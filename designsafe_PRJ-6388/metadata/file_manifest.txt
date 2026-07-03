@@ -1,3 +1,0 @@
-./metadata/file_manifest.txt
-./metadata/README.md
-./metadata/SHA256SUMS.txt
