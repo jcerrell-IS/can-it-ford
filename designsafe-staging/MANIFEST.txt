@@ -1,8 +1,14 @@
 Can It Ford dataset manifest
-Generated: 2026-07-03T04:36:57Z
+Generated: 2026-07-03T05:46:40Z
 
 SIZE          FILE                                      SHA256
 1219          data/phase_space_results.csv              278d292f78ab0d9a0329e439d30e5fdb31143cc450b77e2697c7c340d2f4a665
 2442          docs/README_designsafe.md                 31f40d5f935c28752e53a2d5d8a5878809a0f11229876c70aa9dd1c6a4fa77d6
+751504        figures/opening_frame_clean.png           59f9cd94f88af21767bd2860985e5b7ba92c091c8df93086c18fc81cae13192e
+848474        figures/peak_frame.png                    a2b18e5253e3934f30184826b1a1dd71e6b6f122e3f70c4ec8b0d1765d6726fb
+302876        figures/phase_space_poster_figure.png     883e6b44690af8dfa67b2f6a58d88a46f1a3bb9e84a5ee0825663d203c80338e
+166389        figures/phase_space_poster_figure.svg     0c4510f17fbdea490934b8a4224fa6808e734d349c4a6067eee441a6e18f9057
+6737          figures/pipeline_diagram_canva.svg        8ce790f16a30b02e0af3e5a465f488424fd38a53962617833df8daf63cc9ea14
 5139          scripts/can_it_ford_L2.py                 3f7b8702093ac71825b2b98a2a86080f8e78c0af883c8695d6ad0ce4b206b2f4
 3258          scripts/can_it_ford_mu_sweep.py           4b73eb860fa4616c6ee0563467b26ea8033f0bcbeb5f6f37fd9f38907f353e18
+4237          scripts/make_phase_space.py               a3b0998517c389699c073895f13e9faed90abbcd6de41296d35a77c0f193ba55
