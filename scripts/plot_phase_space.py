@@ -3,6 +3,8 @@ import pandas as pd
 import numpy as np
 
 df = pd.read_csv("data/phase_space_results.csv")
+df['l1_haz'] = df['depth_m'] * df['velocity_ms']
+df['l1_verdict'] = df['l1_haz'].apply(lambda h: 'FORD' if h <= 0.60 else 'NO-FORD')
 v = np.linspace(0.1, 3.5, 300)
 
 fig = go.Figure()
@@ -19,16 +21,16 @@ fig.add_trace(go.Scatter(x=v, y=0.30/v, mode="lines",
     line=dict(color="goldenrod", dash="dot", width=1.5)))
 
 for _, row in df.iterrows():
-    color  = "#cc0000" if row.l2_verdict == "NO-FORD" else "#009900"
-    symbol = "x"      if row.l2_verdict == "NO-FORD" else "circle"
+    color  = "#cc0000" if row.verdict == "NO-FORD" else "#009900"
+    symbol = "x"      if row.verdict == "NO-FORD" else "circle"
     fig.add_trace(go.Scatter(
         x=[row.velocity_ms], y=[row.depth_m], mode="markers",
         marker=dict(size=18, color=color, symbol=symbol,
                     line=dict(width=2, color="black")),
-        name=f"L2: ({row.depth_m}m, {row.velocity_ms}m/s) → {row.l2_verdict}",
+        name=f"L2: ({row.depth_m}m, {row.velocity_ms}m/s) → {row.verdict}",
         hovertemplate=f"d={row.depth_m}m, v={row.velocity_ms}m/s<br>"
                       f"L1: {row.l1_verdict} (haz={row.l1_haz})<br>"
-                      f"L2: <b>{row.l2_verdict}</b><extra></extra>"
+                      f"L2: <b>{row.verdict}</b><extra></extra>"
     ))
 
 fig.add_annotation(
