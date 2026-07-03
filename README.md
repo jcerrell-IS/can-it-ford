@@ -133,7 +133,7 @@ This pipeline handles the forward direction (known scene + known flood propertie
 
 ## External assets
 
-- **W&B experiment tracking:** [jcerrell29-claremont-mckenna-college/can-it-ford](https://wandb.ai/jcerrell29-claremont-mckenna-college/can-it-ford)
+- **W&B experiment tracking:** [jcerrell29-claremont-mckenna-college/can-it-ford]([https://wandb.ai/jcerrell29-claremont-mckenna-college/can-it-ford](https://wandb.ai/profile/jcerrell29?shareProfileType=copy))
 - **Live Gradio demo:** [josiecerrell/can-it-ford on HuggingFace](https://huggingface.co/spaces/josiecerrell/can-it-ford)
 - **Dataset DOI:** DesignSafe PRJ-6388 (pending publication July 2026)
 
