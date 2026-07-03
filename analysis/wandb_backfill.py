@@ -1,6 +1,10 @@
 import wandb
-
-API_KEY = "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"
+from thresholds import L1_HAZ_THRESHOLD_4WD
+import os
+import sys, os
+sys.path.append(os.path.join(os.path.dirname(__file__), "scripts"))
+from thresholds import L1_HAZ_THRESHOLD_4WD
+wandb.login(key=os.environ.get("WANDB_API_KEY"))
 ORG = "jcerrell29-claremont-mckenna-college"
 
 runs = [
@@ -19,7 +23,7 @@ wandb.login(key=API_KEY)
 
 for r in runs:
     l1_haz = round(r["depth_m"] * r["velocity_ms"], 3)
-    l1_verdict = "NO-FORD" if l1_haz > 0.60 else "FORD"
+    l1_verdict = "NO-FORD" if l1_haz > L1_HAZ_THRESHOLD_4WD else "FORD"
     divergence = (r["verdict"] == "NO-FORD" and l1_verdict == "FORD")
 
     run = wandb.init(
