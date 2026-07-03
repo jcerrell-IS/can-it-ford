@@ -72,6 +72,12 @@ cd /work/11603/jcerrell0629/vista/
 apptainer exec --nv $GENESIS_PATH python3 simulation/can_it_ford_L2.py <depth_m> <velocity_ms>
 ```
 
+Add `--record` to save a headless video of the simulation (answers "what does the drift actually look like"):
+
+```bash
+apptainer exec --nv $GENESIS_PATH python3 simulation/can_it_ford_L2.py 0.30 1.5 --record
+```
+
 Each run appends one row to `data/phase_space_results.csv` with depth, velocity, verdict, peak drift, and displacement.
 
 **L0 and L1 (local, no GPU needed):**
@@ -133,9 +139,10 @@ This pipeline handles the forward direction (known scene + known flood propertie
 
 ## External assets
 
-- **W&B experiment tracking:** [jcerrell29-claremont-mckenna-college/can-it-ford]([https://wandb.ai/jcerrell29-claremont-mckenna-college/can-it-ford](https://wandb.ai/profile/jcerrell29?shareProfileType=copy))
-- **Live Gradio demo:** [josiecerrell/can-it-ford on HuggingFace](https://huggingface.co/spaces/josiecerrell/can-it-ford)
-- **Dataset DOI:** DesignSafe PRJ-6388 (pending publication July 2026)
+- **W&B experiment tracking:** [jcerrell29-claremont-mckenna-college/can-it-ford](https://wandb.ai/jcerrell29-claremont-mckenna-college/can-it-ford) — 23+ L2 runs logged with depth, velocity, verdict, peak drift, and displacement
+- **Live Gradio demo:** [josiecerrell/can-it-ford on HuggingFace Spaces](https://huggingface.co/spaces/josiecerrell/can-it-ford) — enter any (depth, velocity, vehicle class) and get L0/L1/L2 verdicts
+- **Hailuo AI comparison:** [`figures/hailuo/`](figures/hailuo/) — three frames from a Hailuo AI video generation of a sedan in d=0.30 m, v=1.5 m/s flood conditions. Hailuo predicts FORD (visually plausible). L2 Genesis MPM predicts NO-FORD (lateral drift 0.328 m). This is the visual model vs physical model comparison for poster Panel 4.
+- **Dataset DOI:** DesignSafe PRJ-6388 — pending publication July 2026. Will include L2 scripts, CSVs, figures, and README.
 
 ---
 
@@ -145,4 +152,4 @@ See `CITATION.cff`. DOI will be added here upon DesignSafe publication.
 
 ## Acknowledgments
 
-PI: Krishna Kumar (GeoElements Lab, UT Austin). Daily mentors: Hassan Iqbal, Cheng-Hsi Hsiao, Sarah Etter. Genesis container environment: Luke Smith (lsmith9003@utexas.edu). Funded by NSF SCIPE REU 2026 (Chishiki AI scholarship, GeoElements).
+PI: Krishna Kumar (GeoElements Lab, UT Austin). Daily mentors: Hassan Iqbal, Cheng-Hsi Hsiao. Genesis container environment: Luke Smith (lsmith9003@utexas.edu). Funded by NSF SCIPE REU 2026 (Chishiki AI scholarship, GeoElements).
