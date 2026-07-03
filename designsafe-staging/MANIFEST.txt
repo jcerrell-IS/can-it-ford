@@ -1,0 +1,8 @@
+Can It Ford dataset manifest
+Generated: 2026-07-03T04:36:57Z
+
+SIZE          FILE                                      SHA256
+1219          data/phase_space_results.csv              278d292f78ab0d9a0329e439d30e5fdb31143cc450b77e2697c7c340d2f4a665
+2442          docs/README_designsafe.md                 31f40d5f935c28752e53a2d5d8a5878809a0f11229876c70aa9dd1c6a4fa77d6
+5139          scripts/can_it_ford_L2.py                 3f7b8702093ac71825b2b98a2a86080f8e78c0af883c8695d6ad0ce4b206b2f4
+3258          scripts/can_it_ford_mu_sweep.py           4b73eb860fa4616c6ee0563467b26ea8033f0bcbeb5f6f37fd9f38907f353e18
