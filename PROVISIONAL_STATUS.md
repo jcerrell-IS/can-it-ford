@@ -2,7 +2,7 @@
 
 This file exists so the project's revision history is visible, not hidden. The README's "Key finding" section is kept as originally written. This file documents what has changed since, and why, so a reader can see where this started and where it is going.
 
-Last updated: July 7, 2026 (session 2).
+Last updated: July 7, 2026 (session 3).
 
 ---
 
@@ -12,37 +12,67 @@ The README currently states the L2 finding (23 conditions, 16 divergence points,
 
 ---
 
-## July 7 session 2: mass and geometry bugs found and fixed, live on Vista (not yet pushed here)
+## July 7 session 3: timestep bug, first clean NO-FORD, and where this SPH work stops
 
-This section documents same-day diagnostic work on `can_it_ford_L2_new.py`, done directly on Vista, ahead of the file itself being pushed to this repo.
+**Bug C, timestep too coarse.** After fixing mass and geometry (session 2), I pushed a stress test (d=1.0m, v=3.0m/s) and it spiked to a 1m displacement with a velocity vector pointing backward against the flow, then the session disconnected. That's the signature of a numerical blowup, not real physics. My own OSS survey already had the answer: Genesis's `flush_cubes.py` example uses `dt=4e-3, substeps=20` for MPM liquid coupling. My script was running `dt=1e-2`, 2.5x coarser.
 
-**Bug A, vehicle mass unset.** Confirmed via `grep`: no `density` or `rho` anywhere in the original file. Vehicle used Genesis's internal default, giving an effective mass far below a real curb weight. Fixed by setting `rho=604` on the vehicle's `Rigid` material after also correcting the box size (see Bug B), targeting a mass-matched ~1,450 kg proxy.
+```python
+# before
+sim_options=gs.options.SimOptions(dt=1e-2, substeps=10),
+```
 
-**Bug B, vehicle geometry undersized and misplaced.** The vehicle box was 0.4 x 0.2 x 0.15 m, roughly 10x too small per dimension versus a real car, and was positioned with `pos=(1.0, 0.0, water_depth + 0.075)`. Given the box height of 0.15m, this placed the vehicle's bottom face exactly at the water's top surface for every depth tested, meaning the vehicle sat balanced on top of the water rather than submerged in it. Confirmed visually by watching the rendered video. Fixed by resizing to `size=(1.0, 1.6, 1.5)` and repositioning to `pos=(1.0, 0.0, 0.75)`, pinning the vehicle to the ground plane independent of `water_depth`, so shallower or deeper water submerges more or less of the vehicle the way real fording works.
+```python
+# after
+sim_options=gs.options.SimOptions(dt=4e-3, substeps=10),
+```
 
-**One theory ruled out, not just deprioritized.** Genesis's SPH solver defaults `particle_size` to 0.02m, giving roughly 10+ particles across even the smallest original vehicle face. This is fine resolution, not the coarse-grid failure mode Genesis issue #600 describes for MPM. The near-zero displacement seen before these fixes is attributable to Bugs A and B above, not to a weak or broken SPH-rigid coupling kernel.
+Reran the same case that crashed. Clean finish, no crash, oscillatory transient (push, overshoot, partial recovery), velocity components stayed bounded under 0.5 m/s the whole run. Timestep was the whole story for the crash.
 
-**Result after both fixes, on the same synthetic box/plane scene (still SPH, not yet MPM, not yet a real gsplat scene):**
-- All 24 originally-tested (depth, velocity) pairs plus a v=8.0 m/s stress test returned FORD with near-zero displacement (0.0000-0.0004m) before Bug B's fix.
-- After Bug B's fix, a genuinely hazardous case (d=0.6m, v=2.0m/s, AR&R hazard D x V = 1.2, well above the 4WD threshold of 0.60) produced 0.0125m peak displacement, a real, severity-scaled result, still under the current 0.05m DRIFT_THRESHOLD (still FORD).
-- A borderline-safe case (d=0.3m, v=1.5m/s, hazard = 0.45, below the 4WD threshold) produced 0.0005m, consistent with L1's own prediction that this condition is not clearly hazardous.
-- An out-of-range stress test (d=1.0m, v=3.0m/s) produced a displacement spike to roughly 1m with a velocity vector pointing backward against the flow, followed by the session disconnecting. Read as a numerical instability at parameters well outside anything validated, not a real physical result. Not yet re-tested at a more moderate extension (e.g. v=2.5m/s) to find the actual stable ceiling for the current timestep.
+**First result I'd actually call trustworthy on this pilot scene:**
 
-**What this means for the original 23-point finding:** very likely was a mass-and-geometry artifact, not real physics, consistent with the "Bug 1" entry below. The corrected setup does produce real, severity-scaled displacement, which is the first physically plausible signal this project has produced. Still not the real-scene MPM pipeline described in the abstract.
+```
+depth=1.0m velocity=3.0m/s verdict=NO-FORD peak_x_disp=0.1836m
+```
 
-**Still open:** DRIFT_THRESHOLD's citation (item 5 below), the CSV logging bugs (item 7 below), and finding the stable velocity ceiling for the current timestep before trusting any extreme-condition test.
+3.7x over the 0.05m DRIFT_THRESHOLD. AR&R L1 agrees at this condition too (hazard = D x V = 3.0, far above the 0.60 threshold), a genuine cross-check pass between methods on corrected physics.
+
+**Displacement now scales monotonically with severity for the first time this project has produced:**
+
+| depth, velocity | AR&R hazard | peak x_disp | verdict |
+|---|---|---|---|
+| 0.3m, 1.5m/s | 0.45 | 0.0005m | FORD |
+| 0.6m, 2.0m/s | 1.20 | 0.0125m | FORD |
+| 0.6m, 2.5m/s | 1.50 | 0.0425m | FORD (close) |
+| 1.0m, 3.0m/s | 3.00 | 0.1836m | NO-FORD |
+
+**Sanity check run before trusting this, not just accepting a clean video:** compared the water's total x-momentum at the final step against the vehicle's estimated momentum change.
+
+```python
+mass_per_particle = 0.8 * 0.02**3 * 1000
+total_px = (vel[:, 0] * mass_per_particle).sum()
+```
+
+Water: 320.1 kg m/s. Vehicle: roughly 1450 x 0.47 = 681.5 kg m/s. Same order of magnitude, not exact, not expected to be exact since this isn't a closed system (walls and ground absorb momentum too) and the two numbers are measured differently (final snapshot vs peak estimate). This rules out the push coming from nowhere. It does not prove the transfer is exact. I'm calling it plausible, not verified.
+
+**One thing I still can't check:** WCSPH is only valid if the water's density stays within about 1% of rest density the whole run. My script doesn't save `rho` to the `.npz`, only `pos` and `vel`, so I can't check this retroactively for any run so far. Adding `rho` to the next save is a fix, not yet done.
+
+**Where this stops, stated plainly:** this SPH box scene will not become the dataset in the paper, no matter how many more bugs get fixed in it. Every fix here (mass, geometry, timestep) transfers directly to the MPM version. The dataset itself does not.
 
 ---
 
 ## Confirmed corrections, in order of severity
 
-### 1. Vehicle mass bug (discovered July 7, fixed same day)
+### 1. Vehicle mass bug (discovered and fixed July 7)
 
-The vehicle box in `can_it_ford_L2_new.py` never had an explicit density set. Genesis defaulted to an internal density giving a simulated vehicle mass far below a real curb weight of roughly 1,400 to 1,500 kg. The vehicle floated by construction, making `coup_friction` mathematically irrelevant regardless of its value. The originally reported "friction-invariant drift" result (0.395 to 0.400 m across mu 0.0 to 0.7) is a likely artifact of this bug, not a confirmed physical finding. Fixed July 7 by setting explicit density; see session 2 section above for the full fix and result.
+The vehicle box in `can_it_ford_L2_new.py` never had an explicit density set. Genesis defaulted to an internal density giving a simulated vehicle mass far below a real curb weight of roughly 1,400-1,500 kg. The vehicle floated by construction, making `coup_friction` mathematically irrelevant regardless of its value. The originally reported "friction-invariant drift" result (0.395-0.400m across mu 0.0-0.7) is a likely artifact of this bug. Fixed by setting `rho=604` after correcting box size.
 
-### 1b. Vehicle geometry and placement bug (discovered and fixed July 7, same session as above)
+### 1b. Vehicle geometry and placement bug (discovered and fixed July 7)
 
-See session 2 section above. Vehicle was undersized and spawned resting on top of the water surface rather than submerged in it, independent of the mass bug. Both bugs needed fixing before any displacement number was trustworthy.
+Box was 0.4 x 0.2 x 0.15m, roughly 10x too small per dimension versus a real car, and positioned so its bottom face sat exactly at the water's top surface for every depth tested, meaning it rested on top of the water rather than in it. Confirmed by watching the render. Fixed by resizing to `size=(1.0, 1.6, 1.5)` and repositioning to `pos=(1.0, 0.0, 0.75)`, pinned to the ground independent of `water_depth`.
+
+### 1c. Timestep bug (discovered and fixed July 7)
+
+`dt=1e-2` was 2.5x coarser than the `dt=4e-3, substeps=20` range Genesis's own `flush_cubes.py` MPM coupling example uses. Caused a numerical blowup at an extreme test condition. Fixed by setting `dt=4e-3`.
 
 ### 2. Solver mismatch
 
@@ -50,38 +80,50 @@ All results to date were run on Genesis's SPH solver, not MPM. The abstract and 
 
 ### 3. Synthetic geometry, not a reconstructed scene
 
-No real gsplat-reconstructed flooded scene has been ingested anywhere in the pipeline. The water and vehicle are hardcoded Box morphs on a flat plane. No PhysGaussian kernel-to-particle bridge code exists yet. Tutorial 2's `bench.mov` is the only proof the gsplat half of the pipeline works end to end on its own.
+No real gsplat-reconstructed flooded scene has been ingested anywhere in the pipeline. No PhysGaussian kernel-to-particle bridge code exists yet. Tutorial 2's `bench.mov` is the only proof the gsplat half of the pipeline works end to end on its own.
 
 ### 4. Live script not yet on GitHub
 
-`can_it_ford_L2_new.py`, the file with all of the July 7 fixes described above, has still not been pushed to this repo. Only the older, pre-fix `can_it_ford_L2.py` is on `main`. The Vista working directory is flat (not a `simulation/` subdirectory) and is not itself a git repository, so pushes have to be done deliberately from a separate synced clone.
+`can_it_ford_L2_new.py`, with all three fixes above, has still not been pushed to this repo. Only the older, pre-fix `can_it_ford_L2.py` is on `main`.
 
 ### 5. DRIFT_THRESHOLD = 0.05m has no citation
 
-This value drives every NO-FORD verdict in L2 and currently has no published source behind it. Now more consequential than before, since it is deciding verdicts on physically plausible displacement numbers rather than obviously-broken ones. Candidate fix under research: express it as a percentage of a published stability criterion (Smith 2019 Eq. 6 is a lead) rather than an absolute number.
+Drives every NO-FORD verdict, no published source behind it yet. Candidate fix: Smith 2019 Eq. 6 as a stability-boundary fraction rather than a bare number.
 
 ### 6. Finding framing has changed twice
 
-First reported (June 29) as 3 divergence points from 9 runs. Later reported (July 3) as 16 divergence points from 23 runs, 30.4% agreement. Both versions were generated under the mass-and-geometry-bugged conditions described above.
+3 divergence points from 9 runs (June 29), then 16 from 23 (July 3). Both under the bugged conditions above.
 
-### 7. CSV logging bugs (discovered July 7)
+### 7. CSV and NPZ logging gaps
 
-`peak_x_disp`, the value the FORD/NO-FORD verdict is actually based on, is never written to `phase_space_results.csv`, only printed to terminal and saved in per-run `.npz` files. The CSV cannot verify its own verdicts. Separately, the `max_vel_ms` column tracks the vehicle's initial settling speed, not flow-driven velocity, and is not a meaningful physics measurement as currently computed. Both need a schema fix (a new CSV, not a patch to the existing one, since the old file's rows are already written under the old column set).
+`peak_x_disp`, the value the verdict is based on, is never written to `phase_space_results.csv`. `max_vel_ms` tracks initial settling speed, not flow velocity. `rho` is never saved to the `.npz`, blocking the WCSPH density-bound check described above. All three need a schema fix.
+
+---
+
+## What carries over to MPM, and what doesn't
+
+**Carries over directly, already validated on this pilot scene:** `rho=604`, `size=(1.0, 1.6, 1.5)`, `pos=(1.0, 0.0, 0.75)` for the vehicle. `dt=4e-3` as a starting point, though MPM's actual stability rule is different (below).
+
+**Does not carry over, needs its own derivation:** MPM stability depends on grid spacing, not just timestep. At Genesis's default `grid_density=64`, `dx=1/64=0.015625m`, and Genesis warns when `substep_dt > 2e-2 * dx`, meaning substep time must stay under `3.125e-4`s. `dt=4e-3` with `substeps=10` gives `substep_dt=4e-4s`, still 1.28x above that ceiling. `substeps=16-20` is the correct MPM starting point, not 10.
+
+**Vehicle representation does not change.** It stays a `Rigid` entity coupled via `needs_coup=True`/`coup_friction`, the same pattern as today, just against `MPM.Liquid` water instead of `SPH.Liquid`. It does not become an MPM particle body itself.
+
+**Template for the migration:** `examples/coupling/water_wheel.py --solver mpm` for emitter syntax, `examples/coupling/sand_wheel.py` for the coupling flag pattern, `examples/coupling/flush_cubes.py` for the parameter values above.
 
 ---
 
 ## Possible shortcut
 
-Luke Smith's Tutorial 3 (`taichi_mpm` codebase) already contains a working real-gsplat-to-MPM bridge: `preprocess.py` ingests a real `.ply` file, `run_mpm.py` simulates it, demoed on a Toyota Corolla gsplat. This may reduce the rebuild scope significantly. Open question for Hassan or Cheng-Hsi: can this Taichi MPM output feed a Genesis scene on Vista, or does it require its own separate pipeline.
+Luke Smith's Tutorial 3 (`taichi_mpm` codebase) already contains a working real-gsplat-to-MPM bridge: `preprocess.py` ingests a real `.ply` file, `run_mpm.py` simulates it, demoed on a Toyota Corolla gsplat. Open question for Hassan or Cheng-Hsi: can this feed a Genesis scene on Vista.
 
 ---
 
 ## Rebuild path (in priority order)
 
-1. Push `can_it_ford_L2_new.py`, with the mass and geometry fixes, to this repo so it matches what is actually running
-2. Find the stable velocity ceiling for the current timestep, then fix the CSV logging bugs (both independent of the items below, can happen any time)
-3. Migrate SPH.Liquid to MPM.Liquid in the solver
-4. Shoot and gsplat-reconstruct a real water-adjacent scene (or evaluate Luke's Toyota Corolla dataset as a starting point)
+1. Push `can_it_ford_L2_new.py` with all three fixes above to this repo
+2. Fix the CSV and NPZ logging gaps
+3. Migrate to `MPM.Liquid` with `grid_density=64`, `dt=4e-3`, `substeps=16-20`, vehicle stays `Rigid`
+4. Shoot and gsplat-reconstruct a real water-adjacent scene
 5. Write or adapt the PhysGaussian/Taichi bridge from real reconstructed geometry into simulatable particles
 6. Rerun the full depth/velocity sweep on the corrected, real pipeline
 
