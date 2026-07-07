@@ -41,7 +41,7 @@ def main():
     plane   = scene.add_entity(morph=gs.morphs.Plane())
 
     water   = scene.add_entity(
-        material=gs.materials.SPH.Liquid(mu=0.01, sampler="regular"),
+        material=gs.materials.SPH.Liquid(mu=0.001, sampler="regular"),
         morph=gs.morphs.Box(
             pos=(1.0, 0.0, water_depth / 2.0),
             size=(1.8, 1.8, water_depth),
@@ -126,7 +126,7 @@ def main():
     npz_path  = f"particles_d{depth_str}_v{vel_str}.npz"
     np.savez(npz_path, pos=pos_final, vel=vel_final,
              depth=water_depth, velocity=water_velocity,
-             verdict=verdict, peak_x_disp=max_x_disp)
+             verdict=verdict, peak_x_disp=max_x_disp, rho=604)
     print(f"Saved particle state: {npz_path}")
 
     print(f"\n=== RESULT ===")
@@ -138,7 +138,7 @@ def main():
     with open(csv_path, "a", newline="") as f:
         writer = csv.DictWriter(
             f,
-            fieldnames=["depth_m", "velocity_ms", "verdict", "final_x_disp_m", "final_y_disp_m", "max_vel_ms"]
+            fieldnames=["depth_m", "velocity_ms", "verdict", "peak_x_disp_m", "final_x_disp_m", "final_y_disp_m", "max_vel_ms"]
         )
         if not file_exists:
             writer.writeheader()
@@ -146,6 +146,7 @@ def main():
             "depth_m":         water_depth,
             "velocity_ms":     water_velocity,
             "verdict":         verdict,
+            "peak_x_disp_m":   round(max_x_disp, 4),
             "final_x_disp_m":  round(final_xd, 4),
             "final_y_disp_m":  round(final_yd, 4),
             "max_vel_ms":      round(max_vel_mag, 4),
