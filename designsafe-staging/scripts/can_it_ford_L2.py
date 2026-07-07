@@ -5,7 +5,6 @@ import sys
 
 import genesis as gs
 
-# Positional args (backward compat): python can_it_ford_L2.py 0.30 1.5
 water_depth    = float(sys.argv[1]) if len(sys.argv) > 1 and not sys.argv[1].startswith('-') else 0.30
 water_velocity = float(sys.argv[2]) if len(sys.argv) > 2 and not sys.argv[2].startswith('-') else 0.0
 
@@ -14,16 +13,19 @@ print(f"--- Running L2: depth={water_depth}m, velocity={water_velocity}m/s ---")
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("-v", "--vis", action="store_true", default=False)
+    parser.add_argument("-v", "--vis",    action="store_true", default=False,
+                        help="Open interactive viewer window (requires display)")
+    parser.add_argument("-r", "--record", action="store_true", default=False,
+                        help="Save headless video of the simulation (works on Vista)")
     args, _ = parser.parse_known_args()
 
     gs.init(precision="32", logging_level="warning")
 
     scene = gs.Scene(
-        sim_options=gs.options.SimOptions(dt=1e-2, substeps=10),
+        sim_options=gs.options.SimOptions(dt=4e-3, substeps=10),
         sph_options=gs.options.SPHOptions(
             lower_bound=(0.0, -1.0, 0.0),
-            upper_bound=(2.0, 1.0, 2.4),
+            upper_bound=(2.0,  1.0, 2.4),
         ),
         vis_options=gs.options.VisOptions(visualize_sph_boundary=True),
         viewer_options=gs.options.ViewerOptions(
@@ -34,13 +36,12 @@ def main():
         show_viewer=args.vis,
     )
 
-    frictionless_rigid = gs.materials.Rigid(needs_coup=True, coup_friction=0.0)
+    vehicle_rigid = gs.materials.Rigid(needs_coup=True, coup_friction=0.4, rho=604)
 
-    plane = scene.add_entity(morph=gs.morphs.Plane())
+    plane   = scene.add_entity(morph=gs.morphs.Plane())
 
-    # FIX: water box now uses actual water_depth parameter
-    water = scene.add_entity(
-        material=gs.materials.SPH.Liquid(mu=0.01, sampler="regular"),
+    water   = scene.add_entity(
+        material=gs.materials.SPH.Liquid(mu=0.005, sampler="regular"),
         morph=gs.morphs.Box(
             pos=(1.0, 0.0, water_depth / 2.0),
             size=(1.8, 1.8, water_depth),
@@ -48,87 +49,107 @@ def main():
         surface=gs.surfaces.Default(color=(0.5, 0.7, 0.9, 1.0)),
     )
 
-    # Vehicle sits just above the water surface
     vehicle = scene.add_entity(
-        material=frictionless_rigid,
+        material=vehicle_rigid,
         morph=gs.morphs.Box(
-            pos=(1.0, 0.0, water_depth + 0.075),
-            size=(0.4, 0.2, 0.15),
+            pos=(1.0, 0.0, 0.75),
+            size=(1.0, 1.6, 1.5),
             fixed=False,
         ),
     )
+
+    cam = None
+    if args.record:
+        cam = scene.add_camera(
+            res=(1280, 960),
+            pos=(3.5, -3.15, 2.42),
+            lookat=(1.0, 0.0, 0.5),
+            fov=40,
+            GUI=False,
+        )
 
     scene.build()
 
     water.set_velocity(gs.tensor([water_velocity, 0.0, 0.0]))
 
-    # Track displacement for verdict
-    initial_pos = vehicle.get_pos()
-    max_x_disp = 0.0
-    max_vel_mag = 0.0
-    DRIFT_THRESHOLD = 0.05  # 5cm lateral drift = NO-FORD
+    initial_pos     = vehicle.get_pos()
+    max_x_disp      = 0.0
+    max_vel_mag      = 0.0
+    DRIFT_THRESHOLD  = 0.05
+
+    if cam is not None:
+        cam.start_recording()
 
     horizon = 500 if "PYTEST_VERSION" not in os.environ else 5
     for i in range(horizon):
         scene.step()
 
-        # Inlet boundary condition (unchanged from original)
         if water_velocity > 0.0:
-            pts = water.get_particles_pos()
+            pts  = water.get_particles_pos()
             mask = pts[:, 0] < 0.3
             if mask.any():
-                vel = water.get_particles_vel()
-                vel[mask, 0] = water_velocity
+                vel              = water.get_particles_vel()
+                vel[mask, 0]     = water_velocity
                 water.set_particles_vel(vel)
+
+        if cam is not None:
+            cam.render()
 
         current_pos = vehicle.get_pos()
         vehicle_vel = vehicle.get_vel()
-        x_disp = abs(float(current_pos[0]) - float(initial_pos[0]))
-        y_disp = abs(float(current_pos[1]) - float(initial_pos[1]))
-        vel_mag = float((vehicle_vel[0]**2 + vehicle_vel[1]**2 + vehicle_vel[2]**2)**0.5)
-        max_x_disp = max(max_x_disp, x_disp)
+        x_disp      = abs(float(current_pos[0]) - float(initial_pos[0]))
+        y_disp      = abs(float(current_pos[1]) - float(initial_pos[1]))
+        vel_mag     = float((vehicle_vel[0]**2 + vehicle_vel[1]**2 + vehicle_vel[2]**2)**0.5)
+        max_x_disp  = max(max_x_disp, x_disp)
         max_vel_mag = max(max_vel_mag, vel_mag)
 
         if i % 50 == 0:
             print(f"Step {i}: x_disp={x_disp:.4f}m  vel={vehicle_vel}")
 
-    # Verdict: any axis drift beyond threshold = NO-FORD
-    final_pos  = vehicle.get_pos()
-    final_xd   = abs(float(final_pos[0]) - float(initial_pos[0]))
-    final_yd   = abs(float(final_pos[1]) - float(initial_pos[1]))
-    verdict    = "NO-FORD" if max_x_disp > DRIFT_THRESHOLD else "FORD"  # peak displacement, not final
+    if cam is not None:
+        depth_str  = str(water_depth).replace(".", "p")
+        vel_str    = str(water_velocity).replace(".", "p")
+        video_path = f"simulation_d{depth_str}_v{vel_str}.mp4"
+        cam.stop_recording(save_to_filename=video_path, fps=60)
+        print(f"Saved video: {video_path}")
 
-    # Save particle state for viability audit
+    final_pos = vehicle.get_pos()
+    final_xd  = abs(float(final_pos[0]) - float(initial_pos[0]))
+    final_yd  = abs(float(final_pos[1]) - float(initial_pos[1]))
+    verdict   = "NO-FORD" if max_x_disp > DRIFT_THRESHOLD else "FORD"
+
     import numpy as np
     pos_final = water.get_particles_pos().cpu().numpy()
     vel_final = water.get_particles_vel().cpu().numpy()
     depth_str = str(water_depth).replace(".", "p")
-    vel_str = str(water_velocity).replace(".", "p")
-    npz_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), f"particles_d{depth_str}_v{vel_str}.npz")
-    np.savez(npz_path, pos=pos_final, vel=vel_final, depth=water_depth, velocity=water_velocity, verdict=verdict, peak_x_disp=max_x_disp)
+    vel_str   = str(water_velocity).replace(".", "p")
+    npz_path  = f"particles_d{depth_str}_v{vel_str}.npz"
+    np.savez(npz_path, pos=pos_final, vel=vel_final,
+             depth=water_depth, velocity=water_velocity,
+             verdict=verdict, peak_x_disp=max_x_disp, rho=604)
     print(f"Saved particle state: {npz_path}")
 
     print(f"\n=== RESULT ===")
     print(f"depth={water_depth}m  velocity={water_velocity}m/s  verdict={verdict}")
-    print(f"final x_disp={final_xd:.4f}m  final y_disp={final_yd:.4f}m  max_vel={max_vel_mag:.4f}m/s")
+    print(f"peak x_disp={max_x_disp:.4f}m  final x_disp={final_xd:.4f}m  final y_disp={final_yd:.4f}m  max_vel={max_vel_mag:.4f}m/s")
 
-    # Save to CSV (append mode — safe across multiple runs)
-    csv_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "phase_space_results.csv")
+    csv_path    = "phase_space_results_v2.csv"
     file_exists = os.path.isfile(csv_path)
     with open(csv_path, "a", newline="") as f:
         writer = csv.DictWriter(
             f,
-            fieldnames=["depth_m", "velocity_ms", "verdict", "final_x_disp_m", "final_y_disp_m", "max_vel_ms"]
+            fieldnames=["depth_m", "velocity_ms", "verdict", "peak_x_disp_m", "final_x_disp_m", "final_y_disp_m", "max_vel_ms"]
         )
         if not file_exists:
             writer.writeheader()
         writer.writerow({
-            "depth_m":        water_depth,
-            "velocity_ms":    water_velocity,
-            "verdict":        verdict,
-            "final_x_disp_m": round(final_xd, 4),
-            "final_y_disp_m": round(final_yd, 4),
-            "max_vel_ms":     round(max_vel_mag, 4),
+            "depth_m":         water_depth,
+            "velocity_ms":     water_velocity,
+            "verdict":         verdict,
+            "peak_x_disp_m":   round(max_x_disp, 4),
+            "final_x_disp_m":  round(final_xd, 4),
+            "final_y_disp_m":  round(final_yd, 4),
+            "max_vel_ms":      round(max_vel_mag, 4),
         })
     print(f"Saved to {csv_path}")
 

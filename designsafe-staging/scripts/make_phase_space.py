@@ -1,91 +1,97 @@
-import numpy as np
 import pandas as pd
-import plotly.graph_objects as go
+import matplotlib.pyplot as plt
+import numpy as np
 
-depths = np.round(np.arange(0.1, 1.0+1e-9, 0.1), 2)
-velocities = np.round(np.arange(0.0, 3.0+1e-9, 0.5), 2)
-rows = []
-for v in velocities:
-    for d in depths:
-        l0 = "NO-FORD" if d > 0.15 else "FORD"
-        haz = round(d*v, 4)
-        l1 = "NO-FORD" if haz > 0.60 else "FORD"
-        rows.append({"depth":d,"velocity":v,"L0":l0,"L1":l1})
-grid_df = pd.DataFrame(rows)
+df = pd.read_csv('phase_space_results.csv')
+df = df.drop_duplicates(subset=['depth_m', 'velocity_ms'], keep='last')
 
-l2_df = pd.DataFrame({
-    "depth":   [0.15, 0.30, 0.60, 0.15, 0.30, 0.45, 0.60, 0.30, 0.30],
-    "velocity":[0.0,  0.0,  0.0,  1.5,  1.5,  1.5,  1.5,  1.0,  2.0],
-    "verdict": ["FORD","FORD","FORD","NO-FORD","NO-FORD","NO-FORD","NO-FORD","NO-FORD","NO-FORD"]
-})
-
-CATEGORY_ORDER = ["FORD","NO-FORD","DISAGREE"]
-CATEGORY_CODE = {n:i for i,n in enumerate(CATEGORY_ORDER)}
-CATEGORY_COLOR = {"FORD":"#b7e6a5","NO-FORD":"#f4a9a8","DISAGREE":"#f5c542"}
+df['L1_haz'] = df['depth_m'] * df['velocity_ms']
+df['L1_verdict'] = df['L1_haz'].apply(lambda h: 'FORD' if h < 0.60 else 'NO-FORD')
 
 def classify(row):
-    if row["L0"] != row["L1"]:
-        return "DISAGREE"
-    return row["L0"]
+    if row['verdict'] == 'FORD'    and row['L1_verdict'] == 'FORD':    return 'FORD_AGREE'
+    if row['verdict'] == 'NO-FORD' and row['L1_verdict'] == 'NO-FORD': return 'NOFORD_AGREE'
+    if row['verdict'] == 'NO-FORD' and row['L1_verdict'] == 'FORD':    return 'DIVERGE'
+    return 'OTHER'
 
-grid_df["category"] = grid_df.apply(classify, axis=1)
-grid_df["z"] = grid_df["category"].map(CATEGORY_CODE)
+df['category'] = df.apply(classify, axis=1)
 
-z_grid = grid_df.pivot(index="velocity", columns="depth", values="z").sort_index().sort_index(axis=1)
-x_vals = z_grid.columns.tolist()
-y_vals = z_grid.index.tolist()
+fig, ax = plt.subplots(figsize=(11, 6.5))
+ax.set_facecolor('#fafafa')
 
-n_cat = len(CATEGORY_ORDER)
-discrete_colorscale = []
-for i, cat in enumerate(CATEGORY_ORDER):
-    lo = i/n_cat
-    hi = (i+1)/n_cat
-    discrete_colorscale.append([lo, CATEGORY_COLOR[cat]])
-    discrete_colorscale.append([hi, CATEGORY_COLOR[cat]])
+d_arr = np.linspace(0.07, 0.75, 500)
 
-heatmap = go.Heatmap(x=x_vals, y=y_vals, z=z_grid.values, colorscale=discrete_colorscale, zmin=0, zmax=n_cat, xgap=1, ygap=1, showscale=False)
-legend_traces = [go.Scatter(x=[None], y=[None], mode="markers", marker=dict(size=16, color=CATEGORY_COLOR[cat], symbol="square"), name=cat, showlegend=True) for cat in CATEGORY_ORDER]
+v_thresh_4wd = np.minimum(0.60 / d_arr, 3.0)
+ax.fill_between(d_arr, 0, v_thresh_4wd,   alpha=0.10, color='#4dac26')
+ax.fill_between(d_arr, v_thresh_4wd, 3.0, alpha=0.08, color='#d01c8b')
 
-d_range = np.linspace(0.05, max(x_vals), 400)
-hyperbola_traces = []
-for k, color, dash, label in [(0.30,"#1f77b4","dot","Sedan"), (0.45,"#9467bd","dash","Lg. passenger"), (0.60,"#d62728","solid","4WD")]:
-    v_curve = k/d_range
-    mask = v_curve <= max(y_vals)*1.05
-    hyperbola_traces.append(go.Scatter(x=d_range[mask], y=v_curve[mask], mode="lines", line=dict(color=color, width=3, dash=dash), name=f"AR&R d\u00b7v={k} ({label})"))
+for thresh, label, ls, col, lw in [
+    (0.30, 'AR&R sedan (0.30 m\u00b2/s)',       ':',  '#1a6faf', 1.6),
+    (0.45, 'AR&R large pass. (0.45 m\u00b2/s)', '--', '#4393c3', 1.6),
+    (0.60, 'AR&R 4WD (0.60 m\u00b2/s)',         '-',  '#e07b00', 2.4),
+]:
+    ax.plot(d_arr, thresh / d_arr, color=col, lw=lw, linestyle=ls, label=label, zorder=4)
 
-l2_ford = l2_df[l2_df["verdict"]=="FORD"]
-l2_noford = l2_df[l2_df["verdict"]=="NO-FORD"]
-div_mask = (l2_df["verdict"]=="NO-FORD") & (l2_df["depth"].isin([0.15,0.30])) & (l2_df["velocity"].isin([1.0,1.5]))
-div_points = l2_df[div_mask]
+ax.axvline(0.15, color='#333333', lw=1.4, linestyle='--',
+           label='L0 depth threshold (0.15 m)', zorder=3)
 
-scatter_ford = go.Scatter(x=l2_ford["depth"], y=l2_ford["velocity"], mode="markers", marker=dict(symbol="circle", size=18, color="black", line=dict(width=2, color="white")), name="L2: FORD")
-scatter_noford = go.Scatter(x=l2_noford["depth"], y=l2_noford["velocity"], mode="markers", marker=dict(symbol="x", size=18, color="black", line=dict(width=3)), name="L2: NO-FORD")
-scatter_div = go.Scatter(x=div_points["depth"], y=div_points["velocity"], mode="markers", marker=dict(symbol="diamond", size=24, color="#BF5700", line=dict(width=2, color="white")), name="L1/L2 Divergence")
+for x_val, txt in [(0.30, 'NWS 12in\nSmith 2019'), (0.60, 'NWS 24in')]:
+    ax.axvline(x_val, color='gray', lw=0.9, linestyle=':', alpha=0.55, zorder=2)
+    ax.text(x_val - 0.005, 2.82, txt, ha='right', fontsize=7.5, color='gray', va='top')
 
-fig = go.Figure()
-fig.add_trace(heatmap)
-for t in legend_traces:
-    fig.add_trace(t)
-for t in hyperbola_traces:
-    fig.add_trace(t)
-fig.add_trace(scatter_ford)
-fig.add_trace(scatter_noford)
-fig.add_trace(scatter_div)
+ford     = df[df['category'] == 'FORD_AGREE']
+agree_no = df[df['category'] == 'NOFORD_AGREE']
+diverge  = df[df['category'] == 'DIVERGE']
 
-fig.update_layout(
-    title=dict(text="Can It Ford? \u2014 L0/L1/L2 Phase Space", font=dict(size=28, color="black")),
-    xaxis=dict(title=dict(text="Water depth, d (m)", font=dict(size=24)), tickfont=dict(size=20), range=[0, max(x_vals)+0.05], showgrid=False),
-    yaxis=dict(title=dict(text="Flow velocity, v (m/s)", font=dict(size=24)), tickfont=dict(size=20), range=[0, max(y_vals)+0.1], showgrid=False),
-    legend=dict(font=dict(size=18), bgcolor="white", bordercolor="black", borderwidth=1),
-    font=dict(size=20, color="black"),
-    plot_bgcolor="white",
-    paper_bgcolor="white",
-    width=2400,
-    height=1800,
-    margin=dict(l=100, r=40, t=100, b=90),
-)
+ax.scatter(ford['depth_m'], ford['velocity_ms'],
+           color='#4dac26', marker='o', s=140, zorder=7,
+           label='L2 = FORD  (L1 agrees)',
+           edgecolors='#2d7a16', linewidths=1.3)
+ax.scatter(agree_no['depth_m'], agree_no['velocity_ms'],
+           color='#c0392b', marker='X', s=140, zorder=7,
+           label='L2 = NO-FORD  (L1 agrees)',
+           edgecolors='#922b21', linewidths=1.3)
+ax.scatter(diverge['depth_m'], diverge['velocity_ms'],
+           color='#e07b00', marker='D', s=180, zorder=8,
+           label='DIVERGE: L1=FORD, L2=NO-FORD',
+           edgecolors='#333333', linewidths=1.2)
+ax.scatter(diverge['depth_m'], diverge['velocity_ms'],
+           color='none', marker='o', s=420, zorder=7,
+           edgecolors='#e07b00', linewidths=2.0)
 
-fig.write_image("phase_space_poster_figure.png", width=2400, height=1800, scale=1)
-fig.write_image("phase_space_poster_figure.svg", format="svg", width=2400, height=1800, scale=1)
-fig.write_html("phase_space_poster_figure.html")
-print("Done.")
+ax.annotate('haz=0.22\nall 3 thresholds miss',
+            xy=(0.15, 1.5), xytext=(0.07, 2.15),
+            fontsize=8, color='#7d4000', fontweight='bold',
+            arrowprops=dict(arrowstyle='->', color='#b05900', lw=1.0), zorder=9)
+
+ax.annotate('haz=0.45\n4WD threshold misses',
+            xy=(0.30, 1.5), xytext=(0.30, 2.15),
+            fontsize=8, color='#7d4000', fontweight='bold', ha='center',
+            arrowprops=dict(arrowstyle='->', color='#b05900', lw=1.0), zorder=9)
+
+ax.annotate('haz=0.30\n4WD + large pass miss',
+            xy=(0.30, 1.0), xytext=(0.42, 0.62),
+            fontsize=8, color='#7d4000', fontweight='bold',
+            arrowprops=dict(arrowstyle='->', color='#b05900', lw=1.0), zorder=9)
+
+ax.text(0.60, 0.42,
+        'L2 detects persistent lateral drag\nthat no D\u00d7V threshold can represent.\nStructural failure, not a calibration issue.',
+        fontsize=8.5, color='#333333', ha='center', va='center',
+        bbox=dict(boxstyle='round,pad=0.50', facecolor='#fff8e6',
+                  edgecolor='#e07b00', alpha=0.96),
+        zorder=10)
+
+ax.set_xlabel('Water Depth (m)', fontsize=12)
+ax.set_ylabel('Flow Velocity (m/s)', fontsize=12)
+ax.set_title('Can It Ford? -- L2 (Genesis MPM) Phase Space vs L1 (AR&R) Predictions',
+             fontsize=12, fontweight='bold')
+ax.set_xlim(0.05, 0.75)
+ax.set_ylim(-0.10, 2.95)
+
+ax.legend(fontsize=9, bbox_to_anchor=(1.01, 1), loc='upper left',
+          framealpha=0.93, edgecolor='#cccccc', borderaxespad=0)
+ax.grid(True, alpha=0.20, color='gray')
+
+plt.tight_layout()
+plt.savefig('can_it_ford_phase_space_v2.png', dpi=150, bbox_inches='tight')
+print('Saved: can_it_ford_phase_space_v2.png')
