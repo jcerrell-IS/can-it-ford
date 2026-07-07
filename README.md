@@ -28,7 +28,7 @@ Three methods run side by side to find the simplest one that still gets the answ
 
 The 23-condition L2 result below was run on synthetic box geometry using Genesis's SPH solver, not the MPM pipeline this repo describes. No real gsplat-reconstructed scene and no PhysGaussian bridge have been built yet. Full severity-ranked log: [`PROVISIONAL_STATUS.md`](PROVISIONAL_STATUS.md).
 
-Two bugs found and fixed this session, in the order I found them:
+Three bugs found and fixed this session, in the order I found them:
 
 **Bug 1: vehicle had no mass set.**
 
@@ -74,23 +74,44 @@ vehicle = scene.add_entity(
 
 Pinned to the ground plane instead of to `water_depth`, so shallow water partially submerges it and deep water submerges more of it, the way fording actually works. Also scaled the box up from a 10x-undersized proxy to something closer to real vehicle dimensions, and recomputed `rho` for the new volume to keep the mass target the same (~1,450kg for the new 2.4 m³ box: `1450 / 2.4 = 604`).
 
-**Result after both fixes, still on SPH, still on the synthetic box/plane scene:**
+**Bug 3: timestep too coarse.**
 
-```
-depth=0.6m velocity=2.0m/s verdict=FORD peak_x_disp=0.0125m
+```python
+# before
+sim_options=gs.options.SimOptions(dt=1e-2, substeps=10),
 ```
 
-That's a real, severity-scaled number for the first time (a milder case, d=0.3/v=1.5, gave 0.0005m, consistent with it being below the AR&R hazard threshold in the first place). Before the fix, every single one of 24 tested conditions returned near-zero displacement regardless of depth or velocity, including a v=8.0 m/s stress test, which is what exposed the bug in the first place.
+After fixing mass and geometry, a stress test (d=1.0m, v=3.0m/s) spiked to a 1m displacement with a velocity vector pointing backward against the flow, then crashed. That's a numerical blowup, not real physics. Genesis's own `flush_cubes.py` example uses `dt=4e-3, substeps=20` for MPM liquid coupling, 2.5x finer than what this script was running.
+
+```python
+# after
+sim_options=gs.options.SimOptions(dt=4e-3, substeps=10),
+```
+
+Reran the same case that crashed. Clean finish, no crash, oscillatory transient (push, overshoot, partial recovery), velocity components stayed bounded under 0.5 m/s the whole run.
+
+**Result after all three fixes, still on SPH, still on the synthetic box/plane scene:**
+
+| depth, velocity | AR&R hazard | peak x_disp | verdict |
+|---|---|---|---|
+| 0.3m, 1.5m/s | 0.45 | 0.0005m | FORD |
+| 0.6m, 2.0m/s | 1.20 | 0.0125m | FORD |
+| 0.6m, 2.5m/s | 1.50 | 0.0425m | FORD (close) |
+| 1.0m, 3.0m/s | 3.00 | 0.1836m | NO-FORD |
+
+Displacement now scales monotonically with severity, for the first time this project has produced that. The 1.0m/3.0m/s case is 3.7x over the 0.05m `DRIFT_THRESHOLD`, and it agrees with the AR&R L1 hazard flag at that same condition (hazard=3.0, far above the 0.60 threshold), a real cross-check pass between the two methods on corrected physics.
+
+Sanity-checked this before trusting it: compared the water's total x-momentum at the final step against the vehicle's estimated momentum change. Water: 320.1 kg·m/s. Vehicle: roughly 1450 x 0.47 = 681.5 kg·m/s. Same order of magnitude, not exact, not expected to be exact since this isn't a closed system. Rules out the push coming from nowhere, doesn't prove the transfer is exact.
 
 **One theory ruled out, checked against Genesis's actual source, not assumed:** SPH `particle_size` defaults to 0.02m, giving 10+ particles across even the original undersized vehicle face. That's fine resolution. The near-zero displacement was Bugs 1 and 2 above, not a weak SPH-rigid coupling kernel.
 
-**Still open:** `DRIFT_THRESHOLD=0.05m` has no citation. `peak_x_disp`, the value the verdict is actually based on, is never written to `phase_space_results.csv`, only printed to terminal and saved per-run in `.npz`. `max_vel_ms` in the CSV tracks the vehicle's initial settling speed, not flow velocity. None of these are fixed yet.
+**Still open:** `DRIFT_THRESHOLD=0.05m` has no citation. `peak_x_disp`, the value the verdict is actually based on, is never written to `phase_space_results.csv`, only printed to terminal and saved per-run in `.npz`. `max_vel_ms` in the CSV tracks the vehicle's initial settling speed, not flow velocity. `rho` isn't saved to the `.npz` either, blocking a WCSPH density-bound check. None of these are fixed yet.
 
 ---
 
 ## Key finding (from the synthetic pilot, not yet the real-scene result)
 
-**23 unique (depth, velocity) conditions** tested via L2 on the SPH/box-geometry pilot scene, before the July 7 mass and geometry fixes above.
+**23 unique (depth, velocity) conditions** tested via L2 on the SPH/box-geometry pilot scene, before the July 7 mass, geometry, and timestep fixes above.
 
 - **L1 / L2 agreement rate: 30.4%** (7 of 23 conditions)
 - **16 conditions:** L1 predicts FORD, L2 produces lateral drift exceeding 0.05 m (NO-FORD)
