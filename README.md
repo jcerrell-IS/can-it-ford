@@ -10,15 +10,11 @@
 
 ---
 
-> **Status (July 7, 2026): the finding below is provisional.** It was produced on synthetic box geometry using Genesis's SPH solver, with a vehicle mass bug that makes the simulated vehicle roughly 100 to 600 times lighter than a real car, so it floats by construction. This means the friction-invariant result below is a likely artifact, not yet a confirmed physical finding. Nothing below has been changed or deleted. Full corrections, severity ranking, and rebuild plan: [`PROVISIONAL_STATUS.md`](PROVISIONAL_STATUS.md).
-
----
-
 ## What this does
 
 Given a real flooded road reconstructed from video using 3D Gaussian splatting, this pipeline answers: **can a specific autonomous vehicle ford this crossing?**
 
-The experiment runs three methods side by side to find the simplest one that still gets the answer right.
+Three methods run side by side to find the simplest one that still gets the answer right.
 
 | Level | Model | Source |
 |---|---|---|
@@ -28,16 +24,79 @@ The experiment runs three methods side by side to find the simplest one that sti
 
 ---
 
-## Key finding
+## Status: pipeline under active correction (July 7, 2026)
 
-**23 unique (depth, velocity) conditions** tested via L2 Genesis MPM simulation on TACC Vista GH200 GPUs.
+The 23-condition L2 result below was run on synthetic box geometry using Genesis's SPH solver, not the MPM pipeline this repo describes. No real gsplat-reconstructed scene and no PhysGaussian bridge have been built yet. Full severity-ranked log: [`PROVISIONAL_STATUS.md`](PROVISIONAL_STATUS.md).
+
+Two bugs found and fixed this session, in the order I found them:
+
+**Bug 1: vehicle had no mass set.**
+
+```python
+# before
+frictionless_rigid = gs.materials.Rigid(needs_coup=True, coup_friction=0.0)
+```
+
+No `rho` argument means Genesis falls back to its internal default. For the original box size (0.4 x 0.2 x 0.15 m) that gave an effective mass somewhere in the 2.4-12kg range depending on what the true default resolves to, against a real curb weight of roughly 1,400-1,500kg. The vehicle floated. `coup_friction` was mathematically irrelevant at any value because ground normal force was near zero.
+
+```python
+# after
+frictionless_rigid = gs.materials.Rigid(needs_coup=True, coup_friction=0.0, rho=604)
+```
+
+**Bug 2: vehicle spawned on top of the water, not in it.**
+
+```python
+# before
+vehicle = scene.add_entity(
+    material=frictionless_rigid,
+    morph=gs.morphs.Box(
+        pos=(1.0, 0.0, water_depth + 0.075),
+        size=(0.4, 0.2, 0.15),
+        fixed=False,
+    ),
+)
+```
+
+The water box is centered at `water_depth / 2.0` with height `water_depth`, so its top surface sits at exactly `z = water_depth`. The vehicle's `pos.z = water_depth + 0.075` with box height 0.15 puts its bottom face at exactly `z = water_depth` too, every single depth tested. I confirmed this visually by rendering `simulation_d0p6_v1p5.mp4` before the fix: the vehicle sits balanced on the surface, not submerged.
+
+```python
+# after
+vehicle = scene.add_entity(
+    material=frictionless_rigid,
+    morph=gs.morphs.Box(
+        pos=(1.0, 0.0, 0.75),
+        size=(1.0, 1.6, 1.5),
+        fixed=False,
+    ),
+)
+```
+
+Pinned to the ground plane instead of to `water_depth`, so shallow water partially submerges it and deep water submerges more of it, the way fording actually works. Also scaled the box up from a 10x-undersized proxy to something closer to real vehicle dimensions, and recomputed `rho` for the new volume to keep the mass target the same (~1,450kg for the new 2.4 m³ box: `1450 / 2.4 = 604`).
+
+**Result after both fixes, still on SPH, still on the synthetic box/plane scene:**
+
+```
+depth=0.6m velocity=2.0m/s verdict=FORD peak_x_disp=0.0125m
+```
+
+That's a real, severity-scaled number for the first time (a milder case, d=0.3/v=1.5, gave 0.0005m, consistent with it being below the AR&R hazard threshold in the first place). Before the fix, every single one of 24 tested conditions returned near-zero displacement regardless of depth or velocity, including a v=8.0 m/s stress test, which is what exposed the bug in the first place.
+
+**One theory ruled out, checked against Genesis's actual source, not assumed:** SPH `particle_size` defaults to 0.02m, giving 10+ particles across even the original undersized vehicle face. That's fine resolution. The near-zero displacement was Bugs 1 and 2 above, not a weak SPH-rigid coupling kernel.
+
+**Still open:** `DRIFT_THRESHOLD=0.05m` has no citation. `peak_x_disp`, the value the verdict is actually based on, is never written to `phase_space_results.csv`, only printed to terminal and saved per-run in `.npz`. `max_vel_ms` in the CSV tracks the vehicle's initial settling speed, not flow velocity. None of these are fixed yet.
+
+---
+
+## Key finding (from the synthetic pilot, not yet the real-scene result)
+
+**23 unique (depth, velocity) conditions** tested via L2 on the SPH/box-geometry pilot scene, before the July 7 mass and geometry fixes above.
 
 - **L1 / L2 agreement rate: 30.4%** (7 of 23 conditions)
 - **16 conditions:** L1 predicts FORD, L2 produces lateral drift exceeding 0.05 m (NO-FORD)
+- **Friction-invariant:** drift stays at 0.328-0.400 m across friction coefficients 0.0-0.7
 
-Divergence covers depths 0.10–0.60 m at velocities 1.0–2.0 m/s, the entire practical wading range. This is a **structural failure**, not a tuning issue: D x V is a scalar and cannot represent directional persistent lateral drag, no matter what threshold or vehicle class you use.
-
-Secondary finding: the result is **friction-invariant**. Lateral drift stays at 0.328–0.400 m across road friction coefficients 0.0–0.7, so the failure comes from the flow dynamics, not how the road surface is modeled (see `data/mu_sweep_results.csv`).
+This is very likely a mass-bug artifact, not a physics result. See the Status section above. Kept here, unedited, because it's the reason the rebuild exists, not because it's trusted.
 
 ---
 
@@ -76,13 +135,13 @@ cd /work/11603/jcerrell0629/vista/
 apptainer exec --nv $GENESIS_PATH python3 simulation/can_it_ford_L2.py <depth_m> <velocity_ms>
 ```
 
-Add `--record` to save a headless video of the simulation (answers "what does the drift actually look like"):
+Add `--record` to save a headless video:
 
 ```bash
 apptainer exec --nv $GENESIS_PATH python3 simulation/can_it_ford_L2.py 0.30 1.5 --record
 ```
 
-Each run appends one row to `data/phase_space_results.csv` with depth, velocity, verdict, peak drift, and displacement.
+Each run appends one row to `data/phase_space_results.csv`.
 
 **L0 and L1 (local, no GPU needed):**
 
@@ -103,23 +162,16 @@ python3 analysis/make_phase_space.py
 
 ## Physical validation
 
-`analysis/viability_audit.py` checks that the Genesis MPM runs are physically consistent, not just that they finished and produced an output.
-
-Run it from the repo root after pulling `.npz` particle files from Vista:
+`analysis/viability_audit.py` checks mass conservation and momentum transfer from `.npz` particle files, not just that a run finished.
 
 ```bash
 scp jcerrell0629@vista.tacc.utexas.edu:/work/11603/jcerrell0629/vista/particles_d*.npz .
 python3 analysis/viability_audit.py
 ```
 
-The script loads particle positions and velocities from each run and checks two invariants:
+Writes `viability_audit_results.csv`, one row per `.npz` file: run conditions, particle count, total mass, x/z momentum.
 
-- **Mass conservation:** total water mass is computed from particle count and fluid density (RHO0 = 1000 kg/m3). Flagged PASS or FAIL against the expected RHO0 x depth x width x length volume budget.
-- **Momentum:** x and z momentum are summed across all particles at the end of each run. The x component shows how much lateral impulse the water transferred to the vehicle, which is what drives the drift verdict.
-
-Results write to `viability_audit_results.csv` with one row per `.npz` file, covering: run conditions (depth, velocity, verdict), particle count, total mass, and x/z momentum.
-
-The `.npz` files (per-run particle positions, velocities, and metadata) stay on Vista at `/work/11603/jcerrell0629/vista/` and are not committed to this repo. SCP them locally before running the audit.
+`.npz` files stay on Vista, not committed here. SCP before running.
 
 ---
 
@@ -127,33 +179,33 @@ The `.npz` files (per-run particle positions, velocities, and metadata) stay on 
 
 | File | Description | Rows |
 |---|---|---|
-| `data/phase_space_results.csv` | L2 Genesis MPM results | 23 unique conditions |
-| `data/scenario_sweep.csv` | Theoretical L0/L1 grid | 70 rows (depths 0.1–1.0 m x velocities 0.0–3.0 m/s) |
+| `data/phase_space_results.csv` | L2 pilot results (pre-fix, see Status) | 23 unique conditions |
+| `data/scenario_sweep.csv` | Theoretical L0/L1 grid | 70 rows (depths 0.1-1.0 m x velocities 0.0-3.0 m/s) |
 | `data/mu_sweep_results.csv` | Friction sensitivity at (d=0.30 m, v=1.5 m/s) | 8 conditions |
 
 ---
 
 ## Framing
 
-This pipeline is a running version of the Section 3 orchestrator described in Thorpe et al. (arXiv:2605.30542, Physically Viable World Models). The N=23 tested conditions exceed the N >= 19 threshold for 95% marginal coverage conformal prediction (Luo et al. IJRR 2024), which is enough to build a formal safety certificate on L2 verdicts, once the corrections in `PROVISIONAL_STATUS.md` are resolved.
+This pipeline is a running version of the Section 3 orchestrator in Thorpe et al. (arXiv:2605.30542, Physically Viable World Models). N=23 exceeds the N >= 19 threshold for 95% marginal-coverage conformal prediction (Luo et al. IJRR 2024), useful once the corrections in `PROVISIONAL_STATUS.md` are resolved.
 
-This pipeline handles the forward direction (known scene + known flood properties => traversability verdict). Hsiao and Kumar (arXiv:2507.09005) handle the inverse direction (images => material properties via Bayesian optimization). Together they form a closed perception-to-action loop.
+Forward direction: known scene + known flood properties => traversability verdict. Hsiao and Kumar (arXiv:2507.09005) handle the inverse direction: images => material properties via Bayesian optimization.
 
 ---
 
 ## External assets
 
-- **W&B experiment tracking:** [jcerrell29-claremont-mckenna-college/can-it-ford](https://wandb.ai/jcerrell29-claremont-mckenna-college/can-it-ford) — 23+ L2 runs logged with depth, velocity, verdict, peak drift, and displacement
-- **Live Gradio demo:** [josiecerrell/can-it-ford on HuggingFace Spaces](https://huggingface.co/spaces/josiecerrell/can-it-ford) — enter any (depth, velocity, vehicle class) and get L0/L1/L2 verdicts
-- **Hailuo AI comparison:** [`figures/hailuo/`](figures/hailuo/) — three frames from a Hailuo AI video generation of a sedan in d=0.30 m, v=1.5 m/s flood conditions. Hailuo predicts FORD (visually plausible). L2 Genesis MPM predicts NO-FORD (lateral drift 0.328 m). This is the visual model vs physical model comparison for poster Panel 4.
-- **Dataset DOI:** DesignSafe PRJ-6388 — pending publication, timing under revision (see `PROVISIONAL_STATUS.md`).
+- **W&B:** [jcerrell29-claremont-mckenna-college/can-it-ford](https://wandb.ai/jcerrell29-claremont-mckenna-college/can-it-ford)
+- **Gradio demo:** [josiecerrell/can-it-ford on HuggingFace Spaces](https://huggingface.co/spaces/josiecerrell/can-it-ford)
+- **Hailuo comparison:** [`figures/hailuo/`](figures/hailuo/), Hailuo predicts FORD at d=0.30m/v=1.5m/s, pilot L2 predicts NO-FORD, visual-model-vs-physical-model comparison for poster Panel 4
+- **Dataset DOI:** DesignSafe PRJ-6388, timing under revision, see `PROVISIONAL_STATUS.md`
 
 ---
 
 ## Citation
 
-See `CITATION.cff`. DOI will be added here upon DesignSafe publication.
+See `CITATION.cff`. DOI added upon DesignSafe publication.
 
 ## Acknowledgments
 
-PI: Krishna Kumar (GeoElements Lab, UT Austin). Daily mentors: Hassan Iqbal, Cheng-Hsi Hsiao, Sarah Etter. Genesis container environment: Luke Smith (lsmith9003@utexas.edu). Funded by NSF SCIPE REU 2026 (Chishiki AI scholarship, GeoElements).
+PI: Krishna Kumar (GeoElements Lab, UT Austin). Daily mentors: Hassan Iqbal, Cheng-Hsi Hsiao, Sarah Etter. Genesis container: Luke Smith (lsmith9003@utexas.edu). Funded by NSF SCIPE REU 2026 (Chishiki AI scholarship, GeoElements).
