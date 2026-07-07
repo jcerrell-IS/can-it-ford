@@ -36,12 +36,12 @@ def main():
         show_viewer=args.vis,
     )
 
-    frictionless_rigid = gs.materials.Rigid(needs_coup=True, coup_friction=0.0, rho=604)
+    vehicle_rigid = gs.materials.Rigid(needs_coup=True, coup_friction=0.4, rho=604)
 
     plane   = scene.add_entity(morph=gs.morphs.Plane())
 
     water   = scene.add_entity(
-        material=gs.materials.SPH.Liquid(mu=0.001, sampler="regular"),
+        material=gs.materials.SPH.Liquid(mu=0.005, sampler="regular"),
         morph=gs.morphs.Box(
             pos=(1.0, 0.0, water_depth / 2.0),
             size=(1.8, 1.8, water_depth),
@@ -50,7 +50,7 @@ def main():
     )
 
     vehicle = scene.add_entity(
-        material=frictionless_rigid,
+        material=vehicle_rigid,
         morph=gs.morphs.Box(
             pos=(1.0, 0.0, 0.75),
             size=(1.0, 1.6, 1.5),
@@ -133,7 +133,7 @@ def main():
     print(f"depth={water_depth}m  velocity={water_velocity}m/s  verdict={verdict}")
     print(f"peak x_disp={max_x_disp:.4f}m  final x_disp={final_xd:.4f}m  final y_disp={final_yd:.4f}m  max_vel={max_vel_mag:.4f}m/s")
 
-    csv_path    = "phase_space_results.csv"
+    csv_path    = "phase_space_results_v2.csv"
     file_exists = os.path.isfile(csv_path)
     with open(csv_path, "a", newline="") as f:
         writer = csv.DictWriter(
