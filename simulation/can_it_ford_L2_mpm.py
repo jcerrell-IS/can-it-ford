@@ -2,6 +2,7 @@ import argparse
 import csv
 import os
 import sys
+from datetime import datetime
 
 import genesis as gs
 
@@ -22,7 +23,7 @@ def main():
     gs.init(precision="32", logging_level="warning")
 
     scene = gs.Scene(
-        sim_options=gs.options.SimOptions(dt=4e-3, substeps=16),
+        sim_options=gs.options.SimOptions(dt=4e-3, substeps=20),
         mpm_options=gs.options.MPMOptions(
             grid_density=64,
             lower_bound=(0.0, -1.0, 0.0),
@@ -37,7 +38,7 @@ def main():
         show_viewer=args.vis,
     )
 
-    frictionless_rigid = gs.materials.Rigid(needs_coup=True, coup_friction=0.0, rho=604)
+    vehicle_rigid = gs.materials.Rigid(needs_coup=True, coup_friction=0.4, rho=604)
 
     plane   = scene.add_entity(morph=gs.morphs.Plane())
 
@@ -51,7 +52,7 @@ def main():
     )
 
     vehicle = scene.add_entity(
-        material=frictionless_rigid,
+        material=vehicle_rigid,
         morph=gs.morphs.Box(
             pos=(1.0, 0.0, 0.75),
             size=(1.0, 1.6, 1.5),
@@ -107,10 +108,13 @@ def main():
         if i % 50 == 0:
             print(f"Step {i}: x_disp={x_disp:.4f}m  vel={vehicle_vel}")
 
+    depth_str = str(water_depth).replace(".", "p")
+    vel_str   = str(water_velocity).replace(".", "p")
+    run_stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    run_tag   = f"d{depth_str}_v{vel_str}_grid64_cf0p4_{run_stamp}"
+
     if cam is not None:
-        depth_str  = str(water_depth).replace(".", "p")
-        vel_str    = str(water_velocity).replace(".", "p")
-        video_path = f"simulation_mpm_d{depth_str}_v{vel_str}.mp4"
+        video_path = f"simulation_mpm_{run_tag}.mp4"
         cam.stop_recording(save_to_filename=video_path, fps=60)
         print(f"Saved video: {video_path}")
 
@@ -122,24 +126,24 @@ def main():
     import numpy as np
     pos_final = water.get_particles_pos().cpu().numpy()
     vel_final = water.get_particles_vel().cpu().numpy()
-    depth_str = str(water_depth).replace(".", "p")
-    vel_str   = str(water_velocity).replace(".", "p")
-    npz_path  = f"particles_mpm_d{depth_str}_v{vel_str}.npz"
+    npz_path  = f"particles_mpm_{run_tag}.npz"
     np.savez(npz_path, pos=pos_final, vel=vel_final,
              depth=water_depth, velocity=water_velocity,
-             verdict=verdict, peak_x_disp=max_x_disp, rho=604)
+             verdict=verdict, peak_x_disp=max_x_disp, rho=604,
+             coup_friction=0.4, grid_density=64, run_tag=run_tag)
     print(f"Saved particle state: {npz_path}")
 
     print(f"\n=== RESULT ===")
     print(f"depth={water_depth}m  velocity={water_velocity}m/s  verdict={verdict}")
     print(f"peak x_disp={max_x_disp:.4f}m  final x_disp={final_xd:.4f}m  final y_disp={final_yd:.4f}m  max_vel={max_vel_mag:.4f}m/s")
+    print(f"run_tag={run_tag}")
 
     csv_path    = "phase_space_results_mpm.csv"
     file_exists = os.path.isfile(csv_path)
     with open(csv_path, "a", newline="") as f:
         writer = csv.DictWriter(
             f,
-            fieldnames=["depth_m", "velocity_ms", "verdict", "peak_x_disp_m", "final_x_disp_m", "final_y_disp_m", "max_vel_ms"]
+            fieldnames=["depth_m", "velocity_ms", "verdict", "peak_x_disp_m", "final_x_disp_m", "final_y_disp_m", "max_vel_ms", "run_tag"]
         )
         if not file_exists:
             writer.writeheader()
@@ -151,6 +155,7 @@ def main():
             "final_x_disp_m":  round(final_xd, 4),
             "final_y_disp_m":  round(final_yd, 4),
             "max_vel_ms":      round(max_vel_mag, 4),
+            "run_tag":         run_tag,
         })
     print(f"Saved to {csv_path}")
 
