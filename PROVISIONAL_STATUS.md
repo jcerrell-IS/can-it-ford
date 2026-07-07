@@ -1,5 +1,3 @@
-ytes
-
 # Provisional Status and Corrections Log
 
 This file exists so the project's revision history is visible, not hidden. The README's "Key finding" section is kept as originally written. This file documents what has changed since, and why, so a reader can see where this started and where it is going.
