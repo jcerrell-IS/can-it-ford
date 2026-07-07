@@ -7,3 +7,4 @@ ssh_config_tacc_block.txt
 ssh_config_tacc_block.txt
 logs/
 figures/hailuo/*.mp4
+.env
