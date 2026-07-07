@@ -27,13 +27,13 @@ ax_vr = fig.add_axes([0.525, 0.082, 0.448, 0.088])
 ax_f  = fig.add_axes([0.000, 0.000, 1.000, 0.075])
 
 fig.text(0.500, 0.963,
-    'Can It Ford?   Scalar Criterion vs. Genesis MPM at d = 0.30 m, v = 1.5 m/s',
+    'Can It Ford?   Scalar Criterion vs. Genesis SPH Pilot at d = 0.30 m, v = 1.5 m/s',
     ha='center', va='center', fontsize=20, fontweight='bold', color='#111111')
 fig.text(0.254, 0.930, 'L1 Scalar Criterion  (AR&R)',
     ha='center', va='center', fontsize=16, fontweight='bold', color='#AA2200')
 fig.text(0.254, 0.912, 'No force computation performed',
     ha='center', va='center', fontsize=13, color='#999', style='italic')
-fig.text(0.749, 0.930, 'Genesis MPM L2 Simulation  (This work)',
+fig.text(0.749, 0.930, 'Genesis SPH Pilot, L2 (This work)',
     ha='center', va='center', fontsize=16, fontweight='bold', color='#1a1a1a')
 fig.text(0.749, 0.912, 'Rigid body + weakly-compressible SPH water',
     ha='center', va='center', fontsize=13, color='#999', style='italic')

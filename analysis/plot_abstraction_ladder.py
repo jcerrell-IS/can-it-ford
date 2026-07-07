@@ -15,9 +15,9 @@ l2_open_verdict = [0]
 fig, ax = plt.subplots(figsize=(10, 5.5))
 ax.plot(depths_l0, l0_verdict, 'bs-', markersize=9, linewidth=1.8, label='L0: Static Depth Threshold')
 ax.plot(depths_l1, l1_verdict_v15, 'g^--', markersize=9, linewidth=1.8, label='L1: AR&R Depth-Velocity (v=1.5 m/s)')
-ax.plot(depths_l2_still, l2_still, 'ro-', markersize=9, linewidth=1.8, label='L2: Genesis MPM (still water)')
+ax.plot(depths_l2_still, l2_still, 'ro-', markersize=9, linewidth=1.8, label='L2: Genesis SPH Pilot (still water)')
 ax.scatter(l2_open_depth, l2_open_verdict, color='darkred', s=160, marker='X', zorder=6,
-           label='L2: Genesis MPM (open-channel, v=1.5 m/s) -- KEY RESULT')
+           label='L2: Genesis SPH Pilot (open-channel, v=1.5 m/s) -- KEY RESULT')
 ax.axvline(0.30, color='gray', linestyle='--', linewidth=1.8,
            label='NWS 12in / Smith-Modra-Felder sedan threshold')
 ax.axvline(0.60, color='dimgray', linestyle=':', linewidth=1.2, label='NWS 24in threshold')

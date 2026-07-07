@@ -45,7 +45,7 @@ fig.update_layout(
     title=dict(
         text="Can It Ford? — L0/L1/L2 Abstraction Ladder Phase Space<br>"
              "<sub>At d=0.30m, v=1.5m/s: L1 scalar criterion misses "
-             "persistent lateral drag captured by Genesis MPM (L2)</sub>",
+             "persistent lateral drag captured by Genesis SPH Pilot (L2)</sub>",
         font=dict(size=15)
     ),
     xaxis=dict(title="Flow Velocity (m/s)", range=[0,3.5], dtick=0.5,

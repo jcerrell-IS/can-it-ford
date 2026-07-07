@@ -2,7 +2,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 
-df = pd.read_csv('phase_space_results.csv')
+df = pd.read_csv('data/phase_space_results.csv')
 df = df.drop_duplicates(subset=['depth_m', 'velocity_ms'], keep='last')
 
 df['L1_haz'] = df['depth_m'] * df['velocity_ms']
@@ -83,7 +83,7 @@ ax.text(0.60, 0.42,
 
 ax.set_xlabel('Water Depth (m)', fontsize=12)
 ax.set_ylabel('Flow Velocity (m/s)', fontsize=12)
-ax.set_title('Can It Ford? -- L2 (Genesis MPM) Phase Space vs L1 (AR&R) Predictions',
+ax.set_title('Can It Ford? -- L2 (Genesis SPH Pilot) Phase Space vs L1 (AR&R) Predictions',
              fontsize=12, fontweight='bold')
 ax.set_xlim(0.05, 0.75)
 ax.set_ylim(-0.10, 2.95)
