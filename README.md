@@ -19,78 +19,28 @@ Three methods run side by side to find the simplest one that still gets the answ
 | Level | Model | Source |
 |---|---|---|
 | **L0** | Static depth threshold (d >= 0.15 m => NO-FORD) | NWS Turn Around Don't Drown |
-| **L1** | AR&R hazard scalar D x V, threshold 0.60 m²/s (4WD class) | Shand et al. 2011 |
+| **L1** | AR&R hazard scalar D x V, threshold 0.60 m²/s (4WD class), draft/interim criterion per the source report, not an endorsed safety standard | Shand et al. 2011 |
 | **L2** | Genesis MPM weakly-compressible water + rigid vehicle coupling | This project |
 
 ---
 
-## Status: pipeline under active correction (July 7, 2026)
+## Status: pipeline under active correction (July 7, 2026, session 5)
 
-The 23-condition L2 result below was run on synthetic box geometry using Genesis's SPH solver, not the MPM pipeline this repo describes. No real gsplat-reconstructed scene and no PhysGaussian bridge have been built yet. Full severity-ranked log: [`PROVISIONAL_STATUS.md`](PROVISIONAL_STATUS.md).
+The 23-condition L2 result below was run on synthetic box geometry using Genesis's SPH solver, not the MPM pipeline this repo describes. No real gsplat-reconstructed scene and no PhysGaussian bridge have been built yet. Full severity-ranked log, including two corrections made after an initial fix turned out to be wrong: [`PROVISIONAL_STATUS.md`](PROVISIONAL_STATUS.md).
 
-Three bugs found and fixed this session, in the order I found them:
+Five bugs found and fixed across five sessions today, two of them (viscosity, friction) not caught until a source-cross-validated audit against this project's own technical review documents:
 
-**Bug 1: vehicle had no mass set.**
+**Bug 1, vehicle had no mass set.** No `rho` argument meant the vehicle floated by construction. Fixed with `rho=604` on a resized box, holding the vehicle at roughly 1,450kg.
 
-```python
-# before
-frictionless_rigid = gs.materials.Rigid(needs_coup=True, coup_friction=0.0)
-```
+**Bug 2, vehicle spawned on top of the water, not in it.** Position was pinned to `water_depth`, so the vehicle's bottom face sat exactly at the surface at every depth tested. Fixed by pinning to the ground plane instead, `pos=(1.0, 0.0, 0.75)`.
 
-No `rho` argument means Genesis falls back to its internal default. For the original box size (0.4 x 0.2 x 0.15 m) that gave an effective mass somewhere in the 2.4-12kg range depending on what the true default resolves to, against a real curb weight of roughly 1,400-1,500kg. The vehicle floated. `coup_friction` was mathematically irrelevant at any value because ground normal force was near zero.
+**Bug 3, timestep too coarse.** `dt=1e-2` was 2.5x above Genesis's own MPM coupling example range, caused a numerical blowup at an extreme test case. Fixed with `dt=4e-3`.
 
-```python
-# after
-frictionless_rigid = gs.materials.Rigid(needs_coup=True, coup_friction=0.0, rho=604)
-```
+**Bug 4, water viscosity, fixed wrong then corrected.** An earlier pass set `mu=0.001`, reasoning it matched real water's SI viscosity. That reasoning doesn't hold, Genesis's `mu` isn't SI dynamic viscosity, it's an internal WCSPH coefficient, and the engine's own default is `mu=0.005`. Corrected to `mu=0.005`, the documented default, not a guess in either direction.
 
-**Bug 2: vehicle spawned on top of the water, not in it.**
+**Bug 5, friction coupling never actually fixed.** `coup_friction=0.0` was flagged as a concern back when the mass bug was found, but the value itself was never changed until today. Every result up to and including the milestone table below ran with zero water-to-vehicle and vehicle-to-ground friction. Fixed to `coup_friction=0.4`, cited (Azhar et al. 2023, Smith et al. 2019, defensible range 0.3-0.6). Variable renamed from `frictionless_rigid` to `vehicle_rigid` since the old name was no longer accurate.
 
-```python
-# before
-vehicle = scene.add_entity(
-    material=frictionless_rigid,
-    morph=gs.morphs.Box(
-        pos=(1.0, 0.0, water_depth + 0.075),
-        size=(0.4, 0.2, 0.15),
-        fixed=False,
-    ),
-)
-```
-
-The water box is centered at `water_depth / 2.0` with height `water_depth`, so its top surface sits at exactly `z = water_depth`. The vehicle's `pos.z = water_depth + 0.075` with box height 0.15 puts its bottom face at exactly `z = water_depth` too, every single depth tested. I confirmed this visually by rendering `simulation_d0p6_v1p5.mp4` before the fix: the vehicle sits balanced on the surface, not submerged.
-
-```python
-# after
-vehicle = scene.add_entity(
-    material=frictionless_rigid,
-    morph=gs.morphs.Box(
-        pos=(1.0, 0.0, 0.75),
-        size=(1.0, 1.6, 1.5),
-        fixed=False,
-    ),
-)
-```
-
-Pinned to the ground plane instead of to `water_depth`, so shallow water partially submerges it and deep water submerges more of it, the way fording actually works. Also scaled the box up from a 10x-undersized proxy to something closer to real vehicle dimensions, and recomputed `rho` for the new volume to keep the mass target the same (~1,450kg for the new 2.4 m³ box: `1450 / 2.4 = 604`).
-
-**Bug 3: timestep too coarse.**
-
-```python
-# before
-sim_options=gs.options.SimOptions(dt=1e-2, substeps=10),
-```
-
-After fixing mass and geometry, a stress test (d=1.0m, v=3.0m/s) spiked to a 1m displacement with a velocity vector pointing backward against the flow, then crashed. That's a numerical blowup, not real physics. Genesis's own `flush_cubes.py` example uses `dt=4e-3, substeps=20` for MPM liquid coupling, 2.5x finer than what this script was running.
-
-```python
-# after
-sim_options=gs.options.SimOptions(dt=4e-3, substeps=10),
-```
-
-Reran the same case that crashed. Clean finish, no crash, oscillatory transient (push, overshoot, partial recovery), velocity components stayed bounded under 0.5 m/s the whole run.
-
-**Result after all three fixes, still on SPH, still on the synthetic box/plane scene:**
+**Result below is from before bugs 4 and 5 were corrected, kept for the record, not yet re-trusted:**
 
 | depth, velocity | AR&R hazard | peak x_disp | verdict |
 |---|---|---|---|
@@ -99,25 +49,23 @@ Reran the same case that crashed. Clean finish, no crash, oscillatory transient 
 | 0.6m, 2.5m/s | 1.50 | 0.0425m | FORD (close) |
 | 1.0m, 3.0m/s | 3.00 | 0.1836m | NO-FORD |
 
-Displacement now scales monotonically with severity, for the first time this project has produced that. The 1.0m/3.0m/s case is 3.7x over the 0.05m `DRIFT_THRESHOLD`, and it agrees with the AR&R L1 hazard flag at that same condition (hazard=3.0, far above the 0.60 threshold), a real cross-check pass between the two methods on corrected physics.
+Displacement scaled monotonically with severity, a genuine first for this project, but every row here ran with zero friction and an unvalidated viscosity value. This table needs a full rerun under the corrected 5-bug stack before any of these specific numbers are trusted or shown to anyone as a result. Output CSV filename also changed to `phase_space_results_v2.csv` to avoid a silent header-schema collision with the existing 6-column `data/phase_space_results.csv`.
 
-Sanity-checked this before trusting it: compared the water's total x-momentum at the final step against the vehicle's estimated momentum change. Water: 320.1 kg·m/s. Vehicle: roughly 1450 x 0.47 = 681.5 kg·m/s. Same order of magnitude, not exact, not expected to be exact since this isn't a closed system. Rules out the push coming from nowhere, doesn't prove the transfer is exact.
+**Also confirmed and still open, not yet fixed:** the domain is a closed, reflecting `CubeBoundary`, not an open channel, and the vehicle occupies roughly half the domain's length. Reflected waves off the downstream wall likely contaminate any run of meaningful length. This applies to the MPM version too. The single most decisive untested question: does the drift result survive an enlarged or damped domain.
 
-**One theory ruled out, checked against Genesis's actual source, not assumed:** SPH `particle_size` defaults to 0.02m, giving 10+ particles across even the original undersized vehicle face. That's fine resolution. The near-zero displacement was Bugs 1 and 2 above, not a weak SPH-rigid coupling kernel.
-
-**Still open:** `DRIFT_THRESHOLD=0.05m` has no citation. `peak_x_disp`, the value the verdict is actually based on, is never written to `phase_space_results.csv`, only printed to terminal and saved per-run in `.npz`. `max_vel_ms` in the CSV tracks the vehicle's initial settling speed, not flow velocity. `rho` isn't saved to the `.npz` either, blocking a WCSPH density-bound check. None of these are fixed yet.
+Full detail on all five bugs, the boundary-condition question, and what carries over to the MPM migration: [`PROVISIONAL_STATUS.md`](PROVISIONAL_STATUS.md).
 
 ---
 
 ## Key finding (from the synthetic pilot, not yet the real-scene result)
 
-**23 unique (depth, velocity) conditions** tested via L2 on the SPH/box-geometry pilot scene, before the July 7 mass, geometry, and timestep fixes above.
+**23 unique (depth, velocity) conditions** tested via L2 on the SPH/box-geometry pilot scene, before any of the July 7 fixes above.
 
 - **L1 / L2 agreement rate: 30.4%** (7 of 23 conditions)
 - **16 conditions:** L1 predicts FORD, L2 produces lateral drift exceeding 0.05 m (NO-FORD)
 - **Friction-invariant:** drift stays at 0.328-0.400 m across friction coefficients 0.0-0.7
 
-This is very likely a mass-bug artifact, not a physics result. See the Status section above. Kept here, unedited, because it's the reason the rebuild exists, not because it's trusted.
+This is very likely a mass-bug artifact, not a physics result: a floating, near-massless body has ground normal force approximately zero, so friction is mathematically irrelevant regardless of its value, exactly the signature reported here. See the Status section above. Kept here, unedited, because it's the reason the rebuild exists, not because it's trusted.
 
 ---
 
@@ -137,6 +85,7 @@ The `simulation/` directory has scripts for all three abstraction levels.
 simulation/           L0, L1, L2 scripts — run on Vista GH200 via Apptainer
 analysis/             Phase space figures, W&B logging, physical validation
 data/                 Experiment CSVs (L2 results, L0/L1 grid, friction sweep)
+citations/            Full bibliography and source PDFs for every threshold used
 figures/              Output figures and comparison assets
 scripts/              Utility: data sync, manifest, Vista pull
 designsafe-staging/   Files staged for DesignSafe DOI (PRJ-6388, pending publication)
@@ -162,7 +111,7 @@ Add `--record` to save a headless video:
 apptainer exec --nv $GENESIS_PATH python3 simulation/can_it_ford_L2.py 0.30 1.5 --record
 ```
 
-Each run appends one row to `data/phase_space_results.csv`.
+Each run appends one row to `phase_space_results_v2.csv`.
 
 **L0 and L1 (local, no GPU needed):**
 
@@ -226,7 +175,7 @@ Forward direction: known scene + known flood properties => traversability verdic
 
 ## Citation
 
-See `CITATION.cff`. DOI added upon DesignSafe publication.
+See `CITATION.cff` for citing this repository. See [`citations/README.md`](citations/README.md) for the full bibliography of sources this project's parameters and thresholds trace back to. DOI added upon DesignSafe publication.
 
 ## Acknowledgments
 
