@@ -2,6 +2,7 @@ import argparse
 import csv
 import os
 import sys
+from datetime import datetime
 
 import genesis as gs
 
@@ -106,10 +107,13 @@ def main():
         if i % 50 == 0:
             print(f"Step {i}: x_disp={x_disp:.4f}m  vel={vehicle_vel}")
 
+    depth_str = str(water_depth).replace(".", "p")
+    vel_str   = str(water_velocity).replace(".", "p")
+    run_stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    run_tag   = f"d{depth_str}_v{vel_str}_mu0p005_cf0p4_{run_stamp}"
+
     if cam is not None:
-        depth_str  = str(water_depth).replace(".", "p")
-        vel_str    = str(water_velocity).replace(".", "p")
-        video_path = f"simulation_d{depth_str}_v{vel_str}.mp4"
+        video_path = f"simulation_{run_tag}.mp4"
         cam.stop_recording(save_to_filename=video_path, fps=60)
         print(f"Saved video: {video_path}")
 
@@ -121,24 +125,24 @@ def main():
     import numpy as np
     pos_final = water.get_particles_pos().cpu().numpy()
     vel_final = water.get_particles_vel().cpu().numpy()
-    depth_str = str(water_depth).replace(".", "p")
-    vel_str   = str(water_velocity).replace(".", "p")
-    npz_path  = f"particles_d{depth_str}_v{vel_str}.npz"
+    npz_path  = f"particles_{run_tag}.npz"
     np.savez(npz_path, pos=pos_final, vel=vel_final,
              depth=water_depth, velocity=water_velocity,
-             verdict=verdict, peak_x_disp=max_x_disp, rho=604)
+             verdict=verdict, peak_x_disp=max_x_disp, rho=604,
+             coup_friction=0.4, mu=0.005, run_tag=run_tag)
     print(f"Saved particle state: {npz_path}")
 
     print(f"\n=== RESULT ===")
     print(f"depth={water_depth}m  velocity={water_velocity}m/s  verdict={verdict}")
     print(f"peak x_disp={max_x_disp:.4f}m  final x_disp={final_xd:.4f}m  final y_disp={final_yd:.4f}m  max_vel={max_vel_mag:.4f}m/s")
+    print(f"run_tag={run_tag}")
 
     csv_path    = "phase_space_results_v2.csv"
     file_exists = os.path.isfile(csv_path)
     with open(csv_path, "a", newline="") as f:
         writer = csv.DictWriter(
             f,
-            fieldnames=["depth_m", "velocity_ms", "verdict", "peak_x_disp_m", "final_x_disp_m", "final_y_disp_m", "max_vel_ms"]
+            fieldnames=["depth_m", "velocity_ms", "verdict", "peak_x_disp_m", "final_x_disp_m", "final_y_disp_m", "max_vel_ms", "run_tag"]
         )
         if not file_exists:
             writer.writeheader()
@@ -150,6 +154,7 @@ def main():
             "final_x_disp_m":  round(final_xd, 4),
             "final_y_disp_m":  round(final_yd, 4),
             "max_vel_ms":      round(max_vel_mag, 4),
+            "run_tag":         run_tag,
         })
     print(f"Saved to {csv_path}")
 
