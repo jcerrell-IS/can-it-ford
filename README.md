@@ -10,6 +10,10 @@
 
 ---
 
+> **Status (July 7, 2026): the finding below is provisional.** It was produced on synthetic box geometry using Genesis's SPH solver, with a vehicle mass bug that makes the simulated vehicle roughly 100 to 600 times lighter than a real car, so it floats by construction. This means the friction-invariant result below is a likely artifact, not yet a confirmed physical finding. Nothing below has been changed or deleted. Full corrections, severity ranking, and rebuild plan: [`PROVISIONAL_STATUS.md`](PROVISIONAL_STATUS.md).
+
+---
+
 ## What this does
 
 Given a real flooded road reconstructed from video using 3D Gaussian splatting, this pipeline answers: **can a specific autonomous vehicle ford this crossing?**
@@ -131,7 +135,7 @@ The `.npz` files (per-run particle positions, velocities, and metadata) stay on 
 
 ## Framing
 
-This pipeline is a running version of the Section 3 orchestrator described in Thorpe et al. (arXiv:2605.30542, Physically Viable World Models). The N=23 tested conditions exceed the N >= 19 threshold for 95% marginal coverage conformal prediction (Luo et al. IJRR 2024), which is enough to build a formal safety certificate on L2 verdicts.
+This pipeline is a running version of the Section 3 orchestrator described in Thorpe et al. (arXiv:2605.30542, Physically Viable World Models). The N=23 tested conditions exceed the N >= 19 threshold for 95% marginal coverage conformal prediction (Luo et al. IJRR 2024), which is enough to build a formal safety certificate on L2 verdicts, once the corrections in `PROVISIONAL_STATUS.md` are resolved.
 
 This pipeline handles the forward direction (known scene + known flood properties => traversability verdict). Hsiao and Kumar (arXiv:2507.09005) handle the inverse direction (images => material properties via Bayesian optimization). Together they form a closed perception-to-action loop.
 
@@ -142,7 +146,7 @@ This pipeline handles the forward direction (known scene + known flood propertie
 - **W&B experiment tracking:** [jcerrell29-claremont-mckenna-college/can-it-ford](https://wandb.ai/jcerrell29-claremont-mckenna-college/can-it-ford) — 23+ L2 runs logged with depth, velocity, verdict, peak drift, and displacement
 - **Live Gradio demo:** [josiecerrell/can-it-ford on HuggingFace Spaces](https://huggingface.co/spaces/josiecerrell/can-it-ford) — enter any (depth, velocity, vehicle class) and get L0/L1/L2 verdicts
 - **Hailuo AI comparison:** [`figures/hailuo/`](figures/hailuo/) — three frames from a Hailuo AI video generation of a sedan in d=0.30 m, v=1.5 m/s flood conditions. Hailuo predicts FORD (visually plausible). L2 Genesis MPM predicts NO-FORD (lateral drift 0.328 m). This is the visual model vs physical model comparison for poster Panel 4.
-- **Dataset DOI:** DesignSafe PRJ-6388 — pending publication July 2026. Will include L2 scripts, CSVs, figures, and README.
+- **Dataset DOI:** DesignSafe PRJ-6388 — pending publication, timing under revision (see `PROVISIONAL_STATUS.md`).
 
 ---
 
