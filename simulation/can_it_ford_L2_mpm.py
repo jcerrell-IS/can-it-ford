@@ -26,8 +26,8 @@ def main():
         sim_options=gs.options.SimOptions(dt=4e-3, substeps=20),
         mpm_options=gs.options.MPMOptions(
             grid_density=64,
-            lower_bound=(0.0, -1.0, 0.0),
-            upper_bound=(2.0,  1.0, 2.4),
+            lower_bound=(-0.1, -1.0, -0.1),
+            upper_bound=(2.1,  1.0, 2.5),
         ),
         vis_options=gs.options.VisOptions(visualize_mpm_boundary=True),
         viewer_options=gs.options.ViewerOptions(
