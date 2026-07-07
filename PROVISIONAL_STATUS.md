@@ -2,13 +2,29 @@
 
 This file exists so the project's revision history is visible, not hidden. The README's "Key finding" section is kept as originally written. This file documents what has changed since, and why, so a reader can see where this started and where it is going.
 
-Last updated: July 7, 2026 (session 5).
+Last updated: July 7, 2026 (session 6).
 
 ---
 
 ## Why this file exists
 
 The README currently states the L2 finding (23 conditions, 16 divergence points, 30.4% L1/L2 agreement, friction-invariant drift) as settled fact. As of this update, that finding is **provisional**, pending a rebuild described below. Nothing in the README has been deleted. This file is the honest accounting layered on top.
+
+---
+
+## July 7 session 6: first clean MPM run
+
+`can_it_ford_L2_mpm.py`'s first attempt crashed on `add_entity`, MPM pads whatever domain you specify inward by `3*dx` (confirmed exactly `0.046875m` at `grid_density=64`), and the water box's floor sat exactly on `z=0`, outside that padded interior. Not a bug in the fix stack, a solver-specific domain requirement SPH doesn't have. Fixed by expanding the domain from `(0,-1,0)-(2,1,2.4)` to `(-0.1,-1,-0.1)-(2.1,1,2.5)`. Full writeup in `REBUILD_REFERENCE.md`.
+
+**First result on real MPM, same fix stack as session 5 (rho=604, coup_friction=0.4), grid_density=64, substeps=20:**
+
+```
+depth=0.3m velocity=1.5m/s verdict=FORD peak_x_disp=0.0038m final_x_disp=0.0038m max_vel=0.1167m/s
+```
+
+Agrees with AR&R L1 at this condition (hazard = 0.3*1.5 = 0.45, below the 0.60 threshold, both say FORD). **Not yet directly comparable to the SPH result at the same condition**, the only SPH run under the full 5-bug fix stack so far was the d=1.0/v=3.0 headline case, not this milder one. A same-condition SPH rerun at d=0.3/v=1.5 under the full stack is the natural next comparison, not yet done.
+
+**Still open before this counts as more than a smoke test:** `grid_density=64` is below the `128` minimum flagged for real car geometry (issue #600 tunneling risk), acceptable for now since the vehicle is still a box proxy, not yet acceptable once a real mesh is in place. Domain is still the small synthetic-scale box, not the real-scene rule-of-thumb size. Only one condition tested, not a sweep.
 
 ---
 
@@ -114,9 +130,13 @@ Session 4 set `mu=0.001` believing it matched real water's SI viscosity. Genesis
 
 `coup_friction=0.0` was identified as a problem during the session 2 mass-bug discussion but never actually changed until session 5. Every result from session 2 onward, including the session 3 milestone, ran with zero friction. Fixed to `coup_friction=0.4`, cited (Azhar et al. 2023, Smith et al. 2019, defensible range 0.3-0.6).
 
-### 2. Solver mismatch
+### 1f. MPM boundary safety padding (discovered and fixed July 7, session 6)
 
-All results to date were run on Genesis's SPH solver, not MPM. Not yet corrected in the running code, an untested MPM draft exists at `simulation/can_it_ford_L2_mpm.py`.
+MPM pads the specified domain inward by `3*dx` on every face, SPH does not do this. The SPH-sized domain crashed on first MPM use. Fixed by expanding the domain with margin.
+
+### 2. Solver mismatch, now partially resolved
+
+SPH results were run on Genesis's SPH solver. MPM draft now runs clean on one test condition as of session 6, not yet swept.
 
 ### 3. Synthetic geometry, not a reconstructed scene
 
@@ -124,7 +144,7 @@ No real gsplat-reconstructed flooded scene has been ingested anywhere in the pip
 
 ### 4. Closed, reflecting domain boundary (known, still unaddressed)
 
-Genesis's SPH solver uses a `CubeBoundary`, reflecting on all six faces, not an open channel. The domain is 2.0m long in x, the vehicle occupies roughly x=0.5 to 1.5, half the domain length, with only 0.5m of clearance to the downstream wall. At velocities up to 3.0 m/s over a 500-step horizon, reflected waves off that wall very likely reach the vehicle before the run ends. This applies to the MPM version too, Genesis has no native inlet/outlet boundary for either solver in this version. The single most decisive unresolved test: does the drift result survive an enlarged or damped domain, or does it disappear, which would mean the closed tank was generating the drift rather than the flow.
+Genesis's SPH solver uses a `CubeBoundary`, reflecting on all six faces, not an open channel. Applies to MPM too, confirmed no inlet/outlet API exists in v1.2.0. The single most decisive unresolved test: does the drift result survive an enlarged or damped domain.
 
 ### 5. DRIFT_THRESHOLD = 0.05m, citation resolved, code unchanged
 
@@ -132,21 +152,21 @@ No published paper defines a fixed 0.05m displacement threshold. Reframed as rou
 
 ### 6. Vehicle geometry is a proxy, not a documented consistent scale
 
-Current box is 1.0 x 1.6 x 1.5m, 2.4 cubic meters. A real vehicle's external envelope is closer to 10-12 cubic meters, or the scene would need a consistently applied 1:10 scale (Froude-similarity-adjusted depth and velocity too, not just the vehicle). Box-proxy vehicles are supported in the literature (Xiong et al. 2024), this specific undersized aspect ratio without a stated scale convention is not yet.
+Current box is 1.0 x 1.6 x 1.5m, 2.4 cubic meters. Real vehicle mass better sourced now via EPA 2025 Automotive Trends Report (~1975-2014 kg average), see `REBUILD_REFERENCE.md`.
 
 ### 7. CSV and NPZ logging gaps (resolved July 7, sessions 4-5)
 
-`peak_x_disp_m` is now written to the CSV. `rho=604` is now saved to the `.npz`. Output filename changed in session 5 to `phase_space_results_v2.csv` to avoid a header-schema collision with the existing 6-column committed file.
+`peak_x_disp_m` is now written to the CSV. `rho=604` is now saved to the `.npz`. Output filename changed in session 5 to `phase_space_results_v2.csv`.
 
 ---
 
 ## What carries over to MPM, and what doesn't
 
-**Carries over directly, validated on this pilot scene as of session 5:** `rho=604`, `size=(1.0, 1.6, 1.5)`, `pos=(1.0, 0.0, 0.75)` for the vehicle. `coup_friction=0.4` as a starting point, same citation basis applies to MPM-rigid coupling. `dt=4e-3` as a starting point only, MPM's actual stability rule is different (below).
+**Carries over directly, validated on the pilot scene, confirmed working as of session 6:** `rho=604`, `size=(1.0, 1.6, 1.5)`, `pos=(1.0, 0.0, 0.75)` for the vehicle. `coup_friction=0.4`. `dt=4e-3, substeps=20`.
 
-**Does not carry over as-is:** MPM stability depends on grid spacing, not just timestep. At Genesis's default `grid_density=64`, `dx=1/64=0.015625m`, Genesis warns when `substep_dt > 2e-2 * dx`, so substep time must stay under `3.125e-4`s. `dt=4e-3` needs `substeps=16-20` for MPM, not 10. The `mu=0.005` SPH viscosity value has no direct MPM equivalent, `MPM.Liquid` defaults to `viscous=False` and derives its stress response from `E=1e6, nu=0.2`, not a viscosity coefficient in the SPH sense, do not carry `mu` over to the MPM script.
+**Does not carry over:** `mu` has no MPM.Liquid equivalent. MPM domains need `3*dx` safety padding beyond the geometry, SPH domains don't.
 
-**Vehicle representation does not change.** Stays a `Rigid` entity, `needs_coup=True`/`coup_friction`, against `MPM.Liquid` instead of `SPH.Liquid`.
+**Vehicle representation does not change.** Stays a `Rigid` entity, `needs_coup=True`/`coup_friction`, against `MPM.Liquid` instead of `SPH.Liquid`, confirmed working session 6.
 
 **Template for the migration:** `examples/coupling/water_wheel.py --solver mpm`, `examples/coupling/sand_wheel.py`, `examples/coupling/flush_cubes.py`.
 
@@ -154,7 +174,7 @@ Current box is 1.0 x 1.6 x 1.5m, 2.4 cubic meters. A real vehicle's external env
 
 ## Possible shortcut
 
-Luke Smith's Tutorial 3 (`taichi_mpm` codebase) already contains a working real-gsplat-to-MPM bridge: `preprocess.py` ingests a real `.ply` file, `run_mpm.py` simulates it, demoed on a Toyota Corolla gsplat. Open question for Hassan or Cheng-Hsi: can this feed a Genesis scene on Vista.
+Cheng-Hsi already has a real flood scene splat dataset with a vehicle (`chhsiao93/hicss-splat` on Hugging Face), status of the vehicle as real mesh vs placeholder unconfirmed, asked him directly July 7. Luke Smith's Tutorial 3 (`taichi_mpm` codebase) also has a working real-gsplat-to-MPM bridge, demoed on a Toyota Corolla.
 
 ---
 
@@ -163,12 +183,13 @@ Luke Smith's Tutorial 3 (`taichi_mpm` codebase) already contains a working real-
 1. ~~Push the corrected script (mass, geometry, timestep) to this repo~~ **Done, July 7.**
 2. ~~Fix the CSV and NPZ logging gaps~~ **Done, July 7.**
 3. ~~Fix friction coupling and correct the viscosity overcorrection~~ **Done, July 7, session 5.**
-4. Rerun all conditions with the full corrected fix stack (mass, geometry, timestep, viscosity, friction, new CSV filename)
-5. Test whether the drift result survives an enlarged/damped domain, the single most decisive open test on the closed-boundary question
-6. Migrate to `MPM.Liquid` with `grid_density=64`, `dt=4e-3`, `substeps=16-20`, vehicle stays `Rigid`, draft exists untested at `simulation/can_it_ford_L2_mpm.py`
-7. Shoot and gsplat-reconstruct a real water-adjacent scene
-8. Write or adapt the PhysGaussian/Taichi bridge from real reconstructed geometry into simulatable particles
-9. Rerun the full depth/velocity sweep on the corrected, real pipeline
+4. ~~Get the MPM draft running on at least one condition~~ **Done, July 7, session 6.**
+5. Rerun all SPH conditions with the full corrected fix stack (mass, geometry, timestep, viscosity, friction, new CSV filename)
+6. Sweep the MPM script across the full condition set, not just one
+7. Test whether the drift result survives an enlarged/damped domain, the single most decisive open test on the closed-boundary question
+8. Shoot and gsplat-reconstruct a real water-adjacent scene, or prototype against Cheng-Hsi's existing flood splat if confirmed usable
+9. Write or adapt the PhysGaussian/Taichi bridge from real reconstructed geometry into simulatable particles
+10. Rerun the full depth/velocity sweep on the corrected, real pipeline
 
 ## Deadline note
 
