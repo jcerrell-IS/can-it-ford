@@ -22,7 +22,7 @@ def main():
     gs.init(precision="32", logging_level="warning")
 
     scene = gs.Scene(
-        sim_options=gs.options.SimOptions(dt=1e-2, substeps=10),
+        sim_options=gs.options.SimOptions(dt=4e-3, substeps=10),
         sph_options=gs.options.SPHOptions(
             lower_bound=(0.0, -1.0, 0.0),
             upper_bound=(2.0,  1.0, 2.4),
@@ -36,7 +36,7 @@ def main():
         show_viewer=args.vis,
     )
 
-    frictionless_rigid = gs.materials.Rigid(needs_coup=True, coup_friction=0.0)
+    frictionless_rigid = gs.materials.Rigid(needs_coup=True, coup_friction=0.0, rho=604)
 
     plane   = scene.add_entity(morph=gs.morphs.Plane())
 
@@ -52,8 +52,8 @@ def main():
     vehicle = scene.add_entity(
         material=frictionless_rigid,
         morph=gs.morphs.Box(
-            pos=(1.0, 0.0, water_depth + 0.075),
-            size=(0.4, 0.2, 0.15),
+            pos=(1.0, 0.0, 0.75),
+            size=(1.0, 1.6, 1.5),
             fixed=False,
         ),
     )
