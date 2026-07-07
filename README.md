@@ -182,6 +182,7 @@ Writes `viability_audit_results.csv`, one row per `.npz` file: run conditions, p
 | `data/phase_space_results.csv` | L2 pilot results (pre-fix, see Status) | 23 unique conditions |
 | `data/scenario_sweep.csv` | Theoretical L0/L1 grid | 70 rows (depths 0.1-1.0 m x velocities 0.0-3.0 m/s) |
 | `data/mu_sweep_results.csv` | Friction sensitivity at (d=0.30 m, v=1.5 m/s) | 8 conditions |
+| `data/l2_results_from_wandb.csv` | Confirmed L2 runs pulled from W&B API | 9 conditions |
 
 ---
 
