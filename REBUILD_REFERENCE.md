@@ -10,6 +10,14 @@ His `SplatViewer` page links to a real Hugging Face dataset, `chhsiao93/hicss-sp
 
 ---
 
+## First real MPM test run, new finding not in any of the three research passes
+
+`can_it_ford_L2_mpm.py` crashed on its very first `add_entity` call for the water box: `Entity has particles outside solver boundary`. Genesis's `MPMSolver` silently pads whatever `lower_bound`/`upper_bound` you specify inward by a safety margin, confirmed exactly `0.046875m` at `grid_density=64` (that's 3 grid cells, `dx=1/64=0.015625`, `3*dx=0.046875`). SPH does not do this, the same water box geometry that worked fine in the SPH script sits exactly on `z=0`, which is fine for SPH but outside MPM's actual usable interior once padding is applied.
+
+**Fix applied:** domain expanded from `(0,-1,0)-(2,1,2.4)` to `(-0.1,-1,-0.1)-(2.1,1,2.5)`, giving more than double the required margin on the tight faces. General rule going forward: any MPM domain must extend at least `3*dx` past the outermost geometry on every face, not just past the vehicle/water as originally sized for SPH.
+
+---
+
 ## Headline corrections vs what was previously assumed
 
 - **`coup_friction` Genesis default is `0.1`, not `0.0`, confirmed across two independent research passes with pinned source lines.** The old pipeline's `coup_friction=0.0` was a hardcoded override in the code itself, not something Genesis does to you by default. `needs_coup` defaults to `True`.
@@ -19,6 +27,7 @@ His `SplatViewer` page links to a real Hugging Face dataset, `chhsiao93/hicss-sp
 - **PhysGaussian's output coordinates are normalized, not world meters.** Must un-normalize before building a Genesis scene, or build the Genesis domain to match that normalized space instead.
 - **A trained splat is not a mesh.** Vehicle rigid-body geometry has to come from somewhere else entirely, real photogrammetry, a CAD file, or a downloaded model.
 - **No inlet/outlet API exists in Genesis v1.2.0**, confirmed across all three passes, with an exact source citation for the emitter pattern (`genesis/engine/scene.py`, `add_emitter`). Every liquid scene is closed/reflecting.
+- **MPM pads the specified domain inward by `3*dx`.** Confirmed empirically on the first real run, see above. Domain construction must account for this, SPH does not have this behavior.
 
 ---
 
@@ -42,6 +51,7 @@ EPA 2025 Automotive Trends Report: average new US vehicle weight MY2024 ~1,975 k
 | `Rigid` default rho (unset) | context-dependent: 1000 / 600 / 1500 | genesis/engine/materials/rigid.py, L25-37 |
 | `Rigid` default sdf_cell_size | `0.005` (5mm) | genesis/engine/materials/rigid.py |
 | `MPMOptions` default domain | `(-1,-1,0)` to `(1,1,1)` | genesis/options/solvers.py, L569-621 |
+| `MPMSolver` boundary safety padding | `3*dx` inward on every face | confirmed empirically, first real run, 0.046875m at grid_density=64 |
 | PhysGaussian opacity_threshold default | `0.02` | gs_simulation.py, L123 + config/ |
 | PhysGaussian fill density_threshold | `5.0` | utils/decode_param.py |
 
@@ -49,7 +59,7 @@ EPA 2025 Automotive Trends Report: average new US vehicle weight MY2024 ~1,975 k
 - Vehicle mass: 1,975-2,014 kg average (EPA 2025), sensitivity-test 1500/2000/2500 if class unknown
 - Tire-water coupling friction: 0.3-0.5 (ASTM E1337, wet rubber on submerged asphalt), matches the already-fixed `0.4`
 - Grid density for a real car mesh: minimum 128, not 64, thin body panels tunnel through at 64 (issue #600)
-- Domain sizing rule of thumb: >=2x vehicle length upstream/downstream, >=3x vehicle width laterally
+- Domain sizing rule of thumb: >=2x vehicle length upstream/downstream, >=3x vehicle width laterally, plus `3*dx` padding on every face for MPM specifically
 - CFL sanity check at dt=4e-3, substeps=20, 1.5m/s, grid_density=128: per-substep travel ~0.0003m vs grid spacing ~0.0078m, ratio ~0.038, comfortably stable, not just "probably fine"
 
 ---
@@ -113,7 +123,7 @@ Confirmed exact line range across two passes: `gs_simulation.py`, L241-245. Inte
 1. **Splat capture.** Real video, >=20-30 overlapping images, 60%+ overlap, include a known scale reference. Cheng-Hsi's existing flood splat dataset is a viable prototyping substitute while this step is pending.
 2. **Splat training (gsplat, LS6 A100s).** `--resolution 2` if VRAM exceeded.
 3. **PhysGaussian-style extraction.** Stop before Warp instantiation. Clip with `sim_area` first. Pre-filter with `opacity_threshold>=0.05` for outdoor scenes.
-4. **Genesis MPM scene construction (water).** `grid_density=128` minimum for real geometry, domain sized to real-scene rule of thumb.
+4. **Genesis MPM scene construction (water).** `grid_density=128` minimum for real geometry, domain sized to real-scene rule of thumb, plus `3*dx` padding.
 5. **Vehicle mesh sourcing.** Photogrammetry preferred, then CAD, then downloaded model. Check units and validate resulting mass, don't assume.
 6. **Rigid-MPM coupling.** `coup_friction=0.4` carries over. Omit `fixed=True` for a free body. Untested path anywhere publicly.
 7. **Run headless.** `show_viewer=False`. Check `torch.cuda.is_available()`, `wp.init()` device count, `ti.init(arch=ti.cuda)`, every time.
@@ -133,6 +143,7 @@ Confirmed exact line range across two passes: `gs_simulation.py`, L241-245. Inte
 | `dt=4e-3` | keep as starting point, re-derive via CFL for the real domain |
 | `coup_friction=0.4` | keep exactly, confirm attached to the new Rigid material |
 | `mu=0.005` (SPH) | delete, no MPM analog |
+| MPM domain bounds | must add `3*dx` padding beyond geometry extent on every face, new rule, not in the original SPH-derived bounds |
 
 ---
 
