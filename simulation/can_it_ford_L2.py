@@ -110,7 +110,7 @@ def main():
         depth_str  = str(water_depth).replace(".", "p")
         vel_str    = str(water_velocity).replace(".", "p")
         video_path = f"simulation_d{depth_str}_v{vel_str}.mp4"
-        cam.stop_recording(save_to=video_path)
+        cam.stop_recording(save_to_filename=video_path)
         print(f"Saved video: {video_path}")
 
     final_pos = vehicle.get_pos()
