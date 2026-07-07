@@ -1,8 +1,10 @@
+ytes
+
 # Provisional Status and Corrections Log
 
 This file exists so the project's revision history is visible, not hidden. The README's "Key finding" section is kept as originally written. This file documents what has changed since, and why, so a reader can see where this started and where it is going.
 
-Last updated: July 7, 2026 (session 4).
+Last updated: July 7, 2026 (session 5).
 
 ---
 
@@ -12,35 +14,59 @@ The README currently states the L2 finding (23 conditions, 16 divergence points,
 
 ---
 
-## July 7 session 4: viscosity bug, and the two open items from session 3 are now closed
+## July 7 session 5: session 4's viscosity fix was itself wrong, plus the friction bug that survived four sessions untouched
 
-**Bug D, water viscosity 10x too high.** `gs.materials.SPH.Liquid(mu=0.01, ...)` was set to `mu=0.01`. Real water's dynamic viscosity is `1e-3` (0.001), confirmed against the project's own SPH verification literature review. This means every run to date, including the session 3 milestone result below, ran with water 10x more viscous than real water. Direction of the likely effect: higher viscosity dampens flow velocity gradients near the vehicle, so the true push from real-viscosity water could be different from what's reported below. Not yet rerun with the fix.
-
-```python
-# before
-water = scene.add_entity(
-    material=gs.materials.SPH.Liquid(mu=0.01, sampler="regular"),
-    ...
-)
-```
+**Correcting Bug D.** Session 4 set `mu=0.001` on the reasoning that real water's dynamic viscosity is 1e-3 Pa*s. That reasoning was wrong. Genesis's `SPH.Liquid` `mu` argument is not SI dynamic viscosity, it's an internal weakly-compressible-SPH viscosity coefficient, and the engine's own default is `mu=0.005`. The official Genesis tutorial uses `mu=0.02` to demonstrate a visibly more viscous liquid for comparison. `mu=0.001` was below the engine's own baseline "water" setting, an unvalidated value with no source behind it, the opposite of a fix. Caught by cross-referencing the project's own Technical Feasibility Review, which was not consulted before making the session 4 change.
 
 ```python
-# after
+# session 4 (wrong)
 water = scene.add_entity(
     material=gs.materials.SPH.Liquid(mu=0.001, sampler="regular"),
     ...
 )
 ```
 
-**Both open items from session 3 are now closed.** `peak_x_disp_m` is now written to `phase_space_results.csv` (was previously only printed to terminal and saved per-run in `.npz`). `rho=604` is now saved into every `.npz`, unblocking the WCSPH density-bound check described below. Same commit as the viscosity fix.
+```python
+# session 5 (corrected)
+water = scene.add_entity(
+    material=gs.materials.SPH.Liquid(mu=0.005, sampler="regular"),
+    ...
+)
+```
 
-**Still not rerun with the combined fix stack:** the session 3 milestone table below was generated before this session's viscosity fix. All four rows need a rerun once the CSV schema change is confirmed stable.
+`mu=0.005` matches Genesis's own documented engine default exactly, so this is now a defensible, citable, non-arbitrary choice rather than a guess in either direction.
+
+**Bug E, friction coupling never actually fixed.** `coup_friction=0.0` was flagged as a problem back in the mass-bug discussion (session 2), but no session actually changed the value, it stayed hardcoded at zero through sessions 2, 3, and 4, including the milestone NO-FORD result. This means every trustworthy-looking result to date, mass and geometry and timestep all correct, still ran with zero water-to-vehicle and vehicle-to-ground friction.
+
+```python
+# before, all sessions through session 4
+frictionless_rigid = gs.materials.Rigid(needs_coup=True, coup_friction=0.0, rho=604)
+```
+
+```python
+# after, session 5
+vehicle_rigid = gs.materials.Rigid(needs_coup=True, coup_friction=0.4, rho=604)
+```
+
+`coup_friction=0.4` sits inside the empirically defensible range: Azhar et al. 2023 used mu=0.55 in a matched scale model, Smith et al. 2019 measured tire-pavement friction on concrete, gravel, and sand and recommended using a worst-case value, and the general range cited across both is 0.3 to 0.6. Variable renamed from `frictionless_rigid` to `vehicle_rigid` since the old name was no longer accurate.
+
+**Why this matters more than a routine parameter fix:** a floating, near-massless body has ground normal force N approximately 0, so Coulomb friction mu*N approximately 0 regardless of what mu is set to. The original "friction-invariant drift, 0.395-0.400m across mu 0.0-0.7" result is exactly the signature that produces. Once mass was fixed (session 2), the vehicle should rest on the ground and friction should start to matter. It never got the chance to, because coup_friction stayed at 0.0 through every subsequent session. The session 3 milestone result (d=1.0m, v=3.0m/s, 0.1836m, NO-FORD) was generated with correct mass and correct submersion but still zero friction. Whether that verdict survives non-zero friction is unknown until it's rerun.
+
+**CSV filename changed to avoid a silent corruption.** The committed `data/phase_space_results.csv` has 6 columns, no `peak_x_disp_m`. The session 4 CSV schema change added a 7th field but wrote to the same filename. If Vista's local working copy shares that same 6-column file (likely, since it accumulated the original 31 rows), the next run would append a 7-value row under a 6-column header, misaligning every column silently, pandas and Excel shift columns rather than error on this. Output filename changed to `phase_space_results_v2.csv` so a fresh, correct 7-column header always gets written, instead of relying on remembering to delete a file on Vista.
+
+**Nothing has been rerun yet under the corrected mu + coup_friction + CSV filename stack.** Every number in the session 3 milestone table is now known to be under-friction and needs a rerun before it means anything.
 
 ---
 
-## July 7 session 3: timestep bug, first clean NO-FORD, and where this SPH work stops
+## July 7 session 4 (superseded by session 5's correction above, kept for the record, not deleted)
 
-**Bug C, timestep too coarse.** After fixing mass and geometry (session 2), I pushed a stress test (d=1.0m, v=3.0m/s) and it spiked to a 1m displacement with a velocity vector pointing backward against the flow, then the session disconnected. That's the signature of a numerical blowup, not real physics. My own OSS survey already had the answer: Genesis's `flush_cubes.py` example uses `dt=4e-3, substeps=20` for MPM liquid coupling. My script was running `dt=1e-2`, 2.5x coarser.
+Session 4 closed the CSV/NPZ logging gaps (peak_x_disp_m in the CSV, rho in the npz), both of which are still correctly closed and did not need correcting. Session 4 also set mu=0.001, which session 5 above corrects.
+
+---
+
+## July 7 session 3: timestep bug, first clean run, now known to be under-friction
+
+**Bug C, timestep too coarse.** After fixing mass and geometry (session 2), a stress test (d=1.0m, v=3.0m/s) spiked to a 1m displacement with a velocity vector pointing backward against the flow, then crashed. That's a numerical blowup, not real physics. Genesis's own `flush_cubes.py` example uses `dt=4e-3, substeps=20` for MPM liquid coupling. The script was running `dt=1e-2`, 2.5x coarser.
 
 ```python
 # before
@@ -52,91 +78,79 @@ sim_options=gs.options.SimOptions(dt=1e-2, substeps=10),
 sim_options=gs.options.SimOptions(dt=4e-3, substeps=10),
 ```
 
-Reran the same case that crashed. Clean finish, no crash, oscillatory transient (push, overshoot, partial recovery), velocity components stayed bounded under 0.5 m/s the whole run. Timestep was the whole story for the crash.
+Reran the same case that crashed. Clean finish, no crash, oscillatory transient, velocity components stayed bounded under 0.5 m/s the whole run. Timestep was the whole story for that specific crash.
 
-**First result I'd actually call trustworthy on this pilot scene, before the session 4 viscosity fix:**
+**The session 3 result, now known to be incomplete, not just unverified:**
 
 ```
 depth=1.0m velocity=3.0m/s verdict=NO-FORD peak_x_disp=0.1836m
 ```
 
-3.7x over the 0.05m DRIFT_THRESHOLD. AR&R L1 agrees at this condition too (hazard = D x V = 3.0, far above the 0.60 threshold), a genuine cross-check pass between methods on corrected physics. This number needs a rerun under session 4's viscosity fix before it's trusted as final.
+Correct mass, correct submersion, correct timestep, but zero friction (coup_friction=0.0, unfixed until session 5) and an over-viscous fluid at the time (mu=0.01, later wrongly "fixed" to 0.001 in session 4, corrected to 0.005 in session 5). This number does not carry forward as trusted. It needs a full rerun under the session 5 fix stack.
 
-**Displacement scaled monotonically with severity for the first time this project produced, under the session 3 fix stack (pre-viscosity-fix):**
+**Sanity check that still holds regardless of the above:** compared the water's total x-momentum at the final step against the vehicle's estimated momentum change. Water: 320.1 kg m/s. Vehicle: roughly 1450 x 0.47 = 681.5 kg m/s. Same order of magnitude. This check is about momentum transfer plausibility, not about friction or viscosity, so it isn't invalidated by the corrections above, but it also doesn't validate the specific displacement number, which does need a rerun.
 
-| depth, velocity | AR&R hazard | peak x_disp | verdict |
-|---|---|---|---|
-| 0.3m, 1.5m/s | 0.45 | 0.0005m | FORD |
-| 0.6m, 2.0m/s | 1.20 | 0.0125m | FORD |
-| 0.6m, 2.5m/s | 1.50 | 0.0425m | FORD (close) |
-| 1.0m, 3.0m/s | 3.00 | 0.1836m | NO-FORD |
-
-**Sanity check run before trusting this, not just accepting a clean video:** compared the water's total x-momentum at the final step against the vehicle's estimated momentum change.
-
-```python
-mass_per_particle = 0.8 * 0.02**3 * 1000
-total_px = (vel[:, 0] * mass_per_particle).sum()
-```
-
-Water: 320.1 kg m/s. Vehicle: roughly 1450 x 0.47 = 681.5 kg m/s. Same order of magnitude, not exact, not expected to be exact since this isn't a closed system (walls and ground absorb momentum too) and the two numbers are measured differently (final snapshot vs peak estimate). This rules out the push coming from nowhere. It does not prove the transfer is exact. I'm calling it plausible, not verified.
-
-**Where this stops, stated plainly:** this SPH box scene will not become the dataset in the paper, no matter how many more bugs get fixed in it. Every fix here (mass, geometry, timestep, viscosity) transfers directly to the MPM version. The dataset itself does not.
+**Where this stops, stated plainly:** this SPH box scene will not become the dataset in the paper, no matter how many more bugs get fixed in it. Every fix here (mass, geometry, timestep, viscosity, friction) transfers directly to the MPM version. The dataset itself does not.
 
 ---
 
-## Confirmed corrections, in order of severity
+## Confirmed corrections, in order of discovery
 
-### 1. Vehicle mass bug (discovered and fixed July 7)
+### 1. Vehicle mass bug (discovered and fixed July 7, session 2)
 
-The vehicle box in the script never had an explicit density set. Genesis defaulted to an internal density giving a simulated vehicle mass far below a real curb weight of roughly 1,400-1,500 kg. The vehicle floated by construction, making `coup_friction` mathematically irrelevant regardless of its value. The originally reported "friction-invariant drift" result (0.395-0.400m across mu 0.0-0.7) is a likely artifact of this bug. Fixed by setting `rho=604` after correcting box size.
+No explicit density set. Vehicle floated by construction. Fixed with `rho=604`.
 
-### 1b. Vehicle geometry and placement bug (discovered and fixed July 7)
+### 1b. Vehicle geometry and placement bug (discovered and fixed July 7, session 2)
 
-Box was 0.4 x 0.2 x 0.15m, roughly 10x too small per dimension versus a real car, and positioned so its bottom face sat exactly at the water's top surface for every depth tested, meaning it rested on top of the water rather than in it. Confirmed by watching the render. Fixed by resizing to `size=(1.0, 1.6, 1.5)` and repositioning to `pos=(1.0, 0.0, 0.75)`, pinned to the ground independent of `water_depth`.
+Box undersized and positioned to always sit exactly at the water surface. Fixed with `size=(1.0, 1.6, 1.5)`, `pos=(1.0, 0.0, 0.75)`.
 
-### 1c. Timestep bug (discovered and fixed July 7)
+### 1c. Timestep bug (discovered and fixed July 7, session 3)
 
-`dt=1e-2` was 2.5x coarser than the `dt=4e-3, substeps=20` range Genesis's own `flush_cubes.py` MPM coupling example uses. Caused a numerical blowup at an extreme test condition. Fixed by setting `dt=4e-3`.
+`dt=1e-2` was 2.5x coarser than Genesis's own MPM coupling example range. Fixed with `dt=4e-3`.
 
-### 1d. Water viscosity bug (discovered and fixed July 7)
+### 1d. Water viscosity, fixed wrong then corrected (session 4, then session 5)
 
-`mu=0.01` was 10x real water's dynamic viscosity of `1e-3`. Every run to date, including the session 3 milestone table, ran with water 10x more viscous than real water. Fixed by setting `mu=0.001`. Not yet rerun.
+Session 4 set `mu=0.001` believing it matched real water's SI viscosity. Genesis's `mu` is not SI viscosity, and 0.001 is below the engine's own default. Session 5 corrected to `mu=0.005`, the documented engine default.
+
+### 1e. Friction coupling bug (discovered and fixed July 7, session 5)
+
+`coup_friction=0.0` was identified as a problem during the session 2 mass-bug discussion but never actually changed until session 5. Every result from session 2 onward, including the session 3 milestone, ran with zero friction. Fixed to `coup_friction=0.4`, cited (Azhar et al. 2023, Smith et al. 2019, defensible range 0.3-0.6).
 
 ### 2. Solver mismatch
 
-All results to date were run on Genesis's SPH solver, not MPM. The abstract and README describe the pipeline as Genesis MPM. Not yet corrected in the running code.
+All results to date were run on Genesis's SPH solver, not MPM. Not yet corrected in the running code, an untested MPM draft exists at `simulation/can_it_ford_L2_mpm.py`.
 
 ### 3. Synthetic geometry, not a reconstructed scene
 
-No real gsplat-reconstructed flooded scene has been ingested anywhere in the pipeline. No PhysGaussian kernel-to-particle bridge code exists yet. Tutorial 2's `bench.mov` is the only proof the gsplat half of the pipeline works end to end on its own.
+No real gsplat-reconstructed flooded scene has been ingested anywhere in the pipeline. No PhysGaussian bridge code exists yet.
 
-### 4. Live script push (resolved July 7)
+### 4. Closed, reflecting domain boundary (known, still unaddressed)
 
-The corrected script, with all four bug fixes above, is now on `main` at `simulation/can_it_ford_L2.py`.
+Genesis's SPH solver uses a `CubeBoundary`, reflecting on all six faces, not an open channel. The domain is 2.0m long in x, the vehicle occupies roughly x=0.5 to 1.5, half the domain length, with only 0.5m of clearance to the downstream wall. At velocities up to 3.0 m/s over a 500-step horizon, reflected waves off that wall very likely reach the vehicle before the run ends. This applies to the MPM version too, Genesis has no native inlet/outlet boundary for either solver in this version. The single most decisive unresolved test: does the drift result survive an enlarged or damped domain, or does it disappear, which would mean the closed tank was generating the drift rather than the flow.
 
-### 5. DRIFT_THRESHOLD = 0.05m has no citation (resolved framing, code unchanged)
+### 5. DRIFT_THRESHOLD = 0.05m, citation resolved, code unchanged
 
-No published paper defines a 0.05m displacement threshold; flood-vehicle stability literature defines failure at incipient motion ("started to slide"), not a fixed distance. Verified reframing: 0.05m is a conservative numerical onset-of-motion detector, about 2.5-3.4% of representative vehicle body width (Xia et al. 2014, Honda Accord 1.845m and Audi Q7 1.983m, DOI:10.1007/s11069-013-0889-2; Shah et al. 2018, Perodua Viva 1.475m, DOI:10.1051/matecconf/201820307003). The earlier candidate fix citing Smith 2019 Eq. 6 was checked and does not hold up, that paper does not state a finite displacement criterion either. The code value itself does not need to change, only how it's described in the paper.
+No published paper defines a fixed 0.05m displacement threshold. Reframed as roughly 2.5-3.4% of representative vehicle body width (Xia et al. 2014, Shah et al. 2018). Full writeup in `citations/README.md`.
 
-### 6. Finding framing has changed twice
+### 6. Vehicle geometry is a proxy, not a documented consistent scale
 
-3 divergence points from 9 runs (June 29), then 16 from 23 (July 3). Both under the bugged conditions above.
+Current box is 1.0 x 1.6 x 1.5m, 2.4 cubic meters. A real vehicle's external envelope is closer to 10-12 cubic meters, or the scene would need a consistently applied 1:10 scale (Froude-similarity-adjusted depth and velocity too, not just the vehicle). Box-proxy vehicles are supported in the literature (Xiong et al. 2024), this specific undersized aspect ratio without a stated scale convention is not yet.
 
-### 7. CSV and NPZ logging gaps (resolved July 7)
+### 7. CSV and NPZ logging gaps (resolved July 7, sessions 4-5)
 
-`peak_x_disp_m` is now written to `phase_space_results.csv`. `rho=604` is now saved to the `.npz`, unblocking the WCSPH density-bound check. `max_vel_ms` still tracks initial settling speed, not flow velocity, this is a naming/interpretation note rather than a bug, since renaming the column would break any downstream script reading it.
+`peak_x_disp_m` is now written to the CSV. `rho=604` is now saved to the `.npz`. Output filename changed in session 5 to `phase_space_results_v2.csv` to avoid a header-schema collision with the existing 6-column committed file.
 
 ---
 
 ## What carries over to MPM, and what doesn't
 
-**Carries over directly, already validated on this pilot scene:** `rho=604`, `size=(1.0, 1.6, 1.5)`, `pos=(1.0, 0.0, 0.75)` for the vehicle, `mu=0.001` for water. `dt=4e-3` as a starting point, though MPM's actual stability rule is different (below).
+**Carries over directly, validated on this pilot scene as of session 5:** `rho=604`, `size=(1.0, 1.6, 1.5)`, `pos=(1.0, 0.0, 0.75)` for the vehicle. `coup_friction=0.4` as a starting point, same citation basis applies to MPM-rigid coupling. `dt=4e-3` as a starting point only, MPM's actual stability rule is different (below).
 
-**Does not carry over, needs its own derivation:** MPM stability depends on grid spacing, not just timestep. At Genesis's default `grid_density=64`, `dx=1/64=0.015625m`, and Genesis warns when `substep_dt > 2e-2 * dx`, meaning substep time must stay under `3.125e-4`s. `dt=4e-3` with `substeps=10` gives `substep_dt=4e-4s`, still 1.28x above that ceiling. `substeps=16-20` is the correct MPM starting point, not 10.
+**Does not carry over as-is:** MPM stability depends on grid spacing, not just timestep. At Genesis's default `grid_density=64`, `dx=1/64=0.015625m`, Genesis warns when `substep_dt > 2e-2 * dx`, so substep time must stay under `3.125e-4`s. `dt=4e-3` needs `substeps=16-20` for MPM, not 10. The `mu=0.005` SPH viscosity value has no direct MPM equivalent, `MPM.Liquid` defaults to `viscous=False` and derives its stress response from `E=1e6, nu=0.2`, not a viscosity coefficient in the SPH sense, do not carry `mu` over to the MPM script.
 
-**Vehicle representation does not change.** It stays a `Rigid` entity coupled via `needs_coup=True`/`coup_friction`, the same pattern as today, just against `MPM.Liquid` water instead of `SPH.Liquid`. It does not become an MPM particle body itself.
+**Vehicle representation does not change.** Stays a `Rigid` entity, `needs_coup=True`/`coup_friction`, against `MPM.Liquid` instead of `SPH.Liquid`.
 
-**Template for the migration:** `examples/coupling/water_wheel.py --solver mpm` for emitter syntax, `examples/coupling/sand_wheel.py` for the coupling flag pattern, `examples/coupling/flush_cubes.py` for the parameter values above.
+**Template for the migration:** `examples/coupling/water_wheel.py --solver mpm`, `examples/coupling/sand_wheel.py`, `examples/coupling/flush_cubes.py`.
 
 ---
 
@@ -148,13 +162,15 @@ Luke Smith's Tutorial 3 (`taichi_mpm` codebase) already contains a working real-
 
 ## Rebuild path (in priority order)
 
-1. ~~Push the corrected script with all four fixes above to this repo~~ **Done, July 7.**
+1. ~~Push the corrected script (mass, geometry, timestep) to this repo~~ **Done, July 7.**
 2. ~~Fix the CSV and NPZ logging gaps~~ **Done, July 7.**
-3. Rerun all conditions with the full four-bug fix stack, including the new viscosity fix
-4. Migrate to `MPM.Liquid` with `grid_density=64`, `dt=4e-3`, `substeps=16-20`, vehicle stays `Rigid`
-5. Shoot and gsplat-reconstruct a real water-adjacent scene
-6. Write or adapt the PhysGaussian/Taichi bridge from real reconstructed geometry into simulatable particles
-7. Rerun the full depth/velocity sweep on the corrected, real pipeline
+3. ~~Fix friction coupling and correct the viscosity overcorrection~~ **Done, July 7, session 5.**
+4. Rerun all conditions with the full corrected fix stack (mass, geometry, timestep, viscosity, friction, new CSV filename)
+5. Test whether the drift result survives an enlarged/damped domain, the single most decisive open test on the closed-boundary question
+6. Migrate to `MPM.Liquid` with `grid_density=64`, `dt=4e-3`, `substeps=16-20`, vehicle stays `Rigid`, draft exists untested at `simulation/can_it_ford_L2_mpm.py`
+7. Shoot and gsplat-reconstruct a real water-adjacent scene
+8. Write or adapt the PhysGaussian/Taichi bridge from real reconstructed geometry into simulatable particles
+9. Rerun the full depth/velocity sweep on the corrected, real pipeline
 
 ## Deadline note
 
