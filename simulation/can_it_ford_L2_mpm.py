@@ -38,7 +38,7 @@ def main():
         show_viewer=args.vis,
     )
 
-    vehicle_rigid = gs.materials.Rigid(needs_coup=True, coup_friction=0.4, rho=604)
+    vehicle_rigid = gs.materials.Rigid(needs_coup=True, coup_friction=0.55, rho=604)
 
     plane   = scene.add_entity(morph=gs.morphs.Plane())
 
@@ -130,7 +130,7 @@ def main():
     np.savez(npz_path, pos=pos_final, vel=vel_final,
              depth=water_depth, velocity=water_velocity,
              verdict=verdict, peak_x_disp=max_x_disp, rho=604,
-             coup_friction=0.4, grid_density=128, run_tag=run_tag)
+             coup_friction=0.55, grid_density=128, run_tag=run_tag)
     print(f"Saved particle state: {npz_path}")
 
     print(f"\n=== RESULT ===")
