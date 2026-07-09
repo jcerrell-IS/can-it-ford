@@ -1,9 +1,191 @@
-# Kumar Update — July 9, 2026
+# Can It Ford — Status Log
 
-This folder is a snapshot prepared for the July 9 update to Kumar. It holds five simulation renders, the cited vehicle-parameter module (vehicle_params.py), the phase-space results table (phase_space_results.csv), and this note. The five mp4s in this folder are SPH renders. None of them is an MPM result, and nothing below should be read as claiming otherwise.
+**Last updated:** July 9, 2026
+**Scope:** MPM rebuild progress since Kumar's July 7 instruction to migrate to [`kks32/mpm-engine`](https://github.com/kks32/mpm-engine).
 
-What is confirmed real. The five mp4 renders — simulation_d0p3_v1p5, simulation_d0p6_v1p5, simulation_d0p6_v2p0, simulation_d0p6_v2p5, and simulation_d1p0_v3p0 — are Genesis SPH runs across a spread of flood-depth and approach-velocity conditions: 0.3 m depth at 1.5 m/s, 0.6 m depth at 1.5, 2.0, and 2.5 m/s, and 1.0 m depth at 3.0 m/s. They were produced on Vista and copied here unchanged. They come from Genesis's SPH.Liquid solver, not from MPM. The vehicle parameters in vehicle_params.py are drawn from primary sources rather than aggregators: curb weights and bounding boxes come from manufacturer spec sheets (Toyota Corolla and Highlander UK, Honda Civic Canada, Ford F-150), while the center-of-gravity heights and the full measured principal moment-of-inertia tensors (Ixx roll, Iyy pitch, Izz yaw) come from the NHTSA Light Vehicle Inertial Parameter Database, published as SAE Technical Paper 1999-01-1336. Those inertial values are measured on NHTSA's instrumented rigs, not box estimates, and the module covers three classes: a compact sedan (Corolla/Civic), a midsize SUV (Highlander/Explorer), and a light pickup (F-150). The friction citation has also been corrected. Earlier sessions set the coupling friction to 0.4 and cited a defensible 0.3 to 0.6 band from Azhar et al. 2023 and Smith et al. 2019; that has been tightened to the exact coefficient Azhar et al. 2023 report for their matched scale-model study, 0.55, and the friction is now set to 0.55 directly. This is the value the Genesis L2 scripts (can_it_ford_L2.py and can_it_ford_L2_mpm.py) and the box-SDF collider setup now use.
+## Contents
 
-What is in progress. The Genesis MPM run was attempted again tonight at the same 0.3 m depth, 1.5 m/s condition, this time at grid_density 128 (the resolution flagged as the minimum for real car geometry, up from the grid_density 64 used in the earlier smoke test), with the car-sized box proxy (1.0 by 1.6 by 1.5 m) as the vehicle body and coup_friction 0.4. Two fixes were applied to get it to launch: the substep count was raised from 20 to 32 to restore CFL/timestep headroom, and the water box was repositioned and resized (0.35 m long, centered near x = 0.275 m, spanning roughly x = 0.10 to 0.45 m) so it no longer overlaps or initializes inside the vehicle body, which sits downstream at x = 0.5 to 1.5 m. Those two fixes were necessary but not sufficient. The run did not complete and did not produce a FORD or NO-FORD verdict. It printed step 0, with the vehicle just beginning to settle under gravity, and then crashed at the very first post-coupling substep with a CUDA illegal memory access (CUDA_ERROR_ILLEGAL_ADDRESS) raised inside the MPM solver's internal state-validity check. No verdict, no output video, no CSV row, and no particle .npz file were written. So there is still no confirmed MPM verdict at vehicle scale: the earlier grid_density 64 smoke test finished cleanly, but raising the resolution to the grid_density 128 needed for real geometry reintroduced instability, and the failure mode has moved from the earlier domain-padding crash to a GPU-side illegal memory access on the first coupled step. This run also used the box proxy, not the reconstructed car_mesh.ply, so it does not close the real-mesh item below.
+- [Summary](#summary)
+- [Chronological Log](#chronological-log)
+- [Track 1: kks32/mpm-engine](#track-1-kks32mpm-engine)
+- [Track 2: Direct Genesis MPM](#track-2-direct-genesis-mpm)
+- [Track Divergence](#track-divergence)
+- [Vehicle Mesh](#vehicle-mesh)
+- [Vehicle Physics Reference](#vehicle-physics-reference)
+- [Prior Work: Genesis SPH](#prior-work-genesis-sph)
+- [Citations](#citations)
+- [Open Questions](#open-questions)
+- [Next Steps](#next-steps)
 
-What is still open. No real gsplat-reconstructed flooded scene has been ingested anywhere in the pipeline, and no PhysGaussian or Taichi bridge from reconstructed geometry into simulatable particles exists yet. The vehicle is still a box proxy rather than a real car mesh. And the scale issue on car_mesh.ply is still under investigation: the mesh's real-world scale has not been pinned down, so it is not yet usable as the simulation body.
+---
+
+## Summary
+
+Two independent MPM tracks are running in parallel. Neither has produced a FORD/NO-FORD verdict yet. Two independent vehicle-mesh reconstruction attempts have both failed, for different reasons. No real vehicle mesh currently exists in the pipeline.
+
+| Track | Solver | State | Blocker |
+|---|---|---|---|
+| [`kks32/mpm-engine`](https://github.com/kks32/mpm-engine) | `warpmpm` (Warp-based) | Env confirmed, vehicle scene wired to real sedan dimensions | Water drift during gravity settling, cause not isolated |
+| Direct Genesis MPM | `gs.materials.MPM.Liquid` | Crashed before producing output | `CUDA_ERROR_ILLEGAL_ADDRESS` at step 0 |
+| Genesis SPH (prior) | `gs.materials.SPH.Liquid` | Complete, already reviewed | Superseded; methods rehearsal only |
+| Vehicle mesh | — | Two attempts, both closed | No usable mesh; using box proxy |
+
+---
+
+## Chronological Log
+
+| Date | Event |
+|---|---|
+| Jul 7, AM | Sent Kumar a bug-fix summary on the SPH-era script (unset density, wrong spawn depth, unstable timestep). Cheng-Hsi flags Genesis is likely running SPH, not MPM, for water. |
+| Jul 7, PM | Kumar instructs: `"can you run what Cheng-Hsi has first? kks32/mpm-engine is the MPM engine."` |
+| Jul 7–8 | `kks32/mpm-engine` environment set up and verified on Vista. |
+| Jul 7–8 | **Mesh Attempt 1**: marching-cubes reconstruction on Luke Smith's ls6 point cloud. Closed to genus 9, stopped. |
+| Jul 8, 6:20 PM | `can_it_ford_L2_mpm.py` written (direct Genesis MPM track), generic box vehicle. |
+| Jul 8–9, overnight | **Mesh Attempt 2**: Poisson reconstruction via `open3d` (`reconstruct_car.py`, separate `.venv-o3d`). Produced `car_mesh.ply`, technically watertight. |
+| Jul 9, ~3:30 AM | Diagnosed `car_mesh.ply`: source point cloud was never car-sized. Not a fixable scale bug. Recommended box proxy. |
+| Jul 9, 4:38 AM | `box_sdf_collider_setup.py` rewritten: real sedan bounding box, larger domain, full physics run loop. |
+| Jul 9, evening | Ran `can_it_ford_L2_mpm.py` again. Crashed, `CUDA_ERROR_ILLEGAL_ADDRESS`, step 0. |
+| Jul 9, evening | Sent Kumar this update; sent Hassan a technical question on the crash and the drift bug. |
+
+---
+
+## Track 1: `kks32/mpm-engine`
+
+**Environment, Vista, confirmed working:**
+
+| Component | Value |
+|---|---|
+| Python | `3.12.13`, venv via `uv` |
+| `torch` | `2.11.0+cu128` |
+| CUDA | Confirmed `True` on GH200 |
+| Verified APIs | `newtonian()`, `mesh_sdf.build_sdf()`, `Solver.add_sdf_collider()` |
+
+**Current vehicle scene** (`box_sdf_collider_setup.py`, local to Vista and to Downloads on my Mac, not yet pushed to this repo):
+
+```python
+BOX_DIMS_M = (4.66, 1.79, 1.44)   # real sedan bounding box, x=length/flow direction
+DOMAIN_SIZE_M = 10.0              # cubic domain, sized for upstream/downstream room
+grid = GridConfig(n_grid=192, grid_lim=DOMAIN_SIZE_M)
+
+vehicle_center = (6.5, 5.0, floor_z + BOX_DIMS_M[2] / 2.0)
+vehicle = solver.add_sdf_collider(
+    sdf, center=vehicle_center, quat=(0.0, 0.0, 0.0, 1.0),
+    velocity=(0.0, 0.0, 0.0), omega=(0.0, 0.0, 0.0),
+    surface="separable", friction=0.55,
+)
+```
+
+Run loop tracks peak contact force over a 1.0s simulated window, not just a fixed step count.
+
+**Open bug:** water particles drift toward the low-x domain edge during gravity settling, before the vehicle is added. Not yet isolated: plane friction, water block bounds, or grid setup. This bug was described against an older, smaller version of this script; not yet reconfirmed against the current one.
+
+---
+
+## Track 2: Direct Genesis MPM
+
+File: [`simulation/can_it_ford_L2_mpm.py`](https://github.com/jcerrell-IS/can-it-ford/blob/main/simulation/can_it_ford_L2_mpm.py)
+
+**Configured parameters (verified against the live file):**
+
+| Parameter | Value |
+|---|---|
+| `grid_density` | `64` |
+| `coup_friction` | `0.55` |
+| `rho` | `604` |
+| Vehicle box | `1.0 x 1.6 x 1.5 m` (generic, not sedan-scale, see [Track Divergence](#track-divergence)) |
+| `dt` / `substeps` | `4e-3` / `32` |
+
+**Known bug in this file:** the auto-generated `run_tag` string reads `grid128_cf0p4`, implying `grid_density=128` and `coup_friction=0.4`. Neither matches the actual configured values above. Stale naming, left from an earlier version, does not affect the physics, does affect anyone reading filenames.
+
+**Tonight's run, 0.30 m depth, 1.5 m/s:**
+
+| Result | Value |
+|---|---|
+| Steps completed | Step 0 only |
+| Failure | `CUDA_ERROR_ILLEGAL_ADDRESS`, raised inside the MPM solver's internal state-validity check |
+| When | First post-coupling substep, vehicle beginning to settle under gravity |
+| Verdict | None |
+| Output written | None: no video, no `.npz`, no CSV row |
+| Traceback saved | None found, anywhere: local repo, Vista, GitHub |
+
+---
+
+## Track Divergence
+
+The two tracks currently use different vehicle geometry. `kks32/mpm-engine`'s vehicle box was updated to the real sedan bounding box (`4.66 x 1.79 x 1.44 m`) on July 9. `can_it_ford_L2_mpm.py` still uses the older generic box (`1.0 x 1.6 x 1.5 m`) from July 8 and has not been updated since. Flagging this so it is not mistaken for a single consistent vehicle representation across both tracks.
+
+---
+
+## Vehicle Mesh
+
+Two independent reconstruction attempts, both closed, for different reasons.
+
+| Attempt | Method | Result |
+|---|---|---|
+| 1 | Marching cubes, Luke Smith's ls6 point cloud (44,148 points, no faces) | Closed to genus 9. Further closure would merge the wheels into the body. Stopped rather than force a bad mesh. |
+| 2 | Poisson reconstruction, `open3d`, `reconstruct_car.py` | Technically succeeded, watertight, clean. Produced `car_mesh.ply`. Diagnosed as unusable: raw source point cloud is `0.345 x 0.174 x 0.72 m`, `car_mesh.ply` is `0.33 x 0.17 x 0.71 m`, nearly identical. The reconstruction introduced no scale error; the source point cloud was never car-sized to begin with, likely a small tutorial demo asset. |
+
+**Also checked, still open:**
+- A CoRL 2026 planning-paper submission from the lab (unpublished, cites PVWM as its own reference [1]) uses a real truck splat in a flood MPM scene, the Alaska Village Scene. Asked Cheng-Hsi whether it's reusable, no answer yet.
+- Cheng-Hsi's own `hicss-splat` dataset also represents its truck as a placeholder ball, not a real mesh.
+
+**Net status:** no confirmed real vehicle mesh exists anywhere in the pipeline. Current plan: box proxy, sized to real sedan dimensions in Track 1.
+
+---
+
+## Vehicle Physics Reference
+
+| Class | Mass | Bbox (L x W x H) | CG height | Ixx / Iyy / Izz (kg·m²) |
+|---|---|---|---|---|
+| Compact sedan (Corolla/Civic) | ~1390 kg | `4.66 x 1.79 x 1.44 m` | 0.52 m | 365 / 1617 / 1785 |
+
+Source: NHTSA Light Vehicle Inertial Parameter Database, SAE Technical Paper 1999-01-1336. Measured on instrumented rigs, not box-estimated.
+
+---
+
+## Prior Work: Genesis SPH
+
+Five renders, already reviewed by Kumar, not new evidence, listed for completeness only.
+
+| Render | Depth | Velocity |
+|---|---|---|
+| `simulation_d0p3_v1p5.mp4` | 0.3 m | 1.5 m/s |
+| `simulation_d0p6_v1p5.mp4` | 0.6 m | 1.5 m/s |
+| `simulation_d0p6_v2p0.mp4` | 0.6 m | 2.0 m/s |
+| `simulation_d0p6_v2p5.mp4` | 0.6 m | 2.5 m/s |
+| `simulation_d1p0_v3p0.mp4` | 1.0 m | 3.0 m/s |
+
+Solver: `gs.materials.SPH.Liquid`, not MPM. Methods rehearsal, not the paper's dataset.
+
+---
+
+## Citations
+
+| Claim | Source | Backing on file |
+|---|---|---|
+| L1 hazard threshold | Shand et al. 2011, AR&R Project 10 Stage 2 | `citations/ARR_Project_10_Stage2_Report_Final.pdf` |
+| Friction range (superseded) | Smith-Modra-Felder 2019 | `citations/Smith-Modra-Felder/smith2019_instability_table.png` |
+| Friction `0.55` | Azhar et al. 2023 | No PDF on file, no public link confirmed |
+| Vehicle mass/inertia | NHTSA LVIP Database, SAE 1999-01-1336 | No public link confirmed |
+| Framework | Thorpe et al., PVWM | [arXiv:2605.30542](https://arxiv.org/abs/2605.30542) |
+| `DRIFT_THRESHOLD = 0.05 m` | Not cited anywhere in the live code | Open, no source identified yet |
+
+---
+
+## Open Questions
+
+- [ ] Root cause of `CUDA_ERROR_ILLEGAL_ADDRESS` in `can_it_ford_L2_mpm.py`
+- [ ] Root cause of water drift in `box_sdf_collider_setup.py`, and whether it still occurs in the current (sedan-scale) version
+- [ ] Whether the CoRL 2026 truck mesh is reusable
+- [ ] Source for `DRIFT_THRESHOLD = 0.05 m`
+- [ ] Whether the two tracks should be reconciled to one vehicle representation
+
+## Next Steps
+
+- [ ] Debug the CUDA crash in `can_it_ford_L2_mpm.py`; capture a full traceback next run
+- [ ] Debug the water drift in `box_sdf_collider_setup.py`
+- [ ] Push `box_sdf_collider_setup.py` to this repo
+- [ ] Update `can_it_ford_L2_mpm.py` to the real sedan box dimensions, or document why it should stay separate
+- [ ] Fix the stale `run_tag` naming in `can_it_ford_L2_mpm.py`
+- [ ] Resolve vehicle mesh: CoRL truck, a sourced CC0 model, or confirm box proxy for the final result
+- [ ] Resolve the `DRIFT_THRESHOLD` citation
