@@ -72,6 +72,22 @@ def main(device="auto"):
 
     solver.add_plane(point=(0.0, 0.0, floor_z), normal=(0.0, 0.0, 1.0), surface="slip", friction=0.2)
 
+    # --- Lateral confinement walls -------------------------------------------------
+    # P2G/G2P use a quadratic B-spline stencil reaching ~2 cells; a particle that drifts
+    # within 2*dx of a true domain edge pushes the stencil off-grid and crashes the run.
+    # Reflect settling/splashing particles with slip walls placed 2*dx *inside* each
+    # lateral edge. Inward-pointing normals match the floor plane convention above; the
+    # floor (low-z) is already handled and the top (high-z) is left open for the free
+    # surface to rise. dx = grid_lim / n_grid, so this tracks DOMAIN_SIZE_M automatically.
+    dx = grid.dx
+    margin = 2.0 * dx
+    lo, hi = margin, DOMAIN_SIZE_M - margin
+    solver.add_plane(point=(lo, 0.0, 0.0), normal=(1.0, 0.0, 0.0), surface="slip", friction=0.2)   # low-x
+    solver.add_plane(point=(hi, 0.0, 0.0), normal=(-1.0, 0.0, 0.0), surface="slip", friction=0.2)  # high-x
+    solver.add_plane(point=(0.0, lo, 0.0), normal=(0.0, 1.0, 0.0), surface="slip", friction=0.2)   # low-y
+    solver.add_plane(point=(0.0, hi, 0.0), normal=(0.0, -1.0, 0.0), surface="slip", friction=0.2)  # high-y
+    print(f"lateral slip walls at {lo:.4f} & {hi:.4f} m (2*dx={margin:.4f} m inside domain [0, {DOMAIN_SIZE_M}])")
+
     vehicle_center = (6.5, 5.0, floor_z + BOX_DIMS_M[2] / 2.0)
     vehicle = solver.add_sdf_collider(
         sdf,
