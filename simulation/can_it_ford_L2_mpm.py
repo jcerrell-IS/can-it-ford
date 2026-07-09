@@ -23,9 +23,9 @@ def main():
     gs.init(precision="32", logging_level="warning")
 
     scene = gs.Scene(
-        sim_options=gs.options.SimOptions(dt=4e-3, substeps=20),
+        sim_options=gs.options.SimOptions(dt=4e-3, substeps=32),
         mpm_options=gs.options.MPMOptions(
-            grid_density=128,
+            grid_density=64,
             lower_bound=(-0.1, -1.0, -0.1),
             upper_bound=(2.1,  1.0, 2.5),
         ),
@@ -45,8 +45,8 @@ def main():
     water   = scene.add_entity(
         material=gs.materials.MPM.Liquid(),
         morph=gs.morphs.Box(
-            pos=(1.0, 0.0, water_depth / 2.0),
-            size=(1.8, 1.8, water_depth),
+            pos=(0.275, 0.0, water_depth / 2.0),
+            size=(0.35, 1.8, water_depth),
         ),
         surface=gs.surfaces.Default(color=(0.5, 0.7, 0.9, 1.0)),
     )
@@ -54,7 +54,7 @@ def main():
     vehicle = scene.add_entity(
         material=vehicle_rigid,
         morph=gs.morphs.Box(
-            pos=(1.0, 0.0, 0.75),
+            pos=(1.0, 0.0, 0.755),
             size=(1.0, 1.6, 1.5),
             fixed=False,
         ),
@@ -88,7 +88,7 @@ def main():
 
         if water_velocity > 0.0:
             pts  = water.get_particles_pos()
-            mask = pts[:, 0] < 0.3
+            mask = pts[:, 0] < 0.14
             if mask.any():
                 vel              = water.get_particles_vel()
                 vel[mask, 0]     = water_velocity
@@ -130,7 +130,7 @@ def main():
     np.savez(npz_path, pos=pos_final, vel=vel_final,
              depth=water_depth, velocity=water_velocity,
              verdict=verdict, peak_x_disp=max_x_disp, rho=604,
-             coup_friction=0.55, grid_density=128, run_tag=run_tag)
+             coup_friction=0.55, grid_density=64, run_tag=run_tag)
     print(f"Saved particle state: {npz_path}")
 
     print(f"\n=== RESULT ===")
