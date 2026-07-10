@@ -40,7 +40,7 @@ def make_vehicle_box_sdf():
     return sdf
 
 
-def make_water_block(grid: GridConfig, depth=0.30, velocity_x=1.5):
+def make_water_block(grid: GridConfig, floor_z=0.0, depth=0.30, velocity_x=1.5):
     """Small smoke-test water block. Replace with project particles/volumes for production."""
     dx = grid.dx
     h = 0.5 * dx
@@ -49,7 +49,7 @@ def make_water_block(grid: GridConfig, depth=0.30, velocity_x=1.5):
     # y spans 3..7 (4 m) around y=5.0, enveloping the vehicle's y=[4.11, 5.90] (width 1.79).
     x = np.arange(0.30, 3.80, h)
     y = np.arange(3.00, 7.00, h)
-    z = np.arange(0.05, depth, h)
+    z = np.arange(floor_z, floor_z + depth, h)
     pts = np.stack(np.meshgrid(x, y, z, indexing="ij"), -1).reshape(-1, 3)
     # Keep the smoke test small on CPU; production should use a denser water particle set.
     pts = pts[::4].astype(np.float32)
@@ -60,11 +60,11 @@ def make_water_block(grid: GridConfig, depth=0.30, velocity_x=1.5):
 
 
 def main(device="auto"):
-    grid = GridConfig(n_grid=192, grid_lim=DOMAIN_SIZE_M)
-    floor_z = 0.0
+    grid = GridConfig(n_grid=288, grid_lim=DOMAIN_SIZE_M)
+    floor_z = 3.0 * grid.dx
     sdf = make_vehicle_box_sdf()
 
-    water_pos, water_vol, water_vel = make_water_block(grid)
+    water_pos, water_vol, water_vel = make_water_block(grid, floor_z=floor_z)
     solver = Solver(grid=grid, device=device).load_particles(water_pos, water_vol)
     solver.set_material(newtonian(eta=0.001, density=1000.0, bulk_modulus=2.0e5))
 
@@ -80,7 +80,7 @@ def main(device="auto"):
     # floor (low-z) is already handled and the top (high-z) is left open for the free
     # surface to rise. dx = grid_lim / n_grid, so this tracks DOMAIN_SIZE_M automatically.
     dx = grid.dx
-    margin = 2.0 * dx
+    margin = 4.0 * dx
     lo, hi = margin, DOMAIN_SIZE_M - margin
     solver.add_plane(point=(lo, 0.0, 0.0), normal=(1.0, 0.0, 0.0), surface="slip", friction=0.2)   # low-x
     solver.add_plane(point=(hi, 0.0, 0.0), normal=(-1.0, 0.0, 0.0), surface="slip", friction=0.2)  # high-x
