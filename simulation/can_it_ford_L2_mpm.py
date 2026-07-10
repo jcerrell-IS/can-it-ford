@@ -111,7 +111,7 @@ def main():
     depth_str = str(water_depth).replace(".", "p")
     vel_str   = str(water_velocity).replace(".", "p")
     run_stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    run_tag   = f"d{depth_str}_v{vel_str}_grid128_cf0p4_{run_stamp}"
+    run_tag   = f"d{depth_str}_v{vel_str}_grid64_cf0p55_{run_stamp}"
 
     if cam is not None:
         video_path = f"simulation_mpm_{run_tag}.mp4"
