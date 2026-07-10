@@ -25,7 +25,7 @@ def main():
     scene = gs.Scene(
         sim_options=gs.options.SimOptions(dt=4e-3, substeps=32),
         mpm_options=gs.options.MPMOptions(
-            grid_density=64,
+            grid_density=128,
             lower_bound=(-0.1, -1.0, -0.1),
             upper_bound=(2.1,  1.0, 2.5),
         ),
@@ -111,7 +111,7 @@ def main():
     depth_str = str(water_depth).replace(".", "p")
     vel_str   = str(water_velocity).replace(".", "p")
     run_stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    run_tag   = f"d{depth_str}_v{vel_str}_grid64_cf0p55_{run_stamp}"
+    run_tag   = f"d{depth_str}_v{vel_str}_grid128_cf0p55_{run_stamp}"
 
     if cam is not None:
         video_path = f"simulation_mpm_{run_tag}.mp4"
@@ -130,7 +130,7 @@ def main():
     np.savez(npz_path, pos=pos_final, vel=vel_final,
              depth=water_depth, velocity=water_velocity,
              verdict=verdict, peak_x_disp=max_x_disp, rho=604,
-             coup_friction=0.55, grid_density=64, run_tag=run_tag)
+             coup_friction=0.55, grid_density=128, run_tag=run_tag)
     print(f"Saved particle state: {npz_path}")
 
     print(f"\n=== RESULT ===")
