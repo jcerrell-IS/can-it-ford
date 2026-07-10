@@ -212,3 +212,5 @@ See `kumar_july9_update/STATUS.md` for the current, fuller, actively-maintained 
 ## Deadline note
 
 DesignSafe DOI was originally self-targeted for July 10. This is self-imposed, not an NSF requirement. Given the corrections above, publishing before the rebuild would be premature. Target is now approximately July 21 to July 24, pending explicit confirmation with Kumar. The only real hard constraint is that a DOI must exist before the July 31 final paper.
+
+**truck_trimmed.ply, closed July 10.** Extents 1.447 x 0.450 x 0.411m. Checked against all three vehicle_params.py classes for a uniform rescale, none fit within 10% spread. Not a scale-ambiguity issue, proportions themselves don't match a real vehicle. Box proxy remains the committed geometry.
