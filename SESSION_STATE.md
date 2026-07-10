@@ -2,15 +2,15 @@
 
 Read this before doing anything else, on any machine. Update the relevant section before you stop working, even mid-task. This file exists so a fresh terminal or a fresh chat session can pick up exactly where the last one left off, instead of re-deriving it from memory.
 
-Last updated: July 10, 2026, 07:20 UTC (Claude chat, from a real terminal paste, not from memory).
+Last updated: July 10, 2026, 06:44 UTC (Claude chat, verified live against GitHub + Slack, not from memory).
 
 ---
 
 ## MacBook (local)
 
-**Last command run:** `brew install ffmpeg` (upgraded to 8.1.2_1), `pip install trimesh pyvista` (confirmed importable). Both done, not blockers.
-**Current status:** Not a blocker. A second, separate Claude Code TUI session is running here, see "Gsplat / COLMAP" below, that's the active one.
-**Next action:** none queued for the plain shell. Attention goes to the Claude Code session instead.
+**Last command run:** n/a, seeded from chat verification, not a real terminal session.
+**Current status:** Not the blocker right now. Everything blocking is on Vista.
+**Next action:** none queued.
 
 ## Vista (Genesis MPM, GH200)
 
@@ -33,7 +33,7 @@ Last updated: July 10, 2026, 07:20 UTC (Claude chat, from a real terminal paste,
 
 ## Cross-cutting, not tied to one machine
 
-- **W&B API key:** confirmed still present in `wandb_backfill.py`'s git history (commit `50eff29`), per `PROJECT_FILE_MAP.md`. Removing it from the current file does not remove it from history. Rotate on wandb.ai today regardless of current-file state.
+- **W&B API key:** confirmed still present in `wandb_backfill.py`'s git history (commit `50eff29`), per `PROJECT_FILE_MAP.md`. Removing it from the current file does not remove it from history. Rotate on wandb.ai today regardless of current-file state. **[Jul 10, 08:08 UTC, MacBook]** Repo confirmed **PUBLIC** on GitHub (`4bd2967` + `50eff29` are on `origin/main`), so the historical key is compromised. Current file `analysis/wandb_backfill.py` verified clean (reads `os.environ`; a dangling `wandb.login(key=API_KEY)` on line 22 references an undefined name — harmless, worth deleting). User reports creating a new key, but the **revoke of the exposed key is still UNCONFIRMED** — do not mark rotated until verified on wandb.ai.
 - **Poster board size:** not confirmed anywhere (Slack, calendar, or files, all checked). Ask Rosie or Luke directly, do not guess or default to 42x56/48x36/42x60.
 - **Poster session date:** master doc says July 30, one external note claims July 29. Neither independently confirmed via calendar in this session. Confirm directly before building anything date-specific.
 - **10 AM meeting:** Kumar, Josie, Josue Ortiz confirmed via Slack for "tomorrow" relative to July 9, i.e. today, July 10.
