@@ -38,3 +38,5 @@ Last updated: July 10, 2026, 06:44 UTC (Claude chat, verified live against GitHu
 - **Poster session date:** master doc says July 30, one external note claims July 29. Neither independently confirmed via calendar in this session. Confirm directly before building anything date-specific.
 - **10 AM meeting:** Kumar, Josie, Josue Ortiz confirmed via Slack for "tomorrow" relative to July 9, i.e. today, July 10.
 - **Local repo note:** `~/can-it-ford/kumar_july9_update/` was committed and pushed from the MacBook (commit `cbba280`), separately from and prior to the GitHub-API-side edits made in Claude chat today. Both landed on the same `main`, no conflict, but it's worth knowing two different tools have been writing to this repo today.
+
+**Bridge scaffold (bridge/):** landed on main via rebase, 13:49 UTC. extract.py, gaussian_io.py, genesis_particles.py applied clean, no conflicts in the actual code.
