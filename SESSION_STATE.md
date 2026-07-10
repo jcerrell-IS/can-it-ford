@@ -2,27 +2,27 @@
 
 Read this before doing anything else, on any machine. Update the relevant section before you stop working, even mid-task. This file exists so a fresh terminal or a fresh chat session can pick up exactly where the last one left off, instead of re-deriving it from memory.
 
-Last updated: July 10, 2026, 06:44 UTC (Claude chat, verified live against GitHub + Slack, not from memory).
+Last updated: July 10, 2026, 07:20 UTC (Claude chat, from a real terminal paste, not from memory).
 
 ---
 
 ## MacBook (local)
 
-**Last command run:** n/a, seeded from chat verification, not a real terminal session.
-**Current status:** Not the blocker right now. Everything blocking is on Vista.
-**Next action:** none queued.
+**Last command run:** `brew install ffmpeg` (upgraded to 8.1.2_1), `pip install trimesh pyvista` (confirmed importable). Both done, not blockers.
+**Current status:** Not a blocker. A second, separate Claude Code TUI session is running here, see "Gsplat / COLMAP" below, that's the active one.
+**Next action:** none queued for the plain shell. Attention goes to the Claude Code session instead.
 
 ## Vista (Genesis MPM, GH200)
 
-**Last command run:** `python3 simulation/can_it_ford_L2_mpm.py 0.30 1.5` inside the Apptainer container, July 9 evening (per Slack + kumar_july9_update/STATUS.md).
-**Current status:** Crashes at step 0, `CUDA_ERROR_ILLEGAL_ADDRESS`, first coupled substep. Zero output (no video, no npz, no CSV row). This is the single highest-priority open blocker in the whole project.
-**Next action:** rerun with `CUDA_LAUNCH_BLOCKING=1` and save the FULL traceback to `logs/mpm_crash_july10.txt` before doing anything else to this script. No traceback has ever been saved for this crash (confirmed, STATUS.md). Two just-fixed items already live: `run_tag` string now correctly says `grid64_cf0p55` instead of the stale `grid128_cf0p4` label; `PROVISIONAL_STATUS.md`'s session-6 "clean MPM run" claim is now marked unconfirmed at the top of that file. Do not re-trust that 0.0038m number without a fresh, logged run.
+**Last command run:** `idev -N 1 -n 1 -p gh-dev -t 1:30:00`, landed on `c642-051`, then `cd /work/11603/jcerrell0629/vista/can-it-ford` (note: repo is one level deeper than `/work/11603/jcerrell0629/vista`, the plain path is NOT a git repo, `can-it-ford` is a subfolder of it), `git fetch origin`, `git log HEAD..origin/main --oneline` queued, output not yet reported back to chat.
+**Current status:** `grid_density` bumped 64->128 on GitHub (per Genesis issue #600, car-scale tunneling risk), not yet pulled or tested on Vista. Still crashes at step 0 as of the last confirmed run (July 9, grid_density=64). Whether 128 fixes it is unconfirmed.
+**Next action:** `git pull` inside `can-it-ford` (now that the path is correct), then rerun with `CUDA_LAUNCH_BLOCKING=1`, tee the full output to `logs/mpm_crash_july10.txt`. This has never been done, no traceback has ever been captured for this crash.
 
-## LS6 (gsplat, A100)
+## Gsplat / COLMAP (real drain footage, separate Claude Code session, MacBook)
 
-**Last command run:** unknown, not confirmed this session.
-**Current status:** Piece 1 of the rebuild (shoot + reconstruct a real water-adjacent scene) has not started. `box_sdf_collider_setup.py` (the kks32/mpm-engine track) is further along than direct Genesis MPM: real sedan-scale vehicle box wired in, but has an unresolved water-drift bug during gravity settling, before the vehicle is even added.
-**Next action:** confirm current state directly (`ls`, `git status`) before assuming anything here, do not trust old chat summaries.
+**Last command run (as best reconstructed from a garbled terminal paste):** SD card mounted at `/Volumes/Untitled/DCIM/891_0709/`, 5 MP4s found, 4 usable (2954 is 1.5s, discarded). Classified as 2 drains: **Drain A** = 2955/2957/2959 (limestone wall, metal railing, P18 sign; best orbit = 2957), **Drain B** = 2956 (plaza, red Adirondack chairs). Files renamed to `drainA.MP4`/`drainB.MP4`, frames extracted via `ffmpeg -vf fps=2` for both (Drain B expected ~354 frames from its 177s duration). Session then moved to COLMAP: was instructed to SSH to `ls6.tacc.utexas.edu`, but the terminal prompt actually shown was `(vista) c609-122[gh]`, meaning it ended up on a Vista compute node, not LS6. `echo $SCRATCH` confirmed `/scratch/11603/jcerrell0629`, `mkdir -p $SCRATCH/datasets` succeeded. One command failed on a stray leading `- ` character (`-bash: -: command not found`), harmless typo, not yet re-run clean.
+**Current status:** THIS IS REAL PROGRESS ON PIECE 1 (real gsplat scene) for the first time in the project. Not yet run: `scp` the extracted frames to `$SCRATCH/datasets/drainA` (and B), then COLMAP `feature_extractor` + `exhaustive_matcher` + `mapper` (CPU-only mode, `--SiftExtraction.use_gpu 0 --SiftMatching.use_gpu 0`, per the session's own plan) to get camera poses. Health check to watch for: the mapper's `Registered images: X / Y` line, expect most of the ~354+ frames to register or the reconstruction is unusable (motion blur suspected as the failure mode if it's low).
+**Next action:** re-run the `$SCRATCH` setup cleanly (drop the stray `- `), scp Drain A's frames over, run COLMAP on Drain A first, report the registered-image count before touching Drain B or spending a gsplat training run on it. Also unresolved: confirm whether staying on Vista (vs the originally planned LS6) is fine for this, or whether gsplat training specifically needs LS6's tested environment.
 
 ## Rotating / fourth pane
 
@@ -37,3 +37,4 @@ Last updated: July 10, 2026, 06:44 UTC (Claude chat, verified live against GitHu
 - **Poster board size:** not confirmed anywhere (Slack, calendar, or files, all checked). Ask Rosie or Luke directly, do not guess or default to 42x56/48x36/42x60.
 - **Poster session date:** master doc says July 30, one external note claims July 29. Neither independently confirmed via calendar in this session. Confirm directly before building anything date-specific.
 - **10 AM meeting:** Kumar, Josie, Josue Ortiz confirmed via Slack for "tomorrow" relative to July 9, i.e. today, July 10.
+- **Local repo note:** `~/can-it-ford/kumar_july9_update/` was committed and pushed from the MacBook (commit `cbba280`), separately from and prior to the GitHub-API-side edits made in Claude chat today. Both landed on the same `main`, no conflict, but it's worth knowing two different tools have been writing to this repo today.
