@@ -2,7 +2,19 @@
 
 This file exists so the project's revision history is visible, not hidden. The README's "Key finding" section is kept as originally written. This file documents what has changed since, and why, so a reader can see where this started and where it is going.
 
-Last updated: July 7, 2026 (session 6).
+Last updated: July 10, 2026 (correction added below; nothing in the session 6 entry deleted, per this file's own convention).
+
+---
+
+## July 10 correction: the session 6 "first clean MPM run" below was never independently confirmed, and the direct-Genesis-MPM track has since crashed with zero output
+
+I flagged this to myself on July 8 and could not reproduce it (grep on Vista at the time showed both L2 scripts still running `SPH.Liquid`), and retracted the claim in that day's session. I did not come back and correct this file after that retraction.
+
+Then on July 9, running the actual current `can_it_ford_L2_mpm.py` (the file the July 7 session 6 entry below describes) produced: step 0 only, `CUDA_ERROR_ILLEGAL_ADDRESS` on the first coupled substep, no verdict, no video, no `.npz`, no CSV row. Full write-up: `kumar_july9_update/STATUS.md`, Track 2. Kumar was told this directly the same night, honestly, not as a "success."
+
+So the specific numbers in the July 7 entry below (`verdict=FORD peak_x_disp=0.0038m`) are not confirmed to have come from a real run of this pipeline. They may be a real result from an earlier, different version of the script, a mis-transcribed number, or a hallucinated one. I don't know which, and I'm not deleting the entry, I'm flagging it as unconfirmed until someone (me, on Vista, with a saved terminal log) reproduces it.
+
+**Current true state, as of July 9 (see `kumar_july9_update/STATUS.md` for full detail):** two MPM tracks running in parallel, neither has produced a FORD/NO-FORD verdict. Direct Genesis MPM (Track 2) crashes at step 0. `kks32/mpm-engine` (Track 1) is further along (real sedan-scale vehicle box wired in) but has an unresolved water-drift bug during gravity settling, before the vehicle is even added.
 
 ---
 
@@ -25,6 +37,8 @@ depth=0.3m velocity=1.5m/s verdict=FORD peak_x_disp=0.0038m final_x_disp=0.0038m
 Agrees with AR&R L1 at this condition (hazard = 0.3*1.5 = 0.45, below the 0.60 threshold, both say FORD). **Not yet directly comparable to the SPH result at the same condition**, the only SPH run under the full 5-bug fix stack so far was the d=1.0/v=3.0 headline case, not this milder one. A same-condition SPH rerun at d=0.3/v=1.5 under the full stack is the natural next comparison, not yet done.
 
 **Still open before this counts as more than a smoke test:** `grid_density=64` is below the `128` minimum flagged for real car geometry (issue #600 tunneling risk), acceptable for now since the vehicle is still a box proxy, not yet acceptable once a real mesh is in place. Domain is still the small synthetic-scale box, not the real-scene rule-of-thumb size. Only one condition tested, not a sweep.
+
+**(See the July 10 correction at the top of this file: this result is now unconfirmed, not verified fact.)**
 
 ---
 
@@ -63,6 +77,8 @@ vehicle_rigid = gs.materials.Rigid(needs_coup=True, coup_friction=0.4, rho=604)
 ```
 
 `coup_friction=0.4` sits inside the empirically defensible range: Azhar et al. 2023 used mu=0.55 in a matched scale model, Smith et al. 2019 measured tire-pavement friction on concrete, gravel, and sand and recommended using a worst-case value, and the general range cited across both is 0.3 to 0.6. Variable renamed from `frictionless_rigid` to `vehicle_rigid` since the old name was no longer accurate.
+
+**Note added July 10:** the live code as of today actually runs `coup_friction=0.55` (Azhar et al. 2023's own value directly, not the 0.4 blended estimate described above). See `kumar_july9_update/STATUS.md` for the current, verified-against-the-live-file parameter table.
 
 **Why this matters more than a routine parameter fix:** a floating, near-massless body has ground normal force N approximately 0, so Coulomb friction mu*N approximately 0 regardless of what mu is set to. The original "friction-invariant drift, 0.395-0.400m across mu 0.0-0.7" result is exactly the signature that produces. Once mass was fixed (session 2), the vehicle should rest on the ground and friction should start to matter. It never got the chance to, because coup_friction stayed at 0.0 through every subsequent session. The session 3 milestone result (d=1.0m, v=3.0m/s, 0.1836m, NO-FORD) was generated with correct mass and correct submersion but still zero friction. Whether that verdict survives non-zero friction is unknown until it's rerun.
 
@@ -128,7 +144,7 @@ Session 4 set `mu=0.001` believing it matched real water's SI viscosity. Genesis
 
 ### 1e. Friction coupling bug (discovered and fixed July 7, session 5)
 
-`coup_friction=0.0` was identified as a problem during the session 2 mass-bug discussion but never actually changed until session 5. Every result from session 2 onward, including the session 3 milestone, ran with zero friction. Fixed to `coup_friction=0.4`, cited (Azhar et al. 2023, Smith et al. 2019, defensible range 0.3-0.6).
+`coup_friction=0.0` was identified as a problem during the session 2 mass-bug discussion but never actually changed until session 5. Every result from session 2 onward, including the session 3 milestone, ran with zero friction. Fixed to `coup_friction=0.4` (later moved to `0.55`, see July 10 note above), cited (Azhar et al. 2023, Smith et al. 2019, defensible range 0.3-0.6).
 
 ### 1f. MPM boundary safety padding (discovered and fixed July 7, session 6)
 
@@ -136,7 +152,7 @@ MPM pads the specified domain inward by `3*dx` on every face, SPH does not do th
 
 ### 2. Solver mismatch, now partially resolved
 
-SPH results were run on Genesis's SPH solver. MPM draft now runs clean on one test condition as of session 6, not yet swept.
+SPH results were run on Genesis's SPH solver. MPM draft crashes at step 0 as of July 9 (see July 10 correction at top), not yet a clean sweep, not yet a single confirmed verdict.
 
 ### 3. Synthetic geometry, not a reconstructed scene
 
@@ -152,7 +168,7 @@ No published paper defines a fixed 0.05m displacement threshold. Reframed as rou
 
 ### 6. Vehicle geometry is a proxy, not a documented consistent scale
 
-Current box is 1.0 x 1.6 x 1.5m, 2.4 cubic meters. Real vehicle mass better sourced now via EPA 2025 Automotive Trends Report (~1975-2014 kg average), see `REBUILD_REFERENCE.md`.
+Current box is 1.0 x 1.6 x 1.5m, 2.4 cubic meters. Real vehicle mass better sourced now via EPA 2025 Automotive Trends Report (~1975-2014 kg average), see `REBUILD_REFERENCE.md`. As of July 9, the `kks32/mpm-engine` track uses the real sedan bounding box (4.66 x 1.79 x 1.44m, NHTSA/SAE 1999-01-1336) but `can_it_ford_L2_mpm.py` has not been updated to match, see `kumar_july9_update/STATUS.md`, "Track Divergence."
 
 ### 7. CSV and NPZ logging gaps (resolved July 7, sessions 4-5)
 
@@ -162,11 +178,11 @@ Current box is 1.0 x 1.6 x 1.5m, 2.4 cubic meters. Real vehicle mass better sour
 
 ## What carries over to MPM, and what doesn't
 
-**Carries over directly, validated on the pilot scene, confirmed working as of session 6:** `rho=604`, `size=(1.0, 1.6, 1.5)`, `pos=(1.0, 0.0, 0.75)` for the vehicle. `coup_friction=0.4`. `dt=4e-3, substeps=20`.
+**Carries over directly, validated on the pilot scene, confirmed working as of session 6:** `rho=604`, `size=(1.0, 1.6, 1.5)`, `pos=(1.0, 0.0, 0.75)` for the vehicle (box-proxy scale, see item 6 above for the sedan-scale divergence). `coup_friction` (0.4 in this entry, 0.55 in the live file as of July 10). `dt=4e-3, substeps=20` (substeps=32 in the live file as of July 9).
 
 **Does not carry over:** `mu` has no MPM.Liquid equivalent. MPM domains need `3*dx` safety padding beyond the geometry, SPH domains don't.
 
-**Vehicle representation does not change.** Stays a `Rigid` entity, `needs_coup=True`/`coup_friction`, against `MPM.Liquid` instead of `SPH.Liquid`, confirmed working session 6.
+**Vehicle representation does not change.** Stays a `Rigid` entity, `needs_coup=True`/`coup_friction`, against `MPM.Liquid` instead of `SPH.Liquid`. As of July 10: wired correctly, has not yet produced a completed run, see correction at top.
 
 **Template for the migration:** `examples/coupling/water_wheel.py --solver mpm`, `examples/coupling/sand_wheel.py`, `examples/coupling/flush_cubes.py`.
 
@@ -183,13 +199,15 @@ Cheng-Hsi already has a real flood scene splat dataset with a vehicle (`chhsiao9
 1. ~~Push the corrected script (mass, geometry, timestep) to this repo~~ **Done, July 7.**
 2. ~~Fix the CSV and NPZ logging gaps~~ **Done, July 7.**
 3. ~~Fix friction coupling and correct the viscosity overcorrection~~ **Done, July 7, session 5.**
-4. ~~Get the MPM draft running on at least one condition~~ **Done, July 7, session 6.**
+4. ~~Get the MPM draft running on at least one condition~~ **Not actually done, see July 10 correction at top. Still the current top priority.**
 5. Rerun all SPH conditions with the full corrected fix stack (mass, geometry, timestep, viscosity, friction, new CSV filename)
-6. Sweep the MPM script across the full condition set, not just one
+6. Sweep the MPM script across the full condition set, not just one, once it can complete even one condition
 7. Test whether the drift result survives an enlarged/damped domain, the single most decisive open test on the closed-boundary question
 8. Shoot and gsplat-reconstruct a real water-adjacent scene, or prototype against Cheng-Hsi's existing flood splat if confirmed usable
 9. Write or adapt the PhysGaussian/Taichi bridge from real reconstructed geometry into simulatable particles
 10. Rerun the full depth/velocity sweep on the corrected, real pipeline
+
+See `kumar_july9_update/STATUS.md` for the current, fuller, actively-maintained version of this tracking table.
 
 ## Deadline note
 
