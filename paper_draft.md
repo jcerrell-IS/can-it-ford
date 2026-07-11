@@ -35,7 +35,7 @@ Our pipeline instantiates two complementary halves of a closed perception-to-act
 
 ## Data Availability
 
-Simulation dataset published on DesignSafe-CI (DOI: [INSERT AFTER JULY 10]).
+Simulation dataset published on DesignSafe-CI (DOI: pending, target July 21-24 2026).
 Code: https://github.com/jcerrell-IS/can-it-ford
 
 ---
