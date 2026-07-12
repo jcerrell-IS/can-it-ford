@@ -35,9 +35,9 @@ for thresh, label, ls, col, lw in [
 ax.axvline(0.15, color='#333333', lw=1.4, linestyle='--',
            label='L0 depth threshold (0.15 m)', zorder=3)
 
-for x_val, txt in [(0.30, 'NWS 12in\nSmith 2019'), (0.60, 'NWS 24in')]:
-    ax.axvline(x_val, color='gray', lw=0.9, linestyle=':', alpha=0.55, zorder=2)
-    ax.text(x_val - 0.005, 2.82, txt, ha='right', fontsize=7.5, color='gray', va='top')
+
+
+
 
 ford     = df[df['category'] == 'FORD_AGREE']
 agree_no = df[df['category'] == 'NOFORD_AGREE']
