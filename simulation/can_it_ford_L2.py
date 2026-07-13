@@ -6,8 +6,12 @@ from datetime import datetime
 
 import genesis as gs
 
-water_depth    = float(sys.argv[1]) if len(sys.argv) > 1 and not sys.argv[1].startswith('-') else 0.30
-water_velocity = float(sys.argv[2]) if len(sys.argv) > 2 and not sys.argv[2].startswith('-') else 0.0
+_pre_parser = argparse.ArgumentParser(add_help=False)
+_pre_parser.add_argument('--depth', type=float, default=0.30)
+_pre_parser.add_argument('--velocity', type=float, default=0.0)
+_pre_args, _ = _pre_parser.parse_known_args()
+water_depth    = _pre_args.depth
+water_velocity = _pre_args.velocity
 
 print(f"--- Running L2: depth={water_depth}m, velocity={water_velocity}m/s ---")
 

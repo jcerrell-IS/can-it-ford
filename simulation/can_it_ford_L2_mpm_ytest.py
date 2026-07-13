@@ -30,8 +30,8 @@ def main():
         sim_options=gs.options.SimOptions(dt=4e-3, substeps=32),
         mpm_options=gs.options.MPMOptions(
             grid_density=128,
-            lower_bound=(-2.5, -1.0, -0.1),
-            upper_bound=(4.5,  1.0, 2.5),
+            lower_bound=(-0.1, -1.1, -0.1),
+            upper_bound=(2.1,  1.1, 2.5),
         ),
         vis_options=gs.options.VisOptions(visualize_mpm_boundary=True),
         viewer_options=gs.options.ViewerOptions(
@@ -59,7 +59,7 @@ def main():
         material=vehicle_rigid,
         morph=gs.morphs.Box(
             pos=(1.0, 0.0, 0.755),
-            size=(4.66, 1.79, 1.44),
+            size=(1.0, 1.6, 1.5),
             fixed=False,
         ),
     )
@@ -142,7 +142,7 @@ def main():
     print(f"peak x_disp={max_x_disp:.4f}m  final x_disp={final_xd:.4f}m  final y_disp={final_yd:.4f}m  max_vel={max_vel_mag:.4f}m/s")
     print(f"run_tag={run_tag}")
 
-    csv_path    = "data/phase_space_results_mpm.csv"
+    csv_path    = "phase_space_results_mpm.csv"
     file_exists = os.path.isfile(csv_path)
     with open(csv_path, "a", newline="") as f:
         writer = csv.DictWriter(
