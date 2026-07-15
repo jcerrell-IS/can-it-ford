@@ -16,4 +16,10 @@ session_archive/
 renders/
 !data/track1_sweep_v1/
 !data/track1_sweep_v1/**
-
+!data/track1_sweep_v1/
+!data/track1_sweep_v1/**
+!data/track1_sweep_v2/
+!data/track1_sweep_v2/**
+session_*.md
+session_*.txt
+*-im-fixing-a-vehicle-density-bug-*.txt

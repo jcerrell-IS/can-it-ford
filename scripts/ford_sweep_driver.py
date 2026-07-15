@@ -1,27 +1,74 @@
 from pathlib import Path
+import argparse
 import csv
+import sys
 import time
 import numpy as np
 import wandb
-from warpmpm.vehicle import load_vehicle, FloodScene
+
+REPO_ROOT = Path(__file__).resolve().parents[1]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.append(str(REPO_ROOT))
+from vehicle_params import get_vehicle
 
 VEHICLE_PLY = "/work/11603/jcerrell0629/vista/truck_trimmed.ply"
-OUTDIR = Path("/work/11603/jcerrell0629/vista/can-it-ford/data/track1_sweep_v1")
-OUTDIR.mkdir(parents=True, exist_ok=True)
+DATA_ROOT = Path("/work/11603/jcerrell0629/vista/can-it-ford/data")
 
 VEHICLE_CLASSES = {
-    "sedan": {"target_length": 4.6, "vehicle_mass": 1240.0},
-    "suv": {"target_length": 4.8, "vehicle_mass": 2020.0},
-    "pickup": {"target_length": 5.5, "vehicle_mass": 1930.0},
+    "sedan": "compact_sedan",
+    "suv": "midsize_suv",
+    "pickup": "light_pickup",
 }
 
-DEPTHS = [0.15, 0.30, 0.45, 0.60]
-VELOCITIES = [1.0, 1.5, 2.0]
-N_GRID = 64
+SWEEP_CONFIGS = {
+    "v2": {
+        "outdir": DATA_ROOT / "track1_sweep_v2",
+        "depths": [0.15, 0.30, 0.45, 0.60],
+        "velocities": [1.0, 1.5, 2.0],
+        "n_grid": 64,
+    },
+    "v3": {
+        "outdir": DATA_ROOT / "track1_sweep_v3",
+        "depths": [0.10, 0.15, 0.30, 0.45, 0.60],
+        "velocities": [0.5, 1.0, 1.5, 2.0],
+        "n_grid": 128,
+    },
+}
+
 BASE_FRAMES = 90
 MAX_FRAMES = 150
 PLATEAU_WINDOW = 10
 PLATEAU_TOL_M = 0.01
+MIN_Z_LAYERS = 2
+
+parser = argparse.ArgumentParser()
+parser.add_argument("--config", choices=sorted(SWEEP_CONFIGS), default="v2")
+parser.add_argument("--dry-run", action="store_true")
+parser.add_argument("--allow-underresolved", action="store_true")
+args, _ = parser.parse_known_args()
+
+CONFIG = SWEEP_CONFIGS[args.config]
+OUTDIR = CONFIG["outdir"]
+DEPTHS = CONFIG["depths"]
+VELOCITIES = CONFIG["velocities"]
+N_GRID = CONFIG["n_grid"]
+
+def fit_to_bbox(vehicle, bbox_m):
+    length, width, height = bbox_m
+    target = np.array([width, length, height], dtype=np.float64)
+    current = np.asarray(vehicle.extent, dtype=np.float64)
+    if np.any(current <= 0.0):
+        raise ValueError(f"degenerate vehicle extent {current}")
+    scale = target / current
+    surface = np.asarray(vehicle.surface, dtype=np.float64) * scale
+    vehicle.surface = surface.astype(np.float32)
+    if vehicle.splat_pos is not None:
+        vehicle.splat_pos = (np.asarray(vehicle.splat_pos, dtype=np.float64)
+                             * scale).astype(np.float32)
+    vehicle.extent = current * scale
+    vehicle.spacing = float("inf")
+    return vehicle
+
 
 def has_plateaued(history):
     d = np.asarray(history.displacement)
@@ -31,20 +78,66 @@ def has_plateaued(history):
     recent = mag[-PLATEAU_WINDOW:]
     return float(recent.max() - recent.min()) < PLATEAU_TOL_M
 
+
+def water_z_layers(bbox_m, depth, n_grid):
+    length, width, height = bbox_m
+    lim = max(2.2 * length, 3.5 * width, 6.0 * depth)
+    dx = lim / n_grid
+    h = dx / 2.0
+    floor = 3.0 * dx
+    return len(np.arange(floor + 0.5 * h, floor + depth, h)), dx
+
+
+def preflight():
+    print(f"CONFIG {args.config}: n_grid={N_GRID} depths={DEPTHS} velocities={VELOCITIES}")
+    print(f"  {len(VEHICLE_CLASSES)} vehicles x {len(DEPTHS)} depths x {len(VELOCITIES)} velocities "
+          f"= {len(VEHICLE_CLASSES) * len(DEPTHS) * len(VELOCITIES)} runs")
+    print(f"  outdir={OUTDIR}")
+    underresolved = []
+    for vclass, params_key in VEHICLE_CLASSES.items():
+        bbox_m = get_vehicle(params_key)["bbox_m"]
+        for depth in DEPTHS:
+            layers, dx = water_z_layers(bbox_m, depth, N_GRID)
+            flag = "OK" if layers >= MIN_Z_LAYERS else "UNDER-RESOLVED"
+            print(f"  {vclass:7s} depth={depth:.2f}m dx={dx:.4f}m water_z_layers={layers} {flag}")
+            if layers < MIN_Z_LAYERS:
+                underresolved.append((vclass, depth, layers))
+    if underresolved:
+        print(f"WARNING: {len(underresolved)} cells have < {MIN_Z_LAYERS} water particle layers.")
+        print("These seed a water slab thinner than the solver can represent.")
+        for vclass, depth, layers in underresolved:
+            print(f"  {vclass} depth={depth:.2f}m -> {layers} layer(s)")
+        if not args.allow_underresolved:
+            print("REFUSING. Re-run with --allow-underresolved to proceed anyway.")
+    return not underresolved or args.allow_underresolved
+
+
+if not preflight():
+    sys.exit(1)
+if args.dry_run:
+    print("DRY RUN: preflight only, no simulation launched.", flush=True)
+    sys.exit(0)
+
+from warpmpm.vehicle import load_vehicle, FloodScene
+
+OUTDIR.mkdir(parents=True, exist_ok=True)
 manifest_path = OUTDIR / "manifest.csv"
 run_index = 0
 header_written = False
 
-for vclass, vparams in VEHICLE_CLASSES.items():
+for vclass, params_key in VEHICLE_CLASSES.items():
+    spec = get_vehicle(params_key)
+    bbox_m = spec["bbox_m"]
+    vehicle_mass = spec["mass_kg"]
     for depth in DEPTHS:
         for velocity in VELOCITIES:
             run_id = f"veh-{vclass}_dep-{depth:.2f}_vel-{velocity:.2f}_idx-{run_index:04d}".replace(".", "p")
             print(f"START {run_id}", flush=True)
             t0 = time.time()
 
-            v = load_vehicle(VEHICLE_PLY, target_length=vparams["target_length"])
+            v = fit_to_bbox(load_vehicle(VEHICLE_PLY), bbox_m)
             scene = FloodScene(v, depth=depth, velocity=velocity,
-                               vehicle_mass=vparams["vehicle_mass"], n_grid=N_GRID)
+                               vehicle_mass=vehicle_mass, n_grid=N_GRID)
 
             frames_used = BASE_FRAMES
             history = scene.run(frames_used)
@@ -56,7 +149,7 @@ for vclass, vparams in VEHICLE_CLASSES.items():
 
             h = scene.grid.dx / 2.0
             solid_volume = v.n_particles * h ** 3
-            density = vparams["vehicle_mass"] / solid_volume
+            density = vehicle_mass / solid_volume
             density_ok = 100.0 <= density <= 300.0
 
             d_final = np.asarray(history.displacement[-1])
@@ -65,8 +158,15 @@ for vclass, vparams in VEHICLE_CLASSES.items():
             row = {
                 "run_id": run_id,
                 "vehicle_class": vclass,
-                "target_length_m": vparams["target_length"],
-                "vehicle_mass_kg": vparams["vehicle_mass"],
+                "params_class": params_key,
+                "bbox_l_m": bbox_m[0],
+                "bbox_w_m": bbox_m[1],
+                "bbox_h_m": bbox_m[2],
+                "fitted_extent_x_m": round(float(v.extent[0]), 4),
+                "fitted_extent_y_m": round(float(v.extent[1]), 4),
+                "fitted_extent_z_m": round(float(v.extent[2]), 4),
+                "vehicle_mass_kg": vehicle_mass,
+                "solid_volume_m3": round(float(solid_volume), 4),
                 "vehicle_density_kgm3": round(density, 2),
                 "density_plausible": density_ok,
                 "depth_m": depth,
