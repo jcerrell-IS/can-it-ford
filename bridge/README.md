@@ -69,16 +69,24 @@ The **intercept** is the whole point: PhysGaussian hands `mpm_init_pos`, `mpm_in
 - **TODO-4** Decide world-meters vs normalized-cube target (see Open questions).
 - **TODO-5** `fill_internal_particles`: original reimpl of opacity-field densify + 6-axis ray
   interior test. License-gated — do not copy PhysGaussian.
-- **TODO-6** `to_genesis_scene`: **verify Genesis v1.2.0 can seed arbitrary pre-positioned
-  particles at all** before committing to this path (see Open questions).
+- **TODO-6** `to_genesis_scene`: pre-positioned seeding is **confirmed supported** (see Open
+  questions #1). `MPMEntity.set_particles_pos(pos)` takes shape `(M, N, 3)`, called after
+  entity creation and `scene.build()`, before the first step. Remaining work: particle count
+  `N` is fixed by the initial morph's sampling and is **not** directly settable, so
+  `genesis_particles.py` must size the seeding morph to match the bridge's actual particle
+  count, then overwrite positions with `set_particles_pos`.
 - **TODO-7** Round-trip test: `run_bridge` on a tiny synthetic cloud → `.npz` → assert
   shapes/dtypes (`pos` f32 (N,3), `vol` f32 (N,), `cov` f32 (N,6)).
 
 ## Open questions (unresolved, do not assume)
 
 1. **Does Genesis MPM accept pre-positioned initial particles, or only the per-step emitter
-   pattern?** `REBUILD_REFERENCE.md` flags this as untested. If emitter-only, stage 9 needs a
-   different strategy (seed a dense box then displace, or patch Genesis). Test before building.
+   pattern?** **Resolved: yes, pre-positioned seeding is supported.** `MPMEntity.set_particles_pos(pos)`
+   accepts an array of shape `(M, N, 3)` and is called after entity creation and `scene.build()`,
+   before the first step. One caveat: the particle count `N` is fixed by the initial morph's
+   sampling and cannot be set directly, so the seeding morph must be sized to match the bridge's
+   actual particle count and its positions then overwritten (see TODO-6). No emitter workaround
+   or Genesis patch needed.
 2. **Normalized vs world coordinates.** PhysGaussian's output is normalized to the `[0,2]`
    cube, not world meters. Either un-normalize back to metric before building the Genesis
    domain, or build the Genesis domain in the normalized space. Pick one and be consistent;
