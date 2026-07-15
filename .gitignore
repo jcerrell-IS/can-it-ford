@@ -8,5 +8,9 @@ ssh_config_tacc_block.txt
 logs/
 figures/hailuo/*.mp4
 .env
-data/
+data/*
 reference_docs/
+CLAUDE.md
+docs/session_notes/archive/
+!data/track1_sweep_v1/
+!data/track1_sweep_v1/**
