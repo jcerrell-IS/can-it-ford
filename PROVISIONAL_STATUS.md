@@ -180,6 +180,8 @@ Current box is 1.0 x 1.6 x 1.5m, 2.4 cubic meters. Real vehicle mass better sour
 
 **Carries over directly, validated on the pilot scene, confirmed working as of session 6:** `rho=604`, `size=(1.0, 1.6, 1.5)`, `pos=(1.0, 0.0, 0.75)` for the vehicle (box-proxy scale, see item 6 above for the sedan-scale divergence). `coup_friction` (0.4 in this entry, 0.55 in the live file as of July 10). `dt=4e-3, substeps=20` (substeps=32 in the live file as of July 9).
 
+**Correction added July 13:** `rho=604` above is the old box-proxy leftover and does not carry to the sedan-scale vehicle. Density is coupled to box volume (mass = rho x volume), and the collision box was later resized to the real sedan bounding box (4.66 x 1.79 x 1.44 m) without recalculating density, which left the vehicle roughly 5x too heavy. The correct target density for the 1390 kg sedan is `rho=115.7`. Not confirmed applied to the live `simulation/can_it_ford_L2_mpm.py` yet.
+
 **Does not carry over:** `mu` has no MPM.Liquid equivalent. MPM domains need `3*dx` safety padding beyond the geometry, SPH domains don't.
 
 **Vehicle representation does not change.** Stays a `Rigid` entity, `needs_coup=True`/`coup_friction`, against `MPM.Liquid` instead of `SPH.Liquid`. As of July 10: wired correctly, has not yet produced a completed run, see correction at top.

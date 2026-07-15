@@ -15,7 +15,7 @@ Last updated: July 10, 2026, 06:44 UTC (Claude chat, verified live against GitHu
 ## Vista (Genesis MPM, GH200)
 
 **Last command run:** `idev -N 1 -n 1 -p gh-dev -t 1:30:00`, landed on `c642-051`, then `cd /work/11603/jcerrell0629/vista/can-it-ford` (note: repo is one level deeper than `/work/11603/jcerrell0629/vista`, the plain path is NOT a git repo, `can-it-ford` is a subfolder of it), `git fetch origin`, `git log HEAD..origin/main --oneline` queued, output not yet reported back to chat.
-**Current status:** `grid_density` bumped 64->128 on GitHub (per Genesis issue #600, car-scale tunneling risk), not yet pulled or tested on Vista. Still crashes at step 0 as of the last confirmed run (July 9, grid_density=64). Whether 128 fixes it is unconfirmed.
+**Current status:** `grid_density` (64 vs 128) has since been tested and ruled out as the crash cause. The run still crashes at step 0 regardless of grid density. The current live suspect (as of July 13) is the domain-widening commit's bounds themselves (lower_bound=(-2.5,-1.0,-0.1), upper_bound=(4.5,1.0,2.5)), independent of grid_density, box size, and vehicle position, each of which was tested and ruled out individually. This has not yet been tested in combination with the corrected vehicle mass (rho=115.7).
 **Next action:** `git pull` inside `can-it-ford` (now that the path is correct), then rerun with `CUDA_LAUNCH_BLOCKING=1`, tee the full output to `logs/mpm_crash_july10.txt`. This has never been done, no traceback has ever been captured for this crash.
 
 ## Gsplat / COLMAP (real drain footage, separate Claude Code session, MacBook)

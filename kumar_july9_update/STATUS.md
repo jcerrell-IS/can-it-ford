@@ -168,7 +168,7 @@ Solver: `gs.materials.SPH.Liquid`, not MPM. Methods rehearsal, not the paper's d
 | Friction `0.55` | Azhar et al. 2023 | No PDF on file, no public link confirmed |
 | Vehicle mass/inertia | NHTSA LVIP Database, SAE 1999-01-1336 | No public link confirmed |
 | Framework | Thorpe et al., PVWM | [arXiv:2605.30542](https://arxiv.org/abs/2605.30542) |
-| `DRIFT_THRESHOLD = 0.05 m` | Not cited anywhere in the live code | Open, no source identified yet |
+| `DRIFT_THRESHOLD = 0.05 m` | Numerical onset-of-motion detection tolerance, not a physically-cited threshold; approximately 2.5 to 3.4 percent of vehicle body width. Underlying incipient-motion physics: Xia et al. 2014 (DOI 10.1007/s11069-013-0889-2), Shah et al. 2018 (DOI 10.1051/matecconf/201820307003) | Resolved July 13 (framing); see `citations/README.md` |
 
 ---
 
@@ -177,7 +177,7 @@ Solver: `gs.materials.SPH.Liquid`, not MPM. Methods rehearsal, not the paper's d
 - [ ] Root cause of `CUDA_ERROR_ILLEGAL_ADDRESS` in `can_it_ford_L2_mpm.py`
 - [ ] Root cause of water drift in `box_sdf_collider_setup.py`, and whether it still occurs in the current (sedan-scale) version
 - [ ] Whether the CoRL 2026 truck mesh is reusable
-- [ ] Source for `DRIFT_THRESHOLD = 0.05 m`
+- [x] Source for `DRIFT_THRESHOLD = 0.05 m` (resolved July 13: it is a numerical detection tolerance, not a physically-cited threshold; framed as approximately 2.5 to 3.4 percent of vehicle body width, with incipient-motion physics from Xia et al. 2014 and Shah et al. 2018)
 - [ ] Whether the two tracks should be reconciled to one vehicle representation
 
 ## Next Steps
@@ -188,4 +188,4 @@ Solver: `gs.materials.SPH.Liquid`, not MPM. Methods rehearsal, not the paper's d
 - [ ] Update `can_it_ford_L2_mpm.py` to the real sedan box dimensions, or document why it should stay separate
 - [ ] Fix the stale `run_tag` naming in `can_it_ford_L2_mpm.py`
 - [ ] Resolve vehicle mesh: CoRL truck, a sourced CC0 model, or confirm box proxy for the final result
-- [ ] Resolve the `DRIFT_THRESHOLD` citation
+- [x] Resolve the `DRIFT_THRESHOLD` citation (resolved July 13: numerical onset-of-motion detection tolerance, not a physically-cited threshold; framed as approximately 2.5 to 3.4 percent of vehicle body width, per Xia et al. 2014 and Shah et al. 2018)

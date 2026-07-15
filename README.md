@@ -39,15 +39,15 @@ The splat-to-particle bridge is intended to reuse [PhysGaussian (Xie et al. 2023
 
 ---
 
-## Status (July 9, 2026): pipeline under active rebuild
+## Status (July 9 snapshot, reviewed July 13, 2026): pipeline under active rebuild
 
 **The authoritative technical log is [`kumar_july9_update/STATUS.md`](kumar_july9_update/STATUS.md).** The severity-ranked bug history is in [`PROVISIONAL_STATUS.md`](PROVISIONAL_STATUS.md). Read those before trusting any number in this repo. Short version:
 
 - **The L2 solver is migrating from SPH to MPM.** The 23-condition result below was produced on synthetic box geometry with Genesis's SPH solver, as a pilot, not with the MPM pipeline the project targets. That SPH pilot is now closed.
 - **The current directed L2 engine is [`kks32/mpm-engine`](https://github.com/kks32/mpm-engine)** (per Kumar's instruction), with a box/SDF collider for the vehicle. A parallel [Genesis](https://github.com/Genesis-Embodied-AI/Genesis) MPM script (`simulation/can_it_ford_L2_mpm.py`) also exists.
 - **The MPM run does not yet complete at vehicle scale.** The latest attempt crashes with `CUDA_ERROR_ILLEGAL_ADDRESS` on the first coupled substep. No MPM FORD/NO-FORD verdict exists yet. Tracked in [#1](../../issues/1).
-- **The vehicle is still a box proxy** `size=(1.0, 1.6, 1.5)` in both L2 scripts, not a real car mesh. Cited real vehicle parameters exist in `vehicle_params.py` but are not yet wired into the solver ([#7](../../issues/7)).
-- **No real gsplat-reconstructed flooded scene has been ingested yet**, and no PhysGaussian/Taichi splat-to-particle bridge exists in code. A first real vehicle gsplat reconstruction (`truck_trimmed.ply`) exists in working files but is not connected to the pipeline ([#6](../../issues/6)).
+- **The vehicle is still a box proxy, not a real car mesh.** The Genesis Track 2 script (`can_it_ford_L2_mpm.py`) uses a generic `size=(1.0, 1.6, 1.5)` box; the `kks32/mpm-engine` Track 1 script (`box_sdf_collider_setup.py`) uses the real sedan bounding box `(4.66, 1.79, 1.44)`. Cited real vehicle parameters exist in `vehicle_params.py` but are not yet wired into the Genesis solver ([#7](../../issues/7)).
+- **No real gsplat-reconstructed flooded scene has been ingested yet**, and no PhysGaussian/Taichi splat-to-particle bridge exists in code. A candidate vehicle reconstruction (`truck_trimmed.ply`) exists in working files but was closed on July 10 as not vehicle-proportioned (extents 1.447 x 0.450 x 0.411 m), so the box proxy remains the committed geometry. It is not connected to the pipeline ([#6](../../issues/6)).
 - **Coupling friction is set to 0.55** (Azhar et al. 2023, the exact matched-scale-model coefficient), corrected from an earlier 0.4 approximation.
 - **The domain is a closed, reflecting boundary, not an open channel.** Reflected waves likely contaminate long runs. This is the single most decisive untested question and applies to both SPH and MPM.
 

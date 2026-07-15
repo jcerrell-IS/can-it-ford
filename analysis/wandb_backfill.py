@@ -19,8 +19,6 @@ runs = [
     {"depth_m":0.30,"velocity_ms":2.0,"verdict":"NO-FORD"},
 ]
 
-wandb.login(key=API_KEY)
-
 for r in runs:
     l1_haz = round(r["depth_m"] * r["velocity_ms"], 3)
     l1_verdict = "NO-FORD" if l1_haz > L1_HAZ_THRESHOLD_4WD else "FORD"

@@ -12,5 +12,8 @@ data/*
 reference_docs/
 CLAUDE.md
 docs/session_notes/archive/
+session_archive/
+renders/
 !data/track1_sweep_v1/
 !data/track1_sweep_v1/**
+
