@@ -1,0 +1,10 @@
+file,depth_m,velocity_ms,verdict,n_particles,mass_sum_kg,mass_integrity,momentum_x,momentum_z
+particles_d1p0_v3p0.npz,1.0,3.0,NO-FORD,405000,2000.0,PASS,190.1291,74.0065
+particles_mpm_d0p3_v1p5_grid128_cf0p4_20260709_181641.npz,0.3,1.5,FORD,189000,600.0,PASS,43.1188,-8.359
+particles_mpm_d0p3_v1p5_grid128_cf0p4_20260709_181800.npz,0.3,1.5,FORD,189000,600.0,PASS,43.2155,-8.3646
+particles_mpm_d0p3_v1p5_grid128_cf0p4_20260709_190529.npz,0.3,1.5,FORD,189000,600.0,PASS,43.1549,-8.3642
+particles_mpm_d0p3_v1p5_grid64_cf0p4_20260707_170356.npz,0.3,1.5,FORD,972000,600.0,PASS,-8.1488,-9.8325
+particles_mpm_d0p3_v1p5_grid64_cf0p4_20260707_172348.npz,0.3,1.5,FORD,972000,600.0,PASS,-8.0864,-9.8218
+particles_mpm_d0p6_v1p5_grid128_cf0p4_20260709_190141.npz,0.6,1.5,FORD,378000,1200.0,PASS,166.5828,-39.6656
+particles_mpm_d0p6_v2p5_grid128_cf0p4_20260709_190236.npz,0.6,2.5,FORD,378000,1200.0,PASS,207.7082,-35.601
+particles_mpm_d1p0_v3p0_grid128_cf0p4_20260709_190349.npz,1.0,3.0,FORD,630000,2000.0,PASS,351.1702,-50.6178
