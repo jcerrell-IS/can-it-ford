@@ -140,7 +140,7 @@ Run with no `--input` for a synthetic demo that verifies the renderer works.
 python3 analysis/make_phase_space_v2.py
 ```
 
-**Physical validation.** `analysis/viability_audit.py` checks mass conservation and momentum transfer from `.npz` particle files, not just that a run finished. SCP the `.npz` files off Vista first (they are not committed here).
+**Physical validation.** `analysis/viability_audit.py` reads final-state `.npz` particle files and reports total water momentum per run. It does **not** verify mass conservation: the former mass-integrity check was withdrawn on July 15, 2026 as tautological (it compared a value to itself and could not fail). See `docs/viability_audit_mass_retraction.md`. Per-step invariant checking is not yet implemented. SCP the `.npz` files off Vista first (they are not committed here).
 
 ---
 
