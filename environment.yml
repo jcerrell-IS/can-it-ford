@@ -164,7 +164,7 @@ dependencies:
       - nbconvert==7.17.1
       - nbformat==5.10.4
       - networkx==3.6.1
-      - numba==0.65.1
+      - numba==0.66.0
       - numpy==2.4.6
       - openapi-core==0.16.0
       - openapi-schema-validator==0.3.4
