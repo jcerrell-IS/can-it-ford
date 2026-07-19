@@ -26,3 +26,4 @@ session_*.txt
 vehicle_geometry_research/**/*.key
 vehicle_geometry_research/**/*.key
 vehicle_geometry_research/**/*-detailed-*/**/*.key
+pane*_export.txt
