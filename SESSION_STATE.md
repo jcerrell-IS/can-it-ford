@@ -139,3 +139,43 @@ This is the coupled-variable failure CLAUDE.md warns about (`grid_density <-> do
 **Displacements shifted, physically coherently.** Sedan and pickup got heavier under cited masses (1240 to 1390, 1930 to 2300) and move noticeably less (sedan d=0.6/v=1.5: 1.9416 to 1.1991). The SUV got slightly lighter (2020 to 1990) and is essentially unchanged to slightly higher. v1 is preserved at `data/track1_sweep_v1/`; v2 is at `data/track1_sweep_v2/`.
 
 **SLURM gotchas hit while running this, worth remembering.** `gh` and `gh-dev` are genuinely distinct partitions (resolves the open question in CLAUDE.md). The allocation is `BCS20003`, and lowercase `bcs20003` is rejected by the submit filter, so just omit `-A` and let it resolve. Two jobs reported `COMPLETED 0:0` while doing nothing: job 833156 wrote `#SBATCH -o` to login-node-local `/tmp` which does not exist on the compute node, and job 833194 hit `ModuleNotFoundError: wandb` but exited 0 because the script's last line was an `echo`. End SLURM scripts with `exit $rc`. Also: the sweep needs `/work/11603/jcerrell0629/vista/.venv` (wandb 0.28.0, warp 1.15.0), NOT `mpm-engine/.venv` (no wandb, warp 1.14.0). The repo's own `wandb/` directory shadows the real package if the repo root is put on `sys.path[0]`, so the driver appends it instead.
+
+## 2026-07-19: full session consolidation, MCP/data/decisions/infra
+MCP: deepwiki, github, wandb, huggingface(hf) connected in Claude Code CLI on
+Mac and Vista (user scope). LS6 in progress, confirm with `claude mcp list`
+before trusting. .claude/settings.json WebFetch allowlist (48 domains)
+committed and pushed on Mac and Vista; confirm LS6's copy matches, not just
+exists.
+W&B KEY ROTATION CONFIRMED DONE (git log --all -p | grep wandb_v1_ proves the
+50eff29-exposed key is a third, dead key). Supersedes any prior "unconfirmed"
+note.
+DATA: data/track1_sweep_v3/ (n_grid=128) CONFIRMED INVALID, do not cite, do not
+plot, do not read from it in any new session. data/track1_sweep_v2/ (n_grid=64)
+is the protected valid source, ~24/36 rows valid (sedan+pickup only, SUV
+excluded, density-implausible).
+RESULT: figures/poster_exports/can_it_ford_phase_space.{png,pdf,html} built
+from validated v2 data. L2 calls NO-FORD in 22/24 valid cells where L1 says
+FORD. This is a real, citable divergence result.
+DECIDED: SUV excluded from plotted markers, one caption line added naming the
+exclusion reason, not marked-distinct on-figure. DECIDED: Yaris mesh repair via
+mesh2sdf, not fill_holes, per repo's own findings note (919 zero-thickness
+interior parts risk sealing the underbody, corrupting buoyancy). Yaris
+confirmed 1100kg via deck header, distinct from 1390kg sedan class, do not
+conflate.
+TASK DASHBOARD (~/can-it-ford agent view) showed 4 awaiting input as of 7/18:
+deploy canonical CLAUDE.md (5d), reconcile nine open items (5d), Yaris mesh
+(now decided above), process SD card frames for COLMAP (8d+, this is Piece 1
+of the real-scene rebuild, highest actual priority, not infra work).
+INFRA: Vista repeatedly lands on the login node; when idev did succeed (nodes
+c642-011, c642-022) the SSH session died within seconds before any Genesis
+command ran. ControlMaster/ControlPersist/ServerAlive added to ~/.ssh/config
+for vista and ls6, confirm this actually fixes the drop pattern before relying
+on it. tmux session "cif" was only running 4 of 6 intended panes as of last
+check, fix given, confirm live.
+NEW invisible-parallel-work sources beyond tmux panes and separate CLI
+sessions: Claude Code's own dispatched agent-view task dashboard, and
+com.josie.canitford-sweep.plist (install-sweep), a Downloads-folder LaunchAgent
+running roughly every 2 hours.
+STILL OPEN: paper_draft.md two-version reconciliation (root vs paper/, newer
+one has Yaris "Small Car class" section, adopt newer, not yet executed), second
+Vista clone at /home1/11603/jcerrell0629/can-it-ford still undiagnosed.
