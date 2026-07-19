@@ -145,3 +145,34 @@ Reuse this, do not re-derive unit logic:
 - mpm-engine internals: DeepWiki kks32/mpm-engine
 - meshio LS-DYNA status: github.com/nschloe/meshio/issues/607
 - lsdyna-mesh-reader: akaszynski.github.io/lsdyna-mesh-reader
+
+## Canonical hull note (added 2026-07-19)
+
+Two watertight hulls now exist from the same Yaris coarse v1l deck. Both were produced by
+direct *NODE / *ELEMENT_SHELL / *ELEMENT_SOLID card parsing (the compiled
+lsdyna_mesh_reader hangs 20+ min on this 42MB / ~378k-element deck, do not retry it)
+followed by mesh2sdf. Stats below were verified live on disk on 2026-07-19, not carried
+from a summary:
+
+| file | watertight | winding-consistent | volume | bbox (m) | verts / faces | implied density (1100 kg) |
+|---|---|---|---|---|---|---|
+| yaris_coarse_v1l_watertight.ply | True | True | 3.5427 m^3 | 4.283 x 1.746 x 1.518 | 327,212 / 655,308 | 310.5 kg/m^3 |
+| yaris_sedan_watertight.ply | True | True | 6.8185 m^3 | 4.383 x 1.780 x 1.551 | 25,663 / 51,450 | 161.3 kg/m^3 |
+
+CANONICAL: yaris_coarse_v1l_watertight.ply (mesh2sdf 256^3 padded, +17mm offset, underbody
+and wheel wells kept open, enclosed volume ~32% of bbox). This is the hull to feed the
+SDF collider. Its 2026-07-19 handoff line is in SESSION_STATE.md.
+
+SUPERSEDED: yaris_sedan_watertight.ply (mesh2sdf 128^3, ~+42mm offset, underbody partly
+bridged shut, enclosed volume ~62% of bbox). Kept on disk for now (non-destructive, only
+977KB), do NOT use it for buoyancy. Retire it only after Panels 1 (VISTA-MPM-WATER) and 2
+(VISTA-TRACK1-SDF) confirm they are on the coarse_v1l hull and nothing references the
+sedan file.
+
+Density caveat, documented honestly the same way as the Track 1 SUV class (308 kg/m^3):
+the canonical hull implies 1100 kg / 3.543 m^3 = 310.5 kg/m^3, just outside this project's
+100-300 kg/m^3 soft plausibility band. Not disqualifying. Counterpoint worth stating: the
+sedan hull's 161.3 kg/m^3 lands inside the band only because it sealed the underbody shut
+(larger enclosed volume), so its in-band figure is the misleading one, not a point in its
+favor. Mass is 1100 kg from the deck header (tons/mm/N/sec units), NOT the 1390 kg
+Civic/Corolla value.
