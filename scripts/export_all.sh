@@ -1,20 +1,3 @@
-#!/usr/bin/env zsh
-# export_all.sh — canonical multi-pane / multi-session capture for Can It Ford
-#
-# Provenance: extracted verbatim from ~/.zshrc (the live, working "v3" definition
-# with counters + md5 dedup + W&B-key redaction + clipboard copy). Kept in the repo
-# so any pane can find it by reading the repo, not just shell history.
-#
-# This is zsh (uses ${(@f)...} splitting and zsh arrays); run with zsh, not bash.
-#
-# Usage:
-#   source scripts/export_all.sh   # then call:  export_all [minutes] [pane_lines]
-#   ./scripts/export_all.sh [minutes] [pane_lines]   # runs it directly
-#
-# NOTE: the real WANDB_API_KEY export that sits elsewhere in ~/.zshrc is
-# deliberately NOT included here. This file only carries the redaction *pattern*.
-# ---------------------------------------------------------------------------
-
 export_all() {
   local minutes="${1:-60}"
   local pane_lines="${2:-400}"
@@ -115,55 +98,3 @@ export_all() {
           parsed=$(jq -r "$jqfilter" "$f" 2>/dev/null)
         else
           parsed=$(ssh "$host" "cat '$f'" 2>/dev/null | jq -r "$jqfilter" 2>/dev/null)
-        fi
-        parsed_trimmed=$(echo "$parsed" | tr -d '[:space:]')
-
-        if [[ -z "$parsed_trimmed" ]]; then
-          claudeskipped_empty=$((claudeskipped_empty + 1))
-          continue
-        fi
-
-        h=$(echo "$parsed" | md5sum | cut -d' ' -f1)
-        if grep -q "^$h\$" "$seenfile" 2>/dev/null; then
-          claudeskipped_dup=$((claudeskipped_dup + 1))
-          continue
-        fi
-        echo "$h" >> "$seenfile"
-        claudelogged=$((claudelogged + 1))
-
-        if [[ "$target_header_written" == "0" ]]; then
-          echo "### $host : $repo_path"
-          target_header_written=1
-        fi
-        echo "#### $f"
-        echo '```'
-        echo "$parsed"
-        echo '```'
-        echo ""
-      done
-    done
-
-  } > "$tmpblock"
-
-  # redaction as a separate pass, not piped, so the block above never
-  # runs in a subshell and every counter above survives to this point
-  sed -i -E 's/wandb_v1_[A-Za-z0-9_]+/[REDACTED_WANDB_KEY]/g' "$tmpblock"
-
-  cat "$tmpblock" | pbcopy 2>/dev/null
-
-  if [[ -f "$logfile" ]]; then
-    cat "$tmpblock" "$logfile" > "${logfile}.new" && mv "${logfile}.new" "$logfile"
-  else
-    cp "$tmpblock" "$logfile"
-  fi
-  rm -f "$tmpblock"
-
-  echo "Prepended to $logfile (this run's capture also copied to clipboard)"
-  echo "Panes skipped as empty: $paneskipped"
-  echo "Claude Code files skipped (cleared/empty): $claudeskipped_empty | skipped (unchanged since last run): $claudeskipped_dup | logged: $claudelogged"
-}
-
-# If executed directly (not sourced), run the capture with any passed args.
-if [[ "${ZSH_EVAL_CONTEXT:-}" == *toplevel* && "${(%):-%N}" == "${0}" ]]; then
-  export_all "$@"
-fi
