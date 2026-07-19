@@ -1,0 +1,19 @@
+cff-version: 1.2.0
+title: "Can It Ford? Query-Conditioned World Models for Autonomous Vehicle Flood Traversability"
+message: "If you use this dataset or code, please cite it as below."
+type: dataset
+authors:
+  - given-names: Josie
+    family-names: Cerrell
+    affiliation: Claremont McKenna College
+  - given-names: Krishna
+    family-names: Kumar
+    affiliation: University of Texas at Austin
+license: ODC-By-1.0
+keywords:
+  - flood traversability
+  - Gaussian splatting
+  - material point method
+  - world models
+  - autonomous vehicles
+repository-code: "https://github.com/jcerrell-IS/can-it-ford"

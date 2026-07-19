@@ -179,3 +179,5 @@ running roughly every 2 hours.
 STILL OPEN: paper_draft.md two-version reconciliation (root vs paper/, newer
 one has Yaris "Small Car class" section, adopt newer, not yet executed), second
 Vista clone at /home1/11603/jcerrell0629/can-it-ford still undiagnosed.
+
+2026-07-19  Yaris coarse v1l watertight hull CONFIRMED via direct-card-parse (*NODE/*ELEMENT_SHELL, no Deck() hang) + mesh2sdf 256^3 padded SDF, +17mm offset. is_watertight=True, winding-consistent. bbox 4.283 x 1.746 x 1.518 m (subcompact Yaris, NOT Civic 4.66m). V=327,212 F=655,308, enclosed vol=3.543 m^3, underbody kept open. Mass 1100 kg per deck header (tons,mm,N,sec). Do NOT apply 1390 kg Civic mass. Output: vehicle_geometry_research/yaris_coarse_v1l_watertight.{obj,ply}

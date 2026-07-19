@@ -1,0 +1,57 @@
+--- Sweep run: Fri Jul 17 12:48:29 CDT 2026 ---
+--- Sweep run: Fri Jul 17 12:49:39 CDT 2026 ---
+--- Sweep run: Fri Jul 17 12:58:36 CDT 2026 ---
+--- Sweep run: Fri Jul 17 13:14:14 CDT 2026 ---
+--- Sweep run: Fri Jul 17 13:14:18 CDT 2026 ---
+--- Sweep run: Fri Jul 17 13:19:05 CDT 2026 ---
+--- Sweep run: Fri Jul 17 13:19:10 CDT 2026 ---
+--- Sweep run: Fri Jul 17 13:19:33 CDT 2026 ---
+--- Sweep run: Fri Jul 17 13:31:18 CDT 2026 ---
+--- Sweep run: Fri Jul 17 16:07:46 CDT 2026 ---
+--- Sweep run: Fri Jul 17 18:07:46 CDT 2026 ---
+--- Sweep run: Fri Jul 17 18:31:36 CDT 2026 ---
+mv: rename /Users/josie/Downloads/CAN-IT-FORD knowledge on 13:07 to /Users/josie/can-it-ford/_inbox/CAN-IT-FORD knowledge on 13:07: No such file or directory
+FAILED to move (left in place, check .sweep_log.txt above this line for the reason): /Users/josie/Downloads/CAN-IT-FORD knowledge on 13:07
+moved: /Users/josie/Downloads/canitford_inbox_sweep.sh -> /Users/josie/can-it-ford/_inbox/2026-07-17_canitford_inbox_sweep.sh
+moved: /Users/josie/Downloads/com.josie.canitford-sweep.plist -> /Users/josie/can-it-ford/_inbox/com.josie.canitford-sweep.plist
+moved: /Users/josie/Downloads/CAN_IT_FORD_bug_audit_july14.md -> /Users/josie/can-it-ford/_inbox/CAN_IT_FORD_bug_audit_july14.md
+moved: /Users/josie/Downloads/can_it_ford_references.bib -> /Users/josie/can-it-ford/_inbox/can_it_ford_references.bib
+--- Sweep run: Fri Jul 17 20:07:46 CDT 2026 ---
+--- Sweep run: Fri Jul 17 22:07:46 CDT 2026 ---
+--- Sweep run: Sat Jul 18 00:07:46 CDT 2026 ---
+--- Sweep run: Sat Jul 18 02:07:47 CDT 2026 ---
+--- Sweep run: Sat Jul 18 03:35:59 CDT 2026 ---
+mv: rename /Users/josie/Downloads/CAN-IT-FORD knowledge on 13:07 to /Users/josie/can-it-ford/_inbox/CAN-IT-FORD knowledge on 13:07: No such file or directory
+FAILED to move (left in place, check .sweep_log.txt above this line for the reason): /Users/josie/Downloads/CAN-IT-FORD knowledge on 13:07
+--- Sweep run: Sat Jul 18 03:36:30 CDT 2026 ---
+mv: rename /Users/josie/Downloads/CAN-IT-FORD knowledge on 13:07 to /Users/josie/can-it-ford/_inbox/CAN-IT-FORD knowledge on 13:07: No such file or directory
+FAILED to move (left in place, check .sweep_log.txt above this line for the reason): /Users/josie/Downloads/CAN-IT-FORD knowledge on 13:07
+--- Sweep run: Sat Jul 18 03:36:44 CDT 2026 ---
+mv: rename /Users/josie/Downloads/CAN-IT-FORD knowledge on 13:07 to /Users/josie/can-it-ford/_inbox/CAN-IT-FORD knowledge on 13:07: No such file or directory
+FAILED to move (left in place, check .sweep_log.txt above this line for the reason): /Users/josie/Downloads/CAN-IT-FORD knowledge on 13:07
+--- Sweep run: Sat Jul 18 03:41:57 CDT 2026 ---
+mv: rename /Users/josie/Downloads/CAN-IT-FORD knowledge on 13:07 to /Users/josie/can-it-ford/_inbox/CAN-IT-FORD knowledge on 13:07: No such file or directory
+FAILED to move (left in place, check .sweep_log.txt above this line for the reason): /Users/josie/Downloads/CAN-IT-FORD knowledge on 13:07
+moved: /Users/josie/Downloads/canitford_inbox_sweep.sh -> /Users/josie/can-it-ford/_inbox/2026-07-18_canitford_inbox_sweep.sh
+moved: /Users/josie/Downloads/canitford inbox sweep 2.sh -> /Users/josie/can-it-ford/_inbox/canitford inbox sweep 2.sh
+--- Sweep run: Sat Jul 18 05:14:59 CDT 2026 ---
+mv: rename /Users/josie/Downloads/CAN-IT-FORD knowledge on 13:07 to /Users/josie/can-it-ford/_inbox/CAN-IT-FORD knowledge on 13:07: No such file or directory
+FAILED to move (left in place, check .sweep_log.txt above this line for the reason): /Users/josie/Downloads/CAN-IT-FORD knowledge on 13:07
+moved: /Users/josie/Downloads/canitford_inbox_sweep.sh -> /Users/josie/can-it-ford/_inbox/2026-07-18_canitford_inbox_sweep.sh
+Sweep complete. See /Users/josie/can-it-ford/_inbox/.sweep_log.txt for details.
+--- Sweep run: Sat Jul 18 10:59:30 CDT 2026 ---
+mv: rename /Users/josie/Downloads/CAN-IT-FORD knowledge on 13:07 to /Users/josie/can-it-ford/_inbox/CAN-IT-FORD knowledge on 13:07: No such file or directory
+FAILED to move (left in place, check .sweep_log.txt above this line for the reason): /Users/josie/Downloads/CAN-IT-FORD knowledge on 13:07
+Sweep complete. See /Users/josie/can-it-ford/_inbox/.sweep_log.txt for details.
+--- Sweep run: Sat Jul 18 16:09:32 CDT 2026 ---
+mv: rename /Users/josie/Downloads/CAN-IT-FORD knowledge on 13:07 to /Users/josie/can-it-ford/_inbox/CAN-IT-FORD knowledge on 13:07: No such file or directory
+FAILED to move (left in place, check .sweep_log.txt above this line for the reason): /Users/josie/Downloads/CAN-IT-FORD knowledge on 13:07
+Sweep complete. See /Users/josie/can-it-ford/_inbox/.sweep_log.txt for details.
+--- Sweep run: Sat Jul 18 19:28:28 CDT 2026 ---
+mv: rename /Users/josie/Downloads/CAN-IT-FORD knowledge on 13:07 to /Users/josie/can-it-ford/_inbox/CAN-IT-FORD knowledge on 13:07: No such file or directory
+FAILED to move (left in place, check .sweep_log.txt above this line for the reason): /Users/josie/Downloads/CAN-IT-FORD knowledge on 13:07
+Sweep complete. See /Users/josie/can-it-ford/_inbox/.sweep_log.txt for details.
+--- Sweep run: Sat Jul 18 21:28:28 CDT 2026 ---
+mv: rename /Users/josie/Downloads/CAN-IT-FORD knowledge on 13:07 to /Users/josie/can-it-ford/_inbox/CAN-IT-FORD knowledge on 13:07: No such file or directory
+FAILED to move (left in place, check .sweep_log.txt above this line for the reason): /Users/josie/Downloads/CAN-IT-FORD knowledge on 13:07
+Sweep complete. See /Users/josie/can-it-ford/_inbox/.sweep_log.txt for details.
