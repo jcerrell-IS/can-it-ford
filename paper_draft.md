@@ -19,6 +19,10 @@ Significance. This work delivers a closed reconstruct-to-decide pipeline and a c
 
 ## 3. Methods
 
+### 3.1 Vehicle Representation
+
+The vehicle evaluated is a subcompact sedan, represented by the 2010 Toyota Yaris finite-element model developed by the Center for Collision Safety and Analysis and validated against full-scale crash tests. This is a real, crash-validated vehicle geometry (measured curb mass 1100 kg, body envelope 4.30 by 1.70 by 1.47 m), not a generic mid-size sedan placeholder. Under the Australian Rainfall and Runoff vehicle-stability guidelines (Shand et al. 2011), a vehicle of this mass and size falls in the Small Car class, the most conservative of the three passenger classes, with a limiting still-water depth of 0.30 m and a limiting depth-velocity product of 0.30 m2/s. Adopting the real subcompact geometry therefore places the L1 stability criterion in its correct and most conservative class, rather than the more permissive class a larger placeholder would have implied.
+
 ### 3.2 PVWM Framing
 
 The three-level abstraction ladder instantiates the orchestrator described in Section 3 of Thorpe et al. (2026) as the first running implementation. The PVWM paper identifies automatic abstraction selection as the central open problem and provides no committed orchestrator code. Our orchestrate_ford_query() function represents the first concrete implementation, with the empirical divergence zone at d greater than or equal to 0.25m, v greater than or equal to 1.2 m/s, and D times V less than 0.60 m2/s defining the L1-to-L2 escalation boundary. At this boundary, the scalar criterion structurally lacks the mechanism to represent directional persistent lateral drag, independent of threshold value or vehicle class. 
