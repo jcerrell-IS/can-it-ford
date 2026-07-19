@@ -140,6 +140,18 @@ This is the coupled-variable failure CLAUDE.md warns about (`grid_density <-> do
 
 **SLURM gotchas hit while running this, worth remembering.** `gh` and `gh-dev` are genuinely distinct partitions (resolves the open question in CLAUDE.md). The allocation is `BCS20003`, and lowercase `bcs20003` is rejected by the submit filter, so just omit `-A` and let it resolve. Two jobs reported `COMPLETED 0:0` while doing nothing: job 833156 wrote `#SBATCH -o` to login-node-local `/tmp` which does not exist on the compute node, and job 833194 hit `ModuleNotFoundError: wandb` but exited 0 because the script's last line was an `echo`. End SLURM scripts with `exit $rc`. Also: the sweep needs `/work/11603/jcerrell0629/vista/.venv` (wandb 0.28.0, warp 1.15.0), NOT `mpm-engine/.venv` (no wandb, warp 1.14.0). The repo's own `wandb/` directory shadows the real package if the repo root is put on `sys.path[0]`, so the driver appends it instead.
 
+**July 16 (Vista):** RESOLVED: `DRIFT_THRESHOLD=0.05` grounded in `citations/drift_threshold_grounding.md`, it is a solver-internal onset-of-motion tolerance (metres of lateral drift), NOT citable to ARR/WRL/Smith (all define D×V incipient-motion limits in m²/s, no displacement distance), value stays 0.05, no source citation on the number, and the paper draft does not reference 0.05 yet; committed. OPEN: the Luo et al. IJRR consistency check could not be run here, no Luo/IJRR citation and no "skill file 03" exist anywhere in the repo, paper draft, or `~/.claude/skills/` on Vista (likely Mac-only, verify there).
+
+## 2026-07-18 evening: SSH auth + MCP cleanup, all machines
+- MacBook, Vista, LS6: github/wandb/hf MCP servers reconfigured with real tokens via ~/.env_mcp, verified with `claude mcp list`
+- CLAUDE_CODE_OAUTH_TOKEN corruption diagnosed (multiline paste broke Bearer header) and fixed via `read -r` pattern, safe going forward
+- SSH keys added to GitHub: Vista (`id_ed25519_github`, already registered), LS6 (`id_rsa`, newly added, labeled "LS6")
+- All three git remotes switched HTTPS -> SSH, confirmed via real `git fetch`:
+  - Vista `vista/can-it-ford`: 7d60a05..c98e0af
+  - LS6 `vista/can-it-ford` (shared /work path): same commit, confirmed separately
+  - LS6 `ls6/can-it-ford`: 41eb656..0b84cb7
+- Found: `/work/11603/jcerrell0629/ls6/can-it-ford` and `/work/11603/jcerrell0629/vista/can-it-ford` are TWO SEPARATE CLONES at the same commit, not diverged, but worth deciding whether ls6/can-it-ford should be deleted in favor of always using the shared vista path, not resolved tonight
+
 ## 2026-07-19: full session consolidation, MCP/data/decisions/infra
 MCP: deepwiki, github, wandb, huggingface(hf) connected in Claude Code CLI on
 Mac and Vista (user scope). LS6 in progress, confirm with `claude mcp list`
