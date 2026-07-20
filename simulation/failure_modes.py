@@ -22,14 +22,19 @@ OMEGA_COLUMNS = ("wx", "wy", "wz")
 
 
 class FailureMode(Enum):
-    FORD = "FORD"
     STUCK = "STUCK"
     SLIDE = "SLIDE"
     TOPPLE = "TOPPLE"
     FLOAT = "FLOAT"
 
 
-MODE_SEVERITY = (FailureMode.TOPPLE, FailureMode.FLOAT, FailureMode.SLIDE)
+MODE_SEVERITY = (FailureMode.SLIDE, FailureMode.TOPPLE, FailureMode.FLOAT)
+
+MODE_UNITS = {
+    FailureMode.SLIDE: "m",
+    FailureMode.TOPPLE: "g",
+    FailureMode.FLOAT: "m",
+}
 
 
 class MissingKinematicsError(ValueError):
@@ -59,8 +64,15 @@ class Kinematics:
 @dataclass
 class ClassificationResult:
     mode: FailureMode
-    magnitude_ratio: float
+    first_reached_frame: int | None = None
+    first_reached_time: float | None = None
+    magnitude_ratio: float | None = None
+    percent_over_threshold: float | None = None
+    absolute_over_threshold: float | None = None
+    threshold_value: float | None = None
+    threshold_units: str = ""
     ratios: dict = field(default_factory=dict)
+    first_index: dict = field(default_factory=dict)
     sustained: dict = field(default_factory=dict)
     max_surge_drift_m: float = 0.0
     max_vertical_lift_m: float = 0.0
@@ -109,15 +121,27 @@ def kinematics_from_columns(cols: dict, mass_kg: float) -> Kinematics:
                       force=force, mass_kg=float(mass_kg))
 
 
-def _sustained(mask: np.ndarray, frames: int) -> bool:
+def _first_sustained_index(mask: np.ndarray, frames: int) -> int:
+    mask = np.asarray(mask, dtype=bool)
     if frames <= 1:
-        return bool(np.any(mask))
+        idx = int(np.argmax(mask))
+        return idx if mask.size and mask[idx] else -1
     run = 0
-    for flag in np.asarray(mask, dtype=bool):
-        run = run + 1 if flag else 0
-        if run >= frames:
-            return True
-    return False
+    start = -1
+    for i, flag in enumerate(mask):
+        if flag:
+            if run == 0:
+                start = i
+            run += 1
+            if run >= frames:
+                return start
+        else:
+            run = 0
+    return -1
+
+
+def _sustained(mask: np.ndarray, frames: int) -> bool:
+    return _first_sustained_index(mask, frames) >= 0
 
 
 def _safe_ratio(value: float, threshold: float) -> float:
@@ -140,47 +164,78 @@ def classify_kinematics(kin: Kinematics, ssf: float,
     speed = np.linalg.norm(kin.vel, axis=1)
     weight_n = kin.mass_kg * G
 
-    slide_hold = _sustained(
-        (surge_drift >= th.slide_m) & (surge_speed >= th.slide_speed_ms), th.sustain_frames
-    )
-    float_hold = _sustained(
-        (lift >= th.float_m) & (rise_speed >= th.float_speed_ms), th.sustain_frames
-    )
-    topple_hold = _sustained(surge_accel_g >= ssf, th.sustain_frames)
-
     driven_downstream = float(np.max(np.abs(surge_force))) > 0.0
     driven_upward = float(np.max(vertical_force)) > 0.0
 
-    ratios = {
-        FailureMode.SLIDE: _safe_ratio(float(np.max(surge_drift)), th.slide_m),
-        FailureMode.TOPPLE: _safe_ratio(float(np.max(surge_accel_g)), ssf),
-        FailureMode.FLOAT: _safe_ratio(float(np.max(lift)), th.float_m),
+    slide_idx = _first_sustained_index(
+        (surge_drift >= th.slide_m) & (surge_speed >= th.slide_speed_ms), th.sustain_frames
+    )
+    topple_idx = _first_sustained_index(surge_accel_g >= ssf, th.sustain_frames)
+    float_idx = _first_sustained_index(
+        (lift >= th.float_m) & (rise_speed >= th.float_speed_ms), th.sustain_frames
+    )
+
+    first_index = {
+        FailureMode.SLIDE: slide_idx,
+        FailureMode.TOPPLE: topple_idx,
+        FailureMode.FLOAT: float_idx,
     }
     sustained = {
-        FailureMode.SLIDE: bool(slide_hold and driven_downstream),
-        FailureMode.TOPPLE: bool(topple_hold),
-        FailureMode.FLOAT: bool(float_hold and driven_upward),
+        FailureMode.SLIDE: bool(slide_idx >= 0 and driven_downstream),
+        FailureMode.TOPPLE: bool(topple_idx >= 0),
+        FailureMode.FLOAT: bool(float_idx >= 0 and driven_upward),
     }
+
+    max_surge_drift = float(np.max(surge_drift))
+    max_lift = float(np.max(lift))
+    max_surge_accel_g = float(np.max(surge_accel_g))
+
+    mode_value = {
+        FailureMode.SLIDE: max_surge_drift,
+        FailureMode.TOPPLE: max_surge_accel_g,
+        FailureMode.FLOAT: max_lift,
+    }
+    mode_threshold = {
+        FailureMode.SLIDE: th.slide_m,
+        FailureMode.TOPPLE: ssf,
+        FailureMode.FLOAT: th.float_m,
+    }
+    ratios = {m: _safe_ratio(mode_value[m], mode_threshold[m]) for m in MODE_SEVERITY}
 
     common = dict(
         ratios=ratios,
+        first_index=first_index,
         sustained=sustained,
-        max_surge_drift_m=float(np.max(surge_drift)),
-        max_vertical_lift_m=float(np.max(lift)),
+        max_surge_drift_m=max_surge_drift,
+        max_vertical_lift_m=max_lift,
         max_speed_ms=float(np.max(speed)),
         peak_surge_force_n=float(np.max(np.abs(surge_force))),
         peak_vertical_force_n=float(np.max(vertical_force)),
-        peak_surge_accel_g=float(np.max(surge_accel_g)),
+        peak_surge_accel_g=max_surge_accel_g,
         weight_n=float(weight_n),
         ssf=float(ssf),
     )
 
-    for mode in MODE_SEVERITY:
-        if sustained[mode]:
-            return ClassificationResult(mode=mode, magnitude_ratio=ratios[mode], **common)
+    reached = [m for m in MODE_SEVERITY if sustained[m]]
+    if not reached:
+        return ClassificationResult(mode=FailureMode.STUCK, **common)
 
-    worst = max(ratios.values()) if ratios else 0.0
-    return ClassificationResult(mode=FailureMode.FORD, magnitude_ratio=worst, **common)
+    mode = reached[-1]
+    value = mode_value[mode]
+    thr = mode_threshold[mode]
+    idx = first_index[mode]
+    percent_over = ((value / thr) - 1.0) * 100.0 if thr > 0 else float("inf")
+    return ClassificationResult(
+        mode=mode,
+        first_reached_frame=int(idx),
+        first_reached_time=float(kin.t[idx]),
+        magnitude_ratio=ratios[mode],
+        percent_over_threshold=float(percent_over),
+        absolute_over_threshold=float(value - thr),
+        threshold_value=float(thr),
+        threshold_units=MODE_UNITS[mode],
+        **common,
+    )
 
 
 def classify_timeseries(path, mass_kg: float, ssf: float,
@@ -188,6 +243,10 @@ def classify_timeseries(path, mass_kg: float, ssf: float,
     cols = load_timeseries(path)
     kin = kinematics_from_columns(cols, mass_kg)
     return classify_kinematics(kin, ssf, thresholds)
+
+
+def _round(value, ndigits):
+    return round(value, ndigits) if value is not None else None
 
 
 def classify_manifest(manifest_path, thresholds: FailureThresholds | None = None) -> list:
@@ -219,7 +278,13 @@ def classify_manifest(manifest_path, thresholds: FailureThresholds | None = None
                 continue
             record.update({
                 "mode": res.mode.value,
-                "magnitude_ratio": round(res.magnitude_ratio, 4),
+                "first_reached_frame": res.first_reached_frame,
+                "first_reached_time_s": _round(res.first_reached_time, 4),
+                "percent_over_threshold": _round(res.percent_over_threshold, 2),
+                "absolute_over_threshold": _round(res.absolute_over_threshold, 6),
+                "threshold_value": _round(res.threshold_value, 4),
+                "threshold_units": res.threshold_units,
+                "magnitude_ratio": _round(res.magnitude_ratio, 4),
                 "max_surge_drift_m": round(res.max_surge_drift_m, 4),
                 "max_vertical_lift_m": round(res.max_vertical_lift_m, 4),
                 "max_speed_ms": round(res.max_speed_ms, 4),
@@ -234,11 +299,17 @@ def classify_manifest(manifest_path, thresholds: FailureThresholds | None = None
 
 
 def format_verdict(result: ClassificationResult) -> str:
-    if result.mode == FailureMode.FORD:
-        return (f"FORD, worst-case margin {result.magnitude_ratio:.2f}x threshold "
-                f"(surge drift={result.max_surge_drift_m:.3f}m, lift={result.max_vertical_lift_m:.3f}m, "
+    if result.mode == FailureMode.STUCK:
+        return (f"STUCK (stable), no instability criterion tripped "
+                f"(max surge drift={result.max_surge_drift_m:.4f}m, "
+                f"max lift={result.max_vertical_lift_m:.4f}m, "
                 f"peak surge accel={result.peak_surge_accel_g:.3f}g vs SSF {result.ssf:.2f})")
-    return (f"{result.mode.value}, exceeds threshold by {result.magnitude_ratio:.2f}x "
-            f"(surge drift={result.max_surge_drift_m:.3f}m, lift={result.max_vertical_lift_m:.3f}m, "
-            f"peak surge force={result.peak_surge_force_n:.1f}N vs weight {result.weight_n:.1f}N, "
-            f"peak surge accel={result.peak_surge_accel_g:.3f}g vs SSF {result.ssf:.2f})")
+    unit = result.threshold_units
+    if unit == "m":
+        absolute = f"{result.absolute_over_threshold * 1000.0:.4g} mm"
+    else:
+        absolute = f"{result.absolute_over_threshold:.4g} g"
+    return (f"{result.mode.value} first reached at frame {result.first_reached_frame} "
+            f"(t={result.first_reached_time:.4f}s), exceeds criterion by "
+            f"{result.percent_over_threshold:.2f}% ({absolute} past "
+            f"{result.threshold_value:.4g}{unit})")
