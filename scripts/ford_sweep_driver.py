@@ -41,17 +41,30 @@ PLATEAU_WINDOW = 10
 PLATEAU_TOL_M = 0.01
 MIN_Z_LAYERS = 2
 
+YARIS_PLY = str(REPO_ROOT / "vehicle_geometry_research" / "yaris_coarse_v1l_watertight.ply")
+YARIS_MASS_KG = 1100.0
+
 parser = argparse.ArgumentParser()
 parser.add_argument("--config", choices=sorted(SWEEP_CONFIGS), default="v2")
+parser.add_argument("--vehicle", choices=["box", "yaris"], default="box")
+parser.add_argument("--output", default=None)
 parser.add_argument("--dry-run", action="store_true")
 parser.add_argument("--allow-underresolved", action="store_true")
 args, _ = parser.parse_known_args()
 
 CONFIG = SWEEP_CONFIGS[args.config]
-OUTDIR = CONFIG["outdir"]
+OUTDIR = Path(args.output).expanduser().resolve() if args.output else CONFIG["outdir"]
 DEPTHS = CONFIG["depths"]
 VELOCITIES = CONFIG["velocities"]
 N_GRID = CONFIG["n_grid"]
+
+USE_REAL_MESH = args.vehicle == "yaris"
+if USE_REAL_MESH:
+    VEHICLE_ITER = [("yaris", "compact_sedan")]
+    VEHICLE_SOURCE_PLY = YARIS_PLY
+else:
+    VEHICLE_ITER = list(VEHICLE_CLASSES.items())
+    VEHICLE_SOURCE_PLY = VEHICLE_PLY
 
 def fit_to_bbox(vehicle, bbox_m):
     length, width, height = bbox_m
@@ -89,12 +102,12 @@ def water_z_layers(bbox_m, depth, n_grid):
 
 
 def preflight():
-    print(f"CONFIG {args.config}: n_grid={N_GRID} depths={DEPTHS} velocities={VELOCITIES}")
-    print(f"  {len(VEHICLE_CLASSES)} vehicles x {len(DEPTHS)} depths x {len(VELOCITIES)} velocities "
-          f"= {len(VEHICLE_CLASSES) * len(DEPTHS) * len(VELOCITIES)} runs")
+    print(f"CONFIG {args.config}: vehicle={args.vehicle} n_grid={N_GRID} depths={DEPTHS} velocities={VELOCITIES}")
+    print(f"  {len(VEHICLE_ITER)} vehicles x {len(DEPTHS)} depths x {len(VELOCITIES)} velocities "
+          f"= {len(VEHICLE_ITER) * len(DEPTHS) * len(VELOCITIES)} runs")
     print(f"  outdir={OUTDIR}")
     underresolved = []
-    for vclass, params_key in VEHICLE_CLASSES.items():
+    for vclass, params_key in VEHICLE_ITER:
         bbox_m = get_vehicle(params_key)["bbox_m"]
         for depth in DEPTHS:
             layers, dx = water_z_layers(bbox_m, depth, N_GRID)
@@ -125,17 +138,20 @@ manifest_path = OUTDIR / "manifest.csv"
 run_index = 0
 header_written = False
 
-for vclass, params_key in VEHICLE_CLASSES.items():
+for vclass, params_key in VEHICLE_ITER:
     spec = get_vehicle(params_key)
     bbox_m = spec["bbox_m"]
-    vehicle_mass = spec["mass_kg"]
+    vehicle_mass = YARIS_MASS_KG if USE_REAL_MESH else spec["mass_kg"]
     for depth in DEPTHS:
         for velocity in VELOCITIES:
             run_id = f"veh-{vclass}_dep-{depth:.2f}_vel-{velocity:.2f}_idx-{run_index:04d}".replace(".", "p")
             print(f"START {run_id}", flush=True)
             t0 = time.time()
 
-            v = fit_to_bbox(load_vehicle(VEHICLE_PLY), bbox_m)
+            if USE_REAL_MESH:
+                v = load_vehicle(VEHICLE_SOURCE_PLY)
+            else:
+                v = fit_to_bbox(load_vehicle(VEHICLE_SOURCE_PLY), bbox_m)
             scene = FloodScene(v, depth=depth, velocity=velocity,
                                vehicle_mass=vehicle_mass, n_grid=N_GRID)
 
