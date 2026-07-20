@@ -152,6 +152,12 @@ This is the coupled-variable failure CLAUDE.md warns about (`grid_density <-> do
   - LS6 `ls6/can-it-ford`: 41eb656..0b84cb7
 - Found: `/work/11603/jcerrell0629/ls6/can-it-ford` and `/work/11603/jcerrell0629/vista/can-it-ford` are TWO SEPARATE CLONES at the same commit, not diverged, but worth deciding whether ls6/can-it-ford should be deleted in favor of always using the shared vista path, not resolved tonight
 
+## 2026-07-18 (Vista, Kumar low-velocity sweep task) findings, steps 1-3 read live from simulation/can_it_ford_L2_mpm.py
+- Vehicle density/mass CONFIRMED live: `rho=115.7` on box `(4.66, 1.79, 1.44)` (volume 12.01 m3) gives 1390 kg, matches the sedan-class target. No fix needed.
+- Simulation domain CONFIRMED live (the question nobody could answer in the Friday meeting): `lower_bound=(-2.5, -1.0, -0.1)`, `upper_bound=(4.5, 1.0, 2.5)`, i.e. 7.0 m (x) x 2.0 m (y) x 2.6 m (z), `grid_density=128`.
+- Water render is RAW PARTICLES, not a reconstructed surface: water is `gs.materials.MPM.Liquid()` with `surface=gs.surfaces.Default(color=...)` and no reconstruction/vis_mode set; the camera renders particles directly. Surface-reconstruction fix still pending (verify exact Genesis keyword via container grep before editing).
+- NOTE: `can_it_ford_L2_mpm.py` carries a 189-line uncommitted diff (instrumentation + `data/track2_sweep` manifest), file mtime 2026-07-16 13:52, never run (`data/track2_sweep` does not exist), no live process. Low-velocity sweep to be built on it pending confirmation it is safe to keep.
+
 ## 2026-07-19: full session consolidation, MCP/data/decisions/infra
 MCP: deepwiki, github, wandb, huggingface(hf) connected in Claude Code CLI on
 Mac and Vista (user scope). LS6 in progress, confirm with `claude mcp list`
@@ -193,3 +199,8 @@ one has Yaris "Small Car class" section, adopt newer, not yet executed), second
 Vista clone at /home1/11603/jcerrell0629/can-it-ford still undiagnosed.
 
 2026-07-19  Yaris coarse v1l watertight hull CONFIRMED via direct-card-parse (*NODE/*ELEMENT_SHELL, no Deck() hang) + mesh2sdf 256^3 padded SDF, +17mm offset. is_watertight=True, winding-consistent. bbox 4.283 x 1.746 x 1.518 m (subcompact Yaris, NOT Civic 4.66m). V=327,212 F=655,308, enclosed vol=3.543 m^3, underbody kept open. Mass 1100 kg per deck header (tons,mm,N,sec). Do NOT apply 1390 kg Civic mass. Output: vehicle_geometry_research/yaris_coarse_v1l_watertight.{obj,ply}
+
+## 2026-07-20 (Vista, Yaris watertight mesh confirmed + mass correction)
+- `vehicle_geometry_research/yaris_sedan_watertight.ply` CONFIRMED real on the Mac (977025 bytes, Jul 17 06:07, mesh2sdf output: watertight=True, 1 component, volume 6.8185 m3); NOT present anywhere on Vista (repo-wide and `/work/11603/jcerrell0629/vista` `find -iname '*.ply'` both return zero), so it must be synced to Vista before any Vista run can load it.
+- Yaris target mass corrected to 1100 kg (this specific NCAC FE deck's own stated curb mass, a primary source for this exact geometry), superseding the 1050 kg generic-subcompact estimate and the 1390 kg Civic/Corolla figure that was never this vehicle's mass; mesh-based rho = 1100 / 6.8185 = 161.33 kg/m3, to be used only once the mesh is wired in.
+- Mesh-wiring into `simulation/can_it_ford_L2_mpm.py` and `simulation/can_it_ford_L2_mpm_ytest.py` INTENTIONALLY DEFERRED: both still use `gs.morphs.Box()` (L2_mpm.py VEHICLE_RHO=115.7, ytest.py hardcoded rho=604), and switching to `gs.morphs.Mesh()` makes the grid_density=128 hollow-vehicle risk live (Genesis issue #600), a deliberate design decision, not a quiet rho edit. gs.morphs calls left untouched this session.

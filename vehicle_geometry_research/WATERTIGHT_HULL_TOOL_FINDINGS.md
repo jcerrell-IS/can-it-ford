@@ -1,7 +1,7 @@
 # Watertight hull tooling for LS-DYNA coarse FE meshes -> MPM SDF collision geometry
 
-Research note. No conversion has been run. Findings and recommendation only.
-Date: 2026-07-17.
+Research note. Conversion completed 2026-07-17 06:07 via mesh2sdf: watertight=True, 1 component, volume 6.8185 m^3, output yaris_sedan_watertight.ply (on the Mac only as of 2026-07-20, not yet synced to Vista). Sections below are the findings and recommendation that produced it.
+Date: 2026-07-17, completion status corrected 2026-07-20.
 
 ## Source geometry (confirmed by direct inspection)
 
