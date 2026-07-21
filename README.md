@@ -59,8 +59,8 @@ Open items are tracked as [GitHub Issues](../../issues).
 
 **23 unique (depth, velocity) conditions** tested via L2 on the SPH box-geometry pilot, before the July 7 friction and viscosity fixes.
 
-- **L1 / L2 agreement rate: 30.4 percent** (7 of 23 conditions)
-- **16 conditions:** L1 predicts FORD, pilot L2 produces lateral drift exceeding 0.05 m (NO-FORD)
+- **L1 / L2 agreement rate: 39.1 percent** (9 of 23 conditions)
+- **14 conditions:** L1 predicts FORD, pilot L2 produces lateral drift exceeding 0.05 m (NO-FORD)
 - **Friction-invariant:** drift stays roughly 0.33 to 0.40 m across friction coefficients 0.0 to 0.7
 
 Treat the friction-invariance with suspicion: it is exactly the signature a floating, near-massless body produces (ground normal force near zero makes friction mathematically irrelevant), and the pilot ran before the vehicle mass bug was fixed. This is kept because it motivates the rebuild, not because it is trusted. The 0.05 m drift threshold itself has no direct published source and is reframed as a fraction of vehicle width in [`citations/README.md`](citations/README.md) ([#5](../../issues/5)).
