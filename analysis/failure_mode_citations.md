@@ -15,7 +15,7 @@ stable / no-instability baseline reported when none of the three criteria trip.
 | Code mode | Physical meaning | Criterion in code | Primary source |
 |-----------|------------------|-------------------|----------------|
 | STUCK | Stable, no instability onset | none of the three below sustained | Shand et al. 2011 (baseline = absence of the three) |
-| SLIDE | Hydrodynamic drag exceeds tire-ground friction, vehicle slips downstream | sustained surge (cross-stream) drift and surge speed above tolerance, with a downstream driving force present | Xia et al. 2011 |
+| SLIDE | Hydrodynamic drag exceeds tire-ground friction, vehicle slips downstream | sustained surge (cross-stream) drift and surge speed above tolerance, with a downstream driving force present | Xia et al. 2010 |
 | TOPPLE | Overturning moment exceeds the vehicle's stability limit | sustained surge acceleration (in g) at or above the vehicle Static Stability Factor (SSF) | Xia et al. 2013 |
 | FLOAT | Buoyancy plus hydrodynamic lift exceeds vehicle weight, vehicle lifts off | sustained vertical lift and rise speed above tolerance, with an upward driving force present | Kramer et al. 2016 |
 
