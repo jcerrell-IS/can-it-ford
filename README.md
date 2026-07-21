@@ -191,3 +191,4 @@ Note: PhysGaussian has no detected license in its GitHub metadata. Any PhysGauss
 ## Acknowledgments
 
 PI: Krishna Kumar (GeoElements Lab, UT Austin). Daily mentors: Hassan Iqbal, Cheng-Hsi Hsiao, Sarah Etter. Near-peer: Cristian Moran. Genesis container: Luke Smith. Funded by NSF SCIPE REU 2026 (Chishiki AI scholarship, GeoElements).
+
