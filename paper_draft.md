@@ -21,7 +21,40 @@ Significance. This work delivers a closed reconstruct-to-decide pipeline and a c
 
 ### 3.1 Vehicle Representation
 
-The vehicle evaluated is a subcompact sedan, represented by the 2010 Toyota Yaris finite-element model developed by the Center for Collision Safety and Analysis and validated against full-scale crash tests. This is a real, crash-validated vehicle geometry (measured curb mass 1100 kg, body envelope 4.30 by 1.70 by 1.47 m), not a generic mid-size sedan placeholder. Under the Australian Rainfall and Runoff vehicle-stability guidelines (Shand et al. 2011), a vehicle of this mass and size falls in the Small Car class, the most conservative of the three passenger classes, with a limiting still-water depth of 0.30 m and a limiting depth-velocity product of 0.30 m2/s. Adopting the real subcompact geometry therefore places the L1 stability criterion in its correct and most conservative class, rather than the more permissive class a larger placeholder would have implied.
+The validated coupled-simulation results (the v2 sweep, 24 of 36 cells retained after filtering) were produced with box-proxy vehicle geometry, not with a real vehicle mesh. Two passenger-vehicle classes are cited: a compact sedan and a light pickup. A midsize SUV class was also run but is excluded from all reported results because its solidified proxy is density-implausible (308.13 kg/m3, outside the 100 to 300 kg/m3 fill-quality band). Each proxy is built by scaling a single source surface anisotropically to the target class bounding box, so that per-class mass, bounding box, displaced volume, and side-on drag area are correct while the sub-bounding-box shape detail is shared rather than class-specific. Class curb mass and bounding box are drawn from manufacturer specification sheets, with center-of-gravity height and inertia from the NHTSA measured inertial-parameter database (SAE 1999-01-1336), collected in vehicle_params.py. Vehicle density is not prescribed; it is derived post hoc (class mass divided by solidified particle volume) and used only as a plausibility check.
+
+The two cited classes are the compact sedan (1390 kg, 4.66 m length, Toyota Corolla / Honda Civic anchors) and the light pickup (2300 kg, 5.89 m length, Ford F-150 anchor).
+
+Under the Australian Rainfall and Runoff vehicle-stability guidelines (Shand et al. 2011, AR&R Project 10, Table 3), these two proxies fall in different classes than a naive subcompact reading would imply:
+
+- The sedan (1390 kg, 4.66 m) exceeds both the 1250 kg and 4.3 m Small Car limits, placing it in the Large passenger car class: limiting depth-velocity product D times V less than or equal to 0.45 m2/s, limiting still-water depth 0.40 m.
+- The pickup (2300 kg, 5.89 m) exceeds the 2000 kg and 4.5 m limits, placing it in the Large 4WD class: limiting D times V less than or equal to 0.60 m2/s.
+
+This corrects a classification error in an earlier draft, which assigned the vehicle to the Small Car class (D times V less than or equal to 0.30 m2/s, depth 0.30 m). That Small Car classification is correct only for the real 1100 kg, 4.30 m Toyota Yaris geometry, which is a separate and not-yet-validated capability: the --vehicle yaris path in ford_sweep_driver.py was wired in this week and is still under validation after a mass-assignment bug was found. It does not describe the box-proxy sedan and pickup that produced the cited results.
+
+These AR&R thresholds serve as the L1 stability criterion, but the source itself labels them "draft, interim," not a permanently validated standard. They are treated accordingly here and are not presented as a settled regulatory limit.
+
+<!--
+SUPERSEDED DRAFT TEXT (retained for reference, not live prose, not a code comment).
+The prior Section 3.1 below described the real Toyota Yaris FE mesh as the evaluated
+vehicle. This was aspirational: the Yaris mesh had produced no validated result at the
+time of writing, and the AR&R Small Car classification it invoked applies only to that
+mesh, not to the box-proxy sedan and pickup that produced the v2 sweep. Kept verbatim in
+case the Yaris capability is validated and reinstated.
+
+The vehicle evaluated is a subcompact sedan, represented by the 2010 Toyota Yaris
+finite-element model developed by the Center for Collision Safety and Analysis and
+validated against full-scale crash tests. This is a real, crash-validated vehicle
+geometry (measured curb mass 1100 kg, body envelope 4.30 by 1.70 by 1.47 m), not a
+generic mid-size sedan placeholder. Under the Australian Rainfall and Runoff
+vehicle-stability guidelines (Shand et al. 2011), a vehicle of this mass and size falls
+in the Small Car class, the most conservative of the three passenger classes, with a
+limiting still-water depth of 0.30 m and a limiting depth-velocity product of 0.30 m2/s.
+Adopting the real subcompact geometry therefore places the L1 stability criterion in its
+correct and most conservative class, rather than the more permissive class a larger
+placeholder would have implied.
+-->
+
 
 ### 3.2 PVWM Framing
 
