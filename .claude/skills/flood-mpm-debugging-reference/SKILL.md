@@ -1,6 +1,6 @@
 ---
 name: flood-mpm-debugging-reference
-description: Use this skill for ANY task that writes, edits, or debugs code touching Genesis MPM/SPH, kks32/mpm-engine, vehicle mass/inertia/friction parameters, or gsplat-to-simulation geometry in the Can It Ford project. Trigger on mentions of grid_density, coup_friction, rho, DRIFT_THRESHOLD, MPM.Liquid, SPH.Liquid, load_vehicle, FloodScene, splashsurf, or any error message containing "particles pass through", "GLIBCXX", "arm64", "aarch64", or a CUDA/torch install failure on Vista or LS6. Also trigger before stating any vehicle mass, inertia, or rho value as fact, before writing a new MPM/SPH scene, and before assuming a Genesis or kks32/mpm-engine API behaves a certain way without checking.
+description: Use this skill for ANY task that writes, edits, or debugs code touching Genesis MPM/SPH, kks32/mpm-engine, PhysGaussian, vehicle mass/inertia/friction parameters, water compressibility, collider type, failure-mode classification, DRIFT_THRESHOLD, or gsplat-to-simulation geometry in the Can It Ford project. Also trigger before writing Methods or Limitations text, before rendering any output, and before committing any code adapted from PhysGaussian. Trigger on mentions of grid_density, coup_friction, rho, MPM.Liquid, SPH.Liquid, load_vehicle, FloodScene, splashsurf, SDF/CDF colliders, slide/topple/float, or any error message containing "particles pass through", "GLIBCXX", "arm64", "aarch64", or a CUDA/torch install failure on Vista or LS6. Also trigger before stating any vehicle mass, inertia, or rho value as fact, before writing a new MPM/SPH scene, and before assuming a Genesis or kks32/mpm-engine API behaves a certain way without checking.
 ---
 
 # Flood-MPM Debugging Reference
@@ -23,6 +23,21 @@ Never state a vehicle mass, inertia tensor, rho, or friction value from memory o
 - **Box-proxy pipeline**: `vehicle_params.py`, generic bounding box + mass + NHTSA-measured inertia tensor, no real mesh. Currently used by Track 1 and Track 2 vehicle bodies.
 - **Real-mesh pipeline**: NCAC/CCSA finite-element models (Yaris resolved, Silverado/Rogue available but not yet converted), or a Gaussian-splat capture loaded via `kks32/mpm-engine`'s `load_vehicle()`. These have their own, separate rho calculation from actual mesh volume, not from `vehicle_params.py`.
 A script using one should never silently inherit a number computed for the other.
+
+## PhysGaussian, licensing constraint, do not violate
+
+PhysGaussian's own code is **all-rights-reserved**, not permissively licensed. It is approved for use as a **private, local-only render tool** for generating one hero visual asset, never committed to the public `can-it-ford` repo. Adapting its code (including `gs_simulation.py`) and pushing that adaptation to GitHub is a real license violation, not a citation nicety. If a task calls for the splat-to-particle bridge PhysGaussian demonstrates, check `kks32/mpm-engine`'s own `src/warpmpm/splats` first, it already implements the same concept under MIT, and is safe to commit to. Only a clean-room reimplementation of PhysGaussian's approach, written without copying its code, would be safe to commit publicly.
+
+## Part 3: physics properties to lock before rendering anything
+
+Each of these is a one-line, cited decision that belongs in CLAUDE.md and in any Methods/Limitations section, not something a script should silently assume. Check the live value before stating any of these as fact, don't assume the number below still matches what a given script currently does.
+
+1. **Vehicle mass/density.** Pick one and use it everywhere: 1078 kg / rho=304.28 (NCAC actual modeled weight, most defensible), or 1100 kg / rho=310.47 (MASH class nominal, also defensible if explicitly labeled as such). Either is fine. Using both, silently, in different files is the actual problem.
+2. **Friction.** Confirm `friction=0.55` is the live value on the SDF collider calls, don't assume it from a prior session. If the code actually has the 0.4 engine default instead, either change it and cite Azhar et al. 2023, or report 0.4 honestly as "engine default, not yet calibrated," don't silently claim 0.55 when the code says otherwise.
+3. **Water compressibility.** `mpm-engine`'s bulk modulus is deliberately softened for timestep stability. Bulk wave speed is therefore not physically real water. State this plainly in Methods/Limitations. It's a defensible, documented tradeoff, not a hidden flaw, don't let it read as an oversight.
+4. **Collider type.** Use SDF colliders, not CDF, for anything needing a calibrated force reading. The repo's own docs describe CDF as "soft" and under-reporting contact load.
+5. **Failure-mode taxonomy.** Three real hydrodynamic instabilities exist in the literature (Shand et al. 2011): slide, topple, float. "Stuck" is the stable, no-instability baseline, not a fourth mode. Citation anchors, already resolved, don't re-derive: slide → Xia et al. 2011 (drag ≥ friction), topple → Xia et al. 2013, float → Kramer et al. 2016 (Froude < 0.5 = flotation-controlled, > 0.5 = sliding-dominant).
+6. **DRIFT_THRESHOLD = 0.05m.** Already resolved, reuse this exact language rather than re-deriving it: "a conservative numerical onset-of-motion detection tolerance, not a peer-reviewed physical instability criterion," grounded conceptually in Xia et al. 2014 and Shah et al. 2018. This has been independently derived three separate times across this project's files, all three agree, treat re-deriving it a fourth time as wasted effort, not added rigor.
 
 ## `kks32/mpm-engine`, what it can already do, checked directly against the source
 
@@ -75,11 +90,3 @@ This is the original SPH pilot script (`SPH.Liquid`, not `MPM.Liquid`), not conn
 ## When you hit something not covered above
 
 Say so explicitly. Do not extrapolate a fix from a superficially similar entry in this table and present it with the same confidence as a sourced one. Search fresh, and if the finding is worth keeping, it belongs back in `reference_data/` or `docs/` and a short pointer added here, not left to be rediscovered next session.
-
-## Session-start pointer (folded in from the CLAUDE.md addendum)
-
-This section preserves the text originally drafted as a CLAUDE.md addendum. CLAUDE.md is gitignored in this repo to keep personal profile information off GitHub, so the pointer lives here in the committed skill instead.
-
-Before writing or debugging any code touching Genesis MPM/SPH, kks32/mpm-engine, vehicle mass/inertia/friction parameters, or gsplat-to-simulation geometry, load the `flood-mpm-debugging-reference` skill. It indexes known Genesis/kks32 bugs with fixes, the current correct vehicle parameter values, and which files in `reference_data/` and `docs/` to open for full sourced detail.
-
-Never state a vehicle mass, inertia, rho, or friction value as fact without checking it against `reference_data/vehicle_data_master_reference_2026-07-21.json` or `vehicle_params.py` live. Prior session summaries and superseded research files in this repo are not sources of truth, the skill above tells you which specific files are currently known-wrong.
