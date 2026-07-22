@@ -37,7 +37,7 @@ def main():
         show_viewer=args.vis,
     )
 
-    vehicle_rigid = gs.materials.Rigid(needs_coup=True, coup_friction=0.4, rho=604)
+    vehicle_rigid = gs.materials.Rigid(needs_coup=True, coup_friction=0.55, rho=604)  # 0.55 per Azhar et al. 2023 (matched scale-model coefficient)
 
     plane   = scene.add_entity(morph=gs.morphs.Plane())
 
@@ -110,7 +110,7 @@ def main():
     depth_str = str(water_depth).replace(".", "p")
     vel_str   = str(water_velocity).replace(".", "p")
     run_stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    run_tag   = f"d{depth_str}_v{vel_str}_mu0p005_cf0p4_{run_stamp}"
+    run_tag   = f"d{depth_str}_v{vel_str}_mu0p005_cf0p55_{run_stamp}"
 
     if cam is not None:
         video_path = f"simulation_{run_tag}.mp4"
@@ -129,7 +129,7 @@ def main():
     np.savez(npz_path, pos=pos_final, vel=vel_final,
              depth=water_depth, velocity=water_velocity,
              verdict=verdict, peak_x_disp=max_x_disp, rho=604,
-             coup_friction=0.4, mu=0.005, run_tag=run_tag)
+             coup_friction=0.55, mu=0.005, run_tag=run_tag)
     print(f"Saved particle state: {npz_path}")
 
     print(f"\n=== RESULT ===")
