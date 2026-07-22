@@ -42,7 +42,7 @@ PLATEAU_TOL_M = 0.01
 MIN_Z_LAYERS = 2
 
 YARIS_PLY = str(REPO_ROOT / "vehicle_geometry_research" / "yaris_coarse_v1l_watertight.ply")
-YARIS_MASS_KG = 1100.0
+YARIS_MASS_KG = 1078.0  # NCAC actual modeled Yaris mass (real-mesh path); rho emerges as mass/solid_volume, not hardcoded 304.28. Per CLAUDE.md Physical Plausibility Checklist item 1.
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--config", choices=sorted(SWEEP_CONFIGS), default="v2")
