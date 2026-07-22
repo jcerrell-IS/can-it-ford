@@ -1,0 +1,74 @@
+{
+  "document_purpose": "Compiled, source-verified vehicle class comparison for Can It Ford, built from live Scite and web research on 2026-07-21. This is NOT a live NHTSA vPIC pull. Curb weight and precise vPIC fields for the RAV4 and CR-V still need to be pulled separately, either via a real VIN decode or manufacturer spec sheets.",
+  "existing_project_vehicles": {
+    "small_passenger": {
+      "vehicle": "Dodge Neon, 1998",
+      "ar_and_r_class": "small passenger",
+      "limiting_still_water_depth_m": 0.3,
+      "limiting_dv_threshold_m2_s": 0.30,
+      "source": "Ball et al. 2019, ARR Book 6, and Shand, Cox, Blacka & Smith 2011, AR&R Report P10/S2/020"
+    },
+    "large_4wd": {
+      "vehicle": "Chevrolet C1500, 1998",
+      "ar_and_r_class": "large 4WD",
+      "limiting_still_water_depth_m": 0.5,
+      "limiting_dv_threshold_m2_s": 0.60,
+      "source": "Ball et al. 2019, ARR Book 6, and Shand, Cox, Blacka & Smith 2011, AR&R Report P10/S2/020"
+    },
+    "large_passenger_or_crossover": {
+      "vehicle": "Ford Explorer, 1998",
+      "ar_and_r_class": "large passenger (approximate mapping, mid-size SUV, not a strict AR&R sedan)",
+      "limiting_still_water_depth_m": 0.4,
+      "limiting_dv_threshold_m2_s": 0.45,
+      "source": "Ball et al. 2019, ARR Book 6, and Shand, Cox, Blacka & Smith 2011, AR&R Report P10/S2/020",
+      "note": "Explorer is mid-size, not a strict AR&R large passenger sedan, mapping is approximate"
+    }
+  },
+  "proposed_fourth_class": {
+    "category": "small footprint, high ground clearance (compact SUV/crossover)",
+    "rationale": "AR&R's three classes do not separately distinguish a small-footprint vehicle with SUV-class ground clearance from a small-footprint vehicle with low ground clearance. Buoyancy-versus-submersion-depth behavior differs meaningfully between the two even at similar mass and length.",
+    "candidate_vehicles": ["Toyota RAV4, 1998", "Honda CR-V, 1998"],
+    "era_note": "Both existed as real production vehicles by 1998, matching the model year of the three existing project vehicles",
+    "status": "Not yet pulled from NHTSA vPIC live. Curb weight and vPIC fields still needed."
+  },
+  "historical_test_vehicles_behind_ar_and_r_thresholds": {
+    "source": "Keller and Mitsch 1993, cited as one of three foundational studies (with Bonham and Hattersley 1967 and Gordon and Stone 1973) underlying the current AR&R vehicle hazard guidelines",
+    "vehicles_tested": ["Toyota Corolla", "Suzuki Swift", "Ford Laser", "Honda Civic", "Ford LTD"],
+    "confirmed_via": "Direct citation snippet from Shah, Mustaffa & Martínez 2019, DOI 10.1080/15715124.2019.1566240, via Scite live search 2026-07-21"
+  },
+  "yaris_mesh_independent_grounding": {
+    "note": "The project's existing Yaris mesh choice is independently grounded, not arbitrary",
+    "source": "Azhar, Pauwels & Bui 2023, DOI 10.1111/jfr3.12885, used a 1:14 scale Toyota Yaris as its own confirmatory test vehicle",
+    "relevance": "This is the same paper the project's coup_friction=0.55 value traces to, still flagged UNRESOLVED for the exact numeral"
+  },
+  "moving_vehicle_literature_confirmed_2026_07_21": [
+    {
+      "citation": "Shah, Mustaffa & Kim 2018, Instability Criteria for Vehicles in Motion Exposed to Flood Risks",
+      "doi": "10.1051/matecconf/201820307003",
+      "access": "Diamond OA, fully open",
+      "relevance": "First experimental study of a moving vehicle in floodwater, 1:10 scale, force decomposition into buoyancy, drag, friction, and driving force"
+    },
+    {
+      "citation": "Shah, Mustaffa & Martinez 2019, Criterion of vehicle instability in floodwaters: past, present and future",
+      "doi": "10.1080/15715124.2019.1566240",
+      "access": "Green OA",
+      "url": "https://www.researchgate.net/publication/330258340_Criterion_of_Vehicle_Instability_in_Floodwaters_Past_Present_and_Future"
+    },
+    {
+      "citation": "Shah, Mustaffa & Martinez-Gomariz 2019, A review of safety guidelines for vehicles in floodwaters",
+      "doi": "10.1080/15715124.2019.1687487",
+      "access": "Green OA",
+      "url": "http://hdl.handle.net/2117/180906"
+    }
+  ],
+  "recent_synthesis_reference": {
+    "citation": "A New Semi-Empirical Model to Predict Vehicle Instability in Urban Flooding",
+    "doi": "10.3390/w18010080",
+    "note": "Calibrates separate stability curves for multiple vehicle categories from a large experimental dataset, confirms AR&R depth thresholds of 0.3/0.4/0.5m and DV thresholds of 0.30/0.45/0.60 m2/s"
+  },
+  "still_open_before_this_is_fully_usable": [
+    "Pull real NHTSA vPIC JSON for a specific 1998 RAV4 and/or CR-V VIN, not yet done",
+    "Confirm curb weight for both from manufacturer spec sheets, since vPIC decode fields may not include this directly",
+    "Decide whether to actually add this fourth class to the sweep, or hold it for future work given the six-day timeline"
+  ]
+}
