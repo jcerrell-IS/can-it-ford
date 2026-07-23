@@ -307,3 +307,11 @@ Written from live artifacts (git log/status, grep of on-disk scripts, `tmux capt
 **PAPER METHODS: DONE. POSTER METHODS PANEL: NOT DONE (in-progress as of 21:38 CDT).** Paper Methods 3.4 committed (de4391e, honest open-issue note) and 3.3 committed earlier (e173175), both real in staging history. Poster Methods panel is NOT saved: `paper/poster_methods.md` does not exist on disk; pane ford.2 is waiting for a go and flags an unresolved 1078-vs-1100 kg mass conflict between the draft and Abstract/section 3.1.
 
 **Rollup:** only item 4's paper-side is confirmed done. Items 1, 2, 3 and the poster panel are all still open/in-progress at 21:38 CDT.
+
+## 2026-07-23, post-restart audit: P2G crash NOT fixed by position change
+
+Committed 8cc302c (pos=-1.8) at 00:10:18. Crash trace at 00:27:22, 17 min later,
+identical CUDA_ERROR_ILLEGAL_ADDRESS in p2g. Position was not the coupled variable
+causing this. Domain-widening bounds remain the live suspect per the 19:53 CDT entry.
+No new successful sim output exists anywhere on Vista since this commit. Do not report
+the coupled MPM sim as running.
