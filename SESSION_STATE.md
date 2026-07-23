@@ -232,6 +232,59 @@ Vista clone at /home1/11603/jcerrell0629/can-it-ford still undiagnosed.
 2026-07-19  Yaris coarse v1l watertight hull CONFIRMED via direct-card-parse (*NODE/*ELEMENT_SHELL, no Deck() hang) + mesh2sdf 256^3 padded SDF, +17mm offset. is_watertight=True, winding-consistent. bbox 4.283 x 1.746 x 1.518 m (subcompact Yaris, NOT Civic 4.66m). V=327,212 F=655,308, enclosed vol=3.543 m^3, underbody kept open. Mass 1100 kg per deck header (tons,mm,N,sec). Do NOT apply 1390 kg Civic mass. Output: vehicle_geometry_research/yaris_coarse_v1l_watertight.{obj,ply}
 
 ## 2026-07-20 (Vista, Yaris watertight mesh confirmed + mass correction)
-- `vehicle_geometry_research/yaris_sedan_watertight.ply` CONFIRMED real on the Mac (977025 bytes, Jul 17 06:07, mesh2sdf output: watertight=True, 1 component, volume 6.8185 m3); NOT present anywhere on Vista (repo-wide and `/work/11603/jcerrell0629/vista` `find -iname '*.ply'` both return zero), so it must be synced to Vista before any Vista run can load it.
+- `yaris_sedan_watertight.ply` CONFIRMED real on the Mac (977025 bytes, Jul 17 06:07, mesh2sdf output: watertight=True, 1 component, volume 6.8185 m3); NOT present anywhere on Vista (repo-wide and `/work/11603/jcerrell0629/vista` `find -iname '*.ply'` both return zero), so it must be synced to Vista before any Vista run can load it.
 - Yaris target mass corrected to 1100 kg (this specific NCAC FE deck's own stated curb mass, a primary source for this exact geometry), superseding the 1050 kg generic-subcompact estimate and the 1390 kg Civic/Corolla figure that was never this vehicle's mass; mesh-based rho = 1100 / 6.8185 = 161.33 kg/m3, to be used only once the mesh is wired in.
 - Mesh-wiring into `simulation/can_it_ford_L2_mpm.py` and `simulation/can_it_ford_L2_mpm_ytest.py` INTENTIONALLY DEFERRED: both still use `gs.morphs.Box()` (L2_mpm.py VEHICLE_RHO=115.7, ytest.py hardcoded rho=604), and switching to `gs.morphs.Mesh()` makes the grid_density=128 hollow-vehicle risk live (Genesis issue #600), a deliberate design decision, not a quiet rho edit. gs.morphs calls left untouched this session.
+
+Mon Jul 20 05:58:43 CDT 2026: drain_2956 COLMAP complete, 265/267 registered (99.25%), 62.9min runtime. Winner for gsplat training. drain_2957 blur-culled (261 clean frames) but COLMAP not yet run.
+
+---
+
+## 2026-07-22 19:53 CDT: consolidated four-pane status pass
+
+Written from live artifacts (grep/cat/git of the files, plus `tmux capture-pane` of each pane), not from memory or from any pane's summary. Each block states only what is confirmed on disk right now.
+
+### 1. Water-box overlap fix (pane canitford.0, Vista, CUDA crash)
+
+**NOT FIXED. Still open, in-progress as of 2026-07-22 19:53 CDT.** Moving the water box was tested and does not resolve the crash: it either re-crashes identically or produces a fake "success" (no real coupled run). The overlap hypothesis (B03) was never even confirmed as the crash cause; the live suspect remains the domain-widening bounds (`lower=(-2.5,-1.0,-0.1)`, `upper=(4.5,1.0,2.5)`), consistent with CLAUDE.md. No CUDA traceback has been captured yet. Next proposed action (not yet run, awaiting go): test `coup_softness` on the vehicle material. Do not report the coupled MPM sim as running.
+
+### 2. Yaris flood-sweep numbers (pane canitford.1, Vista)
+
+**NO NUMBERS EXIST. Run FAILED, in-progress as of 2026-07-22 19:53 CDT.** Latest attempt failed at 0/12 runs on a mesh-vs-splat loader bug; no output was produced. Confirmed on disk: no `data/track2_sweep/`, no Yaris sweep manifest anywhere; the only sweep manifests present are `data/track1_sweep_v1/manifest.csv` and `data/track1_sweep_v2/manifest.csv` (both truck-shell, not Yaris). The failure was logged honestly. Blocker: the Yaris asset/loader must be fixed first (smallest version: export the watertight hull to `.obj` and repoint `YARIS_PLY`) before any real Yaris (C1) result can exist. Do not cite or plot any Yaris sweep verdict.
+
+### 3. designsafe-staging parity check (staging vs main sim script)
+
+**PARITY CHECK DONE. RECONCILIATION NOT DONE.** Live grep confirms the staging copy is stale on two coupled parameters:
+
+| parameter | main `simulation/can_it_ford_L2_mpm.py` | staging `designsafe-staging/scripts/can_it_ford_L2.py` |
+|---|---|---|
+| coup_friction | 0.55 (line 28) | 0.4 (lines 40, 132) |
+| vehicle rho | 115.7 (line 27) | 604 (line 40) |
+
+The staging `rho=604` is the pre-resize regression value CLAUDE.md flags (old box density never recomputed). `git status` shows no local change to the staging script, so no fix has been applied. Do not run or cite anything from the staging copy claiming friction=0.55 until it is reconciled.
+
+### 4. Methods section status (pane ford.0, paper_draft.md)
+
+**Section 3.3 "Rigid-Fluid Coupling in the MPM Solver" ADDED to the root `paper_draft.md` (grep-confirmed present; file is uncommitted, `git status` shows ` M`).** It correctly attributes the Section 4.3 sweep to the Track 1 mpm-engine solver, not Genesis. The water-box-overlap paragraph was DELIBERATELY HELD (grep confirms it is absent): there is no confirmation anywhere that the overlap bug is fixed (see block 1), so writing it would overclaim. Correct call. Canonical draft is the root `paper_draft.md` (newest, has the full Results section); `paper/paper_draft.md` is stale (Jul 17, 5.5 KB) and should not be edited. Still to do: commit the root draft.
+
+**One-line rollup:** blocks 1 and 2 are still-open/in-progress (crash unresolved, Yaris run has zero output); block 3 is a confirmed mismatch with the fix not yet applied; block 4 is the only real forward progress (coupling subsection written, uncommitted, overlap paragraph correctly held).
+
+---
+
+## 2026-07-22 21:38 CDT: consolidated status re-check (supersedes 19:53 pass)
+
+Written from live artifacts (git log/status, grep of on-disk scripts, `tmux capture-pane` of canitford.0/1/2 and ford.0/2) at 21:38 CDT, not from any pane's summary. Repo is moving during this check (designsafe-staging HEAD advanced de4391e -> ab11309 mid-pass) and SESSION_STATE.md still has uncommitted edits from another pane.
+
+### 1. Water-box fix outcome (pane canitford.0, Vista MPM crash)
+**NOT FIXED. In-progress as of 21:38 CDT.** Local `simulation/can_it_ford_L2_mpm.py:145` still reads `pos=(0.275, 0.0, water_depth/2.0)`. The Vista working tree has an UNCOMMITTED reposition to `pos=(-1.8, ...)` and a NEW `crash_trace_july22_water*` file appeared, i.e. it re-crashed. No CUDA traceback captured on this machine. Local and Vista diverge; nothing committed. Do not report the coupled MPM sim as running.
+
+### 2. Yaris sweep numbers (pane canitford.1, Vista)
+**NO NUMBERS EXIST. In-progress as of 21:38 CDT.** On disk: only `data/track1_sweep_v1/manifest.csv` and `track1_sweep_v2/manifest.csv` (both truck-shell). No `data/track2_sweep/`, no Yaris manifest anywhere. No Yaris sweep verdict exists to cite or plot.
+
+### 3. designsafe-staging parity check (pane canitford.2)
+**PARITY MISMATCH STANDS; RECONCILIATION NOT DONE. In-progress as of 21:38 CDT.** `designsafe-staging` is a working clone of github.com/jcerrell-IS/can-it-ford.git, currently ahead 4 and UNPUSHED (not in parity with origin/main). Staging `scripts/can_it_ford_L2.py` still carries the stale coupled params (coup_friction=0.4, rho=604) flagged at 19:53; git shows no fix applied. Pane canitford.2 is blocked waiting on a "C0" entry that was never written; the reconciliation never ran.
+
+### 4. Methods section status (panes ford.0 / ford.2)
+**PAPER METHODS: DONE. POSTER METHODS PANEL: NOT DONE (in-progress as of 21:38 CDT).** Paper Methods 3.4 committed (de4391e, honest open-issue note) and 3.3 committed earlier (e173175), both real in staging history. Poster Methods panel is NOT saved: `paper/poster_methods.md` does not exist on disk; pane ford.2 is waiting for a go and flags an unresolved 1078-vs-1100 kg mass conflict between the draft and Abstract/section 3.1.
+
+**Rollup:** only item 4's paper-side is confirmed done. Items 1, 2, 3 and the poster panel are all still open/in-progress at 21:38 CDT.
