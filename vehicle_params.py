@@ -9,7 +9,14 @@ Project: "Can It Ford?" — NSF SCIPE REU 2026, TACC/UT Austin (Josie Cerrell).
 
 ALL physical values are from PRIMARY / authoritative sources, not aggregators:
   - Curb weight & bounding box: manufacturer official spec sheets
-    (Toyota media/UK, Honda Canada, Ford media/Europe).
+    (Toyota media/UK, Honda Canada, Ford media/Europe), and, for the
+    compact_sedan class, the crash-validated 2010 Toyota Yaris NCAC/CCSA
+    LS-DYNA FE model (mass from deck header, bbox measured from the FE mesh).
+  NOTE: the compact_sedan class was switched from a Corolla/Civic placeholder
+    to the real 2010 Yaris. Its cg_height_m, inertia_kg_m2, and ssf are
+    ESTIMATES (uniform-box fallback / subcompact-typical), NOT NHTSA-measured:
+    the SAE 1999-01-1336 database ends Nov 1998 and contains no Yaris. Replace
+    with measured Yaris values before relying on L2 overturning dynamics.
   - CG (center-of-gravity) height AND full moment-of-inertia tensor
     (Ixx roll, Iyy pitch, Izz yaw): NHTSA Light Vehicle Inertial Parameter
     Database, published as SAE Technical Paper 1999-01-1336
@@ -52,6 +59,7 @@ from __future__ import annotations
 SRC = {
     "nhtsa_sae_1999_01_1336": "https://www.eng.auburn.edu/~dmbevly/mech4420/vehicle_params.pdf",  # DOI 10.4271/1999-01-1336
     "sae_mobilus_1999_01_1336": "https://saemobilus.sae.org/papers/measured-vehicle-inertial-parameters-nhtsas-data-november-1998-1999-01-1336",
+    "ncac_yaris_fe": "https://doi.org/10.13021/G8JS5D",  # 2010 Toyota Yaris coarse FE model, CCSA/GMU + FHWA (NCAC), crash-validated
     "toyota_uk_corolla": "https://media.toyota.co.uk/wp-content/uploads/sites/5/pdf/210127M-Corolla-Tech-Spec.pdf",
     "honda_ca_civic": "https://www.honda.ca/-/media/Brands/Honda/Models/CIVIC-SEDAN/2025/PDF/2025-Honda-Civic-Sedan-Specifications---EN_v2.pdf",
     "toyota_uk_highlander": "https://media.toyota.co.uk/wp-content/uploads/sites/5/pdf/210321M-Highlander-Tech-Spec.pdf",
@@ -64,29 +72,40 @@ SRC = {
 # ---------------------------------------------------------------------------
 VEHICLE_PARAMS = {
     "compact_sedan": {
-        "anchors": ["Toyota Corolla", "Honda Civic"],
-        # curb weight
-        "mass_kg": 1390.0,
-        "mass_kg_range": (1300.0, 1480.0),
-        "mass_source": SRC["toyota_uk_corolla"],  # + honda_ca_civic
-        # bounding box (L, W-no-mirrors, H) meters
-        "bbox_m": (4.66, 1.79, 1.44),
-        "bbox_m_range": {"L": (4.60, 4.70), "W": (1.78, 1.80), "H": (1.42, 1.46)},
-        "bbox_source": SRC["honda_ca_civic"],  # + toyota_uk_corolla
-        # center of gravity height (measured, NHTSA)
-        "cg_height_m": 0.52,
-        "cg_height_m_range": (0.50, 0.55),
-        "cg_source": SRC["nhtsa_sae_1999_01_1336"],
-        # measured principal moments of inertia (representative: 1998 Honda Civic)
-        "inertia_kg_m2": {"Ixx": 365.0, "Iyy": 1617.0, "Izz": 1785.0},
+        # Subcompact sedan class, represented by the real 2010 Toyota Yaris
+        # NCAC/CCSA crash-validated LS-DYNA FE model (George Mason Univ. + FHWA),
+        # NOT a generic mid-size sedan placeholder. Geometry measured directly
+        # from the coarse FE deck (yaris-coarse-v1l), mm rescaled to m; mass from
+        # the deck header. Maps to the AR&R "Small Car" stability class (0.30 m
+        # depth cap, 0.30 m2/s D*V cap), per Shand et al. 2011 / EMA 1999.
+        "anchors": ["Toyota Yaris (2010, NCAC/CCSA coarse FE model)"],
+        # curb weight, FE deck header ("Version 1l, 1100 kg"); matches published Yaris
+        "mass_kg": 1100.0,
+        "mass_kg_range": (1045.0, 1120.0),
+        "mass_source": SRC["ncac_yaris_fe"],
+        # bounding box (L, W-no-mirrors, H) meters, measured from the FE mesh
+        # (raw 4.299 x 1.696 x 1.468 m) and consistent with Toyota spec
+        # (4300 x 1695 x 1470 mm)
+        "bbox_m": (4.30, 1.70, 1.47),
+        "bbox_m_range": {"L": (4.29, 4.31), "W": (1.69, 1.71), "H": (1.46, 1.49)},
+        "bbox_source": SRC["ncac_yaris_fe"],
+        # cg_height and ssf below are ESTIMATES, not NHTSA-measured: the measured
+        # NHTSA inertial DB (SAE 1999-01-1336) ends Nov 1998 and has no Yaris.
+        # cg ~ 0.35 x body height (subcompact-typical). CONFIRM before L2/collider.
+        "cg_height_m": 0.51,
+        "cg_height_m_range": (0.49, 0.53),
+        "cg_source": "estimate (no NHTSA-measured 2010 Yaris; subcompact-typical)",
+        # inertia: uniform-density box fallback from Yaris mass+bbox (no measured
+        # Yaris tensor exists). box_inertia() OVERESTIMATES Iyy/Izz; treat as upper bound.
+        "inertia_kg_m2": {"Ixx": 463.0, "Iyy": 1893.0, "Izz": 1960.0},
         "inertia_kg_m2_range": {
-            "Ixx": (300.0, 480.0),
-            "Iyy": (1100.0, 2400.0),
-            "Izz": (1200.0, 2500.0),
+            "Ixx": (430.0, 500.0),
+            "Iyy": (1750.0, 2050.0),
+            "Izz": (1800.0, 2100.0),
         },
-        "inertia_source": SRC["nhtsa_sae_1999_01_1336"],
-        "inertia_reference_vehicle": "1998 Honda Civic (measured, SAE 1999-01-1336)",
-        "ssf": 1.43,  # 1998 Civic
+        "inertia_source": "uniform-density box fallback (no measured 2010 Yaris)",
+        "inertia_reference_vehicle": "uniform-density box (2010 Yaris mass+bbox; no NHTSA measured entry)",
+        "ssf": 1.42,  # estimate: track/(2*cg), subcompact-typical; CONFIRM before use
     },
     "midsize_suv": {
         "anchors": ["Toyota Highlander", "Ford Explorer"],
