@@ -2,6 +2,7 @@
   "document_purpose": "Master, source-verified reference for all vehicle physical parameters and mesh sources used in Can It Ford. Every number below was pulled live from a primary source in this session (not from any NHTSA_vPIC_JSON file in the project, those contain zero physical data, confirmed by direct inspection). This supersedes vehicle_class_research_summary_2026-07-21.json.",
   "verified_live_on": "2026-07-21",
   "important_note": "This data previously existed only inside a Claude.ai chat conversation. It was not saved anywhere durable. This file fixes that.",
+  "canonical_status_note": "CANONICAL vehicle-parameter reference as of the 2026-07-23 reconciliation. Two other files carried this same filename and are now superseded: (1) reference_data/vehicle_data_master_reference_2026-07-21.json.OLD-4906B and (2) vehicle_geometry_research/vehicle_data_master_reference_2026-07-21.json. Those two were byte-identical to each other (MD5 26796981b0a65c113095a291f2a267a8) and, despite the shared filename, did NOT contain the physical parameters in this file. They held the older vehicle-CLASS-COMPARISON summary (AR&R limiting depth / DV thresholds, moving-vehicle instability literature, the proposed 4th vehicle class). That class-comparison content is NOT duplicated here; it is preserved at archive/superseded_docs/vehicle_class_comparison_2026-07-21.SUPERSEDED.json (see ARCHIVE_INDEX.md for the original paths). If AR&R thresholds or the moving-vehicle citations are needed, read that archived file. This file is the single source for physical mesh/vehicle parameters only.",
 
   "part_1_L1_AR&R_threshold_vehicles": {
     "source": "SAE Technical Paper 1999-01-1336 (Heydinger et al. 1999), DOI 10.4271/1999-01-1336, public PDF at eng.auburn.edu/~dmbevly/mech4420/vehicle_params.pdf, fetched live this session",
@@ -94,7 +95,31 @@
       "weight_kg_per_NCAC_page": 1078,
       "weight_lb_per_NCAC_page": 2377,
       "MASH_class": "1100C",
-      "FLAG": "Project currently computes rho using 1100kg (MASH class nominal target). This NCAC page states actual modeled weight is 1078kg, about 2 percent lower. Consider recomputing rho = 1078 / 3.5427 = 304.28 kg/m3 if precision matters before publication.",
+      "rho_reconciliation": {
+        "status": "Both mass options are recorded explicitly below (replaces the earlier single FLAG). This settles the reference file. It does NOT authorize pasting one rho into a script: the collider-volume basis is still open (see volume_basis_still_open).",
+        "formula": "rho = mass / collider_box_volume, units kg / m^3",
+        "collider_box_volume_m3": 3.5427,
+        "mass_option_A_MASH_nominal_target": {
+          "mass_kg": 1100,
+          "basis": "MASH 1100C class NOMINAL target weight, not the weight this specific mesh was built to",
+          "rho_kg_m3_at_box_volume_3_5427": 310.50,
+          "exact_quotient": "1100 / 3.5427 = 310.4976",
+          "note": "An earlier 2026-07-19 entry divided by enclosed volume 3.543 m^3 instead, giving 310.47. The 310.47-vs-310.50 gap is purely the 3.543-vs-3.5427 volume rounding, not a second number."
+        },
+        "mass_option_B_NCAC_modeled_RECOMMENDED": {
+          "mass_kg": 1078,
+          "basis": "Actual modeled weight stated on the NCAC/CCSA page for THIS 2010 Yaris mesh (weight_kg_per_NCAC_page above). Matches the geometry the mesh was actually built to.",
+          "rho_kg_m3_at_box_volume_3_5427": 304.28,
+          "exact_quotient": "1078 / 3.5427 = 304.2877 (project stores 304.28)",
+          "note": "RECOMMENDED mass pairing: use the mesh's own modeled weight (1078 kg), not the class nominal target (1100 kg)."
+        },
+        "recommended_pairing": "Option B: 1078 kg (NCAC-modeled) at collider box volume 3.5427 m^3 -> rho 304.28 kg/m^3. Chosen because 1078 kg is the weight this specific Yaris mesh was actually built to, whereas 1100 kg is only the MASH class nominal target.",
+        "volume_basis_still_open": {
+          "note": "The recommended rho assumes the collider BOX volume 3.5427 m^3. A separate 2026-07-20 entry computed rho from the RAW MESH volume 6.8185 m^3 instead, giving 1100/6.8185 = 161.33 or 1078/6.8185 = 158.10. Which volume the simulation should divide by (collider box vs raw enclosed mesh) is a still-open coupled question. Do NOT paste any single rho into a script until BOTH mass and volume are fixed against a live grep of the actual mesh. Cross-ref SESSION_STATE.md line 28.",
+          "volumes_in_play_m3": [3.5427, 3.543, 6.8185],
+          "masses_in_play_kg": [1078, 1100]
+        }
+      },
       "vin_on_page": "not listed",
       "tire_size_on_page": "not listed",
       "sha384_coarse": "4f2b837ba0c85c2ef123a75201ac341c5de6763fb2768b818d41ec4c027af921aabea83f0069bfa8b457a56c44c34ed0",

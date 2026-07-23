@@ -36,6 +36,35 @@ files moved above, so relocating them does not affect it.
 
 ---
 
+## 2026-07-23 `vehicle_data_master_reference` reconciliation
+
+Separate from the 2026-07-22 organize pass. Three files shared the name
+`vehicle_data_master_reference_2026-07-21.json`; they were reconciled to one canonical
+file. The surprise: two of the three, despite the filename, were NOT the physical-parameter
+master at all. They were the older vehicle-CLASS-COMPARISON summary (AR&R limiting depth /
+DV thresholds, moving-vehicle instability literature, the proposed 4th vehicle class) and
+were byte-identical to each other (MD5 `26796981b0a65c113095a291f2a267a8`). That
+class-comparison content existed nowhere else in the repo, so it was archived, not dropped.
+
+| File | Original location | New location | git | Reason |
+|---|---|---|---|---|
+| `vehicle_data_master_reference_2026-07-21.json` | `vehicle_geometry_research/` | `archive/superseded_docs/vehicle_class_comparison_2026-07-21.SUPERSEDED.json` | git mv (renamed) | Filename collided with the physical-parameter master but the content is the vehicle-class-comparison summary. Renamed on archive to end the collision. Byte-identical to the `.OLD-4906B` twin removed below. |
+
+Canonical kept in place and unmoved: `reference_data/vehicle_data_master_reference_2026-07-21.json`
+(the physical-parameter master). It was edited in this pass to replace the single Yaris `FLAG`
+string with an explicit `rho_reconciliation` block recording BOTH mass options
+(1100 kg MASH nominal → rho 310.50, vs 1078 kg NCAC-modeled → rho 304.28, both at collider
+box volume 3.5427 m^3), with 1078/304.28 marked RECOMMENDED (mesh's actual built geometry)
+and the still-open collider-volume basis (3.5427 vs raw mesh 6.8185) noted, not silently
+resolved. The class-comparison content is now ONLY at the archived path above; it was never
+present in the canonical file.
+
+### Byte-identical twin removed (MD5 `26796981b0a65c113095a291f2a267a8`)
+- KEPT:    `archive/superseded_docs/vehicle_class_comparison_2026-07-21.SUPERSEDED.json` (the archived copy above)
+- DELETED: `reference_data/vehicle_data_master_reference_2026-07-21.json.OLD-4906B` (was git-tracked; recoverable from history; byte-for-byte identical to the kept copy)
+
+---
+
 ## Byte-identical duplicates, RESOLVED 2026-07-22
 
 Each pair below was byte-identical (same MD5, re-verified live before deleting). The
