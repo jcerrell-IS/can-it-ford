@@ -27,3 +27,8 @@ vehicle_geometry_research/**/*.key
 vehicle_geometry_research/**/*.key
 vehicle_geometry_research/**/*-detailed-*/**/*.key
 pane*_export.txt
+
+# Large archived session-log binaries: kept on disk under archive/session_logs/,
+# intentionally not tracked so the repo does not carry tens of MB of log history.
+archive/session_logs/*.zip
+archive/session_logs/LIVE_SESSION_LOG.md.bak-*
