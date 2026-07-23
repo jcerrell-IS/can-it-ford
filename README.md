@@ -77,7 +77,7 @@ Treat the friction-invariance with suspicion: it is exactly the signature a floa
 
 | Class | Anchors | Mass | Bounding box (L x W x H, m) | Inertia source |
 |---|---|---|---|---|
-| `compact_sedan` | Toyota Corolla, Honda Civic | 1390 kg | 4.66 x 1.79 x 1.44 | measured, [NHTSA SAE 1999-01-1336](https://doi.org/10.4271/1999-01-1336) |
+| `compact_sedan` | Toyota Yaris (2010, NCAC/CCSA FE model) | 1100 kg | 4.30 x 1.70 x 1.47 | uniform-box fallback (no NHTSA-measured Yaris); mass/bbox from [crash-validated FE model](https://doi.org/10.13021/G8JS5D) |
 | `midsize_suv` | Toyota Highlander, Ford Explorer | 1990 kg | 4.96 x 1.93 x 1.75 | measured, NHTSA SAE 1999-01-1336 |
 | `light_pickup` | Ford F-150, Toyota Tacoma/Tundra | 2300 kg | 5.89 x 2.03 x 1.96 | measured, NHTSA SAE 1999-01-1336 |
 

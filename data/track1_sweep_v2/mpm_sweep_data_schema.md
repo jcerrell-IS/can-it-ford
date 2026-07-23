@@ -36,9 +36,20 @@ MPM, n_grid = 64. This is the Track 1 box-proxy sweep, not the Genesis SPH pilot
 
 ## Known limitations of this schema
 
-- No per-frame velocity columns (vx, vy, vz). v2 stores final-state kinematics only, so
-  `simulation/failure_modes.py` cannot classify SLIDE vs FLOAT from this manifest. The
-  mode decomposition requires a regenerated sweep with per-frame velocities present.
+- CONFIRMED BLOCKING (verified and reproduced 2026-07-23, not a suspicion): the
+  failure-mode classifier rejects all 36 rows of this sweep. Each per-run timeseries
+  (`{run_id}_timeseries.csv`, sibling to this manifest) carries only
+  `t,dx,dy,dz,dmag,yaw_deg,pitch_deg,roll_deg`. `simulation/failure_modes.py` requires
+  `t,dx,dy,dz,vx,vy,vz` (its REQUIRED_COLUMNS, line 20), so `classify_manifest()` raises
+  `MissingKinematicsError` on every row with its own message: "missing ['vx', 'vy', 'vz'].
+  This timeseries predates the FloodHistory.to_csv velocity columns; net force cannot be
+  computed from it. Regenerate the run." No SLIDE / TOPPLE / FLOAT classification is
+  possible from this sweep, so no failure-mode result can go on the poster or in the paper.
+- CONCRETE UNBLOCK: make the sweep's per-run writer (FloodHistory.to_csv) emit vx, vy, vz
+  per frame, then re-run all 36 cells so each `{run_id}_timeseries.csv` includes them.
+  Adding columns to this manifest.csv is not enough: the classifier reads the per-run
+  timeseries, not the manifest. This is the single change that unblocks failure-mode
+  classification; nothing else in the pipeline needs to move for it.
 - Retention for reported results: 24 density-plausible cells, further reduced to 21
   fully trustworthy after excluding 3 under-resolved single-layer pickup cells at
   depth 0.15 m. See paper_draft.md Section 4.3.

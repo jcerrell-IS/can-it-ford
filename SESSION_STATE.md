@@ -2,11 +2,27 @@
 
 Read this before doing anything else, on any machine. Update the relevant section before you stop working, even mid-task. This file exists so a fresh terminal or a fresh chat session can pick up exactly where the last one left off, instead of re-deriving it from memory.
 
-Last updated: 2026-07-23, 05:13 UTC (Claude Code, MacBook, verified live: `git status`/`git log` against origin/main, `tmux capture-pane` of panel_monitor, and the committed round artifacts. Not from memory. Older sections below are retained history, this top block is the current state.)
+Last updated: 2026-07-23, 11:30 UTC (Claude Code, MacBook, verified live. Repo made PRIVATE at 11:30 via `gh repo edit`, verified `isPrivate=true`, containing the public leak but NOT fully resolving it (see the security block). This pass wrote the full-round reconciliation subsection at the top of CURRENT ROUND: SECURITY leak labeled honestly (not "clean"), phantom hash f623cd2 corrected to 936026e + b141c48, phantom research file noted, master-ref JSON reconciliation flagged in-progress, RayTracer collision recorded resolved with LuisaRender/crash caveats, Yaris mass logged as a 1078/304.28 recommendation not a fact. Earlier 10:19 pass reconciled the v3-sweep-validity contradiction to INVALID per `docs/v3_invalidation_status.md`. Committed base synced 0/0, but tree has uncommitted multi-pane edits and this SESSION_STATE.md edit is itself uncommitted. Not from memory. Older sections below are retained history; this top block is the current state.)
 
 ---
 
 ## CURRENT ROUND (2026-07-23) READ THIS FIRST
+
+### 2026-07-23 ~11:07 UTC full-round reconciliation (newest; extends and corrects the 05:13 items below)
+
+**SECURITY, personal-profile leak, STILL PUBLIC, do NOT label this "clean".** Three full copies of the personal CLAUDE.md are tracked on public `origin/main` right now: `files/CLAUDE_md_CANONICAL_july13.md`, `files/CLAUDE_md_FINAL_july13.md`, `files/CLAUDE_md_corrected_july13.md` (each carries "WHO JOSIE IS", ADHD, processing-speed detail; added in `b141c48`, 2026-07-18). Also `.claude/skills/geoelements-tech-reference/SKILL.md` (~line 214, "Keep it short (ADHD)"). The 41-line tracked `CLAUDE.md` is the sanitized "Multi-Pane Standing Rules" file and IS clean; name/major/institution in poster/paper files is intended-public, not a leak. DECISION (Josie, 2026-07-23): make the repo PRIVATE. STATUS: DONE at 11:30 UTC. Ran `gh repo edit jcerrell-IS/can-it-ford --visibility private --accept-visibility-change-consequences` on Josie's explicit go; verified `isPrivate=true`, `visibility=PRIVATE`. Public reads are now blocked. STILL OPEN, do not mark the leak fully resolved: (1) the files were public from 2026-07-18 (`b141c48`) to 2026-07-23, ~5 days, so treat the ADHD/profile content as already-disclosed (may be cached, cloned, or forked); (2) private only walls off the public, but any collaborator with repo access (Kumar, Hassan, Luke, Cheng-Hsi) can still read `files/CLAUDE_md_*.md`, which is exactly who the PRIVACY rule meant to keep it from, so removing those files from the repo (git rm + commit) is still warranted; (3) history purge (git filter-repo + force-push across the Vista and LS6 clones) is the durable fix. The local `git rm --cached` staging option was NOT chosen and was NOT run.
+
+**Git facts corrected.** The 05:13 block below ("0 ahead / 0 behind, 11 commits") was true then; the tree has since taken more pulls/commits. Committed state is currently synced (0/0), but there are uncommitted multi-pane edits: `README.md`, `paper_draft.md`, `vehicle_params.py`, `data/track1_sweep_v2/mpm_sweep_data_schema.md`, `SESSION_STATE.md`. `71d4958` is NOT a merge commit (single parent `b291499`, verified twice); the repo is not mid-merge.
+
+**Phantom commit hash corrected.** `f623cd2` does not exist in this repo (confirmed via `git cat-file`). The real v3 provenance is `936026e` ("Add v3 sweep scaffold; document n_grid=128 hollow-vehicle invalidation") plus `b141c48` (archive of the invalidated v3 data). Cite those, never `f623cd2`. Separately, 8 hex hashes in this file are not objects in this Mac repo: 4 are cross-clone and expected absent (Vista `7d60a05`/`c98e0af`, LS6 `41eb656`/`0b84cb7`); 4 are stated as on main but absent here (`50eff29`, `cbba280`, `fecaaa0`, `101f266`), verify against the clone that created each before citing as current.
+
+**Phantom research file noted.** `vehicle_class_research_summary_2026-07-21.json` is referenced in the tonight-audit block ("keep for history") but exists nowhere on disk. Do not cite it as present. The master-ref JSON exists in two tracked locations plus a worktree (see next item).
+
+**JSON reconciliation outcome: IN PROGRESS, not done.** The two `vehicle_data_master_reference_2026-07-21.json` copies DIFFER (`vehicle_geometry_research/` sha `8255e12` vs `reference_data/` sha `89b8d50`). A locked git worktree `.claude/worktrees/reconcile-vehicle-master-ref` (`777945b`) is mid-reconciliation. Do NOT treat either copy as canonical until that worktree lands; `d5f8729` also left a `.OLD-4906B` backup of the reference_data copy.
+
+**RayTracer collision resolution.** Per `d5f8729`'s own message, the "collision" was two parallel edits to `simulation/can_it_ford_L2_mpm.py` (Vista's water-box reposition `pos 0.275 -> -1.8`, and the Mac's RayTracer/material work: `renderer=gs.renderers.RayTracer()`, plane `surface=Rough`, water `surface=Water()`). Non-overlapping lines, merged with NO git conflict, resolved cleanly. CAVEAT: that water-box reposition does NOT fix the CUDA crash (see the 07-22 status blocks, it re-crashed), and Genesis's RayTracer renderer is LuisaRender-backed; LuisaRender/LuisaRenderPy is a confirmed arm64 build failure (debugging skill / Genesis issue #42), and both Mac and Vista are arm64, so whether the wired RayTracer actually renders on these nodes is UNCONFIRMED. The confirmed-working render path is bpy/EEVEE (the hero shot), not Genesis RayTracer.
+
+**Yaris mass, RECOMMENDATION only, not a fact until confirmed in code.** Recommend 1078 kg / rho 304.28 (NCAC actual modeled weight over solid_volume 3.5427 m3), per CLAUDE.md's "most defensible" option and the `YARIS_MASS_KG=1078` direction already in `scripts/ford_sweep_driver.py` (commit `3a4e82e`). A conflicting earlier instruction this round proposed 1100 / 3.5427 / 310.47 (MASH nominal); both appear in CLAUDE.md's checklist (1078 = most defensible, 1100 = acceptable if labeled). This stays a RECOMMENDATION. `vehicle_params.py` is being edited by another pane right now (uncommitted); confirm its live Yaris value before treating any number as fact. Coupled edit (mass <-> volume <-> rho); do not paste rho into a box-proxy path.
 
 ### Push: DONE and verified live
 - Josie ran her own push sequence; Claude Code held out of git entirely per instruction. Verified at 05:13 UTC: `main...origin/main` = 0 ahead / 0 behind, `origin/main..HEAD` empty. The 11 previously-unpushed commits are on origin/main. Working tree clean apart from untracked files listed at the bottom.
@@ -163,7 +179,7 @@ This is the coupled-variable failure CLAUDE.md warns about (`grid_density <-> do
 - **Densities are unaffected.** 293.55 / 308.13 / 242.12 come from vehicle geometry, not water resolution, and stand as reported.
 - Depths >= 0.30 m have 3+ layers and are fine.
 
-**Fix, not yet run:** the `v3` config (`--config v3`, `n_grid=128`, depths from 0.10) passes preflight on every cell (pickup at 0.15 m gets 3 layers, worst case anywhere is 2). Re-run at v3 before any depth-0.15 claim is made. `python scripts/ford_sweep_driver.py --config v3` on a GH200 node; v2 took 1:52 at n_grid=64, so v3 at 128 with 60 runs will take substantially longer.
+**Fix proposed here is SUPERSEDED, do NOT re-run at v3.** This Jul 15 note originally proposed the `v3` config (`n_grid=128`) as the cure for the depth-0.15 water under-resolution. v3 was later found INVALID on independent grounds (hollow-vehicle shell artifact), so refining the grid to v3 does not fix the vehicle, it makes it worse. Authoritative resolution: `docs/v3_invalidation_status.md` (2026-07-22), fresh scaling diagnostic gives `p_exp ~ 2.1` (area scaling, a shell signature, not solid `n_grid^3`), density leaves the 100-300 band at n_grid=128; this closes the "COMPLETELY WRONG ON 3 COUNTS" dispute (that twin was byte-identical, carried no counter-argument). The depth-0.15 under-resolution therefore stays OPEN. The real fix is to decouple the body's solidify pitch from the grid pitch, or densify the point cloud before solidifying, NOT to refine the water grid. Make no depth-0.15 claim from either sweep until that is done.
 
 **Process lesson:** the preflight caught this, the sweep did not. It ran to `DONE 36 runs` and `PYTHON_EXIT=0` while quietly simulating a 1-layer puddle. A green exit code proved nothing here, the same way SLURM's `COMPLETED 0:0` proved nothing for jobs 833156 and 833194.
 
@@ -199,9 +215,12 @@ W&B KEY ROTATION CONFIRMED DONE (git log --all -p | grep wandb_v1_ proves the
 50eff29-exposed key is a third, dead key). Supersedes any prior "unconfirmed"
 note.
 DATA: data/track1_sweep_v3/ (n_grid=128) CONFIRMED INVALID, do not cite, do not
-plot, do not read from it in any new session. data/track1_sweep_v2/ (n_grid=64)
-is the protected valid source, ~24/36 rows valid (sedan+pickup only, SUV
-excluded, density-implausible).
+plot, do not read from it in any new session. Authoritative record, and the
+reconciliation of this against the Jul 15 "re-run at v3" note above (which is now
+marked superseded): docs/v3_invalidation_status.md (p_exp ~ 2.1 area scaling,
+hollow-vehicle reasoning holds, supersedes the byte-identical "COMPLETELY WRONG"
+twin). data/track1_sweep_v2/ (n_grid=64) is the protected valid source, ~24/36
+rows valid (sedan+pickup only, SUV excluded, density-implausible).
 RESULT: figures/poster_exports/can_it_ford_phase_space.{png,pdf,html} built
 from validated v2 data. L2 calls NO-FORD in 22/24 valid cells where L1 says
 FORD. This is a real, citable divergence result.
