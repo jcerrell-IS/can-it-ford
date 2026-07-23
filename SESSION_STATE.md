@@ -2,7 +2,38 @@
 
 Read this before doing anything else, on any machine. Update the relevant section before you stop working, even mid-task. This file exists so a fresh terminal or a fresh chat session can pick up exactly where the last one left off, instead of re-deriving it from memory.
 
-Last updated: July 10, 2026, 06:44 UTC (Claude chat, verified live against GitHub + Slack, not from memory).
+Last updated: 2026-07-23, 05:13 UTC (Claude Code, MacBook, verified live: `git status`/`git log` against origin/main, `tmux capture-pane` of panel_monitor, and the committed round artifacts. Not from memory. Older sections below are retained history, this top block is the current state.)
+
+---
+
+## CURRENT ROUND (2026-07-23) READ THIS FIRST
+
+### Push: DONE and verified live
+- Josie ran her own push sequence; Claude Code held out of git entirely per instruction. Verified at 05:13 UTC: `main...origin/main` = 0 ahead / 0 behind, `origin/main..HEAD` empty. The 11 previously-unpushed commits are on origin/main. Working tree clean apart from untracked files listed at the bottom.
+- Top two commits this round:
+  - `a4e7486`: poster figure output cleanup; `coup_friction=0.55` citation audit (`analysis/failure_mode_citations.md`); hero-shot render script (`render_hero_shot.py`) + `figures/hero_shot_test.png`; poster intro/ack (`paper/poster_intro_ack.md`); export tooling (`scripts/export_session_log.sh`, `split_session_log.py`, `launch_cif6.sh`); sweep schema (`data/track1_sweep_v2/mpm_sweep_data_schema.md`); vehicle pull notes (`_inbox/vehicle_files_to_pull.md`, `_inbox/tonight_research_audit_and_file_map.md`); `analysis/build_poster_phase_space.py`.
+  - `c308108`: gitignore the export-tool auto-generated logs. `_inbox/LIVE_SESSION_LOG.md` and the `_inbox/.sweep*`/`.export*` files are now untracked + ignored (out of git, not deleted from disk). Also discarded a redundant local diff on `simulation/can_it_ford_L2_mpm.py` because it was superseded by a Vista commit (the Mac's copy of that diff was stale).
+- Note for the next session: the session-start local diff on SESSION_STATE.md itself was discarded inside that push, so before this rewrite the file had reverted to the older `5974de6` version. This block is the fresh state on top of it.
+
+### Hero-shot render (this round)
+- `render_hero_shot.py` built and run with `~/blender-render-env/bin/python` -> `figures/hero_shot_test.png` (1600x1200, EEVEE). Water = MPM particle cloud colored by speed via viridis (Kumar convention); vehicle = box proxy; CC0 Poly Haven HDRI in `assets/hdri/`.
+- ENV CHANGE flagged: `~/blender-render-env` was empty and on Python 3.14 (no bpy wheels), rebuilt in place on Python 3.11 with `bpy 5.0.1` + numpy. That is a change to that env, recorded here because it was not explicitly requested.
+- Honest look note: with no arg the script auto-picked the grid64 972k-particle `d0p3_v1p5` frame (verdict FORD), subsampled to 150k. In EEVEE the points read pastel and cube-ish; Cycles would make them true spheres and read truer. NOT yet re-rendered in Cycles. Pass a path as `argv[1]` to pin a specific frame.
+- House-rule compliance: script stripped of comments/docstrings, forbidden-import grep (taichi/genesis) CLEAN, parses cleanly.
+
+### Tonight's research audit (`_inbox/tonight_research_audit_and_file_map.md`)
+- Load-bearing output: `vehicle_data_master_reference_2026-07-21.json` is now the single file every vehicle-parameter decision should check against. It SUPERSEDES `vehicle_class_research_summary_2026-07-21.json` (stale, keep for history only).
+- Settles Dodge Neon inertia: Ixx 441 / Iyy 1748 / Izz 1945 is correct; the Perplexity 2618/515/2684 is wrong. Do not re-litigate.
+- NHTSA vPIC JSON files confirmed to hold zero physical data (name lookups only). Stop treating them as a physics source.
+- OPEN CONFLICT, do NOT silently fix: the audit states NCAC Yaris modeled weight is 1078 kg -> rho = 1078 / 3.5427 = 304.28 kg/m3. This does NOT match this file's own 2026-07-20 entry (Yaris 1100 kg, mesh vol 6.8185 m3, rho 161.33) or the 2026-07-19 entry (enclosed vol 3.543 m3, 1100 kg). Three volume figures (3.5427 / 3.543 / 6.8185) and two masses (1078 / 1100) are in play and unreconciled. Do NOT paste any single rho into code until the mass/volume pair is settled against a live grep of the actual mesh plus the master reference. This is a coupled edit (mass <-> volume <-> rho), not a one-liner.
+
+### panel_monitor "/loop": SET UP, NOT YET LIVE (verified live 05:13 UTC, flag before trusting)
+- INTENT (per Josie): panel_monitor is meant to be the ongoing status source going forward, replacing manual SESSION_STATE updates.
+- ACTUAL live state: the `panel_monitor` tmux session holds a Claude Code session FROZEN at a permission-approval dialog for its first baseline command (`tmux ls`). It has created `scripts/pane_check.sh` (untracked) but has NOT run the baseline, NOT scheduled its once-a-minute monitoring cron, and has produced NO status output. So it is not an operational status source yet.
+- To make it live: in the panel_monitor pane, approve the pending `tmux ls` prompt (option 1 or 2). Until that happens, THIS file remains the current status source, not panel_monitor. Recheck panel_monitor's live state before citing it as the source of truth anywhere.
+
+### Untracked, decide next session
+- `assets/hdri/` (hero-shot HDRI) and `scripts/pane_check.sh` (panel_monitor's monitor script) are untracked. Decide whether to commit or gitignore each. The HDRI is CC0; committing the binary is optional.
 
 ---
 
