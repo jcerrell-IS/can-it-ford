@@ -37,7 +37,7 @@ def main():
         show_viewer=args.vis,
     )
 
-    vehicle_rigid = gs.materials.Rigid(needs_coup=True, coup_friction=0.55, rho=604)  # 0.55 per Azhar et al. 2023 (matched scale-model coefficient)
+    vehicle_rigid = gs.materials.Rigid(needs_coup=True, coup_friction=0.55, rho=604)
 
     plane   = scene.add_entity(morph=gs.morphs.Plane())
 
