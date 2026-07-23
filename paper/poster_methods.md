@@ -24,7 +24,7 @@ The whole point is to find the simplest model that still gets the ford / no-ford
 
 Two solvers actually produced results here, and the one I ultimately want is still broken. I want to be straight about which is which:
 
-- **Genesis SPH pilot** (a simpler, water-only stand-in using plain box shapes): this produced my main finding, that L1 and L2 disagree in fast, shallow water, and that changing the tire friction does not fix that disagreement.
+- **Genesis SPH pilot** (a simpler stand-in for the full coupled simulation: a plain box-shaped vehicle sitting in SPH water, not a real car mesh): this produced my main finding, that L1 and L2 disagree in fast, shallow water, and that changing the tire friction does not fix that disagreement.
 - **kks32/mpm-engine** (the Kumar group's MPM solver): this extends the same logic to the full box-proxy vehicle classes above and reports how far the vehicle slides. It is the solver I cite for the vehicle sweep.
 - **Genesis coupled-MPM** (the real goal, a car mesh fully coupled to MPM water): **not working yet.** It crashes at the particle-to-grid step and produced none of the results here. That is honest open work, not a finished capability.
 
