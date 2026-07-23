@@ -48,7 +48,7 @@ STUCK reports no exceedance magnitude, because nothing was violated.
 These are flagged rather than asserted, consistent with the project's DRIFT_THRESHOLD
 provenance discipline.
 
-1. DOIs for Xia et al. 2010, Xia et al. 2013, and Kramer et al. 2016 are not yet
+1. DOIs for Xia et al. 2010, Xia et al. 2013, and Kramer et al. 2016 are now confirmed in the bib (xia2010, xia2013).
    confirmed here and should be filled in and checked against the primary papers before
    any of this reaches a poster, the paper, or Kumar.
 2. Year reconciliation: the project already cites "Xia et al. 2014"
