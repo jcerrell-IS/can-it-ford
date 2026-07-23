@@ -211,7 +211,6 @@ cat /tmp/x/<name>/*.txt
 5. **Ground claims in the source.** Name the paper + section, pull the exact line if needed.
 6. **ML background is not required.** Keep it encouraging, not gatekept.
 7. **Permission/env errors on Luke's shared paths → Slack Luke, don't debug. Allocation errors → wait on Krishna.**
-8. **Keep it short:** answer first, one path, device-tagged steps, one check-in.
 9. **No em-dashes ever, no inline code comments, no docstrings.**
 
 ---

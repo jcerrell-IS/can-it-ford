@@ -43,3 +43,4 @@ _inbox/*.bak_*
 .claude/settings.json
 .claude/settings.json
 _inbox/pane_export_archive/
+files/CLAUDE_md_*.md
