@@ -36,38 +36,42 @@ files moved above, so relocating them does not affect it.
 
 ---
 
-## Safe to delete, byte-identical duplicates, awaiting approval
+## Byte-identical duplicates, RESOLVED 2026-07-22
 
-These were NOT moved and NOT deleted. Each pair is byte-identical (same MD5). Listed here
-only as deletion candidates for a human to approve. Verify the "keep" choice before
-deleting, especially for the sweep scripts, which are wired into live automation.
+Each pair below was byte-identical (same MD5, re-verified live before deleting). The
+redundant copy was removed, keeping exactly one canonical copy of each. Checksums are
+recorded so the removals stay auditable. Content was preserved in every case: the kept
+copy is byte-for-byte the deleted one.
 
 ### Pair 1 — older sweep-script version (MD5 `f3b35fbaf51410559c170880acaa50be`)
-- `_inbox/2026-07-17_canitford_inbox_sweep.sh`
-- `_inbox/canitford inbox sweep 2.sh`
+- KEPT:    `_inbox/2026-07-17_canitford_inbox_sweep.sh`
+- DELETED: `_inbox/canitford inbox sweep 2.sh` (was git-tracked; recoverable from history)
 
-Both are an older version of the inbox sweep, superseded by the active script (Pair 2's
-kept file). Candidate: delete both, or keep one as an "older version" reference.
+An older version of the inbox sweep, superseded by the active script (Pair 2's kept file).
+One copy retained as the "older version" reference; the awkwardly-named twin removed.
 
 ### Pair 2 — current sweep script (MD5 `0adefd72944508a9321eda51b2f20542`)
-- `_inbox/canitford_inbox_sweep.sh`  ← **KEEP: this is the script the launchd plist actually runs**
-- `_inbox/2026-07-18_canitford_inbox_sweep.sh`  ← disposable dated twin
+- KEPT:    `_inbox/canitford_inbox_sweep.sh` (the script the launchd plist actually runs)
+- DELETED: `_inbox/2026-07-18_canitford_inbox_sweep.sh` (was git-tracked; recoverable)
 
-Candidate: delete the dated `2026-07-18_` copy. Do NOT delete `canitford_inbox_sweep.sh`;
-the plist's `ProgramArguments` points at it by that exact name.
+The active script was kept by exact name; the dated twin removed. The live automation is
+unaffected (its `ProgramArguments` still resolves).
 
 ### Pair 3 — launchd plist (MD5 `8746c13e37954a33d2d7eac47d91f8ba`)
-- `_inbox/com.josie.canitford-sweep.plist`
-- `_inbox/2026-07-19_com.josie.canitford-sweep.plist`
+- KEPT:    `_inbox/com.josie.canitford-sweep.plist` (git-tracked, canonical name)
+- DELETED: `_inbox/2026-07-19_com.josie.canitford-sweep.plist` (was untracked)
 
-Candidate: delete the dated `2026-07-19_` copy after confirming which filename the loaded
-LaunchAgent references (`launchctl list | grep canitford`).
+The loaded LaunchAgent runs from `~/Library/LaunchAgents/com.josie.canitford-sweep.plist`
+(confirmed via `launchctl list`), so both `_inbox` copies were only staging copies and
+neither removal touched the running agent.
 
 ### Pair 4 — vehicle files list (MD5 `ffabeee18d096ae3f13ddc719a241739`)
-- `_inbox/vehicle_files_to_pull.md`
-- `files/vehicle_files_to_pull.md`
+- KEPT:    `_inbox/vehicle_files_to_pull.md` (actively-maintained inbox location)
+- DELETED: `files/vehicle_files_to_pull.md` (was untracked)
 
-Candidate: keep one canonical copy, delete the other. Both are currently untracked.
+Both were untracked and no code referenced either path. The copy in the actively-swept
+`_inbox` was kept over the one in `files/`, whose overall fate is still an open structural
+question (see below).
 
 ---
 
@@ -89,9 +93,10 @@ breakage risk or genuine ambiguity, so it was not moved without a human call.
   still-cited is unclear; may still be referenced.
 - **`_inbox/tonight_research_audit_and_file_map.md`** — untracked planning doc, possibly
   still active work.
-- **`files/` directory** — a partial mirror of `_inbox` content (holds a duplicate of
-  `vehicle_files_to_pull.md`). Whether it should be merged into `_inbox` or removed is a
-  structural decision.
+- **`files/` directory** — a partial mirror of `_inbox` content. Its duplicate of
+  `vehicle_files_to_pull.md` was removed during the 2026-07-22 dedup (kept copy is in
+  `_inbox`). Whether the `files/` directory as a whole should be merged into `_inbox` or
+  removed is still a structural decision.
 - **`archive/` vs `_archive/` naming** — this pass created `archive/`; a pre-existing
   `_archive/invalidated_data/` also exists. Consider consolidating to one.
 - **`Instructions.docx.md`** (root, tracked) — intentionally left in place: it is the live
