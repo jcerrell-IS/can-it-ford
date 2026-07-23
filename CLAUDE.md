@@ -39,3 +39,11 @@ restate them in chat prompts.
 - Before prescribing idev/GPU allocation, confirm the task actually
   needs GPU. File checks, git operations, and monitoring belong on the
   login node, not inside idev.
+
+## git filter-repo standing note
+--path/--invert-paths and --replace-text are independent passes, filter-repo
+does not combine them automatically. A rewrite touching an existing repo
+(not a fresh clone) requires --force or it aborts safely rather than doing
+nothing. After any filter-repo rewrite, --force --all pushes the FULL pack
+again, not a diff, large repos with binary history take real time, cutoff
+mid-transfer in a terminal paste does not mean it failed.
