@@ -60,6 +60,18 @@ placeholder would have implied.
 
 The three-level abstraction ladder instantiates the orchestrator described in Section 3 of Thorpe et al. (2026) as the first running implementation. The PVWM paper identifies automatic abstraction selection as the central open problem and provides no committed orchestrator code. Our orchestrate_ford_query() function represents the first concrete implementation, with the empirical divergence zone at d greater than or equal to 0.25m, v greater than or equal to 1.2 m/s, and D times V less than 0.60 m2/s defining the L1-to-L2 escalation boundary. At this boundary, the scalar criterion structurally lacks the mechanism to represent directional persistent lateral drag, independent of threshold value or vehicle class. 
 
+### 3.3 Rigid-Fluid Coupling in the MPM Solver
+
+The Track 1 sweep (Section 4.3) couples the vehicle to the floodwater inside a single Material Point Method particle array, using the mpm-engine solver (kks32/mpm-engine). Water and vehicle are not separate simulation objects. The water slab and the solidified vehicle particle set are concatenated into one particle array, and the entire array is first assigned the weakly compressible newtonian fluid material.
+
+The vehicle is then marked rigid in place, rather than added as a distinct body. set_material_range(n_water, n_total, "rigid", obj_id=0, density) re-tags the contiguous index range holding the vehicle particles as a single rigid body (obj_id 0), leaving the leading range as fluid. finalize_rigid_bodies() locks that registration before the first step. From that point the vehicle particles are slaved to one rigid-body pose: each substep, the fluid's grid momentum accumulates into the body's net force and torque, and the body translates and rotates as one piece. Sliding, floating, and overturning are therefore emergent outcomes of the two-way coupling, not prescribed behaviors.
+
+Static boundaries are defined separately from the particle array. add_plane(point, normal, "slip", friction, restitution) places the floor and the four domain walls as slip planes. The floor carries a small restitution so the rigid body has a contact surface it cannot sink through, because the grid boundary condition alone constrains only the fluid. The water slab is seeded upstream of the vehicle with a gap, so in this solver no fluid particle is initialized inside the rigid body.
+
+### 3.4 Open Issue in the Genesis Coupled-MPM Path
+
+The coupled-MPM target path, a rigid vehicle immersed in Genesis MPM floodwater, is not yet numerically stable and did not produce any of the results reported in Section 4. It fails with a particle-to-grid (P2G) crash. This issue is under active diagnosis and is at present partially, not fully, resolved. An initial hypothesis attributed the crash to a static starting overlap, water particles seeded inside the vehicle body at initialization. Repositioning the water slab to remove that starting overlap only delays the crash rather than preventing it: under gravity the repositioned slab slumps and reaches the vehicle within a roughly 30 cm gap, reproducing the same P2G crash later in the run. This points the root cause away from a purely static initial-overlap condition and toward how P2G handles fluid particles very close to the rigid body's signed-distance-field (SDF) boundary. The issue remains open at the time of writing, and the coupled-MPM traversability verdicts it gates are correspondingly not reported here.
+
 ---
 
 ## 4. Results
