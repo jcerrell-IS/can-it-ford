@@ -8,9 +8,9 @@ I start with a real video of a flooded road and turn it into a 3D model of the s
 
 The results here use a **box-proxy vehicle**, not a full car mesh yet. I take a simple block and stretch it so its mass, size, displaced water volume, and side-on area match a real vehicle class. I ran a **compact sedan (1390 kg)** and a **light pickup (2300 kg)**. I also ran a midsize SUV but dropped it, because once it was filled in its density came out physically unrealistic. Because the sedan is 1390 kg and 4.66 m long, it lands in the **Large passenger car** class in the flood-safety guidelines, not the "Small Car" class a tiny subcompact would.
 
-I am also wiring in a **real Toyota Yaris car mesh** as the next step, but it has **not** produced a validated result yet (I found a mass bug and it is still being checked), so it is not a claim on this poster, just work in progress.[^yaris]
+I am also wiring in a **real 2010 Toyota Yaris car mesh** as the next step, but it has **not** produced a validated result yet (I found a mass bug and it is still being checked), so it is not a claim on this poster, just work in progress.[^yaris]
 
-[^yaris]: The Yaris mesh's own modeled weight is 1078 kg. The 1100 kg figure sometimes quoted for this car is the MASH nominal test-class standard, a slightly different number.
+[^yaris]: The 2010 Toyota Yaris mesh's own modeled weight is 1078 kg. The 1100 kg figure sometimes quoted for this car is the MASH nominal test-class standard, a slightly different number.
 
 ## The three levels I compare
 
