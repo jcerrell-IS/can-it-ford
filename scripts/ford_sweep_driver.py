@@ -42,7 +42,7 @@ PLATEAU_TOL_M = 0.01
 MIN_Z_LAYERS = 2
 
 YARIS_PLY = str(REPO_ROOT / "vehicle_geometry_research" / "yaris_coarse_v1l_watertight.ply")
-YARIS_MASS_KG = 1078.0  # NCAC actual modeled Yaris mass (real-mesh path); rho emerges as mass/solid_volume, not hardcoded 304.28. Per CLAUDE.md Physical Plausibility Checklist item 1.
+YARIS_MASS_KG = 1100.0  # PRIMARY source: LS-DYNA deck header "Version 1l, 1100 kg" (yaris-coarse-v1l.key line 27). 1078 is a SECONDARY NCAC download-page "modeled weight", logged not coded. rho emerges as mass/solid_volume at runtime (see below), not hardcoded. Per CLAUDE.md Physical Plausibility Checklist item 1.
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--config", choices=sorted(SWEEP_CONFIGS), default="v2")
