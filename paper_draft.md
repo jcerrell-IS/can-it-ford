@@ -27,10 +27,10 @@ The two cited classes are the compact sedan (1390 kg, 4.66 m length, Toyota Coro
 
 Under the Australian Rainfall and Runoff vehicle-stability guidelines (Shand et al. 2011, AR&R Project 10, Table 3), these two proxies fall in different classes than a naive subcompact reading would imply:
 
-- The sedan (1390 kg, 4.66 m) exceeds both the 1250 kg and 4.3 m Small Car limits, placing it in the Large passenger car class: limiting depth-velocity product D times V less than or equal to 0.45 m2/s, limiting still-water depth 0.40 m.
+- The sedan (1390 kg, 4.66 m) exceeds both the 1250 kg and 4.3 m Small Car limits, placing it in the Large passenger car class: limiting depth-velocity product D times V less than or equal to 0.45 m2/s.
 - The pickup (2300 kg, 5.89 m) exceeds the 2000 kg and 4.5 m limits, placing it in the Large 4WD class: limiting D times V less than or equal to 0.60 m2/s.
 
-This corrects a classification error in an earlier draft, which assigned the vehicle to the Small Car class (D times V less than or equal to 0.30 m2/s, depth 0.30 m). That Small Car classification is correct only for the real 1100 kg, 4.30 m Toyota Yaris geometry, which is a separate and not-yet-validated capability: the --vehicle yaris path in ford_sweep_driver.py was wired in this week and is still under validation after a mass-assignment bug was found. It does not describe the box-proxy sedan and pickup that produced the cited results.
+This corrects a classification error in an earlier draft, which assigned the vehicle to the Small Car class (D times V less than or equal to 0.30 m2/s). That Small Car classification is correct only for the real 1100 kg, 4.30 m Toyota Yaris geometry, which is a separate and not-yet-validated capability: the --vehicle yaris path in ford_sweep_driver.py was wired in this week and is still under validation after a mass-assignment bug was found. It does not describe the box-proxy sedan and pickup that produced the cited results.
 
 These AR&R thresholds serve as the L1 stability criterion, but the source itself labels them "draft, interim," not a permanently validated standard. They are treated accordingly here and are not presented as a settled regulatory limit.
 
