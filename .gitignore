@@ -40,3 +40,6 @@ _inbox/.export_all_state/
 _inbox/.runerr
 _inbox/.runout
 _inbox/*.bak_*
+.claude/settings.json
+.claude/settings.json
+_inbox/pane_export_archive/
