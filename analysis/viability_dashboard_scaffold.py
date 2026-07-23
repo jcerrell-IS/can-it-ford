@@ -274,3 +274,7 @@ def format_certificate(results: Sequence[InvariantResult]) -> str:
             f"{r.name:<22}{r.paper_constraint:<16}{r.coverage.value:<16}{r.status.value:<18}{value:<12}{tol:<12}"
         )
     return "\n".join(lines)
+
+
+if __name__ == "__main__":
+    print(format_certificate(run_dashboard()))
