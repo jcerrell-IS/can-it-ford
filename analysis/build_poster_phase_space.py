@@ -7,9 +7,9 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 GRID_CSV = os.path.join(ROOT, "data", "scenario_sweep.csv")
 L2_CSV = os.path.join(ROOT, "data", "track1_sweep_v2", "manifest.csv")
-OUT = os.path.join(ROOT, "figures", "poster_exports")
+OUT = os.path.join(ROOT, "figures")
 os.makedirs(OUT, exist_ok=True)
-STEM = os.path.join(OUT, "can_it_ford_phase_space")
+STEM = os.path.join(OUT, "phase_space_poster_figure")
 
 DRIFT_THRESHOLD = 0.05
 
@@ -153,11 +153,9 @@ fig.add_annotation(
 )
 
 fig.write_image(STEM + ".png", width=2400, height=1800, scale=1)
-fig.write_image(STEM + ".pdf", width=2400, height=1800, scale=1)
-fig.write_html(STEM + ".html", include_plotlyjs=True, full_html=True)
+fig.write_image(STEM + ".svg", width=2400, height=1800, scale=1)
 
 print("grid cells:", grid.shape[0], "| L2 points plotted:", len(l2),
       "| verdicts:", dict(l2["verdict"].value_counts()))
 print("PNG:", STEM + ".png")
-print("PDF:", STEM + ".pdf")
-print("HTML:", STEM + ".html")
+print("SVG:", STEM + ".svg")
