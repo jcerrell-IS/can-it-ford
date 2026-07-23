@@ -3,7 +3,6 @@
   "verified_live_on": "2026-07-21",
   "important_note": "This data previously existed only inside a Claude.ai chat conversation. It was not saved anywhere durable. This file fixes that.",
   "canonical_status_note": "CANONICAL vehicle-parameter reference as of the 2026-07-23 reconciliation. Two other files carried this same filename and are now superseded: (1) reference_data/vehicle_data_master_reference_2026-07-21.json.OLD-4906B and (2) vehicle_geometry_research/vehicle_data_master_reference_2026-07-21.json. Those two were byte-identical to each other (MD5 26796981b0a65c113095a291f2a267a8) and, despite the shared filename, did NOT contain the physical parameters in this file. They held the older vehicle-CLASS-COMPARISON summary (AR&R limiting depth / DV thresholds, moving-vehicle instability literature, the proposed 4th vehicle class). That class-comparison content is NOT duplicated here; it is preserved at archive/superseded_docs/vehicle_class_comparison_2026-07-21.SUPERSEDED.json (see ARCHIVE_INDEX.md for the original paths). If AR&R thresholds or the moving-vehicle citations are needed, read that archived file. This file is the single source for physical mesh/vehicle parameters only.",
-
   "part_1_L1_AR&R_threshold_vehicles": {
     "source": "SAE Technical Paper 1999-01-1336 (Heydinger et al. 1999), DOI 10.4271/1999-01-1336, public PDF at eng.auburn.edu/~dmbevly/mech4420/vehicle_params.pdf, fetched live this session",
     "note": "Weight figures are actual VIMF-measured TEST weight, driver-only condition unless noted. Driver is already included, do not add driver mass on top.",
@@ -45,8 +44,8 @@
       "class": "large 4WD / pickup",
       "test_weight_N": 18954,
       "mass_kg_driver_included": 1932.1,
-      "wheelbase_m": 3.340,
-      "track_front_m": 1.610,
+      "wheelbase_m": 3.34,
+      "track_front_m": 1.61,
       "track_rear_m": 1.646,
       "roof_height_m": 1.76,
       "drive_axle": "R (RWD)",
@@ -69,7 +68,7 @@
       "track_rear_m": 1.529,
       "roof_height_m": 1.65,
       "drive_axle": "4 (4WD)",
-      "cg_from_front_axle_m": 1.180,
+      "cg_from_front_axle_m": 1.18,
       "cg_height_above_ground_m": 0.644,
       "pitch_inertia_Iyy_kgm2": 2471,
       "roll_inertia_Ixx_kgm2": 579,
@@ -80,7 +79,6 @@
     },
     "vin_availability": "The paper's own text states VINs exist only in an internal electronic copy, obtainable by contacting Dr. W. Riley Garrott, NHTSA/VRTC, riley.garrott@nhtsa.dot.gov. The printed table has zero VINs for any 1998 vehicle. This applies equally to all four vehicles above, it is not a CR-V-specific or RAV4-specific gap."
   },
-
   "part_2_L2_MPM_mesh_vehicles_NCAC_CCSA": {
     "source": "Center for Collision Safety and Analysis, George Mason University, ccsa.gmu.edu/models/, fetched live this session. Reverse-engineered from real, physically torn-down vehicles under NHTSA/FHWA contract.",
     "note": "These are NOT the same specific vehicles as Part 1 (no current NCAC model exists for a 1998 Neon, Explorer, or C1500). Recommended as the mesh-plus-physics source for the actual L2 render, self-consistent trio, real VIN and tire data where available.",
@@ -102,7 +100,7 @@
         "mass_option_A_MASH_nominal_target": {
           "mass_kg": 1100,
           "basis": "MASH 1100C class NOMINAL target weight, not the weight this specific mesh was built to",
-          "rho_kg_m3_at_box_volume_3_5427": 310.50,
+          "rho_kg_m3_at_box_volume_3_5427": 310.5,
           "exact_quotient": "1100 / 3.5427 = 310.4976",
           "note": "An earlier 2026-07-19 entry divided by enclosed volume 3.543 m^3 instead, giving 310.47. The 310.47-vs-310.50 gap is purely the 3.543-vs-3.5427 volume rounding, not a second number."
         },
@@ -116,9 +114,17 @@
         "recommended_pairing": "Option B: 1078 kg (NCAC-modeled) at collider box volume 3.5427 m^3 -> rho 304.28 kg/m^3. Chosen because 1078 kg is the weight this specific Yaris mesh was actually built to, whereas 1100 kg is only the MASH class nominal target.",
         "volume_basis_still_open": {
           "note": "The recommended rho assumes the collider BOX volume 3.5427 m^3. A separate 2026-07-20 entry computed rho from the RAW MESH volume 6.8185 m^3 instead, giving 1100/6.8185 = 161.33 or 1078/6.8185 = 158.10. Which volume the simulation should divide by (collider box vs raw enclosed mesh) is a still-open coupled question. Do NOT paste any single rho into a script until BOTH mass and volume are fixed against a live grep of the actual mesh. Cross-ref SESSION_STATE.md line 28.",
-          "volumes_in_play_m3": [3.5427, 3.543, 6.8185],
-          "masses_in_play_kg": [1078, 1100]
-        }
+          "volumes_in_play_m3": [
+            3.5427,
+            3.543,
+            6.8185
+          ],
+          "masses_in_play_kg": [
+            1078,
+            1100
+          ]
+        },
+        "recommended_pairing_CORRECTED_2026_07_23": "Option A: 1100 kg (deck header primary source) at collider box volume 3.5427 m^3, rho 310.4976 (stored 310.50). SUPERSEDES the recommended_pairing field above. Two independent live reads of yaris-coarse-v1l.key confirm 1100 kg is the ONLY mass value the deck itself states, neither 1078 nor MASH appears anywhere in the deck. Both are secondary NCAC-webpage annotations, not primary source content. vehicle_params.py and the L2 sim already use 1100.0/310.47 as of commit 6d14dcb. Old Option B field kept for history, not deleted."
       },
       "vin_on_page": "not listed",
       "tire_size_on_page": "not listed",
@@ -163,7 +169,6 @@
       "validation_report": "doi:10.13021/xb7g-8z06"
     }
   },
-
   "still_open_after_this_file": [
     "Rogue coarse/decimated mesh variant, only the large 3.24M-element version was found on the live page, worth a follow-up check for a lighter version",
     "Rogue tire size, not published on this page, would need a separate manufacturer spec lookup",
