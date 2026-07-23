@@ -20,7 +20,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "tmux wait-for -S \"pane_$(tmux display-message -p '#S_#I_#P' 2>/dev/null)_done\" 2>/dev/null || true"
+            "command": "mkdir -p ~/.pane_signals && echo \"$(date -u +%s)\" > ~/.pane_signals/$(tmux display-message -p '#S_#I_#P' 2>/dev/null || echo unknown)_done 2>/dev/null || true"
           }
         ]
       }
