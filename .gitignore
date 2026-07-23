@@ -32,3 +32,9 @@ pane*_export.txt
 # intentionally not tracked so the repo does not carry tens of MB of log history.
 archive/session_logs/*.zip
 archive/session_logs/LIVE_SESSION_LOG.md.bak-*
+_inbox/.export_all_seen_hashes.txt
+_inbox/.sweep_log.txt
+_inbox/.sweep_stdout.log
+_inbox/LIVE_SESSION_LOG.md
+_inbox/.export_state/
+_inbox/LATEST.md
