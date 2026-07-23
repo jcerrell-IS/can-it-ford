@@ -130,6 +130,7 @@ def main():
             camera_fov=40,
         ),
         show_viewer=args.vis,
+        renderer=gs.renderers.RayTracer(),
     )
 
     vehicle_rigid = gs.materials.Rigid(needs_coup=True, coup_friction=VEHICLE_COUP_FRICTION, rho=VEHICLE_RHO)
@@ -137,15 +138,18 @@ def main():
     measured_rho  = float(vehicle_rigid.rho)
     measured_cf   = float(vehicle_rigid.coup_friction)
 
-    plane   = scene.add_entity(morph=gs.morphs.Plane())
+    plane   = scene.add_entity(
+        morph=gs.morphs.Plane(),
+        surface=gs.surfaces.Rough(color=(0.35, 0.33, 0.30), roughness=0.85),
+    )
 
     water   = scene.add_entity(
         material=gs.materials.MPM.Liquid(),
         morph=gs.morphs.Box(
-            pos=(0.275, 0.0, water_depth / 2.0),
+            pos=(-1.8, 0.0, water_depth / 2.0),
             size=(0.35, 1.8, water_depth),
         ),
-        surface=gs.surfaces.Default(color=(0.5, 0.7, 0.9, 1.0)),
+        surface=gs.surfaces.Water(),
     )
 
     vehicle = scene.add_entity(

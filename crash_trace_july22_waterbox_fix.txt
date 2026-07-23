@@ -1,0 +1,72 @@
+=== run start 2026-07-22T21:35:11-05:00 : depth=0.30 velocity=0.0 grid_density=128, CUDA_LAUNCH_BLOCKING=1, headless, waterbox pos=(-1.8,0,d/2) ===
+=== node: c642-082.vista.tacc.utexas.edu ===
+INFO:    gocryptfs not found, will not be able to use gocryptfs
+
+==========
+== CUDA ==
+==========
+
+CUDA Version 12.8.1
+
+Container image Copyright (c) 2016-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+
+This container image and its contents are governed by the NVIDIA Deep Learning Container License.
+By pulling and using the container, you accept the terms and conditions of this license:
+https://developer.nvidia.com/ngc/nvidia-deep-learning-container-license
+
+A copy of this license is made available in this container at /NGC-DL-CONTAINER-LICENSE for your convenience.
+
+/usr/local/lib/python3.10/dist-packages/quadrants/_test_tools/warnings_helper.py:11: UserWarning: cannot create weak reference to 'tuple' object. Template mapper caching disabled.
+  warnings.warn(message)
+[E 07/22/26 21:35:33.363 237726] [cuda_driver.h:operator()@94] CUDA Error CUDA_ERROR_ILLEGAL_ADDRESS: an illegal memory access was encountered while calling launch_kernel (cuLaunchKernel)
+--- Running L2 MPM: depth=0.3m, velocity=0.0m/s, grid_density=128 ---
+Water: n_particles=1512000, total_mass=189.0000kg, m_p=1.250000e-04kg
+Step 0: x_disp=0.0000m  vel=tensor([ 0.0000,  0.0000, -0.0392], device='cuda:0')
+Traceback (most recent call last):
+  File "/work/11603/jcerrell0629/vista/can-it-ford/simulation/can_it_ford_L2_mpm.py", line 340, in <module>
+    main()
+  File "/work/11603/jcerrell0629/vista/can-it-ford/simulation/can_it_ford_L2_mpm.py", line 193, in main
+    scene.step()
+  File "/code/genesis-world/genesis/utils/misc.py", line 142, in wrapper
+    return method(self, *args, **kwargs)
+  File "/code/genesis-world/genesis/engine/scene.py", line 1047, in step
+    self._sim.step()
+  File "/code/genesis-world/genesis/engine/simulator.py", line 287, in step
+    self.substep(self.cur_substep_local)
+  File "/code/genesis-world/genesis/engine/simulator.py", line 322, in substep
+    self.substep_pre_coupling(f)
+  File "/code/genesis-world/genesis/engine/simulator.py", line 334, in substep_pre_coupling
+    solver.substep_pre_coupling(f)
+  File "/code/genesis-world/genesis/engine/solvers/mpm_solver.py", line 592, in substep_pre_coupling
+    self.p2g(
+  File "/usr/local/lib/python3.10/dist-packages/quadrants/lang/_quadrants_callable.py", line 111, in __call__
+    return self.wrapper(self.instance, *args, **kwargs)
+  File "/usr/local/lib/python3.10/dist-packages/quadrants/lang/kernel_impl.py", line 164, in wrapped_classkernel
+    return wrapped_func(*args, **kwargs)
+  File "/usr/local/lib/python3.10/dist-packages/quadrants/lang/kernel_impl.py", line 147, in wrapped_func
+    return primal(*args, **kwargs)
+  File "/usr/local/lib/python3.10/dist-packages/quadrants/lang/kernel.py", line 739, in __call__
+    ret = self.launch_kernel(key, kernel_cpp, compiled_kernel_data, *py_args, qd_stream=qd_stream)
+  File "/usr/local/lib/python3.10/dist-packages/quadrants/lang/kernel.py", line 591, in launch_kernel
+    raise e from None
+  File "/usr/local/lib/python3.10/dist-packages/quadrants/lang/kernel.py", line 583, in launch_kernel
+    prog.launch_kernel(compiled_kernel_data, launch_ctx)
+RuntimeError: [cuda_driver.h:operator()@94] CUDA Error CUDA_ERROR_ILLEGAL_ADDRESS: an illegal memory access was encountered while calling launch_kernel (cuLaunchKernel)
+
+[38;5;9m[Genesis] [21:35:33] [ERROR] RuntimeError: [cuda_driver.h:operator()@94] CUDA Error CUDA_ERROR_ILLEGAL_ADDRESS: an illegal memory access was encountered while calling launch_kernel (cuLaunchKernel)[0m
+[E 07/22/26 21:35:33.376 237726] [cuda_driver.h:operator()@94] CUDA Error CUDA_ERROR_ILLEGAL_ADDRESS: an illegal memory access was encountered while calling stream_synchronize (cuStreamSynchronize)
+Exception ignored in atexit callback: <function destroy at 0x40011a7329e0>
+Traceback (most recent call last):
+  File "/code/genesis-world/genesis/__init__.py", line 393, in destroy
+    qd.reset()
+  File "/usr/local/lib/python3.10/dist-packages/quadrants/lang/misc.py", line 203, in reset
+    impl.reset()
+  File "/usr/local/lib/python3.10/dist-packages/quadrants/lang/impl.py", line 630, in reset
+    pyquadrants.clear()
+  File "/usr/local/lib/python3.10/dist-packages/quadrants/lang/impl.py", line 592, in clear
+    self._prog.finalize()
+RuntimeError: [cuda_driver.h:operator()@94] CUDA Error CUDA_ERROR_ILLEGAL_ADDRESS: an illegal memory access was encountered while calling stream_synchronize (cuStreamSynchronize)
+[E 07/22/26 21:35:33.604 237726] [cuda_driver.h:operator()@94] CUDA Error CUDA_ERROR_ILLEGAL_ADDRESS: an illegal memory access was encountered while calling mem_free_async_impl (cuMemFreeAsync)
+terminate called after throwing an instance of 'std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >'
+/usr/bin/bash: line 20: 237698 Aborted                 (core dumped) apptainer run --nv --env CUDA_LAUNCH_BLOCKING=1 "$GENESIS_PATH" python3 simulation/can_it_ford_L2_mpm.py --depth 0.30 --velocity 0.0 --grid-density 128
+=== exit code: 134 ===

@@ -86,9 +86,18 @@ class ClassificationResult:
 
 def load_timeseries(path) -> dict:
     path = Path(path)
+    n_comment = 0
+    header = None
     with open(path) as fh:
-        header = fh.readline().strip().lstrip("#").strip().split(",")
-    data = np.loadtxt(path, delimiter=",", skiprows=1, ndmin=2)
+        for line in fh:
+            if line.startswith("#"):
+                n_comment += 1
+                continue
+            header = line.strip().split(",")
+            break
+    if header is None:
+        raise ValueError(f"{path.name}: no header row found")
+    data = np.loadtxt(path, delimiter=",", skiprows=n_comment + 1, ndmin=2)
     if data.shape[1] != len(header):
         raise ValueError(
             f"{path.name}: header has {len(header)} names but data has {data.shape[1]} columns"

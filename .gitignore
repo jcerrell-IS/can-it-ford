@@ -4,7 +4,6 @@ __pycache__/
 *.pyc
 gradio_app/
 ssh_config_tacc_block.txt
-ssh_config_tacc_block.txt
 logs/
 figures/hailuo/*.mp4
 .env
@@ -16,14 +15,11 @@ session_archive/
 renders/
 !data/track1_sweep_v1/
 !data/track1_sweep_v1/**
-!data/track1_sweep_v1/
-!data/track1_sweep_v1/**
 !data/track1_sweep_v2/
 !data/track1_sweep_v2/**
 session_*.md
 session_*.txt
 *-im-fixing-a-vehicle-density-bug-*.txt
-vehicle_geometry_research/**/*.key
 vehicle_geometry_research/**/*.key
 vehicle_geometry_research/**/*-detailed-*/**/*.key
 pane*_export.txt
@@ -38,3 +34,10 @@ _inbox/.sweep_stdout.log
 _inbox/LIVE_SESSION_LOG.md
 _inbox/.export_state/
 _inbox/LATEST.md
+vehicle_meshes/
+*.key
+_PENDING_NOT_COMMITTED/
+_inbox/.export_all_state/
+_inbox/.runerr
+_inbox/.runout
+_inbox/*.bak_*
