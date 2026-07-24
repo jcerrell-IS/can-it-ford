@@ -210,13 +210,13 @@ The nearest genuine exception is Smith, Modra & Felder (2019), *Journal of Flood
 
 ### 3.3 Azhar et al. 2023 (μ = 0.55) vs Genesis `coup_friction`: two different quantities
 
-**This wording is held in deliberate agreement with `README.md`. If either is edited, the other must be updated to match, they must not be allowed to drift into contradiction.**
+**This wording is held in deliberate agreement with `README.md` (commit `77d75b2`, "Re-verify README Status against live tree, split coup_friction citation from its application"). If either is edited, the other must be updated to match. They must not be allowed to drift into contradiction.**
 
-The number **0.55 is citation-accurate to Azhar et al. 2023**, where it is a **physical Coulomb friction coefficient** between vehicle and bed in a DualSPHysics plus Chrono flood simulation. That attribution is not in dispute.
+The number and its application are two separate claims. Keep them separate:
 
-Genesis's `coup_friction` is a **numerical solver-coupling coefficient**: an impulse/stability parameter governing the fluid-to-rigid coupling in the MPM solver. It is not a Coulomb friction coefficient and shares only its name.
+***The number.*** **0.55 is citation-accurate.** It traces to Azhar, Pauwels & Bui 2023, "Confirmation of vehicle stability criteria through a combination of smoothed particle hydrodynamics and laboratory measurements", *Journal of Flood Risk Management* 16(2):e12885, DOI [10.1111/jfr3.12885](https://doi.org/10.1111/jfr3.12885). There it is a **physical Coulomb friction coefficient** for a passive rigid vehicle, quoted in the model setup alongside a COG height of 0.45 m and a weight of 1097 kg, for a DualSPHysics model matched to a 1:14 scale physical model. Two precision notes carried over from the README verification: the paper adopts 0.55 "in accordance with" prior literature rather than measuring it in its own scale-model traction testing (so any phrasing calling it "the exact matched-scale-model coefficient" overstates it and is retracted), and `analysis/failure_mode_citations.md` still carries this as UNRESOLVED because Wiley returns 403 to crawlers and scite has no open-access full text to re-query. That is a retrieval failure, not a contradiction.
 
-Therefore: **setting `coup_friction = 0.55` on the strength of Azhar et al. 2023 is an open modeling assumption, not a proven equivalence.** No source establishes that the solver parameter and the physical coefficient are the same quantity or take the same value. This must be stated as an assumption in Methods and Limitations, never as a cited physical parameter.
+***The application.*** Genesis `coup_friction` is a **numerical solver-coupling coefficient**, a different *kind* of quantity from Coulomb friction, not a dimensionless tyre-on-pavement ratio. Setting `coup_friction = 0.55` because Azhar's Coulomb μ is 0.55 is an **open modeling assumption, not a proven equivalence**, and no calibration establishing that the two are interchangeable has been done here. This exact conflation (a physical Coulomb coefficient fed into a numerical coupling-impulse coefficient as if they were the same quantity) is named in the provenance-audit skill's own Known-Error Register. Do not present 0.55 as a settled, sourced value for this solver parameter: **the citation covers the number, not the substitution.** State it as an assumption in Methods and Limitations, never as a cited physical parameter.
 
 Two consequences worth stating plainly:
 
@@ -242,7 +242,7 @@ Two consequences worth stating plainly:
 - Xiong et al. (2024), *Water Resources Research* 60:e2023WR036739, the 0.25 to 0.75 cross-study range
 - Xia, Falconer, Xiao & Wang (2014), *Natural Hazards* 70:1619-1630 (DOI 10.1007/s11069-013-0889-2), μ = 0.25, C_d = 1.15 case
 - Smith, Modra & Felder (2019), *Journal of Flood Risk Management* 12:e12527 (DOI 10.1111/jfr3.12527), full-scale multi-bed-material testing
-- Azhar et al. (2023), *Journal of Flood Risk Management* (DOI 10.1111/jfr3.12885), source of the physical μ = 0.55, see §3.3 for why it does not transfer to `coup_friction`
+- Azhar, Pauwels & Bui (2023), "Confirmation of vehicle stability criteria through a combination of smoothed particle hydrodynamics and laboratory measurements", *Journal of Flood Risk Management* 16(2):e12885 (DOI 10.1111/jfr3.12885), source of the physical mu = 0.55, see §3.3 for why it does not transfer to `coup_friction`
 - Underlying audit: `~/Downloads/Ground-Material Friction and Road-Camber Physics for Flood-Traversability Simulation: A Provenance-Grade Literature Audit.md` (2026-07-21). Not yet in-repo; a synthesized audit, so the DOIs above are the citable layer, not the audit document.
 
 **Vehicle mass, real-mesh path (added 2026-07-23, see §3.1)**
