@@ -40,6 +40,7 @@ MAX_FRAMES = 150
 PLATEAU_WINDOW = 10
 PLATEAU_TOL_M = 0.01
 MIN_Z_LAYERS = 2
+MESH_BBOX_TOL = 0.25  # real-mesh extent vs cited bbox; catches a mis-scaled export
 
 YARIS_PLY = str(REPO_ROOT / "vehicle_geometry_research" / "yaris_coarse_v1l_watertight.ply")
 YARIS_MASS_KG = 1100.0  # PRIMARY source: LS-DYNA deck header "Version 1l, 1100 kg" (yaris-coarse-v1l.key line 27). 1078 is a SECONDARY NCAC download-page "modeled weight", logged not coded. rho emerges as mass/solid_volume at runtime (see below), not hardcoded. Per CLAUDE.md Physical Plausibility Checklist item 1.
@@ -125,7 +126,41 @@ def preflight():
     return not underresolved or args.allow_underresolved
 
 
+def preflight_vehicle_source():
+    """Load the vehicle geometry before any GPU time is committed.
+
+    The --vehicle yaris path hands load_vehicle a watertight mesh ply, which shares
+    its suffix with the 3DGS splat exports the box path uses. Actually loading here
+    means a format or scale problem surfaces during --dry-run on the login node,
+    rather than after the first run of the sweep has already been queued."""
+    path = Path(VEHICLE_SOURCE_PLY)
+    print(f"  vehicle source: {path}")
+    if not path.is_file():
+        print("  MISSING: vehicle source ply not found. REFUSING.")
+        return False
+    from warpmpm.vehicle import load_vehicle
+    v = load_vehicle(str(path))
+    width, length, height = (float(x) for x in v.extent)
+    kind = "3DGS splat" if v.splat_pos is not None else "mesh"
+    print(f"  loaded as {kind}: {v.n_particles} solid particles, "
+          f"L={length:.2f}m W={width:.2f}m H={height:.2f}m")
+    if USE_REAL_MESH:
+        # the real mesh keeps its own scale (fit_to_bbox is deliberately skipped), so
+        # a millimetre-unit or otherwise mis-scaled export would reach the solver silently
+        params_key = VEHICLE_ITER[0][1]
+        nominal = get_vehicle(params_key)["bbox_m"]
+        drift = max(abs(got - want) / want
+                    for got, want in zip((length, width, height), nominal, strict=True))
+        print(f"  vs {params_key} cited bbox {nominal}: max drift {drift * 100:.1f}%")
+        if drift > MESH_BBOX_TOL:
+            print(f"  IMPLAUSIBLE: extent is over {MESH_BBOX_TOL:.0%} off the cited bbox. REFUSING.")
+            return False
+    return True
+
+
 if not preflight():
+    sys.exit(1)
+if not preflight_vehicle_source():
     sys.exit(1)
 if args.dry_run:
     print("DRY RUN: preflight only, no simulation launched.", flush=True)
