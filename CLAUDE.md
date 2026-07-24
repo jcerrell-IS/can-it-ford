@@ -47,3 +47,17 @@ does not combine them automatically. A rewrite touching an existing repo
 nothing. After any filter-repo rewrite, --force --all pushes the FULL pack
 again, not a diff, large repos with binary history take real time, cutoff
 mid-transfer in a terminal paste does not mean it failed.
+
+## File provenance, do not cite anything not on this list without checking it live
+
+CANONICAL:
+- CLAUDE.md (this file, project root) — Multi-Pane Standing Rules
+- vehicle_params.py — mass_kg: 1100.0
+- vehicle_geometry_research/yaris_coarse_v1l_watertight.ply — canonical Yaris mesh
+
+DEPRECATED, do not read or cite:
+- vehicle_geometry_research/yaris_sedan_watertight_DEPRECATED_lowres_do_not_use.ply
+- reference_data/vehicle_data_master_reference_2026-07-21.json.OLD-4906B
+- data/track1_sweep_v3/
+- docs/session_notes/2026-07-16_l1_l2_dxv_crossref.md
+- files/CLAUDE_md_*_july13.md
