@@ -39,6 +39,11 @@ restate them in chat prompts.
 - Before prescribing idev/GPU allocation, confirm the task actually
   needs GPU. File checks, git operations, and monitoring belong on the
   login node, not inside idev.
+- Before asserting any parameter, threshold, citation, mesh property, or
+  milestone as fact, read docs/VERIFIED_FACTS_LEDGER_july24.md. Section B
+  lists claims already proven false. Section F is the complete vehicle
+  asset inventory: there is ONE usable mesh, not three. Do not re-derive
+  anything in Section A.
 
 ## git filter-repo standing note
 --path/--invert-paths and --replace-text are independent passes, filter-repo
