@@ -4,7 +4,8 @@ def test_scenario_sweep_schema():
     df = pd.read_csv("data/scenario_sweep.csv")
     expected_columns = ["depth_m", "velocity_ms", "L0_verdict", "L1_haz",
                         "L1_haz_product_only", "L1_verdict",
-                        "L1_verdict_small_car", "L1_verdict_four_wd"]
+                        "L1_verdict_small_passenger", "L1_verdict_large_passenger",
+                        "L1_verdict_large_4wd", "L1_class_sensitive"]
     assert list(df.columns) == expected_columns
     assert df["depth_m"].dtype == float
     assert df["velocity_ms"].dtype == float

@@ -6,7 +6,7 @@ df = pd.read_csv('data/phase_space_results.csv')
 df = df.drop_duplicates(subset=['depth_m', 'velocity_ms'], keep='last')
 
 df['L1_haz'] = df['depth_m'] * df['velocity_ms']
-df['L1_verdict'] = df['L1_haz'].apply(lambda h: 'FORD' if h < 0.60 else 'NO-FORD')
+df['L1_verdict'] = df['L1_haz'].apply(lambda h: 'FORD' if h <= 0.60 else 'NO-FORD')
 
 def classify(row):
     if row['verdict'] == 'FORD'    and row['L1_verdict'] == 'FORD':    return 'FORD_AGREE'

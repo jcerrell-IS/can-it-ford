@@ -163,7 +163,7 @@ AR_R_SOURCE = (
 )
 
 AR_R_STABILITY_LIMITS = {
-    "small_car": {
+    "small_passenger": {
         "depth_m": 0.30, "velocity_ms": 3.0, "haz_m2s": 0.30,
         "report_class": "Small passenger",
         "length_m_max": 4.3, "kerb_weight_kg_max": 1250, "ground_clearance_m_max": 0.12,
@@ -173,15 +173,17 @@ AR_R_STABILITY_LIMITS = {
         "report_class": "Large passenger",
         "length_m_min": 4.3, "kerb_weight_kg_min": 1250, "ground_clearance_m_min": 0.12,
     },
-    "four_wd": {
+    "large_4wd": {
         "depth_m": 0.50, "velocity_ms": 3.0, "haz_m2s": 0.60,
         "report_class": "Large 4WD",
         "length_m_min": 4.5, "kerb_weight_kg_min": 2000, "ground_clearance_m_min": 0.22,
     },
 }
 
+AR_R_CLASS_ORDER = ("small_passenger", "large_passenger", "large_4wd")
 
-def L1_verdict(depth_m: float, velocity_ms: float, vehicle_class: str = "small_car") -> str:
+
+def L1_verdict(depth_m: float, velocity_ms: float, vehicle_class: str = "small_passenger") -> str:
     if vehicle_class not in AR_R_STABILITY_LIMITS:
         raise ValueError(
             f"no AR&R stability limits sourced for vehicle_class={vehicle_class!r}; "
