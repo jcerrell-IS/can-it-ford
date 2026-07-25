@@ -155,8 +155,29 @@ VEHICLE_PARAMS = {
 }
 
 
+AR_R_SOURCE = (
+    "Shand, Cox, Blacka & Smith (2011), AR&R Project 10 Stage 2, P10/S2/020, "
+    "ISBN 978-0-85825-948-5, Table 3 'Proposed DRAFT Stability Criteria for "
+    "Stationary Vehicles', PDF p.24 / printed p.14. Values are the report's own "
+    "DRAFT INTERIM figures for STATIONARY vehicles, not an endorsed safety standard."
+)
+
 AR_R_STABILITY_LIMITS = {
-    "small_car": {"depth_m": 0.30, "velocity_ms": 3.0, "haz_m2s": 0.30},
+    "small_car": {
+        "depth_m": 0.30, "velocity_ms": 3.0, "haz_m2s": 0.30,
+        "report_class": "Small passenger",
+        "length_m_max": 4.3, "kerb_weight_kg_max": 1250, "ground_clearance_m_max": 0.12,
+    },
+    "large_passenger": {
+        "depth_m": 0.40, "velocity_ms": 3.0, "haz_m2s": 0.45,
+        "report_class": "Large passenger",
+        "length_m_min": 4.3, "kerb_weight_kg_min": 1250, "ground_clearance_m_min": 0.12,
+    },
+    "four_wd": {
+        "depth_m": 0.50, "velocity_ms": 3.0, "haz_m2s": 0.60,
+        "report_class": "Large 4WD",
+        "length_m_min": 4.5, "kerb_weight_kg_min": 2000, "ground_clearance_m_min": 0.22,
+    },
 }
 
 
