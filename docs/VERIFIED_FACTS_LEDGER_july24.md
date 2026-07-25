@@ -503,6 +503,36 @@ apply. The same duplication exists on Vista.
 not in git. It is one `git add .` away from entering history. Decide deliberately whether
 it belongs in the repo, in LFS, or in `.gitignore`.
 
+### F4. **[OPEN PROVENANCE DEFECT]** Track 2 vehicle geometry is a superseded placeholder
+
+`simulation/can_it_ford_L2_mpm.py:26` hardcodes `VEHICLE_SIZE = (4.66, 1.79, 1.44)`. That
+value matches no class currently defined in `vehicle_params.py` and it is not the canonical
+hull.
+
+| Source | L x W x H (m) | Volume (m3) |
+|---|---|---|
+| `can_it_ford_L2_mpm.py:26` VEHICLE_SIZE | 4.66 x 1.79 x 1.44 | **12.0116** |
+| `vehicle_params.py` compact_sedan (live) | 4.30 x 1.70 x 1.47 | 10.7457 |
+| `yaris_coarse_v1l_watertight.ply` hull | 4.283 x 1.746 x 1.518 bbox | **3.5427** (trimesh hull) |
+
+Box volume against hull volume is **12.0116 / 3.5427 = 3.391x**.
+
+**Root cause, traced through git.** 4.66 x 1.79 x 1.44 is the pre-Yaris `compact_sedan`
+placeholder. Commit `72974ab` introduced it. Commit `0b59eea` ("Restore Yaris
+vehicle_params.py correction...") replaced it with the real 2010 Yaris FE geometry at
+4.30 x 1.70 x 1.47. The string `4.66` no longer appears anywhere in `vehicle_params.py`.
+The Track 2 script was never updated and is frozen at the superseded value. This is the
+same failure class as A12: a constant moved in one file and not in its consumer.
+
+**Consequence.** Any Track 2 density computed as mass over box volume inherits the 3.391x
+error. At 1100 kg: 1100 / 12.0116 = 91.6 kg/m3 against 1100 / 3.5427 = 310.5 kg/m3 on the
+hull. A 91.6 kg/m3 body is far below the 100 to 300 kg/m3 plausibility band in CLAUDE.md
+and would float in almost any depth. Do not report a Track 2 rho, buoyancy, or float
+verdict until this is reconciled.
+
+**Not fixed here.** Recorded as an open defect only. Changing `VEHICLE_SIZE` alters every
+Track 2 result and must be a deliberate, separately reviewed change.
+
 **No SUV mesh exists. No pickup mesh exists.** Two independent reconstruction attempts to
 build one failed: marching cubes stalled at genus 9, and Poisson reconstruction produced a
 0.345 m long asset from a mismatched source point cloud.
