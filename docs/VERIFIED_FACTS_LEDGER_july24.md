@@ -28,6 +28,13 @@ being committed. Corrections are marked inline as **[CORRECTED]**, **[FILLED]**,
 | F-1 | F1 | Two byte-identical duplicate meshes in the nested `can-it-ford/can-it-ford/` tree were unlisted. Added |
 | F-2 | F1 | `truck_trimmed.ply` is present in THIS repo at `data/`, 45.20 MB, and is UNTRACKED by git |
 
+**Second pass, same day, after review:**
+
+| ID | Section | What changed |
+|---|---|---|
+| D1b | A3, E | A3 rewritten to carry the source's full three-part argument in order, with the pre-2011 referent named explicitly and the "Such a revision... is suggested below" sentence retained as the fixing context. Section E reframed to the accurate and stronger claim: the authors found the then-current guidelines non-conservative, proposed Table 3 as an interim draft revision, and asked for further testing |
+| D8 | A9 | "68 percent over-fill" had no named basis and is wrong under both readings. Now states both explicitly: 67.8 percent OF the 11.348 m3 bounding box, and +117 percent OVER the 3.5427 m3 hull (2.17x). The displacement-relevant figure is the hull one |
+
 **Verified correct on this pass, no change needed:** A1's Small passenger row and all
 quotes, A2, A4 in full, A6, A8's line reference, A11's numbers, A12's commit hash,
 F1's vertex and face counts, G3's FORD counts, G4's inclusivity finding.
@@ -87,39 +94,51 @@ Note the executive-summary version of the same table (PDF p.9, printed vii) carr
 different title: "Proposed DRAFT INTERIM criteria for stationary vehicle stability". Both
 support the stationary-scope point.
 
-### A3. **[CORRECTED]** What the report actually disclaims, and about which criteria
+### A3. **[CORRECTED]** What the report found non-conservative, and about which criteria
 
 The previous version of this section was headed "The report disclaims its own numbers" and
 asserted that the authors call Table 3 non-conservative. **That is a misattribution.** Both
-quotes are verbatim, but they do not say what the section claimed.
+quotes are verbatim, but neither says what the section claimed. The corrected reading is
+not weaker, it is a different and more useful claim.
 
-**Quote 1, PDF p.9.** **[CORRECTED]** This is item 1 of a numbered list introduced by "To
-provide robust and accurate criterion, we propose that:". It is a recommendation for how
-the new criteria should be adopted, not a disclaimer of published values:
+**The three-part structure of the source's own argument, PDF p.24, in order:**
 
-> "1. The draft stability criteria presented below are adopted as interim, informal values;"
+1. **Why the pre-2011 guidelines fail.** Verbatim: "On the basis of changes in modern
+   vehicle design, the limited nature of the earlier experimental work and the lack of
+   calibration in computational studies, it is unlikely that the earlier results are
+   directly applicable and conservative when applied to modern vehicles."
 
-**Quote 2, PDF p.24.** **[CORRECTED]** "the existing AR&R guidelines" means the
-PRE-EXISTING guidelines being revised, NOT Table 3. The sentence immediately following
-makes this explicit:
+2. **The finding, and its subject.** Verbatim, with the following sentence included because
+   it is what fixes the referent:
 
-> "In the interim, however, the existing AR&R guidelines are clearly non-conservative and
-> revision of the criteria should be considered until further testing is undertaken. **Such
-> a revision to provide Draft interim criteria for stationary vehicle stability is
-> suggested below.**"
+   > "In the interim, however, the existing AR&R guidelines are clearly non-conservative
+   > and revision of the criteria should be considered until further testing is
+   > undertaken. **Such a revision to provide Draft interim criteria for stationary vehicle
+   > stability is suggested below.**"
 
-Table 3 IS that suggested revision. The authors call the OLD guidelines non-conservative
-and offer Table 3 as the fix.
+   "the existing AR&R guidelines" means the **pre-2011** guidelines in force at the time of
+   writing. Table 3 IS the revision suggested in the very next sentence. The authors found
+   the then-current guidelines non-conservative and offered Table 3 as the interim fix.
 
-**What survives, and it is still strong.** The authors present Table 3 as explicitly
-interim and informal, they state the earlier experimental basis is unlikely to apply to
-modern vehicles, and they lay out a five-point program of further testing (PDF p.9) that
-they say is required before any of this becomes a true safety guideline. Verbatim, p.9:
-"Only criteria developed in such a rigorous way are suitable for presenting as true safety
-guidelines."
+3. **What they asked for next, PDF p.9.** A five-point program of full-scale testing,
+   frictional-coefficient measurement, computational-model calibration, and field
+   verification, introduced by "To provide robust and accurate criterion, we propose that:".
+   Item 1 of that list, which is a recommendation for adoption and not a standalone
+   disclaimer **[D2]**:
+
+   > "1. The draft stability criteria presented below are adopted as interim, informal values;"
+
+   And the closing condition, verbatim: "Only criteria developed in such a rigorous way are
+   suitable for presenting as true safety guidelines."
+
+**What this licenses.** That the AR&R authors found the guidelines then in force to be
+non-conservative, proposed Table 3 as an explicitly interim draft revision, and stated that
+further full-scale testing and calibration was required before any such criteria could be
+presented as true safety guidelines.
 
 **What does NOT survive:** any sentence of the form "the AR&R authors called their own
-Table 3 criteria non-conservative." Do not write that on a poster or in a paper.
+Table 3 criteria non-conservative." They said that of the guidelines Table 3 replaces. Do
+not write the unqualified version on a poster or in a paper.
 
 ### A4. Flow regime behind the AR&R curves: NOT STATED
 
@@ -241,9 +260,22 @@ with the underbody bridged shut (overstates displacement).
 
 **Three consequences.**
 
-1. At `n_grid=64` the solidified body fills 67.8 percent of its bounding box, which is more
-   over-filled than the sedan hull that was deprecated for exactly that bias. Every
-   FloodScene run to date used a body displacing 2.17x the hull's actual volume.
+1. **[CORRECTED, basis named]** At `n_grid=64` the solidified body has volume 7.698 m3.
+   State the over-fill against whichever basis you mean, and always name it:
+
+   | Basis | Value | Figure |
+   |---|---|---|
+   | Fraction of the 11.348 m3 **bounding box** | 7.698 / 11.348 | **67.8 percent of bbox** |
+   | Excess over the 3.5427 m3 **trimesh hull** | 7.698 / 3.5427 = 2.173 | **2.17x the hull, i.e. +117 percent over hull volume** |
+
+   These are two different statements about the same number and they are not
+   interchangeable. "68 percent over-fill" with no basis named is wrong under both
+   readings: it is 67.8 percent OF the bounding box (not an excess), and the excess over
+   the hull is +117 percent (not 68). The displacement-relevant figure is the hull one:
+   every FloodScene run to date used a body displacing **2.17x the hull's actual volume**.
+
+   For comparison on the bbox basis, this is a higher fill fraction than the deprecated
+   sedan hull (~62 percent of bbox), which was deprecated for exactly that bias.
 2. **[FLAG, interpretation not measurement]** The monotonic decrease is read as convergence
    toward the hull's true 31.2 percent rather than hollowing. The recorded "n_grid=128
    hollows the vehicle" dead end would then be a misdiagnosis when the asset is a
@@ -413,14 +445,17 @@ points in phase space."
 
 After, defensible against the source:
 
-> The AR&R Project 10 Stage 2 authors present their vehicle stability criteria as
-> "interim, informal values" and state that "Only criteria developed in such a rigorous
-> way are suitable for presenting as true safety guidelines," setting out a five-point
-> program of full-scale testing and model calibration they consider prerequisite. Those
-> interim criteria were derived for stationary vehicles from 1:25 scale model tests and
-> quasi-static axle-load measurements. This work supplies coupled full-scale physics of
-> the kind that program calls for, and identifies where in depth-velocity space the
-> interim criteria and a coupled model disagree for a small passenger vehicle.
+> The AR&R Project 10 Stage 2 authors found the vehicle stability guidelines then in force
+> to be "clearly non-conservative," proposed the Table 3 criteria as an explicitly interim
+> draft revision, and stated that further testing was required before any such criteria
+> could stand: "Only criteria developed in such a rigorous way are suitable for presenting
+> as true safety guidelines." They set out a five-point program of full-scale testing,
+> frictional-coefficient measurement, computational-model calibration, and field
+> verification to get there. Their interim criteria were themselves derived for stationary
+> vehicles from 1:25 scale model tests and quasi-static axle-load measurements. This work
+> supplies coupled full-scale physics of the kind that program calls for, and identifies
+> where in depth-velocity space the interim criteria and a coupled model disagree for a
+> small passenger vehicle.
 
 Three limitations that must be declared alongside it:
 
