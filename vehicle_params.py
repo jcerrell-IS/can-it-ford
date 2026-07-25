@@ -155,6 +155,27 @@ VEHICLE_PARAMS = {
 }
 
 
+AR_R_STABILITY_LIMITS = {
+    "small_car": {"depth_m": 0.30, "velocity_ms": 3.0, "haz_m2s": 0.30},
+}
+
+
+def L1_verdict(depth_m: float, velocity_ms: float, vehicle_class: str = "small_car") -> str:
+    if vehicle_class not in AR_R_STABILITY_LIMITS:
+        raise ValueError(
+            f"no AR&R stability limits sourced for vehicle_class={vehicle_class!r}; "
+            f"only {list(AR_R_STABILITY_LIMITS)} are populated"
+        )
+    limits = AR_R_STABILITY_LIMITS[vehicle_class]
+    if depth_m > limits["depth_m"]:
+        return "NO-FORD"
+    if velocity_ms > limits["velocity_ms"]:
+        return "NO-FORD"
+    if depth_m * velocity_ms > limits["haz_m2s"]:
+        return "NO-FORD"
+    return "FORD"
+
+
 # ---------------------------------------------------------------------------
 # Uniform-density box fallback (for models with no NHTSA match)
 # ---------------------------------------------------------------------------
