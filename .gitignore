@@ -49,3 +49,7 @@ can-it-ford/
 .claude/hooks/*.bak
 _inbox/
 _ARCHIVE_*
+.claude/settings.json.bak*
+.claude/hooks/*.bak
+_inbox/
+_ARCHIVE_*
