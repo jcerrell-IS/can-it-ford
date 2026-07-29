@@ -41,13 +41,13 @@ The splat-to-particle bridge is intended to reuse [PhysGaussian (Xie et al. 2023
 
 ## Status (updated 2026-07-29): real MPM verdicts now exist, one table was withdrawn
 
-**The L2 solver migration to MPM is functionally proven.** On 2026-07-25, kks32/mpm-engine's real MPM solver ran to completion on Vista (job 866266, reusing an idle allocation) using the real watertight Yaris hull, yaris_coarse_v1l_watertight.ply, not a box proxy, across all three AR&R vehicle classes: 1100 kg small passenger, 1609 kg large passenger, 2337 kg large 4WD. Render assets: figures/yaris_flood.mp4 and related files.
+**The L2 solver migration to MPM is functionally proven.** On 2026-07-25, kks32/mpm-engine's real MPM solver ran to completion on Vista (job 866266, reusing an idle allocation) using the real watertight Yaris hull, yaris_coarse_v1l_watertight.ply, not a box proxy, across all three AR&R vehicle classes: 1100 kg small passenger, 1609 kg large passenger, 2337 kg large 4WD.
 
-**One derived result from that pass was retracted, not hidden.** The first class-verdict table, three_class_table.md, asserted a verdict per class. A follow-up validation pass, docs/mass_sensitivity_table.md v3, found the 1100 kg case failed a particle-passthrough gate at 10.67 percent against a 10 percent limit, and withdrew that table. The v3 rerun, under standing water plus sustained inflow rather than the original dry-start setup, found SLIDE as the only failure mode that activated across all three classes, and found L0 and L2 agreeing with each other while L1, the AR&R depth-velocity hazard scalar, was the rung that diverged. This reverses the earlier framing and is the current result.
+**One derived result from that pass was retracted, not hidden.** The first class-verdict table asserted a verdict per class. A follow-up validation pass, docs/mass_sensitivity_table.md v3, found the 1100 kg case failed a particle-passthrough gate at 10.67 percent against a 10 percent limit, and withdrew that table. The v3 rerun, under standing water plus sustained inflow rather than the original dry-start setup, found SLIDE as the only failure mode that activated across all three classes, and found L0 and L2 agreeing with each other while L1, the AR&R depth-velocity hazard scalar, was the rung that diverged.
 
-**Track 2's standalone script, simulation/can_it_ford_L2_mpm.py, still has an open, unfixed defect.** It hardcodes a superseded vehicle box, 4.66 x 1.79 x 1.44 m, 3.39x the real hull volume, left over from before the Yaris geometry was finalized. The verified render above did not run through this script. Do not run it and cite the result until this line is fixed.
+**Track 2's standalone script, simulation/can_it_ford_L2_mpm.py, still has an open, unfixed defect.** It hardcodes a superseded vehicle box, 4.66 x 1.79 x 1.44 m, 3.39x the real hull volume. The verified render above did not run through this script.
 
-**data/scenario_sweep.csv is now the three-class, boundary-inclusive L1 sweep**, with L1_verdict_small_passenger, L1_verdict_large_passenger, L1_verdict_large_4wd, and L1_class_sensitive columns. Current FORD counts out of 70 conditions: 14, 19, 24 respectively.
+**data/scenario_sweep.csv is the three-class, boundary-inclusive L1 sweep**, with L1_verdict_small_passenger, L1_verdict_large_passenger, L1_verdict_large_4wd, and L1_class_sensitive columns. Current FORD counts out of 70 conditions: 14, 19, 26 respectively.
 
 ## Vehicle parameters
 
