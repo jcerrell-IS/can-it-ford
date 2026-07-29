@@ -194,7 +194,7 @@ def L1_verdict(depth_m: float, velocity_ms: float, vehicle_class: str = "small_p
         return "NO-FORD"
     if velocity_ms > limits["velocity_ms"]:
         return "NO-FORD"
-    if depth_m * velocity_ms > limits["haz_m2s"]:
+    if round(depth_m * velocity_ms, 6) > limits["haz_m2s"]:
         return "NO-FORD"
     return "FORD"
 

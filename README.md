@@ -29,7 +29,7 @@ The abstraction ladder is a running instance of the Section 3 orchestrator in [P
 
 ## Pipeline
 
-<img src="https://raw.githubusercontent.com/jcerrell-IS/can-it-ford/main/figures/can_it_ford_pipeline_diagram.svg" alt="Can It Ford pipeline diagram" width="820">
+<img src="figures/can_it_ford_pipeline_diagram.svg" alt="Can It Ford pipeline diagram" width="820">
 
 ```
 video  ->  gsplat (LS6 A100)  ->  splat/mesh to MPM particles  ->  MPM water + rigid vehicle coupling (Vista GH200)  ->  FORD / NO-FORD
@@ -72,9 +72,9 @@ Open items are tracked as [GitHub Issues](../../issues).
 
 Treat the friction-invariance with suspicion: it is exactly the signature a floating, near-massless body produces (ground normal force near zero makes friction mathematically irrelevant), and the pilot ran before the vehicle mass bug was fixed. This is kept because it motivates the rebuild, not because it is trusted. The 0.05 m drift threshold itself has no direct published source and is reframed as a fraction of vehicle width in [`citations/README.md`](citations/README.md) ([#5](../../issues/5)).
 
-<img src="https://raw.githubusercontent.com/jcerrell-IS/can-it-ford/main/can_it_ford_phase_space_v2.png" alt="L1 vs L2 phase space" width="640">
+<img src="can_it_ford_phase_space_v2.png" alt="L1 vs L2 phase space" width="640">
 
-<img src="https://raw.githubusercontent.com/jcerrell-IS/can-it-ford/main/can_it_ford_validation.png" alt="Monotonic displacement validation" width="640">
+<img src="can_it_ford_validation.png" alt="Monotonic displacement validation" width="640">
 
 ---
 
