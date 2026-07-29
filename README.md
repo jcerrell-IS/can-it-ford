@@ -39,44 +39,15 @@ The splat-to-particle bridge is intended to reuse [PhysGaussian (Xie et al. 2023
 
 ---
 
-## Status (July 9 snapshot, re-verified live 2026-07-23): pipeline under active rebuild
+## Status (updated 2026-07-29): real MPM verdicts now exist, one table was withdrawn
 
-*Re-verification basis for this date: the bullets below were checked against the live tree at `daf453e` (2026-07-23), not against a summary. The P2G/`CUDA_ERROR_ILLEGAL_ADDRESS` crash is still open per `d869f93` ("Log confirmed non-fix of P2G crash post position-change"), so the "no MPM verdict" bullet stands. Key-finding numbers below were recomputed from `data/phase_space_results.csv` this pass and match `07c8c65`. The Yaris and Track 1 v2 lines were checked against disk and against Vista (`squeue`, `data/`) on 2026-07-23.*
+**The L2 solver migration to MPM is functionally proven.** On 2026-07-25, kks32/mpm-engine's real MPM solver ran to completion on Vista (job 866266, reusing an idle allocation) using the real watertight Yaris hull, yaris_coarse_v1l_watertight.ply, not a box proxy, across all three AR&R vehicle classes: 1100 kg small passenger, 1609 kg large passenger, 2337 kg large 4WD. Render assets: figures/yaris_flood.mp4 and related files.
 
-**The authoritative technical log is [`kumar_july9_update/STATUS.md`](kumar_july9_update/STATUS.md).** The severity-ranked bug history is in [`PROVISIONAL_STATUS.md`](PROVISIONAL_STATUS.md). Read those before trusting any number in this repo. Short version:
+**One derived result from that pass was retracted, not hidden.** The first class-verdict table, three_class_table.md, asserted a verdict per class. A follow-up validation pass, docs/mass_sensitivity_table.md v3, found the 1100 kg case failed a particle-passthrough gate at 10.67 percent against a 10 percent limit, and withdrew that table. The v3 rerun, under standing water plus sustained inflow rather than the original dry-start setup, found SLIDE as the only failure mode that activated across all three classes, and found L0 and L2 agreeing with each other while L1, the AR&R depth-velocity hazard scalar, was the rung that diverged. This reverses the earlier framing and is the current result.
 
-- **The L2 solver is migrating from SPH to MPM.** The 23-condition result below was produced on synthetic box geometry with Genesis's SPH solver, as a pilot, not with the MPM pipeline the project targets. That SPH pilot is now closed.
-- **The current directed L2 engine is [`kks32/mpm-engine`](https://github.com/kks32/mpm-engine)** (per Kumar's instruction), with a box/SDF collider for the vehicle. A parallel [Genesis](https://github.com/Genesis-Embodied-AI/Genesis) MPM script (`simulation/can_it_ford_L2_mpm.py`) also exists.
-- **The MPM run does not yet complete at vehicle scale.** The latest attempt crashes with `CUDA_ERROR_ILLEGAL_ADDRESS` on the first coupled substep. No MPM FORD/NO-FORD verdict exists yet. Tracked in [#1](../../issues/1).
-- **The vehicle is still a box proxy, not a real car mesh.** The Genesis Track 2 script (`can_it_ford_L2_mpm.py`) uses a generic `size=(1.0, 1.6, 1.5)` box; the `kks32/mpm-engine` Track 1 script (`box_sdf_collider_setup.py`) uses the real sedan bounding box `(4.66, 1.79, 1.44)`. Cited real vehicle parameters exist in `vehicle_params.py` but are not yet wired into the Genesis solver ([#7](../../issues/7)).
-- **Track 1's v2 sweep is partially valid and the Yaris real-mesh sweep has produced nothing.** In [`data/track1_sweep_v2/manifest.csv`](data/track1_sweep_v2/manifest.csv) (36 rows, `kks32/mpm-engine` MPM, `n_grid=64`), **24 of 36 rows are density-plausible**: all 12 sedan and all 12 pickup rows pass, all 12 SUV rows fail at 308.13 kg/m3 (2.7 percent over the 100-300 kg/m3 band), and the schema further reduces the reportable set to 21 after excluding 3 under-resolved single-layer pickup cells at 0.15 m depth. Caveat on what "valid" means here: all 36 geometries are `truck_trimmed.ply` anisotropically warped by `fit_to_bbox` to each class bounding box, not per-class real meshes, and the failure-mode classifier rejects all 36 rows because the timeseries predate the `vx,vy,vz` columns it requires. The `--vehicle yaris` real-mesh sweep (`scripts/run_yaris_v2_prov.sbatch`, 1 vehicle x 4 depths x 3 velocities) stands at **0 of 12 runs**, verified live on Vista 2026-07-23: no `data/*yaris*` output directory, `logs/` empty apart from `.gitkeep`, and `squeue -u jcerrell0629` returning no queued or running job. No Yaris verdict exists to cite or plot.
-- **No real gsplat-reconstructed flooded scene has been ingested yet**, and no PhysGaussian/Taichi splat-to-particle bridge exists in code. A candidate vehicle reconstruction (`truck_trimmed.ply`) exists in working files but was closed on July 10 as not vehicle-proportioned (extents 1.447 x 0.450 x 0.411 m), so the box proxy remains the committed geometry. It is not connected to the pipeline ([#6](../../issues/6)).
-- **Coupling friction is set to 0.55, and the number is citation-accurate while the application of it is not yet justified.** Separate these two claims, they are not the same claim:
-  - *The number.* 0.55 traces to Azhar, Pauwels & Bui 2023, "Confirmation of vehicle stability criteria through a combination of smoothed particle hydrodynamics and laboratory measurements," *Journal of Flood Risk Management* 16(2):e12885, DOI [10.1111/jfr3.12885](https://doi.org/10.1111/jfr3.12885). There it is a **physical Coulomb friction coefficient** for a passive rigid vehicle, quoted in the model setup alongside a COG height of 0.45 m and a weight of 1097 kg, for a DualSPHysics model matched to a 1:14 scale physical model. Two precision notes: the paper adopts 0.55 "in accordance with" prior literature rather than measuring it in its own scale-model traction testing (so the earlier README phrase "the exact matched-scale-model coefficient" overstated it, and is retracted here), and the verbatim setup quote is recorded in [`citations/Bibliographic and Content Verification...md`](citations/) while [`analysis/failure_mode_citations.md`](analysis/failure_mode_citations.md) still carries this as UNRESOLVED because Wiley returns 403 to crawlers and scite has no open-access full text to re-query. That is a retrieval failure, not a contradiction, but the two files disagree and the newer one has not been updated.
-  - *The application.* Genesis `coup_friction` is a **numerical solver-coupling coefficient**, a different kind of quantity from Coulomb friction, not a dimensionless tyre-on-pavement ratio. Setting `coup_friction = 0.55` because Azhar's Coulomb mu is 0.55 is an **open modeling assumption, not a proven equivalence**, and no calibration establishing that the two are interchangeable has been done here. This exact conflation (a physical Coulomb coefficient fed into a numerical coupling-impulse coefficient as if they were the same quantity) is named in the provenance-audit skill's own Known-Error Register. Do not present 0.55 as a settled, sourced value for this solver parameter; the citation covers the number, not the substitution.
+**Track 2's standalone script, simulation/can_it_ford_L2_mpm.py, still has an open, unfixed defect.** It hardcodes a superseded vehicle box, 4.66 x 1.79 x 1.44 m, 3.39x the real hull volume, left over from before the Yaris geometry was finalized. The verified render above did not run through this script. Do not run it and cite the result until this line is fixed.
 
-  Corrected from an earlier 0.4 approximation.
-- **The domain is a closed, reflecting boundary, not an open channel.** Reflected waves likely contaminate long runs. This is the single most decisive untested question and applies to both SPH and MPM.
-
-Open items are tracked as [GitHub Issues](../../issues).
-
----
-
-## Key finding (provisional pilot, not the real-scene result)
-
-**23 unique (depth, velocity) conditions** tested via L2 on the SPH box-geometry pilot, before the July 7 friction and viscosity fixes.
-
-- **L1 / L2 agreement rate: 39.1 percent** (9 of 23 conditions)
-- **14 conditions:** L1 predicts FORD, pilot L2 produces lateral drift exceeding 0.05 m (NO-FORD)
-- **Friction-invariant:** drift stays roughly 0.33 to 0.40 m across friction coefficients 0.0 to 0.7
-
-Treat the friction-invariance with suspicion: it is exactly the signature a floating, near-massless body produces (ground normal force near zero makes friction mathematically irrelevant), and the pilot ran before the vehicle mass bug was fixed. This is kept because it motivates the rebuild, not because it is trusted. The 0.05 m drift threshold itself has no direct published source and is reframed as a fraction of vehicle width in [`citations/README.md`](citations/README.md) ([#5](../../issues/5)).
-
-<img src="can_it_ford_phase_space_v2.png" alt="L1 vs L2 phase space" width="640">
-
-<img src="can_it_ford_validation.png" alt="Monotonic displacement validation" width="640">
-
----
+**data/scenario_sweep.csv is now the three-class, boundary-inclusive L1 sweep**, with L1_verdict_small_passenger, L1_verdict_large_passenger, L1_verdict_large_4wd, and L1_class_sensitive columns. Current FORD counts out of 70 conditions: 14, 19, 24 respectively.
 
 ## Vehicle parameters
 

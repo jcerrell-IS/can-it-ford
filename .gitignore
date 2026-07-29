@@ -45,3 +45,7 @@ _inbox/*.bak_*
 _inbox/pane_export_archive/
 files/CLAUDE_md_*.md
 can-it-ford/
+.claude/settings.json.bak*
+.claude/hooks/*.bak
+_inbox/
+_ARCHIVE_*
