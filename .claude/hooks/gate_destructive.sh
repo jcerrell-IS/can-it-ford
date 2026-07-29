@@ -8,6 +8,9 @@ case "$CMD" in
   *"git push"*)
     echo '{"hookSpecificOutput":{"permissionDecision":"ask","permissionDecisionReason":"Rule 16: push needs explicit confirmation, every time."}}'
     ;;
+  *"git commit"*)
+    echo '{"hookSpecificOutput":{"permissionDecision":"ask","permissionDecisionReason":"Any commit needs explicit confirmation before it runs, same as push."}}'
+    ;;
   *"rm -rf"*|*"rm -r "*)
     echo '{"hookSpecificOutput":{"permissionDecision":"ask","permissionDecisionReason":"Recursive delete. Confirm the target path first."}}'
     ;;

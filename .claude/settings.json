@@ -12,6 +12,20 @@
       "Bash(git log*)",
       "Bash(git diff*)",
       "Bash(git fetch*)"
+    ],
+    "deny": [
+      "Read(PROVISIONAL_STATUS.md)",
+      "Read(vehicle_geometry_research/yaris_sedan_watertight_DEPRECATED_lowres_do_not_use.ply)",
+      "Read(reference_data/vehicle_data_master_reference_2026-07-21.json.OLD-4906B)",
+      "Read(data/track1_sweep_v3/**)",
+      "Read(docs/session_notes/2026-07-16_l1_l2_dxv_crossref.md)",
+      "Read(files/CLAUDE_md_*_july13.md)",
+      "Read(reference_docs/briefing_vault/00_MASTER_CORRECTIONS_INDEX.md)",
+      "Read(reference_data/MPM_Flood-Vehicle_Reference_Data__Sedan__SUV__Pickup__NEON_TABLE_SUPERSEDED.md)",
+      "Read(designsafe-staging/**)",
+      "Read(can-it-ford/**)",
+      "Read(**/*_DEPRECATED*)",
+      "Read(**/*_SUPERSEDED*)"
     ]
   },
   "hooks": {
@@ -43,6 +57,15 @@
           }
         ],
         "matcher": "Edit|Write"
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/hooks/gate_protected_files.sh"
+          }
+        ],
+        "matcher": "Read"
       }
     ],
     "SessionStart": [

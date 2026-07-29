@@ -36,20 +36,76 @@ MPM, n_grid = 64. This is the Track 1 box-proxy sweep, not the Genesis SPH pilot
 
 ## Known limitations of this schema
 
-- CONFIRMED BLOCKING (verified and reproduced 2026-07-23, not a suspicion): the
-  failure-mode classifier rejects all 36 rows of this sweep. Each per-run timeseries
-  (`{run_id}_timeseries.csv`, sibling to this manifest) carries only
-  `t,dx,dy,dz,dmag,yaw_deg,pitch_deg,roll_deg`. `simulation/failure_modes.py` requires
-  `t,dx,dy,dz,vx,vy,vz` (its REQUIRED_COLUMNS, line 20), so `classify_manifest()` raises
-  `MissingKinematicsError` on every row with its own message: "missing ['vx', 'vy', 'vz'].
-  This timeseries predates the FloodHistory.to_csv velocity columns; net force cannot be
-  computed from it. Regenerate the run." No SLIDE / TOPPLE / FLOAT classification is
-  possible from this sweep, so no failure-mode result can go on the poster or in the paper.
-- CONCRETE UNBLOCK: make the sweep's per-run writer (FloodHistory.to_csv) emit vx, vy, vz
-  per frame, then re-run all 36 cells so each `{run_id}_timeseries.csv` includes them.
-  Adding columns to this manifest.csv is not enough: the classifier reads the per-run
-  timeseries, not the manifest. This is the single change that unblocks failure-mode
-  classification; nothing else in the pipeline needs to move for it.
+### CONFIRMED BLOCKING: no failure-mode classification is possible from this sweep
+
+Status: confirmed finding, not a suspicion. First reproduced 2026-07-23, re-verified
+against the live files 2026-07-25. 36 of 36 rows rejected, 0 classifiable.
+
+What the FloodScene sweep writes. Every cell is produced by
+`scripts/ford_sweep_driver.py`, which imports `FloodScene` from `warpmpm.vehicle`
+(line 169) and persists the run with `history.to_csv(...)` (line 243). That writer emits
+exactly one header for every cell:
+
+    t,dx,dy,dz,dmag,yaw_deg,pitch_deg,roll_deg
+
+Verified live 2026-07-25: all 36 `{run_id}_timeseries.csv` files in this directory exist,
+and `sort -u` over their header rows returns that single line, no variants.
+
+What the classifier demands. `simulation/failure_modes.py` sets
+`REQUIRED_COLUMNS = ("t", "dx", "dy", "dz", "vx", "vy", "vz")` at line 20, and
+`load_timeseries()` gates on it at lines 106 to 111 before any physics runs.
+
+The rejection. Every one of the 36 manifest rows resolves to an existing timeseries file,
+so this is NOT a "timeseries missing" failure. Each file then fails the kinematics gate
+with an identical missing set, `['vx', 'vy', 'vz']`, and `classify_manifest()` records the
+classifier's own message per row:
+
+    missing ['vx', 'vy', 'vz']. This timeseries predates the FloodHistory.to_csv
+    velocity columns; net force cannot be computed from it. Regenerate the run.
+
+Counts, reproduced 2026-07-25 over `manifest.csv` plus all sibling timeseries: 36 rows in,
+0 timeseries missing on disk, 36 rejected at the `REQUIRED_COLUMNS` gate, 0 reaching
+`classify_kinematics()`. `get_vehicle()` resolves `compact_sedan`, `light_pickup`, and
+`midsize_suv` and each carries an `ssf`, so the classifier does not die earlier for an
+unrelated reason: it reaches the kinematics gate and is turned away there.
+
+Downstream consequence. Zero STUCK / SLIDE / TOPPLE / FLOAT verdicts exist for this
+sweep. `final_disp_m`, `final_yaw_deg`, and `final_roll_deg` (columns 20 to 22) are
+end-state scalars, not a failure-mode label, and cannot be substituted for one. No
+failure-mode result from v2 can go on the poster or in the paper.
+
+### The data is captured but discarded at write time
+
+Sharpening the above, from `citations/vehicle(kks32).py` (the local copy of the writer):
+`FloodHistory.append()` already stores per-frame linear velocity and angular velocity,
+`self.v.append(state["v"])` and `self.omega.append(state["omega"])` at lines 207 to 208,
+and `arrays()` exposes both at lines 217 to 218. `to_csv()` at lines 221 to 227 then
+column-stacks only t, displacement, displacement magnitude, and the three Euler angles,
+so v and omega are dropped on the way to disk.
+
+This is a writer-side omission of already-computed state, not missing instrumentation.
+The velocity was in memory during every one of the 36 runs and was never persisted.
+
+Caveat on what was checked where: `warpmpm` is not installed on the Mac, so the deployed
+module was not read directly. The evidence that the deployed writer matches this copy is
+that the header string literal at line 226 is byte-identical to the header found in all 36
+files on disk.
+
+### CONCRETE UNBLOCK
+
+1. Extend `FloodHistory.to_csv` to emit `vx,vy,vz` from `arrays()["v"]`. Emit `wx,wy,wz`
+   from `arrays()["omega"]` in the same edit: those are the classifier's optional
+   `OMEGA_COLUMNS` (line 21), they are absent from all 36 current files, and without them
+   `kinematics_from_columns()` silently substitutes a zero omega array. Adding them costs
+   nothing now and avoids a second re-run later.
+2. Re-run all 36 cells. The fix is not retroactive: the existing files cannot be repaired,
+   because the velocity was never written.
+
+Adding columns to this `manifest.csv` does not help. The classifier reads the per-run
+timeseries, not the manifest. This is the single change that unblocks failure-mode
+classification, and nothing else in the pipeline has to move for it.
+
+### Other limitations
 - Retention for reported results: 24 density-plausible cells, further reduced to 21
   fully trustworthy after excluding 3 under-resolved single-layer pickup cells at
   depth 0.15 m. See paper_draft.md Section 4.3.
