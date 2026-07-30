@@ -1,0 +1,18 @@
+======================================================================
+g64  flood_vehicle_laneR_yaris
+  h 0.073606526  floor 0.441639  n_water 23532  water_vol 9.3844 m3
+  local_depth  f0 -0.05252  peak 0.30771 @frame 38  final 0.13063  median 0.23688
+  local_depth / h at peak  = 4.18 layers
+  oob_count total 0
+  water_in_veh_bbox_frac max 0.03706
+  veh_z_min start 0.441639  final 0.441639  rise 0.000000
+  particle span x 0.5488 to 8.8660   z 0.3879 to 1.9142
+======================================================================
+g128 yaris_v2_eta1e3_g128
+  h 0.036802859  floor 0.220817  n_water 225616  water_vol 11.2464 m3
+  local_depth  f0 0.16596  peak 0.43922 @frame 21  final 0.27284  median 0.38622
+  local_depth / h at peak  = 11.93 layers
+  oob_count total 0
+  water_in_veh_bbox_frac max 0.05661
+  veh_z_min start 0.220817  final 0.220817  rise 0.000000
+  particle span x 0.2745 to 8.7394   z 0.2099 to 1.6931

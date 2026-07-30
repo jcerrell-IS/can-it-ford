@@ -1,0 +1,6 @@
+rotated mesh extents [1.746378 4.28261  1.518008]
+particle  extents [1.692969 4.19562  1.472147]  h= 0.07360736280679703
+particle bbox lo [-0.836385 -2.104501  0.036804]  hi [0.856584 2.091118 1.508951]
+mesh-in-vehframe bbox lo [-0.873189 -2.141305  0.      ]  hi [0.873189 2.141305 1.518008]
+watertight True volume 3.542739
+CONTAINMENT bbox-match: 100.00% of 2000 sampled solid particles inside mesh
