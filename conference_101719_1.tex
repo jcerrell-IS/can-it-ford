@@ -1,0 +1,234 @@
+\documentclass[conference]{IEEEtran}
+\IEEEoverridecommandlockouts
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{xcolor}
+\usepackage{booktabs}
+
+% ---------------------------------------------------------------
+% FLAG / PLACEHOLDER: anything still needing a live check or a
+% decision from Josie before July 31. Renders in red so it cannot
+% be missed in the compiled PDF. Search \FLAG and \PLACEHOLDER
+% before final submission and delete every one.
+% ---------------------------------------------------------------
+\newcommand{\FLAG}[1]{\textcolor{red}{[FLAG: #1]}}
+\newcommand{\PLACEHOLDER}[1]{\textcolor{red}{[PLACEHOLDER: #1]}}
+
+\begin{document}
+
+\title{Can It Ford? Query-Conditioned, Physically Viable World Models for\\
+Autonomous-Vehicle Flood Traversability from Gaussian Splatting
+\thanks{This work was supported by the National Science Foundation under NSF REU Site: Cyberinfrastructure Research for Societal Advancement (SCIPE-AI), Award \#2447887.}}
+
+\author{
+\IEEEauthorblockN{Josie Cerrell}
+\IEEEauthorblockA{
+Department of Integrated Sciences \\
+Claremont McKenna College \\
+SCIPE-AI Research Experience for Undergraduates \\
+Texas Advanced Computing Center, The University of Texas at Austin \\
+\PLACEHOLDER{jcerrell29@cmc.edu or preferred contact email}
+}
+}
+
+\maketitle
+
+% =================================================================
+% ABSTRACT
+% Locked, Kumar-approved, June 18 (CanItFord_Abstract_FINAL.docx).
+% Reflowed into one continuous paragraph, no internal bold labels,
+% since IEEE abstracts do not use run-in headers. No wording
+% changed beyond removing the Background/Objective/etc. labels.
+% =================================================================
+\begin{abstract}
+Flooded roads are a leading cause of vehicle fatalities each year, killing drivers who cannot judge how deep the water is, how fast it moves, or what the road beneath it is doing. Neither human drivers nor automated vehicles can read these things from appearance alone. World models that predict only appearance inherit the same limitation, since they can render an outcome that looks plausible but is physically wrong. This motivates physically viable world models, which preserve the latent physics that actually governs what happens when a vehicle enters floodwater. This project asks a deliberately narrow question: can an autonomous vehicle ford a specific flooded road? It then identifies the simplest physical abstraction sufficient to answer that query reliably, rather than the most detailed simulation that can be built. We reconstruct a flooded-road scene using 3D Gaussian splatting (gsplat). Following PhysGaussian, the Gaussian kernels seed a continuum representation that initializes a Material Point Method (MPM) simulation in the Genesis physics engine, where rigid-MPM coupling allows a rigid vehicle to interact with weakly compressible floodwater. We compare three levels of physical fidelity: a static depth threshold, a depth-velocity stability criterion, and, where it can be stabilized within the project timeline, a full coupled MPM simulation. Where feasible, we expect the coupled model to reproduce empirical instability thresholds, with buoyancy near published float depths and sliding governed by the depth-velocity product. Our central claim is that the minimal sufficient abstraction is query-dependent: a simple threshold suffices for deep, still water, while fast, shallow flow requires the coupled model to return the correct answer. This work delivers a reconstruct-to-decide pipeline and a concrete instantiation of query-conditioned, physically viable world models, and a small, testable step toward autonomous systems that can physically reason about a hazard before committing to it.
+\end{abstract}
+
+\begin{IEEEkeywords}
+physically viable world models, Gaussian splatting, Material Point Method, flood traversability, autonomous vehicles, abstraction selection
+\end{IEEEkeywords}
+
+% =================================================================
+% I. INTRODUCTION
+% =================================================================
+\section{Introduction}
+
+Flooded roads kill more people in the United States each year than any other flood-related hazard, and most of those deaths involve a vehicle driven into water whose depth, flow velocity, or submerged road condition could not be judged from the surface \cite{nws_tadd}. This is not only a human-driver problem. An autonomous vehicle facing the same scene has the same information gap, and a world model that predicts only visual appearance can render a plausible-looking outcome that is physically wrong: it may show a vehicle continuing forward with no indication that the same maneuver would, in reality, cause loss of traction or flotation.
+
+Physically viable world models (PVWM) address this by preserving the latent physics that governs an action's outcome rather than only its appearance \cite{thorpe2026pvwm}. The PVWM framework identifies automatic abstraction selection, choosing how much physical fidelity a given query actually requires, as a central open problem, and leaves the orchestrator that would make that choice unimplemented \cite{thorpe2026pvwm}.
+
+This project instantiates that orchestrator for one deliberately narrow query: \emph{can this specific autonomous vehicle ford this specific flooded road right now?} Rather than building the highest-fidelity simulation possible, the goal is to identify the simplest physical abstraction sufficient to answer that query correctly, and to characterize where a cheaper abstraction silently gives the wrong answer. Figure~\ref{fig:pipeline} summarizes the full reconstruct-to-decide pipeline this paper describes.
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=0.92\textwidth]{pipeline_diagram.pdf}
+\caption{The reconstruct-to-decide pipeline: a real video is reconstructed as a Gaussian splat, bridged to Material Point Method particles following PhysGaussian, simulated in Genesis with rigid-fluid coupling, and resolved to a FORD/NO-FORD verdict by the L0/L1/L2 abstraction orchestrator.}
+\label{fig:pipeline}
+\end{figure*}
+
+The remainder of this paper is organized as follows. Section~\ref{sec:prior} reviews prior flood-vehicle stability work and the reconstruction and simulation methods this project builds on. Section~\ref{sec:approach} describes the pipeline and the three-level abstraction ladder in detail. Section~\ref{sec:results} presents current results. Section~\ref{sec:conclusions} concludes. Section~\ref{sec:future} outlines future work.
+
+% =================================================================
+% II. PRIOR WORK
+% =================================================================
+\section{Prior Work}
+\label{sec:prior}
+
+\subsection{Flood-Vehicle Stability Criteria}
+Two families of empirical criteria describe when floodwater destabilizes a vehicle. The Australian Rainfall and Runoff (AR\&R) Project 10 guidelines define a depth-velocity hazard scalar, $H = D \times V$ (m\textsuperscript{2}/s), with published class-specific thresholds \cite{shand2011arr}. Smith, Modra, and Felder report full-scale flotation and sliding stability curves derived from physical vehicle testing \cite{smithmodrafelder2019}. Both are scalar, single-number criteria: neither represents the direction of applied force, and neither was derived to predict the persistent lateral drift this project observes at some phase-space points (Section~\ref{sec:results}).
+
+\subsection{Physics-Grounded Scene Reconstruction}
+3D Gaussian Splatting (3DGS) reconstructs a photorealistic, explicit scene representation from ordinary multi-view video \cite{kerbl20233dgs}. PhysGaussian extends this representation with physical simulation by treating each Gaussian kernel's covariance as a seed for a continuum Material Point Method (MPM) particle volume, allowing a trained splat to drive a physics simulation directly rather than only a renderer \cite{xie2023physgaussian}. The simulation itself runs in Genesis, an open-source, solver-agnostic physics engine \cite{genesis2024}. \FLAG{No publicly available, drop-in flood-video-to-Genesis-MPM pipeline exists as of this writing; PhysGaussian's own reference implementation targets a Warp MPM solver, not Genesis. Confirm this framing is still accurate before submission.}
+
+\subsection{Why a Single Scalar Threshold Is Insufficient}
+Both L0 and L1 are deterministic functions of published thresholds, not simulation output: L0 applies a single fixed depth cutoff \cite{nws_tadd}, and L1 applies the AR\&R two-part depth-and-hazard criterion per vehicle class \cite{shand2011arr}. Evaluating both across the same depth-velocity grid, Fig.~\ref{fig:l0l1} shows that L0 alone is markedly over-conservative, and that AR\&R's own published per-class caps (Fig.~\ref{fig:threeclass}) already diverge from one another well before any coupled simulation enters the picture. Neither figure required simulated data to produce; both are direct evaluations of cited formulas and are included here to motivate why a coupled physical model is worth the added cost.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{l0l1_two_rules_v2.pdf}
+\caption{L0 (fixed depth threshold) versus L1 (AR\&R depth-velocity hazard scalar) across 70 (depth, velocity) scenarios. Both panels are direct evaluations of published formulas \cite{nws_tadd,shand2011arr}, not simulation output. Orange circles mark the 30 scenarios where L1 permits crossing but L0 alone would not.}
+\label{fig:l0l1}
+\end{figure}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{L1_three_class_corrected.png}
+\caption{The L1 criterion evaluated per AR\&R's own three published vehicle classes \cite{shand2011arr}: small passenger, large passenger, and large 4WD. These do not correspond to the sedan/SUV/pickup NHTSA/SAE classes used for the diagnostic vehicle asset in Table~\ref{tab:vehicle}; where this paper reports results tied to AR\&R's own classes, it uses the watertight-hull mass-override method described in Section~\ref{sec:approach}C, not the silhouette splat.}
+\label{fig:threeclass}
+\end{figure}
+
+\subsection{Forward and Inverse Property Estimation}
+Hsiao and Kumar demonstrate the inverse direction of this same reconstruction-to-physics pipeline: given only visual observation, a NeRF-based reconstruction paired with Bayesian optimization recovers a granular material's friction angle to within roughly two degrees of ground truth \cite{hsiao2025nerfmpm}. This project addresses the complementary forward direction: given a known scene and known flood hydraulic conditions, what is the traversability verdict under full fluid-rigid-body dynamics? Together, the two directions describe a closed perception-to-action loop, one of the auditability properties PVWM requires \cite{thorpe2026pvwm}.
+
+% =================================================================
+% III. APPROACH
+% =================================================================
+\section{Approach}
+\label{sec:approach}
+
+\subsection{Pipeline}
+The reconstruct-to-decide pipeline (Fig.~\ref{fig:pipeline}) has four stages: (1) a real flooded or water-adjacent road scene is captured on video and reconstructed in 3D via Gaussian splatting on an NVIDIA A100 GPU (TACC Lonestar6); (2) following the PhysGaussian extraction pattern, trained Gaussian kernels are opacity-filtered and converted into an initial MPM particle volume; (3) the particle volume, together with a rigid-body vehicle proxy, is simulated in the Genesis physics engine using weakly-compressible MPM water and rigid-MPM coupling; (4) the simulation's displacement output is passed through a query-conditioned abstraction-selection orchestrator, \texttt{orchestrate\_ford\_query()}, which returns a FORD/NO-FORD verdict at the cheapest level of fidelity sufficient to answer correctly.
+
+\subsection{Three-Level Abstraction Ladder}
+Three levels of physical fidelity are compared directly against one another on the same phase-space grid of (depth, velocity) conditions, summarized in Table~\ref{tab:ladder}.
+
+\begin{table}[t]
+\caption{Abstraction Ladder Definitions}
+\label{tab:ladder}
+\centering
+\begin{tabular}{@{}p{0.3in}p{0.55in}p{2.25in}@{}}
+\toprule
+\textbf{Level} & \textbf{Basis} & \textbf{Definition} \\
+\midrule
+L0 & Depth & Fixed depth cutoff ($\approx$0.15\,m \cite{nws_tadd}), independent of velocity or vehicle class. \\
+L1 & $D\times V$ & $H = D \times V$ vs.\ class threshold (0.60\,m\textsuperscript{2}/s, 4WD default) \cite{shand2011arr}. $V$ is flow velocity, not vehicle speed; mass and force direction are not represented. \\
+L2 & MPM & Genesis rigid-MPM simulation; NO-FORD when lateral drift exceeds a threshold. \FLAG{Threshold currently 0.05\,m with no independent citation; being reframed relative to Smith-Modra-Felder (2019) Eq.~6.} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+This instantiates the orchestrator PVWM leaves unimplemented: the empirical L1/L2 divergence zone characterized in Section~\ref{sec:results} defines the escalation boundary at which L1 alone is not sufficient and the query must be answered at L2.
+
+A first-principles force balance motivates why L1's scalar hazard measure is expected to be insufficient in the first place. Fig.~\ref{fig:force} plots lateral hydrodynamic drag force against maximum available static friction at several water depths (left), and the resulting critical velocity above which drag is predicted to exceed friction, as a function of depth (right). \FLAG{Confirm the drag coefficient, frontal area, and friction coefficient used to generate this figure are the same cited values used elsewhere in the paper (Azhar et al. 2023 range for $\mu$) before submission, and cite the drag-force equation this figure is built from explicitly in the caption or body text.}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{force_balance.png}
+\caption{Analytical force-balance calculation, not simulation output. Left: lateral drag force versus flow velocity at four water depths, against the maximum static friction limit (dashed). Right: the resulting critical velocity, above which drag exceeds friction, as a function of depth. \PLACEHOLDER{cite the specific drag/friction equation and coefficient values used before submission.}}
+\label{fig:force}
+\end{figure}
+
+\subsection{Vehicle and Scene Representation}
+The vehicle asset used to find and root-cause this project's grid-resolution solidification defect is a rigid body solidified from a surface Gaussian splat (\texttt{truck\_trimmed.ply}, 191{,}107 points, no interior), used because no watertight simulation-ready mesh existed in the pipeline at the time. Three vehicle classes (sedan, SUV, pickup) are each a single rescaled base silhouette stretched to that class's real bounding-box dimensions from NHTSA/SAE reference data \cite{heydinger1999sae}. This is stated explicitly as a limitation, not glossed over: all three classes share one silhouette, so cross-class comparisons involving this asset reflect scaled mass and footprint, not distinct vehicle geometry.
+
+Solidifying a surface point cloud into a filled rigid body is grid-resolution-dependent in a way that is easy to miss. At MPM grid resolution \texttt{n\_grid=64}, the column-fill solidification step correctly produces a solid body and the three densities in Table~\ref{tab:vehicle} are recovered. At \texttt{n\_grid=128}, the same splat produces a hollow shell instead: verified directly in job 833349 (\texttt{ford\_sweep\_driver.py --config v3}, run July 15, 2026; documented in \texttt{docs/track1\_v3\_sweep\_invalid\_hollow\_vehicle.md}), particle count scaled 4.31$\times$ between the two resolutions rather than the 8$\times$ a solid body requires, and 0 of 60 test runs at \texttt{n\_grid=128} passed a density plausibility check (all three classes' apparent density roughly doubled, 1.84--1.87$\times$, a resolution artifact, not a physical effect). Water resolution and vehicle solidity are governed by different length scales for this asset, raising grid resolution helps the former and silently breaks the latter. \textbf{Table~\ref{tab:vehicle}'s densities hold only at \texttt{n\_grid=64}} and must not be read across to any higher-resolution run without re-solidifying the vehicle by a decoupled method first. This also settles, rather than merely defers, the question of testing 0.05\,m depth: at \texttt{n\_grid=64} it seeds zero water particle layers for the pickup class, and at \texttt{n\_grid=128} the vehicle itself is invalid, so 0.05\,m is not reachable with this asset at any grid setting tested.
+
+The candidate fix this diagnosis points to, moving to a true watertight mesh rather than re-tuning the solidification pitch, is what the project adopted for vehicle representation tied to AR\&R's own classes. A crash-validated, watertight 2010 Toyota Yaris hull (\texttt{yaris\_coarse\_v1l\_watertight.ply}; mass 1100\,kg from the LS-DYNA deck header, \texttt{Version 1l, 1100 kg}) replaces the single rescaled silhouette with one real, watertight geometry, and vehicle class is expressed as an explicit mass override on that same geometry rather than as three separate meshes (\texttt{renders/yaris\_render\_s1/gates\_both\_scenarios.py}): \texttt{small\_passenger} at 1100\,kg, \texttt{large\_passenger} at 1609\,kg, and \texttt{large\_4wd} at 2337\,kg, matching AR\&R's own three classes directly \cite{shand2011arr}. This resolves the class-mapping question in Fig.~\ref{fig:threeclass}: AR\&R's classes do not map onto the sedan/SUV/pickup NHTSA/SAE classes used for the diagnostic asset in Table~\ref{tab:vehicle} at all; they are a separate three-mass study on one watertight hull, kept deliberately distinct from the silhouette-based diagnostic above. This mass-override asset and method, not the silhouette splat, is what any AR\&R-class-linked simulation result in this paper is run on.
+
+\begin{table}[t]
+\caption{Vehicle Class Density at \texttt{n\_grid=64} (Only Valid Grid Setting)}
+\label{tab:vehicle}
+\centering
+\begin{tabular}{@{}p{0.7in}p{0.95in}p{1.1in}@{}}
+\toprule
+\textbf{Class} & \textbf{Density (kg/m\textsuperscript{3})} & \textbf{In heuristic band?} \\
+\midrule
+Sedan & 293.55 & Yes \\
+Pickup & 242.12 & Yes \\
+SUV & 308.13 & No (2.7\% over, left as-is) \\
+\bottomrule
+\end{tabular}
+\\[2pt]
+{\footnotesize Verified against \texttt{docs/track1\_v3\_sweep\_invalid\_hollow\_vehicle.md}. Values are not meaningful at \texttt{n\_grid=128} (see body text).}
+\end{table}
+
+% =================================================================
+% IV. RESULTS
+% =================================================================
+\section{Results}
+\label{sec:results}
+
+\subsection{Scene Reconstruction Status}
+Structure-from-motion reconstruction (COLMAP) is complete for one real scene (``Drain A''), confirmed via a populated sparse point cloud and camera pose set on TACC Vista scratch storage. \FLAG{Gaussian-splat checkpoint training from this reconstruction, which runs separately on LS6, has not been confirmed complete as of this draft. Do not describe Drain A as a fully trained, simulation-ready splat until that is verified live. A second scene (``Drain B'') has not yet been captured or reconstructed.}
+
+\subsection{Synthetic-Geometry Pilot Study}
+An early parametric comparison of L1 against a Genesis SPH solver (\texttt{data/l2\_results\_from\_wandb.csv}) covers 9 unique (depth, velocity) conditions. L1 and L2 agreed at 5 of 9 (55.6\%). The 4 divergence points, where L1 returned FORD but L2 returned NO-FORD, were (0.30\,m, 1.5\,m/s), (0.15\,m, 1.5\,m/s), (0.30\,m, 1.0\,m/s), and (0.30\,m, 2.0\,m/s). \FLAG{A previous draft of this subsection cited 23 pairs, 16 divergence points, and 30.4\% agreement. Those specific numbers do not match this file (9 pairs, 4 divergences, 55.6\% agreement) and were never traced to a source file before being written; treat them as unverified and superseded by the numbers above, which are read directly from the CSV. A separate file, \texttt{data/phase\_space\_results.csv}, has 23 unique (depth, velocity) pairs matching the old claim's pair count, but carries only a single verdict column with no corresponding L1 value, so an agreement rate cannot be computed from it, and 15 of its 31 rows share a condition with another row under a different verdict (e.g., three separate (0.30\,m, 1.5\,m/s) runs returned FORD, NO-FORD, and NO-FORD with three different displacements), so it is not run-labeled cleanly enough to use as-is either. Before final submission: either reconcile which file (and which L1 calculation) produced the original 23/16/30.4\% claim, or report only the verified 9-pair result above.}
+
+A separate 4-point friction sweep at the (0.30\,m, 1.5\,m/s) divergence point (\texttt{data/mu\_sweep\_results.csv}) shows lateral displacement of 0.399, 0.3957, and 0.3953\,m at coupling friction $\mu = 0.3, 0.5, 0.7$ respectively, essentially invariant across that range. At $\mu = 0.0$, displacement drops to 0.3283\,m, a real difference, not noise. \FLAG{A previous draft described this as ``friction-invariant across $\mu=0.0$ to $0.7$.'' That overstates it: invariance holds from $\mu=0.3$ to $0.7$; $\mu=0.0$ is measurably lower. The qualitative point, that a scalar hazard measure cannot represent this directional force, still stands, but state the range precisely. This is also only 4 points at a single condition; do not generalize beyond it without more data.}
+
+Pending a fully reconciled dataset, Fig.~\ref{fig:l2schematic} remains an explicitly labeled schematic, not a plotted result, showing only the conceptual shape of the claim. Do not remove the ``SCHEMATIC'' watermark until it is replaced by a figure built from the verified 9-point dataset above or a larger confirmed re-run.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.85\linewidth]{l2_divergence_real_v2.png}
+\caption{Schematic illustration only, not measured or simulated data. Shows the conceptual region where the L1 hazard scalar is expected to disagree with a coupled L2 simulation; the verified 9-point pilot (Section~\ref{sec:results}A) supports the same qualitative shape.}
+\label{fig:l2schematic}
+\end{figure}
+
+\subsection{Real-Simulation Sweep}
+A second, larger sweep (\texttt{data/track1\_sweep\_v2/manifest.csv}, committed July 16, 2026) uses the density-corrected \texttt{truck\_trimmed.ply} asset at the only valid grid setting, \texttt{n\_grid=64}. It contains 36 runs, 12 each for the sedan, SUV, and pickup classes, spanning the full depth$\times$velocity grid $\{0.15, 0.30, 0.45, 0.60\}$\,m $\times\ \{1.0, 1.5, 2.0\}$\,m/s; every run reports \texttt{plateaued\_ok=True}. This is confirmed, by direct read, to be the same 36-run ``v2'' sweep referred to in prior project notes, and it is a separate, non-overlapping dataset from the watertight-Yaris mass-override method introduced in Section~\ref{sec:approach}C (\texttt{renders/yaris\_render\_s1/}): neither cites nor is cited by \texttt{track1\_sweep\_v2} anywhere in the repository. Final lateral displacement ranges 0.020--1.826\,m for the pickup class, 0.055--1.777\,m for the sedan class, and 0.057--1.445\,m for the SUV class; density plausibility holds for sedan (293.55\,kg/m\textsuperscript{3}) and pickup (242.12\,kg/m\textsuperscript{3}) but not SUV (308.13\,kg/m\textsuperscript{3}, 2.7\% over band), matching Table~\ref{tab:vehicle}. A separate, later attempt at this sweep using \texttt{n\_grid=128} is confirmed invalid: the vehicle solidifies as a hollow shell at that resolution (Section~\ref{sec:approach}C), and its output must never be cited as a result. \FLAG{A clean L1-vs-L2 agreement rate cannot yet be computed from this sweep: doing so requires assigning each of these three NHTSA/SAE classes (sedan/SUV/pickup) to one of AR\&R's own three classes (small passenger/large passenger/large 4WD) for the L1 comparison, which is the same class-mapping question flagged in Fig.~\ref{fig:threeclass}'s caption, and requires the L2 drift threshold, which Table~\ref{tab:ladder} already flags as uncited. Resolve both before reporting an agreement number from this sweep.}
+
+% =================================================================
+% V. CONCLUSIONS
+% =================================================================
+\section{Conclusions}
+\label{sec:conclusions}
+
+The synthetic-geometry pilot demonstrates, as a proof of concept, that a scalar depth-velocity hazard measure can disagree substantially with a coupled physical simulation, and that the disagreement is structural rather than a calibration artifact: no choice of coupling friction closes the gap at the divergence points identified in Section~\ref{sec:results}. This supports treating abstraction selection as query-dependent rather than assuming any single fixed-fidelity model is correct everywhere in the operating envelope. \FLAG{This is the pilot-study conclusion. Do not upgrade this to a claim about the real reconstructed scene until the real-scene sweep in Section~\ref{sec:results} is verified and the vehicle mesh/density limitation is either resolved further or explicitly scoped as a stated limitation.}
+
+% =================================================================
+% VI. FUTURE WORK
+% =================================================================
+\section{Future Work}
+\label{sec:future}
+
+Several concrete extensions were identified during this project and are listed here roughly in order of expected impact relative to effort.
+
+\begin{itemize}
+\item \textbf{Crash-validated vehicle geometry.} NHTSA/NCAC publishes free, government-funded, crash-validated finite-element vehicle models (e.g., a 2010 Toyota Yaris sedan and a 2007 Chevrolet Silverado pickup) with real validated mass distribution, available in LS-DYNA keyword format and convertible to a simulation-ready collision mesh. This would replace the single-silhouette box proxy with genuinely distinct, citable vehicle geometry per class.
+\item \textbf{Physical-viability audit dashboard.} A direct instantiation of PVWM's ``physically viable'' criterion: automated checks for mass conservation, momentum conservation, MPM Jacobian/volume-ratio bounds, zero-penetration contact, and energy monotonicity, applied to every run rather than asserted informally.
+\item \textbf{Failure-mode classification with violation magnitude.} An explicit failure-mode hierarchy (stuck, slide, topple, float) reported with the magnitude by which a run crosses each threshold, rather than a binary verdict.
+\item \textbf{Graph Network Simulator (GNS) surrogate.} A lightweight GNS trained on the completed simulation sweep as a fast surrogate for untested (depth, velocity, vehicle-class) combinations, connecting the L0/L1/L2 ladder to a learned, still physically-grounded fourth level.
+\item \textbf{A second independently-sourced real scene.} \FLAG{Verify exact citation and public availability of the FRED flooded-road dataset before including it as a committed future-work item rather than a candidate.}
+\item \textbf{DesignSafe-CI dataset publication.} Publish the validated real-scene dataset and simulation outputs with a DOI once the real-scene sweep is verified, rather than publishing the synthetic pilot data.
+\end{itemize}
+
+% =================================================================
+% ACKNOWLEDGMENT
+% =================================================================
+\section*{Acknowledgment}
+This work was supported by the National Science Foundation under NSF REU Site: Cyberinfrastructure Research for Societal Advancement (SCIPE-AI), Award \#2447887, hosted at the Texas Advanced Computing Center (TACC), The University of Texas at Austin. The author thanks faculty mentor Dr.\ Krishna Kumar and research mentors Hassan Iqbal, Cheng-Hsi Hsiao, and Cristian Moran for their guidance throughout this project, and Rosalia Gomez for program coordination and support.
+
+% =================================================================
+% REFERENCES
+% Uses BibTeX + IEEEtran.bst, matching the Zotero/Better-BibTeX
+% auto-export pipeline. The official Overleaf gallery IEEE template
+% does not ship IEEEtran.bst by default; upload the one provided
+% alongside this file, or references will not resolve.
+% =================================================================
+\bibliographystyle{IEEEtran}
+\bibliography{can_it_ford_references_IEEE}
+
+\end{document}
