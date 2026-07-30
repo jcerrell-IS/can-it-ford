@@ -29,7 +29,7 @@ Department of Integrated Sciences \\
 Claremont McKenna College \\
 SCIPE-AI Research Experience for Undergraduates \\
 Texas Advanced Computing Center, The University of Texas at Austin \\
-\PLACEHOLDER{jcerrell29@cmc.edu or preferred contact email}
+jcerrell29@cmc.edu
 }
 }
 
@@ -55,11 +55,11 @@ physically viable world models, Gaussian splatting, Material Point Method, flood
 % =================================================================
 \section{Introduction}
 
-Flooded roads kill more people in the United States each year than any other flood-related hazard, and most of those deaths involve a vehicle driven into water whose depth, flow velocity, or submerged road condition could not be judged from the surface \cite{nws_tadd}. This is not only a human-driver problem. An autonomous vehicle facing the same scene has the same information gap, and a world model that predicts only visual appearance can render a plausible-looking outcome that is physically wrong: it may show a vehicle continuing forward with no indication that the same maneuver would, in reality, cause loss of traction or flotation.
+Flooded roads kill more people in the United States each year than any other flood-related hazard, and most of those deaths involve a vehicle driven into water whose depth, flow velocity, or submerged road condition could not be judged from the surface \cite{nws_tadd}. This is not only a human-driver problem. An autonomous vehicle facing the same scene has the same information gap, and a world model that predicts only visual appearance can render a plausible-looking outcome that is physically wrong: it may show a vehicle continuing forward with no indication that the same maneuver would cause loss of traction or flotation.
 
 Physically viable world models (PVWM) address this by preserving the latent physics that governs an action's outcome rather than only its appearance \cite{thorpe2026pvwm}. The PVWM framework identifies automatic abstraction selection, choosing how much physical fidelity a given query actually requires, as a central open problem, and leaves the orchestrator that would make that choice unimplemented \cite{thorpe2026pvwm}.
 
-This project instantiates that orchestrator for one deliberately narrow query: \emph{can this specific autonomous vehicle ford this specific flooded road right now?} Rather than building the highest-fidelity simulation possible, the goal is to identify the simplest physical abstraction sufficient to answer that query correctly, and to characterize where a cheaper abstraction silently gives the wrong answer. Figure~\ref{fig:pipeline} summarizes the full reconstruct-to-decide pipeline this paper describes.
+This project instantiates that orchestrator for one deliberately narrow query: \emph{can this specific autonomous vehicle ford this specific flooded road right now?} Rather than building the highest-fidelity simulation possible, we identify the simplest physical abstraction sufficient to answer that query correctly, and characterize where a cheaper abstraction silently gives the wrong answer. Figure~\ref{fig:pipeline} summarizes the full reconstruct-to-decide pipeline.
 
 \begin{figure*}[t]
 \centering
@@ -68,8 +68,6 @@ This project instantiates that orchestrator for one deliberately narrow query: \
 \label{fig:pipeline}
 \end{figure*}
 
-The remainder of this paper is organized as follows. Section~\ref{sec:prior} reviews prior flood-vehicle stability work and the reconstruction and simulation methods this project builds on. Section~\ref{sec:approach} describes the pipeline and the three-level abstraction ladder in detail. Section~\ref{sec:results} presents current results. Section~\ref{sec:conclusions} concludes. Section~\ref{sec:future} outlines future work.
-
 % =================================================================
 % II. PRIOR WORK
 % =================================================================
@@ -77,13 +75,13 @@ The remainder of this paper is organized as follows. Section~\ref{sec:prior} rev
 \label{sec:prior}
 
 \subsection{Flood-Vehicle Stability Criteria}
-Two families of empirical criteria describe when floodwater destabilizes a vehicle. The Australian Rainfall and Runoff (AR\&R) Project 10 guidelines define a depth-velocity hazard scalar, $H = D \times V$ (m\textsuperscript{2}/s), with published class-specific thresholds \cite{shand2011arr}. Smith, Modra, and Felder report full-scale flotation and sliding stability curves derived from physical vehicle testing \cite{smithmodrafelder2019}. Both are scalar, single-number criteria: neither represents the direction of applied force, and neither was derived to predict the persistent lateral drift this project observes at some phase-space points (Section~\ref{sec:results}).
+Two families of empirical criteria describe when floodwater destabilizes a vehicle. The Australian Rainfall and Runoff (AR\&R) Project 10 guidelines define a depth-velocity hazard scalar, $H = D \times V$ (m\textsuperscript{2}/s), with published class-specific thresholds \cite{shand2011arr}. Smith, Modra, and Felder report full-scale flotation and sliding stability curves derived from physical vehicle testing \cite{smithmodrafelder2019}. Both are single-number criteria: neither represents the direction of applied force, and neither was derived to predict the persistent lateral drift this project observes at some phase-space points (Section~\ref{sec:results}).
 
 \subsection{Physics-Grounded Scene Reconstruction}
 3D Gaussian Splatting (3DGS) reconstructs a photorealistic, explicit scene representation from ordinary multi-view video \cite{kerbl20233dgs}. PhysGaussian extends this representation with physical simulation by treating each Gaussian kernel's covariance as a seed for a continuum Material Point Method (MPM) particle volume, allowing a trained splat to drive a physics simulation directly rather than only a renderer \cite{xie2023physgaussian}. The simulation itself runs in Genesis, an open-source, solver-agnostic physics engine \cite{genesis2024}. \FLAG{No publicly available, drop-in flood-video-to-Genesis-MPM pipeline exists as of this writing; PhysGaussian's own reference implementation targets a Warp MPM solver, not Genesis. Confirm this framing is still accurate before submission.}
 
 \subsection{Why a Single Scalar Threshold Is Insufficient}
-Both L0 and L1 are deterministic functions of published thresholds, not simulation output: L0 applies a single fixed depth cutoff \cite{nws_tadd}, and L1 applies the AR\&R two-part depth-and-hazard criterion per vehicle class \cite{shand2011arr}. Evaluating both across the same depth-velocity grid, Fig.~\ref{fig:l0l1} shows that L0 alone is markedly over-conservative, and that AR\&R's own published per-class caps (Fig.~\ref{fig:threeclass}) already diverge from one another well before any coupled simulation enters the picture. Neither figure required simulated data to produce; both are direct evaluations of cited formulas and are included here to motivate why a coupled physical model is worth the added cost.
+Both L0 and L1 are deterministic functions of published thresholds, not simulation output: L0 applies a single fixed depth cutoff \cite{nws_tadd}, and L1 applies the AR\&R two-part depth-and-hazard criterion per vehicle class \cite{shand2011arr}. We evaluate both across the same depth-velocity grid. Fig.~\ref{fig:l0l1} shows that L0 alone is markedly over-conservative, and that AR\&R's own published per-class caps (Fig.~\ref{fig:threeclass}) already diverge well before any coupled simulation is involved. Neither figure required simulated data; both are direct evaluations of cited formulas, and both motivate why a coupled physical model is worth the added cost.
 
 \begin{figure}[t]
 \centering
@@ -112,7 +110,7 @@ Hsiao and Kumar demonstrate the inverse direction of this same reconstruction-to
 The reconstruct-to-decide pipeline (Fig.~\ref{fig:pipeline}) has four stages: (1) a real flooded or water-adjacent road scene is captured on video and reconstructed in 3D via Gaussian splatting on an NVIDIA A100 GPU (TACC Lonestar6); (2) following the PhysGaussian extraction pattern, trained Gaussian kernels are opacity-filtered and converted into an initial MPM particle volume; (3) the particle volume, together with a rigid-body vehicle proxy, is simulated in the Genesis physics engine using weakly-compressible MPM water and rigid-MPM coupling; (4) the simulation's displacement output is passed through a query-conditioned abstraction-selection orchestrator, \texttt{orchestrate\_ford\_query()}, which returns a FORD/NO-FORD verdict at the cheapest level of fidelity sufficient to answer correctly.
 
 \subsection{Three-Level Abstraction Ladder}
-Three levels of physical fidelity are compared directly against one another on the same phase-space grid of (depth, velocity) conditions, summarized in Table~\ref{tab:ladder}.
+We compare three levels of physical fidelity on the same phase-space grid of (depth, velocity) conditions, summarized in Table~\ref{tab:ladder}.
 
 \begin{table}[t]
 \caption{Abstraction Ladder Definitions}
@@ -131,12 +129,12 @@ L2 & MPM & Genesis rigid-MPM simulation; NO-FORD when lateral drift exceeds a th
 
 This instantiates the orchestrator PVWM leaves unimplemented: the empirical L1/L2 divergence zone characterized in Section~\ref{sec:results} defines the escalation boundary at which L1 alone is not sufficient and the query must be answered at L2.
 
-A first-principles force balance motivates why L1's scalar hazard measure is expected to be insufficient in the first place. Fig.~\ref{fig:force} plots lateral hydrodynamic drag force against maximum available static friction at several water depths (left), and the resulting critical velocity above which drag is predicted to exceed friction, as a function of depth (right). \FLAG{Confirm the drag coefficient, frontal area, and friction coefficient used to generate this figure are the same cited values used elsewhere in the paper (Azhar et al. 2023 range for $\mu$) before submission, and cite the drag-force equation this figure is built from explicitly in the caption or body text.}
+A first-principles force balance motivates why L1's scalar hazard measure is expected to be insufficient. Fig.~\ref{fig:force} plots lateral hydrodynamic drag force against maximum available static friction at several water depths (left), and the resulting critical velocity above which drag is predicted to exceed friction, as a function of depth (right). \FLAG{Confirm the drag coefficient, frontal area, and friction coefficient used to generate this figure are the same cited values used elsewhere in the paper (Azhar et al. 2023 range for $\mu$) before submission, and cite the drag-force equation this figure is built from explicitly in the caption or body text.}
 
 \begin{figure}[t]
 \centering
 \includegraphics[width=\linewidth]{force_balance.png}
-\caption{Analytical force-balance calculation, not simulation output. Left: lateral drag force versus flow velocity at four water depths, against the maximum static friction limit (dashed). Right: the resulting critical velocity, above which drag exceeds friction, as a function of depth. \PLACEHOLDER{cite the specific drag/friction equation and coefficient values used before submission.}}
+\caption{Analytical force-balance calculation, not simulation output. Left: lateral drag force versus flow velocity at four water depths, against the maximum static friction limit (dashed). Right: the resulting critical velocity, above which drag exceeds friction, as a function of depth. The drag formulation behind this figure could not be recovered: no generating script for it survives in the project repository, so the drag coefficient and frontal area it assumes cannot be stated here. Read the curves as establishing the shape of the drag-versus-friction argument, not as a calibrated prediction.}
 \label{fig:force}
 \end{figure}
 
@@ -188,7 +186,17 @@ Pending a fully reconciled dataset, Fig.~\ref{fig:l2schematic} remains an explic
 \end{figure}
 
 \subsection{Real-Simulation Sweep}
-The coupled sweep supporting AR\&R-class-linked results is the gated inventory in \texttt{data/all\_runs\_inventory.csv}: 17 runs on the watertight Yaris hull (Section~\ref{sec:approach}C), not \texttt{track1\_sweep\_v2}, which is superseded and excluded per project policy. It comprises a 3$\times$3 mass-by-resolution block (9 runs, masses 1100/1609/2337\,kg directly matching AR\&R's small passenger/large passenger/large 4WD classes, no class-mapping needed, at \texttt{n\_grid} 48/64/96) fixed at depth 0.30\,m and velocity 1.5\,m/s, plus a three-point depth sweep and a five-point velocity sweep at \texttt{n\_grid}=64. Floor friction is held uniform at 0.55 across all 17 runs. 7 of the 17 runs exceed a 10\% particle-passthrough gate; these are flagged, not excluded. \FLAG{An L1-vs-L2 agreement rate from this sweep still requires the L2 drift threshold, which Table~\ref{tab:ladder} already flags as uncited; report displacement magnitudes only until that is resolved.}
+\label{subsec:sweep}
+The coupled sweep supporting AR\&R-class-linked results is the gated inventory in \texttt{data/all\_runs\_inventory.csv}: 17 runs on the watertight Yaris hull (Section~\ref{sec:approach}C), not \texttt{track1\_sweep\_v2}, which is superseded and excluded: that earlier 36-run sweep used a rescaled box proxy of 1390\,kg enclosing 4.7352\,m\textsuperscript{3}, against the real hull's 3.5427\,m\textsuperscript{3}. It comprises a 3$\times$3 mass-by-resolution block (9 runs, masses 1100/1609/2337\,kg directly matching AR\&R's small passenger/large passenger/large 4WD classes, no class-mapping needed, at \texttt{n\_grid} 48/64/96) fixed at depth 0.30\,m and velocity 1.5\,m/s, plus a three-point depth sweep and a five-point velocity sweep at \texttt{n\_grid}=64. Floor friction is held uniform at 0.55 across all 17 runs. 7 of the 17 runs exceed a 10\% particle-passthrough gate, reaching 15.9\% at 3.0\,m/s; these are flagged, not excluded. Water-layer depth resolution also varies across the block, from three layers at the coarsest grid to six at the finest, so the coarse-grid rows are the least trustworthy independent of their passthrough figure. \FLAG{An L1-vs-L2 agreement rate from this sweep still requires the L2 drift threshold, which Table~\ref{tab:ladder} already flags as uncited; report displacement magnitudes only until that is resolved.}
+
+Fig.~\ref{fig:masssweep} shows the mass-by-resolution block. Displacement falls monotonically as mass rises at every one of the three grid resolutions tested, so the \emph{direction} of the mass effect is consistent. The \emph{magnitude} is not: the three curves do not overlay, and the 48- and 64-cell curves cross between 1609 and 2337\,kg. The lightest-to-heaviest displacement ratio is non-monotonic in resolution across the three grids, so no single multiplier characterizes the mass effect and none is quoted here. Any mass-sensitivity claim from this work is therefore directional only, and treating it as a calibrated effect size would be unsupported.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{mass_grid_sweep_v2.pdf}
+\caption{The direct visual for the 3\,$\times$\,3 mass-by-resolution block described in Section~\ref{subsec:sweep}: coupled-MPM final displacement versus vehicle mass at three grid resolutions, from the nine \texttt{sweep=mass\_grid} rows of \texttt{data/all\_runs\_inventory.csv}. One hull, three AR\&R mass overrides, fixed depth 0.30\,m and velocity 1.5\,m/s. Displacement decreases with mass at every resolution, but the curves do not collapse onto one another and the 48- and 64-cell curves cross, so the effect size is not grid-converged; no ratio or multiplier is reported for this reason. Ringed markers exceed the 10\% particle-passthrough limit and are flagged rather than excluded; 7 of the 17 runs in the full inventory exceed it.}
+\label{fig:masssweep}
+\end{figure}
 
 % =================================================================
 % V. CONCLUSIONS
@@ -204,7 +212,7 @@ The synthetic-geometry pilot demonstrates, as a proof of concept, that a scalar 
 \section{Future Work}
 \label{sec:future}
 
-Several concrete extensions were identified during this project and are listed here roughly in order of expected impact relative to effort.
+We identified several concrete extensions, listed roughly in order of expected impact relative to effort.
 
 \begin{itemize}
 \item \textbf{Crash-validated vehicle geometry.} NHTSA/NCAC publishes free, government-funded, crash-validated finite-element vehicle models (e.g., a 2010 Toyota Yaris sedan and a 2007 Chevrolet Silverado pickup) with real validated mass distribution, available in LS-DYNA keyword format and convertible to a simulation-ready collision mesh. This would replace the single-silhouette box proxy with genuinely distinct, citable vehicle geometry per class.
