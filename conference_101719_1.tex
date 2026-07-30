@@ -120,12 +120,14 @@ We compare three levels of physical fidelity on the same phase-space grid of (de
 \toprule
 \textbf{Level} & \textbf{Basis} & \textbf{Definition} \\
 \midrule
-L0 & Depth & Fixed depth cutoff ($\approx$0.15\,m \cite{nws_tadd}), independent of velocity or vehicle class. \\
+L0 & Depth & Fixed depth cutoff, independent of velocity or vehicle class. NWS publishes two figures: 6\,in ($\approx$0.15\,m) of fast-moving water knocks over an adult, and 12\,in ($\approx$0.30\,m) carries away most cars \cite{nws_tadd}. We adopt the 0.15\,m pedestrian figure as a deliberately conservative vehicle bound rather than NWS's own 0.30\,m vehicle figure, since vehicle stability testing places small-car loss of traction close to 0.30\,m rather than well above it \cite{smithmodrafelder2019,azhar2023}. \\
 L1 & $D\times V$ & $H = D \times V$ vs.\ class threshold (0.60\,m\textsuperscript{2}/s, 4WD default) \cite{shand2011arr}. $V$ is flow velocity, not vehicle speed; mass and force direction are not represented. \\
-L2 & MPM & Genesis rigid-MPM simulation; NO-FORD when lateral drift exceeds a threshold. \FLAG{Threshold currently 0.05\,m with no independent citation; being reframed relative to Smith-Modra-Felder (2019) Eq.~6.} \\
+L2 & MPM & Genesis rigid-MPM simulation; NO-FORD when lateral drift exceeds 0.05\,m. That figure is a conservative numerical onset-of-motion detector internal to the solver, marking where the rigid body has left its initial pose by more than solver noise. It is not an empirical stability limit and is not offered as one; the sliding physics it is meant to catch is characterized experimentally elsewhere \cite{shah2018instability,xia2014criterion}. \\
 \bottomrule
 \end{tabular}
 \end{table}
+
+The L0 bound is consequential rather than cosmetic. Across the 70 (depth, velocity) scenarios of \texttt{data/scenario\_sweep.csv}, a 0.15\,m cutoff permits crossing in 7; NWS's own 0.30\,m vehicle figure would permit 21, three times as many.
 
 This instantiates the orchestrator PVWM leaves unimplemented: the empirical L1/L2 divergence zone characterized in Section~\ref{sec:results} defines the escalation boundary at which L1 alone is not sufficient and the query must be answered at L2.
 
