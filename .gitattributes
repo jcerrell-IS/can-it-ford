@@ -1,2 +1,10 @@
 figures/*.html linguist-generated=true
 *.html linguist-vendored=true
+* text=auto
+*.csv text eol=lf
+*.py text eol=lf
+*.md text eol=lf
+*.ply binary
+*.npz binary
+*.key -text
+*.k -text

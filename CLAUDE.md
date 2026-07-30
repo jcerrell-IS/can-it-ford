@@ -66,3 +66,19 @@ DEPRECATED, do not read or cite:
 - data/track1_sweep_v3/
 - docs/session_notes/2026-07-16_l1_l2_dxv_crossref.md
 - files/CLAUDE_md_*_july13.md
+- data/track1_sweep_v2/ — superseded box-proxy sweep (1390 kg box, 4.7352 m3
+  solid volume vs the real hull's 3.542739 m3). Not archived, because
+  analysis/gp_surrogate.py and analysis/build_poster_phase_space.py still read
+  it and .gitignore lines 17-18 explicitly un-ignore it. Do not source a paper
+  figure or a density number from it; use data/all_runs_inventory.csv instead.
+
+## Nested ./can-it-ford/ duplicate directory, do not read data from it
+
+There is a second copy of this project nested at ./can-it-ford/ inside the repo
+root. It is NOT a synced mirror. Verified live 2026-07-29 by filecmp: paper/
+conference_101719.tex and paper/can_it_ford_references_IEEE.bib are byte-identical
+between root and nested, but data/scenario_sweep.csv, vehicle_params.py and
+scripts/ford_sweep_driver.py all DIFFER. Root is canonical for every one of them.
+Always confirm pwd is /Users/josie/can-it-ford, not the nested copy, before
+reading a parameter or a verdict count, and exclude ./can-it-ford/ from repo-wide
+greps or you will get two conflicting answers and no way to tell which is live.
