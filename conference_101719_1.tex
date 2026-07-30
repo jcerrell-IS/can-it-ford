@@ -63,8 +63,8 @@ This project instantiates that orchestrator for one deliberately narrow query: \
 
 \begin{figure*}[t]
 \centering
-\includegraphics[width=0.92\textwidth]{pipeline_diagram.pdf}
-\caption{The reconstruct-to-decide pipeline: a real video is reconstructed as a Gaussian splat, bridged to Material Point Method particles following PhysGaussian, simulated in Genesis with rigid-fluid coupling, and resolved to a FORD/NO-FORD verdict by the L0/L1/L2 abstraction orchestrator.}
+\includegraphics[width=0.92\textwidth]{pipeline_diagram_v2.pdf}
+\caption{The reconstruct-to-decide pipeline: a real video is reconstructed as a Gaussian splat, bridged to Material Point Method particles following PhysGaussian, simulated in Genesis with rigid-fluid coupling, and resolved to a FORD/NO-FORD verdict by the L0/L1/L2 abstraction orchestrator. Dashed stages are conceptual, not the path used for any result reported here: the Gaussian-splat reconstruction and the PhysGaussian kernel-to-particle bridge are designed and not yet built.}
 \label{fig:pipeline}
 \end{figure*}
 
@@ -134,7 +134,7 @@ A first-principles force balance motivates why L1's scalar hazard measure is exp
 \begin{figure}[t]
 \centering
 \includegraphics[width=\linewidth]{force_balance.png}
-\caption{Analytical force-balance calculation, not simulation output. Left: lateral drag force versus flow velocity at four water depths, against the maximum static friction limit (dashed). Right: the resulting critical velocity, above which drag exceeds friction, as a function of depth. The drag formulation behind this figure could not be recovered: no generating script for it survives in the project repository, so the drag coefficient and frontal area it assumes cannot be stated here. Read the curves as establishing the shape of the drag-versus-friction argument, not as a calibrated prediction.}
+\caption{Analytical force-balance calculation, not simulation output. Left: lateral drag force versus flow velocity at four water depths, against the maximum static friction limit (dashed). Right: the resulting critical velocity, above which drag exceeds friction, as a function of depth. The legend reports $N=0$ and $F_{\text{fric}}=0$ at 0.30, 0.45, and 0.60\,m. Those zeros are a real buoyancy result, not missing values: at 0.30\,m this model's buoyant force already reaches 15.99\,kN against a vehicle weight of 10.79\,kN, so normal force is zero and the friction limit $\mu N$ vanishes with it. The right panel corroborates this independently, with critical velocity falling to zero near 0.19\,m. That flotation depth is a property of the model's displacement assumption, which treats the vehicle as a solid prism over roughly three quarters of its bounding-box footprint. The real hull encloses 3.5427\,m\textsuperscript{3} against a 10.7457\,m\textsuperscript{3} bounding-box prism, a fill factor of only 0.33, so the prism assumption overstates displacement in shallow water and floats the vehicle at about 0.20\,m. That is below even the 0.30\,m depth cap AR\&R assigns to its Small Car class \cite{shand2011arr}, so the model reaches flotation before the empirical guideline reaches its own depth limit. This figure should therefore be read as establishing the \emph{shape} of the drag-versus-friction argument, not as a calibrated flotation prediction. \FLAG{Project notes record a measured critical flow depth of about 0.38\,m for a full-scale passenger vehicle, which would sharpen this comparison, but the corresponding bibliography entry is an unverified placeholder and is deliberately not cited here. Verify that reference before quoting the 0.38\,m figure in the paper.}}
 \label{fig:force}
 \end{figure}
 
@@ -180,7 +180,7 @@ Pending a fully reconciled dataset, Fig.~\ref{fig:l2schematic} remains an explic
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=0.85\linewidth]{l2_divergence_real_v2.png}
+\includegraphics[width=0.85\linewidth]{l2_divergence_real_v2.pdf}
 \caption{L1 hazard scalar versus coupled L2 simulation, 9 measured conditions from \texttt{data/l2\_results\_from\_wandb.csv}. Agreement holds at 5 of 9 (55.6\%): 3 conditions where both agree FORD, 2 where both agree NO-FORD. All 4 disagreements run one way, L1 permits and L2 refuses, with no reverse cases in this dataset. One flagged cell (marked \textdagger) has an \texttt{l1\_haz\_score} that disagrees with its own $D \times V$ product; the figure plots the consistent $D \times V$ value throughout and the discrepancy is noted rather than silently resolved.}
 \label{fig:l2schematic}
 \end{figure}
