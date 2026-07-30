@@ -1,9 +1,11 @@
 % ==================================================================
 % can_it_ford_references_IEEE.bib
 % Built fresh from Josie's verified citation register.
-% Entries marked VERIFY have confirmed author/year/identifier but
-% NOT a confirmed exact title or venue string. Check each VERIFY
-% entry against the actual source before submission.
+% No entry is a stub. As of July 30, 2026 every entry's author list,
+% title and venue have been checked against a primary record: a live
+% Crossref or DataCite query, or the source PDF's own text layer. The
+% provenance comment above an entry names which was used. Provenance
+% lives in comments, not in note fields, because IEEEtran prints note.
 % ==================================================================
 
 @article{thorpe2026pvwm,
@@ -84,22 +86,34 @@
   year    = {2014}
 }
 
+% Metadata read from api.crossref.org for 10.1111/jfr3.12885 on
+% July 30, 2026, and cross-checked against the local PDF (Zotero
+% storage 6Y7VPLP7). The previous VERIFY note claimed this entry as the
+% source for coup_friction; it is not. Azhar's mu is a physical Coulomb
+% tyre-road coefficient, whereas coup_friction is a solver coupling
+% coefficient. They are different quantities and must not be conflated.
 @article{azhar2023,
-  author  = {Azhar, {\relax and others}},
-  title   = {{VERIFY: exact title}},
+  author  = {Azhar, Fatima and Pauwels, Valentijn R. N. and Bui, Ha H.},
+  title   = {Confirmation of vehicle stability criteria through a combination of smoothed particle hydrodynamics and laboratory measurements},
   journal = {Journal of Flood Risk Management},
+  volume  = {16},
+  number  = {2},
   doi     = {10.1111/jfr3.12885},
-  year    = {2023},
-  note    = {VERIFY: confirm full citation before submission. Used as the source for coup\_friction / physical friction coefficient (mu approx 0.3-0.55).}
+  year    = {2023}
 }
 
+% Metadata read from api.crossref.org for 10.1029/2023WR036739 on
+% July 30, 2026, and cross-checked against the local PDF (Zotero
+% storage 8SMXRASA). Currently an uncited entry: retained because it is
+% now correct and may be cited, but it prints nothing as things stand.
 @article{xiong2024,
-  author  = {Xiong, {\relax and others}},
-  title   = {{VERIFY: exact title, rigid-block vehicle proxy validation in SPH flood studies}},
+  author  = {Xiong, Yan and Liang, Qiuhua and Zheng, Jinhai and Wang, Gang and Tong, Xue},
+  title   = {Simulation of the Full-Process Dynamics of Floating Vehicles Driven by Flash Floods},
   journal = {Water Resources Research},
+  volume  = {60},
+  number  = {10},
   doi     = {10.1029/2023WR036739},
-  year    = {2024},
-  note    = {VERIFY: confirm full citation before submission.}
+  year    = {2024}
 }
 
 @techreport{ccsa2016yaris,
@@ -137,9 +151,18 @@
   note         = {Verified via web search July 16, 2026: no peer-reviewed paper exists for Genesis as of this writing; this is the citation format Genesis's own project maintainers specify, cited this way in multiple published papers that build on Genesis.}
 }
 
+% Author list, title and arXiv identifier (2605.22018v2) read directly
+% from the local PDF text layer (Zotero storage XGPFETGF) on
+% July 30, 2026. Affiliation: ARC Training Centre for Automated Vehicles
+% in Rural and Remote Regions (AVR3), Queensland University of
+% Technology. Public availability confirmed from the paper's own access
+% statement: the dataset is released on Hugging Face and through the
+% QUT research data portal, with a public SDK at
+% github.com/AVR3-Training-Centre/python-FRED.
 @misc{fred2026,
+  author       = {Malone, Connor and Demmel, S{\'e}bastien and Glaser, S{\'e}bastien},
   title        = {{FRED}: A Multi-Modal Autonomous Driving Dataset for Flooded Road Environments},
   howpublished = {arXiv:2605.22018},
-  year         = {2026},
-  note         = {VERIFY: confirm exact title, author list, and public availability before citing as a committed future-work source.}
+  url          = {https://huggingface.co/datasets/CMalone-Jupiter/FRED},
+  year         = {2026}
 }
