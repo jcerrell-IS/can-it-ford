@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1613" height="512" viewBox="0 0 1613 512" role="img">
+<title>Can It Ford? reconstruct-to-decide pipeline</title>
+<desc>Five-stage pipeline. The Gaussian Splat and PhysGaussian Bridge stages are drawn with dashed borders to mark them as conceptual, not part of the path used for the reported results.</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10Z" fill="#000"/></marker></defs>
+<rect width="1613" height="512" fill="#FFFFFF"/>
+<rect x="36" y="119" width="280" height="272" rx="18" fill="#F4F4F4" stroke="#000000" stroke-width="3"/>
+<text x="176.0" y="230.45" text-anchor="middle" font-family="DejaVu Serif, Times New Roman, Times, serif" font-size="27" fill="#000000">Real Video</text>
+<text x="176.0" y="264.45" text-anchor="middle" font-family="DejaVu Serif, Times New Roman, Times, serif" font-size="27" fill="#000000">(flooded / water-</text>
+<text x="176.0" y="298.45" text-anchor="middle" font-family="DejaVu Serif, Times New Roman, Times, serif" font-size="27" fill="#000000">adjacent scene)</text>
+<line x1="323" y1="255.0" x2="344" y2="255.0" stroke="#000000" stroke-width="4" marker-end="url(#arrow)"/>
+<rect x="351" y="119" width="280" height="272" rx="18" fill="#F4F4F4" stroke="#000000" stroke-width="3" stroke-dasharray="14 10"/>
+<text x="491.0" y="247.45" text-anchor="middle" font-family="DejaVu Serif, Times New Roman, Times, serif" font-size="27" fill="#000000">Gaussian Splat</text>
+<text x="491.0" y="281.45" text-anchor="middle" font-family="DejaVu Serif, Times New Roman, Times, serif" font-size="27" fill="#000000">(gsplat, LS6)</text>
+<line x1="638" y1="255.0" x2="659" y2="255.0" stroke="#000000" stroke-width="4" marker-end="url(#arrow)"/>
+<rect x="666" y="119" width="280" height="272" rx="18" fill="#F4F4F4" stroke="#000000" stroke-width="3" stroke-dasharray="14 10"/>
+<text x="806.0" y="213.45" text-anchor="middle" font-family="DejaVu Serif, Times New Roman, Times, serif" font-size="27" fill="#000000">PhysGaussian</text>
+<text x="806.0" y="247.45" text-anchor="middle" font-family="DejaVu Serif, Times New Roman, Times, serif" font-size="27" fill="#000000">Bridge</text>
+<text x="806.0" y="281.45" text-anchor="middle" font-family="DejaVu Serif, Times New Roman, Times, serif" font-size="27" fill="#000000">(kernel to MPM</text>
+<text x="806.0" y="315.45" text-anchor="middle" font-family="DejaVu Serif, Times New Roman, Times, serif" font-size="27" fill="#000000">particle seed)</text>
+<line x1="953" y1="255.0" x2="974" y2="255.0" stroke="#000000" stroke-width="4" marker-end="url(#arrow)"/>
+<rect x="981" y="119" width="280" height="272" rx="18" fill="#F4F4F4" stroke="#000000" stroke-width="3"/>
+<text x="1121.0" y="230.45" text-anchor="middle" font-family="DejaVu Serif, Times New Roman, Times, serif" font-size="27" fill="#000000">Genesis MPM</text>
+<text x="1121.0" y="264.45" text-anchor="middle" font-family="DejaVu Serif, Times New Roman, Times, serif" font-size="27" fill="#000000">(rigid-fluid</text>
+<text x="1121.0" y="298.45" text-anchor="middle" font-family="DejaVu Serif, Times New Roman, Times, serif" font-size="27" fill="#000000">coupling)</text>
+<line x1="1268" y1="255.0" x2="1289" y2="255.0" stroke="#000000" stroke-width="4" marker-end="url(#arrow)"/>
+<rect x="1301" y="124" width="280" height="272" rx="18" fill="#BFBFBF"/>
+<rect x="1296" y="119" width="280" height="272" rx="18" fill="#E8E8E8" stroke="#000000" stroke-width="3"/>
+<text x="1436.0" y="230.45" text-anchor="middle" font-family="DejaVu Serif, Times New Roman, Times, serif" font-size="27" fill="#000000">FORD /</text>
+<text x="1436.0" y="264.45" text-anchor="middle" font-family="DejaVu Serif, Times New Roman, Times, serif" font-size="27" fill="#000000">NO-FORD</text>
+<text x="1436.0" y="298.45" text-anchor="middle" font-family="DejaVu Serif, Times New Roman, Times, serif" font-size="27" fill="#000000">Verdict</text>
+<text x="1576" y="454" text-anchor="end" font-family="DejaVu Serif, Times New Roman, Times, serif" font-size="25" font-style="italic" fill="#444444">L0 / L1 / L2 orchestrator</text>
+</svg>
