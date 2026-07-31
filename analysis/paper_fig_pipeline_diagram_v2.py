@@ -35,17 +35,35 @@ WHICH STAGES ARE DASHED, AND WHY TWO AND NOT ONE
   complete for one real scene ("Drain A"), so video capture is genuinely done.
   Stages 4 and 5 stay solid: 17 gated coupled runs exercise them.
 
+WHY STAGE 4 SAYS "WARP MPM" AND NOT "GENESIS MPM"
+  It said Genesis MPM until 2026-07-31. That was wrong, and wrong in the one
+  direction this diagram cannot afford: a SOLID box means, per the paragraph
+  above, that 17 gated runs realized the stage. Those runs are warpmpm.
+  Verified live in renders/yaris_render_s1/_incoming/sim_standing.py, which is
+  their driver: `from warpmpm.core.solver import GridConfig, Solver`.
+  Genesis ran the separate 9-condition pilot in data/l2_results_from_wandb.csv,
+  and that is SPH (level=L2_Genesis_SPH), not MPM either way.
+  Every other box names its actual tool (gsplat, PhysGaussian), so naming the
+  design target here while drawing the box solid asserted a provenance that is
+  not true. Genesis remains named in the Fig. 1 caption as the engine the full
+  pipeline is designed around, which is accurate and stays.
+
 OUTPUT
   paper/figures_review/pipeline_diagram_v2.svg   NEW file, overwrites nothing
   paper/figures_review/pipeline_diagram_v2.pdf   via rsvg-convert, TRUE VECTOR
 
+  Both land under $CANITFORD_REPO, defaulting to the root checkout. Set that
+  env var before running from a worktree, or this writes into the root while
+  another pane may be live on it.
+
 Stdlib only for the SVG, matching analysis/paper_fig_mass_grid_sweep_v2.py.
 The PDF step shells out to rsvg-convert (librsvg 2.62.3, /opt/homebrew/bin).
 """
+import os
 import subprocess
 from pathlib import Path
 
-REPO = Path('/Users/josie/can-it-ford')
+REPO = Path(os.environ.get('CANITFORD_REPO', '/Users/josie/can-it-ford'))
 OUTDIR = REPO / 'paper' / 'figures_review'
 OUTDIR.mkdir(parents=True, exist_ok=True)
 SVG = OUTDIR / 'pipeline_diagram_v2.svg'
@@ -68,7 +86,7 @@ STAGES = [
     ["Real Video", "(flooded / water-", "adjacent scene)"],
     ["Gaussian Splat", "(gsplat, LS6)"],
     ["PhysGaussian", "Bridge", "(kernel to MPM", "particle seed)"],
-    ["Genesis MPM", "(rigid-fluid", "coupling)"],
+    ["Warp MPM", "(rigid-fluid", "coupling)"],
     ["FORD /", "NO-FORD", "Verdict"],
 ]
 
