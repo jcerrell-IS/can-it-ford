@@ -56,3 +56,4 @@ _ARCHIVE_*
 # PreCompact snapshots, per-session churn, every pane appends here
 .claude/state/
 .olauth
+deliverables/
