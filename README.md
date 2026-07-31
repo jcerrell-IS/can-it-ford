@@ -13,7 +13,9 @@
 
 ## What this does
 
-Given a real flooded road reconstructed from video using 3D Gaussian splatting, this pipeline answers one question: **can a specific vehicle ford this crossing?**
+Given a flooded road scene and a flood condition, this pipeline answers one question: **can a specific vehicle ford this crossing?**
+
+The intended front end reconstructs that scene from video using 3D Gaussian splatting. That front end is designed and not yet built: every result reported in this repo and in the paper starts from a watertight vehicle mesh and a parameterized flood condition, not from a splat. See Status below for what is actually built today.
 
 Three methods run side by side, from cheapest to most expensive, to find the simplest model that still gets the answer right. The interesting result is where they disagree.
 
@@ -33,6 +35,7 @@ The abstraction ladder is a running instance of the Section 3 orchestrator in [P
 
 ```
 video  ->  gsplat (LS6 A100)  ->  splat/mesh to MPM particles  ->  MPM water + rigid vehicle coupling (Vista GH200)  ->  FORD / NO-FORD
+[      designed, not yet built             ]  [            built and producing results            ]
 ```
 
 The splat-to-particle bridge is intended to reuse [PhysGaussian (Xie et al. 2023, arXiv:2311.12198)](https://arxiv.org/abs/2311.12198) extraction logic on top of [3D Gaussian Splatting (Kerbl et al. 2023, arXiv:2308.04079)](https://arxiv.org/abs/2308.04079). See the Status section for which stages are actually built today.
