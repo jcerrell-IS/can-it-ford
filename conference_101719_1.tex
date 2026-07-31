@@ -198,6 +198,15 @@ Fig.~\ref{fig:masssweep} shows the mass-by-resolution block. Displacement falls 
 \label{fig:masssweep}
 \end{figure}
 
+Fig.~\ref{fig:l2render} shows what one row of that inventory looks like as a coupled scene rather than as a scalar. It is included to make the coupling concrete and to expose the passthrough artefact directly, not as evidence for any verdict.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{l2_render_g64_m1100_f45.png}
+\caption{Frame 45 of 90 from the coupled MPM run \texttt{g64\_m1100} (\texttt{renders/yaris\_render\_s1/\_incoming/g64\_m1100/}): the watertight Yaris hull at the 1100\,kg small-passenger override, standing water with sustained inflow at depth 0.30\,m and velocity 1.5\,m/s, \texttt{n\_grid}=64, 48{,}367 water and 8{,}905 vehicle particles across four water layers. This run finishes at 0.659\,m of displacement, an order of magnitude beyond the 0.05\,m L2 detector of Table~\ref{tab:ladder}, so it reads NO-FORD. It is also one of the 7 flagged runs: its peak particle passthrough is 10.7\%, just above the 10\% gate, so water is visibly entering the hull volume in this frame. The figure is qualitative and is not the source of any number reported in this paper.}
+\label{fig:l2render}
+\end{figure}
+
 % =================================================================
 % V. CONCLUSIONS
 % =================================================================
