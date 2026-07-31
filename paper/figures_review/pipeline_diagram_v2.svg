@@ -19,7 +19,7 @@
 <text x="806.0" y="315.45" text-anchor="middle" font-family="DejaVu Serif, Times New Roman, Times, serif" font-size="27" fill="#000000">particle seed)</text>
 <line x1="953" y1="255.0" x2="974" y2="255.0" stroke="#000000" stroke-width="4" marker-end="url(#arrow)"/>
 <rect x="981" y="119" width="280" height="272" rx="18" fill="#F4F4F4" stroke="#000000" stroke-width="3"/>
-<text x="1121.0" y="230.45" text-anchor="middle" font-family="DejaVu Serif, Times New Roman, Times, serif" font-size="27" fill="#000000">Genesis MPM</text>
+<text x="1121.0" y="230.45" text-anchor="middle" font-family="DejaVu Serif, Times New Roman, Times, serif" font-size="27" fill="#000000">Warp MPM</text>
 <text x="1121.0" y="264.45" text-anchor="middle" font-family="DejaVu Serif, Times New Roman, Times, serif" font-size="27" fill="#000000">(rigid-fluid</text>
 <text x="1121.0" y="298.45" text-anchor="middle" font-family="DejaVu Serif, Times New Roman, Times, serif" font-size="27" fill="#000000">coupling)</text>
 <line x1="1268" y1="255.0" x2="1289" y2="255.0" stroke="#000000" stroke-width="4" marker-end="url(#arrow)"/>
