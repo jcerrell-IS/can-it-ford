@@ -18,9 +18,15 @@ Source of truth throughout is `git show overleaf/main:...`, never a local worktr
 >   `conference_101719.pdf` and `conference_101719_preview.pdf` are now 1150700 bytes and
 >   identical, so the untouched IEEE template and the 10-FLAG July 17 build are both gone.
 >
-> Sections 3 and 9 below are therefore **historical as of `bbd5bd8`**. Everything else in this
-> manifest, the citation verification, the reproduced numbers, the Fig. 4 arithmetic, and the
-> self-corrections, is unaffected: the tex changed by one line and the bib not at all.
+> **Section 3 has since been brought current to `bbd5bd8`** and now describes the shipped state:
+> Figure 3 is a true-vector PDF with a confirmed generator, and no file in the paper is
+> mislabelled. **Section 9 remains historical**, describing the two PDFs as they were at
+> `32b0d12`; both were rebuilt at `bbd5bd8` and both now pass every gate, recorded at the end of
+> that section.
+>
+> Everything else in this manifest, the citation verification, the reproduced numbers, the
+> Fig. 4 arithmetic, and the self-corrections, is unaffected: the tex changed by one line and
+> the bib not at all.
 
 ## 1. Submitted commit
 
@@ -59,30 +65,44 @@ format, which is not always what the extension claims.
 |---|---|---|---|---|---|
 | 1 | `pipeline_diagram_v2.pdf` | `6fd2a9b724c3eb1cf01caf1c2a579d62` | .pdf | PDF 1.7 | `analysis/paper_fig_pipeline_diagram_v2.py` |
 | 2 | `l0l1_two_rules_v2.pdf` | `4faed270266265673fc0a50884eac027` | .pdf | PDF 1.7 | `analysis/paper_fig_l0l1_two_rules_v2.py` + `analysis/svg_to_paper_pdf.py` |
-| 3 | `L1_three_class_corrected.png` | `5d4b1b1b3a4c93c2e82b422f9d3f63a8` | **.png** | **JPEG (JFIF 1.02)** | PROVENANCE_PARTIAL |
+| 3 | `L1_three_class_corrected.pdf` | `d7d4ba519f194e1ffc60302f9021c5e5` | .pdf | PDF 1.4, 1 page, 35243 B | `analysis/plot_l1_three_class.py` |
 | 4 | `force_balance.jpg` | `c5b58510de2ace950d22b36627cd698c` | .jpg | JPEG (JFIF 1.02) | **PROVENANCE_MISSING** |
 | 5 | `l2_divergence_real_v2.pdf` | `1d809c9b8d2ef8238160074e79e7016e` | .pdf | PDF 1.7 | `analysis/paper_fig_l2_divergence_v2.py` + `analysis/svg_to_paper_pdf.py` |
 | 6 | `mass_grid_sweep_v2.pdf` | `a7c192b82fc986d4bcfa79b227d71f00` | .pdf | PDF 1.7 | `analysis/paper_fig_mass_grid_sweep_v2.py` + `analysis/svg_to_paper_pdf.py` |
 | 7 | `l2_render_g64_m1100_f0045.png` | `688281d14e3c394de9bd8cac252541c9` | .png | PNG, 1541x664 RGB | PROVENANCE_PARTIAL |
 
+### Provenance gap count: two of seven
+
+**Figure 4** (PROVENANCE_MISSING) and **Figure 7** (PROVENANCE_PARTIAL). Figure 3 was the third
+and closed at `c418884`. Details in the three subsections below.
+
 ### Extension-versus-format
 
-**One file is mislabelled, not two.** `L1_three_class_corrected.png` carries JPEG data under a
-`.png` extension. `force_balance.jpg` is JPEG data correctly named; an earlier lineage carried
-those same bytes as `force_balance.png` and that was corrected before submission. pdfTeX
-compiles the mislabelled file without error because its PDF backend sniffs content rather than
-trusting the extension, but the mismatch is real and would break stricter toolchains.
+**No file in the paper is mislabelled, as of `c418884`.** Every extension now matches its true
+`file` output. Two mismatches existed and both were fixed before submission: `force_balance.png`
+carried JPEG data and was renamed to `.jpg`, and `L1_three_class_corrected.png` carried JPEG
+data and was replaced outright by a true-vector PDF. pdfTeX compiled both without error, because
+its PDF backend sniffs content rather than trusting the extension, which is exactly why the trap
+survived two rounds of review: it is invisible in the build log.
 
 Three further PNGs sit in the remote tree unreferenced by the tex and do not ship in the PDF:
 `fig1.png` (341x297), `pipeline_diagram.png` (1613x512, superseded by `_v2`), and
 `l2_divergence_real_v2.png` (1509x995, the raster predecessor of the vector PDF).
 
-### Figure 3, PROVENANCE_PARTIAL
+### Figure 3, gap CLOSED as of `c418884`
 
-No script writes the filename `L1_three_class_corrected.png`. `analysis/plot_l1_three_class.py`
-regenerates equivalent content from `data/scenario_sweep.csv` under a different output name and
-self-verifies its counts. Those counts were re-derived directly from the CSV this pass and
-match: **small_passenger 14, large_passenger 19, large_4wd 26**.
+`analysis/plot_l1_three_class.py` is a genuine parameterized generator, not an approximation of
+one. It reads `data/scenario_sweep.csv` (its `--csv` default), writes a PDF through `--out`
+(defaulting to `figures/fig1_l1_three_class.pdf`), and embeds a provenance line carrying the
+input CSV's own md5 into the rendered figure. Pointing `--out` at
+`L1_three_class_corrected.pdf` reproduces the shipped file.
+
+Its counts were re-derived directly from the CSV this pass and match: **small_passenger 14,
+large_passenger 19, large_4wd 26**.
+
+The superseded raster it replaced, `L1_three_class_corrected.png` md5
+`5d4b1b1b3a4c93c2e82b422f9d3f63a8`, was **JPEG data under a `.png` extension**, the same
+driver-selection trap already fixed on `force_balance`. It is gone from the tree.
 
 ### Figure 4, PROVENANCE_MISSING
 
@@ -93,11 +113,26 @@ paper. See section 6 for an independent arithmetic check of its quoted quantitie
 
 ### Figure 7, PROVENANCE_PARTIAL
 
-No script writes `l2_render_g64_m1100_f0045.png`. The submitted bytes are md5-identical to
-`renders/yaris_render_s1/frame_check_f0045_poster_crop_no_artifact.png`, which no script writes
-either and which `.gitignore` line 14 (`renders/`) excludes from the public repo. The upstream
-simulation **is** traceable: `renders/yaris_render_s1/render_pv3.py --run g64_m1100
---hero-only 45`. The unscripted step is the crop. Full analysis in
+The md5 chain is **confirmed**, re-verified directly this pass:
+
+```
+overleaf/main:l2_render_g64_m1100_f0045.png                          688281d14e3c394de9bd8cac252541c9
+renders/yaris_render_s1/frame_check_f0045_poster_crop_no_artifact.png 688281d14e3c394de9bd8cac252541c9
+```
+
+Byte-identical. The upstream simulation is traceable to
+`renders/yaris_render_s1/render_pv3.py --run g64_m1100 --hero-only 45`, and every quantity in
+the caption is independently confirmed by that run's `summary.json` and `metrics.csv`.
+
+**Correction to an attribution made elsewhere.** A parallel pane recorded
+`analysis/make_poster_figures.py` as the generator. That file exists (39869 bytes) but contains
+**zero** references to `l2_render`, `poster_crop`, `no_artifact`, or `frame_check`, and a
+repo-wide search finds **no script writing either filename**. The attribution does not hold.
+
+**The gap stated precisely:** the chain exists *locally* and is verifiable by md5, but the crop
+step between the rendered frame and the shipped bytes is **unscripted**, and the intermediate
+file is excluded from the public repo by `.gitignore` line 14 (`renders/`). A reader of the
+repository therefore cannot reproduce this figure. Full analysis in
 `docs/RENDER_ASSET_INVENTORY_2026-07-31.md`.
 
 ## 4. Citations
@@ -247,5 +282,23 @@ hand-uploaded. Both were last touched at commit `4001460`, 2026-07-30T04:49:55Z.
   superseded title "Full-scale testing of vehicle floatation and stability in flowing
   floodwater".
 
-Anyone browsing the repository sees those PDFs, not the current build. Neither was rebuilt or
-replaced during this pass.
+Anyone browsing the repository saw those PDFs, not the current build.
+
+**Both were rebuilt at `bbd5bd8` and both now pass every gate**, verified from the remote:
+
+| Gate | `conference_101719.pdf` | `conference_101719_preview.pdf` |
+|---|---|---|
+| Pages | 7 | 7 |
+| md5 | `f0ef39a5a44f1f7b6ed1a3324f977def` | `f0ef39a5a44f1f7b6ed1a3324f977def` |
+| First line | "Can It Ford? Query-Conditioned, Physically Viable" | same |
+| `FLAG:` / `PLACEHOLDER:` via pdftotext | 0 / 0 | 0 / 0 |
+| "Eq. 6" | absent | absent |
+| "Kravis Department of Integrated Sciences" | present | present |
+| Reference [4] title | "Full-scale testing of stability curves for vehicles in flood waters" | same |
+
+The two files are byte-identical, as expected: both are the same build of the same source. The
+3-page IEEE template and the 5-page 10-FLAG build are gone from the tree.
+
+On checking reference [4]: the title is the only usable signal. IEEEtran renders both "Brianna
+D." and "Benjamin D." as "B. D. Modra", so an author-name check on the rendered PDF cannot fail
+and proves nothing.
