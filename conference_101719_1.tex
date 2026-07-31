@@ -41,10 +41,24 @@ jcerrell29@cmc.edu
 % Supersedes the June 18 CanItFord_Abstract_FINAL.docx wording, which
 % ran 296 words, was written in expectation tense, claimed a splat
 % reconstruction Section I disclaims, and credited Genesis for runs
-% that were executed with warpmpm. Re-clear with Kumar before submission.
+% that were executed with warpmpm.
+%
+% Second pass, same day, restoring the approved framing and fixing the
+% one accuracy defect the first rewrite introduced:
+%   the 9-condition agreement was presented as coming from the coupled MPM
+%   Yaris configuration. It is the Genesis SPH pilot on synthetic geometry
+%   (Section IV, Synthetic-Geometry Pilot Study), and the body reports NO
+%   L1-versus-L2 agreement rate for the 17-run Yaris sweep at all.
+% The "vehicle class alone ... 12" claim was briefly challenged as unsourced
+% and is NOT: it is Fig 3's headline, 5 + 7 class-sensitive cells of 70.
+% It is stated only in the figure artwork, never in the body prose, which is
+% worth fixing in Section IV independently.
+% Opening, narrow-question framing, and closing contribution sentence are
+% carried over from the June 18 approved text. 250 words.
+% Re-clear with Kumar before submission.
 % =================================================================
 \begin{abstract}
-Flooded roads are a leading cause of vehicle fatalities, killing drivers who cannot judge how deep the water is, how fast it moves, or what the road beneath it is doing. Automated vehicles inherit the same gap, and a world model that predicts only appearance can render an outcome that is physically wrong. Physically viable world models address this by preserving the latent physics that governs the outcome, but leave open how much fidelity a given query requires. We instantiate that abstraction-selection orchestrator for one narrow query: can this vehicle ford this flooded road? The full pipeline reconstructs a scene by Gaussian splatting and bridges it to particles following PhysGaussian; that front end is designed and not yet built, so every result here uses a flood domain specified parametrically in depth and velocity. We compare three fidelity levels on a common depth-velocity grid: a static depth cutoff, the Australian Rainfall and Runoff depth-velocity criterion, and a coupled rigid-body Material Point Method simulation of a watertight Toyota Yaris hull. Across 70 conditions, applying AR\&R's depth and velocity limits jointly rather than its hazard product alone reclassifies 23 cells from FORD to NO-FORD, all in the same direction, and vehicle class alone changes the verdict in 12. In a 9-condition coupled pilot the two levels agree at only 5, and all four disagreements run one way: the criterion permits where the simulation refuses. The minimal sufficient abstraction is therefore query-dependent, and the cheap criterion fails asymmetrically, permitting crossings the coupled model rejects.
+Flooded roads are a leading cause of vehicle fatalities, killing drivers who cannot judge how deep the water is, how fast it moves, or what the road beneath it is doing. Automated vehicles inherit the same gap: a world model predicting only appearance can render an outcome that looks plausible but is wrong. Physically viable world models preserve that latent physics, but leave open how much fidelity a query requires. This project asks a narrow question, can an autonomous vehicle ford a specific flooded road, and identifies the simplest abstraction sufficient to answer it, not the most detailed simulation available. We compare three fidelity levels on a depth-velocity grid: a static depth cutoff, the Australian Rainfall and Runoff (AR\&R) criterion, and a coupled rigid-body Material Point Method simulation of a watertight Toyota Yaris hull. The splatting front end and PhysGaussian bridge are designed and not yet built, so every flood domain here is parametric. Across 70 conditions the depth cutoff admits 7 crossings and the joint criterion 14; tightening the rule and the class together reclassifies 23 cells to NO-FORD with none in the opposite direction, and vehicle class alone decides the verdict in 12. In a 9-condition pilot on synthetic geometry, run with SPH rather than the coupled configuration, the two agree at only 5, and all four disagreements run one way: the criterion permits where the simulation refuses. The minimal sufficient abstraction is therefore query-dependent, and this work delivers a reconstruct-to-decide pipeline instantiating query-conditioned physically viable world models.
 \end{abstract}
 
 \begin{IEEEkeywords}
