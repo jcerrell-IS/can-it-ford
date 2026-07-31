@@ -336,7 +336,7 @@ Draft caption for the replacement, not applied:
 
 | Asset | Found at | Dimensions | True format (`file`) | Vector? | Generator in `analysis/` | What it plots | Verdict vs current Fig. 3 |
 |---|---|---|---|---|---|---|---|
-| `L0_L1_phase_space_divergence.png` | NOT in repo. Only `~/Documents/CAN_IT_FORD_ARCHIVE_2026-07-17/paper_and_writing/CURRENT/` | 1568 x 700 | **JPEG**, despite `.png` | No | None found | L0 vs L1 divergence, two panels | **Loses.** Raster, extension mismatch, outside the repo, superseded by `l0l1_two_rules_v2.pdf` which is already Fig. 2 |
+| `L0_L1_phase_space_divergence.png` | NOT in repo. **Three byte-identical copies** outside it (see note below) | 1568 x 700 | **JPEG**, despite `.png` | No | None found | L0 vs L1 divergence, two panels | **Loses.** Raster, extension mismatch, outside the repo, superseded by `l0l1_two_rules_v2.pdf` which is already Fig. 2 |
 | `can_it_ford_phase_space.png` | `figures/poster_exports/` | 2400 x 1800 | PNG, RGBA | No | `make_phase_space.py`, `make_phase_space_v2.py` | Poster phase space | **Loses.** Raster at poster scale, duplicates Fig. 2/3 territory |
 | `phase_space_poster_figure.png` | `figures/` and `designsafe-staging/figures/` | 2400 x 1800 | PNG, RGBA | No | `build_poster_phase_space.py` | L1 grid plus L2 overlay | **Disqualified.** Its generator reads `data/track1_sweep_v2/manifest.csv`, which project CLAUDE.md bars from sourcing any paper figure |
 | `two_panel_figure.pdf` | **Does not exist** anywhere under `/Users/josie/can-it-ford`, `~/Desktop`, `~/Documents` | | | | | | Cannot be evaluated |
@@ -346,6 +346,35 @@ Draft caption for the replacement, not applied:
 Three of the six named assets do not exist. Of the three that do, all are raster, none
 has a vector sibling in use, and one is disqualified by a standing project rule.
 **No existing asset beats the current Fig. 3.**
+
+### Correction: the full-home search, completed after the table above was first written
+
+An initial search covered only `/Users/josie/can-it-ford`, `~/Desktop`, and `~/Documents`
+and reported a single copy of `L0_L1_phase_space_divergence.png`. A full
+`find /Users/josie` finished afterwards and found **three** copies, all byte-identical
+(md5 `488086e293585a701d6c026b6429fd57`, 115752 bytes, JPEG 1568 x 700):
+
+- `~/Downloads/L0_L1_phase_space_divergence.png` (mtime 2026-07-16 18:06)
+- `~/Downloads/IEEE_Conference_Template/L0_L1_phase_space_divergence.png` (2026-07-29 21:04)
+- `~/Documents/CAN_IT_FORD_ARCHIVE_2026-07-17/paper_and_writing/CURRENT/` (2026-07-17 08:19)
+
+The verdict is unchanged, and the full search **strengthens** the other rows:
+`two_panel_figure.pdf`, `can_it_ford_figure.pdf`, and `newplot.png` are absent from the
+entire home directory, not merely from the three roots first checked.
+
+**`~/Downloads/IEEE_Conference_Template/` is a stale, all-raster snapshot of the
+superseded paper, not a source of better assets.** Every file in it is dated
+2026-07-29 21:04 and it contains `conference_101719.tex`, the file this project has
+already marked superseded in favour of `conference_101719_1.tex` (commit `a991216`). It
+also carries `l2_divergence_SCHEMATIC_placeholder.pdf` and `.png`, a placeholder the
+current paper has since replaced with `l2_divergence_real_v2.pdf`, plus
+`force_balance.png` at the same 94526 bytes as the shipped `.jpg` (the extension-mismatch
+era), and `L1_three_class_corrected.png` at 111660 bytes.
+
+That last file is worth naming: it is a **raster** version of the exact figure this
+report recommends keeping, which now exists as a vector PDF. It confirms the current
+Fig. 3 is the newer artifact and that the direction of travel has been raster to vector.
+Nothing in this directory should be pulled forward.
 
 ---
 
