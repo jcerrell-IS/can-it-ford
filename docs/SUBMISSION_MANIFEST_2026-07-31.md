@@ -6,6 +6,22 @@ summary, including this file's own earlier revisions.
 
 Source of truth throughout is `git show overleaf/main:...`, never a local worktree.
 
+> **Supersession note, added 2026-07-30 20:20.** This manifest documents commit `32b0d12`, and
+> that record stands as an accurate snapshot of that commit. The remote advanced twice while it
+> was being written, both times acting on findings recorded here:
+>
+> - `c418884` "Swap Fig. 3 to a true-vector PDF and drop the mislabelled raster" resolves the
+>   extension-versus-format defect in section 3. `L1_three_class_corrected.png` (JPEG data under
+>   a `.png` extension) is gone, replaced by `L1_three_class_corrected.pdf`, 35243 bytes. **No
+>   file in the paper is now mislabelled.**
+> - `bbd5bd8` "Rebuild both committed PDFs from the current source" resolves section 9. Both
+>   `conference_101719.pdf` and `conference_101719_preview.pdf` are now 1150700 bytes and
+>   identical, so the untouched IEEE template and the 10-FLAG July 17 build are both gone.
+>
+> Sections 3 and 9 below are therefore **historical as of `bbd5bd8`**. Everything else in this
+> manifest, the citation verification, the reproduced numbers, the Fig. 4 arithmetic, and the
+> self-corrections, is unaffected: the tex changed by one line and the bib not at all.
+
 ## 1. Submitted commit
 
 | Field | Value |
