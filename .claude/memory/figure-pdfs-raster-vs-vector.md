@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: project
   originSessionId: 8df1a68b-f8b8-4f11-b461-c1acf505fb7a
-  modified: 2026-07-30T23:13:46.200Z
+  modified: 2026-07-31T00:32:02.509Z
 ---
 
 `analysis/svg_to_paper_pdf.py` builds the paper's figure PDFs from hand-emitted
@@ -39,3 +39,21 @@ rows means pure vector. Confirm captions with
 prefer re-running `rsvg-convert -f pdf` on the existing SVG over redesigning the
 figure, since the SVG already carries the approved layout. Related:
 [[overleaf-tex-is-canonical]].
+
+**Live state as built from `conference_101719_1.tex` (measured 2026-07-30):** 7
+figures, 7 native captions, and only 3 image objects in the whole paper. Four
+figures are already true vector. The two raster ones were Fig 3
+(`L1_three_class_corrected.png`) and Fig 4 (`force_balance.jpg`); Fig 7 is a
+legitimately raster MPM render. So "every figure is a flattened screenshot" was
+never true of any build in the repo.
+
+**Fig 4 had no generator at all.** `force_balance.jpg` was orphaned output with
+no script behind it, which is why it could not simply be re-exported. Its legend
+(N=2796 N, F_fric=979 N at 0.15 m) back-solves to **mu = 0.35**, a value matching
+neither AR&R's 0.30 nor Azhar's 0.55, so any "reconcile 0.55 against 0.30"
+framing was arguing about a number the figure never used. Replaced by
+`analysis/paper_fig_force_balance_v2.py`, which asserts its own anchors and emits
+vector in single- and double-column layouts. Note its buoyancy at 0.30 m is
+**16.14 kN**, not the 15.99 kN the old caption quotes: the old model used an
+effective plan area of 5.433 m2 (footprint 7.244 m2), while the sourced bbox
+4.30 x 1.70 m over 0.75 gives 5.4825 m2. Caption needs that one number updated.

@@ -1,11 +1,32 @@
 ---
 name: wandb-key-401-broken
-description: "W&B key on the Mac RESOLVED July 13 2026 (new key works, 88 runs, exposure scan clean); ~/.netrc still stale, old-key revocation on wandb.ai still unconfirmed"
+description: "W&B key rotation CONFIRMED by hash July 30; ~/.netrc is NOT stale (matches live); the OLD key is still publicly readable on GitHub via dangling commit 50eff29 and revocation on wandb.ai remains the one open action"
 metadata: 
   node_type: memory
   type: project
   originSessionId: a4dec10a-24a0-4ec5-825a-dfb8cef24336
+  modified: 2026-07-31T01:12:35.035Z
 ---
+
+**Updated 2026-07-30, three claims below are now corrected by direct hash comparison (T1).**
+
+1. **Rotation is CONFIRMED, no longer just claimed.** The key on the public deletion line
+   and the live `~/.zshrc` key are both 86 chars and their sha256 prefixes differ
+   (`1fb673a2…` exposed vs `906a741c…` live). They are different keys.
+2. **`~/.netrc` is NOT stale.** Its wandb password hashes to `906a741c…`, identical to the
+   live key. Any note saying netrc still holds an old value is wrong; stop repeating it.
+3. **"the leaked key from 50eff29" is misleading.** `50eff29` is the commit that *removed*
+   the hardcoded key (`-API_KEY = "…"` replaced by `wandb.login(key=os.environ.get(...))`).
+   The key lived in the commits *before* it. But the removal diff still displays the value,
+   and GitHub **still serves that commit** at
+   `https://github.com/jcerrell-IS/can-it-ford/commit/50eff29d92ad25eba92387bdf3752ceb1200844f.patch`
+   with no authentication, even though filter-repo (run 2026-07-23) left it unreachable from
+   `origin/main`. Full SHA `50eff29d92ad25eba92387bdf3752ceb1200844f`, file
+   `analysis/wandb_backfill.py`, dated 2026-07-03.
+
+**The one open action is REVOCATION on wandb.ai, not rotation.** Unreachable from a branch
+is not deleted: GitHub serves dangling commits by SHA indefinitely unless GitHub Support is
+asked to purge them. Rewriting history again does nothing about a SHA someone already has.
 
 RESOLVED July 13, 2026. Earlier that day the Mac's WANDB_API_KEY was broken: ~/.zshrc had
 four stacked `export WANDB_API_KEY=` lines, two placeholders, and an active 86-char
