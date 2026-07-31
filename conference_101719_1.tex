@@ -59,7 +59,7 @@ Flooded roads kill more people in the United States each year than any other flo
 
 Physically viable world models (PVWM) address this by preserving the latent physics that governs an action's outcome rather than only its appearance \cite{thorpe2026pvwm}. The PVWM framework identifies automatic abstraction selection, choosing how much physical fidelity a given query actually requires, as a central open problem, and leaves the orchestrator that would make that choice unimplemented \cite{thorpe2026pvwm}.
 
-This project instantiates that orchestrator for one deliberately narrow query: \emph{can this specific autonomous vehicle ford this specific flooded road right now?} Rather than building the highest-fidelity simulation possible, we identify the simplest physical abstraction sufficient to answer that query correctly, and characterize where a cheaper abstraction silently gives the wrong answer. Figure~\ref{fig:pipeline} summarizes the full reconstruct-to-decide pipeline.
+This project instantiates that orchestrator for one deliberately narrow query: \emph{can this specific autonomous vehicle ford this specific flooded road right now?} Rather than building the highest-fidelity simulation possible, we identify the simplest physical abstraction sufficient to answer that query correctly, and characterize where a cheaper abstraction silently gives the wrong answer. Figure~\ref{fig:pipeline} summarizes the full reconstruct-to-decide pipeline. The Gaussian splatting front end reached structure-from-motion on one real scene but was not trained or coupled to any result reported here, so the flood domain in every result below is specified parametrically in depth and velocity rather than recovered from reconstruction.
 
 \begin{figure*}[t]
 \centering
