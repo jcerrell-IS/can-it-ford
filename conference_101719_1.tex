@@ -64,7 +64,7 @@ This project instantiates that orchestrator for one deliberately narrow query: \
 \begin{figure*}[t]
 \centering
 \includegraphics[width=0.92\textwidth]{pipeline_diagram_v2.pdf}
-\caption{The reconstruct-to-decide pipeline: a real video is reconstructed as a Gaussian splat, bridged to Material Point Method particles following PhysGaussian, simulated in Genesis with rigid-fluid coupling, and resolved to a FORD/NO-FORD verdict by the L0/L1/L2 abstraction orchestrator. Dashed stages are conceptual, not the path used for any result reported here: the Gaussian-splat reconstruction and the PhysGaussian kernel-to-particle bridge are designed and not yet built.}
+\caption{The reconstruct-to-decide pipeline: a real video is reconstructed as a Gaussian splat, bridged to Material Point Method particles following PhysGaussian, simulated in Genesis with rigid-fluid coupling, and resolved to a FORD/NO-FORD verdict by the L0/L1/L2 abstraction orchestrator. Dashed stages are conceptual, not the path used for any result reported here: the Gaussian-splat reconstruction and the PhysGaussian kernel-to-particle bridge are designed and not yet built. The MPM stage names the engine the pipeline is designed around; the coupled runs reported in Section~\ref{subsec:sweep} ran on a Warp-based MPM solver.}
 \label{fig:pipeline}
 \end{figure*}
 
@@ -107,7 +107,7 @@ Hsiao and Kumar demonstrate the inverse direction of this same reconstruction-to
 \label{sec:approach}
 
 \subsection{Pipeline}
-The reconstruct-to-decide pipeline (Fig.~\ref{fig:pipeline}) has four stages: (1) a real flooded or water-adjacent road scene is captured on video and reconstructed in 3D via Gaussian splatting on an NVIDIA A100 GPU (TACC Lonestar6); (2) following the PhysGaussian extraction pattern, trained Gaussian kernels are opacity-filtered and converted into an initial MPM particle volume; (3) the particle volume, together with a rigid-body vehicle proxy, is simulated in the Genesis physics engine using weakly-compressible MPM water and rigid-MPM coupling; (4) the simulation's displacement output is passed through a query-conditioned abstraction-selection orchestrator, \texttt{orchestrate\_ford\_query()}, which returns a FORD/NO-FORD verdict at the cheapest level of fidelity sufficient to answer correctly.
+The reconstruct-to-decide pipeline (Fig.~\ref{fig:pipeline}) has four stages: (1) a real flooded or water-adjacent road scene is captured on video and reconstructed in 3D via Gaussian splatting on an NVIDIA A100 GPU (TACC Lonestar6); (2) following the PhysGaussian extraction pattern, trained Gaussian kernels are opacity-filtered and converted into an initial MPM particle volume; (3) the particle volume, together with a rigid-body vehicle proxy, is simulated with weakly-compressible MPM water and rigid-MPM coupling, in the Genesis physics engine as designed and, for the coupled runs reported here, in a Warp-based MPM solver; (4) the simulation's displacement output is passed through a query-conditioned abstraction-selection orchestrator, \texttt{orchestrate\_ford\_query()}, which returns a FORD/NO-FORD verdict at the cheapest level of fidelity sufficient to answer correctly.
 
 \subsection{Three-Level Abstraction Ladder}
 We compare three levels of physical fidelity on the same phase-space grid of (depth, velocity) conditions, summarized in Table~\ref{tab:ladder}.
