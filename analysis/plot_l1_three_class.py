@@ -227,7 +227,7 @@ def build(cells, prov, out_path):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--csv", default=str(REPO_ROOT / "data" / "scenario_sweep.csv"))
-    ap.add_argument("--out", default=str(REPO_ROOT / "figures" / "fig1_l1_three_class.pdf"))
+    ap.add_argument("--out", default=str(REPO_ROOT / "figures" / "L1_three_class_corrected.pdf"))
     args = ap.parse_args()
 
     rows = load_rows(args.csv)
