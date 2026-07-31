@@ -64,7 +64,7 @@ This project instantiates that orchestrator for one deliberately narrow query: \
 \begin{figure*}[t]
 \centering
 \includegraphics[width=0.92\textwidth]{pipeline_diagram_v2.pdf}
-\caption{The reconstruct-to-decide pipeline: a real video is reconstructed as a Gaussian splat, bridged to Material Point Method particles following PhysGaussian, simulated in Genesis with rigid-fluid coupling, and resolved to a FORD/NO-FORD verdict by the L0/L1/L2 abstraction orchestrator. Dashed stages are conceptual, not the path used for any result reported here: the Gaussian-splat reconstruction and the PhysGaussian kernel-to-particle bridge are designed and not yet built. The MPM stage names the engine the pipeline is designed around; the coupled runs reported in Section~\ref{subsec:sweep} ran on a Warp-based MPM solver.}
+\caption{The reconstruct-to-decide pipeline: a real video is reconstructed as a Gaussian splat, bridged to Material Point Method particles following PhysGaussian, simulated with rigid-fluid coupling, and resolved to a FORD/NO-FORD verdict by the L0/L1/L2 abstraction orchestrator. Dashed stages are conceptual, not the path used for any result reported here: the Gaussian-splat reconstruction and the PhysGaussian kernel-to-particle bridge are designed and not yet built. The MPM stage names the solver that produced the coupled runs reported in Section~\ref{subsec:sweep}; Genesis is the engine the full pipeline is designed around.}
 \label{fig:pipeline}
 \end{figure*}
 
