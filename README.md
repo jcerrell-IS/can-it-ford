@@ -22,7 +22,7 @@ Three methods run side by side, from cheapest to most expensive, to find the sim
 | Level | Model | Source |
 |---|---|---|
 | **L0** | Static depth threshold (d >= 0.15 m gives NO-FORD) | [NWS Turn Around Don't Drown](https://www.weather.gov/safety/flood-turn-around-dont-drown) |
-| **L1** | AR&R hazard scalar D x V, threshold 0.60 m2/s (Large 4WD class). Draft/interim criterion from the source report, not an endorsed safety standard. | [Shand et al. 2011](citations/ARR_Project_10_Stage2_Report_Final.pdf) |
+| **L1** | AR&R two-part criterion: a class depth cap AND a D x V cap, both required together. The paper's canonical class is Small Car (depth <= 0.30 m and D x V <= 0.30 m2/s). The bare D x V <= 0.60 m2/s figure often quoted is the Large 4WD hazard cap alone, with no depth restriction. Draft/interim criterion from the source report, not an endorsed safety standard. | [Shand et al. 2011](citations/ARR_Project_10_Stage2_Report_Final.pdf) |
 | **L2** | Coupled particle simulation: weakly compressible water plus a rigid vehicle body, verdict from lateral drift | This project |
 
 The abstraction ladder is a running instance of the Section 3 orchestrator in [Physically Viable World Models (Thorpe et al. 2026, arXiv:2605.30542)](https://arxiv.org/abs/2605.30542). Forward direction here (known scene plus known flood gives a verdict) is the sibling of the inverse direction in [Hsiao and Kumar 2025 (arXiv:2507.09005)](https://arxiv.org/abs/2507.09005), which recovers material properties from images.
@@ -44,7 +44,7 @@ The splat-to-particle bridge is intended to reuse [PhysGaussian (Xie et al. 2023
 
 ## Status (updated 2026-07-29): real MPM verdicts now exist, one table was withdrawn
 
-**The L2 solver migration to MPM is functionally proven.** On 2026-07-25, kks32/mpm-engine's real MPM solver ran to completion on Vista (job 866266, reusing an idle allocation) using the real watertight Yaris hull, yaris_coarse_v1l_watertight.ply, not a box proxy, across all three AR&R vehicle classes: 1100 kg small passenger, 1609 kg large passenger, 2337 kg large 4WD.
+**The L2 solver migration to MPM is functionally proven.** On 2026-07-25, kks32/mpm-engine's real MPM solver ran to completion on Vista (job 866266, reusing an idle allocation) using the real watertight Yaris hull, yaris_coarse_v1l_watertight.ply, not a box proxy, at the kerb masses of all three AR&R vehicle classes: 1100 kg small passenger, 1609 kg large passenger, 2337 kg large 4WD. Only the mass varies. The single 4.2826 m hull fails AR&R's length criterion for both upper classes at every mass, so this is a controlled mass-sensitivity study on one geometry, not a comparison of three vehicles.
 
 **One derived result from that pass was retracted, not hidden.** The first class-verdict table asserted a verdict per class. A follow-up validation pass, docs/mass_sensitivity_table.md v3, found the 1100 kg case failed a particle-passthrough gate at 10.67 percent against a 10 percent limit, and withdrew that table. The v3 rerun, under standing water plus sustained inflow rather than the original dry-start setup, found SLIDE as the only failure mode that activated across all three classes, and found L0 and L2 agreeing with each other while L1, the AR&R depth-velocity hazard scalar, was the rung that diverged.
 
@@ -61,10 +61,10 @@ The splat-to-particle bridge is intended to reuse [PhysGaussian (Xie et al. 2023
 | Class | Anchors | Mass | Bounding box (L x W x H, m) | Inertia source |
 |---|---|---|---|---|
 | `compact_sedan` | Toyota Yaris (2010, NCAC/CCSA FE model) | 1100 kg | 4.30 x 1.70 x 1.47 | uniform-box fallback (no NHTSA-measured Yaris); mass/bbox from [crash-validated FE model](https://doi.org/10.13021/G8JS5D) |
-
-The `compact_sedan` bounding box above is the vehicle's published nominal specification, not the watertight hull's own measured extent. The mesh actually spans 4.2826 x 1.7464 x 1.5180 m (11.3533 m3 against the nominal 10.7457 m3). The paper carries both figures and uses the nominal box only as a reference prism; anything computing displaced volume should use the measured hull volume, 3.5427 m3.
 | `midsize_suv` | Toyota Highlander, Ford Explorer | 1990 kg | 4.96 x 1.93 x 1.75 | measured, NHTSA SAE 1999-01-1336 |
 | `light_pickup` | Ford F-150, Toyota Tacoma/Tundra | 2300 kg | 5.89 x 2.03 x 1.96 | measured, NHTSA SAE 1999-01-1336 |
+
+The `compact_sedan` bounding box above is the vehicle's published nominal specification, not the watertight hull's own measured extent. The mesh actually spans 4.2826 x 1.7464 x 1.5180 m (11.3533 m3 against the nominal 10.7457 m3). The paper carries both figures and uses the nominal box only as a reference prism; anything computing displaced volume should use the measured hull volume, 3.5427 m3.
 
 Curb weights and bounding boxes come from manufacturer spec sheets; center-of-gravity heights and full measured principal moment-of-inertia tensors (Ixx roll, Iyy pitch, Izz yaw) come from the NHTSA Light Vehicle Inertial Parameter Database. These are measured on instrumented rigs, not box estimates. Call `get_vehicle(vehicle_class)` for a simulation-ready dict. Not yet wired into the L2 scripts ([#7](../../issues/7)).
 
@@ -101,7 +101,9 @@ cd /work/11603/jcerrell0629/vista/
 apptainer exec --nv $GENESIS_PATH python3 simulation/can_it_ford_L2.py <depth_m> <velocity_ms>
 ```
 
-Add `--record` to save a headless video. The MPM variant is `simulation/can_it_ford_L2_mpm.py` (currently crashing, see [#1](../../issues/1)).
+Add `--record` to save a headless video.
+
+**These commands are the superseded Genesis path, not how the paper's results were produced.** Every coupled result in the current paper came from kks32/mpm-engine on Vista. `simulation/can_it_ford_L2_mpm.py` is a separate Track 2 script that still carries the hardcoded superseded vehicle box described in Status, and is not the path to reproduce the paper.
 
 **L0 and L1 (local, no GPU):**
 
@@ -135,7 +137,7 @@ python3 analysis/make_phase_space_v2.py
 
 | File | Description |
 |---|---|
-| `data/all_runs_inventory.csv` | **Primary source for the paper's coupled sweep.** 17 gated runs on the watertight Yaris hull. 7 of the 17 exceed a 10 percent particle-passthrough gate and are flagged, not excluded |
+| `data/all_runs_inventory.csv` | **Primary source for the paper's coupled sweep.** 17 gated runs on the watertight Yaris hull. 7 of the 17 exceed a 10 percent particle-passthrough gate and are flagged, not excluded. **Not currently committed:** the `data/*` ignore rule excludes it, so a fresh clone will not contain this file |
 | `data/phase_space_results.csv` | L2 SPH pilot output (pre-fix). **Not usable for an agreement rate:** it carries a single verdict column with no corresponding L1 value, and 15 of its 31 rows share a condition with another row under a different verdict (three separate 0.30 m / 1.5 m/s runs return FORD, NO-FORD, NO-FORD). Reconciling it against an explicit L1 calculation is outstanding |
 | `data/scenario_sweep.csv` | Theoretical L0/L1 grid (depths 0.1 to 1.0 m x velocities 0.0 to 3.0 m/s), 70 scenarios |
 | `data/mu_sweep_results.csv` | Friction sensitivity at (d=0.30 m, v=1.5 m/s) |
