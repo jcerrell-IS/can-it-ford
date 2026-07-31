@@ -133,7 +133,7 @@ A first-principles force balance motivates why L1's scalar hazard measure is exp
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=\linewidth]{force_balance.png}
+\includegraphics[width=\linewidth]{force_balance.jpg}
 \caption{Analytical force-balance calculation, not simulation output. Left: lateral drag force versus flow velocity at four water depths, against the maximum static friction limit (dashed). Right: the resulting critical velocity, above which drag exceeds friction, as a function of depth. The legend reports $N=0$ and $F_{\text{fric}}=0$ at 0.30, 0.45, and 0.60\,m. Those zeros are a real buoyancy result, not missing values: at 0.30\,m this model's buoyant force already reaches 15.99\,kN against a vehicle weight of 10.79\,kN, so normal force is zero and the friction limit $\mu N$ vanishes with it. The right panel corroborates this independently, with critical velocity falling to zero near 0.19\,m. That flotation depth is a property of the model's displacement assumption, which treats the vehicle as a solid prism over roughly three quarters of its bounding-box footprint. The real hull encloses 3.5427\,m\textsuperscript{3} against a 10.7457\,m\textsuperscript{3} prism, a fill factor of 0.33. That prism is the \emph{nominal} reference bounding box, the vehicle's published specification dimensions of 4.30 $\times$ 1.70 $\times$ 1.47\,m, and not the hull's own measured extent: the mesh actually spans 4.2826 $\times$ 1.7464 $\times$ 1.5180\,m, or 11.3533\,m\textsuperscript{3}, against which the fill factor is 0.312 rather than 0.33. The distinction does not change the conclusion, since both prisms overstate displacement: on either figure the assumption floats the vehicle at about 0.20\,m. That is below even the 0.30\,m depth cap AR\&R assigns to its Small Car class \cite{shand2011arr}, so the model reaches flotation before the empirical guideline reaches its own depth limit. This figure should therefore be read as establishing the \emph{shape} of the drag-versus-friction argument, not as a calibrated flotation prediction.}
 \label{fig:force}
 \end{figure}
@@ -196,6 +196,15 @@ Fig.~\ref{fig:masssweep} shows the mass-by-resolution block. Displacement falls 
 \includegraphics[width=\linewidth]{mass_grid_sweep_v2.pdf}
 \caption{The direct visual for the 3\,$\times$\,3 mass-by-resolution block described in Section~\ref{subsec:sweep}: coupled-MPM final displacement versus vehicle mass at three grid resolutions, from the nine \texttt{sweep=mass\_grid} rows of \texttt{data/all\_runs\_inventory.csv}. One hull, three AR\&R mass overrides, fixed depth 0.30\,m and velocity 1.5\,m/s. Displacement decreases with mass at every resolution, but the curves do not collapse onto one another and the 48- and 64-cell curves cross, so the effect size is not grid-converged; no ratio or multiplier is reported for this reason. Ringed markers exceed the 10\% particle-passthrough limit and are flagged rather than excluded; 7 of the 17 runs in the full inventory exceed it.}
 \label{fig:masssweep}
+\end{figure}
+
+Fig.~\ref{fig:l2render} shows a single frame from the 1100\,kg, \texttt{n\_grid}=64 member of that block.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{l2_render_g64_m1100_f0045.png}
+\caption{One frame (45 of 90, $t = 1.50$\,s) from run \texttt{g64\_m1100} of the same \texttt{data/all\_runs\_inventory.csv} inventory: the watertight Yaris hull carried at 1100\,kg (AR\&R small passenger), \texttt{n\_grid}=64, requested depth 0.30\,m (realized 0.2944\,m, four water layers), and inflow velocity 1.5\,m/s, giving $D \times V = 0.4416$\,m\textsuperscript{2}/s. This is coupled-MPM solver output, not a Gaussian-splat reconstruction: the vehicle is the crash-validated finite-element hull carried as a rigid body, and the water surface is an isosurface reconstructed from the run's own MPM particles, coloured by water speed. The vehicle is drawn as the full watertight mesh posed by the rigid-body transform, while the physics ran on the 8{,}905 material points filling that hull. It is included to make the coupled simulation legible as a physical scene, not as a validated result. This run is one of the 7 of 17 that exceed the 10\% particle-passthrough gate, at 10.7\%, and the frame is mid-run, so the displacement printed in the frame is not the run's final reported value.}
+\label{fig:l2render}
 \end{figure}
 
 % =================================================================
