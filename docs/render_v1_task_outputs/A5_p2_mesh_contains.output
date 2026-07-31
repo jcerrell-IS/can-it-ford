@@ -1,0 +1,3 @@
+A5  P-2 DISCRIMINATOR: AABB vs POSED-MESH CONTAINS
+    no embree -> AABB-restricted, 800-sample estimate per frame, full 655k mesh
+    frame      AABB%   MESH-CONT%     n_aabb

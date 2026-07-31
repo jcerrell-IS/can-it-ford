@@ -6,7 +6,10 @@ import zlib
 from io import BytesIO
 from pathlib import Path
 
-from PIL import Image, ImageChops
+# Pillow is imported lazily inside the raster helpers only. The default
+# vector path (build_vector) shells out to rsvg-convert and needs no Pillow,
+# so importing it at module scope would make the common case fail on any
+# interpreter without Pillow installed, including /usr/bin/python3.
 
 REPO = Path('/Users/josie/can-it-ford')
 OUTDIR = REPO / 'paper' / 'figures_review'
@@ -31,6 +34,7 @@ def svg_size(svg):
 
 
 def rasterize(svg, n):
+    from PIL import Image
     png = svg.parent / (svg.name + '.png')
     if png.exists():
         png.unlink()
@@ -47,12 +51,14 @@ def rasterize(svg, n):
 
 
 def ink_bbox(png):
+    from PIL import Image, ImageChops
     im = Image.open(png).convert('RGB')
     white = Image.new('RGB', im.size, (255, 255, 255))
     return ImageChops.difference(im, white).getbbox()
 
 
 def flatten_to_jpeg(png):
+    from PIL import Image
     im = Image.open(png)
     if im.mode in ('RGBA', 'LA', 'P'):
         im = im.convert('RGBA')
@@ -145,7 +151,58 @@ def build(stem):
     print()
 
 
+def build_vector(stem):
+    """SVG -> true vector PDF via rsvg-convert (librsvg).
+
+    This is the preferred path and the default. The raster build() above
+    exists only because this machine previously had no SVG-to-vector
+    converter, so figures had to go SVG -> qlmanage PNG -> JPEG -> PDF,
+    which embeds a single DCTDecode image and softens under zoom.
+    librsvg 2.62.3 is installed at /opt/homebrew/bin/rsvg-convert and
+    supports `-f pdf` directly, so that detour is no longer needed.
+
+    Aspect ratio is preserved by librsvg from the SVG's own width/height,
+    so figures included with [width=\\linewidth] occupy the same vertical
+    space as the raster versions to within 0.4 percent. No crop or bbox
+    correction is required here, unlike the qlmanage square-canvas path.
+    """
+    svg = OUTDIR / f'{stem}.svg'
+    if not svg.exists():
+        raise SystemExit(f'missing source: {svg}')
+    out = OUTDIR / f'{stem}.pdf'
+
+    sw, sh = svg_size(svg)
+    print(f'{stem}')
+    print(f'  svg            : {sw:g} x {sh:g}  (aspect {sw / sh:.4f})')
+
+    before = out.stat().st_size if out.exists() else None
+    subprocess.run(['rsvg-convert', '-f', 'pdf', '-o', str(out), str(svg)],
+                   check=True)
+
+    raw = out.read_bytes()
+    n_img = raw.count(b'/Subtype /Image') + raw.count(b'/Subtype/Image')
+    n_dct = raw.count(b'DCTDecode')
+    if n_img or n_dct:
+        raise SystemExit(
+            f'{stem}: expected true vector, got {n_img} image xobject(s) and '
+            f'{n_dct} DCTDecode filter(s). Investigate before shipping.')
+
+    if before is not None:
+        print(f'  replaced       : {before} -> {len(raw)} bytes '
+              f'({100 * (len(raw) / before - 1):+.1f}%)')
+    print(f'  wrote          : {out}  ({len(raw)} bytes)')
+    print(f'  vector check   : imageXObjects=0, DCTDecode=0  TRUE VECTOR')
+    print()
+
+
 if __name__ == '__main__':
-    stems = sys.argv[1:] or sorted(RASTER_LONG_EDGE)
+    argv = sys.argv[1:]
+    raster = '--raster' in argv
+    stems = [a for a in argv if not a.startswith('--')] or sorted(RASTER_LONG_EDGE)
+    if raster:
+        print('MODE: raster (legacy JPEG-in-PDF path), --raster requested\n')
+    else:
+        print('MODE: vector via rsvg-convert (default). Use --raster for the '
+              'legacy path.\n')
     for stem in stems:
-        build(stem)
+        (build if raster else build_vector)(stem)

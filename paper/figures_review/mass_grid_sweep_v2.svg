@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="780" height="500" viewBox="0 0 780 500" font-family="Helvetica,Arial,sans-serif">
+<rect width="780" height="500" fill="white"/>
+<line x1="82" y1="422.0" x2="566" y2="422.0" stroke="#dcdcdc" stroke-width="1"/>
+<text x="73" y="426.0" font-size="11.5" fill="#5c5c5c" text-anchor="end">0.00</text>
+<line x1="82" y1="363.3" x2="566" y2="363.3" stroke="#dcdcdc" stroke-width="1"/>
+<text x="73" y="367.3" font-size="11.5" fill="#5c5c5c" text-anchor="end">0.12</text>
+<line x1="82" y1="304.7" x2="566" y2="304.7" stroke="#dcdcdc" stroke-width="1"/>
+<text x="73" y="308.7" font-size="11.5" fill="#5c5c5c" text-anchor="end">0.24</text>
+<line x1="82" y1="246.0" x2="566" y2="246.0" stroke="#dcdcdc" stroke-width="1"/>
+<text x="73" y="250.0" font-size="11.5" fill="#5c5c5c" text-anchor="end">0.36</text>
+<line x1="82" y1="187.3" x2="566" y2="187.3" stroke="#dcdcdc" stroke-width="1"/>
+<text x="73" y="191.3" font-size="11.5" fill="#5c5c5c" text-anchor="end">0.48</text>
+<line x1="82" y1="128.7" x2="566" y2="128.7" stroke="#dcdcdc" stroke-width="1"/>
+<text x="73" y="132.7" font-size="11.5" fill="#5c5c5c" text-anchor="end">0.60</text>
+<line x1="82" y1="70.0" x2="566" y2="70.0" stroke="#dcdcdc" stroke-width="1"/>
+<text x="73" y="74.0" font-size="11.5" fill="#5c5c5c" text-anchor="end">0.72</text>
+<line x1="115.4" y1="70" x2="115.4" y2="422" stroke="#dcdcdc" stroke-width="1" stroke-dasharray="2,3"/>
+<text x="115.4" y="442" font-size="11.5" fill="#5c5c5c" text-anchor="middle">1100</text>
+<line x1="285.3" y1="70" x2="285.3" y2="422" stroke="#dcdcdc" stroke-width="1" stroke-dasharray="2,3"/>
+<text x="285.3" y="442" font-size="11.5" fill="#5c5c5c" text-anchor="middle">1609</text>
+<line x1="528.3" y1="70" x2="528.3" y2="422" stroke="#dcdcdc" stroke-width="1" stroke-dasharray="2,3"/>
+<text x="528.3" y="442" font-size="11.5" fill="#5c5c5c" text-anchor="middle">2337</text>
+<rect x="82" y="70" width="484" height="352" fill="none" stroke="#1a1a1a" stroke-width="1.2"/>
+<polyline points="115.4,250.5 285.3,296.4 528.3,330.3" fill="none" stroke="#1f6f9c" stroke-width="2.6" stroke-dasharray="5,3"/>
+<circle cx="115.4" cy="250.5" r="6.4" fill="#1f6f9c" stroke="white" stroke-width="1.6"/>
+<circle cx="115.4" cy="250.5" r="12" fill="none" stroke="#6a1b9a" stroke-width="2.2" stroke-dasharray="3,2.5"/>
+<circle cx="285.3" cy="296.4" r="6.4" fill="#1f6f9c" stroke="white" stroke-width="1.6"/>
+<circle cx="528.3" cy="330.3" r="6.4" fill="#1f6f9c" stroke="white" stroke-width="1.6"/>
+<text x="574.0" y="334.3" font-size="11.5" fill="#1f6f9c" font-weight="bold">n_grid = 48</text>
+<polyline points="115.4,100.0 285.3,268.5 528.3,355.7" fill="none" stroke="#c0392b" stroke-width="2.6"/>
+<circle cx="115.4" cy="100.0" r="6.4" fill="#c0392b" stroke="white" stroke-width="1.6"/>
+<circle cx="115.4" cy="100.0" r="12" fill="none" stroke="#6a1b9a" stroke-width="2.2" stroke-dasharray="3,2.5"/>
+<circle cx="285.3" cy="268.5" r="6.4" fill="#c0392b" stroke="white" stroke-width="1.6"/>
+<circle cx="528.3" cy="355.7" r="6.4" fill="#c0392b" stroke="white" stroke-width="1.6"/>
+<text x="574.0" y="359.7" font-size="11.5" fill="#c0392b" font-weight="bold">n_grid = 64</text>
+<polyline points="115.4,290.7 285.3,345.8 528.3,378.3" fill="none" stroke="#2e7d32" stroke-width="2.6"/>
+<circle cx="115.4" cy="290.7" r="6.4" fill="#2e7d32" stroke="white" stroke-width="1.6"/>
+<circle cx="285.3" cy="345.8" r="6.4" fill="#2e7d32" stroke="white" stroke-width="1.6"/>
+<circle cx="528.3" cy="378.3" r="6.4" fill="#2e7d32" stroke="white" stroke-width="1.6"/>
+<text x="574.0" y="382.3" font-size="11.5" fill="#2e7d32" font-weight="bold">n_grid = 96</text>
+<text x="324.0" y="462" font-size="13" fill="#1a1a1a" text-anchor="middle">Vehicle mass (kg), applied as a mass override to one fixed hull</text>
+<text x="20" y="246.0" font-size="13" fill="#1a1a1a" text-anchor="middle" transform="rotate(-90 20 246.0)">L2 final displacement (m)</text>
+<text x="82" y="26" font-size="14" fill="#1a1a1a" font-weight="bold">Coupled-MPM displacement vs. vehicle mass, at three grid resolutions</text>
+<text x="82" y="43" font-size="10.5" fill="#5c5c5c">9 runs, standing water sustained inflow, depth 0.3 m, velocity 1.5 m/s</text>
+<text x="82" y="58" font-size="10.5" fill="#8a1c12">Direction is consistent at every resolution; the magnitude is not. The lines do not overlay, so the effect size is not grid-converged.</text>
+<circle cx="598" cy="114" r="6.4" fill="#9e9e9e" stroke="white" stroke-width="1.4"/>
+<circle cx="598" cy="114" r="12" fill="none" stroke="#6a1b9a" stroke-width="2.2" stroke-dasharray="3,2.5"/>
+<text x="618" y="118" font-size="11" fill="#6a1b9a" font-weight="bold">gate exceeded</text>
+<text x="588" y="135" font-size="10" fill="#5c5c5c">particle passthrough</text>
+<text x="588" y="148" font-size="10" fill="#5c5c5c">above 10%. Flagged,</text>
+<text x="588" y="161" font-size="10" fill="#5c5c5c">not excluded.</text>
+<text x="588" y="182" font-size="10" fill="#5c5c5c">7 of 17 runs in the</text>
+<text x="588" y="195" font-size="10" fill="#5c5c5c">full inventory exceed it.</text>
+<text x="82" y="492" font-size="9" fill="#8a8a8a">source: data/all_runs_inventory.csv, sweep=mass_grid rows; no ratio or multiplier is reported because the magnitude is not grid-converged</text>
+</svg>

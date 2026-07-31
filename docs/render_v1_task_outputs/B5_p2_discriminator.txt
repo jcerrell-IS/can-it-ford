@@ -1,0 +1,39 @@
+B5 P-2 DISCRIMINATOR: AABB versus POSED-MESH CONTAINS, 90 frames
+    run = g64_m1100
+    trimesh.ray.has_embree = False
+    column (i)  AABB      : EXACT, all water particles every frame
+    column (ii) mesh-inside: AABB-restricted, <= 260 sampled/frame, scaled. Unbiased, SE reported.
+
+    gate mesh: 655308 faces (FULL, per B3), watertight=True
+    containment tested in the VEHICLE frame against one static mesh, which is
+    identical to posing the mesh per frame (the pose is rigid) but builds the
+    spatial index once instead of 90 times.
+
+    frame    AABB %    MESH %   +/- SE   n_aabb  n_smp
+        0    8.3301    0.4485   0.1166     4029    260
+        5    7.0006    0.5385   0.1157     3386    260
+       10    7.2467    0.5017   0.1141     3505    260
+       15    7.3232    0.4507   0.1091     3542    260
+       20    7.3852    0.5397   0.1192     3572    260
+       25    7.4968    0.5767   0.1239     3626    260
+       30    7.5754    0.7284   0.1385     3664    260
+       35    7.7615    0.5373   0.1222     3754    260
+       40    8.1150    0.9364   0.1608     3925    260
+       45    8.8366    0.8497   0.1616     4274    260
+       50    9.5127    1.1342   0.1912     4601    260
+       55    9.9655    1.6481   0.2296     4820    260
+       60   10.3190    1.3891   0.2184     4991    260
+       65   10.5506    1.5014   0.2286     5103    260
+       70   10.6354    1.6362   0.2380     5144    260
+       75   10.6705    1.5595   0.2338     5161    260
+       80   10.6374    1.4729   0.2279     5145    260
+       85   10.5196    1.3756   0.2200     5088    260
+       89   10.4886    1.3312   0.2165     5073    260
+
+    elapsed 918 s
+    AABB  frame0 8.3301%   max 10.6705% at f=75   rise above f0 +2.3404 pp
+    MESH  frame0 0.4485%   max 2.1999% at f=67   rise above f0 +1.7513 pp
+    MESH  mean SE across frames 0.1741 pp (noise floor)
+
+    VERDICT: column (ii) rises beyond the noise floor. Real penetration
+             exists on top of the AABB artifact. Magnitude above.

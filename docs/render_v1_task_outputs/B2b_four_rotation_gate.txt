@@ -1,0 +1,9 @@
+B2b FOUR-ROTATION RELATIVE GATE
+    run = g64_m1100
+B2a trimesh.ray.has_embree = False
+    single raw mesh: 655308 faces, watertight=True
+    candidates evaluated by transforming PARTICLES into the raw frame,
+    which is exactly equivalent and builds one spatial index.
+    embree ABSENT, so SUBSAMPLED to 5000 of 8905 solid particles (seed=0). Stated per B2a.
+
+    candidate rotation                 frac inside  seconds

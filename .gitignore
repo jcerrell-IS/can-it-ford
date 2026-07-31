@@ -53,3 +53,8 @@ _ARCHIVE_*
 .claude/hooks/*.bak
 _inbox/
 _ARCHIVE_*
+# PreCompact snapshots, per-session churn, every pane appends here
+.claude/state/
+.olauth
+deliverables/
+deliverables/

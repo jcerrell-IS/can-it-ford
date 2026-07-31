@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Can It Ford? TACC REU 2026 Poster</title>
+<style>
+@page { size: 56in 42in; margin: 0; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: #ffffff;
+  color: #17171a;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+.board {
+  width: 56in;
+  height: 42in;
+  box-sizing: border-box;
+  padding: 1.1in 1.25in 0.9in 1.25in;
+  display: flex;
+  flex-direction: column;
+  background: #ffffff;
+}
+
+.header {
+  border-bottom: 6pt solid #0c447c;
+  padding-bottom: 0.34in;
+  margin-bottom: 0.42in;
+  display: grid;
+  grid-template-columns: 5.6in 1fr 5.6in;
+  column-gap: 0.5in;
+  align-items: center;
+}
+
+.logo-slot {
+  height: 2.5in;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.logo-slot.left { justify-content: flex-start; }
+.logo-slot.right { justify-content: flex-end; }
+.logo-slot img {
+  max-width: 100%;
+  max-height: 2.5in;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  object-position: center;
+}
+
+h1 {
+  font-size: 92pt;
+  line-height: 1.06;
+  font-weight: 700;
+  margin: 0 0 0.16in 0;
+  text-align: center;
+  letter-spacing: -0.5pt;
+  color: #0c447c;
+}
+
+.authors {
+  font-size: 34pt;
+  font-weight: 600;
+  text-align: center;
+  margin: 0 0 0.08in 0;
+  color: #17171a;
+}
+
+.affil {
+  font-size: 24pt;
+  text-align: center;
+  margin: 0;
+  color: #45474d;
+  line-height: 1.35;
+}
+
+.body-grid {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 16.4in 16.4in 18.667in;
+  column-gap: 0.9in;
+  align-content: start;
+}
+
+.col { display: flex; flex-direction: column; }
+
+h2 {
+  font-size: 36pt;
+  font-weight: 700;
+  color: #ffffff;
+  background: #0c447c;
+  margin: 0 0 0.13in 0;
+  padding: 0.09in 0.18in;
+  border-radius: 4pt;
+  letter-spacing: 0.2pt;
+}
+
+h3 {
+  font-size: 26pt;
+  font-weight: 700;
+  color: #0c447c;
+  margin: 0.19in 0 0.07in 0;
+  line-height: 1.18;
+}
+
+p, li {
+  font-size: 24pt;
+  line-height: 1.34;
+  margin: 0 0 0.13in 0;
+  color: #17171a;
+}
+
+ul { margin: 0 0 0.13in 0; padding-left: 0.4in; }
+li { margin-bottom: 0.07in; }
+
+strong { font-weight: 700; color: #0a0a0c; }
+
+.lede {
+  font-size: 27pt;
+  line-height: 1.38;
+  font-weight: 500;
+  border-left: 5pt solid #b5892a;
+  padding-left: 0.26in;
+  margin-bottom: 0.22in;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 24pt;
+  margin: 0 0 0.17in 0;
+}
+th {
+  background: #eef2f7;
+  color: #0c447c;
+  font-weight: 700;
+  text-align: left;
+  padding: 0.09in 0.13in;
+  border-bottom: 2.5pt solid #0c447c;
+}
+td {
+  padding: 0.085in 0.13in;
+  border-bottom: 1pt solid #d3d7de;
+  color: #17171a;
+}
+td.num, th.num { text-align: right; }
+tr.ref td { background: #fdf6e6; font-weight: 700; }
+
+figure { margin: 0 0 0.2in 0; }
+figure img {
+  display: block;
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+  object-position: left top;
+}
+figcaption {
+  font-size: 20pt;
+  line-height: 1.34;
+  color: #3d4046;
+  margin-top: 0.11in;
+}
+figcaption b { color: #0a0a0c; }
+
+.callout {
+  background: #fdf6e6;
+  border: 2pt solid #b5892a;
+  border-radius: 5pt;
+  padding: 0.2in 0.24in;
+  margin: 0 0 0.19in 0;
+}
+.callout p { margin: 0; font-size: 24pt; line-height: 1.36; }
+
+.pending {
+  display: inline-block;
+  background: #f3e2e2;
+  color: #8a2020;
+  border: 1.5pt solid #b34a4a;
+  border-radius: 3pt;
+  padding: 0 0.09in;
+  font-size: 19pt;
+  font-weight: 700;
+  letter-spacing: 0.4pt;
+}
+
+.note {
+  font-size: 20pt;
+  line-height: 1.34;
+  color: #4a4d54;
+  margin: 0 0 0.16in 0;
+}
+
+.refs { font-size: 19pt; line-height: 1.34; color: #2c2f35; }
+.refs li { font-size: 19pt; margin-bottom: 0.075in; }
+
+.ack { font-size: 21pt; line-height: 1.36; color: #2c2f35; }
+
+.footer {
+  border-top: 6pt solid #0c447c;
+  margin-top: 0.34in;
+  padding-top: 0.3in;
+  display: grid;
+  grid-template-columns: 21.5in 1fr 3.9in;
+  column-gap: 0.9in;
+  align-items: start;
+}
+
+.footer h2 {
+  font-size: 30pt;
+  margin-bottom: 0.12in;
+  padding: 0.07in 0.16in;
+}
+
+.qr-reserve {
+  height: 3.6in;
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+}
+.qr-reserve img {
+  width: 3.6in;
+  height: 3.6in;
+  object-fit: contain;
+  object-position: right top;
+}
+</style>
+</head>
+<body>
+<div class="board">
+
+  <div class="header">
+    <div class="logo-slot left"></div>
+    <div>
+      <h1>Can It Ford? Finding the Minimum Sufficient Physical Abstraction for Vehicle Flood Traversability</h1>
+      <p class="authors">Josie Cerrell<sup>1</sup>, Hassan Iqbal<sup>2</sup>, Cheng-Hsi Hsiao<sup>2</sup>, Krishna Kumar<sup>2</sup></p>
+      <p class="affil"><sup>1</sup> Claremont McKenna College, Claremont, CA &nbsp;&nbsp;|&nbsp;&nbsp; <sup>2</sup> GeoElements Lab, Texas Advanced Computing Center, The University of Texas at Austin</p>
+    </div>
+    <div class="logo-slot right"></div>
+  </div>
+
+  <div class="body-grid">
+
+    <div class="col">
+      <h2>Introduction</h2>
+      <p>I am <strong>Josie Cerrell</strong>, an <strong>Integrated Sciences</strong> major at <strong>Claremont McKenna College</strong>. This work was done through the <strong>NSF REU Site: Cyberinfrastructure Research for Societal Advancement</strong>, hosted at the <strong>Texas Advanced Computing Center</strong> at <strong>The University of Texas at Austin</strong>, in the <strong>GeoElements Lab</strong> under PI <strong>Dr. Krishna Kumar</strong>, with daily mentorship from <strong>Hassan Iqbal</strong>, <strong>Cheng-Hsi Hsiao</strong>, and <strong>Sarah Etter</strong>.</p>
+
+      <p>Flooded roads kill people who could not tell they were dangerous. Depth, current speed, and whether the road under the water is still there are all invisible from a driver's seat. An autonomous vehicle has exactly the same blind spot, and so does an AI world model that predicts what a scene will look like next: it can generate a future that looks completely plausible while breaking the physics that actually decides whether the car makes it across.</p>
+
+      <h2>Research Goal</h2>
+      <p class="lede">Given a flooded road and a specific vehicle, can that vehicle ford it, and what is the simplest physics you can get away with and still be right?</p>
+
+      <p>Three levels of model, tested against the same flood conditions:</p>
+      <ul>
+        <li><strong>L0</strong>, a static depth threshold. Deeper than 0.15 m returns NO-FORD. No velocity term at all.</li>
+        <li><strong>L1</strong>, the published depth-velocity stability criteria from the Australian Rainfall and Runoff Project 10 Stage 2 report.</li>
+        <li><strong>L2</strong>, a fully coupled Material Point Method simulation, where buoyancy and drag are not assumed but emerge from water and vehicle interacting.</li>
+      </ul>
+
+      <div class="callout">
+        <p>A safety criterion that is right on average and wrong in the specific case you are standing in is not a safety criterion.</p>
+      </div>
+
+      <h2>Methods</h2>
+      <h3>The criterion side</h3>
+      <p>The AR&amp;R report's Table 3 gives three vehicle classes, small passenger, large passenger, and large 4WD, each with a limiting still-water depth, a limiting velocity of 3.0 m/s, and a limiting depth-velocity product. I read all three rows directly from the source PDF and applied all three caps jointly, which the earlier implementation in this project did not do. Two things the source says that are easy to get wrong: these are criteria for <strong>stationary</strong> vehicles, and the 3.0 m/s velocity cap is an evacuation safety limit imported from human stability research, not a vehicle stability result.</p>
+
+      <h3>The simulation side</h3>
+      <p>A watertight Toyota Yaris hull, <strong>327,212 vertices</strong>, <strong>1100 kg</strong> taken from the LS-DYNA deck header, hull volume <strong>3.542739 m<sup>3</sup></strong>, implied effective density <strong>310.494 kg/m<sup>3</sup></strong>, placed in a water column as a rigid body coupled to weakly-compressible water on an MPM grid.</p>
+
+      <h3>The verification side, which became the bulk of the summer</h3>
+      <p>Before trusting a simulated verdict I audited what the pipeline actually builds. I measured the vehicle's true volume and its submerged volume independently and compared them against what the simulation's own solidifier produces at four grid resolutions.</p>
+
+      <figure>
+        <img src="figures/pipeline_diagram_poster.svg" alt="Pipeline from video to Gaussian splat to MPM seeding to kks32 mpm-engine to verdict, with the L0, L1 and L2 abstraction ladder below it">
+        <figcaption><b>Figure 2. Pipeline and abstraction ladder.</b> Video to Gaussian splat reconstruction to MPM particle seeding to a coupled simulation to a binary verdict. The three rungs below are the abstraction levels compared in this work. Schematic, not a generated result.</figcaption>
+      </figure>
+    </div>
+
+    <div class="col">
+      <h2>Results</h2>
+
+      <h3>1. A published criterion returns one answer per class, not one answer</h3>
+      <p>70 conditions: 10 depths from 0.1 to 1.0 m crossed with 7 velocities from 0 to 3.0 m/s.</p>
+      <table>
+        <thead><tr><th>Class</th><th class="num">FORD</th><th class="num">NO-FORD</th></tr></thead>
+        <tbody>
+          <tr><td>Small passenger</td><td class="num">14</td><td class="num">56</td></tr>
+          <tr><td>Large passenger</td><td class="num">19</td><td class="num">51</td></tr>
+          <tr><td>Large 4WD</td><td class="num">26</td><td class="num">44</td></tr>
+        </tbody>
+      </table>
+      <p><strong>12 of the 70 cells are class-sensitive.</strong> This project's headline example, 0.30 m of water moving at 1.5 m/s, sits inside that band: NO-FORD for a small passenger car and FORD for a large 4WD. The vehicle class you assume decides the verdict, and the source gives no tie-break rule when a vehicle's length, weight, and ground clearance disagree about which class it belongs to.</p>
+
+      <h3>2. Grid resolution biases traction one way, and truth is outside the measured range</h3>
+      <p>At a 0.30 m waterline every grid resolution over-fills the vehicle, so every one of them overstates buoyancy and understates the traction holding the car on the road.</p>
+      <table>
+        <thead><tr><th>Grid</th><th class="num">Modeled traction</th><th class="num">Understated by</th></tr></thead>
+        <tbody>
+          <tr><td>64</td><td class="num">1391 N</td><td class="num">60 percent</td></tr>
+          <tr><td>96</td><td class="num">2459 N</td><td class="num">30 percent</td></tr>
+          <tr><td>128</td><td class="num">3204 N</td><td class="num">8.3 percent</td></tr>
+          <tr class="ref"><td>true geometry</td><td class="num">3495.2 N</td><td class="num">reference</td></tr>
+        </tbody>
+      </table>
+      <div class="callout">
+        <p><strong>This is a one-sided bias, not an uncertainty band.</strong> A band would mean the true answer sits inside the measured spread and refining the grid closes in on it from both sides. That is not what happens. The true value lies above all of it. Every resolution errs in the same direction.</p>
+      </div>
+      <p class="note">Assumptions, all of which move the number: hydrostatic only, valid at zero flow velocity; mu = 0.55 presented as a sensitivity bound, not a cited value; 1100 kg; and a sealed body displacing water over its full submerged envelope. The sealed-body assumption and the column-fill over-fill both inflate buoyancy, so they compound rather than cancel. <span class="pending">PENDING</span> the true-geometry reference derives from a submerged volume of 0.452204 m<sup>3</sup> whose generating routine is not in the repository.</p>
+
+      <h3>3. The cause is upstream of the grid</h3>
+      <p>The scene builder throws the mesh away. It resamples any input to a fixed <strong>60,000-point surface cloud</strong> and solidifies from that, so a 327,212-vertex watertight hull and a sparse point cloud scanned from video arrive at the solver as the same kind of object. Watertightness cannot protect against what happens next.</p>
+      <p>At default resolution the solidified body displaces <strong>2.17 times the hull's true volume, +117 percent</strong>, and its submerged volume at 0.30 m depth is <strong>at least 1.64 times</strong> the true submerged volume. Every simulation run to date used a vehicle displacing more than twice the water it should.</p>
+      <p>An earlier dead end in this project, that a finer grid "hollows out" the vehicle, is a limit of that fixed 60,000-point sample rather than of grid resolution. Measured directly: raising the sample count sixteenfold changes the particle count by <strong>0.7, 1.6, 1.8, 4.6, 12.3 and 37.2 percent</strong> at grids 32, 48, 64, 96, 128 and 192. 60,000 samples are adequate to grid 64, marginal at 96, and inadequate at 128 and above.</p>
+
+      <h3>4. A null result: verdicts that never touched water</h3>
+      <p>An entire earlier simulation track produced FORD verdicts in which the water never reached the vehicle. The water block sat <strong>0.295 m</strong> from the vehicle at an inflow velocity of <strong>0</strong>, so nothing ever closed the gap. Displacement logged <strong>0.0000 m at every one of 500 steps</strong>. The single velocity signature in the run, <strong>0.8240 m/s</strong>, matches free fall through the vehicle's own 3.5 cm ground clearance to within <strong>0.6 percent</strong>: the square root of 2 x 9.81 x 0.035 is 0.8287 m/s. It is a car dropping onto dry ground beside a puddle it never contacted.</p>
+      <p>Those verdicts are <strong>retracted, not blocked</strong>. A blocked result waits on a run that has not happened yet and could still turn out real. A retracted result never measured what it claimed to measure. A second, independent defect in the same track: it hardcodes a superseded vehicle box of 4.66 x 1.79 x 1.44 m, <strong>3.39 times</strong> the real hull volume.</p>
+
+      <h3>5. What is not on this poster</h3>
+      <p><span class="pending">PENDING</span> <strong>No verified L2 FORD or NO-FORD verdict exists as of 2026-07-25.</strong> No results file carries an L2_verdict column, and the one file holding earlier L2-labelled rows comes from the retracted track above. The L1 versus L2 divergence claim that appears in older drafts of this project is therefore not asserted here.</p>
+    </div>
+
+    <div class="col">
+      <figure>
+        <img src="figures/fig1_l1_three_class.svg" alt="Ten by seven grid of flood scenarios shaded by how many of the three vehicle classes are cleared to ford, with twelve hatched class-sensitive cells and AR and R depth and depth-velocity cap lines">
+        <figcaption><b>Figure 1. Vehicle class decides the verdict in 12 of 70 flood scenarios.</b> Each cell is one depth-velocity scenario: depth 0.1 to 1.0 m in 0.1 m steps, water velocity 0.0 to 3.0 m/s in 0.5 m/s steps. Velocity is the speed of the water, not the vehicle. Fill darkness gives how many of the three AR&amp;R classes are cleared to ford at L1. The 12 hatched cells are class-sensitive: the verdict flips on vehicle class alone, with no change to the flood. Seven are cleared only for a Large 4WD; five are cleared for a Large 4WD and a large passenger vehicle but not a small passenger vehicle. In 14 cells all three classes are cleared, in 44 none is. Vertical lines are each class's maximum depth (0.30, 0.40, 0.50 m); curves are the maximum depth-velocity product (0.30, 0.45, 0.60 m<sup>2</sup>/s), which plot as hyperbolas. The classes nest strictly. Verdicts are read from data/scenario_sweep.csv, not recomputed. Draft interim criteria for <b>stationary</b> vehicles, not an endorsed safety standard.</figcaption>
+      </figure>
+
+      <h2>Conclusion</h2>
+      <h3>The minimum sufficient abstraction depends on the question</h3>
+      <p>Deep, still water is handled correctly by a threshold anyone can compute in their head. Shallow, fast water is where the cheap models and the expensive ones part company, and it is also the condition drivers most often misjudge as safe.</p>
+
+      <h3>A published safety criterion is not a single number</h3>
+      <p>It is a family of criteria, one per vehicle class, drafted for stationary vehicles as an explicitly interim revision whose own authors called for full-scale testing and model calibration before anything like it could stand as a true safety guideline. Twelve of seventy conditions in this sweep change answer depending on which class you assume.</p>
+
+      <h3>Verification is a result, not overhead</h3>
+      <p>The two findings I trust most this summer are both negative: a traction estimate biased in one direction at every resolution tested, and a set of verdicts produced by a vehicle that never touched the water. Neither was found by running more simulations. Both were found by measuring what the pipeline actually built and comparing it against the geometry it claimed to be using. <strong>A number without the settings that produced it is not a result.</strong></p>
+
+      <h3>Future directions</h3>
+      <p>Run the coupled L2 sweep on corrected geometry to produce the first trustworthy simulated verdicts, reproduce the true-geometry submerged volume with a routine that lives in the repository, and extend from stationary-vehicle criteria toward the moving vehicle the "Can It Ford" question actually asks about.</p>
+
+    </div>
+
+  </div>
+
+  <div class="footer">
+    <div>
+      <h2>Acknowledgments</h2>
+      <p class="ack">This material is based upon work supported by the <strong>National Science Foundation</strong> under the <strong>NSF REU Site: Cyberinfrastructure Research for Societal Advancement, Award # 2447887</strong>. This research was conducted at <strong>The University of Texas at Austin Texas Advanced Computing Center (TACC)</strong>, whose computational resources made this work possible. I thank my PI, Dr. Krishna Kumar, and my mentors Hassan Iqbal, Cheng-Hsi Hsiao, and Sarah Etter of the GeoElements Lab for their guidance; Cristian Moran for near-peer support; Luke Smith for simulation environment support; and Rosalia Gomez and the TACC Education and Outreach team for organizing the REU program.</p>
+      <p class="ack">The finite element vehicle models used in this work were developed by the Center for Collision Safety and Analysis at George Mason University under contract with the FHWA and NHTSA. Any opinions, findings, and conclusions or recommendations expressed in this material are those of the author and do not necessarily reflect the views of the National Science Foundation.</p>
+    </div>
+    <div>
+      <h2>References</h2>
+      <ol class="refs">
+        <li>Shand, T. D., Cox, R. J., Blacka, M. J., and Smith, G. P. (2011). <i>Appropriate Safety Criteria for Vehicles: Project 10, Stage 2</i> (P10/S2/020). Water Research Laboratory, Australian Rainfall and Runoff Revision Project. ISBN 978-0-85825-948-5.</li>
+        <li>Kumar, K. <i>mpm-engine</i>. github.com/kks32/mpm-engine</li>
+        <li>Thorpe, A., Iqbal, H., Hsiao, C.-H., et al. (2026). <i>Physically Viable World Models: A Case for Query-Conditioned Embodied AI.</i> arXiv:2605.30542</li>
+        <li>Hsiao, C.-H., and Kumar, K. (2025). <i>NeRF-to-MPM Inversion for Granular Material Property Estimation.</i> arXiv:2507.09005</li>
+        <li>Smith, G. P., Modra, B. D., and Felder, S. (2019). Full-scale testing of stability curves for vehicles in flood waters. <i>J. Flood Risk Management</i>, 12. doi:10.1111/jfr3.12527</li>
+        <li>National Weather Service. <i>Turn Around Don't Drown.</i> weather.gov/safety/flood-turn-around-dont-drown</li>
+      </ol>
+    </div>
+    <div class="qr-reserve"></div>
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,112 @@
+=== TESTS DIR ===
+__init__.py
+__pycache__
+test_analytic_benchmarks.py
+test_cdf_collider.py
+test_cdf_fused.py
+test_cdf_geometry.py
+test_cdf_mask.py
+test_cdf_stamp_skip.py
+test_cdf_transfers.py
+test_coupling.py
+test_cuda_graph.py
+test_engine.py
+test_fused_pipeline.py
+test_import_boundaries.py
+test_material_review_fixes.py
+test_mesh_sdf.py
+test_particle_sort.py
+test_pour.py
+test_restricted_launch.py
+test_sdf_collider.py
+test_sparse_blocks.py
+test_splat_bake.py
+test_splat_export.py
+test_splats.py
+test_squeeze_ident.py
+test_state_import.py
+test_tabulated_material.py
+test_vehicle.py
+
+=== SRC DIR ===
+adapters
+colliders
+core
+coupling
+geometry
+__init__.py
+kernels
+materials
+__pycache__
+render
+scenes.py
+splats
+vehicle.py
+vehicle.py.bak_preparity
+
+=== add_sdf_collider ===
+src/warpmpm/core/solver.py:318:    def add_sdf_collider(self, sdf, center, quat=(0.0, 0.0, 0.0, 1.0),
+src/warpmpm/core/solver.py-319-                         velocity=(0.0, 0.0, 0.0), omega=(0.0, 0.0, 0.0), band=None,
+src/warpmpm/core/solver.py-320-                         surface: str = "separable", friction: float = 0.4,
+src/warpmpm/core/solver.py-321-                         start_time: float = 0.0, end_time: float = 1.0e9) -> int:
+src/warpmpm/core/solver.py-322-        """Add a watertight mesh as a moving signed-distance-field collider.
+src/warpmpm/core/solver.py-323-
+src/warpmpm/core/solver.py-324-        ``sdf`` is a ``warpmpm.geometry.SDFData`` built from a mesh. Use set_sdf_pose for
+src/warpmpm/core/solver.py-325-        translation and rotation, and sdf_wrench for its reaction wrench. Returns a handle.
+src/warpmpm/core/solver.py-326-        """
+src/warpmpm/core/solver.py-327-        return self._sim.add_sdf_collider(
+src/warpmpm/core/solver.py-328-            sdf.values, sdf.grads, sdf.origin, sdf.cell, center, quat=quat, velocity=velocity,
+src/warpmpm/core/solver.py-329-            omega=omega, band=band, surface=surface, friction=friction,
+src/warpmpm/core/solver.py-330-            start_time=start_time, end_time=end_time, device=self.device,
+--
+src/warpmpm/kernels/mpm_solver_warp.py:2620:    def add_sdf_collider(self, sdf_values, sdf_grads, origin, cell, center,
+src/warpmpm/kernels/mpm_solver_warp.py-2621-                         quat=(0.0, 0.0, 0.0, 1.0), velocity=(0.0, 0.0, 0.0),
+src/warpmpm/kernels/mpm_solver_warp.py-2622-                         omega=(0.0, 0.0, 0.0), band=None, surface="separable",
+src/warpmpm/kernels/mpm_solver_warp.py-2623-                         friction=0.4, start_time=0.0, end_time=999.0, device="cpu"):
+src/warpmpm/kernels/mpm_solver_warp.py-2624-        res = int(sdf_values.shape[0])
+src/warpmpm/kernels/mpm_solver_warp.py-2625-        if band is None:
+src/warpmpm/kernels/mpm_solver_warp.py-2626-            band = float(self.mpm_model.dx)
+src/warpmpm/kernels/mpm_solver_warp.py-2627-        surface_id = {"sticky": 0, "slip": 1, "separable": 2}[surface]
+src/warpmpm/kernels/mpm_solver_warp.py-2628-
+src/warpmpm/kernels/mpm_solver_warp.py-2629-        # Containment guard: the collide kernel only queries nodes whose body-frame position
+src/warpmpm/kernels/mpm_solver_warp.py-2630-        # falls inside the SDF grid box, so every point within `band` of the mesh surface must
+src/warpmpm/kernels/mpm_solver_warp.py-2631-        # lie inside that box. The minimum stored SDF value on the box's six faces IS the
+src/warpmpm/kernels/mpm_solver_warp.py-2632-        # worst-case surface-to-box-edge margin; if band reaches it, a shell of near-surface
+
+=== friction kernel ===
+src/warpmpm/kernels/mpm_solver_warp.py:1912:        collider_param.friction = friction
+src/warpmpm/kernels/mpm_solver_warp.py:1985:                                0.0, wp.length(v) + normal_component * param.friction
+src/warpmpm/kernels/mpm_solver_warp.py:2145:        param.friction = friction
+src/warpmpm/kernels/mpm_solver_warp.py:2217:                                    v_t = wp.max(vt_len + param.friction * vn, 0.0) * (
+src/warpmpm/kernels/mpm_solver_warp.py:2672:        param.friction = float(friction)
+src/warpmpm/kernels/mpm_solver_warp.py:2728:                                        scale = wp.max(0.0, tlen + param.friction * vn) / tlen
+src/warpmpm/kernels/mpm_solver_warp.py:2876:        param.friction = float(friction)
+
+=== FloodScene density band ===
+335:    density (vehicles are mostly air; a car is roughly 100 to 300 kg/m^3 spread over
+
+=== splat_pos ===
+tests/test_vehicle.py:74:    assert v.splat_pos is None  # meshes render nothing; particles still simulate
+src/warpmpm/vehicle.py:164:    splat_pos: np.ndarray | None = None    # (N, 3) splat centers, vehicle frame
+src/warpmpm/vehicle.py:271:                       splat_pos=pos.astype(np.float32) if splat_colors is not None else None,
+src/warpmpm/vehicle.py:491:    def splat_positions(self) -> np.ndarray | None:
+src/warpmpm/vehicle.py:493:        if self.vehicle.splat_pos is None:
+src/warpmpm/vehicle.py:496:        return self.vehicle.splat_pos @ R.T + t
+
+=== collider calls in vehicle.py ===
+270:                       surface=pos.astype(np.float32),
+397:        s.add_plane((0, 0, floor), (0, 0, 1), "slip", friction=floor_friction,
+401:            s.add_plane(pt, nrm, "slip", friction=0.0, restitution=0.05)
+
+=== performance doc ===
+FUNCTION_ENCODER.md
+MATH_REFERENCE.md
+performance.md
+
+=== bulk modulus note ===
+36:   The bulk modulus is already softened far below real water to keep dt near 1e-4 s.
+75:For bulky tools the SDF stays the right collider, and the pour A/B quantifies why.
+125:   collider for bulk containers.
+259:   tool moves at cm/s and explicit integration spends its substeps resolving sound
+266:   speedup is 5 to 30 times. Decoupling dt from the bulk modulus would also permit
+271:   advective scale (about 1e-3 s at our dx), retires the softened EOS, and, done

@@ -248,8 +248,8 @@ at depth 0.30. Bounding box 11.348 m3. Trimesh hull volume 3.5427 m3 (31.2 perce
 | n_grid | h (m) | solid_volume | % bbox | x hull vol | realized rho (1100 kg) | water layers @ 0.15/0.30/0.45 |
 |---|---|---|---|---|---|---|
 | 32 | 0.147 | 8.592 | 75.7% | 2.43x | 128.0 | 1 / 2 / 3 |
-| **64 (default)** | 0.074 | 7.698 | **67.8%** | 2.17x | 142.9 | 2 / 4 / 6 |
-| 96 | 0.049 | 7.096 | 62.5% | 2.00x | 155.0 | 3 / 6 / 9 |
+| **64 (default)** | ~~0.074~~ 0.0736074 | ~~7.698~~ **3.5514** | ~~67.8%~~ **31.3%** | ~~2.17x~~ **1.0024x** | ~~142.9~~ **309.74** | 2 / 4 / 6 |
+| 96 | ~~0.049~~ 0.0490716 | ~~7.096~~ **3.5218** | ~~62.5%~~ **31.0%** | ~~2.00x~~ **0.9941x** | ~~155.0~~ **312.34** | 3 / 6 / 9 |
 | 128 | 0.037 | 6.356 | 56.0% | 1.79x | 173.1 | 4 / 8 / 12 |
 | 192 | 0.025 | 4.440 | 39.1% | 1.25x | 247.8 | 6 / 12 / 18 |
 | hull truth | | 3.543 | 31.2% | 1.00x | 310.5 | |
@@ -257,6 +257,36 @@ at depth 0.30. Bounding box 11.348 m3. Trimesh hull volume 3.5427 m3 (31.2 perce
 Reference fill fractions from this project's own mesh notes: canonical v1l is ~32 percent
 bbox with the underbody open (buoyancy-correct); the deprecated sedan hull was ~62 percent
 with the underbody bridged shut (overstates displacement).
+
+**[SUPERSEDED 2026-07-29, method replaced, not a corrected arithmetic error.]** Every
+`solid_volume`, `% bbox`, `x hull vol` and `realized rho` figure in the table above was
+measured under the **column-fill** solidify path, which fills wheel wells and window
+openings into the solid by design. That path has been replaced by `solidify_watertight`,
+which does not overfill. The `n_grid=64` and `n_grid=96` rows have been struck through and
+corrected above, because `solidify_watertight` runs exist at those two resolutions. Rows
+32, 128 and 192 are left as the historical column-fill record: no `solidify_watertight`
+run exists at those resolutions, and their values have NOT been interpolated or estimated.
+Note that `n_grid=48` has live values (below) but no row in the table above.
+
+Live replacement values, read from `data/all_runs_inventory.csv` on 2026-07-29 (identical
+across all 9 gated `n_grid=64` runs):
+
+| n_grid | h (m) | solid_volume (m3) | fill_ratio | realized rho (1100 kg) |
+|---|---|---|---|---|
+| 48 | 0.0981431 | 3.6357101018957585 | 1.0262427183870328 | 302.55 |
+| 64 | 0.0736074 | 3.5513843861695054 | 1.0024403113437104 | 309.74 |
+| 96 | 0.0490716 | 3.5217987479492066 | 0.9940892478811469 | 312.34 |
+
+`renders/from_vista/yaris_g64_m1100_d0p30_v1p5_dx0p090.PROVENANCE.txt` independently
+records `solid_volume 3.550864656814358`, `h 0.07360652630115225` and `realized rho
+309.78` for its own `n_grid=64` clip. That is a different run from the gated inventory
+rows and the two disagree in the fifth significant figure; neither has been declared
+canonical over the other. `paper/conference_101719.tex` Table II uses the inventory
+values (302.6 / 309.7 / 312.3).
+
+`analysis/plot_geometry_pipeline.py` plots the struck-through column-fill series from this
+table and is therefore a historical diagnostic of the replaced method, not a current
+result. It now refuses to run without an explicit acknowledgement flag.
 
 **Three consequences.**
 
@@ -272,7 +302,12 @@ with the underbody bridged shut (overstates displacement).
    interchangeable. "68 percent over-fill" with no basis named is wrong under both
    readings: it is 67.8 percent OF the bounding box (not an excess), and the excess over
    the hull is +117 percent (not 68). The displacement-relevant figure is the hull one:
-   every FloodScene run to date used a body displacing **2.17x the hull's actual volume**.
+   every FloodScene run **under the column-fill path** used a body displacing **2.17x the
+   hull's actual volume**. **[CORRECTED 2026-07-29]** The original wording, "every
+   FloodScene run to date", is now false: the 17 gated runs in
+   `data/all_runs_inventory.csv` were solidified with `solidify_watertight` and displace
+   **1.0024x** the hull at `n_grid=64`, not 2.17x. Do not cite 2.17x, 7.698 m3 or
+   142.9 kg/m3 as a property of any current run.
 
    For comparison on the bbox basis, this is a higher fill fraction than the deprecated
    sedan hull (~62 percent of bbox), which was deprecated for exactly that bias.
