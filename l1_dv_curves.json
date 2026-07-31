@@ -1,0 +1,45 @@
+{
+  "source": "/Users/josie/can-it-ford/data/scenario_sweep.csv",
+  "md5": "890984346a52ed4a6ae0803894131e6e",
+  "bytes": 4435,
+  "mtime": "2026-07-29 18:25:47",
+  "ford_counts": {
+    "small_passenger": 14,
+    "large_passenger": 19,
+    "large_4wd": 26
+  },
+  "class_sensitive": 12,
+  "caps": {
+    "small_passenger": {
+      "depth_cap_m": 0.3,
+      "hazard_cap_m2s": 0.3,
+      "limiting_velocity_ms": 3.0
+    },
+    "large_passenger": {
+      "depth_cap_m": 0.4,
+      "hazard_cap_m2s": 0.45,
+      "limiting_velocity_ms": 3.0
+    },
+    "large_4wd": {
+      "depth_cap_m": 0.5,
+      "hazard_cap_m2s": 0.6,
+      "limiting_velocity_ms": 3.0
+    }
+  },
+  "arr_length_criterion_m": {
+    "small_passenger": "< 4.3",
+    "large_passenger": "> 4.3",
+    "large_4wd": "> 4.5"
+  },
+  "hull_length_m": 4.2826,
+  "hull_class_match": {
+    "small_passenger": true,
+    "large_passenger": false,
+    "large_4wd": false
+  },
+  "float_trap_cells_if_product_recomputed_inline": {
+    "small_passenger": 2,
+    "large_passenger": 0,
+    "large_4wd": 2
+  }
+}
