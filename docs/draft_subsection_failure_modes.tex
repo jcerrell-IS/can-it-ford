@@ -1,0 +1,94 @@
+% Draft only. Not included by conference_101719_1.tex.
+% Branch analysis/failure-modes, cut from overleaf/main at bbd5bd8.
+% Reproducing commands for every number are in
+% docs/failure_modes_and_threshold_sensitivity.md.
+
+\subsection{Failure modes and threshold sensitivity}
+
+\subsubsection{Mode classification}
+The flood-vehicle literature distinguishes instability modes by force balance rather
+than by any kinematic cutoff. AR\&R Project 10 identifies two recognised hydrodynamic
+mechanisms, floating and frictional sliding, and explicitly excludes toppling from
+its analysis on the grounds that it is restricted to vehicles already sliding or
+floating over uneven terrain. Shah \emph{et al.} likewise define floating by buoyancy
+and lift exceeding vehicle weight. Because no source supplies a displacement or
+rotation threshold, the cutoffs used here are \emph{operational} detection tolerances
+for classifying a simulation trace, not physical instability criteria, and each is
+swept rather than fixed.
+
+Applying a drift cutoff of $0.05$\,m, a roll cutoff of $1.0^\circ$, and a vertical-rise
+cutoff of $0.01$\,m to the 17-run sweep yields 15 SLIDE and 2 TOPPLE events, with no
+STUCK and no FLOAT. Sliding is the dominant mode throughout. The two toppling events
+occur at the extremes of the sweep, the deepest condition ($0.45$\,m) and the fastest
+($3.0$\,m/s), consistent with AR\&R's characterisation of toppling as a consequence of
+prior instability rather than an independent mode. The TOPPLE count is stable at two
+across roll cutoffs spanning $0.51^\circ$ to $2.43^\circ$, because the measured roll
+magnitudes separate into two well-defined groups with an empty interval between them.
+
+Two null results require care. STUCK is empty because the smallest drift observed,
+$0.0578$\,m, already exceeds the $0.05$\,m cutoff; every run moves. FLOAT is empty at
+every rise cutoff tested, but this is not evidence against flotation. The minimum
+vertical coordinate of the vehicle equals three grid cells in all 17 runs, to within
+$4\times10^{-8}$\,m, which is the solver's inward domain padding. The vertical channel
+is saturated at a boundary, so flotation is unobservable in this configuration rather
+than absent from it.
+
+\subsubsection{Threshold sensitivity}
+The $0.05$\,m drift threshold has no empirical footing in the literature, so its
+influence is characterised by sweeping it. Runs are matched to the L1 scenario grid by
+exact agreement in depth and velocity, and each run is compared against the L1 verdict
+for its own vehicle class. Fourteen of 17 runs match; the three excluded lie at depths
+of $0.25$, $0.35$, and $0.45$\,m, which do not appear on the $0.1$\,m scenario grid.
+The matched runs occupy six distinct scenario cells, all at $0.30$\,m depth, so the
+comparison characterises one depth column rather than the full hazard plane.
+
+Pooled over the matched runs, no threshold reconciles the two levels: agreement peaks
+at $92.9\%$ for thresholds in $[0.26, 0.35]$\,m and never reaches unity. At the
+$0.05$\,m operating point agreement is $42.9\%$, and the curve is flat below
+$0.0578$\,m and varies by only $7.1$ percentage points across $[0.03, 0.07]$\,m, so the
+verdict at that operating point is insensitive to the threshold. That insensitivity
+reflects the threshold sitting an order of magnitude below the data rather than any
+robustness of the comparison.
+
+This pooled result does not survive stratification, and the stratified result is the
+substantive one. Separating the matched runs by grid resolution, a threshold achieving
+complete agreement exists at every resolution: $[0.257, 0.351)$\,m at $n_g=48$,
+$[0.314, 0.659)$\,m at $n_g=64$, and $[0.156, 0.269)$\,m at $n_g=96$. The three
+intervals are individually non-empty and pairwise disjoint. Within any single
+resolution, simulated drift orders the conditions exactly as the L1 hazard product
+does; the pooled disagreement arises entirely from resolution-dependent scatter. At
+fixed physical conditions ($D=0.30$\,m, $V=1.5$\,m/s) drift varies by a factor of
+$2.0$ to $2.5$ across the three resolutions, and non-monotonically for the lightest
+vehicle. We therefore report no structural divergence between L1 and L2 from this
+dataset. The discrepancy is a convergence artifact, and resolving it requires a grid
+refinement study rather than a reinterpretation of the abstraction ladder.
+
+\subsubsection{Violation magnitude}
+Reporting only whether a criterion is crossed discards how far. Every run in the sweep
+exceeds $0.05$\,m, by factors ranging from $1.16$ to $26.8$. No run falls within
+$\pm10\%$ of that boundary; the nearest, at $0.5$\,m/s, exceeds it by $15.6\%$. The
+binary verdict therefore misrepresents no individual run here, but only because the
+threshold lies far below the observed range.
+
+\subsubsection{Temporal convergence}
+Per-frame traces show that drift is non-monotonic in 14 of 17 runs, reaching an
+interior maximum and then decreasing. Five runs, the two deepest and the three fastest,
+have not converged by the final frame and are re-accelerating at truncation, with
+terminal speed exceeding twice the minimum speed reached after the drift peak. For
+these five the reported final displacement understates the peak excursion by $8.3\%$ to
+$24.9\%$, the worst case reaching a peak of $1.78$\,m at frame 56 before returning to
+$1.34$\,m at frame 90. The reversal is consistent with wave reflection from the closed
+domain. For the five severe conditions the reported displacement is neither a converged
+steady state nor a peak, and verdicts derived from it should be treated as provisional
+pending longer integration or an open outflow boundary. The remaining 12 runs plateau
+well before truncation.
+
+\subsubsection{External consistency}
+An independent three-dimensional CFD study of a full-scale medium-size passenger
+vehicle reports flotation at $0.38$\,m depth and sliding above a depth-velocity product
+of $0.36$\,m$^2$/s, over a validated Froude range of $0.09$ to $2.46$. All nine
+distinct conditions in the present sweep fall within that range, spanning $Fr=0.294$ to
+$Fr=1.765$, which places this work inside an independently validated envelope.
+Substituting $0.36$\,m$^2$/s for the AR\&R small-passenger value of $0.30$\,m$^2$/s
+alters 3 of 70 scenario verdicts under a pure product rule, indicating that the ladder's
+L1 conclusions are not strongly sensitive to which of the two thresholds is adopted.

@@ -1,0 +1,31 @@
+% Draft only. Not included by conference_101719_1.tex.
+% Two paragraphs for a "Reproducibility and self-correction" note.
+
+\subsection{Reproducibility and self-correction}
+
+Every figure and table in this paper is produced by a committed generator script that
+reads a committed data file, and each caption names the command that regenerates it.
+This was not a stylistic choice. During preparation we audited each numeric claim in the
+draft against its cited source and found four citation errors of our own. The most
+consequential was the lateral-drift threshold used to declare an L2 no-ford verdict,
+which had been attributed to a published stability boundary that, on direct reading,
+contains no lateral-displacement criterion at all; the equation cited is a limiting
+Froude relationship. A second error assigned a still-water depth limit for vehicles to a
+figure drawn from the companion pedestrian-stability analysis rather than the vehicle
+analysis. A third stated a hazard threshold without its class qualifier, reporting a
+value specific to large four-wheel-drive vehicles as though it applied to
+four-wheel-drive vehicles generally. A fourth involved a publication year that differs
+between a journal's online-first and print records, which we now record explicitly in
+the bibliography rather than silently choosing one.
+
+We report these because the corrections changed what the paper claims, not merely how it
+cites. The drift threshold is now described as what it is, a conservative numerical
+onset-of-motion detection tolerance rather than a physical instability criterion, and
+because it is arbitrary we sweep it and report the sensitivity instead of defending a
+single value. That sweep is what revealed that our simulated drift is not yet
+grid-converged, a limitation we would not have found had we continued to treat the
+threshold as externally justified. The general lesson is narrow and practical: a
+threshold with no empirical footing should be swept, not chosen, and an attribution
+should be checked against the source text rather than against a prior summary of it. We
+found each of these errors by re-reading primary sources that earlier drafts had cited
+from secondary notes.
