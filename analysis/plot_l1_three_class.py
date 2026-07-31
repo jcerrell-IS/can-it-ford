@@ -211,7 +211,8 @@ def build(cells, prov, out_path):
 
     fig.text(0.095, 0.045,
              "Caps: Shand, Cox, Blacka and Smith 2011, AR&R Project 10 Stage 2, "
-             "P10/S2/020, Table 3, page 14. Draft interim values, not a safety standard.",
+             "P10/S2/020, Table 3, printed p.14 (PDF p.24). "
+             "Draft interim values, not a safety standard.",
              fontsize=16, color=MUTED, ha="left", va="bottom")
     fig.text(0.095, 0.018,
              f"Data: data/scenario_sweep.csv, md5 {prov['md5'][:12]}, "
