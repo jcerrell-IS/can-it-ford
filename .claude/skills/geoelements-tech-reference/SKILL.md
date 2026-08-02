@@ -1,6 +1,6 @@
 ---
 name: geoelements-tech-reference
-description: The technical encyclopedia for Josie's GeoElements REU project (Krishna Kumar's group, TACC/UT Austin, Summer 2026), covering both the general PVWM/gsplat/MPM background and the concrete "Can It Ford?" vehicle flood-traversability project. Use for ANY question about the science, code, papers, tutorials, repos, commands, or supercomputer setup of her project. Trigger on "what is gsplat / Gaussian splatting / Genesis / MPM / kks32 / world model / PhysGaussian / GNS / Taichi / Warp MPM / Vista / LS6 / Lonestar6 / idev / Slurm / SSH / $SCRATCH / add_sdf_collider / add_box", "explain the pipeline", "what does this command do", "Tutorial 1/2/3 / the runbook", "what does the paper say about X", "where is that line from", "help me run gsplat / the garden scene / my custom dataset", "I got a permission denied / allocation / SSH error", "what's my TACC username / home path", "Can It Ford / L0 L1 L2 / DRIFT_THRESHOLD / ford verdict", or any mention of the tutorials, readings, repos, constitutive models, sim-to-real, or FOCI. The source-grounded reference: knows which paper/section/repo/commit each concept comes from and explains it in Josie's Feynman style. LIVING document, fold in new papers, pivots, and tutorial changes as they arrive — last major revision July 8, 2026, correcting a stale "Vista is not the machine" claim and adding the kks32/mpm-engine pivot and the concrete Can It Ford project content that was previously entirely missing from this file.
+description: Technical encyclopedia for Josie's GeoElements REU 'Can It Ford' project: gsplat, Genesis, MPM, kks32/mpm-engine, PhysGaussian, GNS, papers, tutorials, TACC Vista/LS6 setup, and pipeline concepts.
 ---
 
 # GeoElements Tech Reference (the project encyclopedia)
@@ -29,13 +29,11 @@ Given a real flooded road, can a specific vehicle ford it, and what's the simple
 
 ---
 
-## kks32/mpm-engine: the current MPM target (added July 8, verify-before-trusting notes included)
+## kks32/mpm-engine: the current MPM target (pointer only — full detail lives elsewhere)
 
-Environment, API, canonical scripts, render pipeline, troubleshooting, and Kumar's own visualization conventions all live in the companion skill **`mpm-render-pipeline`** — that's the hands-on production skill, don't duplicate its content here. What belongs here conceptually:
+**Current build target for L2, per Kumar's July 7 Slack instruction: `kks32/mpm-engine`, not Genesis's `MPM.Liquid`.** Two live, unresolved disputes exist about its exact API surface — full sourced detail, contradictions, and citations live in the **`mpm-technical-deep-reference`** skill, not here. Hands-on commands to actually run it live in the **`mpm-render-pipeline`** skill. This skill stays high-level: know that the pivot happened and why, defer to those two skills for anything more specific.
 
-- **What it is:** Kumar's own repo, a Warp-MPM engine (package name `warpmpm`, not Taichi-native despite earlier assumptions).
-- **Two open disputes, unresolved as of last check — say so if asked, don't silently pick a side:** (1) whether `add_sdf_collider()`/`build_sdf()` actually work today or are still roadmap stubs — two same-day sources disagree; the safer, more-corroborated default for a box vehicle is `Solver.add_box()`. (2) which render stack is "primary" — resolved on closer read, not truly contradictory: matplotlib+ffmpeg first (lowest risk), PyVista via conda-forge (not pip) for later poster-quality output.
-- **Standing rule:** never restate a prior session's claim about this repo's API surface as settled fact without checking the live source first. This project has hit that exact failure shape at least twice.
+**Standing rule:** never restate a prior session's claim about this repo's API surface as settled fact without checking the live source first. This project has hit that exact failure shape at least twice.
 
 ---
 
@@ -211,6 +209,7 @@ cat /tmp/x/<name>/*.txt
 5. **Ground claims in the source.** Name the paper + section, pull the exact line if needed.
 6. **ML background is not required.** Keep it encouraging, not gatekept.
 7. **Permission/env errors on Luke's shared paths → Slack Luke, don't debug. Allocation errors → wait on Krishna.**
+8. **Keep it short (ADHD):** answer first, one path, device-tagged steps, one check-in.
 9. **No em-dashes ever, no inline code comments, no docstrings.**
 
 ---

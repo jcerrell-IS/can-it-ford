@@ -1,9 +1,16 @@
 ---
 name: mpm-render-pipeline
-description: Use this skill for the hands-on workflow of producing an MPM simulation render/video with kks32/mpm-engine for the Can It Ford project — environment setup on Vista, vehicle collider setup (box or SDF), water material config, the export-then-render process-isolation pattern, and matching Kumar's visualization conventions. Trigger on "render the MPM video", "set up the water/vehicle scene", "add_sdf_collider", "add_box collider", "export particle frames", "render_frames.py", "PyVista smoke test", "why did my render fail", "make this look like Kumar's figures", or any request to actually run/build/troubleshoot the kks32/mpm-engine pipeline end to end. Companion to geoelements-tech-reference (conceptual/API knowledge) and reu-research-log (progress tracking) — this skill is the hands-on production workflow, mirroring how splat-dataset-prep is the hands-on companion to geoelements-tech-reference for the gsplat half of the pipeline.
+description: "Use this skill for the hands-on workflow of producing an MPM simulation render/video with kks32/mpm-engine for the Can It Ford project — environment setup on Vista, vehicle collider setup (box or SDF), water material config, the export-then-render process-isolation pattern, and matching Kumar's visualization conventions. Trigger on \"render the MPM video\", \"set up the water/vehicle scene\", \"add_sdf_collider\", \"add_box collider\", \"export particle frames\", \"render_frames.py\", \"PyVista smoke test\", \"why did my render fail\", \"make this look like Kumar's figures\", or any request to actually run/build/troubleshoot the kks32/mpm-engine pipeline end to end. Companion to geoelements-tech-reference (conceptual/API knowledge) and reu-research-log (progress tracking) — this skill is the hands-on production workflow, mirroring how splat-dataset-prep is the hands-on companion to geoelements-tech-reference for the gsplat half of the pipeline."
 ---
 
-# MPM Render Pipeline: kks32/mpm-engine Production Workflow
+## Vehicle mesh currently in use, July 15 status
+Every render from this pipeline right now uses truck_trimmed.ply anisotropically fit to each vehicle class's bbox via fit_to_bbox() in scripts/ford_sweep_driver.py, not three genuinely distinct vehicle shapes. Label renders and poster figures "sedan-scale," "SUV-scale," "pickup-scale," not "a sedan," until car_mesh_rescaled.ply's axis fix (see mpm-technical-deep-reference) gets integrated, which hasn't happened yet and needs a scoped decision first, not a silent swap.
+
+## Current sweep to render from
+v3 (n_grid=128, depths 0.10 to 0.60m, velocities 0.5 to 2.0 m/s, 60 runs, launched July 15) supersedes v2. Do not render from v2's three pickup-at-0.15m rows, confirmed invalid, one water particle layer instead of two. Confirm a run's config version before rendering from any manifest.csv.
+
+## box_sdf_collider_setup.py water-drift bug
+Last known status: unresolved, water particles drifting toward the low-x domain edge during gravity settling. Not re-investigated in the July 15 session. Verify current status live before assuming it's fixed or still broken.                               # MPM Render Pipeline: kks32/mpm-engine Production Workflow
 
 Compiled July 8, 2026, from six cross-validated Perplexity research reports (commit-SHA and file/line cited where noted) plus direct chat-history verification. This skill is deliberately narrow: it covers **producing a render**, not general MPM theory (that's `geoelements-tech-reference`) and not logging progress (that's `reu-research-log`).
 
