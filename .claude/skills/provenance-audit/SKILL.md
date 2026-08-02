@@ -1,19 +1,18 @@
 ---
 name: provenance-audit
 description: >
-  Use this skill whenever Josie needs to establish whether a claim, number, figure,
-  dataset, parameter, citation, or "done" milestone in the Can It Ford project is
-  actually TRUE, traceable to a primary source, and safe to build a simulation or a
-  deliverable on. Trigger on "audit this", "does this trace back", "where did this
-  number come from", "verify this figure/claim/citation", "is this CLAUDE.md current",
-  "reconcile the Claude Code sessions / panes", "run a background check on my figures",
-  "what did that source actually say", "build me a Scite / DeepWiki / Consensus prompt
-  to verify X", or any moment a specific number from a project file is about to be
-  acted on, published, put on the poster, or told to Kumar. Also trigger PROACTIVELY,
-  without being asked, the instant a "DONE", a milestone, a parameter value, or a
-  cited threshold is about to be restated as fact from a summary rather than from the
-  live artifact. This skill is the layer that decides what counts as TRUE before
-  anything downstream uses it.
+  Use when Josie needs to know whether a claim, number, figure, dataset, parameter,
+  citation, or milestone in Can It Ford is TRUE and traceable to a primary source.
+  Trigger on: audit this, does this trace back, where did this number come from,
+  verify this claim or citation, is CLAUDE.md current, reconcile the Claude Code
+  panes, background-check my figures, build me a Scite/DeepWiki/Consensus prompt to
+  verify X, or a number about to be published, on the poster, or told to Kumar. Also
+  trigger on reorientation language, unasked: we're pivoting to, moving away from,
+  reorienting around, switching to, what does this change, what has to update
+  because of, or any project-level decision (new solver, threshold source, vehicle
+  mesh, abstraction framing). Also trigger proactively, unasked, the instant a DONE,
+  milestone, parameter, or cited threshold is about to be restated as fact from a
+  summary instead of the live artifact. Decides what counts as TRUE first.
 ---
 
 # PROVENANCE AUDIT
@@ -44,6 +43,30 @@ Rules:
 - A T3 claim cannot promote a milestone, a parameter, or a result to "true". Only T1 can.
 - When T2 and T3 conflict, T2 wins only if T2 was verified against T1 more recently. Otherwise both get re-checked.
 - **The "Master Instructions v6, July 7" brief is T3.** It predates the July 8 to July 17 corrections and it still lists the render milestones as "DONE" (Part 3, asks 1 and 2). Those exact "DONE" claims were later complicated or retracted. Do not quote v6 as current status. Use it for stable context (who people are, deadlines, learning protocols) only.
+
+---
+
+## 1a. REORIENTATION MODE: RUN THE BLAST RADIUS FIRST
+
+A **claim audit** checks one number, citation, or milestone. A **reorientation audit** checks a decision that changes what other things are now allowed to be true, for example the SPH-to-MPM commitment, a new DRIFT_THRESHOLD source, a new vehicle mesh, a new abstraction-ladder framing. Trigger this mode on language like "we're pivoting to," "moving away from," "reorienting around," "switching to," "what does this change," or "what has to update because of." Also trigger it proactively whenever Josie states a project-level decision, even if she does not ask for an audit by name.
+
+**Do not run Section 2 on a single claim yet. Run this first:**
+
+1. **State the decision as one falsifiable sentence.** Same discipline as Section 2 step 1. "Switching DRIFT_THRESHOLD from a bare 0.05m to a fraction of Smith 2019 Eq. 6" is auditable. "Being more careful about thresholds" is not.
+2. **Enumerate every category this project's decisions have historically touched, and check each one, not just the categories that seem obviously affected:**
+   - Code files and scripts that hardcode the old value or old logic
+   - CLAUDE.md, README, and any other status doc (Section 4 covers currency, this step just flags candidates)
+   - The citation register (Section 8, Part 8 equivalents) and any citation that supported the old framing
+   - Sweep or dataset generating scripts, and any dataset they already produced under the old assumption
+   - Poster panels, paper sections, and figure captions that state the old framing
+   - W&B run tags and any dashboard filtering on the old label
+   - Section 7 dispatch templates already sent or in flight that assumed the old framing
+   - Known-Error Register rows (Section 8) that may now be stale or newly relevant
+   - Commit messages or any comment-adjacent text (should not exist per the no-comments rule, audit anyway)
+   - Config values, environment variables, or defaults tied to the old decision
+3. **Log every item found as a row, unresolved.** Verdict placeholder is "possibly affected, needs check," not a real verdict. Do not skip an item because it seems minor. A reorientation's damage is almost always in the item nobody thought to check, every carrier-file precedent in Section 3 was exactly that.
+4. **Only now hand the full list to Section 2.** Each row gets the five-question forensic method, a tier, and a real verdict.
+5. **The KILL list (Section 3) is mandatory for a reorientation audit, not optional.** A reorientation almost always leaves multiple files still asserting the pre-decision state. Search specifically for old-state carrier files, not just the items already flagged in step 2, since carrier files are exactly the ones nobody remembers still exist.
 
 ---
 
