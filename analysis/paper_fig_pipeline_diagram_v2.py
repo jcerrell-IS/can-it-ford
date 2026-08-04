@@ -1,5 +1,7 @@
-"""Rebuild Fig. 1 (the reconstruct-to-decide pipeline) for
-paper/conference_101719.tex, with unrealized stages drawn as dashed boxes.
+"""Rebuild Fig. 1 (the reconstruct-to-decide pipeline) for the canonical
+conference_101719_1.tex on overleaf/main, with unrealized stages drawn as
+dashed boxes. (paper/conference_101719.tex is superseded, see commit a991216;
+line numbers quoted below are from the canonical file.)
 
 WHY THIS SCRIPT EXISTS
   paper/pipeline_diagram.png has no generator anywhere in the repository or in
@@ -35,6 +37,23 @@ WHICH STAGES ARE DASHED, AND WHY TWO AND NOT ONE
   complete for one real scene ("Drain A"), so video capture is genuinely done.
   Stages 4 and 5 stay solid: 17 gated coupled runs exercise them.
 
+WHY BOX 4 SAYS WARP MPM AND NOT GENESIS
+  Box 4 is solid precisely because those 17 gated coupled runs exercise it, and
+  those runs did not use Genesis. Verified live 2026-07-31 in
+  renders/yaris_render_s1/_incoming/sim_standing.py, the driver behind the
+  all_runs_inventory.csv gate, which imports:
+      from warpmpm.core.solver import GridConfig, Solver
+      from warpmpm.materials import newtonian
+      from warpmpm.vehicle import FloodHistory, load_vehicle, solidify_watertight
+  Genesis does appear in the reported work, but as SPH and not MPM: the 9
+  divergence runs in l2_results_from_wandb.csv carry level=L2_Genesis_SPH.
+  No reported result therefore came from a Genesis MPM simulation, so labelling
+  the one solid simulate box "Genesis MPM" contradicted both datasets at once.
+  Under this diagram's own convention (solid = exercised), the box has to name
+  the solver that actually ran. Genesis remains the engine the pipeline is
+  designed around, which is what the abstract, the Fig. 1 caption, and
+  Section II-B now say.
+
 OUTPUT
   paper/figures_review/pipeline_diagram_v2.svg   NEW file, overwrites nothing
   paper/figures_review/pipeline_diagram_v2.pdf   via rsvg-convert, TRUE VECTOR
@@ -45,7 +64,9 @@ The PDF step shells out to rsvg-convert (librsvg 2.62.3, /opt/homebrew/bin).
 import subprocess
 from pathlib import Path
 
-REPO = Path('/Users/josie/can-it-ford')
+# Resolve from __file__ so a run inside a git worktree writes to that worktree,
+# not to the root checkout. Matches analysis/paper_fig_force_balance_v2.py.
+REPO = Path(__file__).resolve().parents[1]
 OUTDIR = REPO / 'paper' / 'figures_review'
 OUTDIR.mkdir(parents=True, exist_ok=True)
 SVG = OUTDIR / 'pipeline_diagram_v2.svg'
@@ -68,7 +89,7 @@ STAGES = [
     ["Real Video", "(flooded / water-", "adjacent scene)"],
     ["Gaussian Splat", "(gsplat, LS6)"],
     ["PhysGaussian", "Bridge", "(kernel to MPM", "particle seed)"],
-    ["Genesis MPM", "(rigid-fluid", "coupling)"],
+    ["Warp MPM", "(rigid-fluid", "coupling)"],
     ["FORD /", "NO-FORD", "Verdict"],
 ]
 
