@@ -2,7 +2,10 @@ import csv
 import os
 from pathlib import Path
 
-REPO = Path('/Users/josie/can-it-ford')
+# Resolved from this file's own location, not hardcoded. A hardcoded absolute
+# path made every checkout, including git worktrees, read the sweep from and
+# write the figure into the main working tree instead of its own.
+REPO = Path(__file__).resolve().parent.parent
 os.chdir(REPO)
 SRC = REPO / 'data' / 'scenario_sweep.csv'
 OUTDIR = REPO / 'paper' / 'figures_review'
@@ -108,6 +111,77 @@ print(f"reduction drawn between the panels: {HI} -> {LO}, a drop of {DROP}")
 assert TOT_HI - TOT_LO == DROP, "totals and highlighted counts disagree on the size of the drop"
 print(f"the totals fall by the same {DROP}, so the drop is one number, not two")
 
+# ------------------------------------------------------------------
+# Reclassification between the panels.
+#
+# This is a count of rows whose status CHANGED, not a difference of two
+# independently computed totals. It is derived from the two verdict masks
+# directly, so there is no legitimate case in which it carries a sign.
+# The box below prints RECLASSIFIED bare, never with a leading minus.
+# ------------------------------------------------------------------
+TOL = 1e-9
+JOINT_DEPTH_CAP = 0.30
+JOINT_PROD_CAP = 0.30
+
+
+def dv(r):
+    return float(r['depth_m']) * float(r['velocity_ms'])
+
+
+BARE_FORD = [r['L1_haz_product_only'] == 'FORD' for r in rows]
+JOINT_FORD = [r['L1_verdict'] == 'FORD' for r in rows]
+
+RECLASSIFIED = sum(1 for b, j in zip(BARE_FORD, JOINT_FORD) if b and not j)
+REVERSED = sum(1 for b, j in zip(BARE_FORD, JOINT_FORD) if j and not b)
+assert RECLASSIFIED == 23, f"reclassified count moved off 23, got {RECLASSIFIED}"
+assert REVERSED == 0, f"{REVERSED} rows now reclassify NO-FORD -> FORD, the box wording is wrong"
+
+# The stored columns are still read as-is for every verdict drawn. These two
+# checks only confirm they continue to encode the thresholds the panel labels
+# and the caption claim. The tolerance is load-bearing: several rows sit
+# exactly on a cap, and a bare <= miscounts the totals by two in each column.
+_bare_recomputed = [dv(r) <= PRODUCT_CAP + TOL for r in rows]
+_joint_recomputed = [float(r['depth_m']) <= JOINT_DEPTH_CAP + TOL
+                     and dv(r) <= JOINT_PROD_CAP + TOL for r in rows]
+assert _bare_recomputed == BARE_FORD, \
+    "L1_haz_product_only no longer matches D*V <= 0.60, relabel the left panel"
+assert _joint_recomputed == JOINT_FORD, \
+    "L1_verdict no longer matches depth <= 0.30 and D*V <= 0.30, relabel the right panel"
+
+HAZ_OK = [dv(r) <= JOINT_PROD_CAP + TOL for r in rows]
+DEP_OK = [float(r['depth_m']) <= JOINT_DEPTH_CAP + TOL for r in rows]
+
+
+def why_excluded(i):
+    """Which joint-rule cap removed row i, or None if it did not reclassify."""
+    if not (BARE_FORD[i] and not JOINT_FORD[i]):
+        return None
+    if not HAZ_OK[i] and DEP_OK[i]:
+        return 'haz'
+    if HAZ_OK[i] and not DEP_OK[i]:
+        return 'dep'
+    return 'both'
+
+
+WHY = [why_excluded(i) for i in range(len(rows))]
+N_HAZ, N_DEP, N_BOTHCAP = WHY.count('haz'), WHY.count('dep'), WHY.count('both')
+assert (N_HAZ, N_DEP, N_BOTHCAP) == (5, 10, 8), \
+    f"cause breakdown moved off 5/10/8, got {(N_HAZ, N_DEP, N_BOTHCAP)}"
+assert N_HAZ + N_DEP + N_BOTHCAP == RECLASSIFIED, \
+    "the three causes do not sum to the reclassified count"
+
+# Every reclassified cell must currently draw as a plain both-refuse X in the
+# joint panel, or the recolour below would be overwriting a different marker.
+assert all(classify(rows[i], 'L1_verdict') == 'neither' for i in range(len(rows)) if WHY[i]), \
+    "a reclassified cell is no longer a both-refuse cell in the joint panel"
+
+print(f"\nreclassified FORD -> NO-FORD between the panels: {RECLASSIFIED}")
+print(f"   excluded by the hazard cap alone   : {N_HAZ}")
+print(f"   excluded by the depth cap alone    : {N_DEP}")
+print(f"   excluded by both caps              : {N_BOTHCAP}")
+print(f"   reverse direction NO-FORD -> FORD  : {REVERSED}")
+print("   stored verdict columns still agree with the thresholds they encode")
+
 L0_ONLY = {col: stats[col]['l0only'] for col, _, _ in PANELS}
 NEVER_L0_ONLY = all(v == 0 for v in L0_ONLY.values())
 print(f"\nL0 permits and L1 refuses, per column: {L0_ONLY}")
@@ -120,13 +194,13 @@ else:
     print("  NON-ZERO, the finding line is replaced by the measured count")
 
 PW, PH = 268, 300
-GAP = 136
+GAP = 156
 ML, MT = 74, 102
 MB, MR = 118, 20
 W = ML + PW * 2 + GAP + MR
 H = MT + PH + MB
 
-BW, BH = 112, 148
+BW, BH = 132, 180
 BX = ML + PW + (GAP - BW) / 2
 BY = MT + (PH - BH) / 2
 BCX = BX + BW / 2
@@ -134,6 +208,39 @@ BCX = BX + BW / 2
 INK, MUTE, GRID = '#1a1a1a', '#5c5c5c', '#dcdcdc'
 C_BOTH, C_L1, C_NEITHER, C_L0 = '#2e7d32', '#e07b00', '#c9c9c9', '#6a1b9a'
 C_L1_DARK, C_L1_TINT = '#7a4300', '#fff4e6'
+
+# One colour AND one ring shape per exclusion cause, so the three stay
+# separable without colour: circle, square, diamond. A plain grey x with no
+# ring keeps its meaning of "neither rule ever permitted this cell".
+C_HAZ, C_DEP, C_BOTHCAP = '#1565c0', '#c2185b', '#37474f'
+CAUSE_COLOR = {'haz': C_HAZ, 'dep': C_DEP, 'both': C_BOTHCAP}
+
+
+def cause_marker(X, Y, why, scale=1.0):
+    """A ringed x for a cell the joint rule removed. Ring shape encodes cause."""
+    col = CAUSE_COLOR[why]
+    r = 7.4 * scale
+    arm = 3.4 * scale
+    if why == 'haz':
+        ring = (f'<circle cx="{X:.1f}" cy="{Y:.1f}" r="{r:.1f}" fill="white" '
+                f'stroke="{col}" stroke-width="{1.7 * scale:.1f}"/>')
+    elif why == 'dep':
+        side = r * 1.78
+        ring = (f'<rect x="{X - side / 2:.1f}" y="{Y - side / 2:.1f}" '
+                f'width="{side:.1f}" height="{side:.1f}" rx="{1.4 * scale:.1f}" fill="white" '
+                f'stroke="{col}" stroke-width="{1.7 * scale:.1f}"/>')
+    else:
+        d = r * 1.14
+        ring = (f'<polygon points="{X:.1f},{Y - d:.1f} {X + d:.1f},{Y:.1f} '
+                f'{X:.1f},{Y + d:.1f} {X - d:.1f},{Y:.1f}" fill="white" '
+                f'stroke="{col}" stroke-width="{1.7 * scale:.1f}"/>')
+    return [
+        ring,
+        f'<line x1="{X - arm:.1f}" y1="{Y - arm:.1f}" x2="{X + arm:.1f}" y2="{Y + arm:.1f}" '
+        f'stroke="{col}" stroke-width="{1.9 * scale:.1f}"/>',
+        f'<line x1="{X - arm:.1f}" y1="{Y + arm:.1f}" x2="{X + arm:.1f}" y2="{Y - arm:.1f}" '
+        f'stroke="{col}" stroke-width="{1.9 * scale:.1f}"/>',
+    ]
 
 s = []
 s.append(f'<svg xmlns="http://www.w3.org/2000/svg" width="{W}" height="{H}" '
@@ -162,11 +269,14 @@ def panel(idx, col, title, subtitle):
         s.append(f'<line x1="{x0}" y1="{gy:.1f}" x2="{x0+PW}" y2="{gy:.1f}" '
                  f'stroke="{GRID}" stroke-width="0.7"/>')
 
-    for r in rows:
+    for ri, r in enumerate(rows):
         d, v = float(r['depth_m']), float(r['velocity_ms'])
         k = classify(r, col)
         X, Y = cx(v), cy(d)
-        if k == 'l1only':
+        if k == 'neither' and col == 'L1_verdict' and WHY[ri]:
+            # was permitted by the bare rule, removed by the joint rule
+            s.extend(cause_marker(X, Y, WHY[ri]))
+        elif k == 'l1only':
             s.append(f'<circle cx="{X:.1f}" cy="{Y:.1f}" r="7.6" fill="{C_L1}" '
                      f'stroke="{C_L1_DARK}" stroke-width="1.7"/>')
         elif k == 'both':
@@ -207,28 +317,35 @@ def panel(idx, col, title, subtitle):
 for i, (col, t, sub) in enumerate(PANELS):
     panel(i, col, t, sub)
 
+# The box says one thing: how many cells changed status, and why. The
+# per-panel "L1 permits, L0 refuses" counts stay in the panel subtitles and
+# the bottom legend, which is the only place they are meaningful.
 s.append(f'<rect x="{BX:.1f}" y="{BY:.1f}" width="{BW}" height="{BH}" rx="9" '
          f'fill="{C_L1_TINT}" stroke="{C_L1}" stroke-width="1.6"/>')
-s.append(f'<text x="{BCX:.1f}" y="{BY+18:.1f}" font-size="9" fill="{MUTE}" '
-         f'text-anchor="middle">L1 permits,</text>')
-s.append(f'<text x="{BCX:.1f}" y="{BY+30:.1f}" font-size="9" fill="{MUTE}" '
-         f'text-anchor="middle">L0 refuses</text>')
-s.append(f'<text x="{BCX:.1f}" y="{BY+74:.1f}" font-size="32" fill="{C_L1_DARK}" '
-         f'font-weight="bold" text-anchor="middle">&#8722;{DROP}</text>')
-s.append(f'<text x="{BCX:.1f}" y="{BY+90:.1f}" font-size="9.5" fill="{MUTE}" '
+s.append(f'<text x="{BCX:.1f}" y="{BY+34:.1f}" font-size="30" fill="{C_L1_DARK}" '
+         f'font-weight="bold" text-anchor="middle">{RECLASSIFIED}</text>')
+s.append(f'<text x="{BCX:.1f}" y="{BY+48:.1f}" font-size="9.5" fill="{INK}" '
          f'text-anchor="middle">scenarios</text>')
-s.append(f'<line x1="{BCX-40:.1f}" y1="{BY+104:.1f}" x2="{BCX+40:.1f}" y2="{BY+104:.1f}" '
+s.append(f'<text x="{BCX:.1f}" y="{BY+60:.1f}" font-size="9.5" fill="{INK}" '
+         f'text-anchor="middle">reclassified</text>')
+s.append(f'<line x1="{BCX-46:.1f}" y1="{BY+72:.1f}" x2="{BCX+46:.1f}" y2="{BY+72:.1f}" '
          f'stroke="{C_L1}" stroke-width="0.9"/>')
-s.append(f'<text x="{BCX-27:.1f}" y="{BY+120:.1f}" font-size="8.5" fill="{MUTE}" '
-         f'text-anchor="middle">bare</text>')
-s.append(f'<text x="{BCX+27:.1f}" y="{BY+120:.1f}" font-size="8.5" fill="{MUTE}" '
-         f'text-anchor="middle">joint</text>')
-s.append(f'<text x="{BCX-27:.1f}" y="{BY+136:.1f}" font-size="13" fill="{INK}" '
-         f'font-weight="bold" text-anchor="middle">{HI}</text>')
-s.append(f'<text x="{BCX:.1f}" y="{BY+136:.1f}" font-size="13" fill="{C_L1_DARK}" '
-         f'text-anchor="middle">&#8594;</text>')
-s.append(f'<text x="{BCX+27:.1f}" y="{BY+136:.1f}" font-size="13" fill="{INK}" '
-         f'font-weight="bold" text-anchor="middle">{LO}</text>')
+s.append(f'<text x="{BCX:.1f}" y="{BY+85:.1f}" font-size="8.5" fill="{MUTE}" '
+         f'text-anchor="middle">bare rule FORD,</text>')
+s.append(f'<text x="{BCX:.1f}" y="{BY+96:.1f}" font-size="8.5" fill="{MUTE}" '
+         f'text-anchor="middle">joint rule NO-FORD</text>')
+s.append(f'<line x1="{BCX-46:.1f}" y1="{BY+108:.1f}" x2="{BCX+46:.1f}" y2="{BY+108:.1f}" '
+         f'stroke="{C_L1}" stroke-width="0.9"/>')
+s.append(f'<text x="{BCX:.1f}" y="{BY+121:.1f}" font-size="8.5" fill="{MUTE}" '
+         f'text-anchor="middle">excluded by</text>')
+for row_i, (n, lab, why) in enumerate([(N_HAZ, 'hazard cap', 'haz'),
+                                       (N_DEP, 'depth cap', 'dep'),
+                                       (N_BOTHCAP, 'both caps', 'both')]):
+    ry = BY + 137 + row_i * 16
+    s.extend(cause_marker(BCX - 52, ry - 3.2, why, scale=0.72))
+    s.append(f'<text x="{BCX-32:.1f}" y="{ry:.1f}" font-size="10.5" fill="{INK}" '
+             f'font-weight="bold" text-anchor="end">{n}</text>')
+    s.append(f'<text x="{BCX-27:.1f}" y="{ry:.1f}" font-size="8.5" fill="{MUTE}">{lab}</text>')
 
 s.append(f'<text x="20" y="{MT+PH/2:.1f}" font-size="11.5" fill="{INK}" text-anchor="middle" '
          f'transform="rotate(-90 20 {MT+PH/2:.1f})">Water depth (m)</text>')
@@ -254,8 +371,14 @@ legitem(131, f'<circle cx="{lx+133}" cy="{ly}" r="7.6" fill="{C_L1}" stroke="{C_
 legitem(300, f'<line x1="{lx+301.4}" y1="{ly-3.6}" x2="{lx+308.6}" y2="{ly+3.6}" stroke="{C_NEITHER}" stroke-width="1.9"/>'
              f'<line x1="{lx+301.4}" y1="{ly+3.6}" x2="{lx+308.6}" y2="{ly-3.6}" stroke="{C_NEITHER}" stroke-width="1.9"/>',
         'both refuse')
+# all three ring shapes in the swatch, so no single colour reads as "the"
+# reclassified marker; the centre box maps each shape to its cause
+legitem(465, "".join(cause_marker(lx + 435, ly, 'haz', scale=0.86)
+                     + cause_marker(lx + 452, ly, 'dep', scale=0.86)
+                     + cause_marker(lx + 469, ly, 'both', scale=0.86)),
+        'reclassified, ringed by cause')
 if not NEVER_L0_ONLY:
-    legitem(410, f'<circle cx="{lx+415}" cy="{ly}" r="6.6" fill="{C_L0}" stroke="white" stroke-width="1.2"/>',
+    legitem(620, f'<circle cx="{lx+625}" cy="{ly}" r="6.6" fill="{C_L0}" stroke="white" stroke-width="1.2"/>',
             'L0 permits, L1 refuses')
 
 s.append(f'<text x="{ML}" y="{ly+22}" font-size="10" fill="{INK}">{FINDING}</text>')

@@ -11,7 +11,9 @@ from pathlib import Path
 # so importing it at module scope would make the common case fail on any
 # interpreter without Pillow installed, including /usr/bin/python3.
 
-REPO = Path('/Users/josie/can-it-ford')
+# Resolved from this file's own location, not hardcoded, so a worktree builds
+# its own figures instead of overwriting the main working tree's.
+REPO = Path(__file__).resolve().parent.parent
 OUTDIR = REPO / 'paper' / 'figures_review'
 ICC_PATH = Path('/System/Library/ColorSync/Profiles/sRGB Profile.icc')
 JPEG_QUALITY = 95
