@@ -5,7 +5,7 @@ TOOL=$(echo "$INPUT" | python3 -c "import json,sys; print(json.load(sys.stdin).g
 
 case "$FILE" in
   *DEPRECATED*|*SUPERSEDED*|*.OLD-*|*_OLD_*)
-    echo '{"hookSpecificOutput":{"permissionDecision":"deny","permissionDecisionReason":"Marked deprecated. Use the canonical file instead, see CLAUDE.md."}}'
+    echo '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"deny","permissionDecisionReason":"Marked deprecated. Use the canonical file instead, see CLAUDE.md."}}'
     exit 0
     ;;
 esac
@@ -13,7 +13,7 @@ esac
 if [ "$TOOL" = "Edit" ] || [ "$TOOL" = "Write" ]; then
   case "$FILE" in
     */CLAUDE.md|*/SESSION_STATE.md|*/README.md|CLAUDE.md|SESSION_STATE.md|README.md)
-      echo '{"hookSpecificOutput":{"permissionDecision":"ask","permissionDecisionReason":"Shared coordination file, multiple panes read this. Confirm before editing."}}'
+      echo '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"ask","permissionDecisionReason":"Shared coordination file, multiple panes read this. Confirm before editing."}}'
       ;;
     *)
       exit 0
