@@ -1,0 +1,16 @@
+{
+  "mcpServers": {
+    "deepwiki": {
+      "type": "http",
+      "url": "https://mcp.deepwiki.com/mcp"
+    },
+    "scite": {
+      "type": "http",
+      "url": "https://api.scite.ai/mcp"
+    },
+    "wolfram": {
+      "type": "http",
+      "url": "https://agenttools.wolfram.com/mcp"
+    }
+  }
+}
