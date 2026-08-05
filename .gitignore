@@ -74,3 +74,4 @@ out/
 overleaf_sync/
 figures/_BIG/
 figures/_BIG_PREVIEW/
+.claude/worktrees/

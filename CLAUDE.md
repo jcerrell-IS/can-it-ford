@@ -14,8 +14,26 @@ restate them in chat prompts.
   law used, do a units check, and compare against these anchors: water
   1000 kg/m^3, vehicle effective density 100-300 kg/m^3 band, sedan
   mass 1000-1600 kg, g=9.81, realistic depth 0-1.0m, velocity
-  0-3.0 m/s. coup_friction is a numerical stability coefficient, NOT
-  physical mu, physical mu is 0.3-0.55 per Azhar et al. 2023.
+  0-3.0 m/s. coup_friction IS the Coulomb friction coefficient in the
+  LegacyCoupler MPM-rigid momentum exchange
+  (genesis/engine/couplers/legacy_coupler.py:322), applied as
+  |v_t_new| = max(0, |v_t| - mu*|v_n|). The separate numerical
+  regularisation parameter is coup_softness, default 0.002. Confirmed
+  2026-08-05 by direct source read, superseding all earlier statements
+  that coup_friction was numerical-only.
+- grid_density >= 96 is NOT the crash threshold and 64 is NOT
+  confirmed safe. Replicated bisection 2026-08-05 found gd 80 and 88
+  pass 3/3 at 60 steps, gd 90+ fails, non-monotone above the boundary,
+  non-deterministic at fixed config. Before citing any grid_density
+  as safe, check can-it-ford-audit/2026-08-04/CONFIRMED_FACTS_LEDGER.md.
+- Before treating any claim in this file as settled: a claim cited
+  from another session's confidence, a skill file, or a prior audit's
+  conclusion is not a second source, it is the same source cited
+  twice. Only a primary-source line, a runtime read, or a replicated
+  control counts as verification. Before archiving or superseding any
+  dated audit file, pull its VERIFIED-tier findings into
+  CONFIRMED_FACTS_LEDGER.md first, the file can go stale, the facts
+  inside it should not disappear with it.
 - For any rendered output: water reads as one connected fluid body,
   vehicle position matches its known density, no particles outside
   domain or clipped through geometry, motion continuous across frames.

@@ -15,6 +15,9 @@ if [ "$TOOL" = "Edit" ] || [ "$TOOL" = "Write" ]; then
     */CLAUDE.md|*/SESSION_STATE.md|*/README.md|CLAUDE.md|SESSION_STATE.md|README.md)
       echo '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"ask","permissionDecisionReason":"Shared coordination file, multiple panes read this. Confirm before editing."}}'
       ;;
+    */paper/*|paper/*)
+      echo '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"deny","permissionDecisionReason":"paper/ is forbidden to edit per standing rules. Get explicit go in chat first, this file mirrors Overleaf."}}'
+      ;;
     *)
       exit 0
       ;;
