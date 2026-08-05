@@ -23,6 +23,8 @@ Given a real flooded road, can a specific vehicle ford it, and what's the simple
 - **L1** — AR&R hazard scalar, hazard = depth × velocity (m²/s), where velocity is the FLOOD's flow rate, not the car's speed. Ignores vehicle weight entirely. Thresholds by class (small passenger 0.30, large passenger 0.45, **Large 4WD 0.60** — not generic "4WD," confirmed against the actual report text). Source: Shand, Cox, Blacka & Smith (2011), AR&R Project 10 Stage 2, Report P10/S2/020 — the report itself calls these values "draft, interim, informal," not a validated safety boundary.
 - **L2** — full coupled particle simulation. NO-FORD when lateral drift exceeds `DRIFT_THRESHOLD = 0.05m`. Still uncited as of last check; candidate fix is Smith, Modra & Felder (2019), DOI:10.1111/jfr3.12527, Eq. 6 stability boundary.
 
+**Citation backbone for the L0/L1/L2 "simplest sufficient model" framing:** this structure is established methodology, not novel as a general principle. Cite Oberkampf & Roy (2010, *Verification and Validation in Scientific Computing*), the NASEM VVUQ report (2012), and ASME V&V 40-2018 (context-of-use/model-risk framing) for the engineering backbone; Blackwell sufficiency and Li-Walsh-Littman (2006, MDP state abstraction) for the formal "coarsest model that preserves the decision" backbone. Novelty claim belongs at the specific-application level (this three-tier hazard-traversability problem), not the principle level: a reviewer familiar with VVUQ will otherwise flag it as reinventing adequacy-for-purpose. Source: `docs/research_2026-08/Task-Conditioned_Model_Fidelity_Selection-_Is_There_Established_Prior_Art_.md`.
+
 **Current build target for L2, as of Kumar's July 7 Slack instruction: `kks32/mpm-engine`, not Genesis's `MPM.Liquid`.** See the dedicated section below — this is a real pivot, not a footnote.
 
 **What's closed, don't reopen unprompted:** an earlier synthetic-geometry SPH pilot study (flat plane, box-morph water, box-morph vehicle, Genesis's SPH solver) produced a 23-pair/16-divergence finding. This was a methods rehearsal, not the paper's dataset, and is explicitly closed. **Do not default to discussing SPH or the synthetic pilot unless Josie explicitly asks about it.**
@@ -34,6 +36,36 @@ Given a real flooded road, can a specific vehicle ford it, and what's the simple
 **Current build target for L2, per Kumar's July 7 Slack instruction: `kks32/mpm-engine`, not Genesis's `MPM.Liquid`.** Two live, unresolved disputes exist about its exact API surface — full sourced detail, contradictions, and citations live in the **`mpm-technical-deep-reference`** skill, not here. Hands-on commands to actually run it live in the **`mpm-render-pipeline`** skill. This skill stays high-level: know that the pivot happened and why, defer to those two skills for anything more specific.
 
 **Standing rule:** never restate a prior session's claim about this repo's API surface as settled fact without checking the live source first. This project has hit that exact failure shape at least twice.
+
+---
+
+## Engine choice, checked against alternatives (2026-08-05)
+
+A structured comparison of Genesis/warp-mpm-family engines against coupled
+rigid-fluid alternatives (DualSPHysics+Chrono, Chrono FSI-SPH, Kratos,
+preCICE+OpenFOAM, CB-Geo, Taichi MLS-MPM) on five criteria (native through-
+flow, two-way coupling, experiment-validated FSI force output, confirmed GH200
+aarch64+CUDA build, time-to-first-case) found no candidate satisfies all five.
+DualSPHysics is the best-validated alternative (native open boundaries,
+repeatedly experiment-validated FSI forces) but ships x86-only precompiled
+static libraries with zero documented ARM build, a real blocker, not a
+documentation gap. **This applies to the MPM/Warp-lineage family broadly
+(both Genesis's own solver and kks32/mpm-engine sit in this family), not
+specifically to choosing Genesis over kks32/mpm-engine**: the comparison is
+against a different axis (coupled rigid-fluid engines outside the MPM family
+entirely), not a re-litigation of the July 7 kks32/mpm-engine pivot.
+
+**Recommendation carried into this project:** validate the current pipeline
+against physical/empirical fording benchmarks rather than porting to a new
+engine. The three-part rule for when a switch WOULD be justified: (i) the
+current pipeline structurally cannot represent a decision-dominant effect
+(e.g., sustained through-flow, see the dedicated section in
+`flood-mpm-debugging-reference`), AND (ii) the candidate engine has direct
+experimental validation for that exact effect, AND (iii) it can run on
+project hardware within a bounded fraction of the deadline. Absent all three:
+validate what's running, don't switch.
+
+Source: `docs/research_2026-08/Coupled_Rigid-Body_Fluid_Simulation_Engines_vs__Genesis_MPM_on_GH200-_An_Evidence-Based_Comparison.md`.
 
 ---
 
@@ -136,8 +168,8 @@ scp jcerrell0629@ls6.tacc.utexas.edu:<PWD_PATH>/results/garden/videos/traj_2999.
 ## READINGS — what each is, the must/optional split, and WHERE specific concepts live
 **Hassan's split:** MUST = the World-Models paper + the navigation/path-planning paper + a Gaussian-splatting paper. HOBBY (only if curious) = GNS, LearnMPM, digging/excavation paper.
 
-### 1. "Path Planning in Physically Viable World Models" — anonymous CoRL 2026 submission
-**In the project as** `CoRL_2026___Physically_Viable_Planning.pdf`. **Not confirmed as Kumar-authored — title page reads "Anonymous Author(s)."** Confirmed via the "Resources for GeoElements group" Drive doc as an official lab reading-list item and PVWM-lineage work, but do not present it as Kumar's own paper. Anchor facts + section map:
+### 1. "Path Planning in Physically Viable World Models", CONFIRMED Kumar-lab paper, arXiv 2607.00673
+**In the project as** `CoRL_2026___Physically_Viable_Planning.pdf` (the anonymized double-blind review copy). **Authorship confirmed 2026-08-05** via direct arXiv fetch of the public posting (arXiv:2607.00673, submitted 1 Jul 2026, listed for CoRL): **Su Ann Low, Cheng-Hsi Hsiao, Xingjian Li, Adam J. Thorpe, Ufuk Topcu, Krishna Kumar**, all @utexas.edu. Cheng-Hsi Hsiao is a direct mentor-meeting contact on this project. The "anonymous, not confirmed" hedge in earlier versions of this file is resolved: this is safe to cite as Kumar-lab work. Anchor facts + section map:
 - **Core idea (Abstract / §1):** augment a reconstructed **3D Gaussian splat** scene with **MPM physics simulation** to generate *physically modified* "what-if" versions of the same environment (flooding, terrain collapse, debris) **without recollecting sensor data or rebuilding the map**, then plan a route and check if it stays feasible *before* the robot commits.
 - **PVWM = Physically Viable World Model (§1):** "transforms a reconstructed scene into query-conditioned environments generated by specified physical interventions" — answers *what would happen under a given intervention.*
 - **§3.1 Scene Reconstruction & Terrain Model:** Gaussian primitives `{(µ_i, Σ_i, c_i, α_i)}`. Ground/obstacle/floater classification via orientation. 2D DEM + obstacle mask → occupancy map G0.
@@ -145,6 +177,8 @@ scp jcerrell0629@ls6.tacc.utexas.edu:<PWD_PATH>/results/garden/videos/traj_2999.
 - **§3.3 Traversability-Aware Planning:** builds on FOCI — Gaussian-overlap collision integral + B-spline trajectory optimization.
 - **Three eval scenarios:** Central Texas field site (rising flood severity), Alaska village scene (fixed geometry, add floodwater), sandbox scene (landslide runout).
 - **Why it matters to Josie:** her splat + MPM sim are exactly the two ingredients this paper combines. Can It Ford is a concrete instance of exactly this framework, applied to vehicle fording specifically rather than general robot path planning.
+
+**Validation gap, confirmed by independent prior-art search:** an external reconstruction-to-decision pipeline review found this paper satisfies reconstruction → physics sim → route-feasibility decision, but explicitly does NOT validate against independent empirical criteria: the authors state the eval environments "exist only in simulation" and this "limits the applicability of hardware validation." A broader search across defense/off-road/disaster-response domains found no published pipeline that closes reconstruction → sim → a specific vehicle's fording go/no-go → validation against independent fording criteria (e.g., FM 90-13's 1.5 m/s current-velocity limit, published D×V thresholds, or a physical test). This is the specific gap Can It Ford's empirical-comparison work could fill, so position it as closing this paper's stated limitation, not as a competing pipeline. Source: `docs/research_2026-08/Reconstruction-to-Decision_Pipelines-_Prior-Art_Assessment_for_Sensor-Reconstruction_Physics-Simulation_Validated_Feasibility_Safety_Verdict.md`.
 
 ### 2. "Physically Viable World Models" — standalone team paper (arXiv 2605.30542)
 Thorpe et al., co-authored by **Hassan Iqbal and Cheng-Hsi Hsiao** (confirmed). THE point paper; read first. Attribution boundary: this framework belongs to the lab/paper, not to Josie — never say her work "contributes to their broader program," state her contribution (the closed reconstruct-to-decide pipeline + abstraction-ladder experiment) directly instead.
