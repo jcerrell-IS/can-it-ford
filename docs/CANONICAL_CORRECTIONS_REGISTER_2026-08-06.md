@@ -237,3 +237,16 @@ Any skill file containing any of the following must be corrected in place.
 8. Whether Kumar's 2019 in/outflow BCs are in public `cb-geo/mpm`.
 9. Whether the p2g source read matches genesis 1.1.1 rather than 1.2.0, C1.
 10. DesignSafe DOI pending Kumar sign-off.
+
+
+## Addendum, 2026-08-06
+
+F3 and F4 are partially superseded. `bridge/config.py`, `extract.py`,
+`filling.py`, `gaussian_io.py`, `genesis_particles.py`, `run_bridge.py`,
+and `scale_calibration.py` are committed (`837c554`, `b0579f2`) and
+contain a real splat-to-Genesis-particle bridge plus a real metric
+scale-recovery step, calibrated against a photographed reference object.
+Both target Genesis, not warpmpm. Neither has produced a validated
+result. Committed is not validated: do not cite either as validated until
+someone actually checks the bridge's output particles or the calibration
+script's derived scale against ground truth.
