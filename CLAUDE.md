@@ -25,15 +25,15 @@ restate them in chat prompts.
   confirmed safe. Replicated bisection 2026-08-05 found gd 80 and 88
   pass 3/3 at 60 steps, gd 90+ fails, non-monotone above the boundary,
   non-deterministic at fixed config. Before citing any grid_density
-  as safe, check can-it-ford-audit/2026-08-04/CONFIRMED_FACTS_LEDGER.md.
+  as safe, check docs/CANONICAL_CORRECTIONS_REGISTER_2026-08-06.md section C2.
 - Before treating any claim in this file as settled: a claim cited
   from another session's confidence, a skill file, or a prior audit's
   conclusion is not a second source, it is the same source cited
   twice. Only a primary-source line, a runtime read, or a replicated
   control counts as verification. Before archiving or superseding any
   dated audit file, pull its VERIFIED-tier findings into
-  CONFIRMED_FACTS_LEDGER.md first, the file can go stale, the facts
-  inside it should not disappear with it.
+  docs/CANONICAL_CORRECTIONS_REGISTER_2026-08-06.md first, the file can
+  go stale, the facts inside it should not disappear with it.
 - For any rendered output: water reads as one connected fluid body,
   vehicle position matches its known density, no particles outside
   domain or clipped through geometry, motion continuous across frames.
@@ -58,10 +58,10 @@ restate them in chat prompts.
   needs GPU. File checks, git operations, and monitoring belong on the
   login node, not inside idev.
 - Before asserting any parameter, threshold, citation, mesh property, or
-  milestone as fact, read docs/VERIFIED_FACTS_LEDGER_july24.md. Section B
-  lists claims already proven false. Section F is the complete vehicle
-  asset inventory: there is ONE usable mesh, not three. Do not re-derive
-  anything in Section A.
+  milestone as fact, read docs/CANONICAL_CORRECTIONS_REGISTER_2026-08-06.md.
+  Section I lists claims already proven false. Section E is the vehicle
+  asset inventory: there is ONE usable mesh, not three. The July 24
+  ledger is historical only and its L1 counts predate the joint-rule fix.
 
 ## AUGUST 4 2026 AUDIT, GROUND TRUTH
 

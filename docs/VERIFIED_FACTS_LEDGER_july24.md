@@ -304,7 +304,7 @@ result. It now refuses to run without an explicit acknowledgement flag.
    the hull is +117 percent (not 68). The displacement-relevant figure is the hull one:
    every FloodScene run **under the column-fill path** used a body displacing **2.17x the
    hull's actual volume**. **[CORRECTED 2026-07-29]** The original wording, "every
-   FloodScene run to date", is now false: the 17 gated runs in
+   FloodScene run to date", is now false: the 17 runs in render_s2 listed in
    `data/all_runs_inventory.csv` were solidified with `solidify_watertight` and displace
    **1.0024x** the hull at `n_grid=64`, not 2.17x. Do not cite 2.17x, 7.698 m3 or
    142.9 kg/m3 as a property of any current run.
