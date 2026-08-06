@@ -295,3 +295,13 @@ Demoted to historical, cite only with a date and never as current:
   ~/can-it-ford-audit/2026-08-04/CONFIRMED_FACTS_LEDGER.md
   docs/CANITFORD_RESEARCH_INTEGRATION_v2_2026-08-05.md
 Where any of them conflicts with the register, the register wins.
+
+
+## MacOS-MCP screenshot permission, 2026-08-06
+
+MacOS-MCP `Snapshot` with `use_vision=true` fails with `cannot identify
+image file`. Cause: macOS Screen Recording permission not granted to
+Claude Desktop / its helper process. Fix: System Settings > Privacy &
+Security > Screen Recording > enable Claude, then relaunch the app.
+`Snapshot` without vision (accessibility tree: open apps, windows,
+interactive elements) works without this permission and needed no fix.
