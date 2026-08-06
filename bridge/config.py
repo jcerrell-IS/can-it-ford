@@ -15,3 +15,6 @@ class BridgeConfig:
     normalize_to_cube: bool = True
     fill_internal: bool = False
     fill_density_threshold: float = 5.0
+    max_scale: float | None = None
+    fill_max_grid_bytes: int = 536870912
+    fill_max_marks: int = 200000000

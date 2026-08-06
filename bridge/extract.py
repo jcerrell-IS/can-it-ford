@@ -7,8 +7,13 @@ from .filling import fill_internal_particles
 from .gaussian_io import GaussianCloud
 
 
+def sigmoid(x: np.ndarray) -> np.ndarray:
+    x = np.asarray(x, dtype=np.float64)
+    return np.where(x >= 0, 1.0 / (1.0 + np.exp(-x)), np.exp(x) / (1.0 + np.exp(x)))
+
+
 def opacity_filter(cloud: GaussianCloud, threshold: float) -> np.ndarray:
-    return cloud.opacities.reshape(-1) > threshold
+    return sigmoid(cloud.opacities.reshape(-1)) > threshold
 
 
 def euler_rotation_matrix(degrees: tuple[float, float, float]) -> np.ndarray:
@@ -72,18 +77,24 @@ def quaternion_to_matrix(quats: np.ndarray) -> np.ndarray:
 
 def gaussian_covariance(scales: np.ndarray, rotations: np.ndarray) -> np.ndarray:
     rot = quaternion_to_matrix(rotations)
-    m = rot * scales[:, None, :]
+    m = rot * np.exp(scales)[:, None, :]
     sigma = m @ np.transpose(m, (0, 2, 1))
     pairs = ((0, 0), (0, 1), (0, 2), (1, 1), (1, 2), (2, 2))
     return np.stack([sigma[:, i, j] for i, j in pairs], axis=1)
 
 
 def particle_volume(scales: np.ndarray) -> np.ndarray:
-    return (4.0 / 3.0) * np.pi * np.prod(scales, axis=1)
+    return (4.0 / 3.0) * np.pi * np.prod(np.exp(scales), axis=1)
+
+
+def scale_filter(cloud: GaussianCloud, max_scale: float) -> np.ndarray:
+    return np.exp(cloud.scales).max(axis=1) <= max_scale
 
 
 def extract_mpm_particles(cloud: GaussianCloud, config: BridgeConfig):
     keep = opacity_filter(cloud, config.opacity_threshold)
+    if config.max_scale is not None:
+        keep = keep & scale_filter(cloud, config.max_scale)
     rot = euler_rotation_matrix(config.rotation_degrees)
     pos = apply_rotation(cloud.positions[keep], rot)
     scales = cloud.scales[keep]
