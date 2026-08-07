@@ -76,16 +76,26 @@ class Rule:
     # If set, the line must ALSO match this OUTSIDE the primary match, so bare
     # numbers do not fire everywhere they legitimately appear.
     context: str | None = None
+    # If set, a line matching this is NEVER a hit. For rules whose context word is
+    # the same word the CORRECTION uses: "this is NOT independent confirmation"
+    # contains "independent" and would otherwise be flagged as the very claim it
+    # retracts. Negation is the common case in this repo, so suppress it here
+    # rather than making every author read past a false ERROR.
+    exclude: str | None = None
     _p: re.Pattern = field(init=False, repr=False)
     _c: re.Pattern | None = field(init=False, repr=False)
+    _x: re.Pattern | None = field(init=False, repr=False)
 
     def __post_init__(self):
         self._p = re.compile(self.pattern, re.I)
         self._c = re.compile(self.context, re.I) if self.context else None
+        self._x = re.compile(self.exclude, re.I) if self.exclude else None
 
     def hits(self, line: str) -> bool:
         m = self._p.search(line)
         if not m:
+            return False
+        if self._x is not None and self._x.search(line):
             return False
         if self._c is None:
             return True
@@ -137,10 +147,13 @@ RULES: list[Rule] = [
 
     Rule("C6", WARN,
          r"9\.80665",
-         "9.80665 appears only at failure_modes.py:14, a 0.034% fork. The solver "
-         "and gates_all_runs.py use 9.81. Use 9.81; that script was never wired "
-         "into the 17-run pipeline, so 9.80665 never influenced a gated result.",
-         "CLAUDE.md item 3 and item 12; register A2 and D6",
+         "9.80665 appears only at failure_modes.py:14, a 0.034% fork against the "
+         "solver and gates_all_runs.py, both 9.81. It IS live: used at :170 "
+         "(surge_accel_g) and :174 (weight_n), and the classifier has now run on "
+         "all 17 runs, so it fed the published verdicts. Do NOT write that it "
+         "never influenced a gated result. Unify on 9.81, then re-run "
+         "analysis/classify_failure_modes.py and confirm 16 SLIDE / 1 STUCK holds.",
+         "CLAUDE.md items 3, 12, 15; register A2, D6, D6b",
          context=None),
 
     Rule("C7", ERROR,
@@ -158,10 +171,15 @@ RULES: list[Rule] = [
          "CLAUDE.md item 13; gates.py:195-196",
          context=r"peer[- ]review|\bcited\b|literature|standard|established|sourced"),
 
-    Rule("C9", ERROR,
-         r"xia\W{0,20}(?:et\s*al\.?\s*)?\W{0,6}2013",
-         "Xia is 2014, not 2013. Four authors including Yejiang Wang, print year 2014.",
-         "memory xia-2014-not-2013-citation-trap",
+    Rule("C9", WARN,
+         r"xia\s*(?:et\s*al\.?)?[,\s]*\(?20(?:10|11|13|14)",
+         "TWO different Xia papers are in play, and each has two defensible years. "
+         "xia2010 = 'Formula of Incipient Velocity for Flooded Vehicles', SLIDE, "
+         "online-first 2010, print 2011. xia2013 = 'Criterion of Vehicle Stability in "
+         "Floodwaters', TOPPLE and the DRIFT_THRESHOLD justification, online-first 2013, "
+         "print 2014. A bare year in prose cannot distinguish them and is not by itself "
+         "an error. Cite the bib key, and never 'correct' one year to the other.",
+         "paper/can_it_ford_references_IEEE.bib:96 and :108, both confirmed 2026-07-20",
          context=None),
 
     Rule("C10", ERROR,
@@ -170,6 +188,27 @@ RULES: list[Rule] = [
          "script in the repo. It CANNOT be independent confirmation of anything.",
          "CLAUDE.md item 12",
          context=r"confirm|independent|corroborat|verif"),
+
+    Rule("C10b", ERROR,
+         r"failure_modes(_by_run(_classified)?)?\.(json|csv)|classify_timeseries|"
+         r"simulation/failure_modes\.py",
+         "NO failure-mode store is independent confirmation, whatever its filename. "
+         "simulation/failure_modes.py reads the same _incoming/<run>/metrics.csv that "
+         "the displacement tables are built from, so it restates one rollout under an "
+         "explicit criterion. Repointing a citation from failure_modes_result.json to "
+         "failure_modes_by_run.json does NOT fix an independence claim: check the verb, "
+         "not just the path.",
+         "register D6i; fixed in four_rung_ladder.md 2026-08-07",
+         context=r"independent|corroborat|second source|cross[- ]check"),
+
+    Rule("C10c", ERROR,
+         r"ratio_(slide|topple|float)|magnitude_ratio|criterion ratio",
+         "ratio_* is PEAK MAGNITUDE, not the verdict. triggered_* is the verdict, and "
+         "they disagree: SLIDE has ratio >= 1 in 17 of 17 runs but triggers in 16, and "
+         "TOPPLE has ratio >= 1 in 13 and triggers in 0. Counting runs by ratio >= 1 "
+         "reports 13 topples that never happened.",
+         "register D6c; failure_modes.py:179-185",
+         context=r"count|runs|verdict|classif|topple|exceed|met\b"),
 
     Rule("C11", ERROR,
          r"gates_results\.json",
@@ -260,7 +299,14 @@ def main(argv: list[str]) -> int:
 
     errors = warns = 0
     for path, lines in iter_targets(argv):
-        sp = str(path)
+        # Match on the REPO-RELATIVE path. Matching an absolute path would make
+        # the "can-it-ford/" entry (meant for the nested duplicate) swallow the
+        # entire repository, since every absolute path here contains it. That
+        # bug silently passed every file when the hook invoked this per-file.
+        try:
+            sp = str(Path(path).resolve().relative_to(REPO))
+        except ValueError:
+            sp = str(path)
         if any(x in sp for x in EXCLUDE):
             continue
         if full and any(x in sp for x in CORRECTION_LAYER):
