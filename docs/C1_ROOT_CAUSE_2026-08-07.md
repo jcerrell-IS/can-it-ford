@@ -335,47 +335,82 @@ explicitly, and that is job `894676`, whose four C2 arms all crashed at the same
 guard anyway. `run_c2`'s own default is still `depth_cells=10` on both the Mac and
 the Vista copy, so the 18 can only have come from the flag.
 
-**The reason is section 3 of this file.** `20dd999`'s argument assumes the body
-floats once given clearance. It does not: it registers 1.53 % of analytic
-buoyancy. At the actual C2 geometry with `depth_cells=18`:
+### 8b-CORRECTION, same day, after reading job 895448's actual trace
 
-| quantity | value |
-|---|---|
-| box bottom after reseat | 2.2373 m |
-| guard low bound `1.5*dx` | 0.2208 m |
-| descent required | 2.0165 m |
-| frames to guard, pure free fall | 19.2 |
-| frames to guard, at the measured 1.53 % response | **19.3** |
+An earlier revision of this section argued the box FREE-FALLS to the guard in
+about 19 frames, concluded that surviving a 200-frame loop would need a 216 m
+descent budget against a 9.42 m `grid_lim`, and therefore that **no tank geometry
+inside the canonical domain can make C2 run**. **All three of those are WRONG and
+are withdrawn.** The error was mine and it contradicted section 1 of this same
+file: a body whose `v_cm` is ASSIGNED from a mass-weighted grid average cannot
+free-fall in water, because the grid velocity at its nodes is the water's, which
+is near zero. C1's own `v_series` shows exactly that, a sustained -0.014 m/s at
+g64, not -9.81 m/s^2. I applied `a = -g + a_late_window` as though the measured
+buoyant response were a small correction to gravity. It is not; there is no
+gravity term in the body's update at all.
 
-Buoyancy buys three hundredths of a frame.
+**What the run actually shows** (job `895448`, `c2_diag2_g64_off0.log`, 195
+`com_frame` records read directly, T2):
 
-**Therefore no tank geometry inside the canonical domain can make C2 run.**
-Deepening delays the trip only as `sqrt(descent)`. To survive even a 200-frame
-measurement loop (6.667 s) the box needs a descent budget of
-`0.5 * 9.71 * 6.667^2 = 216 m`. `grid_lim` is 9.42 m.
+The box does not free-fall and it does not creep monotonically. **It oscillates in
+heave.** COM z runs 2.5475 at frame 0 down to ~1.2 by frame 119, then turns over
+repeatedly: minimum 1.1494 at frame 133, maximum 1.2475 at frame 160, i.e. a
+half-period of 27 frames, so **T_observed = 54 frames = 1.80 s**.
 
-C2 asks a body to reach an equilibrium draft. A body that registers 1.5 % of
-buoyancy has no equilibrium draft to reach. **C2 and C1 are one defect, not two.**
+Against `heave_period()`'s own analytic form, `T = 2*pi*sqrt(m_eff/k)` with
+`k = rho_w g L^2`:
 
-Consequence for the ladder: C2's stated purpose, the primary Archimedes test, is
-already satisfied by the collider path in section 5, which measured buoyancy to
-+1.6 % (first-3, g64) in the same water at the same resolution. The honest status
-is not "C2 has never produced a number, blocked on a guard". It is: C2 cannot
-produce a number on the free-rigid path for the same reason C1 failed, and the
-number C2 existed to produce has already been obtained another way.
+| Ca | T predicted | frames | vs observed 54 |
+|---|---|---|---|
+| **0.0** | 1.8854 s | **56.6** | **within 4.6 %** |
+| 0.5 (the function's default) | 2.3091 s | 69.3 | rejected |
+| 0.67 | 2.4364 s | 73.1 | rejected |
 
-Instrumentation worth adding regardless of the above: the guard message hardcodes
-the label `"x"` while checking all three axes, because `core/solver.py:506` is
-`g = x[:, 1:] if self.periodic_x else x` and `periodic_x` is never set in this
-scene. Printing `x.min(0)` per axis before the raise converts an inferred
-diagnosis into a recorded one.
+**This is a genuinely new result and it is the first evidence from the
+partially-submerged regime**, which section 8 flags as the rung C1 never tested.
+A body with no restoring force cannot oscillate in heave. At the free surface the
+coupling therefore DOES produce a waterplane restoring force, and at close to the
+right frequency, which is qualitatively better than C1's fully-submerged case.
+The period matches the **zero-added-mass** prediction and rejects Ca=0.5, which is
+consistent with section 1: a body that adopts the local grid velocity does not
+entrain fluid the way a force-coupled body does.
+
+It still drifts downward at roughly 0.15 m/s while oscillating, so it reaches the
+guard at frame ~195 of a 200-frame budget, using about 97 % of it rather than 10 %.
+A modestly higher spawn plausibly lets C2 complete. **C2 is not demonstrated to be
+unrunnable, and that claim should not be repeated.**
+
+**What survives, on different and better grounds.** C2 asks for an EQUILIBRIUM
+draft. What this trace shows is an oscillation superimposed on a steady downward
+drift, i.e. no convergence. If C2 completes it would report a draft with no
+defined equilibrium behind it, which is a stronger objection than the crash was.
+Stated as a hypothesis, NOT a result: untested.
+
+**And the guard trip is still unidentified.** At the last frame COM z is 1.14632
+and the cube half-height is `L/2 = 0.7361`, so the axis-aligned bottom face is at
+**0.4102**, while the guard fired at **0.2188**. That is a gap of 0.1914 m, 1.30
+dx. Water is clamped to `>= 0.4048`, also above the trip. So neither the water nor
+the box's flat bottom face is at 0.2188, and an inference that the bottom face sits
+exactly on the bound requires a half-height of 0.93 against the actual 0.7361. A
+rotated cube is the obvious candidate, since the half-diagonal is 1.2749 and a
+tilted corner would reach z = -0.1286, but the trace records only COM and no
+orientation. **The identity of the tripping particle is UNKNOWN.**
+
+That makes the instrumentation the highest-value cheap change, not an optional
+extra: `core/solver.py:506` is `g = x[:, 1:] if self.periodic_x else x` and
+`periodic_x` is never set in this scene, so the guard checks all three axes while
+the message hardcodes the label `"x"`. Print `x.min(0)` per axis AND the material
+of the argmin particle before the raise. One print resolves both the axis and
+whether it is water, the hull, or a rotated corner.
 
 ## 9. Open
 
 - The 7.59x ratio in `dV` between g96 and g64 is unexplained as physics, and given
   section 4 it may not require a physical explanation at all.
-- C2 cannot be run on the free-rigid path at all: see section 8b. It is not
-  blocked by geometry, a threshold, or resolution.
+- C2 is NOT demonstrated unrunnable: see section 8b-CORRECTION. It reached frame
+  ~195 of a 200-frame budget and oscillates in heave at close to the analytic
+  zero-added-mass period. Whether it has an equilibrium draft to report is an open
+  hypothesis, and the identity of the particle tripping the guard is unknown.
 - C3's `ZeroDivisionError` IS fixed (guarded at the `err_headline_vs_ideal_pct`
   assignment), and `run_c3` gained a correct compressible target
   `a_expected_compressible = G*(rho_local/RHO_W - 1)` via `hydrostatic_density`,
