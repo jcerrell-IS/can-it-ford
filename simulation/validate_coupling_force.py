@@ -217,6 +217,17 @@ class BoxTank:
         self.leaked += n
         return n
 
+    def reseat(self, z_bottom):
+        sim = self.solver._sim
+        com = self.solver.rigid_state()["com"].copy()
+        com[2] = float(z_bottom) + self.length / 2.0
+        sim.set_rigid_body_velocity(0, (0.0, 0.0, 0.0), (0.0, 0.0, 0.0),
+                                    device=self.solver.device)
+        wp.to_torch(sim.rigid_x_cm)[0] = torch.tensor(
+            np.asarray(com, dtype=np.float32))
+        self.solver.step(self.dt, 1)
+        return com
+
     def pin(self, com):
         sim = self.solver._sim
         sim.set_rigid_body_velocity(0, (0.0, 0.0, 0.0), (0.0, 0.0, 0.0),
@@ -399,6 +410,14 @@ def run_c2(n_grid, rho_box=600.0, depth_cells=10, offset_cells=0.0,
     settle_state["draft_after_settle"] = tank.draft()[0]
     settle_state["surface_direct_after_settle"] = tank.surface_direct()
 
+    zs_settled, _, _ = tank.column_surface()
+    z_b_reseat = zs_settled - d_inc + offset_cells * dx
+    tank.reseat(z_b_reseat)
+    settle_state["surface_after_settle"] = zs_settled
+    settle_state["z_b_nominal_at_spawn"] = z_b0
+    settle_state["z_b_reseated"] = z_b_reseat
+    settle_state["reseat_shift_m"] = z_b_reseat - z_b0
+
     t_heave = heave_period(tank.mass, tank.length)
     window = max(int(round(t_heave * FPS)), 10)
     tol = 0.01 * tank.h
@@ -490,7 +509,11 @@ def run_c1(n_grid, rho_box=600.0, depth_cells=18.0, box_bottom_cells=8.0,
     settle = settle_pinned(tank, settle_frames)
 
     zs_settle, _, _ = tank.column_surface()
-    submerged = bool(zs_settle > z_b0 + tank.length + 0.5 * dx)
+    z_b_reseat = zs_settle - tank.length - 2.0 * dx
+    z_b_reseat = max(z_b_reseat, tank.floor + 2.0 * dx)
+    tank.reseat(z_b_reseat)
+    zs_settle, _, _ = tank.column_surface()
+    submerged = bool(zs_settle > z_b_reseat + tank.length + 0.5 * dx)
 
     ts, vs = [0.0], [float(tank.solver.rigid_state()["v"][2])]
     for i in range(measure_substeps):
@@ -517,7 +540,10 @@ def run_c1(n_grid, rho_box=600.0, depth_cells=18.0, box_bottom_cells=8.0,
         "settle": settle,
         "fully_submerged_at_release": submerged,
         "surface_after_settle": zs_settle,
-        "box_top_z": z_b0 + tank.length,
+        "box_top_z": z_b_reseat + tank.length,
+        "z_b_reseated": z_b_reseat,
+        "z_b_nominal_at_spawn": z_b0,
+        "submersion_margin_dx": (zs_settle - (z_b_reseat + tank.length)) / dx,
         "a_ideal": a_ideal,
         "a_added_mass_asymptote_ca067": a_ideal / (1.0 + 0.67 * RHO_W / rho_box),
         "a_windows": windows,
