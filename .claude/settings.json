@@ -1,7 +1,17 @@
 {
+  "disableClaudeAiConnectors": true,
+  "fileCheckpointingEnabled": true,
   "permissions": {
     "allow": [
       "Bash(scripts/tacc.sh:*)",
+      "Bash(scripts/tacc_submit.sh:*)",
+      "Bash(scripts/tacc_idle_check.sh:*)",
+      "Bash(scripts/check_claims.py:*)",
+      "Bash(python3 scripts/check_claims.py:*)",
+      "Bash(/Users/josie/can-it-ford/scripts/tacc.sh:*)",
+      "Bash(/Users/josie/can-it-ford/scripts/tacc_submit.sh:*)",
+      "Bash(/Users/josie/can-it-ford/scripts/tacc_idle_check.sh:*)",
+      "Bash(python3 /Users/josie/can-it-ford/scripts/check_claims.py:*)",
       "Bash(scripts/pane_check.sh*)",
       "Bash(tmux ls*)",
       "Bash(tmux capture-pane*)",
@@ -24,7 +34,7 @@
       "Read(reference_docs/briefing_vault/00_MASTER_CORRECTIONS_INDEX.md)",
       "Read(reference_data/MPM_Flood-Vehicle_Reference_Data__Sedan__SUV__Pickup__NEON_TABLE_SUPERSEDED.md)",
       "Read(designsafe-staging/**)",
-      "Read(can-it-ford/**)",
+      "Read(//Users/josie/can-it-ford/can-it-ford/**)",
       "Read(**/*_DEPRECATED*)",
       "Read(**/*_SUPERSEDED*)"
     ]
@@ -67,6 +77,18 @@
           }
         ],
         "matcher": "Read"
+      }
+    ],
+    "PostToolUse": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/hooks/check_claims_posttool.sh",
+            "statusMessage": "Checking for previously refuted claims"
+          }
+        ],
+        "matcher": "Edit|Write"
       }
     ],
     "SessionStart": [

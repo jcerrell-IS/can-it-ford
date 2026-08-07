@@ -150,7 +150,64 @@ an explicit instruction not to re-check it.
 | `scripts/tacc_idle_check.sh` | Detect interactive allocations whose GPUs are at 0% and 0 MiB with load below 0.5. Reports and prints the `scancel` line; never cancels by itself. |
 | `scripts/check_claims.py` | Pattern guard for the 14 refuted claims that have a stable surface form. Defaults to the staged git index so it gates new lines; `--all` audits the archive. |
 
-`check_claims.py --all` currently reports 163 ERROR and 26 WARN across tracked
+## I-7. Two same-shaped bugs: a relative pattern swallowing the whole repo. VERIFIED.
+
+Both found 2026-08-07, both caused by matching a path fragment that the repo's
+own name satisfies.
+
+1. **Permission rule.** `.claude/settings.json` denied `Read(can-it-ford/**)` to
+   block the nested duplicate directory. The pattern is relative, so whenever the
+   shell's working directory drifted to `/Users/josie`, every file under
+   `/Users/josie/can-it-ford/` matched it and became unreadable, including
+   `scripts/`, `.claude/` and the memory directory. Symptom: "File is covered by a
+   Read deny rule" on ordinary project files, intermittently. Fixed by anchoring to
+   the absolute path `Read(//Users/josie/can-it-ford/can-it-ford/**)`.
+
+2. **check_claims.py.** Its `EXCLUDE` tuple carried the same `"can-it-ford/"`
+   entry and matched against the absolute path, so when the PostToolUse hook
+   invoked it per-file it skipped **every** file and silently exited 0. Fixed by
+   normalising to a repo-relative path before matching. Caught only because the
+   hook returned clean on a file already known to have two hits.
+
+## I-8. Rule C9 was wrong and would have corrupted a citation. VERIFIED.
+
+The first version of C9 asserted "Xia is 2014, not 2013". Checking
+`paper/can_it_ford_references_IEEE.bib` before acting showed there are **two**
+Xia papers and the bib deliberately keys both by online-first year:
+
+- `xia2010` (:96) "Formula of Incipient Velocity for Flooded Vehicles",
+  Natural Hazards 58(1) 1-14, online 2010, **print 2011**, cited for SLIDE.
+- `xia2013` (:108) "Criterion of Vehicle Stability in Floodwaters",
+  Natural Hazards 70(2) 1619-1630, online 2013, **print 2014**, cited for TOPPLE
+  and the DRIFT_THRESHOLD justification.
+
+So both skill-file citations were defensible and the rule, not the text, was the
+defect. C9 is now a WARN that explains the ambiguity instead of asserting a year.
+
+**Open, needs a human decision.** `xia2013` currently has `year = {2013}` next to
+`volume = {70}, number = {2}, pages = {1619--1630}`, which is the January **2014**
+print issue, so the entry is internally inconsistent. `year = {2013}` landed in
+`f9bf0f9` on 2026-07-21; a Crossref check on 2026-07-30 concluded 2014 and the bib
+was never updated. Either move the year to 2014 (the key can stay `xia2013`) or
+drop the volume/issue. Nothing was changed here.
+
+## I-9. Connector and skill prune. VERIFIED.
+
+- `disableClaudeAiConnectors: true` set in **project** settings, which drops the
+  38 claude.ai-managed connectors for Can It Ford only. Per the settings schema,
+  any-source-true wins and a project may opt out, so claude.ai chat and every
+  other project keep them. `claude mcp remove` cannot touch these; it reaches only
+  local/user/project scopes, confirmed by attempting it.
+- Removed from local scope: `coupler-io` (unrelated SaaS ETL), plus `blender`,
+  `overleaf`, `undermind` and `zotero`, which were duplicated at user scope. That
+  also clears the "zotero defined in multiple scopes" warning. Both zotero
+  endpoints resolved to the same binary through a symlink, so nothing was lost.
+- 91 skills set to `off`, including 11 `anthropic-skills:` copies that duplicate
+  the version-controlled skills in `.claude/skills/`. Duplicated skills can drift,
+  and the git-tracked copy is the one CLAUDE.md cites.
+- Backups: `~/.claude/_backup_2026-08-07/`.
+
+`check_claims.py --all` currently reports 157 ERROR and 89 WARN across tracked
 files, excluding the correction layer. That is real documented debt (forked
 densities at `can_it_ford_L2_mpm.py:27` and `can_it_ford_L2_mpm_ytest.py:45`,
 the stale 100-300 band in prose), not tool noise. The staged-index default is

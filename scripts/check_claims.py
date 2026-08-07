@@ -199,7 +199,8 @@ RULES: list[Rule] = [
          "failure_modes_by_run.json does NOT fix an independence claim: check the verb, "
          "not just the path.",
          "register D6i; fixed in four_rung_ladder.md 2026-08-07",
-         context=r"independent|corroborat|second source|cross[- ]check"),
+         context=r"independent|corroborat|second source|cross[- ]check",
+         exclude=r"\bnot\b|\bnever\b|\bcannot\b|\bno\b\s+\w*\s*(independent|corroborat)"),
 
     Rule("C10c", ERROR,
          r"ratio_(slide|topple|float)|magnitude_ratio|criterion ratio",
