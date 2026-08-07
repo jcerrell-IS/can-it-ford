@@ -115,17 +115,24 @@ reconstruction as usable but state the metric wherever it is relied on.
 Vista `/work` is at 4.30% of 1024 GB, so `/work` is the correct target for
 anything large.
 
-## I-5. A live citation error found mechanically. VERIFIED.
+## I-5. RETRACTED. The citation was fine; the rule that flagged it was wrong.
 
-`scripts/check_claims.py` flagged
-`.claude/skills/flood-mpm-debugging-reference/SKILL.md:39`, which reads
-`topple -> Xia et al. 2013` under the heading "Citation anchors, already
-resolved, don't re-derive". Xia is **2014**, four authors including Yejiang
-Wang. The same string appears in the stale duplicate at
-`vehicle_geometry_research/flood-mpm-debugging-reference_SKILL_v3_friction_corrected.md:39`.
+**This item originally claimed** that
+`.claude/skills/flood-mpm-debugging-reference/SKILL.md:39`, reading
+`topple -> Xia et al. 2013`, was a live citation error and that Xia is 2014.
+That is wrong and is retracted. See I-8 for the verified position.
 
-This is the failure mode the register exists to prevent: a wrong value carrying
-an explicit instruction not to re-check it.
+The bib deliberately keys both Xia papers by **online-first** year, so
+"Xia et al. 2013" for TOPPLE matches `xia2013` exactly and is correct as written.
+`scripts/check_claims.py` rule C9, as first authored, asserted "Xia is 2014, not
+2013" and would have introduced an error into the bibliography if acted on. The
+rule was the defect, not the skill file.
+
+The transferable lesson is the one this file exists to enforce, turned on itself:
+a mechanical checker is not a primary source either. C9 was written from a
+memory, and the memory was an oversimplification of a two-paper, two-year-each
+situation. Checking `paper/can_it_ford_references_IEEE.bib` before acting is what
+caught it.
 
 ## I-6. MCP configuration. VERIFIED.
 
@@ -232,3 +239,32 @@ files, excluding the correction layer. That is real documented debt (forked
 densities at `can_it_ford_L2_mpm.py:27` and `can_it_ford_L2_mpm_ytest.py:45`,
 the stale 100-300 band in prose), not tool noise. The staged-index default is
 the enforceable gate; the full sweep is a worklist.
+
+---
+
+## APPENDED BY A DIFFERENT CLAUDE CODE SESSION, 2026-08-07 ~10:20 BST
+
+This section was not written by the session that wrote everything above it. A second
+Claude Code session was running concurrently in this same working tree, on the
+failure-mode classifier task. Neither session was told the other existed.
+
+**Read `docs/CONCURRENT_SESSION_NOTICE_2026-08-07.md`.** It records what overlapped,
+which files each session owns, and the proposed sequencing.
+
+Three items bear directly on the work above:
+
+1. **C6's message was factually wrong.** It stated that 9.80665 "appears only at
+   `failure_modes.py:14`". It also appears at `analysis/viability_dashboard_scaffold.py:11`.
+   Two sites. Corrected in `check_claims.py`, and the full inventory is now register A6.
+2. **`6514bfc`'s withdrawal of CLAUDE.md item 15 dropped a still-true fact.** The
+   "gravity is UNKNOWN" half was correctly withdrawn. The post-processing 9.81 vs
+   9.80665 fork was not stale, and the withdrawal note pointed at register A2 for it
+   when A2 did not contain it. Register A6 closes that dangling pointer.
+3. **Commits `0797b08` and `3470ff9` contain the other session's uncommitted edits**
+   (`CLAUDE.md` item 12; `Rule.exclude`, C10b and C10c in `check_claims.py`). They are
+   correct and were verified, but they are not described by those commit messages.
+
+The `--all` sweep figure quoted above (157 ERROR / 89 WARN) predates several rule fixes
+made by the other session: `Rule.exclude` was added and C10b, C10c and C14 were narrowed
+after false positives fired on text that states the correction rather than the claim.
+Re-run before treating that count as a worklist baseline.

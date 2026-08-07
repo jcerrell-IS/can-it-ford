@@ -3,7 +3,7 @@
   "fileCheckpointingEnabled": true,
   "statusLine": {
     "type": "command",
-    "command": ".claude/statusline.sh",
+    "command": "$CLAUDE_PROJECT_DIR/.claude/statusline.sh",
     "refreshInterval": 60,
     "padding": 0
   },
