@@ -509,11 +509,8 @@ def run_c1(n_grid, rho_box=600.0, depth_cells=18.0, box_bottom_cells=8.0,
     settle = settle_pinned(tank, settle_frames)
 
     zs_settle, _, _ = tank.column_surface()
-    z_b_reseat = zs_settle - tank.length - 2.0 * dx
-    z_b_reseat = max(z_b_reseat, tank.floor + 2.0 * dx)
-    tank.reseat(z_b_reseat)
-    zs_settle, _, _ = tank.column_surface()
-    submerged = bool(zs_settle > z_b_reseat + tank.length + 0.5 * dx)
+    z_b_reseat = z_b0
+    submerged = bool(zs_settle > z_b0 + tank.length + 0.5 * dx)
 
     ts, vs = [0.0], [float(tank.solver.rigid_state()["v"][2])]
     for i in range(measure_substeps):
