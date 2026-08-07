@@ -16,6 +16,12 @@ renders/
 !data/track1_sweep_v1/**
 !data/track1_sweep_v2/
 !data/track1_sweep_v2/**
+# data/* above silently hides the canonical 17-run results stores. They were only ever
+# tracked by force-add (841d666), so a new sibling file lands invisible unless un-ignored
+# here. Register D6a. Keep this list in step with analysis/classify_failure_modes.py.
+!data/all_runs_inventory.csv
+!data/failure_modes_by_run.json
+!data/failure_modes_by_run_classified.csv
 session_*.md
 session_*.txt
 *-im-fixing-a-vehicle-density-bug-*.txt
@@ -75,3 +81,13 @@ overleaf_sync/
 figures/_BIG/
 figures/_BIG_PREVIEW/
 .claude/worktrees/
+
+# Overleaf-canonical working copy. paper/ is hook-denied for edits in this repo
+# (the paper builds from conference_101719_1.tex on the overleaf remote, not from
+# here), so this local snapshot must never enter history and diverge from it.
+paper/canonical_2026-08-02/
+
+# Pre-fix backup of the bridge module, kept locally for reference only.
+# Confirmed 2026-08-07 that nothing imports it: /usr/bin/grep -rn "_pre_fix_backup"
+# over *.py/*.md/*.sh/*.json/*.tex returns only a .remember note, no code.
+bridge/_pre_fix_backup_2026-08-05/

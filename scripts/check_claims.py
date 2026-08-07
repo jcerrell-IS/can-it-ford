@@ -148,13 +148,16 @@ RULES: list[Rule] = [
 
     Rule("C6", WARN,
          r"9\.80665",
-         "9.80665 appears only at failure_modes.py:14, a 0.034% fork against the "
-         "solver and gates_all_runs.py, both 9.81. It IS live: used at :170 "
-         "(surge_accel_g) and :174 (weight_n), and the classifier has now run on "
-         "all 17 runs, so it fed the published verdicts. Do NOT write that it "
-         "never influenced a gated result. Unify on 9.81, then re-run "
-         "analysis/classify_failure_modes.py and confirm 16 SLIDE / 1 STUCK holds.",
-         "CLAUDE.md items 3, 12, 15; register A2, D6, D6b",
+         "9.80665 appears at TWO sites, not one: failure_modes.py:14 AND "
+         "analysis/viability_dashboard_scaffold.py:11. Both are post-processing "
+         "consumers of the rigid timeseries. A 0.034% fork against the solver and "
+         "five 9.81 sites. It IS live: used at failure_modes.py:170 (surge_accel_g) "
+         "and :174 (weight_n), and the classifier has now run on all 17 runs, so it "
+         "fed the published verdicts. Do NOT write that it never influenced a gated "
+         "result, and do NOT write that it appears only in failure_modes.py. Unify "
+         "on 9.81, then re-run analysis/classify_failure_modes.py and confirm "
+         "16 SLIDE / 1 STUCK holds.",
+         "CLAUDE.md items 3, 12, 15; register A2, A6, D6, D6b",
          context=None),
 
     Rule("C7", ERROR,
@@ -210,7 +213,13 @@ RULES: list[Rule] = [
          "TOPPLE has ratio >= 1 in 13 and triggers in 0. Counting runs by ratio >= 1 "
          "reports 13 topples that never happened.",
          "register D6c; failure_modes.py:179-185",
-         context=r"count|runs|verdict|classif|topple|exceed|met\b"),
+         # Context must describe a COUNT or COMPARISON, not merely mention a mode. An
+         # earlier version used "count|runs|verdict|classif|topple|exceed|met", which
+         # self-satisfied on any line listing the columns together: "ratio_slide",
+         # "ratio_topple", "ratio_float" matched the pattern on the first name and the
+         # context on the second. A schema declaration is not a claim.
+         context=r">=\s*1|>\s*1|\bexceed|\bcount(?:ing|ed|s)?\b|\bnumber of\b|\btally\b",
+         exclude=r"^\s*[\"']?ratio_\w+[\"']?\s*,|CSV_COLUMNS|fieldnames"),
 
     Rule("C11", ERROR,
          r"gates_results\.json",
@@ -241,7 +250,17 @@ RULES: list[Rule] = [
          "+87.8% g48->g64 then -59.2% g64->g96 at 1100 kg. Cite the binary verdict, "
          "never the displacement magnitude.",
          "CLAUDE.md item 5; L-5 Steffen et al. 2008",
-         context=r"\bgrid\b|\bmesh\b|g48|g64|g96|resolution"),
+         context=r"\bgrid\b|\bmesh\b|g48|g64|g96|resolution",
+         # "not grid-converged" contains "converged" and was firing on text that
+         # states this rule's own guidance. Same class as C10b: the correction must
+         # not be flagged as the claim.
+         # KNOWN LIMIT: this checker is line-based, so a negation that wraps onto the
+         # previous line is invisible. four_rung_ladder_GRIDAWARE.md:168 begins
+         # "grid-converged," with its "are not" on :167, and still WARNs. That hit is
+         # a false positive and is expected. Fixing it needs multi-line context, which
+         # is a design change, not a rule tweak.
+         exclude=r"\bnot\s+\w*[-\s]?converged|\bun-?converged\b|\bnon-?monotone\b|"
+                 r"never the displacement|cite the (mode|verdict|binary)"),
 ]
 
 
@@ -308,7 +327,15 @@ def main(argv: list[str]) -> int:
         try:
             sp = str(Path(path).resolve().relative_to(REPO))
         except ValueError:
-            sp = str(path)
+            # Outside the repo. Match EXCLUDE against the BASENAME only. Matching the
+            # absolute path made this fail OPEN: entries like "can-it-ford/" occur in
+            # unrelated absolute paths, e.g. a scratchpad at
+            # /private/tmp/claude-501/-Users-josie-can-it-ford/..., so every file
+            # written there was silently skipped and reported clean. That is the worst
+            # possible failure for a guard, and it silently invalidated test files.
+            sp = Path(path).name
+            print(f"note: {path} is outside {REPO}; checked, but repo-relative "
+                  f"EXCLUDE paths do not apply", file=sys.stderr)
         if any(x in sp for x in EXCLUDE):
             continue
         # Skip the correction layer in every mode EXCEPT staged. Those documents
