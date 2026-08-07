@@ -234,7 +234,7 @@ Any skill file containing any of the following must be corrected in place.
 5. Which length `vehicle_params.py` actually uses, E4.
 6. Retrieve Xia 2011 and Shu 2011 via library proxy, G10.
 7. The velocity tail in `channel_recirc_v2`: 329 of 3.66M particles over the Torricelli cap at bulk mean 1.008 m/s.
-8. Whether Kumar's 2019 in/outflow BCs are in public `cb-geo/mpm`.
+8. CLOSED 2026-08-07, was a false premise: the in/outflow BC paper (Zhao, Bolognin, Liang, Rohe, Vardon 2019, DOI 10.1016/j.compfluid.2018.10.007) is not Kumar's, it was implemented in Anura3D by a Cambridge/TU Delft/Deltares team unrelated to cb-geo/mpm. No reason to expect it merged there.
 9. Whether the p2g source read matches genesis 1.1.1 rather than 1.2.0, C1.
 10. DesignSafe DOI pending Kumar sign-off.
 
