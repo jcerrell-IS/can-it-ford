@@ -1,7 +1,9 @@
 {
   "_provenance": {
     "generated": "2026-08-05",
-    "generator": "scratchpad/classify_17_runs.py (see docstring)",
+    "regenerated": "2026-08-07, provenance block corrected",
+    "generator": "analysis/classify_failure_modes.py",
+    "generator_note": "The 2026-08-05 original named scratchpad/classify_17_runs.py, which no longer exists in the repo. This script reproduces that run's verdicts on all 17 runs exactly; only this provenance block differs. Register D6a.",
     "classifier": "simulation/failure_modes.py, classify_timeseries()",
     "run_list_source": "data/all_runs_inventory.csv (17 rows)",
     "timeseries_source": "renders/yaris_render_s1/_incoming/<run>/metrics.csv",

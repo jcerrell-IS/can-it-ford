@@ -288,7 +288,10 @@ def classify_manifest(manifest_path, thresholds: FailureThresholds | None = None
             record.update({
                 "mode": res.mode.value,
                 "first_reached_frame": res.first_reached_frame,
-                "first_reached_time_s": _round(res.first_reached_time, 4),
+                # 6 dp, matching analysis/classify_failure_modes.py and the committed
+                # data/failure_modes_by_run.json. Was 4 dp here, which made the two
+                # writers of this field disagree (register D6). No verdict depends on it.
+                "first_reached_time_s": _round(res.first_reached_time, 6),
                 "percent_over_threshold": _round(res.percent_over_threshold, 2),
                 "absolute_over_threshold": _round(res.absolute_over_threshold, 6),
                 "threshold_value": _round(res.threshold_value, 4),
