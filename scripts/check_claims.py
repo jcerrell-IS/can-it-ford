@@ -61,6 +61,7 @@ CORRECTION_LAYER = (
     "CLAUDE.md",
     "docs/CANONICAL_CORRECTIONS_REGISTER",
     "PROVISIONAL_STATUS.md",
+    ".claude/memory/MEMORY.md",
 )
 
 ERROR, WARN = "ERROR", "WARN"
@@ -310,7 +311,11 @@ def main(argv: list[str]) -> int:
             sp = str(path)
         if any(x in sp for x in EXCLUDE):
             continue
-        if full and any(x in sp for x in CORRECTION_LAYER):
+        # Skip the correction layer in every mode EXCEPT staged. Those documents
+        # exist to state a retired claim beside its refutation, so a whole-file
+        # scan of one is pure noise. In staged mode they stay in scope, because a
+        # NEW wrong line in CLAUDE.md is still a new wrong line.
+        if not staged and any(x in sp for x in CORRECTION_LAYER):
             continue
         for lineno, text in lines:
             if len(text) > 2000:
