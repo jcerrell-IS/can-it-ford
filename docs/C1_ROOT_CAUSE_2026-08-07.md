@@ -352,28 +352,50 @@ gravity term in the body's update at all.
 **What the run actually shows** (job `895448`, `c2_diag2_g64_off0.log`, 195
 `com_frame` records read directly, T2):
 
-The box does not free-fall and it does not creep monotonically. **It oscillates in
-heave.** COM z runs 2.5475 at frame 0 down to ~1.2 by frame 119, then turns over
-repeatedly: minimum 1.1494 at frame 133, maximum 1.2475 at frame 160, i.e. a
-half-period of 27 frames, so **T_observed = 54 frames = 1.80 s**.
+The box does not free-fall and it does not descend monotonically. There are
+genuine reversals with real amplitude: swings of 0.144, 0.170, 0.249 and 0.065 m
+between successive turning points, against a numerical noise floor of 7.4e-05 m.
+**Something pushes back intermittently.** That much is solid.
 
-Against `heave_period()`'s own analytic form, `T = 2*pi*sqrt(m_eff/k)` with
-`k = rho_w g L^2`:
+**RETRACTED, SECOND CORRECTION.** An earlier revision of this subsection claimed
+`T_observed = 54 frames`, matched it to the zero-added-mass heave period (56.6
+frames) within 4.6 %, rejected Ca=0.5, and called it "the first evidence from the
+partially-submerged regime" showing a waterplane restoring force at close to the
+right frequency. **That is withdrawn.** It was built on a selected pair of turning
+points. The full trace has THIRTEEN turning points, and the 133 -> 160 interval I
+called a half-period contains a genuine intervening turn at frame 145 (swing
+0.0335 m, far above noise). Filtering to turns with swing > 0.01 m gives
+half-period gaps of 51, 9, 11, 17, 38, 12, 15, 8 frames: median 15, range 8 to 51.
+A clean T=54 oscillation requires every gap to be 27. **None is 27.**
 
-| Ca | T predicted | frames | vs observed 54 |
-|---|---|---|---|
-| **0.0** | 1.8854 s | **56.6** | **within 4.6 %** |
-| 0.5 (the function's default) | 2.3091 s | 69.3 | rejected |
-| 0.67 | 2.4364 s | 73.1 | rejected |
+Worse for the original claim, a periodogram on the detrended tail (frames >= 60,
+cubic detrend, 135 samples) puts the dominant period at **71.5 frames**, and the
+power at each candidate is:
 
-**This is a genuinely new result and it is the first evidence from the
-partially-submerged regime**, which section 8 flags as the rung C1 never tested.
-A body with no restoring force cannot oscillate in heave. At the free surface the
-coupling therefore DOES produce a waterplane restoring force, and at close to the
-right frequency, which is qualitatively better than C1's fully-submerged case.
-The period matches the **zero-added-mass** prediction and rejects Ca=0.5, which is
-consistent with section 1: a body that adopts the local grid velocity does not
-entrain fluid the way a force-coupled body does.
+| period | interpretation | power, as % of peak |
+|---|---|---|
+| 71.5 frames | observed peak | 100 % |
+| 69.3 frames | **Ca = 0.5**, the function's own default | **99 %** |
+| 56.6 frames | Ca = 0.0 | 48 % |
+| 54.0 frames | the retracted claim | 33 % |
+
+So the data, read properly, leans toward **Ca = 0.5 rather than Ca = 0**, which is
+the opposite of what the retracted claim asserted. I had the direction backwards.
+
+**But neither Ca can be claimed, and this is the real conclusion.** The record is
+135 frames and the dominant period is 71.5, i.e. barely half the record length,
+where `135/2 = 67.5` is exactly the second record-length harmonic. A peak sitting
+there is the classic signature of residual trend leaking into the spectrum rather
+than a resolved physical mode, and roughly two cycles cannot separate the two.
+**The trace is too short to determine a heave period at all.** Any Ca conclusion,
+in either direction, needs a longer record: three clean cycles minimum and a decay
+envelope that can actually be fitted.
+
+What the data supports, stated at the strength it can carry: **the descent is
+non-monotonic with irregular, aperiodic reversals of real amplitude.** Not
+"oscillates in heave at the analytic waterplane period". The stronger version is
+exactly the kind of claim that cannot be defended once someone plots the full
+series, which is why it is retracted here rather than left standing.
 
 It still drifts downward at roughly 0.15 m/s while oscillating, so it reaches the
 guard at frame ~195 of a 200-frame budget, using about 97 % of it rather than 10 %.
@@ -408,8 +430,9 @@ whether it is water, the hull, or a rotated corner.
 - The 7.59x ratio in `dV` between g96 and g64 is unexplained as physics, and given
   section 4 it may not require a physical explanation at all.
 - C2 is NOT demonstrated unrunnable: see section 8b-CORRECTION. It reached frame
-  ~195 of a 200-frame budget and oscillates in heave at close to the analytic
-  zero-added-mass period. Whether it has an equilibrium draft to report is an open
+  ~195 of a 200-frame budget. Its descent is non-monotonic with irregular,
+  aperiodic reversals; the trace is too short to determine a heave period or any Ca.
+  Whether it has an equilibrium draft to report is an open
   hypothesis, and the identity of the particle tripping the guard is unknown.
 - C3's `ZeroDivisionError` IS fixed (guarded at the `err_headline_vs_ideal_pct`
   assignment), and `run_c3` gained a correct compressible target
