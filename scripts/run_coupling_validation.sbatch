@@ -34,7 +34,7 @@ for NG in 64 96; do
   for OFF in 0 2; do
     stamp "C2 equilibrium draft n_grid=$NG offset=${OFF}dx"
     time $PY "$SCRIPT" --variant c2 --n-grid $NG --offset-cells $OFF \
-         --depth-cells 10 --settle-frames 600 --max-frames 2500 --device cuda:0 \
+         --depth-cells 18 --settle-frames 600 --max-frames 2500 --device cuda:0 \
          --out "$OUT/c2_g${NG}_off${OFF}.json" > "$OUT/c2_g${NG}_off${OFF}.log" 2>&1
     tail -3 "$OUT/c2_g${NG}_off${OFF}.log"
   done
