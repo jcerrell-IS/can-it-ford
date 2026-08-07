@@ -7,6 +7,19 @@ restate them in chat prompts.
   file content, actual output, or actual verified search results.
   This includes a prior claim from Claude itself, verify independently
   rather than trust at face value.
+- `grep` IN THIS ENVIRONMENT IS NOT `grep`. Confirmed live 2026-08-07
+  by `declare -f grep`: it is a shell function wrapping ugrep with
+  `--ignore-files`, so it SKIPS EVERY GITIGNORED PATH. `.gitignore:14`
+  is `renders/` and `:10` is `data/*`, so a repo-wide
+  `grep -rn "pattern" .` silently omits renders/yaris_render_s1/,
+  which holds sim_standing.py, vehicle_live.py, gates_all_runs.py,
+  gates_both_scenarios.py and all 17 runs' metrics.csv, plus most of
+  data/. Measured: the same pattern returned 5 hits from `.` and 7 when
+  renders/ was named explicitly. An absent hit is NOT evidence of
+  absence. For any inventory or audit claim, use `/usr/bin/grep -rn`,
+  or name renders/ and data/ explicitly, and exclude ./can-it-ford/,
+  ./third_party/ and ./.claude/worktrees/ (27 stale copies that
+  otherwise multiply every hit ~20x).
 - Any parameter assigned to a variable (rho, coup_friction, box
   dimensions, mass, thresholds) must trace to a primary source before
   being written into a script or command.
@@ -42,7 +55,17 @@ restate them in chat prompts.
   different script's bug, recompute against the actual script's own
   geometry.
 - Never let two panes touch the same file, branch, or process without
-  explicit sequencing.
+  explicit sequencing. ACTIVE BREACH 2026-08-07: two Claude Code
+  sessions edited this working tree simultaneously and one committed
+  the other's uncommitted edits inside 0797b08 and 3470ff9 without
+  either knowing. Read docs/CONCURRENT_SESSION_NOTICE_2026-08-07.md
+  before touching scripts/check_claims.py, CLAUDE.md or the register.
+  If you see edits appear in a file you did not write, the default
+  assumption is ANOTHER SESSION, not a linter and not the user.
+- Never run `git add -A`, `git add .`, or `git commit -a` in this repo.
+  Stage explicit paths. A shared working tree means -A captures another
+  session's in-progress work and commits it unreviewed under your
+  message. This is not hypothetical, it happened on 2026-08-07.
 - Any git push, force-push, file delete, or overwrite of an existing
   file requires explicit confirmation before execution.
 - Every prescribed task should trace to the poster (July 27), the
@@ -201,12 +224,21 @@ not by file read from the Mac, see the item for its evidence path.
     by 3.3 percent in height and 2.7 percent in width, both larger than
     gate G-1's own 2 percent tolerance.
 
-15. WITHDRAWN 2026-08-07. This item used to read "Gravity is UNKNOWN in
-    the solver but 9.81 is assumed in post-processing. State both
-    separately, never merge them." That instruction existed only
-    because the solver value was unknown, and it no longer is. Use
-    9.81. See item 3 and register A2 for the primary source and the
-    two post-processing constants.
+15. PARTLY WITHDRAWN 2026-08-07. This item used to read "Gravity is
+    UNKNOWN in the solver but 9.81 is assumed in post-processing. State
+    both separately, never merge them." The UNKNOWN half is withdrawn:
+    the solver value is 9.81 and is not in question, see item 3 and
+    register A2 for the primary source.
+    The OTHER half was NOT stale and is retained: post-processing is
+    forked. 9.80665 at simulation/failure_modes.py:14 and
+    analysis/viability_dashboard_scaffold.py:11, against 9.81 at five
+    sites including gates_all_runs.py:12. TWO sites at 9.80665, not
+    one. Full inventory and the reason this nearly vanished is
+    register A6. The original withdrawal note pointed at register A2
+    for these constants and A2 did not contain them; that dangling
+    pointer is why A6 exists. Because the classifier has now run on all
+    17 runs, 9.80665 fed the published verdicts, so this fork is live,
+    not cosmetic. Never write that it has not influenced a gated result.
 
     SELF-CORRECTION, same day, 2026-08-07. An earlier version of this
     item said the 9.80665 at failure_modes.py:14 "has never influenced
@@ -310,8 +342,12 @@ greps or you will get two conflicting answers and no way to tell which is live.
   stationary-vehicle stability, verdict is necessary not sufficient.
 - NVIDIA Warp is the only engine confirmed for aarch64 plus Hopper,
   do not switch engines.
-- Kumar et al 2019 Computers and Fluids published the MPM in/outflow
-  boundary conditions this project needs.
+- The MPM in/outflow boundary conditions this project needs are Zhao,
+  Bolognin, Liang, Rohe and Vardon 2019, Computers and Fluids 179,
+  27-33, DOI 10.1016/j.compfluid.2018.10.007, implemented in Anura3D.
+  NOT Kumar. Implementing this in warpmpm is a translation, not a
+  port. Corrected 2026-08-07, see register item 8 and
+  docs/OPTION_A_INFLOW_OUTFLOW_BC_PLAN.md.
 - No flood-vehicle study shows resolution moving the stability
   threshold, never cite one as proof that it does.
 - Artificial sound speed can qualitatively flip a rigid-body outcome,
