@@ -105,7 +105,7 @@ not by file read from the Mac, see the item for its evidence path.
    set_material(newtonian(...)) and newtonian() carries no g key to
    override it. All 17 gated runs ran at exactly 9.81 m/s^2.
    gates_all_runs.py:12 (G=9.81) matches; failure_modes.py:14
-   (G=9.80665) is a 0.036 percent fork, numerically immaterial.
+   (G=9.80665) is a 0.034 percent fork, numerically immaterial.
 
 4. inertia_kg_m2, cg_height_m and ssf in vehicle_params.py never reach the
    solver. Only mass does, via vehicle_density = vehicle_mass /
@@ -187,9 +187,15 @@ not by file read from the Mac, see the item for its evidence path.
     by 3.3 percent in height and 2.7 percent in width, both larger than
     gate G-1's own 2 percent tolerance.
 
-15. G is 9.81 at gates_all_runs.py:12 and 9.80665 at
-    failure_modes.py:14. Gravity is UNKNOWN in the solver but 9.81 is
-    assumed in post-processing. State both separately, never merge them.
+15. WITHDRAWN 2026-08-07. This item used to read "Gravity is UNKNOWN in
+    the solver but 9.81 is assumed in post-processing. State both
+    separately, never merge them." That instruction existed only
+    because the solver value was unknown, and it no longer is. Use
+    9.81. See item 3 and register A2 for the primary source and the
+    two post-processing constants. The one thing neither says: the
+    9.80665 in failure_modes.py:14 has never influenced a gated
+    result, because that script was never wired into the 17-run
+    pipeline (item 12, register D6). Fix it only if that changes.
 
 16. gates.py:16-31 forks the AR&R table and L1_verdict instead of
     importing from vehicle_params, while gates_all_runs.py:10 and

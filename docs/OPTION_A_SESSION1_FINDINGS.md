@@ -64,9 +64,15 @@ the `**params` splat. `set_material_range` (`core/solver.py:189`) never sets `g`
 **Gravity in all 17 gated runs is exactly 9.81 m/s^2 in -z.**
 
 Consequences: `gates_all_runs.py:12` (G=9.81) matches the solver.
-`failure_modes.py:14` (G=9.80665) does not, a 0.036 percent fork, numerically
+`failure_modes.py:14` (G=9.80665) does not, a 0.034 percent fork, numerically
 immaterial but real. Item 15's instruction to "state both separately, never
-merge them" is obsolete; they can be merged, on 9.81.
+merge them" is obsolete; they can be merged, on 9.81. Item 15 was formally
+withdrawn 2026-08-07 on that basis.
+
+Correction, 2026-08-07: this note originally said 0.036 percent. The true value
+is (9.81 - 9.80665) / 9.80665 = 0.0342 percent. Caught by
+`scripts/check_claims.py` rule C6. The wrong figure had already propagated to
+CLAUDE.md item 3 and to `analysis/classify_failure_modes.py:31`.
 
 ## F-3. Task 2, the four entry points
 

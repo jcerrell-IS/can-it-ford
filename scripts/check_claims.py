@@ -138,8 +138,9 @@ RULES: list[Rule] = [
     Rule("C6", WARN,
          r"9\.80665",
          "9.80665 appears only at failure_modes.py:14, a 0.034% fork. The solver "
-         "and gates_all_runs.py use 9.81. State the two separately, never merged.",
-         "CLAUDE.md items 3 and 15",
+         "and gates_all_runs.py use 9.81. Use 9.81; that script was never wired "
+         "into the 17-run pipeline, so 9.80665 never influenced a gated result.",
+         "CLAUDE.md item 3 and item 12; register A2 and D6",
          context=None),
 
     Rule("C7", ERROR,
