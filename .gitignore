@@ -91,3 +91,4 @@ paper/canonical_2026-08-02/
 # Confirmed 2026-08-07 that nothing imports it: /usr/bin/grep -rn "_pre_fix_backup"
 # over *.py/*.md/*.sh/*.json/*.tex returns only a .remember note, no code.
 bridge/_pre_fix_backup_2026-08-05/
+!data/failure_modes_by_run_classified.csv
