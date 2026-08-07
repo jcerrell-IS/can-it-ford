@@ -194,7 +194,7 @@ Xia, Teo, Lin, Falconer 2011, Natural Hazards 58(1):1-14, DOI 10.1007/s11069-010
 
 **H4. 32 worktrees exist**, one prunable under `/private/tmp`, 29 directories under `.claude/worktrees/`. None contain a `.claude/skills` directory.
 
-**H5. The Warp MPM figure-label fix already exists, unmerged**, on `claude/verify-execute-code-changes-d89fd8` (7390168) and `claude/bibliography-formatting-fix-4c3864` (f302ce0). Merge it, do not rewrite it.
+**H5. CLOSED 2026-08-07, superseded by a different merge path.** The Warp MPM figure-label fix is live on main via `b844118` ("Emit the Warp MPM label in the pipeline figure generator"), confirmed `git merge-base --is-ancestor b844118 main` and confirmed live in `analysis/paper_fig_pipeline_diagram_v2.py:92` ("Warp MPM", not "Genesis MPM"). The originally identified commits, `claude/verify-execute-code-changes-d89fd8` (7390168) and `claude/bibliography-formatting-fix-4c3864` (f302ce0), are NOT ancestors of main and are now redundant, not pending. Do not cherry-pick either; the change they contain already exists on main through a different history.
 
 **H6. The same script on two machines can differ on a physics input.** Mac `can_it_ford_L2_mpm.py:147` passes no `rho` to `gs.materials.MPM.Liquid()`; Vista `:148` passes `rho=1000.0`. Before citing any parameter read on one machine, confirm which machine ran the result.
 
@@ -232,7 +232,7 @@ Any skill file containing any of the following must be corrected in place.
 ## SECTION J: open, do not state as resolved
 
 1. Run the coupling-force validation. Variant C on the free particle rigid body: C2 equilibrium float draft against Archimedes, C1 initial submerged acceleration `a = g(rho_w/rho_box - 1)` giving `F_buoy = m(a+g)`. Run at the canonical resolution AND one refinement. A coarse-case miss is a finding, not a failure. Never tune a threshold to force a pass.
-2. Merge H5.
+2. CLOSED 2026-08-07, superseded: H5.
 3. Fix or delete the two `failure_modes_result.json` miscitations, D6.
 4. Run the failure-mode classifier on the 17 runs, D6.
 5. Which length `vehicle_params.py` actually uses, E4.
