@@ -307,7 +307,15 @@ cannot slide, so it can never reproduce a SLIDE outcome. It can establish that t
 load is wrong by a factor of N; it cannot say which way any individual verdict
 flips. Direction of bias on the 16 SLIDE verdicts is UNKNOWN and untested.
 
-## 8b. C2 is UNRUNNABLE on the free-rigid path, and it is the same defect
+## 8b. C2 on the free-rigid path: the guard trip, and what it is not
+
+> **THIS SECTION CONTAINS TWO RETRACTIONS. READ 8b-CORRECTION BELOW BEFORE CITING
+> ANYTHING FROM IT.** An earlier version of this heading read "C2 is UNRUNNABLE on
+> the free-rigid path, and it is the same defect". **That is withdrawn.** C2 is NOT
+> demonstrated unrunnable: it reached frame ~195 of a 200-frame budget. Also
+> withdrawn: the free-fall arithmetic, the 216 m descent budget, the claimed
+> 54-frame heave period with its Ca=0 match, and the subsequent "leans toward
+> Ca=0.5". What survives is below and is explicitly labelled.
 
 Added 2026-08-07 19:5x after the above. This supersedes the standing description of
 C2 as "blocked by a P2G edge guard", which framed it as a tank-geometry problem.
@@ -379,17 +387,40 @@ power at each candidate is:
 | 56.6 frames | Ca = 0.0 | 48 % |
 | 54.0 frames | the retracted claim | 33 % |
 
-So the data, read properly, leans toward **Ca = 0.5 rather than Ca = 0**, which is
-the opposite of what the retracted claim asserted. I had the direction backwards.
+**NO RANKING BETWEEN Ca VALUES CAN BE READ FROM THIS AT ALL**, and the power
+column above must not be used to argue one. At `N = 135` the DFT bin width is
+`1/135 = 0.007407` cycles/frame, and every candidate sits inside 0.61 bins of the
+peak:
 
-**But neither Ca can be claimed, and this is the real conclusion.** The record is
-135 frames and the dominant period is 71.5, i.e. barely half the record length,
-where `135/2 = 67.5` is exactly the second record-length harmonic. A peak sitting
-there is the classic signature of residual trend leaking into the spectrum rather
-than a resolved physical mode, and roughly two cycles cannot separate the two.
-**The trace is too short to determine a heave period at all.** Any Ca conclusion,
-in either direction, needs a longer record: three clean cycles minimum and a decay
-envelope that can actually be fitted.
+| period | frequency | bins from peak |
+|---|---|---|
+| 71.5 (peak) | 0.013986 | 0.00 |
+| 69.3 (Ca=0.5) | 0.014430 | **0.06** |
+| 67.5 (record 2nd harmonic) | 0.014815 | 0.11 |
+| 56.6 (Ca=0.0) | 0.017668 | 0.50 |
+| 54.0 (retracted claim) | 0.018519 | 0.61 |
+
+The two Ca hypotheses are separated from each other by only
+`0.003238` cycles/frame, which is **0.44 bins**. Sub-bin separations cannot be
+ranked by power: the 99 % against 48 % is not a lean, it is the shape of one
+unresolved peak sampled at nearby frequencies. An earlier revision of this
+subsection said the data "leans toward Ca = 0.5"; that is withdrawn too. The
+record favours neither, exactly as it favoured neither in the other direction.
+
+This is stated emphatically because the next person to run this periodogram will
+get the same 99 % and may report it as a result. It is not one.
+
+**The real conclusion: the trace cannot determine a heave period or any
+added-mass coefficient, and no ranking between Ca values can be read from it.**
+
+Precondition for any future Ca statement, as a concrete run length rather than a
+qualitative "longer": to separate Ca=0 from Ca=0.5 the bin width must be below
+their frequency gap, so `N >= 1/0.003238 = 309` frames of **post-transient**
+record, i.e. 10.3 s at 30 fps. Three clean cycles and a fittable decay envelope
+are necessary but NOT sufficient; the resolution requirement is the binding one.
+The same record also settles the equilibrium question (fit the mean of the
+reversals: converging means C2 has an equilibrium draft and merely needs frames,
+drifting linearly means it does not), so one longer C2 run answers both.
 
 What the data supports, stated at the strength it can carry: **the descent is
 non-monotonic with irregular, aperiodic reversals of real amplitude.** Not
