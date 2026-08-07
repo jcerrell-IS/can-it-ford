@@ -58,7 +58,29 @@ showed job **894585 `idv10946`, partition gh-dev, RUNNING, started
 2026-08-07T03:32:42 node time, 30 min limit, node c642-002**. The pattern in I-1
 is ongoing, not historical.
 
-## I-2. Register K2 is wrong: there is no working gsplat environment on LS6. VERIFIED.
+## I-2. RETRACTED 2026-08-07. There IS a working gsplat environment on LS6.
+
+**Retracted by I-10, the drainA disk audit at the end of this file.** This item
+originally read "Register K2 is wrong: there is no working gsplat environment on
+LS6. VERIFIED." That conclusion is false. The environment is
+`/scratch/10386/lsmith9003/python-envs/gsplat_env`, it contains `gsplat` and
+`gsplat-1.5.3.dist-info`, and it wrote an 80,612,705-byte PLY on 2026-08-07 at
+03:13:28. Two follow-on claims in this item are also wrong: K2's placement of the
+environment on **Lustre scratch was correct** (`/scratch/10386` is Lustre), and
+K2's 3-to-5-minute wait advice is not "actively harmful", because once the
+correct env is sourced there is no `ModuleNotFoundError` to hit.
+
+The four checks below are each individually true. All four looked under
+`$SCRATCH` (`/scratch/11603/jcerrell0629`) and `$HOME`, and the environment is
+under neither: it belongs to a different project, `/scratch/10386/lsmith9003`.
+The `$HOME/my_gsplat_env` check in particular read that venv's `site-packages`
+but not its `pyvenv.cfg`, which reads
+`home = /scratch/10386/lsmith9003/python-envs/gsplat_env/bin` with
+`include-system-site-packages = true`, so it inherits gsplat instead of holding a
+copy. Retained so the reasoning error stays legible. **Do not act on the
+consequence paragraph.**
+
+### Original text, retained, superseded
 
 Four independent checks, all on LS6:
 
@@ -296,3 +318,169 @@ The `--all` sweep figure quoted above (157 ERROR / 89 WARN) predates several rul
 made by the other session: `Rule.exclude` was added and C10b, C10c and C14 were narrowed
 after false positives fired on text that states the correction rather than the claim.
 Re-run before treating that count as a worklist baseline.
+
+---
+
+## I-10. drainA disk audit, 2026-08-07 continued (session 3)
+
+Written by a third Claude Code session, later the same day. Every figure below
+came from a live command against LS6 through `scripts/tacc.sh`, run with the
+explicit instruction to trust neither this file nor the register on drainA. It
+**retracts I-2 above** and corrects two details in I-3.
+
+Only this file was edited. `CLAUDE.md` and
+`docs/CANONICAL_CORRECTIONS_REGISTER_2026-08-06.md` both carried another
+session's uncommitted edits at the time (+46 and +49 lines), so per the standing
+rule and the 2026-08-07 breach they were left untouched. **Register K2 and K4
+still need merging by hand once that session is parked.**
+
+### I-10a. Every PLY on disk, whole gsplat tree
+
+`/scratch/11603/jcerrell0629/gsplat` exists on **LS6 only**. The same path on
+Vista returns `No such file or directory`, so LS6 is the sole host.
+
+| run dir | file | exact bytes | exact mtime (CDT, -0500) |
+|---|---|---:|---|
+| `results/garden` | `ply/point_cloud_99.ply` | 38,491,425 | 2026-07-23 19:33:49 |
+| `results/garden` | `ply/point_cloud_2999.ply` | 80,612,705 | 2026-08-07 03:13:28 |
+| `results/custom_data` | `ply/point_cloud_2999.ply` | 115,048,881 | 2026-06-08 20:31:13 |
+| `results/drainA` | `ply/point_cloud_2999.ply` | 81,472,689 | 2026-07-17 06:18:21 |
+| `results/drain_2956` | `ply/point_cloud_2999.ply` | 159,643,205 | 2026-07-20 08:39:36 |
+| `results/drain_2957` | `ply/point_cloud_2999.ply` | 155,004,861 | 2026-07-20 09:59:31 |
+
+`ctime` equals `mtime` on all six. **drainA holds exactly one PLY, the July 17
+3k-step file.** There is no drainA PLY at step 6999 or 29999. This confirms I-3's
+`save_ply: false` consequence by direct inventory rather than by inference.
+
+### I-10b. The drainA cfg.yml postdates its own PLY by three days
+
+`results/drainA/cfg.yml` (`max_steps: 30000`, `save_ply: false`) has mtime
+**2026-07-20 19:29:38**. The PLY it sits beside was written **2026-07-17
+06:18:21**. The config on disk is therefore *not* the config that produced the
+PLY; the 3k-step config that did produce it was overwritten by the 30k run and no
+longer exists. Do not read `results/drainA/cfg.yml` as a description of how the
+surviving PLY was made.
+
+`val_step` inventory, for the record: drainA 2999 `num_GS` 345,217 (psnr
+21.5030), 6999 `num_GS` 297,756 (psnr 22.5470), 29999 `num_GS` 399,491 (psnr
+22.735628128051758). Others: garden 99 `num_GS` 163,093, custom_data 2999
+`num_GS` 487,489, drain_2956 2999 `num_GS` 676,452, drain_2957 2999 `num_GS`
+656,798.
+
+### I-10c. `results/garden` is NOT the stock MipNeRF-360 demo scene
+
+`results/garden/cfg.yml` reads **`data_dir: /scratch/11603/jcerrell0629/drainA`**.
+It is Josie's own drainA capture. The directory name is only the stock default
+`result_dir: results/garden` left unedited, which makes the label misleading, but
+no bundled example data is involved.
+
+It was written 2026-08-07 between 03:10:38 and 03:13:28. No `val_step2999.json`
+exists for it because `eval_steps: [7000, 30000]` never fires against
+`max_steps: 3000`; the ckpt and PLY still appear at 2999 because
+`simple_trainer.py:783` writes at `max_steps - 1` regardless. Self-consistent, not
+an anomaly.
+
+**The job running at audit time did not write it.** `scontrol show job idv04063`
+fails because `idv04063` is the job *name*: the id is **3347772**, started
+`2026-08-07T04:04:27` on `c301-001`, `gpu-a100-dev`, 2h limit. That is **51
+minutes after** the garden artifacts were written, and `find -newer` on the
+garden PLY returns nothing anywhere in the gsplat tree, so it has produced no
+files there. It was not touched.
+
+The actual writer was job **3347538**, name `idv59394`, node **c301-004**,
+01:39:25 to 03:39:26, ended **TIMEOUT** at the 2h wall. Its tensorboard event
+files are stamped `c301-004` at 01:42:54, 01:47:53 and 03:10:38; the last sits 16
+seconds before `cfg.yml`, and the run finished at 03:13:28, 26 minutes before the
+job timed out. Three launches in one idev session, the third survived. This is
+another instance of the I-1 pattern.
+
+### I-10d. The environment claim: I-2 is fully contradicted, not partially
+
+The working environment is **`/scratch/10386/lsmith9003/python-envs/gsplat_env`**,
+containing `gsplat` and `gsplat-1.5.3.dist-info`. It belongs to a different
+project (10386, user `lsmith9003`), which is why every `$SCRATCH`-relative check
+missed it. `~/my_gsplat_env/pyvenv.cfg` reads
+`home = /scratch/10386/lsmith9003/python-envs/gsplat_env/bin`, python 3.10.13,
+`include-system-site-packages = true`, so it inherits gsplat rather than holding
+its own. `$HOME/.bash_history` shows the working line used repeatedly:
+
+    source /scratch/10386/lsmith9003/python-envs/gsplat_env/bin/activate
+
+The disproof is physical, not inferential: an 80,612,705-byte PLY and an
+80,613,912-byte checkpoint were written this morning. That cannot happen from a
+`ModuleNotFoundError`. **This is a full contradiction of I-2 and must not be
+recorded as a partial one.** Note the dependency risk this exposes: the
+environment sits in another user's scratch and is subject to that project's purge
+schedule, not ours.
+
+### I-10e. 341,573 Gaussians has no source anywhere checked
+
+Two searches, both negative. (1) Every `.ply` on LS6: the six above, plus eight
+outside the results tree that are Yaris meshes and `taichi_mpm` point clouds, no
+splats among them. (2) Hugging Face for the authenticated account `josiecerrell`:
+`hf repos ls` returns only `josiecerrell/can-it-ford-sweep-v1` as dataset and
+model, updated 2026-07-14, **0 B storage**, so nothing is uploaded.
+
+**No drainA artifact anywhere on disk matches 341,573 Gaussians, and no drainA
+artifact anywhere on disk carries a completion date after 2026-07-20.**
+
+341,573 has no known source and should be treated as unsourced until one is
+produced. The real neighbouring figures are 345,217 (the July 17 PLY), 399,491
+(rank 0's shard) and 1,147,694 (the three-rank total).
+
+### I-10f. Two corrections to I-3 in this same file
+
+1. **I-3's closing line is internally inconsistent.** It says "the fix is to
+   re-export from `ckpt_29999_rank0.pt`", naming one rank, while I-3's own
+   correction table twelve lines earlier states that rank 0 alone "silently drops
+   65% of the scene". Any re-export must concatenate all three ranks. The
+   singular filename in that sentence should not be followed.
+2. **I-3 records `data_dir: .../datasets/drainA/` for the 30k run, which is
+   right, and is now a different path from the current one.** See below.
+
+### I-10g. The drainA dataset was copied to a second path this morning
+
+`/scratch/11603/jcerrell0629/drainA` (`colmap_A.pid`, `colmap_run.log`,
+`database.db`, `images/` with 279 files, `sparse/`, and a `.DS_Store`) all carry
+mtimes of 2026-08-07 01:47 to 01:52. The July copy at
+`/scratch/11603/jcerrell0629/datasets/drainA` is **still intact** (2026-07-16
+15:49) with **identical byte sizes**: `colmap_run.log` 233,912 and `database.db`
+436,924,416 in both.
+
+`colmap_run.log`'s internal timestamps are 2026-07-10 06:24:04 to 07:12:23
+("Elapsed time: 9.951 [minutes]"), with macOS-style thread ids, and a `.DS_Store`
+sits beside it. So COLMAP ran **on the Mac on 2026-07-10** and both LS6 copies are
+uploads of that one reconstruction. This morning's is a re-upload to a new path,
+not a new reconstruction. July training used
+`--data_dir $SCRATCH/datasets/drainA/`; this morning's used the new
+`/scratch/11603/jcerrell0629/drainA`. Two paths, one dataset, 0.44 GB duplicated.
+
+### I-10h. Bridge-test guidance
+
+**No `docs/BRIDGE_FIRST_REAL_DATA_TEST_*.md` exists.** Confirmed four ways: a
+home-wide `find` across `/Users/josie`, `git log --all --diff-filter=A` for the
+filename on every branch (never added, so not deleted either), LS6
+`$SCRATCH`/`$WORK`/`$HOME`, and Vista `$WORK`/`$HOME`. Nothing in `bridge/`
+hardcodes a PLY path; `bridge/gaussian_io.py:89-90` only checks the argument ends
+in `.ply`.
+
+If that test runs, **the only drainA PLY available is the 2026-07-17 file at
+345,217 Gaussians**, which is a 3,000-step model. A higher-quality test needs a
+PLY re-exported from the three `ckpt_29999_rank*.pt` shards, which does **not**
+require a retrain.
+
+The export path only half exists today, so do not quote a ready invocation:
+
+- `examples/simple_trainer.py:1169-1177` already concatenates ranks:
+  `--ckpt` takes a list and does `torch.cat([ckpt["splats"][k] for ckpt in ckpts])`.
+- `gsplat/exporter.py:475` provides
+  `export_splats(means, scales, quats, opacities, sh0, shN, format="ply", save_to=...)`,
+  imported at `simple_trainer.py:33`.
+- **But `:1169` is commented `# run eval only`** and calls only `runner.eval()` and
+  `runner.render_traj()`. The PLY write lives at `:783-806`, inside the training
+  loop, gated on `cfg.save_ply`. So `--ckpt` alone will **not** emit a PLY.
+
+Closing that gap needs a short standalone script that loads the three shards,
+concatenates them, and calls `export_splats` once. Roughly ten lines, no GPU
+training, but it does not exist yet and was deliberately not written or run in
+this pass.
