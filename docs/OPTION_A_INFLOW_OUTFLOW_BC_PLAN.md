@@ -77,12 +77,16 @@ citation for it.
 
 ## Session 1 task list, in order
 
-1. Fetch `src/warpmpm/core/solver.py`, `src/warpmpm/core/mpm_solver_warp.py`,
-   and `src/warpmpm/materials.py` from
+1. Fetch `src/warpmpm/core/solver.py`, `src/warpmpm/kernels/mpm_solver_warp.py`
+   (NOT `core/mpm_solver_warp.py`, that path 404s at this SHA), and
+   `src/warpmpm/materials/__init__.py` (a package, not a flat file) from
    `https://github.com/kks32/mpm-engine` at pinned SHA
    `544c93dd02cb9c7ead89e1155a62967243244fce` into a new directory,
    `third_party/mpm-engine-544c93dd-solver-core/`, with the same
    VENDORED.md-style provenance table the existing partial vendoring uses.
+   Also fetch `src/warpmpm/kernels/mpm_utils.py`, the actual transfer
+   kernels live there, not in mpm_solver_warp.py alone.
+   DONE 2026-08-07, see docs/OPTION_A_SESSION1_FINDINGS.md.
 2. Read `load_particles`, `add_plane`, `add_domain_walls`, and
    `set_material_range` in the fetched solver.py. These are the four
    solver entry points sim_standing.py actually calls. Any BC

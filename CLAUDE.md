@@ -96,11 +96,16 @@ not by file read from the Mac, see the item for its evidence path.
    written again. Every velocity and position write in the driver is sliced
    to the water range (:161, :183-186, :196). The only constraints are the
    floor plane at friction 0.55 and the four slip walls at friction 0.0
-   (:132-137). Gravity is never set in sim_standing.py, in vehicle_live.py,
-   or in third_party/mpm-engine-544c93dd/vehicle_main.py. It is a warpmpm
-   default and its value is UNKNOWN from this repo, warpmpm is not
-   installed on the Mac and no local Solver or GridConfig definition
-   exists. Do not state a gravity value for these runs.
+   (:132-137). Gravity is confirmed 9.81 m/s^2 in -z, corrected 2026-08-07
+   per docs/OPTION_A_SESSION1_FINDINGS.md F-2, against freshly vendored
+   solver core at third_party/mpm-engine-544c93dd-solver-core/.
+   core/solver.py:167-169 hardcodes g=[0,0,-9.81] inside
+   Solver.set_material() unconditionally, not a library default,
+   this wrapper's own hardcoded value. sim_standing.py:127 calls
+   set_material(newtonian(...)) and newtonian() carries no g key to
+   override it. All 17 gated runs ran at exactly 9.81 m/s^2.
+   gates_all_runs.py:12 (G=9.81) matches; failure_modes.py:14
+   (G=9.80665) is a 0.036 percent fork, numerically immaterial.
 
 4. inertia_kg_m2, cg_height_m and ssf in vehicle_params.py never reach the
    solver. Only mass does, via vehicle_density = vehicle_mass /
