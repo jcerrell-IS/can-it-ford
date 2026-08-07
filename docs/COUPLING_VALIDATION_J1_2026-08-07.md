@@ -1,8 +1,21 @@
 # Register J.1: coupling-force validation, method and results
 
 Date: 2026-08-07. Owner: the coupling-validation session.
-Status: method fixed and verified; C0 control PASSED on two platforms; C1/C2/C3
-submitted to Vista as job `894628`.
+Status, corrected 2026-08-07 12:0x by reading the Vista outputs rather than the
+submission: **C0 control PASSES. C1 RAN AND FAILED at both resolutions, with the
+sign inverted. C2 produced no result at any resolution, 0 of 4 crashed. C3
+produced no result, its error metric is undefined by construction. Register J.1
+is NOT closeable.**
+
+The previous status line read "C1/C2/C3 submitted to Vista as job `894628`,
+results pending." That was stale for roughly seven hours. The results had existed
+since 04:57 CDT. A submission is not a result, the same class of error as the
+register's own rule that a commit message is not a register edit. Every number
+below was read from the JSON and log files on Vista, not from a job state:
+`sacct` reported COMPLETED for jobs in which 4 of 9 variant invocations raised
+uncaught exceptions, because the sbatch has no `set -e` and Slurm only sees the
+wrapper's exit code. **Do not treat COMPLETED as evidence a variant produced a
+result.**
 
 This file exists because the docs survey of 2026-08-07 confirmed there is **no
 document anywhere in this tree recording a completed coupling-force, buoyancy or
@@ -95,13 +108,25 @@ finding, not an excuse assembled afterwards.
 
 ## Results so far
 
-**C0, dry drop. PASSED on both platforms.** The rigid integrator and the
-grid-gravity path are correct.
+**C0, dry drop. PASSED at both resolutions on both platforms.** The rigid
+integrator and the grid-gravity path are correct. Analytic target is exactly
+`-9.81` (`core/solver.py:167-169`).
 
-| platform | a measured | error vs -9.81 |
-|---|---|---|
-| Apple M5, warp 1.16.0 CPU | -9.809986697775976 | +0.00014 % |
-| Vista GH200, warp 1.15.0 CUDA | -9.810047354016985 | -0.00048 % |
+| platform | n_grid | a measured | analytic | signed error |
+|---|---|---|---|---|
+| Vista GH200, warp 1.15.0 CUDA, job 894670 | 64 | -9.80999285089118 | -9.81 | **+0.0000729 %** |
+| Vista GH200, warp 1.15.0 CUDA, job 894670 | 96 | -9.810061455934077 | -9.81 | **-0.000626 %** |
+| Apple M5, warp 1.16.0 CPU, Python 3.12.13 | 64 | -9.809986697775976 | -9.81 | **+0.000136 %** |
+
+Superseded: an earlier revision of this file quoted a Vista C0 of
+`-9.810047354016985`. That value is in neither surviving JSON. It came from job
+`894628` or `894642`, whose outputs were overwritten at the same filenames by
+`894670`. Do not cite it.
+
+Both platforms ran **Python 3.12.13** (Vista venv warp 1.15.0; Mac conda
+`can-it-ford` warp 1.16.0). `simulation/__pycache__/validate_coupling_force.cpython-314.pyc`
+is a stale import-only artifact: local `python3` is 3.14.6 and has no warp
+installed, so it cannot have produced any number here.
 
 CPU and CUDA agree to ~6e-6 relative. The residual is float32 reduction ordering.
 `rho_box_realized` = 599.9999999999999 against 600 requested, satisfying the
@@ -113,7 +138,114 @@ particles reproduced to all reported digits on both platforms:
 `draft after settle 0.789370`. Wall clock 364 s on CPU against 5.0 s on the
 GH200, about 73x.
 
-**C1, C2, C3: submitted as Vista job `894628`.** Results pending.
+**C1, initial submerged acceleration. RAN AT BOTH RESOLUTIONS. FAILED.** Job
+`894678`, spawn-submerged variant. `fully_submerged_at_release` is `true` in
+both, so this is not the unsubmerged defect that invalidated `894642`.
+
+Analytic: `a_ideal = g(rho_w/rho_box - 1) = 6.5400 m/s^2` **upward** for
+rho_box=600 < rho_w=1000. `F_buoy_analytic = 31298.44 N`.
+
+| n_grid | a headline (first 3 substeps) | analytic | signed error | F from a | F analytic | signed error |
+|---|---|---|---|---|---|---|
+| 64 | **-1.440997992642224** | +6.5400 | **-122.03 %** | 16020.60 N | 31298.44 N | **-48.81 %** |
+| 96 | **-14.771721839904782** | +6.5400 | **-325.87 %** | **-9498.11 N** | 31298.44 N | **-130.35 %** |
+
+Both are reported. They are not averaged and neither is preferred.
+
+**The sign is inverted at both resolutions.** A body at 600 kg/m^3 released fully
+submerged in 1000 kg/m^3 water must accelerate upward. It accelerates downward,
+and refining the grid makes it worse by a factor of 10 rather than better, so
+this is not a resolution-cost finding. Refinement moving the answer away from the
+target is the signature of a wrong term, not an under-resolved one. The g96 case
+produces a **negative buoyant force**, which is unphysical rather than merely
+inaccurate. Divergence under refinement is also the opposite of the C0 control,
+which tightens as expected.
+
+Windows, showing the failure is not a late-window added-mass artefact
+(`a_windows`, m/s^2, all should approach +6.54 early per finding 6):
+
+| n_grid | 2 substeps | 3 | 5 | 10 | 20 | 40 |
+|---|---|---|---|---|---|---|
+| 64 | -2.3520 | -1.4410 | -0.7265 | -0.2878 | -0.1481 | -0.1047 |
+| 96 | -24.6156 | -14.7717 | -7.0551 | -2.2750 | -0.6722 | -0.1911 |
+
+The earliest window is the worst at both resolutions, which is where finding 6
+predicts the CLEANEST agreement with `a_ideal`. The diagnostics do not excuse it:
+`inverted_count` 0, `escaped_water_frac` 0.0, `water_inside_box_frac` 0.0077 (g64)
+and 0.0114 (g96), `sound_speed_over_vmax` 16.94 and 9.31.
+
+**C2, equilibrium draft. NO RESULT AT ANY RESOLUTION. 0 of 4.** Jobs `894670`
+(partial) and `894676` (all four). Every invocation raised, before producing a
+number:
+
+```
+RuntimeError: particles within 2 cells of the grid edge
+(x in [0.2205, 8.8697] m, domain [0, 9.421742313727737] m, dx=0.1472):
+the P2G stencil would write out of bounds.
+```
+at `core/solver.py:508`, reached from `validate_coupling_force.py:429`
+(`tank.solver.step`). It fires at g64 and g96, at offset 0 dx and 2 dx. No
+`c2_*.json` exists on Vista; only `.log` files. **C2 is the primary Archimedes
+test and it has never produced a number.**
+
+This is the same guard that finding 4 records as bounding resolution from below
+at `n_grid=32`. Here it fires at 64 and 96, so the C2 tank geometry, not the
+resolution, puts water inside the guard band. Per the standing constraint, the
+fix is not to widen the tank by tuning: `grid_lim` is canonical and matched to
+`data/all_runs_inventory.csv`.
+
+**C3, neutral-buoyancy null. NO RESULT. Metric undefined by construction.** Job
+`894678`:
+
+```
+ZeroDivisionError: float division by zero
+```
+at `validate_coupling_force.py:549`, `100.0 * (a0 - a_ideal) / a_ideal`, reached
+via `run_c3` at `:563` calling `run_c1`. C3 sets `rho_box = RHO_W`, so
+`a_ideal = g(1000/1000 - 1) = 0` exactly, and a percent error against zero is
+undefined. **This is a design defect in the null control, not a run failure.**
+C3 needs an absolute-tolerance criterion (`|a_measured| < eps`), not a relative
+one. It would fail this way on every future run until that changes.
+
+## Job provenance and supersession
+
+| job | name | elapsed | state | disposition |
+|---|---|---|---|---|
+| `894628` | j1coupling | 00:03:55 | COMPLETED | **SUPERSEDED.** Pre-dates the spawn-submerged fix; outputs overwritten at the same filenames |
+| `894642` | j1coupling | 00:06:40 | COMPLETED | **SUPERSEDED, INVALID.** Recorded in commit `287b4a6`: C1 ran unsubmerged, so the body was never in the state C1 measures |
+| `894670` | j1coupling | 00:05:36 | CANCELLED | **PARTIALLY LIVE.** Wrote the surviving `c0_g64.json` and `c0_g96.json` at 04:49. Its C2 runs crashed; cancelled manually at 04:54:40 mid-C2 |
+| `894676` | j1c2 | 00:11:12 | COMPLETED | **LIVE, all four C2 crashed.** `scripts/c2only.sbatch`, exists only on Vista, not in this repo |
+| `894678` | j1c1 | 00:03:26 | COMPLETED | **LIVE.** Wrote `c1_g64.json` and `c1_g96.json`; C3 raised ZeroDivisionError. `scripts/c1only.sbatch`, Vista-only |
+
+`c1only.sbatch` and `c2only.sbatch` are not tracked in this repo, so the two jobs
+that produced every surviving C1 number are not reproducible from `git`. That is
+the same un-regenerable-artifact defect the register records for
+`failure_modes_by_run.json` in D6a.
+
+## Is register J.1 closeable?
+
+**No.** J.1 asks for C2 equilibrium draft against Archimedes AND C1 initial
+submerged acceleration, each at canonical resolution and one refinement. Missing:
+
+1. **C2 has no number at all**, 0 of 4 invocations. This is the Archimedes test
+   J.1 names first. Blocked by the P2G edge guard at `core/solver.py:508`, which
+   is a scene-geometry problem in the C2 tank, not a resolution cost.
+2. **C1 ran and failed**, sign-inverted at both resolutions, diverging under
+   refinement (-122 % to -326 %). A failure is a legitimate finding, but J.1 is
+   a validation and this is not a validation that passed. It needs diagnosis
+   before it can be reported as either a solver defect or a test defect.
+3. **C3 cannot produce a number** until its zero-`a_ideal` metric is replaced
+   with an absolute tolerance.
+4. **C0 passes but does not close J.1.** C0 is a dry drop: no water, so it
+   exercises the rigid integrator and grid gravity, not the coupling. Register
+   C13 and A3 are untouched by it.
+
+C1 and C2 do not disagree, because C2 produced nothing to disagree with. Do not
+report the pair as a partial validation.
+
+**Do not close J.1, and do not promote any of this into the register as a
+validation.** What can be promoted now is narrower and should be labelled as
+such: C0 passes, and C1 currently fails.
 
 ## Findings produced by building the test
 

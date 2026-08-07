@@ -150,6 +150,17 @@ Realized density is grid-coupled by construction, since `solid_volume = n_partic
 
 **D7. DRIFT_THRESHOLD 0.05 m has no peer-reviewed source.** Re-declared as a literal in 16 places under three names. `gates.py:195-196` records in a print statement that it is a conservative numerical onset-of-motion tolerance.
 The attribution to Smith, Modra and Felder 2019 Eq. 6 is a MISATTRIBUTION. That equation contains no such criterion.
+**Count disagreement, unresolved:** this entry says three names, CLAUDE.md item 13 says four (`DRIFT_THRESHOLD`, `DRIFT_THRESHOLD_M`, `DRIFT_M`, `THRESHOLD`). Both counts were produced by a bare recursive grep, which H0 shows skips `renders/`, so both are FLOORS, not totals. Re-run with `/usr/bin/grep` before citing either.
+
+**D7a. `simulation/failure_modes.py` carries THREE `0.05` literals, not two, and one of them is not a distance. Verified live 2026-08-07 with `/usr/bin/grep`.**
+
+| line | name | value | UNIT |
+|---|---|---|---|
+| `:46` | `slide_m` | 0.05 | metres |
+| `:47` | `slide_speed_ms` | 0.05 | **metres per second** |
+| `:48` | `float_m` | 0.05 | metres |
+
+CLAUDE.md item 13 previously named only `:46` and `:48`. **`:47` is a speed that shares the numeral.** Any deduplication done by find-and-replace on the value `0.05` would silently convert a speed threshold into a distance threshold. `slide_speed_ms` participates in the JOINT sustained condition at `failure_modes.py:179-185` that produces the 16 SLIDE / 1 STUCK verdicts (D6b, D6c), so corrupting it changes published output without raising an error. **Deduplicate by name and unit, never by value.**
 
 ---
 

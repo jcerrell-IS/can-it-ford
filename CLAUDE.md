@@ -217,8 +217,20 @@ not by file read from the Mac, see the item for its evidence path.
 
 13. DRIFT_THRESHOLD 0.05 m is declared as a literal in 16 places under
     four names, DRIFT_THRESHOLD, DRIFT_THRESHOLD_M, DRIFT_M and
-    THRESHOLD, plus two more literals in failure_modes.py:46 and :48.
-    There is no single definition and no peer-reviewed source.
+    THRESHOLD. There is no single definition and no peer-reviewed
+    source. Register D7 says "three names" against this item's four;
+    that disagreement is unresolved, treat both counts as floors.
+
+    CORRECTED 2026-08-07: failure_modes.py carries THREE 0.05
+    literals, not two. Verified live by /usr/bin/grep:
+      :46 slide_m         = 0.05   metres
+      :47 slide_speed_ms  = 0.05   METRES PER SECOND
+      :48 float_m         = 0.05   metres
+    This item previously named only :46 and :48. :47 is a SPEED that
+    happens to share the numeral. A naive find-and-replace across
+    "0.05" during any deduplication would silently convert a speed
+    into a distance and change SLIDE verdicts, which are the 16 of 17
+    published outcomes. Deduplicate by NAME and UNIT, never by value.
 
 14. EXT_REF at gates.py:12 differs from bbox_m at vehicle_params.py:89
     by 3.3 percent in height and 2.7 percent in width, both larger than
