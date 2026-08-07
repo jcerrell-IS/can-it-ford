@@ -1,0 +1,23 @@
+name: physics-consistency-review
+on:
+  pull_request:
+    branches: [main, revision]
+permissions:
+  contents: read
+  pull-requests: write
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 .claude/checks/params_check.py
+      - uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          prompt: |
+            Review this diff ONLY for: physical-parameter inconsistencies across
+            scripts, duplicated hardcoded thresholds that should read a canonical
+            column, cross-engine (warpmpm vs Genesis) parameter conflation, and
+            citation claims that assert a numeric threshold as sourced from a
+            specific paper/equation. For each finding cite file:line and say what
+            to verify. Do not comment on style.

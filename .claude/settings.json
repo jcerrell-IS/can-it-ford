@@ -83,6 +83,15 @@
           }
         ],
         "matcher": "Read"
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 .claude/hooks/pretooluse_git_commit_gate.py"
+          }
+        ]
       }
     ],
     "PostToolUse": [
