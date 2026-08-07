@@ -207,6 +207,26 @@ drop the volume/issue. Nothing was changed here.
   and the git-tracked copy is the one CLAUDE.md cites.
 - Backups: `~/.claude/_backup_2026-08-07/`.
 
+**Correction, same session.** Treating the local-scope entries as duplicates was
+wrong for three of the five, and removing them was a regression. They were not
+duplicates: they carried project configuration the user-scope entries do not have.
+
+| server | local entry carried | user-scope entry |
+|---|---|---|
+| `undermind` | `oauth.clientId: claude-code` | bare URL, so auth fails with "does not support dynamic client registration" |
+| `overleaf` | `OVERLEAF_PROJECT_ID` (Can It Ford), `OVERLEAF_PROJECT_NAME`, `OVERLEAF_GIT_TOKEN_FILE` | bare `npx`, no project binding |
+| `zotero` | `ZOTERO_API_KEY`, `ZOTERO_LIBRARY_ID`, `ZOTERO_LIBRARY_TYPE` | bare `zotero-mcp`, no credentials |
+
+All three were restored byte-for-byte from the backup. Only `blender` was a true
+duplicate (identical `uvx blender-mcp`, no env or oauth) and stays removed, along
+with `coupler-io`. `undermind` now reports "Needs authentication" rather than
+connected, because the remove/add cycle cleared its stored OAuth token; it needs
+one interactive `/mcp` re-auth.
+
+This also sharpens the known Zotero trap: the **user-scope** zotero entry has no
+`ZOTERO_API_KEY` at all, so in any project other than Can It Ford it connects and
+returns empty rather than erroring. The credentials live only in the local entry.
+
 `check_claims.py --all` currently reports 157 ERROR and 89 WARN across tracked
 files, excluding the correction layer. That is real documented debt (forked
 densities at `can_it_ford_L2_mpm.py:27` and `can_it_ford_L2_mpm_ytest.py:45`,
