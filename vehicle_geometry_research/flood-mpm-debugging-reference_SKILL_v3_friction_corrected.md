@@ -1,9 +1,31 @@
----
-name: flood-mpm-debugging-reference
-description: Use this skill for ANY task that writes, edits, or debugs code touching Genesis MPM/SPH, kks32/mpm-engine, PhysGaussian, vehicle mass/inertia/friction parameters, water compressibility, collider type, failure-mode classification, DRIFT_THRESHOLD, or gsplat-to-simulation geometry in the Can It Ford project. Also trigger before writing Methods or Limitations text, before rendering any output, and before committing any code adapted from PhysGaussian. Trigger on mentions of grid_density, coup_friction, rho, MPM.Liquid, SPH.Liquid, load_vehicle, FloodScene, splashsurf, SDF/CDF colliders, slide/topple/float, or any error message containing "particles pass through", "GLIBCXX", "arm64", "aarch64", or a CUDA/torch install failure on Vista or LS6. Also trigger before stating any vehicle mass, inertia, or rho value as fact, before writing a new MPM/SPH scene, and before assuming a Genesis or kks32/mpm-engine API behaves a certain way without checking.
+# SUPERSEDED, DO NOT READ OR CITE. Historical snapshot only.
+
+Marked superseded 2026-08-07. This is a stale 92-line copy of what is now the
+130-line live skill at `.claude/skills/flood-mpm-debugging-reference/SKILL.md`,
+which is the ONLY canonical copy. 42 lines differ.
+
+Its skill frontmatter (`name: flood-mpm-debugging-reference`) was REMOVED as
+part of marking it superseded. It duplicated the live skill's name while
+sitting outside `.claude/skills/`, so anything scanning the tree for skill
+definitions could have loaded this stale copy instead of the real one.
+
+Known-wrong content still present below, which is why it must not be cited:
+
+- It predates the `coup_friction` correction. The live skill records, verified
+  by direct source read on Vista at commit `639131dc`
+  (`legacy_coupler.py:284`, clamp at `:322`), that `coup_friction` IS a genuine
+  Coulomb friction coefficient. Text below still reflects the earlier, refuted
+  "numerical stability impulse coefficient, not Coulomb friction" framing.
+- Its DRIFT_THRESHOLD wording is flagged by `scripts/check_claims.py` rule C8,
+  and its Xia year by rule C9.
+
+Kept rather than deleted because it is the only record of the intermediate
+"v3 friction corrected" state. Read `.claude/skills/flood-mpm-debugging-reference/SKILL.md`
+for anything current.
+
 ---
 
-# Flood-MPM Debugging Reference
+# Flood-MPM Debugging Reference (SUPERSEDED SNAPSHOT)
 
 This skill exists because this project has repeatedly lost hours rediscovering things already found once. Read the relevant section below before writing code in the matching area. If a section references a file in `reference_data/` or `docs/`, open that file for the full sourced detail, this skill is the index and the hard rules, not the complete research.
 
