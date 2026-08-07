@@ -34,6 +34,11 @@ PROVENANCE = {
     "plane_rigid_gate": "kernels/mpm_solver_warp.py:1915 'if restitution != 0.0' registers rigid contact",
     "deviation_from_canonical": "all planes use restitution=0.0 and friction=0.0 so they act on water only",
     "internal_access": "pin() writes _sim.rigid_x_cm and calls _sim.set_rigid_body_velocity; Solver exposes no pin API",
+    "rigid_mass_is_particle_sum": "kernels/mpm_solver_warp.py:851-853 mass_np[b] = m_b.sum(); with v_cm = mom/M this makes the body adopt a mass-weighted AVERAGE grid velocity, never a force",
+    "collider_wrench_sign": "core/solver.py:305-307 a static cup of m kg reads (0,0,-m*g), so buoyancy on a submerged collider is +z",
+    "sdf_impulse": "kernels/mpm_solver_warp.py:2731-2734 impulse = m*(v_free - v_new), accumulated before the node velocity is overwritten",
+    "box_impulse": "kernels/mpm_solver_warp.py:2082-2085 same accounting for the axis-aligned box collider; solver.py:358 calls sdf_wrench its 6-DOF analogue",
+    "coupling_pkg_unused": "warpmpm.coupling (admittance/wrench/backend) is imported by warpmpm/__init__.py but never called here; it drives add_box tool handles, not material-8 rigid bodies",
 }
 
 
@@ -107,9 +112,90 @@ def tank_geometry(n_grid, depth_cells):
     }
 
 
+def cube_mesh(length):
+    """Watertight axis-aligned cube of side `length`, centred on the ORIGIN.
+
+    add_sdf_collider stores the field in the BODY frame and queries it as
+    body = quat_rotate_inv(quat, x_world - center) (mpm_solver_warp.py:2697-2703),
+    so the mesh must be origin-centred and the world placement passed as `center`.
+    Faces are wound outward; build_sdf re-fixes the global sign from an interior
+    probe anyway (mesh_sdf.py:356-358), the centroid, which is inside a cube.
+    """
+    a = 0.5 * float(length)
+    verts = np.array([[-a, -a, -a], [+a, -a, -a], [+a, +a, -a], [-a, +a, -a],
+                      [-a, -a, +a], [+a, -a, +a], [+a, +a, +a], [-a, +a, +a]],
+                     dtype=float)
+    faces = np.array([[0, 2, 1], [0, 3, 2],      # z = -a
+                      [4, 5, 6], [4, 6, 7],      # z = +a
+                      [0, 1, 5], [0, 5, 4],      # y = -a
+                      [1, 2, 6], [1, 6, 5],      # x = +a
+                      [2, 3, 7], [2, 7, 6],      # y = +a
+                      [3, 0, 4], [3, 4, 7]],     # x = -a
+                     dtype=np.int64)
+    return verts, faces
+
+
+def sdf_margin_cells(length, dx, res, band_safety=2.0):
+    """Smallest margin_cells whose SDF-grid margin clears the collider contact band.
+
+    add_sdf_collider defaults band = dx and REFUSES the collider if the minimum stored
+    SDF value on the grid's six faces does not exceed it (mpm_solver_warp.py:2634-2645),
+    because near-surface space outside the stored box would then get no constraint.
+    build_sdf sets cell = span/(res-1-2*margin) (mesh_sdf.py:346), so the margin distance
+    is margin*span/(res-1-2*margin); requiring that to reach band_safety*dx and solving
+    for margin gives the expression below. At build_sdf's own defaults (res=64,
+    margin_cells=4) the margin is 0.0727*L = 0.107 m against band = dx = 0.147 m at
+    g64, so the DEFAULTS RAISE. This is chosen to satisfy the engine's own guard, not
+    tuned against any measured value.
+    """
+    m = band_safety * dx * (res - 1) / (length + 2.0 * band_safety * dx)
+    margin = int(math.ceil(m))
+    if res - 1 - 2 * margin < 8:
+        raise ValueError(
+            f"sdf_res={res} too small: margin_cells={margin} needed to clear a "
+            f"band of {band_safety}*dx={band_safety * dx:.4f} m leaves only "
+            f"{res - 1 - 2 * margin} cells across the mesh. Raise --sdf-res.")
+    return margin
+
+
+def build_box_sdf(length, dx, res=64, band_safety=2.0):
+    """Build the cube SDF and return (SDFData, provenance dict)."""
+    from warpmpm.geometry import build_sdf
+
+    verts, faces = cube_mesh(length)
+    margin = sdf_margin_cells(length, dx, res, band_safety)
+    sdf = build_sdf(verts, faces, res=res, margin_cells=float(margin))
+    vals = np.asarray(sdf.values)
+    boundary_min = float(min(vals[0].min(), vals[-1].min(),
+                             vals[:, 0, :].min(), vals[:, -1, :].min(),
+                             vals[:, :, 0].min(), vals[:, :, -1].min()))
+    return sdf, {
+        "sdf_res": int(res),
+        "sdf_margin_cells": margin,
+        "sdf_cell_m": float(sdf.cell),
+        "sdf_cell_over_dx": float(sdf.cell) / dx,
+        "sdf_boundary_min_m": boundary_min,
+        "sdf_band_m": dx,
+        "sdf_band_clearance": boundary_min / dx,
+        "sdf_max": float(sdf.sdf_max),
+    }
+
+
 class BoxTank:
     def __init__(self, n_grid, rho_box, depth_cells, box_bottom, water=True,
-                 seed=0, device="auto"):
+                 seed=0, device="auto", box_mode="rigid", sdf_res=64,
+                 sdf_band_safety=2.0):
+        # box_mode: "rigid"        free rigid MPM body (material 8), the C0-C3 path
+        #           "collider_sdf" the same cube as a FIXED mesh-SDF collider
+        #           "collider_box" the same cube as a FIXED axis-aligned box collider
+        # The collider modes create NO box particles: the cube is a boundary condition,
+        # so the reaction wrench is materialised on the grid instead of being inferred
+        # from the body's motion. Water seeding, carve, planes, walls, dt and substeps
+        # are byte-identical across all three.
+        if box_mode not in ("rigid", "collider_sdf", "collider_box"):
+            raise ValueError(f"unknown box_mode {box_mode!r}")
+        self.box_mode = box_mode
+        self.collider = None
         self.n_grid = int(n_grid)
         geo = tank_geometry(self.n_grid, depth_cells)
         self.dx = geo["dx"]
@@ -137,8 +223,14 @@ class BoxTank:
         off = (np.arange(n_side) + 0.5) * h
         bx = LIM / 2.0 - self.length / 2.0
         self.box_x0 = bx
-        gx, gy, gz = np.meshgrid(off + bx, off + bx, off + box_bottom, indexing="ij")
-        box = np.stack([gx, gy, gz], -1).reshape(-1, 3)
+        if self.box_mode == "rigid":
+            gx, gy, gz = np.meshgrid(off + bx, off + bx, off + box_bottom, indexing="ij")
+            box = np.stack([gx, gy, gz], -1).reshape(-1, 3)
+        else:
+            box = np.zeros((0, 3))
+        # centre of the cube the water is carved against; the collider surface is placed
+        # on that same cube so the excluded volume is identical in all three modes.
+        self.box_center = (LIM / 2.0, LIM / 2.0, float(box_bottom) + self.length / 2.0)
 
         nx = geo["nx"]
         self.a_tank = geo["a_tank"]
@@ -178,9 +270,10 @@ class BoxTank:
         s = Solver(grid=GridConfig(n_grid=self.n_grid, grid_lim=LIM),
                    device=device).load_particles(pos, vol)
         s.set_material(newtonian(eta=ETA, density=RHO_W, bulk_modulus=BULK))
-        s.set_material_range(self.n_water, self.n_total, "rigid", obj_id=0,
-                             density=self.rho_box)
-        s.finalize_rigid_bodies()
+        if self.box_mode == "rigid":
+            s.set_material_range(self.n_water, self.n_total, "rigid", obj_id=0,
+                                 density=self.rho_box)
+            s.finalize_rigid_bodies()
         s.add_plane((0, 0, self.floor), (0, 0, 1), "slip", friction=0.0, restitution=0.0)
         for pt, nrm in (((self.wall, 0, 0), (1, 0, 0)),
                         ((LIM - self.wall, 0, 0), (-1, 0, 0)),
@@ -189,10 +282,50 @@ class BoxTank:
             s.add_plane(pt, nrm, "slip", friction=0.0, restitution=0.0)
         s.add_domain_walls()
 
+        self.sdf_info = {}
+        if self.box_mode == "collider_sdf":
+            sdf, self.sdf_info = build_box_sdf(self.length, self.dx, res=sdf_res,
+                                               band_safety=sdf_band_safety)
+            # surface and friction are the engine's own add_sdf_collider defaults and are
+            # NOT tuned. friction cannot reach this measurement anyway: for surface_type 2
+            # the impulse is m*(v_free - v_surf - v_tan_scaled) (mpm_solver_warp.py:2731),
+            # whose NORMAL part is friction-independent, and the tangential part is zero
+            # on a stationary collider in still water.
+            self.collider = s.add_sdf_collider(sdf, self.box_center,
+                                               velocity=(0.0, 0.0, 0.0),
+                                               surface="separable", friction=0.4)
+        elif self.box_mode == "collider_box":
+            hs = self.length / 2.0
+            self.collider = s.add_box(self.box_center, (hs, hs, hs),
+                                      velocity=(0.0, 0.0, 0.0))
+
         self.solver = s
         self.leaked = 0
-        self.spawn_com = s.rigid_state()["com"].copy()
+        self.spawn_com = (s.rigid_state()["com"].copy() if self.box_mode == "rigid"
+                          else np.asarray(self.box_center, dtype=float))
         self.realized_rho = self.mass / (self.n_side ** 3 * h ** 3)
+
+    # --- collider wrench readout -----------------------------------------------------
+    def reset_wrench(self):
+        """Zero the collider's reaction accumulator. Call immediately before step()."""
+        if self.box_mode == "collider_sdf":
+            self.solver.reset_sdf_force(self.collider)
+        elif self.box_mode == "collider_box":
+            self.solver.reset_tool_force(self.collider)
+
+    def wrench(self, dt):
+        """Force the MATERIAL exerts on the collider, sum m*(v_free - v_new)/dt.
+
+        Sign convention is the engine's, stated at core/solver.py:305-307: a static cup
+        holding m kg of settled liquid reads force = (0, 0, -m*g). So a submerged body
+        reads buoyancy as POSITIVE z. Returns (force[3], torque[3] or None).
+        """
+        if self.box_mode == "collider_sdf":
+            w = self.solver.sdf_wrench(self.collider, dt)
+            return np.asarray(w["force"], dtype=float), np.asarray(w["torque"], dtype=float)
+        if self.box_mode == "collider_box":
+            return np.asarray(self.solver.tool_force(self.collider, dt), dtype=float), None
+        raise RuntimeError("wrench() is only defined for the collider modes")
 
     def project_water(self):
         if self.n_water == 0:
@@ -229,6 +362,8 @@ class BoxTank:
         return com
 
     def pin(self, com):
+        if self.box_mode != "rigid":
+            return   # a collider is kinematic: already held, nothing to pin
         sim = self.solver._sim
         sim.set_rigid_body_velocity(0, (0.0, 0.0, 0.0), (0.0, 0.0, 0.0),
                                     device=self.solver.device)
@@ -240,6 +375,8 @@ class BoxTank:
             self.solver.step(self.dt, self.substeps)
 
     def z_bottom(self):
+        if self.box_mode != "rigid":
+            return float(self.box_center[2]) - self.length / 2.0
         return float(self.solver.rigid_state()["com"][2]) - self.length / 2.0
 
     def column_surface(self, bin_cells=2.0):
@@ -338,6 +475,9 @@ class BoxTank:
 
     def geometry(self):
         return {
+            "box_mode": self.box_mode,
+            "box_center": list(self.box_center),
+            **self.sdf_info,
             "n_grid": self.n_grid,
             "grid_lim": LIM,
             "dx": self.dx,
@@ -558,6 +698,107 @@ def run_c1(n_grid, rho_box=600.0, depth_cells=18.0, box_bottom_cells=8.0,
     }
 
 
+def run_c1_sdf(n_grid, rho_box=600.0, depth_cells=18.0, box_bottom_cells=8.0,
+               settle_frames=600, measure_substeps=120, collider="sdf",
+               sdf_res=64, device="auto", seed=0):
+    """C1-SDF: the C1 cube and water, but the cube is a FIXED collider.
+
+    C1 infers the buoyant force from a free rigid body's acceleration. That path
+    materialises no force at all: rigid_body_integrate sets v_cm = rigid_linear_mom / M
+    (kernels/mpm_utils.py:1434) where rigid_linear_mom is the mass-weighted sum of the
+    GRID velocity gathered at each rigid particle (:1411) and M is the sum of those same
+    particle masses (mpm_solver_warp.py:851-853). The body therefore adopts a mass-weighted
+    AVERAGE of grid velocity; no force or impulse is ever formed, so C1's F_buoy_from_a is
+    a back-computation, not a measurement.
+
+    A collider does form one: it accumulates sum m*(v_free - v_new) on the grid before
+    overwriting node velocity, and sdf_wrench / tool_force divide it by dt. Same box, same
+    water, same resolution, same excluded volume. Discriminator, as scoped:
+      collider right, free-rigid wrong -> defect is in the free rigid coupling
+      both wrong                       -> defect is in the scene or the harness
+      collider also negative           -> the water is not hydrostatic
+    rho_box is accepted but only enters as reporting context; a fixed collider has no
+    mass and its reading cannot depend on one.
+    """
+    dx = LIM / n_grid
+    floor = 3.0 * DX_CANON
+    z_b0 = floor + box_bottom_cells * DX_CANON
+    tank = BoxTank(n_grid, rho_box, depth_cells, z_b0, water=True, device=device,
+                   seed=seed, box_mode=f"collider_{collider}", sdf_res=sdf_res)
+    settle = settle_pinned(tank, settle_frames)
+
+    zs_settle, _, _ = tank.column_surface()
+    box_top = z_b0 + tank.length
+
+    f_series, t_series = [], []
+    for i in range(measure_substeps):
+        tank.project_water()
+        tank.reset_wrench()
+        tank.solver.step(tank.dt, 1)
+        f, _tau = tank.wrench(tank.dt)
+        f_series.append([float(f[0]), float(f[1]), float(f[2])])
+        t_series.append((i + 1) * tank.dt)
+
+    f = np.asarray(f_series)
+    fz = f[:, 2]
+    f_analytic = RHO_W * tank.volume * G
+    # Second analytic, for the case the cube is NOT fully submerged. At the C1 defaults
+    # (depth_cells=18, box_bottom_cells=8) box_top = floor + 18*DX_CANON is EXACTLY the
+    # nominal free surface, so full buoyancy is only reached via the displacement rise.
+    # Reported alongside, never instead of, rho_w*V*g.
+    h_sub = float(np.clip(zs_settle - z_b0, 0.0, tank.length))
+    f_partial = RHO_W * G * (tank.length ** 2) * h_sub
+
+    # Report the same window ladder C1 reports so the two are read on one axis. For a
+    # FIXED collider the added-mass transient that makes C1's earliest window the honest
+    # one does not arise (the body never accelerates), so the steady tail is the physically
+    # meaningful figure here. Both are reported; neither is silently preferred.
+    windows = {f"F_first_{n}_mean": float(fz[:n].mean())
+               for n in (1, 2, 3, 5, 10, 20, 40) if n <= len(fz)}
+    tail = fz[len(fz) // 2:]
+    f_steady = float(tail.mean())
+    f_first3 = float(fz[:3].mean()) if len(fz) >= 3 else float("nan")
+
+    return {
+        "variant": f"C1SDF_fixed_collider_buoyancy_{collider}",
+        "collider_kind": collider,
+        "geometry": tank.geometry(),
+        "settle": settle,
+        "surface_after_settle": zs_settle,
+        "box_top_z": box_top,
+        "z_b_nominal_at_spawn": z_b0,
+        "submersion_margin_dx": (zs_settle - box_top) / dx,
+        "fully_submerged_at_measure": bool(zs_settle > box_top + 0.5 * dx),
+        "F_buoy_analytic": f_analytic,
+        "F_buoy_analytic_partial_submersion": f_partial,
+        "submerged_height_m": h_sub,
+        "submerged_height_frac": h_sub / tank.length,
+        "err_steady_vs_partial_pct": (100.0 * (f_steady - f_partial) / f_partial
+                                      if f_partial > 0 else float("nan")),
+        "F_windows": windows,
+        "F_first3_mean": f_first3,
+        "F_steady_tail_mean": f_steady,
+        "F_steady_tail_std": float(tail.std()),
+        "F_steady_tail_ptp": float(tail.max() - tail.min()),
+        "err_steady_vs_analytic_pct": 100.0 * (f_steady - f_analytic) / f_analytic,
+        "err_first3_vs_analytic_pct": 100.0 * (f_first3 - f_analytic) / f_analytic,
+        # lateral force must vanish by symmetry: a nonzero Fx/Fy relative to Fz means the
+        # readout itself is unsound, independent of whether Fz matches buoyancy.
+        "F_lateral_steady": [float(f[len(f) // 2:, 0].mean()),
+                             float(f[len(f) // 2:, 1].mean())],
+        "F_lateral_over_Fz": float(np.hypot(f[len(f) // 2:, 0].mean(),
+                                            f[len(f) // 2:, 1].mean())
+                                   / abs(f_steady)) if f_steady != 0 else float("nan"),
+        "box_weight_at_rho_box": rho_box * tank.volume * G,
+        "a_free_body_implied": (f_steady - rho_box * tank.volume * G) / tank.mass,
+        "a_ideal_for_comparison": G * (RHO_W / rho_box - 1.0),
+        "acoustic_transit_substeps": (tank.length / tank.sound_speed) / tank.dt,
+        "t_series": t_series,
+        "f_series": f_series,
+        "diagnostics": tank.diagnostics(),
+    }
+
+
 def run_c3(n_grid, depth_cells=18.0, box_bottom_cells=8.0, settle_frames=600,
            measure_substeps=120, device="auto", seed=0):
     res = run_c1(n_grid, RHO_W, depth_cells, box_bottom_cells, settle_frames,
@@ -576,7 +817,13 @@ def run_c3(n_grid, depth_cells=18.0, box_bottom_cells=8.0, settle_frames=600,
 
 def main():
     p = argparse.ArgumentParser()
-    p.add_argument("--variant", default="c2", choices=["c0", "c1", "c2", "c3"])
+    p.add_argument("--variant", default="c2",
+                   choices=["c0", "c1", "c2", "c3", "c1sdf"])
+    p.add_argument("--collider", default="sdf", choices=["sdf", "box"],
+                   help="c1sdf only: mesh-SDF collider (primary) or axis-aligned box "
+                        "collider (cross-check, exact geometry, no SDF interpolation)")
+    p.add_argument("--sdf-res", type=int, default=64,
+                   help="c1sdf --collider sdf only: voxels per axis of the cube SDF")
     p.add_argument("--n-grid", type=int, default=64)
     p.add_argument("--rho-box", type=float, default=600.0)
     p.add_argument("--depth-cells", type=float, default=10.0)
@@ -596,6 +843,10 @@ def main():
     elif a.variant == "c1":
         res = run_c1(a.n_grid, a.rho_box, a.depth_cells, a.box_bottom_cells,
                      a.settle_frames, a.measure_substeps, a.device, a.seed)
+    elif a.variant == "c1sdf":
+        res = run_c1_sdf(a.n_grid, a.rho_box, a.depth_cells, a.box_bottom_cells,
+                         a.settle_frames, a.measure_substeps, a.collider,
+                         a.sdf_res, a.device, a.seed)
     elif a.variant == "c3":
         res = run_c3(a.n_grid, a.depth_cells, a.box_bottom_cells,
                      a.settle_frames, a.measure_substeps, a.device, a.seed)
@@ -605,7 +856,7 @@ def main():
     res["provenance"] = PROVENANCE
 
     print(json.dumps({k: v for k, v in res.items()
-                      if k not in ("draft_series", "v_series", "t_series")},
+                      if k not in ("draft_series", "v_series", "t_series", "f_series")},
                      indent=2, default=float))
     if a.out:
         out = Path(a.out)

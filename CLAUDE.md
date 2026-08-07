@@ -62,6 +62,22 @@ restate them in chat prompts.
   Section I lists claims already proven false. Section E is the vehicle
   asset inventory: there is ONE usable mesh, not three. The July 24
   ledger is historical only and its L1 counts predate the joint-rule fix.
+- A GREEN SLURM STATUS IS NOT EVIDENCE THE SCIENCE RAN. sacct reported
+  COMPLETED for a job in which 4 of 9 invocations raised uncaught
+  exceptions, because the sbatch had no `set -e` and Slurm sees only the
+  wrapper's exit code. Verified 2026-08-07: run_coupling_validation.sbatch,
+  c1only.sbatch and c2only.sbatch all carry `set -u` and none carries
+  `set -e`. Do not use `set -e` either, it aborts the whole sweep on the
+  first crash. Use the pattern already written in scripts/c1sdf.sbatch:45-62,
+  which captures each invocation's rc, echoes a `STATUS <tag> rc=<n> OK|FAILED`
+  line, counts failures, and ends with `exit $((FAILED > 0))`. Before quoting
+  any run as a result, open the artifact it was supposed to write. A missing
+  JSON next to a COMPLETED job is a crash, not a result.
+  NOTE, 2026-08-07: an earlier prompt asserted this rule belonged "alongside
+  'a commit message is not a register edit' and 'a status line is not a
+  results read'." Neither phrase existed anywhere in this repo when checked
+  live. They are good maxims and are recorded here as such, but do not cite
+  them as pre-existing project rules.
 
 ## AUGUST 4 2026 AUDIT, GROUND TRUTH
 
@@ -271,6 +287,84 @@ L-7. arXiv 2607.00673 (Low, Hsiao, Li, Thorpe, Topcu, Kumar, July
 
 L-8. Engine decision: do not switch. DualSPHysics ships x86-only
      static libraries, a hard aarch64 blocker on GH200.
+
+## AUGUST 7 2026 COUPLING VALIDATION (J.1), GROUND TRUTH
+
+From Vista job 894731 (`j1c1sdf`, COMPLETED, 7m38s, warp 1.15.0), six runs at
+one code revision. Full record with line citations and the verification script:
+docs/COUPLING_VALIDATION_J1_2026-08-07.md. Supersedes any earlier statement
+about C1 in a session summary or handoff.
+
+J-1. RETRACTED, do not restate: "C1 shows a SIGN INVERSION, the buoyant force
+     goes negative at g96, and the error DIVERGES about 10x under refinement,
+     which is the signature of a wrong term." All three clauses are false.
+     c1_rigid_g96.json v_series steps from 0 to -0.10292938351631165 m/s in ONE
+     substep and is then flat to four decimals. The reported acceleration is the
+     least-squares slope of a STEP: the step model reproduces the n=2, 3 and 5
+     windows to 0.2 percent. The "10x divergence" is (step ratio 7.358) x
+     (dt ratio 1.4545) = 10.70. The body never sinks at 1.5 g.
+
+J-2. The step has two causes, both in the C1 measurement protocol, neither in
+     the solver. (a) BoxTank.pin writes rigid_x_cm and calls
+     set_rigid_body_velocity, which at mpm_solver_warp.py:880-885 writes ONLY
+     rigid_v_cm and rigid_omega. particle_v and particle_x are left stale,
+     rigid_particle_update runs only at substep end, and P2G has no material
+     gate (mpm_utils.py:920-923), so the box deposits its pre-pin velocity at
+     release. (b) The g96 settle NEVER CONVERGED: settle_gate_met false at the
+     full 900-frame cap, c/vmax 6.001 at settle end against a target of 20.
+     The g96 free-rigid number was measured on sloshing water. g64 met the gate
+     at 444 frames, c/vmax 20.057. Cite g64 only.
+
+J-3. WHAT IS REAL AND TOUCHES ALL 17 GATED RUNS. On g64, where the settle gate
+     passed, the free rigid body rises at +0.10026 m/s^2 against an ideal
+     +6.5400, which is 1.53 percent of correct. On the identical water at the
+     identical instant a FIXED collider reads the buoyant force correctly:
+     mesh-SDF 28898.40 N (-7.67 percent) at g64 and 33577.11 N (+7.28 percent)
+     at g96, against analytic rho_w*V*g = 31298.444315169316 N. An axis-aligned
+     box collider reads 19432.45 N (-37.91) and 24639.37 N (-21.28), converging.
+     The force is present in the fluid and measurable. The free rigid body does
+     not receive it.
+
+J-4. MECHANISM. rigid_body_integrate (mpm_utils.py:1434) sets
+     v_cm_new = rigid_linear_mom / M, where rigid_linear_mom is the
+     mass-weighted sum of GRID velocity gathered at each rigid particle
+     (:1402-1411) and M is the sum of those same particle masses
+     (mpm_solver_warp.py:856). The body adopts a mass-weighted AVERAGE of grid
+     velocity. NO force, impulse or torque is ever formed on this path. Rigid
+     particles deposit mass and momentum but never stress
+     (mpm_utils.py:1090-1091), so nodes inside the body see only gravity, and
+     pressure reaches it only through the shell where water and rigid mass
+     coexist, scaled by m_i^R/m_i. Describing the free rigid path as "two-way
+     coupled" without this qualification overstates it.
+
+J-5. This touches the 17 gated runs. Verified live, not from this file:
+     renders/yaris_render_s1/sim_standing.py:129 calls set_material_range(...,
+     "rigid", obj_id=0, ...) and :131 calls finalize_rigid_bodies(). Same path.
+     Every displacement in data/all_runs_inventory.csv was produced by it. State
+     this in the paper, the register, the README and any public artifact. The
+     pin and the failed settle do NOT carry over, the 17 runs have neither.
+
+J-6. Do NOT soften J-5 with the coarse-resolution conservatism citations (Wei
+     and Dalrymple 2016; St-Germain, Nistor and Townsend 2012; Jian et al. 2016;
+     Kleefsman et al. 2005). Those concern the FLUID load, which the SDF arm
+     shows is already close to correct here. This defect is in the body's
+     RESPONSE to that load and points the opposite way. Different mechanisms,
+     opposite directions, must not be netted. The direction of the net effect on
+     the 17 verdicts is UNTESTED and unknown.
+
+J-7. warpmpm.coupling (admittance.py, wrench.py, backend.py, read at the pinned
+     SHA) is robot-tool and collider-only. It never touches material-8 rigid
+     bodies, the string "rigid" appears in none of the three files, and
+     core/solver.py does not import it. Do not flag it as load-bearing again.
+
+J-8. C2 has produced ZERO numbers in four attempts and J.1 is NOT closeable.
+     C2 dies at the core/solver.py:508 edge guard because the box sinks through
+     a floor plane that is invisible to it: grid BCs do not affect rigid
+     particles (core/solver.py:216-218) and a plane registers rigid contact only
+     when restitution != 0.0 (mpm_solver_warp.py:1915), while this harness uses
+     restitution=0.0 throughout. Deepening the water cannot fix it. C3 is
+     undefined by construction for a neutrally buoyant body (a_ideal = 0, and a
+     percent error is taken against it).
 
 ## git filter-repo standing note
 Moved to the `git-history-rewrite` skill (.claude/skills/git-history-rewrite/).
