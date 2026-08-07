@@ -97,3 +97,57 @@ NOTES, and they matter for whoever reads this next:
   accumulating CPU but is INVISIBLE to `pgrep -x claude` and `pgrep -f "MacOS/claude"`,
   while `ps -ax` sees it. Any concurrency check built on pgrep will undercount. The
   prescribed loop in the Session 0 prompt reported 8 sessions where 9 existed.
+
+
+## CHAT SESSION: cross-session flag + regime-ladder dispatch
+
+started: 2026-08-07T19:03:40+0000   surface: claude.ai chat, not a terminal
+  session, no pid, real read/write access to this working tree via Desktop
+  Commander MCP, confirmed live this session (earlier notes claiming chat
+  surfaces cannot reach this repo are stale as of today)
+CLAIMS:
+  - docs/FLAG_topple_accel_risk_2026-08-07.md          EXCLUSIVE (created it)
+  - docs/REGIME_LADDER_DISPATCH_2026-08-07.md           EXCLUSIVE (created it)
+READS-ONLY:
+  - docs/CONCURRENT_SESSION_NOTICE_2026-08-07.md, docs/C1_ROOT_CAUSE_2026-08-07.md,
+    docs/CANONICAL_CORRECTIONS_REGISTER_2026-08-06.md, simulation/failure_modes.py,
+    analysis/classify_failure_modes.py, git log/status/branch, SESSION_CLAIMS.md itself
+VISTA: none. No job submitted, no SU consumed.
+GIT: pushed two commits directly to origin/main, both single-file, both new
+  untracked files staged by explicit path, neither commit touched any file
+  another session had modified. 5d8827f (the flag file), 9b52fa7 (the
+  dispatch file). Did not run git add -A or git commit -a at any point.
+  Confirmed via git status before each commit that the three files another
+  session has modified (.claude/checks/params_check.py,
+  docs/C1_ROOT_CAUSE_2026-08-07.md, simulation/validate_coupling_force.py)
+  were untouched by either commit.
+STATUS: DONE 2026-08-07T19:40:00+0000
+
+WHAT THIS SESSION FOUND, for whoever reads this next:
+
+1. TOPPLE classification (data/failure_modes_by_run_classified.csv, produced
+   by the failure-mode-classifier session per CONCURRENT_SESSION_NOTICE.md)
+   gates on surge_accel_g (failure_modes.py:170,182), which C1_ROOT_CAUSE.md
+   section 8 names as a forbidden back-computed-force quantity on the
+   free-rigid coupling path. Neither session referenced the other. Full
+   detail in FLAG_topple_accel_risk_2026-08-07.md. Not fixed, only flagged.
+
+2. Independently re-verified C1_ROOT_CAUSE.md section 2's polyfit closed-form
+   claim (slope = 6*dV/(dt*(N+1)*(N+2)) for a step at sample 1) symbolically
+   via Wolfram Language for N=1 through 8. Exact match, zero residual every
+   time. The "measurement artifact, not a sinking body" reframing rests on
+   this formula and it now has independent confirmation, not just internal
+   consistency.
+
+3. Wrote docs/REGIME_LADDER_DISPATCH_2026-08-07.md, a self-contained prompt
+   for a fresh Claude Code session to run rungs (b), (c), (d) of section 8's
+   own prescribed regime ladder, plus the two small fixes section 9 already
+   specified (C3's estimator, the P2G guard's axis/material report). Read it
+   before starting that work, it has the concurrency rules this ledger's own
+   header says are advisory only, restated as hard requirements for that
+   specific dispatch.
+
+4. This ledger's own gitignore problem (section near the top, "THIS FILE IS
+   GITIGNORED") appears at least partially resolved: this session read the
+   file via a direct path, not via a worktree copy, and appended successfully.
+   Did not independently re-verify the worktree-visibility claim from SESSION 0.
