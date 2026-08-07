@@ -133,8 +133,13 @@ L2 supporting measurements:
 | large 4WD | 0.123300 | 0.129882 | 0.3025 | 4 |
 
 "SLIDE within 4 frames" is confirmed: onset at frames 3, 3 and 4 against
-`DRIFT_THRESHOLD = 0.05` m. `renders/yaris_render_s1/failure_modes_result.json`
-independently classifies all three as `FailureMode.SLIDE`.
+`DRIFT_THRESHOLD = 0.05` m. `renders/yaris_render_s1/failure_modes_by_run.json`
+(generated 2026-08-05, keyed by run id, covers all 17 gated runs via
+`simulation/failure_modes.py, classify_timeseries()`) independently
+classifies all three as `FailureMode.SLIDE`, consistent with 16 of 17 runs
+overall (the exception is `sweepV_g64_v0p5`, classified STUCK). Replaces
+`failure_modes_result.json`, which carried no run identifier and was
+written by no script in the repo.
 
 ### Rung L1b, arithmetic and its one soft spot
 

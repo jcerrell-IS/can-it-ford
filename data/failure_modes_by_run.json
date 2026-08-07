@@ -1,0 +1,704 @@
+{
+  "_provenance": {
+    "generated": "2026-08-05",
+    "generator": "scratchpad/classify_17_runs.py (see docstring)",
+    "classifier": "simulation/failure_modes.py, classify_timeseries()",
+    "run_list_source": "data/all_runs_inventory.csv (17 rows)",
+    "timeseries_source": "renders/yaris_render_s1/_incoming/<run>/metrics.csv",
+    "mass_source": "all_runs_inventory.csv mass_kg, cross-checked against <run>/summary.json mass_kg",
+    "ssf": 1.42,
+    "ssf_source": "vehicle_params.py:108 (compact_sedan). ESTIMATE, flagged 'CONFIRM before use'. Only the TOPPLE criterion depends on it; SLIDE, FLOAT and STUCK do not.",
+    "thresholds": {
+      "slide_m": 0.05,
+      "slide_speed_ms": 0.05,
+      "float_m": 0.05,
+      "float_speed_ms": 0.02,
+      "sustain_frames": 3
+    },
+    "threshold_caveat": "slide_m = float_m = 0.05 m is an internal numerical onset detector, not a peer-reviewed distance criterion (failure_modes.py:46,48; CLAUDE.md item 13).",
+    "G_postprocessing": 9.80665,
+    "notes": "Supersedes renders/yaris_render_s1/failure_modes_result.json, which is keyed by AR&R class rather than run id, carries no run identifier, and is written by no script in the repo."
+  },
+  "runs": {
+    "g48_m1100": {
+      "mode": "SLIDE",
+      "arr_class_label": "small_passenger",
+      "mass_kg": 1100.0,
+      "n_grid": 48,
+      "realized_depth_m": 0.2944294473039918,
+      "velocity_ms": 1.5,
+      "ssf_used": 1.42,
+      "first_reached_frame": 3,
+      "first_reached_time_s": 0.1,
+      "threshold_value": 0.05,
+      "threshold_units": "m",
+      "percent_over_threshold": 591.4206,
+      "absolute_over_threshold": 0.29571028,
+      "magnitude_ratio": 6.914206,
+      "ratios": {
+        "SLIDE": 6.914206,
+        "TOPPLE": 1.396362,
+        "FLOAT": 0.0
+      },
+      "sustained": {
+        "SLIDE": true,
+        "TOPPLE": false,
+        "FLOAT": false
+      },
+      "first_index": {
+        "SLIDE": 3,
+        "TOPPLE": -1,
+        "FLOAT": -1
+      },
+      "max_surge_drift_m": 0.34571028,
+      "max_vertical_lift_m": 0.0,
+      "max_speed_ms": 0.86207969,
+      "peak_surge_force_n": 21389.4508,
+      "peak_vertical_force_n": 1149.3589,
+      "peak_surge_accel_g": 1.98283362,
+      "weight_n": 10787.315,
+      "timeseries": "renders/yaris_render_s1/_incoming/g48_m1100/metrics.csv",
+      "n_frames": 91
+    },
+    "g48_m1609": {
+      "mode": "SLIDE",
+      "arr_class_label": "large_passenger",
+      "mass_kg": 1609.0,
+      "n_grid": 48,
+      "realized_depth_m": 0.2944294473039918,
+      "velocity_ms": 1.5,
+      "ssf_used": 1.42,
+      "first_reached_frame": 3,
+      "first_reached_time_s": 0.1,
+      "threshold_value": 0.05,
+      "threshold_units": "m",
+      "percent_over_threshold": 402.1095,
+      "absolute_over_threshold": 0.20105476,
+      "magnitude_ratio": 5.021095,
+      "ratios": {
+        "SLIDE": 5.021095,
+        "TOPPLE": 1.196841,
+        "FLOAT": 0.0
+      },
+      "sustained": {
+        "SLIDE": true,
+        "TOPPLE": false,
+        "FLOAT": false
+      },
+      "first_index": {
+        "SLIDE": 3,
+        "TOPPLE": -1,
+        "FLOAT": -1
+      },
+      "max_surge_drift_m": 0.25105476,
+      "max_vertical_lift_m": 0.0,
+      "max_speed_ms": 0.7297735,
+      "peak_surge_force_n": 26816.4556,
+      "peak_vertical_force_n": 1961.4351,
+      "peak_surge_accel_g": 1.69951364,
+      "weight_n": 15778.8998,
+      "timeseries": "renders/yaris_render_s1/_incoming/g48_m1609/metrics.csv",
+      "n_frames": 91
+    },
+    "g48_m2337": {
+      "mode": "SLIDE",
+      "arr_class_label": "large_4wd",
+      "mass_kg": 2337.0,
+      "n_grid": 48,
+      "realized_depth_m": 0.2944294473039918,
+      "velocity_ms": 1.5,
+      "ssf_used": 1.42,
+      "first_reached_frame": 4,
+      "first_reached_time_s": 0.133333,
+      "threshold_value": 0.05,
+      "threshold_units": "m",
+      "percent_over_threshold": 262.0529,
+      "absolute_over_threshold": 0.13102646,
+      "magnitude_ratio": 3.620529,
+      "ratios": {
+        "SLIDE": 3.620529,
+        "TOPPLE": 1.000244,
+        "FLOAT": 0.0
+      },
+      "sustained": {
+        "SLIDE": true,
+        "TOPPLE": false,
+        "FLOAT": false
+      },
+      "first_index": {
+        "SLIDE": 4,
+        "TOPPLE": -1,
+        "FLOAT": -1
+      },
+      "max_surge_drift_m": 0.18102646,
+      "max_vertical_lift_m": 0.0,
+      "max_speed_ms": 0.60234739,
+      "peak_surge_force_n": 32551.7156,
+      "peak_vertical_force_n": 3059.142,
+      "peak_surge_accel_g": 1.42034712,
+      "weight_n": 22918.141,
+      "timeseries": "renders/yaris_render_s1/_incoming/g48_m2337/metrics.csv",
+      "n_frames": 91
+    },
+    "g64_m1100": {
+      "mode": "SLIDE",
+      "arr_class_label": "small_passenger",
+      "mass_kg": 1100.0,
+      "n_grid": 64,
+      "realized_depth_m": 0.2944294473039918,
+      "velocity_ms": 1.5,
+      "ssf_used": 1.42,
+      "first_reached_frame": 3,
+      "first_reached_time_s": 0.1,
+      "threshold_value": 0.05,
+      "threshold_units": "m",
+      "percent_over_threshold": 1230.6799,
+      "absolute_over_threshold": 0.61533995,
+      "magnitude_ratio": 13.306799,
+      "ratios": {
+        "SLIDE": 13.306799,
+        "TOPPLE": 1.332527,
+        "FLOAT": 0.0
+      },
+      "sustained": {
+        "SLIDE": true,
+        "TOPPLE": false,
+        "FLOAT": false
+      },
+      "first_index": {
+        "SLIDE": 3,
+        "TOPPLE": -1,
+        "FLOAT": -1
+      },
+      "max_surge_drift_m": 0.66533995,
+      "max_vertical_lift_m": 0.0,
+      "max_speed_ms": 0.93565331,
+      "peak_surge_force_n": 20411.6253,
+      "peak_vertical_force_n": 4116.4996,
+      "peak_surge_accel_g": 1.89218775,
+      "weight_n": 10787.315,
+      "timeseries": "renders/yaris_render_s1/_incoming/g64_m1100/metrics.csv",
+      "n_frames": 91
+    },
+    "g64_m1609": {
+      "mode": "SLIDE",
+      "arr_class_label": "large_passenger",
+      "mass_kg": 1609.0,
+      "n_grid": 64,
+      "realized_depth_m": 0.2944294473039918,
+      "velocity_ms": 1.5,
+      "ssf_used": 1.42,
+      "first_reached_frame": 3,
+      "first_reached_time_s": 0.1,
+      "threshold_value": 0.05,
+      "threshold_units": "m",
+      "percent_over_threshold": 542.8728,
+      "absolute_over_threshold": 0.27143641,
+      "magnitude_ratio": 6.428728,
+      "ratios": {
+        "SLIDE": 6.428728,
+        "TOPPLE": 1.159643,
+        "FLOAT": 0.0
+      },
+      "sustained": {
+        "SLIDE": true,
+        "TOPPLE": false,
+        "FLOAT": false
+      },
+      "first_index": {
+        "SLIDE": 3,
+        "TOPPLE": -1,
+        "FLOAT": -1
+      },
+      "max_surge_drift_m": 0.32143641,
+      "max_vertical_lift_m": 0.0,
+      "max_speed_ms": 0.69199705,
+      "peak_surge_force_n": 25982.9967,
+      "peak_vertical_force_n": 3218.0181,
+      "peak_surge_accel_g": 1.64669254,
+      "weight_n": 15778.8998,
+      "timeseries": "renders/yaris_render_s1/_incoming/g64_m1609/metrics.csv",
+      "n_frames": 91
+    },
+    "g64_m2337": {
+      "mode": "SLIDE",
+      "arr_class_label": "large_4wd",
+      "mass_kg": 2337.0,
+      "n_grid": 64,
+      "realized_depth_m": 0.2944294473039918,
+      "velocity_ms": 1.5,
+      "ssf_used": 1.42,
+      "first_reached_frame": 4,
+      "first_reached_time_s": 0.133333,
+      "threshold_value": 0.05,
+      "threshold_units": "m",
+      "percent_over_threshold": 183.9289,
+      "absolute_over_threshold": 0.09196444,
+      "magnitude_ratio": 2.839289,
+      "ratios": {
+        "SLIDE": 2.839289,
+        "TOPPLE": 0.959955,
+        "FLOAT": 0.0
+      },
+      "sustained": {
+        "SLIDE": true,
+        "TOPPLE": false,
+        "FLOAT": false
+      },
+      "first_index": {
+        "SLIDE": 4,
+        "TOPPLE": -1,
+        "FLOAT": -1
+      },
+      "max_surge_drift_m": 0.14196444,
+      "max_vertical_lift_m": 0.0,
+      "max_speed_ms": 0.44413556,
+      "peak_surge_force_n": 31240.5461,
+      "peak_vertical_force_n": 1911.4726,
+      "peak_surge_accel_g": 1.36313613,
+      "weight_n": 22918.141,
+      "timeseries": "renders/yaris_render_s1/_incoming/g64_m2337/metrics.csv",
+      "n_frames": 91
+    },
+    "g96_m1100": {
+      "mode": "SLIDE",
+      "arr_class_label": "small_passenger",
+      "mass_kg": 1100.0,
+      "n_grid": 96,
+      "realized_depth_m": 0.2944294473039918,
+      "velocity_ms": 1.5,
+      "ssf_used": 1.42,
+      "first_reached_frame": 3,
+      "first_reached_time_s": 0.1,
+      "threshold_value": 0.05,
+      "threshold_units": "m",
+      "percent_over_threshold": 438.5389,
+      "absolute_over_threshold": 0.21926947,
+      "magnitude_ratio": 5.385389,
+      "ratios": {
+        "SLIDE": 5.385389,
+        "TOPPLE": 1.302373,
+        "FLOAT": 0.000877
+      },
+      "sustained": {
+        "SLIDE": true,
+        "TOPPLE": false,
+        "FLOAT": false
+      },
+      "first_index": {
+        "SLIDE": 3,
+        "TOPPLE": -1,
+        "FLOAT": -1
+      },
+      "max_surge_drift_m": 0.26926947,
+      "max_vertical_lift_m": 4.387e-05,
+      "max_speed_ms": 0.74479601,
+      "peak_surge_force_n": 19949.7295,
+      "peak_vertical_force_n": 1978.8342,
+      "peak_surge_accel_g": 1.84936933,
+      "weight_n": 10787.315,
+      "timeseries": "renders/yaris_render_s1/_incoming/g96_m1100/metrics.csv",
+      "n_frames": 91
+    },
+    "g96_m1609": {
+      "mode": "SLIDE",
+      "arr_class_label": "large_passenger",
+      "mass_kg": 1609.0,
+      "n_grid": 96,
+      "realized_depth_m": 0.2944294473039918,
+      "velocity_ms": 1.5,
+      "ssf_used": 1.42,
+      "first_reached_frame": 3,
+      "first_reached_time_s": 0.1,
+      "threshold_value": 0.05,
+      "threshold_units": "m",
+      "percent_over_threshold": 213.2315,
+      "absolute_over_threshold": 0.10661573,
+      "magnitude_ratio": 3.132315,
+      "ratios": {
+        "SLIDE": 3.132315,
+        "TOPPLE": 1.076433,
+        "FLOAT": 0.0
+      },
+      "sustained": {
+        "SLIDE": true,
+        "TOPPLE": false,
+        "FLOAT": false
+      },
+      "first_index": {
+        "SLIDE": 3,
+        "TOPPLE": -1,
+        "FLOAT": -1
+      },
+      "max_surge_drift_m": 0.15661573,
+      "max_vertical_lift_m": 0.0,
+      "max_speed_ms": 0.61716802,
+      "peak_surge_force_n": 24118.589,
+      "peak_vertical_force_n": 2559.3886,
+      "peak_surge_accel_g": 1.52853426,
+      "weight_n": 15778.8998,
+      "timeseries": "renders/yaris_render_s1/_incoming/g96_m1609/metrics.csv",
+      "n_frames": 91
+    },
+    "g96_m2337": {
+      "mode": "SLIDE",
+      "arr_class_label": "large_4wd",
+      "mass_kg": 2337.0,
+      "n_grid": 96,
+      "realized_depth_m": 0.2944294473039918,
+      "velocity_ms": 1.5,
+      "ssf_used": 1.42,
+      "first_reached_frame": 5,
+      "first_reached_time_s": 0.166667,
+      "threshold_value": 0.05,
+      "threshold_units": "m",
+      "percent_over_threshold": 80.047,
+      "absolute_over_threshold": 0.04002352,
+      "magnitude_ratio": 1.80047,
+      "ratios": {
+        "SLIDE": 1.80047,
+        "TOPPLE": 0.824286,
+        "FLOAT": 0.0
+      },
+      "sustained": {
+        "SLIDE": true,
+        "TOPPLE": false,
+        "FLOAT": false
+      },
+      "first_index": {
+        "SLIDE": 5,
+        "TOPPLE": -1,
+        "FLOAT": -1
+      },
+      "max_surge_drift_m": 0.09002352,
+      "max_vertical_lift_m": 0.0,
+      "max_speed_ms": 0.41504374,
+      "peak_surge_force_n": 26825.3727,
+      "peak_vertical_force_n": 3432.4434,
+      "peak_surge_accel_g": 1.17048641,
+      "weight_n": 22918.141,
+      "timeseries": "renders/yaris_render_s1/_incoming/g96_m2337/metrics.csv",
+      "n_frames": 91
+    },
+    "sweepD_g64_d0p25": {
+      "mode": "SLIDE",
+      "arr_class_label": "small_passenger",
+      "mass_kg": 1100.0,
+      "n_grid": 64,
+      "realized_depth_m": 0.22082208547799384,
+      "velocity_ms": 1.5,
+      "ssf_used": 1.42,
+      "first_reached_frame": 3,
+      "first_reached_time_s": 0.1,
+      "threshold_value": 0.05,
+      "threshold_units": "m",
+      "percent_over_threshold": 500.8015,
+      "absolute_over_threshold": 0.25040073,
+      "magnitude_ratio": 6.008015,
+      "ratios": {
+        "SLIDE": 6.008015,
+        "TOPPLE": 1.115467,
+        "FLOAT": 0.007734
+      },
+      "sustained": {
+        "SLIDE": true,
+        "TOPPLE": false,
+        "FLOAT": false
+      },
+      "first_index": {
+        "SLIDE": 3,
+        "TOPPLE": -1,
+        "FLOAT": -1
+      },
+      "max_surge_drift_m": 0.30040073,
+      "max_vertical_lift_m": 0.00038671,
+      "max_speed_ms": 0.71845726,
+      "peak_surge_force_n": 17086.7021,
+      "peak_vertical_force_n": 2413.4381,
+      "peak_surge_accel_g": 1.58396247,
+      "weight_n": 10787.315,
+      "timeseries": "renders/yaris_render_s1/_incoming/sweepD_g64_d0p25/metrics.csv",
+      "n_frames": 91
+    },
+    "sweepD_g64_d0p35": {
+      "mode": "SLIDE",
+      "arr_class_label": "small_passenger",
+      "mass_kg": 1100.0,
+      "n_grid": 64,
+      "realized_depth_m": 0.3680368091299897,
+      "velocity_ms": 1.5,
+      "ssf_used": 1.42,
+      "first_reached_frame": 3,
+      "first_reached_time_s": 0.1,
+      "threshold_value": 0.05,
+      "threshold_units": "m",
+      "percent_over_threshold": 2008.5806,
+      "absolute_over_threshold": 1.00429029,
+      "magnitude_ratio": 21.085806,
+      "ratios": {
+        "SLIDE": 21.085806,
+        "TOPPLE": 1.599979,
+        "FLOAT": 0.056608
+      },
+      "sustained": {
+        "SLIDE": true,
+        "TOPPLE": false,
+        "FLOAT": false
+      },
+      "first_index": {
+        "SLIDE": 3,
+        "TOPPLE": -1,
+        "FLOAT": -1
+      },
+      "max_surge_drift_m": 1.05429029,
+      "max_vertical_lift_m": 0.00283039,
+      "max_speed_ms": 1.11820021,
+      "peak_surge_force_n": 24508.4594,
+      "peak_vertical_force_n": 5415.2103,
+      "peak_surge_accel_g": 2.27197031,
+      "weight_n": 10787.315,
+      "timeseries": "renders/yaris_render_s1/_incoming/sweepD_g64_d0p35/metrics.csv",
+      "n_frames": 91
+    },
+    "sweepD_g64_d0p45": {
+      "mode": "SLIDE",
+      "arr_class_label": "small_passenger",
+      "mass_kg": 1100.0,
+      "n_grid": 64,
+      "realized_depth_m": 0.4416441709559877,
+      "velocity_ms": 1.5,
+      "ssf_used": 1.42,
+      "first_reached_frame": 2,
+      "first_reached_time_s": 0.066667,
+      "threshold_value": 0.05,
+      "threshold_units": "m",
+      "percent_over_threshold": 2224.2531,
+      "absolute_over_threshold": 1.11212654,
+      "magnitude_ratio": 23.242531,
+      "ratios": {
+        "SLIDE": 23.242531,
+        "TOPPLE": 1.91007,
+        "FLOAT": 0.189071
+      },
+      "sustained": {
+        "SLIDE": true,
+        "TOPPLE": false,
+        "FLOAT": false
+      },
+      "first_index": {
+        "SLIDE": 2,
+        "TOPPLE": -1,
+        "FLOAT": -1
+      },
+      "max_surge_drift_m": 1.16212654,
+      "max_vertical_lift_m": 0.00945354,
+      "max_speed_ms": 1.26063997,
+      "peak_surge_force_n": 29258.4222,
+      "peak_vertical_force_n": 6755.5179,
+      "peak_surge_accel_g": 2.71229886,
+      "weight_n": 10787.315,
+      "timeseries": "renders/yaris_render_s1/_incoming/sweepD_g64_d0p45/metrics.csv",
+      "n_frames": 91
+    },
+    "sweepV_g64_v0p5": {
+      "mode": "STUCK",
+      "arr_class_label": "small_passenger",
+      "mass_kg": 1100.0,
+      "n_grid": 64,
+      "realized_depth_m": 0.2944294473039918,
+      "velocity_ms": 0.5,
+      "ssf_used": 1.42,
+      "first_reached_frame": null,
+      "first_reached_time_s": null,
+      "threshold_value": null,
+      "threshold_units": "",
+      "percent_over_threshold": null,
+      "absolute_over_threshold": null,
+      "magnitude_ratio": null,
+      "ratios": {
+        "SLIDE": 1.135578,
+        "TOPPLE": 0.480474,
+        "FLOAT": 0.0
+      },
+      "sustained": {
+        "SLIDE": false,
+        "TOPPLE": false,
+        "FLOAT": false
+      },
+      "first_index": {
+        "SLIDE": -1,
+        "TOPPLE": -1,
+        "FLOAT": -1
+      },
+      "max_surge_drift_m": 0.05677891,
+      "max_vertical_lift_m": 0.0,
+      "max_speed_ms": 0.34335088,
+      "peak_surge_force_n": 7359.8873,
+      "peak_vertical_force_n": 2715.2231,
+      "peak_surge_accel_g": 0.6822724,
+      "weight_n": 10787.315,
+      "timeseries": "renders/yaris_render_s1/_incoming/sweepV_g64_v0p5/metrics.csv",
+      "n_frames": 91
+    },
+    "sweepV_g64_v1p0": {
+      "mode": "SLIDE",
+      "arr_class_label": "small_passenger",
+      "mass_kg": 1100.0,
+      "n_grid": 64,
+      "realized_depth_m": 0.2944294473039918,
+      "velocity_ms": 1.0,
+      "ssf_used": 1.42,
+      "first_reached_frame": 4,
+      "first_reached_time_s": 0.133333,
+      "threshold_value": 0.05,
+      "threshold_units": "m",
+      "percent_over_threshold": 384.7889,
+      "absolute_over_threshold": 0.19239445,
+      "magnitude_ratio": 4.847889,
+      "ratios": {
+        "SLIDE": 4.847889,
+        "TOPPLE": 0.828259,
+        "FLOAT": 0.0
+      },
+      "sustained": {
+        "SLIDE": true,
+        "TOPPLE": false,
+        "FLOAT": false
+      },
+      "first_index": {
+        "SLIDE": 4,
+        "TOPPLE": -1,
+        "FLOAT": -1
+      },
+      "max_surge_drift_m": 0.24239445,
+      "max_vertical_lift_m": 0.0,
+      "max_speed_ms": 0.57904466,
+      "peak_surge_force_n": 12687.2573,
+      "peak_vertical_force_n": 2693.1931,
+      "peak_surge_accel_g": 1.17612745,
+      "weight_n": 10787.315,
+      "timeseries": "renders/yaris_render_s1/_incoming/sweepV_g64_v1p0/metrics.csv",
+      "n_frames": 91
+    },
+    "sweepV_g64_v2p0": {
+      "mode": "SLIDE",
+      "arr_class_label": "small_passenger",
+      "mass_kg": 1100.0,
+      "n_grid": 64,
+      "realized_depth_m": 0.2944294473039918,
+      "velocity_ms": 2.0,
+      "ssf_used": 1.42,
+      "first_reached_frame": 2,
+      "first_reached_time_s": 0.066667,
+      "threshold_value": 0.05,
+      "threshold_units": "m",
+      "percent_over_threshold": 2123.8884,
+      "absolute_over_threshold": 1.0619442,
+      "magnitude_ratio": 22.238884,
+      "ratios": {
+        "SLIDE": 22.238884,
+        "TOPPLE": 1.789412,
+        "FLOAT": 0.0
+      },
+      "sustained": {
+        "SLIDE": true,
+        "TOPPLE": false,
+        "FLOAT": false
+      },
+      "first_index": {
+        "SLIDE": 2,
+        "TOPPLE": -1,
+        "FLOAT": -1
+      },
+      "max_surge_drift_m": 1.1119442,
+      "max_vertical_lift_m": 0.0,
+      "max_speed_ms": 1.19886112,
+      "peak_surge_force_n": 27410.185,
+      "peak_vertical_force_n": 3472.3693,
+      "peak_surge_accel_g": 2.54096455,
+      "weight_n": 10787.315,
+      "timeseries": "renders/yaris_render_s1/_incoming/sweepV_g64_v2p0/metrics.csv",
+      "n_frames": 91
+    },
+    "sweepV_g64_v2p5": {
+      "mode": "SLIDE",
+      "arr_class_label": "small_passenger",
+      "mass_kg": 1100.0,
+      "n_grid": 64,
+      "realized_depth_m": 0.2944294473039918,
+      "velocity_ms": 2.5,
+      "ssf_used": 1.42,
+      "first_reached_frame": 2,
+      "first_reached_time_s": 0.066667,
+      "threshold_value": 0.05,
+      "threshold_units": "m",
+      "percent_over_threshold": 2928.0781,
+      "absolute_over_threshold": 1.46403904,
+      "magnitude_ratio": 30.280781,
+      "ratios": {
+        "SLIDE": 30.280781,
+        "TOPPLE": 2.233764,
+        "FLOAT": 0.233562
+      },
+      "sustained": {
+        "SLIDE": true,
+        "TOPPLE": false,
+        "FLOAT": false
+      },
+      "first_index": {
+        "SLIDE": 2,
+        "TOPPLE": -1,
+        "FLOAT": -1
+      },
+      "max_surge_drift_m": 1.51403904,
+      "max_vertical_lift_m": 0.0116781,
+      "max_speed_ms": 1.47410288,
+      "peak_surge_force_n": 34216.7727,
+      "peak_vertical_force_n": 3148.4382,
+      "peak_surge_accel_g": 3.17194526,
+      "weight_n": 10787.315,
+      "timeseries": "renders/yaris_render_s1/_incoming/sweepV_g64_v2p5/metrics.csv",
+      "n_frames": 91
+    },
+    "sweepV_g64_v3p0": {
+      "mode": "SLIDE",
+      "arr_class_label": "small_passenger",
+      "mass_kg": 1100.0,
+      "n_grid": 64,
+      "realized_depth_m": 0.2944294473039918,
+      "velocity_ms": 3.0,
+      "ssf_used": 1.42,
+      "first_reached_frame": 2,
+      "first_reached_time_s": 0.066667,
+      "threshold_value": 0.05,
+      "threshold_units": "m",
+      "percent_over_threshold": 3461.6245,
+      "absolute_over_threshold": 1.73081226,
+      "magnitude_ratio": 35.616245,
+      "ratios": {
+        "SLIDE": 35.616245,
+        "TOPPLE": 2.664377,
+        "FLOAT": 1.071482
+      },
+      "sustained": {
+        "SLIDE": true,
+        "TOPPLE": false,
+        "FLOAT": false
+      },
+      "first_index": {
+        "SLIDE": 2,
+        "TOPPLE": -1,
+        "FLOAT": -1
+      },
+      "max_surge_drift_m": 1.78081226,
+      "max_vertical_lift_m": 0.05357409,
+      "max_speed_ms": 1.91111375,
+      "peak_surge_force_n": 40812.8951,
+      "peak_vertical_force_n": 4741.3174,
+      "peak_surge_accel_g": 3.78341553,
+      "weight_n": 10787.315,
+      "timeseries": "renders/yaris_render_s1/_incoming/sweepV_g64_v3p0/metrics.csv",
+      "n_frames": 91
+    }
+  }
+}
