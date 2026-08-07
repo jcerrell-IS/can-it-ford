@@ -307,15 +307,85 @@ cannot slide, so it can never reproduce a SLIDE outcome. It can establish that t
 load is wrong by a factor of N; it cannot say which way any individual verdict
 flips. Direction of bias on the 16 SLIDE verdicts is UNKNOWN and untested.
 
+## 8b. C2 is UNRUNNABLE on the free-rigid path, and it is the same defect
+
+Added 2026-08-07 19:5x after the above. This supersedes the standing description of
+C2 as "blocked by a P2G edge guard", which framed it as a tank-geometry problem.
+
+**What trips the guard is the BOX, in z, not water in x.** `project_water()` clamps
+water to `>= wall - 0.25dx = 0.5521` in x and y and `>= floor - 0.25dx = 0.4048` in
+z, and `settle_pinned` calls it before every step, so the clamp is live during
+settle too. The observed minima (0.2205 at g64, 0.1464 at g96) are below all three
+bounds, so they cannot be water on any axis. Confirmed independently by the
+signature: the trip sits just barely under `1.5*dx` at both resolutions (0.220822
+and 0.147215), which is a body crossing a bound, not a leak. The body passes
+through the floor by design because every plane is `restitution=0.0`, which
+`mpm_solver_warp.py:1915` makes invisible to it.
+
+Credit: this mechanism was established in commit `20dd999`'s body nine hours
+earlier. An earlier revision of this file's analysis attributed the trip to water
+leaking laterally past the wall planes (J.1 finding 3's rind). That was wrong and
+is withdrawn.
+
+**But the fix in `20dd999` was already tested and did not work.** `20dd999`
+deepened C2 to 18 cells on the argument that the box grounded out for lack of
+clearance, and states "only the tank was made deep enough for the body it has to
+float." `scripts/c2only.sbatch:19-20` on Vista passes `--depth-cells 18`
+explicitly, and that is job `894676`, whose four C2 arms all crashed at the same
+guard anyway. `run_c2`'s own default is still `depth_cells=10` on both the Mac and
+the Vista copy, so the 18 can only have come from the flag.
+
+**The reason is section 3 of this file.** `20dd999`'s argument assumes the body
+floats once given clearance. It does not: it registers 1.53 % of analytic
+buoyancy. At the actual C2 geometry with `depth_cells=18`:
+
+| quantity | value |
+|---|---|
+| box bottom after reseat | 2.2373 m |
+| guard low bound `1.5*dx` | 0.2208 m |
+| descent required | 2.0165 m |
+| frames to guard, pure free fall | 19.2 |
+| frames to guard, at the measured 1.53 % response | **19.3** |
+
+Buoyancy buys three hundredths of a frame.
+
+**Therefore no tank geometry inside the canonical domain can make C2 run.**
+Deepening delays the trip only as `sqrt(descent)`. To survive even a 200-frame
+measurement loop (6.667 s) the box needs a descent budget of
+`0.5 * 9.71 * 6.667^2 = 216 m`. `grid_lim` is 9.42 m.
+
+C2 asks a body to reach an equilibrium draft. A body that registers 1.5 % of
+buoyancy has no equilibrium draft to reach. **C2 and C1 are one defect, not two.**
+
+Consequence for the ladder: C2's stated purpose, the primary Archimedes test, is
+already satisfied by the collider path in section 5, which measured buoyancy to
++1.6 % (first-3, g64) in the same water at the same resolution. The honest status
+is not "C2 has never produced a number, blocked on a guard". It is: C2 cannot
+produce a number on the free-rigid path for the same reason C1 failed, and the
+number C2 existed to produce has already been obtained another way.
+
+Instrumentation worth adding regardless of the above: the guard message hardcodes
+the label `"x"` while checking all three axes, because `core/solver.py:506` is
+`g = x[:, 1:] if self.periodic_x else x` and `periodic_x` is never set in this
+scene. Printing `x.min(0)` per axis before the raise converts an inferred
+diagnosis into a recorded one.
+
 ## 9. Open
 
 - The 7.59x ratio in `dV` between g96 and g64 is unexplained as physics, and given
   section 4 it may not require a physical explanation at all.
-- C2, the primary Archimedes test, has still never produced a number at any
-  resolution: every invocation raises "particles within 2 cells of the grid edge"
-  at `core/solver.py:508`. Until it runs, nothing tests equilibrium buoyancy.
-- C3 cannot produce a number until its zero-`a_ideal` metric is replaced with an
-  absolute tolerance.
+- C2 cannot be run on the free-rigid path at all: see section 8b. It is not
+  blocked by geometry, a threshold, or resolution.
+- C3's `ZeroDivisionError` IS fixed (guarded at the `err_headline_vs_ideal_pct`
+  assignment), and `run_c3` gained a correct compressible target
+  `a_expected_compressible = G*(rho_local/RHO_W - 1)` via `hydrostatic_density`,
+  which is better physics than a zero target because EOS-compressed water at depth
+  is denser than 1000. But `run_c3` reports `a_as_fraction_of_g` from
+  `a_headline_first3`, the contaminated estimator of section 2. For a NULL test
+  that is worse than for C1: the pin injects a nonzero `dV` by construction, so C3
+  will read nonzero even if the coupling is perfect. It should use
+  `a_late_window`, which `run_c1` already computes and stores.
+  `a_expected_compressible` is assigned once and read by nothing.
 - `run_c1_sdf` and its helpers `cube_mesh`, `sdf_margin_cells`, `build_box_sdf`
   exist in NO COMMIT as of HEAD `9d53acc`; `scripts/c1sdf.sbatch` and
   `scripts/c2c3diag.sbatch` are untracked. That is the code behind job `894731`,
