@@ -167,14 +167,30 @@ Vista job **894731**, `j1c1sdf`, COMPLETED 2026-08-07T06:50:25, elapsed 00:07:38
 Every run uses the identical flags the published C1 numbers used:
 `--depth-cells 18 --box-bottom-cells 3 --settle-frames 900 --measure-substeps 160`.
 
+**Citation convention, because two versions of the harness exist and their line
+numbers collide.** `[R]` means the repo's `simulation/validate_coupling_force.py`,
+618 lines, sha256 `fd54aa39b2d1733f81d114e32eba426798b8002795590b3b8536ba316a27af32`.
+`[V]` means the Vista-only 869-line copy that produced job 894731, sha256
+`ff64e25421b0ae8fa290490cb322107254d3e3f1c6ac33248382d8129d92e813`, which is NOT in
+git (process item b). An unqualified line number in this file would be wrong for
+whichever copy the reader opens: `:231` is `def pin` in `[R]` and `self.box_center`
+in `[V]`. Solver-core citations are unambiguous and carry no tag; they index
+`third_party/mpm-engine-544c93dd-solver-core/` at the pinned SHA.
+
 The control is tight, verified by reading the harness rather than trusting the
 docstring. `BoxTank.__init__` seeds box particles **only** in rigid mode
-(`:226-230`, `box = np.zeros((0,3))` otherwise) and calls `set_material_range` +
-`finalize_rigid_bodies` **only** in rigid mode (`:273-276`). The water lattice and
-the carve against the cube are unconditional (`:247-251`), and the collider surface
-is placed on that same cube (`:231-233`). So the excluded volume, the water, the
+(`[V]:226-230`, `box = np.zeros((0,3))` otherwise) and calls `set_material_range` +
+`finalize_rigid_bodies` **only** in rigid mode (`[V]:273-276`). The water lattice and
+the carve against the cube are unconditional (`[V]:247-251`), and the collider surface
+is placed on that same cube (`[V]:231-233`). So the excluded volume, the water, the
 seed, the settle procedure and the resolution are identical across all three arms;
 only the cube's representation and the force readout differ.
+
+The rigid path is unchanged between `[R]` and `[V]`: all six change hunks are
+backward-compatible extensions gated on the default `box_mode="rigid"`, and the
+`c1_rigid_*` runs, produced by `[V]`, reproduce the `c1_*` runs, produced by `[R]`,
+at -1.4367 against -1.4410 (g64) and -14.794 against -14.772 (g96). That agreement
+is the regression test that lets the two be read on one axis.
 
 Analytic target `rho_w V g` = **31298.444315169316 N** (`V` = 3.1904632329428453
 m^3). All arms report `fully_submerged_at_measure`/`_at_release` true.
@@ -205,10 +221,10 @@ Two hypotheses are closed by this table alone:
 - **H2 is excluded by direct measurement.** The water IS hydrostatic at
   measurement time. A fixed collider immersed in it reads Archimedes to within
   8 percent at both resolutions. The settle loop is not the problem for the water.
-- **H1 is excluded by construction.** `run_c1:515-520` builds `vs` from
+- **H1 is excluded by construction.** `[R] run_c1:515-520` builds `vs` from
   `rigid_state()["v"][2]` with `ts` increasing, and takes `np.polyfit(t, v, 1)[0]`,
   which is `dv/dt` in the correct sense. `a_ideal = G*(RHO_W/rho_box - 1)` = +6.54
-  is positive for a rising body. The decisive point is that `run_c0:383` uses the
+  is positive for a rising body. The decisive point is that `[R] run_c0:383` uses the
   identical `np.polyfit` call on the identical accessor and returns -9.81 to seven
   significant figures. A flipped subtraction order would have flipped C0 too.
 
@@ -257,7 +273,7 @@ Three consequences, all of which correct the record:
    `m*(a+g)` evaluated on a fitted slope that has no physical referent.
 
 **Why the step exists. H4 is CONFIRMED, and it is a harness defect.**
-`BoxTank.pin` (`:231-236`) writes `rigid_x_cm` and calls
+`BoxTank.pin` (`[R]:231-236`) writes `rigid_x_cm` and calls
 `set_rigid_body_velocity`, and `set_rigid_body_velocity`
 (`mpm_solver_warp.py:880-885`) writes **only** `rigid_v_cm` and `rigid_omega`. It
 does not touch `particle_v` or `particle_x`. The kernel that syncs particles to
@@ -269,16 +285,25 @@ re-run after `pin()`. Meanwhile P2G has no material gate at all:
 `weight * particle_mass * (particle_v + C*dpos)` for every particle. So on the
 first substep after release the box deposits its stale pre-pin velocity into the
 grid and immediately reads it back through `rigid_g2p_accumulate`. The settle loop
-(`:479-487`) pins once per FRAME, not once per substep, so the body free-falls
+(`[R]:479-487`) pins once per FRAME, not once per substep, so the body free-falls
 through all 11 (g64) or 16 (g96) substeps of every frame and is teleported back
 900 times.
 
 **A second contribution, also protocol, also confirmed: the g96 settle never
-converged.** `c1_rigid_g96.json` reports `settle_frames_run` 900 against a cap of
-900 with `settle_gate_met` **false** and `settle_vmax_final` 2.1404 m/s,
-`c/vmax` = 7.55, below the harness's own target of 20 and below the project's 10x
-criterion. The g64 arm met the gate at 444 frames with `vmax` 0.6405 and
-`c/vmax` = 16.95. **The g96 free-rigid number was measured on water that was still
+converged.** Two different sound-speed ratios live in these JSONs and must not be
+merged. `settle.settle_vmax_final` is water-only at the last settle frame and is
+what the gate tests against `ratio_target` = 20.0 (`[R]:473`);
+`diagnostics.sound_speed_over_vmax` is over ALL particles after the measurement
+loop. Reported separately, with `c` = 12.84523257866513 m/s:
+
+| arm | settle frames | gate met | `vmax` at settle end | **c/vmax at settle end** | c/vmax post-measurement |
+|---|---|---|---|---|---|
+| rigid g64 | 444 / 900 | **true** | 0.6405 m/s | **20.057** | 16.946 |
+| rigid g96 | 900 / 900 | **false** | 2.1404 m/s | **6.001** | 7.547 |
+
+g64 stopped the instant it crossed its own target of 20. g96 ran the full 900-frame
+cap and was still at 6.0, far below the target and below the project's 10x
+criterion. **The g96 free-rigid number was measured on water that was still
 sloshing.** It should never have been reported as a refinement of the g64 number.
 `c1sdf_box_g96` also missed the gate; both SDF arms met it (354 and 776 frames).
 
@@ -307,7 +332,8 @@ do if the measured force were actually applied to it.
 `rigid_body_integrate` (`mpm_utils.py:1434`) sets `v_cm_new = rigid_linear_mom / M`,
 where `rigid_linear_mom` is `sum_p m_p * v_interp` accumulated by B-spline gather
 from `grid_v_out` (`:1402-1411`) and `M = rigid_mass[b]` is the sum of those same
-particle masses (`mpm_solver_warp.py:851-853`). Expanding the gather,
+particle masses (`mpm_solver_warp.py:856`, `mass_np[b] = float(m_b.sum())` over
+`idx = np.where((mat_np == 8) & (rid_np == b))`). Expanding the gather,
 `M v_cm_new = sum_i m_i^R v_i`, where `m_i^R` is the rigid contribution to nodal
 mass. **The body's velocity is a mass-weighted AVERAGE of the grid velocity at its
 own particles. No force, impulse or torque is ever formed, and no momentum is
@@ -324,10 +350,20 @@ the fork's design, not a typo, and no parameter in this project's control change
 
 ## Does this touch the 17 gated runs? Yes.
 
-The 17 runs build the vehicle with `set_material_range(..., "rigid", obj_id=...)`
-followed by `finalize_rigid_bodies()`, then step. That is the same free rigid body
-path, the same `rigid_body_integrate`, the same velocity-averaging coupling
-measured above. **Every displacement in `data/all_runs_inventory.csv` was produced
+Verified live 2026-08-07 by direct read of
+`renders/yaris_render_s1/sim_standing.py`, not carried over from CLAUDE.md:
+`:129` is `s.set_material_range(self.n_water, self.n_total, "rigid", obj_id=0,`
+and `:131` is `s.finalize_rigid_bodies()`. That is the same free rigid body path,
+the same `rigid_body_integrate`, the same velocity-averaging coupling measured
+above. (`:132-133` and `:136` do use `restitution=0.05`, so unlike this harness the
+17 runs DO have floor and wall contact registered on the vehicle. That changes
+contact, not the buoyant coupling.)
+
+**Incidental finding, worth its own register line:** `renders/yaris_render_s1/` is
+**not tracked by git**. `git ls-files renders/yaris_render_s1/` returns empty while
+`renders/mpm-engine-out/` IS tracked. The driver script for all 17 gated runs
+therefore exists only in the working checkout, exactly the same exposure as process
+item (b) below. **Every displacement in `data/all_runs_inventory.csv` was produced
 by a coupling that, on a case with an exact analytic answer, delivers about
 1.5 percent of the correct rigid-body response to a fluid load.** That has to be
 stated in the paper, the register, the README and any public artifact. It is not
@@ -400,9 +436,9 @@ the obligation to state the defect.
    and use a collider wrench.
 
 7. **`realized_rho` is a tautology and cannot test H3.** The harness computes
-   `realized_rho = mass / (n_side^3 * h^3)` (`BoxTank:195`) while `mass` is itself
-   `rho_box * length^3` (`:172`) and `length = n_side * h` (`:135`), guarded by an
-   exact-multiple check at `:132`. It therefore reduces algebraically to `rho_box`
+   `realized_rho = mass / (n_side^3 * h^3)` (`[R] BoxTank:195`) while `mass` is itself
+   `rho_box * length^3` (`[R]:172`) and `length = n_side * h` (`[R]:135`), guarded by an
+   exact-multiple check at `[R]:132`. It therefore reduces algebraically to `rho_box`
    at every resolution. Measured: **599.9999999999999 at both g64 and g96**, in
    every one of the ten result JSONs, against 600 requested. The figure is
    reported here because it was asked for, and it does satisfy the project's
@@ -473,20 +509,29 @@ this commit.** Not yet resolved: `simulation/validate_coupling_force.py` on Vist
 is **869 lines** against the repo's **618**, sha256
 `ff64e25421b0ae8fa290490cb322107254d3e3f1c6ac33248382d8129d92e813`. It adds
 `cube_mesh`, `sdf_margin_cells`, `build_box_sdf` and `run_c1_sdf`, and it modifies
-`BoxTank` in six hunks to carry `box_mode`. The rigid path is unchanged in
-substance, evidenced by `c1_rigid_g64` reproducing `c1_g64` at -1.4367 against
--1.4410 and `c1_rigid_g96` reproducing `c1_g96` at -14.794 against -14.772. It is
-retrieved to scratchpad but **NOT committed**, because landing it overwrites a
-tracked file while other sessions are live, which needs explicit confirmation.
+`BoxTank` in six hunks to carry `box_mode`. All six hunks were read in full and are
+backward-compatible extensions gated on the default `box_mode="rigid"`; no
+repo-unique content would be lost. The rigid path is unchanged in substance,
+evidenced by `c1_rigid_g64` reproducing `c1_g64` at -1.4367 against -1.4410 and
+`c1_rigid_g96` reproducing `c1_g96` at -14.794 against -14.772.
+
+**Landing it was attempted and refused.** The write was blocked by the session's
+permission classifier, and CLAUDE.md independently requires explicit confirmation
+before overwriting an existing file. The repo copy is therefore untouched at sha256
+`fd54aa39...`, and the `[R]` / `[V]` citation convention above exists to keep this
+document unambiguous until the two are reconciled. **Until it lands, `scripts/c1sdf.sbatch`
+is in git but the code it invokes is not, so job 894731 is not reproducible from a
+clean clone.** That is the single highest-value outstanding chore in J.1 and it needs
+one decision, not more analysis.
 
 **c. C3 is undefined by construction and should be replaced, not repaired.** For a
 neutrally buoyant body `a_ideal = g(1000/1000 - 1) = 0`, and
-`validate_coupling_force.py:549` computes a percent error against it, so the
+`[R]:549` computes a percent error against it, so the
 ZeroDivisionError is the specification, not a crash. Recommend replacing the
 relative test with an absolute tolerance in m/s^2, since the quantity under test
 is an acceleration that should be zero and has a natural absolute scale: assert
 `|a_measured| <= tol` with `tol` stated in m/s^2 and justified against `g` and the
-substep count. `run_c3:570-573` already computes `a_expected_compressible` from the
+substep count. `[R] run_c3:570-573` already computes `a_expected_compressible` from the
 EOS, which is the correct non-zero reference and is the better target than 0.
 
 **d. C2's edge-guard death is a symptom of the same defect, not a separate bug.**
@@ -499,7 +544,7 @@ and nothing is near the edge at `t = 0`. **It is the box.** `core/solver.py:216-
 states that grid boundary conditions do not affect rigid particles, and a plane is
 registered as a rigid contact surface only when `restitution != 0.0`
 (`mpm_solver_warp.py:1915`). Every plane in this harness is added with
-`restitution=0.0` (`BoxTank:184-189`), a deliberate choice recorded in the script's
+`restitution=0.0` (`[R] BoxTank:184-189`), a deliberate choice recorded in the script's
 own `PROVENANCE` under `deviation_from_canonical`, so the floor is invisible to the
 body. The body therefore sinks, per the defect above, passes through the floor
 plane, and trips the guard. Commit `20dd999` ("Deepen C2 water to 18 cells; the box
@@ -523,7 +568,8 @@ Missing before it can close:
    it FIRST. It cannot run until item (d) is resolved. This is the single largest
    gap and no amount of C1 analysis substitutes for it.
 2. **A clean C1 at g96.** The published g96 free-rigid number was measured on
-   unsettled water (`settle_gate_met` false, `c/vmax` 7.55). It must be re-run with
+   unsettled water (`settle_gate_met` false, `c/vmax` 6.001 at settle end against a
+   target of 20). It must be re-run with
    a settle cap high enough to meet the gate before any g64-to-g96 statement is
    made. Until then there is exactly ONE trustworthy free-rigid data point, g64.
 3. **C3 needs the redefinition in item (c)** before it can produce a verdict.
