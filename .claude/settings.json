@@ -1,6 +1,12 @@
 {
   "disableClaudeAiConnectors": true,
   "fileCheckpointingEnabled": true,
+  "statusLine": {
+    "type": "command",
+    "command": ".claude/statusline.sh",
+    "refreshInterval": 60,
+    "padding": 0
+  },
   "permissions": {
     "allow": [
       "Bash(scripts/tacc.sh:*)",
@@ -89,6 +95,16 @@
           }
         ],
         "matcher": "Edit|Write"
+      }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/hooks/session_end_idle_check.sh"
+          }
+        ]
       }
     ],
     "SessionStart": [
