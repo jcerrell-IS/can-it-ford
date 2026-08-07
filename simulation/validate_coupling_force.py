@@ -190,8 +190,32 @@ class BoxTank:
         s.add_domain_walls()
 
         self.solver = s
+        self.leaked = 0
         self.spawn_com = s.rigid_state()["com"].copy()
         self.realized_rho = self.mass / (self.n_side ** 3 * h ** 3)
+
+    def project_water(self):
+        if self.n_water == 0:
+            return 0
+        x = self.solver.x()
+        w = x[: self.n_water]
+        eps = 0.25 * self.dx
+        lo = np.array([self.wall, self.wall, self.floor], dtype=np.float32) - eps
+        hi = np.array([LIM - self.wall, LIM - self.wall, np.inf], dtype=np.float32) + eps
+        out_lo = w < lo
+        out_hi = w > hi
+        if not (out_lo.any() or out_hi.any()):
+            return 0
+        n = int(np.unique(np.nonzero(out_lo | out_hi)[0]).size)
+        v = self.solver.v()
+        vw = v[: self.n_water]
+        np.clip(w, lo, hi, out=w)
+        vw[out_lo] = np.maximum(vw[out_lo], 0.0)
+        vw[out_hi] = np.minimum(vw[out_hi], 0.0)
+        self.solver.set_x(x)
+        self.solver.set_v(v)
+        self.leaked += n
+        return n
 
     def pin(self, com):
         sim = self.solver._sim
@@ -278,6 +302,7 @@ class BoxTank:
             "sound_speed_over_vmax": (self.sound_speed / vmax) if vmax > 1e-12 else float("inf"),
             "advective_cfl": vmax * self.dt / self.dx,
             "inverted_count": int(self.solver.inverted_count()),
+            "leaked_cumulative": int(self.leaked),
         }
         if self.n_water:
             w = x[: self.n_water]
@@ -381,6 +406,7 @@ def run_c2(n_grid, rho_box=600.0, depth_cells=10, offset_cells=0.0,
     drafts, surfs = [], []
     means, converged, frames_run = [], False, 0
     for f in range(max_frames):
+        tank.project_water()
         tank.solver.step(tank.dt, tank.substeps)
         drafts.append(tank.draft()[0])
         frames_run = f + 1
@@ -432,6 +458,7 @@ def settle_pinned(tank, settle_frames, ratio_target=20.0):
     min_settle = max(20, int(math.ceil(10.0 * transit * FPS)))
     settled = False
     for i in range(settle_frames):
+        tank.project_water()
         tank.solver.step(tank.dt, tank.substeps)
         tank.pin(com_pin)
         vm = float(np.abs(tank.solver.v()[: tank.n_water]).max())
@@ -467,6 +494,7 @@ def run_c1(n_grid, rho_box=600.0, depth_cells=18.0, box_bottom_cells=8.0,
 
     ts, vs = [0.0], [float(tank.solver.rigid_state()["v"][2])]
     for i in range(measure_substeps):
+        tank.project_water()
         tank.solver.step(tank.dt, 1)
         ts.append((i + 1) * tank.dt)
         vs.append(float(tank.solver.rigid_state()["v"][2]))
