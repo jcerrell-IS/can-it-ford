@@ -12,7 +12,7 @@ esac
 
 if [ "$TOOL" = "Edit" ] || [ "$TOOL" = "Write" ]; then
   case "$FILE" in
-    */CLAUDE.md|*/SESSION_STATE.md|*/README.md|CLAUDE.md|SESSION_STATE.md|README.md)
+    */CLAUDE.md|*/SESSION_STATE.md|*/README.md|CLAUDE.md|SESSION_STATE.md|README.md|*/.claude/settings.json|.claude/settings.json)
       echo '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"ask","permissionDecisionReason":"Shared coordination file, multiple panes read this. Confirm before editing."}}'
       ;;
     */paper/*|paper/*)
