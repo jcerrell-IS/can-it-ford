@@ -1,6 +1,7 @@
 {
   "permissions": {
     "allow": [
+      "Bash(scripts/tacc.sh:*)",
       "Bash(scripts/pane_check.sh*)",
       "Bash(tmux ls*)",
       "Bash(tmux capture-pane*)",
