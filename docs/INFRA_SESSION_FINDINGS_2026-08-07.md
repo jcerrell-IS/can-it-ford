@@ -89,8 +89,36 @@ stats. All three exist.
 
 - `ckpts/ckpt_29999_rank{0,1,2}.pt`, all dated **2026-07-20 19:57**, 88 to 94 MB
   each. Three ranks means a completed multi-GPU run to the full 30,000 steps.
-- `stats/val_step29999.json`: **PSNR 22.7356, SSIM 0.8249, LPIPS 0.3112,
-  399,491 Gaussians.**
+- `stats/val_step29999.json`: **PSNR 22.7356, SSIM 0.8249, LPIPS 0.3112**, and
+  `num_GS: 399491`. **That count is rank 0's shard, not the model.** See below.
+
+**CORRECTION, verified 2026-08-07 after this item was first written.** The three
+rank checkpoints are SHARDS holding different numbers of Gaussians, not three
+copies of one model. Read without needing torch, by listing the zip members of
+each `.pt` and dividing the `opacities` tensor (shape `(N,)`, float32) by 4:
+
+| checkpoint | opacities bytes | N |
+|---|---:|---:|
+| `ckpt_29999_rank0.pt` | 1,597,964 | 399,491 |
+| `ckpt_29999_rank1.pt` | 1,498,708 | 374,677 |
+| `ckpt_29999_rank2.pt` | 1,494,104 | 373,526 |
+| **total** | | **1,147,694** |
+
+`num_GS` in `val_step29999.json` equals rank 0's shard **exactly**, so the logged
+count is rank-local. The reconstruction has about **1.15M Gaussians, not 399k**.
+Anywhere the 399,491 figure has been quoted as the model size, including earlier
+in this document, it is wrong by roughly 2.9x.
+
+INFERRED, not verified: PSNR/SSIM/LPIPS are rendered-image metrics and gsplat's
+distributed rasteriser gathers across ranks, so those three are probably global
+and unaffected. That was not confirmed here. Do not quote them as
+per-rank or as global without checking which.
+
+Tensor layout of each shard, all float32, decoded from the archive member sizes:
+`means (N,3)`, `sh0 (N,1,3)`, `scales (N,3)` (three members of N*12 bytes),
+`opacities (N,)`, `quats (N,4)`, `shN (N,15,3)` for `sh_degree: 3`.
+A PLY export must concatenate all three ranks; using rank 0 alone silently drops
+65% of the scene.
 - Earlier checkpoints at 6999 (19:35) and 2999 (2026-07-17), so the progression
   is visible and consistent.
 - `videos/traj_29999.mp4` (16.2 MB), plus `renders/` and a `tb/` tensorboard dir.

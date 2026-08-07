@@ -116,12 +116,20 @@ When you have a single session open, pull these into the register from
   import fails instantly with `ModuleNotFoundError`, so the wait rule is harmful.
 - **K4 resolves to YES, not open.** drainA training completed **2026-07-20
   19:57**, 30,000 steps across 3 ranks: `ckpt_29999_rank{0,1,2}.pt`, and
-  `stats/val_step29999.json` giving **PSNR 22.7356, SSIM 0.8249, LPIPS 0.3112,
-  399,491 Gaussians**, plus `videos/traj_29999.mp4`.
+  `stats/val_step29999.json` giving **PSNR 22.7356, SSIM 0.8249, LPIPS 0.3112**,
+  plus `videos/traj_29999.mp4`.
+- **The model is ~1.15M Gaussians, not 399k.** The `num_GS: 399491` in the stats
+  file is rank 0's shard. The three ranks hold 399,491 / 374,677 / 373,526, so
+  they are shards rather than copies. Verified by listing the zip members of each
+  `.pt` and dividing the `opacities` tensor by 4, no torch required.
 - **The trap under K4:** `cfg.yml` has `save_ply: false`, so no PLY was written at
   30k. The only PLY on disk is `point_cloud_2999.ply` from the 2026-07-17
   3,000-step run. Anything downstream reading a drainA PLY is reading a 3k model.
-  Re-export from `ckpt_29999_rank0.pt`; do not retrain.
+  Re-export by concatenating **all three ranks**; rank 0 alone drops 65% of the
+  scene. Do not retrain.
+- **Backed up 2026-08-07.** `$SCRATCH` purges at 10 days and the checkpoints had
+  atime 2026-08-04. Results and the COLMAP dataset are now copied to
+  `$WORK/gsplat_results_backup/` on LS6 (1.4G). Scratch was not touched.
 
 ## 6. Optional: rotate the Hugging Face token
 
