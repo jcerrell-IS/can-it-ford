@@ -96,7 +96,6 @@ the poster, and the DesignSafe submission.
 | `figures/yaris_flood_standing.gif`, `kumar_july9_update/simulation_d1p0_v3p0.mp4` | Byte-level coincidence in binary media. No printable context. |
 | `docs/**` matches `diagnos` | Engineering usage ("diagnostic"), not clinical. Counts are identical before and after the `a678013` cleanup, which is what shows it was never the target. |
 | `docs/DIRECTORY_PROVENANCE_AUDIT_2026-07-25.md` matches `ghp_`, `sk-` | Prose describing the patterns an audit searches for, plus one already-redacted `sk-ant-oat01-...` reference. No live token. |
-| `docs/CITATION_AUDIT_2026-07-30.md` matches `olp_` | Redacted prose, `olp_...@git.overleaf.com`, zero trailing characters. The real Overleaf token exists only in `.git/config`, which is never committed. Confirmed absent from every tracked file and from all of `origin/main`. |
 
 ---
 

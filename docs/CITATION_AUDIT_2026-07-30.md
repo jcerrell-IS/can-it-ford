@@ -627,11 +627,3 @@ specific curves were not read.
 | 70-75 | LIT_QUEUE items 1 to 6 | NEEDS_LITERATURE |
 | 76-77 | LIT_QUEUE items 7 to 8 | UNVERIFIABLE |
 
----
-
-## SEPARATE, NOT PART OF THE PAPER AUDIT
-
-`git remote -v` prints the Overleaf remote with an embedded write token
-(`olp_...@git.overleaf.com`). It is in `.git/config`, which is not committed, so it is not in
-the repo history. Worth rotating in Overleaf account settings anyway, since it grants write
-access to the paper and it surfaces in the output of a routine command.
