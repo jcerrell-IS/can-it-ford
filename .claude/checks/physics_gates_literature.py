@@ -71,3 +71,10 @@ def gate_manifest_completeness(summary_json, required_fields=("vehicle_mass", "m
     if missing:
         return False, "summary.json missing %s, run cannot be traced back to code plus data plus environment" % missing
     return True, "manifest complete, run is fully traceable"
+
+def gate_output_sensitivity(baseline_value, perturbed_value, param_name, tol=1e-9):
+    if abs(perturbed_value - baseline_value) < tol:
+        return False, "%s changed but output did not move at all, output may not actually depend on this input, this is the comprehension-generation gap pattern per Song et al 2026 doi:10.48550/arXiv.2605.09360" % param_name
+    return True, "%s changed and output moved by %.6g, output is sensitive to this input" % (param_name, perturbed_value - baseline_value)
+
+LITERATURE_GATES["output_sensitivity"] = "Song et al 2026 doi:10.48550/arXiv.2605.09360, PDE-grounded intent verification"

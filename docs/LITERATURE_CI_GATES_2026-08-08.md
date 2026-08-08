@@ -175,3 +175,109 @@ the nearest classes there are `midsize_suv` at 1990.0 and `light_pickup` at
 2300.0. That tuple is the set actually run, not a cited vehicle class set. The
 message text is wrong and the gate should not be quoted as evidence that the
 mass sweep spans cited classes.
+
+## Coupling architecture, added 2026-08-08
+
+The 17 canonical runs use the material-8 free-rigid path (mass-weighted grid
+velocity average, no force accumulator). Hu et al 2018, ACM TOG,
+doi:10.1145/3197517.3201293 (Compatible Particle-In-Cell, colored distance
+field, two-way rigid coupling) and Pazouki, Jayakumar and Negrut 2016
+(point-cloud force coupling) describe real two-way MPM/SPH rigid coupling as
+requiring accumulated contact force, not velocity averaging. The SDF collider
+path (job 894731, **7.3 to 7.7 percent** vs analytic buoyancy) matches this
+architecture and is the validated path. This does not change any of the 17
+runs' verdicts. It reclassifies the coupling defect from an unexplained
+numerical patch to a documented architecture choice with a literature-backed
+alternative for future work.
+
+**CORRECTED ON ENTRY, 2026-08-08.** The text that commissioned this section
+gave the SDF error range as "1.6 to 7.7 percent". That is wrong and was not
+written in. The on-disk numbers from `c1sdf_894731.out`, transcribed at
+`docs/CONTEXT_CENSUS_2026-08-07.md:1043-1053` against
+`F_buoy_analytic = 31298.444315169316`, are `err_steady_vs_analytic_pct` of
+-7.6682435536478435 (`c1sdf_sdf_g64`) and +7.280446501465449
+(`c1sdf_sdf_g96`), so 7.28 to 7.67 percent by magnitude.
+`docs/REGIME_LADDER_DISPATCH_2026-08-07.md:22-23` independently states
+"within 7.3-7.7% of analytic buoyancy". The stray "1.6" appears to be a
+conflation with the **free-rigid** late-window fit of "+1.5% and +0.7-0.8% of
+analytic buoyant acceleration at g64/g96"
+(`REGIME_LADDER_DISPATCH_2026-08-07.md:20-21`), which is a different
+measurement on the path being criticised, not the validated one. Do not merge
+the two ranges.
+
+The material-8 identity is verified live against the pinned solver, not taken
+on the citation's word: `kernels/mpm_utils.py:1366` is commented
+"Rigid body kernels (material == 8)", `:1090` reads
+`elif mat == 7 or mat == 8:  # stationary / rigid, no deformation`, and
+`kernels/mpm_solver_warp.py:853` selects the body's particles with
+`np.where((mat_np == 8) & (rid_np == b))`.
+
+Carry the caveat with the claim: `REGIME_LADDER_DISPATCH_2026-08-07.md:28-33`
+records that the SDF result does **not** clear the 17 published verdicts, for
+three reasons, different restitution (the 17 runs use 0.05 on floor and walls,
+C1 used 0.0 everywhere), 2-grid-cell depth resolution, and self-consistency
+not being validation.
+
+## Watertightness, added 2026-08-08
+
+Kramer, Terheiden and Wieprecht 2016, doi:10.1016/J.IJDRR.2016.04.003, and
+Azhar, Bui and Pauwels 2026, doi:10.1111/jfr3.70181, independently confirm
+watertightness assumptions materially shift flotation depth. Cite alongside
+the solidify_watertight fix, not as a standalone caveat.
+
+**Overlap and tension, flagged on entry.** Neither citation is new to the
+project. `docs/CANONICAL_CORRECTIONS_REGISTER_2026-08-06.md:228` already
+records the Kramer 2016 prototype finding that model-scale watertight vehicles
+float too shallow, and `CLAUDE.md:367` already carries Azhar 2026 for a
+different claim (unsteady flow raising drag 40 to 50 percent), without the DOI.
+What is new here is the two DOIs and the pairing.
+
+More importantly, the instruction to cite these "alongside the solidify_watertight
+fix" runs into register **E2** at line 183: FloodScene `vehicle.py:162` samples
+the mesh down to 60,000 surface points before solidifying, so the source mesh's
+watertightness **does not survive that step**. The measured fill_ratio result
+stands, but watertightness does not propagate through the pipeline. Pairing a
+watertightness citation with the solidify fix therefore risks implying a
+property the pipeline does not preserve. Resolve E2 before this pairing goes
+into the paper.
+
+## Class-specific geometry, added 2026-08-08
+
+Smith, Modra and Felder 2019; Martinez-Gomariz et al 2017; Arrighi et al 2015
+jointly establish buoyancy, drag/lift lever arms, and sliding/float/roll
+thresholds depend on displaced volume, underbody shape, wheelbase, track and
+CoM, not mass alone. Allen et al 2003 SAE 2003-01-0966 gives a citable
+regression method for provisional CoM/inertia by class, explicitly flagged
+in that paper as provisional, not validation.
+
+**Partial overlap, flagged on entry.** Smith, Modra and Felder and Arrighi et
+al 2015 are both already in the register, at lines 226, 189 and 270, in
+adjacent contexts (how buoyancy was historically inferred from displaced
+volume, the three real Yaris masses, and buoyancy reducing the normal force in
+`F_F = mu(W - B - L)`). Martinez-Gomariz et al 2017 and Allen et al 2003 are
+new, as is the framing that the thresholds depend on geometry rather than mass
+alone. That framing is the load-bearing part; the two already-cited references
+are not independent support for it.
+
+This limitation bites directly on `gate_mass_declared`, which keys entirely on
+mass. See the wording caveat above: two of the three masses in the sweep are
+unsourced, and the geometry that this section says actually governs the
+thresholds is not gated at all.
+
+## Output sensitivity, added 2026-08-08
+
+`gate_output_sensitivity` (Song et al 2026, doi:10.48550/arXiv.2605.09360,
+PDE-grounded intent verification) closes the case where a parameter is changed,
+the run completes, and the output is byte-identical, meaning the output never
+depended on that input in the first place.
+
+This gate is added but **not yet called from `params_check.py`**, because it
+needs a baseline and a perturbed value from two runs and `params_check.py` is a
+static check over source and stored manifests. It is the natural harness for
+the open item at `CLAUDE.md` item 15: set `failure_modes.py:14` from 9.80665 to
+9.81, re-run `analysis/classify_failure_modes.py`, and confirm the verdicts are
+byte-identical. Note the polarity carefully before using it there. Item 15 wants
+the verdicts to be unchanged, which this gate reports as a FAILURE by design,
+since an unchanged output is exactly the condition it flags. That is the correct
+reading for a sensitivity probe and the wrong reading for a regression check.
+Do not wire it to item 15 without inverting the interpretation in the caller.

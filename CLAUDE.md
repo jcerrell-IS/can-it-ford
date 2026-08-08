@@ -388,3 +388,78 @@ Claude Desktop / its helper process. Fix: System Settings > Privacy &
 Security > Screen Recording > enable Claude, then relaunch the app.
 `Snapshot` without vision (accessibility tree: open apps, windows,
 interactive elements) works without this permission and needed no fix.
+
+## AUGUST 8 2026 LITERATURE ADDENDUM
+
+Added 2026-08-08 from two further Undermind reviews. Filed as a new section
+because the dispatch that commissioned these asked for addenda under "Part
+2.4" and "Part 4.3", and **neither exists**: this file has no numbered Part
+headers at all, verified by a full live read on 2026-08-08. Nothing existing
+was rewritten or deleted. Citation bank and full working:
+docs/LITERATURE_CI_GATES_2026-08-08.md.
+
+These are external-source claims, not repo file reads, except where an item
+says otherwise. Verify each citation against its primary source before it
+enters the paper. None has been checked against a primary record yet.
+
+A-1. COUPLING ARCHITECTURE REFRAME. Not previously covered anywhere: a live
+     search of this file and the register on 2026-08-08 returned zero hits
+     for CPIC, material-8, Hu 2018, Pazouki, or job 894731. The 17 canonical
+     runs use the material-8 free-rigid path, a mass-weighted grid velocity
+     average with no force accumulator. Material 8 IS the rigid material,
+     verified live against the pinned solver, not on the citation's word:
+     kernels/mpm_utils.py:1366 is commented "Rigid body kernels
+     (material == 8)", :1090 reads "elif mat == 7 or mat == 8: # stationary
+     / rigid, no deformation", and kernels/mpm_solver_warp.py:853 selects
+     the body's particles with np.where((mat_np == 8) & (rid_np == b)).
+     Hu et al 2018, ACM TOG, doi:10.1145/3197517.3201293 (Compatible
+     Particle-In-Cell) and Pazouki, Jayakumar and Negrut 2016 describe real
+     two-way MPM/SPH rigid coupling as requiring accumulated contact force,
+     not velocity averaging. The SDF collider path matches that architecture
+     and is the validated one. This reclassifies the coupling defect from an
+     unexplained numerical patch to a documented architecture choice with a
+     literature-backed alternative. It does NOT change any of the 17 runs'
+     verdicts, and per REGIME_LADDER_DISPATCH_2026-08-07.md:28-33 it does
+     not clear them either, for three reasons: the 17 runs use restitution
+     0.05 on floor and walls where C1 used 0.0 everywhere, 2-grid-cell depth
+     resolution, and self-consistency is not validation.
+
+A-2. THE SDF ERROR RANGE IS 7.3 TO 7.7 PERCENT, NOT 1.6 TO 7.7. The
+     commissioning text gave "1.6 to 7.7 percent" and that is wrong. On-disk
+     numbers from c1sdf_894731.out, transcribed at
+     docs/CONTEXT_CENSUS_2026-08-07.md:1043-1053 against
+     F_buoy_analytic = 31298.444315169316, are err_steady_vs_analytic_pct
+     of -7.6682435536478435 (c1sdf_sdf_g64) and +7.280446501465449
+     (c1sdf_sdf_g96). docs/REGIME_LADDER_DISPATCH_2026-08-07.md:22-23
+     independently states "within 7.3-7.7%". The stray 1.6 is a conflation
+     with the FREE-RIGID late-window fit, "+1.5% and +0.7-0.8% of analytic
+     buoyant acceleration at g64/g96", which measures the path being
+     criticised, not the validated one. Never merge the two ranges.
+
+A-3. CLASS-SPECIFIC GEOMETRY, NOT MASS ALONE. Smith, Modra and Felder 2019;
+     Martinez-Gomariz et al 2017; Arrighi et al 2015 jointly establish that
+     buoyancy, drag and lift lever arms, and sliding/float/roll thresholds
+     depend on displaced volume, underbody shape, wheelbase, track and CoM,
+     not mass alone. Allen et al 2003 SAE 2003-01-0966 gives a citable
+     regression method for provisional CoM and inertia by class, flagged in
+     that paper itself as provisional, NOT validation. Partial overlap:
+     Smith Modra Felder and Arrighi 2015 are already in the register at
+     lines 226, 189 and 270 in adjacent contexts, so they are not
+     independent support for the geometry framing. Martinez-Gomariz 2017 and
+     Allen 2003 are new. This compounds item 10 above: two of the three
+     masses in the sweep are unsourced, and the geometry that actually
+     governs the thresholds is not gated at all.
+
+A-4. WATERTIGHTNESS, WITH A STANDING TENSION. Kramer, Terheiden and
+     Wieprecht 2016, doi:10.1016/J.IJDRR.2016.04.003, and Azhar, Bui and
+     Pauwels 2026, doi:10.1111/jfr3.70181, independently confirm
+     watertightness assumptions materially shift flotation depth. Neither is
+     new to the project: register line 228 already carries the Kramer 2016
+     prototype finding, and line 367 of this file already carries Azhar 2026
+     for a different claim (unsteady flow raising drag 40 to 50 percent).
+     The two DOIs and the pairing are what is new. Do NOT pair these with
+     the solidify_watertight fix until register E2 is resolved: E2 at line
+     183 records that FloodScene vehicle.py:162 samples the mesh down to
+     60,000 surface points before solidifying, so watertightness does not
+     propagate through the pipeline, and the pairing would imply a property
+     the pipeline does not preserve.
