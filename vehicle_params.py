@@ -33,9 +33,17 @@ UNITS (SI throughout, ready for Genesis/Warp which are metric):
                          y = width  (lateral,  pitch axis)   [EXCLUDES mirrors]
                          z = height (vertical, yaw axis)
   - cg_height_m        : measured CG height above ground, meters
-  - inertia_kg_m2      : dict of measured principal moments {Ixx, Iyy, Izz}
+  - inertia_kg_m2      : dict of principal moments {Ixx, Iyy, Izz}, kg*m^2
                          Ixx = roll (about x), Iyy = pitch (about y),
-                         Izz = yaw (about z), in kg*m^2
+                         Izz = yaw (about z).
+                         NOT MEASURED FOR EVERY CLASS. For VEHICLE_PARAMS
+                         ["compact_sedan"] it is a box fallback; read note 3
+                         below before using it.
+                         NB two taxonomies live in this file and they are NOT
+                         interchangeable: VEHICLE_PARAMS keys are
+                         compact_sedan / midsize_suv / light_pickup, whereas
+                         AR_R_STABILITY_LIMITS keys are the AR&R classes
+                         small_passenger / large_passenger / large_4wd.
   - ssf                : NHTSA Static Stability Factor (unitless), for reference
 
 IMPORTANT PHYSICS NOTES for lateral-flow / overturning behavior (L2):
@@ -43,9 +51,43 @@ IMPORTANT PHYSICS NOTES for lateral-flow / overturning behavior (L2):
      bounding-box center — use `cg_height_m`. A too-high CG overstates the
      overturning moment arm under lateral flood drag.
   2. The uniform-density box tensor (see box_inertia()) OVERESTIMATES Iyy/Izz
-     because real vehicle mass hugs the floor and center. Prefer the measured
-     `inertia_kg_m2` when the target model matches one of these classes; fall
-     back to box_inertia() only for models with no NHTSA match.
+     because real vehicle mass hugs the floor and center. Prefer a genuinely
+     MEASURED `inertia_kg_m2` when the target model matches one of these
+     classes; fall back to box_inertia() only for models with no NHTSA match.
+     Read note 3 first: VEHICLE_PARAMS["compact_sedan"] has NO measured tensor.
+
+  3. DO NOT WIRE `inertia_kg_m2` INTO THE MPM SOLVER FOR compact_sedan.
+     Verified 2026-08-08 against live source and measured rollout data; see
+     docs/REALISM_UPGRADE_ASSESSMENT_2026-08-08.md section 1 for the full working.
+
+     (a) It is not measured. {463.0, 1893.0, 1960.0} reproduces EXACTLY from
+         box_inertia(1100, 4.30, 1.70, 1.47), i.e. a solid rectangular box. No
+         measured Yaris tensor exists anywhere: the NHTSA Light Vehicle Inertial
+         Parameter Database (SAE 1999-01-1336) ends Nov 1998 and has no Yaris.
+
+     (b) The solver already computes a strictly better one. warpmpm derives the
+         tensor from the actual hull particle cloud at
+         kernels/mpm_solver_warp.py:859-871. Measured about the true centroid
+         from the 8905 rigid particles of g64_m1100:
+             hull cloud  Ixx 1501.5   Iyy  395.0   Izz 1685.4
+             box (this)  Ixx 1893.0   Iyy  463.0   Izz 1959.8   <- axis-corrected
+         The box overstates every principal moment by +16.3% to +26.1%. The hull
+         fills only 33.2% of its own bounding box, so a solid box MUST overstate
+         the mass spread. Wiring this is a regression on all three axes.
+
+     (c) THE AXES ARE TRANSPOSED RELATIVE TO THE SCENE. This block documents
+         bbox_m as (L,W,H) -> (x,y,z), but the gated scene puts the hull's LONG
+         AXIS ON Y. Measured particle extents at frame 0 of g64_m1100:
+             x 1.7078 m    y 4.2014 m    z 1.4853 m
+         So a naive write of Ixx=463 / Iyy=1893 lands roll inertia on the pitch
+         axis: Ixx -69.2% and Iyy +379.2% against the hull truth above. A 379%
+         pitch-axis error, introduced by a change intended to improve realism.
+
+     What IS usable here: cg_height_m as a COMPARISON, not a value to write. The
+     cloud CG sits 0.6312 m above the floor, already below bbox mid-height
+     0.7427 m, and 23.8% above the 0.51 m estimate. A too-high CG biases toward
+     TOPPLE, and the 17 gated runs report zero topples, so the no-topple result
+     is conservative. That is reportable at zero cost and requires no code change.
 
 Each class stores a representative point estimate plus a (min, max) range.
 Ranges span trims/model-years; point estimates are a sensible mid value.
