@@ -94,6 +94,29 @@ def find_density_literals():
 
 
 def check_bbox_agreement():
+    """DELIBERATELY NOT CALLED FROM main(). Do not re-enable without reading this.
+
+    This compares gates.py EXT_REF against vehicle_params.py bbox_m at a 2 percent
+    tolerance. It WILL fail if wired in, and the failure is not a defect:
+
+        EXT_REF  = [1.746, 4.283, 1.518]   gates.py:12
+        bbox_m   = (4.30,  1.70,  1.47)    vehicle_params.py
+
+    Recomputed 2026-08-08: height differs 3.27 percent, width 2.71 percent, length
+    0.40 percent. But these measure DIFFERENT OBJECTS. EXT_REF is the watertight
+    PLY hull, confirmed because gates.py HULL = 3.542739 matches
+    yaris_coarse_v1l_watertight.ply's volume to all seven digits. bbox_m is sourced
+    to SRC["ncac_yaris_fe"], the NCAC FE model / Toyota published spec.
+
+    So a mesh is being compared against a manufacturer datasheet, and gate G-1's
+    2 percent tolerance is MIS-SPECIFIED rather than the data being wrong. Calling
+    this from main() would block every commit in the repo for a non-defect. Decide
+    which object G-1 is supposed to gate before re-enabling it.
+
+    (CLAUDE.md item 14 records the percentages correctly but frames them as a
+    defect; the spec-versus-mesh explanation is in
+    docs/C1_ROOT_CAUSE_2026-08-07.md section 7 and the E4 discussion.)
+    """
     ext_ref_hits = find_all_matches("gates.py", EXT_REF_PATTERN)
     bbox_hits = find_all_matches("vehicle_params.py", BBOX_PATTERN)
     if not ext_ref_hits:
@@ -123,6 +146,23 @@ def check_bbox_agreement():
 
 
 def check_inertia_wired():
+    """Report that only mass reaches the solver, and BLOCK a naive re-wiring.
+
+    The absence of an inertia/CG wire is currently CORRECT for compact_sedan, not
+    a gap to be closed. Verified 2026-08-08, see
+    docs/REALISM_UPGRADE_ASSESSMENT_2026-08-08.md section 1 and the note in
+    vehicle_params.py:
+      - VEHICLE_PARAMS["compact_sedan"]["inertia_kg_m2"] reproduces exactly from
+        box_inertia(1100, 4.30, 1.70, 1.47). It is a solid box, not a measurement.
+        No measured Yaris tensor exists (SAE 1999-01-1336 ends Nov 1998).
+      - warpmpm already derives a better tensor from the hull particle cloud
+        (mpm_solver_warp.py:859-871): Ixx 1501.5, Iyy 395.0, Izz 1685.4 against
+        the box's axis-corrected 1893.0 / 463.0 / 1959.8, i.e. the box overstates
+        by +16.3% to +26.1%.
+      - vehicle_params documents (L,W,H)->(x,y,z) but the gated scene puts the
+        hull's long axis on Y (extents 1.7078 / 4.2014 / 1.4853), so a naive
+        write gives Ixx -69.2% and Iyy +379.2%.
+    """
     sim_driver = ROOT / "renders" / "yaris_render_s1" / "sim_standing.py"
     if not sim_driver.exists():
         warnings.append("inertia-wired check skipped, sim_standing.py not found at expected path")
@@ -130,7 +170,30 @@ def check_inertia_wired():
     text = sim_driver.read_text(errors="ignore")
     for attr in ("inertia", "cg_height", "ssf", "static_stability_factor"):
         if attr not in text:
-            warnings.append(f"sim_standing.py never references '{attr}', only mass reaches the solver, known standing gap")
+            warnings.append(
+                f"sim_standing.py never references '{attr}'; only mass reaches the solver. "
+                "For compact_sedan this is CORRECT, not a gap: the tabulated tensor is a box "
+                "fallback and its axes are transposed vs the scene. Do not 'fix' it."
+            )
+    # Blocking: catch an actual naive re-wire, in any sim driver.
+    NAIVE_WIRE = re.compile(
+        r"(rigid_inv_inertia_body\s*=|set_rigid_body_inertia|inertia_kg_m2\s*\[|"
+        r"\[\s*[\"']inertia_kg_m2[\"']\s*\])"
+    )
+    AXIS_ACK = "AXIS-CHECKED"
+    for rel in (SIM_DRIVER_REL, "renders/yaris_render_s3_enhanced/sim_enhanced.py"):
+        p = ROOT / rel
+        if not p.exists():
+            continue
+        body = p.read_text(errors="ignore")
+        if NAIVE_WIRE.search(body) and AXIS_ACK not in body:
+            failures.append(
+                f"{rel} appears to wire an inertia tensor into the solver without an "
+                f"'{AXIS_ACK}' acknowledgement. vehicle_params' inertia_kg_m2 is a BOX "
+                "fallback whose axes are transposed vs the scene (long axis is Y, not X); "
+                "a naive wire gives Ixx -69.2% and Iyy +379.2%. See "
+                "docs/REALISM_UPGRADE_ASSESSMENT_2026-08-08.md section 1."
+            )
 
 
 def check_figure_scripts_reimplement_l1():
