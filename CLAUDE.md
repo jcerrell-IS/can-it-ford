@@ -489,3 +489,50 @@ A-4. WATERTIGHTNESS, WITH A STANDING TENSION. Kramer, Terheiden and
      60,000 surface points before solidifying, so watertightness does not
      propagate through the pipeline, and the pairing would imply a property
      the pipeline does not preserve.
+
+## AUGUST 8 2026 CLOSED ITEMS AND GATE INVENTORY
+
+Every SHA below was verified live with git log / git show on 2026-08-08, not
+carried from a summary. PRJ-3702 is deliberately absent: zero hits in docs/
+and in this file, confirmed twice, so there was no open item to remove.
+
+CLOSED
+- Rigid-mass citation :851-853 -> :856, commit 35b7ed0. The mass sum is
+  kernels/mpm_solver_warp.py:856; 851 and 852 are the np.zeros allocations
+  and 853 is the loop header, so the old range cited allocation plus a loop
+  header rather than the sum itself. Three sites fixed. Stamped artifacts
+  under data/coupling_validation/ still carry the old range by design.
+- Failure-mode classifier has run on all 17 canonical runs, commit fae3388.
+  841d666 then tracked data/failure_modes_by_run.json and
+  data/all_runs_inventory.csv, both silently gitignored until then.
+- four_rung_ladder.md and _GRIDAWARE.md no longer cite
+  failure_modes_result.json as independent confirmation, commit 841d666.
+  Verified live: both now read the claim as a measurement, not a confirmation.
+- simulation/validate_coupling_force.py is committed. TWO SHAs, do not
+  conflate: 541d832 first ADDED the file, 057b3e9 landed the C1-SDF/C3
+  harness content including the working C3 nan-guard.
+- Warp MPM figure label, commit b844118. Commit 7390168 makes the IDENTICAL
+  change on branch claude/verify-execute-code-changes-d89fd8 and is not an
+  ancestor of main, so cherry-picking it returns empty, which is success and
+  not a conflict. Do not re-attempt it.
+
+GATE INVENTORY, do not rebuild these from scratch
+.claude/checks/params_check.py already runs four literature-cited gate
+categories, landed by aa754dc (NOT 720d1e2, which is a later inertia-re-wire
+block): lit:geometry_bbox, lit:sound_speed_cfl, lit:resolution_convergence_gci
+and lit:manifest_provenance. TRAP: only three exist as literal strings.
+lit:resolution_convergence_gci is assembled at runtime by
+params_check.py:246 from the gate= argument at :404, so grep -F for it
+returns nothing and a naive audit concludes the gate is missing. It is not.
+Run the script and read its output instead of grepping for the tag.
+
+STILL OPEN, not closed
+- The Overleaf token is off local disk but NOT revoked. ~/can-it-ford-paper
+  was deleted 2026-08-08 after confirming local main and overleaf/main were
+  both 92ce4de, nothing ahead of the remote, no stashes, so Overleaf retained
+  all 5 commits. Verified the same day: no .git/config under ~ contains an
+  olp_ string, and this repo's own overleaf remote URL carries no credential.
+  Two consequences: a push to overleaf now PROMPTS for credentials, so a
+  fresh Overleaf Git authentication token is needed before the next push; and
+  the old token stays valid server-side until rotated in Overleaf account
+  settings.
