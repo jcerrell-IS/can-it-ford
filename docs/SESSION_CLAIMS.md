@@ -151,3 +151,182 @@ WHAT THIS SESSION FOUND, for whoever reads this next:
    GITIGNORED") appears at least partially resolved: this session read the
    file via a direct path, not via a worktree copy, and appended successfully.
    Did not independently re-verify the worktree-visibility claim from SESSION 0.
+
+
+## CODE SESSION: execute the regime-ladder dispatch, rungs (b)(c)(d) + Fix A + Fix B
+
+started: 2026-08-07T20:35:00+0100   worktree: main (NOT a worktree)   surface: Claude Code
+CLAIMS:
+  - simulation/validate_coupling_force_ladder.py        EXCLUSIVE (new file, created it)
+  - docs/REGIME_LADDER_RESULTS_2026-08-07.md            EXCLUSIVE (new file)
+  - scripts/ladder.sbatch                               EXCLUSIVE (new file)
+READS-ONLY, will not edit any of these:
+  - simulation/validate_coupling_force.py   (held by another session, M in the tree)
+  - .claude/checks/params_check.py          (held by another session, M and BROKEN)
+  - docs/C1_ROOT_CAUSE_2026-08-07.md, docs/REGIME_LADDER_DISPATCH_2026-08-07.md,
+    docs/CANONICAL_CORRECTIONS_REGISTER_2026-08-06.md, docs/SESSION_CLAIMS.md (append only),
+    renders/yaris_render_s1/sim_standing.py, data/all_runs_inventory.csv,
+    third_party/mpm-engine-544c93dd-solver-core/ (pinned, never edited)
+VISTA: RELEASED 2026-08-07T21:1x. Jobs 895648 (COMPLETED 00:01:44), 895652 (cancelled
+  while PENDING, 2 h walltime was not backfilling on a gh partition at 192 running /
+  60 pending; resubmitted at 20 min), 895653 (COMPLETED 00:01:38, exit 0:0, all 8 steps
+  rc=0). Batch only, no idev. Total cost about 0.056 node-hours. taccinfo read 669 SU
+  before and after. Queue empty of my jobs on exit.
+STATUS: DONE 2026-08-07T21:1x
+
+DELIVERED: docs/REGIME_LADDER_RESULTS_2026-08-07.md. Rungs (b)(c)(d) at g64 and g96,
+Fix A confirmed against the one stored C3 artifact at zero SU, Fix B confirmed live
+against the real Solver class on real particle arrays. Two arms (b_g64, c_g64) are
+DISCARDS: they hit the 1200-frame settle cap without meeting the gate. Do not quote them.
+Newly raised and not inherited from any prior doc: the g64 settle is non-deterministic at
+fixed configuration, three identical settle phases gave 1200/not-met, 1200/not-met and
+974/met, so a g64 arm's discard status is not reproducible. Detail in section 5.5 of the
+results doc.
+
+ORDERING NOTE, stated because the dispatch asks for this block BEFORE any write:
+simulation/validate_coupling_force_ladder.py was created a few minutes before this
+block was appended. Nothing else was written first, and no Vista job was submitted
+before this claim. The file is new and unclaimed by anyone else, so the race this
+protocol guards against could not have occurred, but the ordering was still wrong.
+
+FOUR THINGS FOUND DURING THE DISPATCH'S OWN SECTION 7 PRE-CHECKS, all live:
+
+1. THE SDF CODE IS COMMITTED. REGIME_LADDER_DISPATCH section 1 rule 6 and
+   C1_ROOT_CAUSE section 9 both say run_c1_sdf, cube_mesh, sdf_margin_cells and
+   build_box_sdf "exist in NO COMMIT". They now exist in 6593404 on branch
+   worktree-c1-triage, which is also pushed to origin/worktree-c1-triage. They are
+   NOT on main: `git merge-base --is-ancestor 6593404 main` is false. The working
+   tree carries a further +8/-2 on top of that branch. So the project's only
+   externally-validated force measurement is preserved in git and on the remote,
+   but it is invisible to anyone reading main. Reconciling it onto main is still
+   owned by another session and was not done here.
+
+2. THE COMMIT GATE IS BROKEN AND BLOCKS EVERY SESSION. .claude/hooks/
+   pretooluse_git_commit_gate.py:8 fires on any Bash command containing both "git"
+   and "commit", and runs .claude/checks/params_check.py, which currently raises
+   ValueError: could not convert string to float: 'length' at its line 85. That file
+   is M in the tree, i.e. mid-edit by another session. Until that session finishes,
+   no `git commit` can succeed here. Two incidental traps: the substring test also
+   fires on the word "uncommitted", and the hook resolves its own script path
+   relative to the tracked cwd, so a single `cd` into a subdirectory bricks every
+   subsequent Bash call in the session. Do not `cd` in this repo.
+
+3. C1_ROOT_CAUSE_2026-08-07.md is no longer dirty; it was landed in 371971b. The
+   dispatch lists it as one of three protected modified files. Two of the three are
+   still modified, that one is clean.
+
+4. VISTA HAS 669 SU AND AN IDLE INTERACTIVE JOB WAS BURNING THEM. Live taccinfo:
+   669 SU on BCS20003, expiring 2026-09-30. squeue showed 895536 idv98837 on gh-dev
+   RUNNING. sacct for 2026-08-06 onward shows six idev jobs today (894519, 894585,
+   894603, 894705, 895446, 895536), five of them TIMEOUT at 00:30:00, against
+   00:07:38 for job 894731, the c1sdf job that produced the only externally-validated
+   result in the project. Not this session's job and not killed by this session.
+
+INCIDENTAL DEFECT SPOTTED, NOT FIXED, NOT MINE: the in-flight edit to
+simulation/validate_coupling_force.py duplicates the com_frame print inside run_c2's
+frame loop, so every frame is emitted twice. Whoever owns that edit should collapse
+it, and anyone counting com_frame lines in a c2 log should dedupe first.
+
+
+## CONSOLIDATION SESSION: J.1 coupling validation, consolidate and extend
+
+started: 2026-08-07T21:51:36+0100   worktree: main (NOT a worktree)   surface: Claude Code, Mac
+CLAIMS:
+  - docs/SESSION_CLAIMS.md        APPEND-ONLY (this block, written with >> not read-modify-write)
+READS-ONLY, will not edit any of these:
+  - simulation/validate_coupling_force.py   (READ-ONLY per dispatch, already patched, M in tree,
+    held by another session; not re-edited here)
+  - docs/COUPLING_VALIDATION_J1_2026-08-07.md  (see NOTE below: dispatch expected to possibly
+    write this; it was already merged by another session at 21:47, so this session does NOT write it)
+  - docs/COUPLING_VALIDATION_J1_VISTA_2026-08-07.md  (Vista-only, does not exist on Mac)
+  - coupling_validation output JSONs, wherever they live (Task 3 is read-only by dispatch)
+VISTA: not claimed as a compute resource. No job submitted, no SU consumed. Read-only
+  commands only via scripts/tacc.sh if used at all.
+STATUS: IN PROGRESS
+
+NOTE ON CONCURRENCY, recorded at claim time because it is a live hazard, not a retrospective:
+  Four claude sessions alive at claim time (ps -ax, since pgrep undercounts per SESSION 0):
+  started 20:35:15, 20:45:13, 21:51:36, 21:51:39. Mine is one of the 21:51 pair, so ANOTHER
+  session began within 3 seconds of this one and may hold the same dispatch. The 20:45 session
+  is the likely owner of both the in-flight simulation/validate_coupling_force.py edit and the
+  21:47 write to docs/COUPLING_VALIDATION_J1_2026-08-07.md (that file and its .bak-premerge
+  sibling share mtime 21:47:58). This session therefore treats that doc as ANOTHER SESSION'S
+  LIVE WORK and does not write it.
+
+FIREWALL RESTATED: this is diagnostic work on the standalone harness
+simulation/validate_coupling_force.py. It is NOT the canonical pipeline. Nothing in this
+session reads, writes, or concludes into data/all_runs_inventory.csv,
+gates_results_all_runs.json, renders/yaris_render_s1/sim_standing.py, or any of the 17 gated
+runs. Nothing found here changes the published NO-FORD verdict, which came from raw
+displacement threshold crossing, not from the force accessor being validated here.
+
+STATUS: DONE 2026-08-07T22:35:54+0100   (supersedes the IN PROGRESS line in this block)
+
+TWO-LINE SUMMARY:
+  Tasks 1 and 2: the Mac-doc merge had ALREADY been done by another session at 21:47:58, so
+  Task 1 was DONE on arrival and this session wrote nothing to it; the Vista-only doc got a
+  prepended MERGED notice that also names two facts the merge did NOT carry over.
+  Task 3: F_buoy_from_a is emphatically NOT flat across the four densities, it runs +16020.6,
+  +2820.0, -6988.9, -42985.3 N and changes sign, so the fixed-absolute-error hypothesis is REFUTED.
+
+FINDINGS, in the order they were established, all live-verified:
+
+1. TASK 1 WAS ALREADY DONE, NOT BY THIS SESSION. docs/COUPLING_VALIDATION_J1_2026-08-07.md
+   contains both marker strings ("four matched density points" at line 272, "-90.99" at
+   line 284). It and its .bak-premerge sibling share mtime 21:47:58, four minutes before this
+   session started at 21:51:36. This session did not write that file: its md5 was
+   8612fe62a383c67c032e8b333f6cfdda when first read and byte-identical at exit.
+
+2. TASK 2 PRECONDITION FAILED, AND THE PREPEND SAYS SO. Every NUMERIC result in the Vista doc
+   is represented in the Mac doc, but two non-numeric facts are not: (a) that the
+   divide-by-zero guard was originally added for run_c3 and generalizes to run_c1, and (b)
+   that the com_frame instrumentation has not yet been exercised on a crash. Rather than
+   assert a clean merge, the prepended line names both. Vista file 32 -> 34 lines; backup at
+   .bak-preprepend, md5 a4e0281215b24b05e8cea3ba9589d1cc, matching the pre-write original.
+
+3. THE TASK 3 PREMISE IS FALSE: THERE ARE NO FOUR JSON FILES. Only the rho=600 point was ever
+   persisted as JSON (data/coupling_validation/c1_g64.json). The 700, 800 and 1000 points
+   exist NOWHERE as machine-readable artifacts. Verified by content search on BOTH machines:
+   the strings -90.99 and -237.34 appear only in the two markdown docs, in no JSON and no log.
+   Cause: validate_coupling_force.py:868-870 writes JSON only when --out is passed, and
+   line 864 otherwise prints to stdout. Those three runs were evidently run without --out.
+   CONSEQUENCE: three of the four published density points rest on hand-transcribed 2 dp
+   numbers with no raw trace. They are not reproducible without re-running.
+
+4. THE DISPATCH'S CONFIRMATION FIELDS DO NOT ALL EXIST. rho_box is stored as
+   geometry.rho_box_requested / rho_box_realized; settle_frames=900 is stored as
+   settle.settle_frames_cap (the CAP, not the count: settle_frames_run was 444 for rho=600);
+   depth_cells is geometry.water_depth_cells. box_bottom_cells is NOT STORED AT ALL. It was
+   recovered by inverting validate_coupling_force.py:652, z_b0 = floor + box_bottom_cells *
+   DX_CANON, against the stored z_b_nominal_at_spawn, floor and grid_lim (DX_CANON = LIM/64,
+   line 16). Every c1-family run recovers box_bottom_cells = 3.00 exactly.
+
+5. TASK 3 RESULT, F_buoy_from_a IS NOT FLAT. F_buoy_analytic = RHO_W * V * G
+   (line 697) carries NO rho_box dependence and is 31298.444 N in every run, so
+   F_buoy_from_a = F_analytic * (1 + err_F_pct/100) exactly. That inversion was validated
+   against the one real JSON to a residual of 1.8e-12 N before being applied.
+       rho_box   F_buoy_from_a (N)   a_meas (m/s2)   a_ideal (m/s2)
+          600         +16020.596          -1.4410          6.5400
+          700          +2819.990          -8.5473          4.2043
+          800          -6988.943         -12.5482          2.4525
+         1000         -42985.283         -23.2831          0.0000
+   Spread 59005.9 N, i.e. 1.885x the analytic buoyant force, and it CHANGES SIGN. A fixed
+   absolute error would have held F_buoy_from_a near one number; it does not. Nor is the
+   force error constant (-15278, -28478, -38287, -74284 N), nor is error/mass constant
+   (-7.98, -12.75, -15.00, -23.28). The 2 dp rounding on the published err_F_pct moves F by
+   only +/-1.6 N, immaterial against a 59006 N spread, so this conclusion is robust to the
+   fact that three rows are derived rather than read.
+   SHARPEST STATEMENT: at rho_box=1000, exact neutral buoyancy, where physics requires
+   a = 0 identically, the harness measures a = -23.28 m/s2, i.e. the body is driven DOWNWARD
+   at 2.37 g, more than twice free fall. The defect worsens monotonically toward neutral
+   buoyancy rather than holding a fixed force offset.
+
+FIREWALL HELD: nothing here read, wrote, or concluded into data/all_runs_inventory.csv,
+gates_results_all_runs.json, renders/yaris_render_s1/sim_standing.py, or any of the 17 gated
+runs. The published NO-FORD verdict came from raw displacement threshold crossing, not from
+the force accessor examined here, and is untouched by all of the above.
+
+NOT DONE, out of scope per the dispatch, each needs its own claim and dispatch:
+vehicle_params.py mass sourcing, the failure_modes_result.json miscitation, DRIFT_THRESHOLD
+sourcing. No Vista job submitted, no SU consumed; the only remote calls were read-only plus
+the single authorized prepend.

@@ -70,6 +70,24 @@
         "hooks": [
           {
             "type": "command",
+            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/gate_concurrent_write.sh"
+          }
+        ],
+        "matcher": "Bash"
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/gate_concurrent_write.sh"
+          }
+        ],
+        "matcher": "Edit|Write"
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
             "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/gate_protected_files.sh"
           }
         ],
@@ -89,7 +107,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 .claude/hooks/pretooluse_git_commit_gate.py"
+            "command": "python3 $CLAUDE_PROJECT_DIR/.claude/hooks/pretooluse_git_commit_gate.py"
           }
         ]
       }

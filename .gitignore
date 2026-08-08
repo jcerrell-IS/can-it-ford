@@ -47,14 +47,9 @@ _inbox/.runerr
 _inbox/.runout
 _inbox/*.bak_*
 .claude/settings.json
-.claude/settings.json
 _inbox/pane_export_archive/
 files/CLAUDE_md_*.md
 can-it-ford/
-.claude/settings.json.bak*
-.claude/hooks/*.bak
-_inbox/
-_ARCHIVE_*
 .claude/settings.json.bak*
 .claude/hooks/*.bak
 _inbox/
@@ -63,15 +58,6 @@ _ARCHIVE_*
 .claude/state/
 .olauth
 deliverables/
-deliverables/
-.claude/memory/
-.claude/rules/
-.claude/handoffs/
-*.rtfd/
-out/
-overleaf_sync/
-figures/_BIG/
-figures/_BIG_PREVIEW/
 .claude/memory/
 .claude/rules/
 .claude/handoffs/
@@ -91,7 +77,7 @@ paper/canonical_2026-08-02/
 # Confirmed 2026-08-07 that nothing imports it: /usr/bin/grep -rn "_pre_fix_backup"
 # over *.py/*.md/*.sh/*.json/*.tex returns only a .remember note, no code.
 bridge/_pre_fix_backup_2026-08-05/
-!data/failure_modes_by_run_classified.csv
 !docs/SESSION_CLAIMS.md
 !docs/SESSION_DISPATCH_2026-07-25.md
 !docs/SESSION_INDEX_2026-07-25_SHIPv3.md
+node_modules/

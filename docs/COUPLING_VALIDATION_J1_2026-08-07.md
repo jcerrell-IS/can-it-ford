@@ -30,6 +30,27 @@ another session owned that file at the time of writing (see
 `CONCURRENT_SESSION_NOTICE_2026-08-07.md`). Promote from here when ownership is
 settled.
 
+
+## J.1, second confirmed density, 2026-08-07 evening
+
+rho_box=800, matched to canonical (box_bottom_cells=3, depth_cells=18,
+settle_frames=900). settle_gate_met true at frame 440. fully_submerged_at_release
+true, submersion_margin_dx +2.797. err_F_pct -122.33 percent. err_headline_vs_ideal_pct
+-611.67 percent.
+
+A first rho=800 attempt at these same nominal settings but with box_bottom_cells left
+at run_c1's own default of 8 produced fully_submerged_at_release false and
+err_F_pct -1524.36 percent, a body sitting above the water it was meant to be
+submerged in. Matching box_bottom_cells to the canonical value alone moved the
+error from -1524 to -122 percent, confirming the earlier number was contaminated
+by a geometry mismatch and NOT a second, independent measurement of J.1 at this
+density. The -122 percent figure is the first trustworthy reading at rho=800.
+
+Two densities now confirmed under matched, converged, fully submerged conditions:
+rho=600 (baseline) and rho=800 (this entry). Both wrong in the same direction and
+by comparable order of magnitude, consistent with a structural defect in the free
+rigid coupling rather than a density-specific artifact.
+
 ## Why the test has this shape
 
 Register A3 is the binding constraint: `rigid_state()` returns exactly
@@ -246,6 +267,38 @@ report the pair as a partial validation.
 **Do not close J.1, and do not promote any of this into the register as a
 validation.** What can be promoted now is narrower and should be labelled as
 such: C0 passes, and C1 currently fails.
+
+
+## J.1, four matched density points, 2026-08-07 evening, from Vista session
+
+All four runs: n_grid=64, box_bottom_cells=3, depth_cells=18, settle_frames=900.
+All four settle_gate_met true, all four fully_submerged_at_release true. These
+are the first four points run under fully matched, converged, correctly
+submerged conditions, superseding any earlier rho=800 reading taken under
+default box_bottom_cells=8, which produced fully_submerged_at_release false
+and is not a valid measurement of anything.
+
+| rho_box | err_F_pct | err_headline_vs_ideal_pct | note |
+|---|---|---|---|
+| 600 | (baseline, established prior) | (baseline, established prior) | canonical |
+| 700 | -90.99 | -303.29 | new |
+| 800 | -122.33 | -611.67 | supersedes the -1524.36 reading taken under box_bottom_cells=8 |
+| 1000 | -237.34 | NaN | a_ideal is exactly zero at rho_box=RHO_W=1000; NaN is the divide-by-zero guard firing correctly, not a bug |
+
+Error grows moving from 700 toward 1000, i.e. toward neutral buoyancy.
+Not yet checked whether F_buoy_from_a is roughly flat across the four runs,
+which would mean a fixed absolute error reading as larger relative error near
+zero net force. Unresolved.
+
+com_frame per-substep trace added to run_c1s measurement loop this session,
+same pattern already proven on run_c2. Five-frame smoke test at rho_box=800
+showed monotonic descent from the first substep, z: 1.6189787 to 1.617443
+over 4 substeps, wrong direction for a body less dense than water. Independent
+confirmation of the wrong-sign result at the trajectory level, not just in
+the windowed acceleration average.
+
+Four densities now confirmed wrong in the same direction under conditions
+that rule out crash, geometry mismatch, and non-convergence as explanations.
 
 ## Findings produced by building the test
 
