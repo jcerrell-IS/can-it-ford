@@ -34,7 +34,7 @@ PROVENANCE = {
     "plane_rigid_gate": "kernels/mpm_solver_warp.py:1915 'if restitution != 0.0' registers rigid contact",
     "deviation_from_canonical": "all planes use restitution=0.0 and friction=0.0 so they act on water only",
     "internal_access": "pin() writes _sim.rigid_x_cm and calls _sim.set_rigid_body_velocity; Solver exposes no pin API",
-    "rigid_mass_is_particle_sum": "kernels/mpm_solver_warp.py:851-853 mass_np[b] = m_b.sum(); with v_cm = mom/M this makes the body adopt a mass-weighted AVERAGE grid velocity, never a force",
+    "rigid_mass_is_particle_sum": "kernels/mpm_solver_warp.py:856 mass_np[b] = m_b.sum(); with v_cm = mom/M this makes the body adopt a mass-weighted AVERAGE grid velocity, never a force",
     "collider_wrench_sign": "core/solver.py:305-307 a static cup of m kg reads (0,0,-m*g), so buoyancy on a submerged collider is +z",
     "sdf_impulse": "kernels/mpm_solver_warp.py:2731-2734 impulse = m*(v_free - v_new), accumulated before the node velocity is overwritten",
     "box_impulse": "kernels/mpm_solver_warp.py:2082-2085 same accounting for the axis-aligned box collider; solver.py:358 calls sdf_wrench its 6-DOF analogue",
@@ -711,7 +711,7 @@ def run_c1_sdf(n_grid, rho_box=600.0, depth_cells=18.0, box_bottom_cells=8.0,
     materialises no force at all: rigid_body_integrate sets v_cm = rigid_linear_mom / M
     (kernels/mpm_utils.py:1434) where rigid_linear_mom is the mass-weighted sum of the
     GRID velocity gathered at each rigid particle (:1411) and M is the sum of those same
-    particle masses (mpm_solver_warp.py:851-853). The body therefore adopts a mass-weighted
+    particle masses (mpm_solver_warp.py:856). The body therefore adopts a mass-weighted
     AVERAGE of grid velocity; no force or impulse is ever formed, so C1's F_buoy_from_a is
     a back-computation, not a measurement.
 
