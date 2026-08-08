@@ -44,6 +44,19 @@ Two sites at 9.80665, not one: **the "appears only at failure_modes.py:14" phras
 
 **This fork now reaches published output.** `failure_modes.py` uses G at `:170` (`surge_accel_g`) and `:174` (`weight_n`), and the classifier has run on all 17 runs (D6b), so 9.80665 fed the published verdicts. Any statement that it never influenced a gated result is retracted. Unify on 9.81, then re-run `analysis/classify_failure_modes.py` and confirm 16 SLIDE / 1 STUCK still holds before treating the change as cosmetic. TOPPLE is the only criterion that could move: it compares `surge_accel_g` against SSF, and all 13 sub-threshold margins are far larger than 0.034 percent, so no verdict flip is expected. Verify rather than assume.
 
+**A7. `friction` on warpmpm's collider path IS a Coulomb coefficient, not numerical damping. T1, verified live 2026-08-07** against the pinned vendored core, `third_party/mpm-engine-544c93dd-solver-core/kernels/mpm_solver_warp.py:2729`, inside the branch commented `separable + Coulomb friction`:
+
+```python
+scale = wp.max(0.0, tlen + param.friction * vn) / tlen
+v_tan = v_tan * scale
+```
+
+`vn` is the into-surface normal component, `tlen` the tangential magnitude. Reduce tangential velocity in proportion to the normal component, floored at zero: the textbook Coulomb rule. External report `5e706c91` reached the same classification by reading live GitHub through DeepWiki; this entry rests on the vendored pin, which is the stronger source.
+**Do not merge this with Genesis `coup_friction`.** They are different parameters in different engines that happen to share a role. Genesis `coup_friction` is separately confirmed as Coulomb at `legacy_coupler.py:322` (CLAUDE.md, 2026-08-05); the Genesis numerical regularisation parameter is `coup_softness`, default 0.002. A skill file asserting either one is "numerical only" is refuted, see Section I.
+Incidental but relevant to A3: this same read shows the SDF path accumulating `param.force` and `param.torque` by `atomic_add` of the grid impulse. That is consistent with A3, not a contradiction of it. A force accessor exists, but only on kinematic colliders, and the 17 runs never create one.
+Caveat on the source report: **`5e706c91`'s Task B failed outright.** It could not access `jcerrell-IS/can-it-ford` by any method and reports zero findings, positive or negative, about this repo. Never read its conclusions as having been checked against our code. Verified 2026-08-08 by direct read of the report file: its own summary states "I could NOT access this repository by any method and am reporting all of Task B as UNVERIFIED," so this caveat is exact, not a paraphrase.
+**Second caveat, added 2026-08-08, and the reason the first one matters.** `5e706c91` itself repeats the refuted Genesis claim. Its analysis section contrasts warpmpm's `friction` with "a Genesis `coup_friction`, which the task correctly describes as a numerical coupling parameter of a different track." That is WRONG, per CLAUDE.md and confirmed 2026-08-05 against `legacy_coupler.py:322`. The report is sound on the half it actually read (warpmpm, via live GitHub) and unsound on the half it did not. Take only the warpmpm half.
+
 ---
 
 ## SECTION B: resolution and numerics, T1
@@ -178,6 +191,21 @@ CLAUDE.md item 13 previously named only `:46` and `:48`. **`:47` is a speed that
 
 **E6. 1609 and 2337 kg are unsourced** against `vehicle_params.py`, which holds 1100 / 1990 / 2300 and contains no density or friction fields at all.
 
+**E6a. AMENDED 2026-08-07. Both masses now have an external source, though still not one in `vehicle_params.py`.** T2, external report `b0d2664f`: all three mass points map onto real CCSA / George Mason FE vehicle models at `ccsa.gmu.edu`, to the kilogram.
+1100 kg = 2010 Toyota Yaris (1100C), the same vehicle family as `yaris_coarse_v1l_watertight.ply`. **1609 kg = 2020 Nissan Rogue**, VIN 5N1AT2MT6LC742896, 5-door SUV, v3 August 2024, 3,240,729 elements. **2337 kg = 2018 Dodge Ram 1500**, a 2270P test vehicle, detailed v3a 2,680,106 elements.
+This means the mass sweep is no longer "two of three masses unsourced." It is now "three masses traceable to named FE models, applied as overrides to a single Yaris hull." The E3 caveat is unchanged and still governs: geometry never changes, run logs print 8,905 particles for all three, so this is a mass-sensitivity study on one hull, NOT a comparison of three vehicles. Do not upgrade the claim past that.
+Before this enters the paper, confirm the masses on the CCSA model pages directly. The report is a single external source and the mass agreement is exact enough to be worth one live check.
+
+**E8. NEW 2026-08-07, RENUMBERED AND SOURCE-CORRECTED 2026-08-08. NCAC / CCSA vehicle-mesh redistribution rights are NOT established. Treat as a blocker, not a footnote.** This item was written as a second **E7** and collided with the Track 2 item immediately below it. It is E8. The register is cited by item number, so a duplicate number is a citation defect, not a cosmetic one.
+
+**CORRECTION 2026-08-08, both source reports were read directly instead of through this entry's own summary: `b0d2664f` and `289743f7` do NOT conflict, and the reasoning gap previously attributed to `b0d2664f` is not in it.** `b0d2664f` states in its own words that "Contractor-authored works are not automatically public domain under 17 U.S.C. 105," that the CCSA GMU site has "NO model license, NO copyright statement, and NO redistribution grant," and it records the CCSA licence status as "UNRESOLVED ... stated as a genuine gap, not a permission." It reaches the same operative conclusion as `289743f7`. Never again describe these two as opposed, and do not attribute that inference error to `b0d2664f`.
+
+What `b0d2664f` genuinely ADDS is a distinction the old wording erased: **NHTSA-hosted** copies carry the "public information and may be distributed or copied" statement, whereas **CCSA-hosted** copies (it names Rogue, Ram, 2014 Silverado) are licence-silent. `289743f7` independently establishes that DOI 10.13021/G8JS5D has an **empty `rightsList`**, was minted by GMU University Libraries on a validation *presentation* PDF rather than a Dataverse deposit, and so carries no CC0 waiver; GMU's Dataverse CC0 default does not reach it, and depositors can opt out of CC0 anyway.
+
+**UNRESOLVED and load-bearing: which side of that line the canonical Yaris falls on.** E1 sources the hull to DOI 10.13021/G8JS5D, which resolves to `ccsa.gmu.edu`, yet `b0d2664f` lists "older Yaris" among the NHTSA-hosted safe set. Both cannot be assumed. Settle this against the actual download page before publishing anything derived from the hull, and do not guess from the DOI alone.
+
+**Operative rule, unchanged and still conservative: do not commit any derived NCAC/CCSA geometry to the public repo, and do not include it in a DesignSafe DOI, without written permission or a confirmed licence.** This gates J10. The rule survives the correction above because it never depended on the reports disagreeing. Separately from the mesh, the GNS code itself (`github.com/geoelements/gns`) is MIT and is safe to reuse, confirmed in `289743f7` against the README badge, the JOSS paper and arXiv:2211.10228.
+
 **E7. Track 2's `can_it_ford_L2_mpm.py:26` hardcodes `VEHICLE_SIZE = (4.66, 1.79, 1.44)`**, a pre-Yaris placeholder 3.391x the canonical hull volume. Still unfixed. Do not cite Track 2 output.
 
 ---
@@ -201,6 +229,11 @@ CLAUDE.md item 13 previously named only `:46` and `:48`. **`:47` is a speed that
 
 **G1. The AR&R / Shand et al. 2011 thresholds describe a STATIONARY vehicle subjected to flow**, not a vehicle driving under power. Stated, not inferred: every criterion table is titled "stationary vehicle stability," and "vehicle movement through flood waters" is listed among the gaps the data cannot assess. Smith, Modra and Felder state directly "Laboratory testing was completed with stationary vehicles."
 
+**G1a. AMENDED 2026-08-07, the configuration detail behind G1.** T2, external report `baa355db`, which tabulates what was physically done in every foundational study. Load-bearing additions:
+Restraint was by fine threads read as force (Bonham & Hattersley 1967 at 1:25; Gordon & Stone 1973 at 1:16), and Keller & Mitsch 1993 was a **desk study with no physical test at all**, assuming mu = 0.3 and Cd = 1.1. Direct buoyancy measurement on a real full-scale vehicle did not happen until the UNSW WRL program (Smith, Modra, Felder 2017 and 2019); everything earlier inferred buoyancy from displaced volume or model float depth.
+**Channel blockage ratio and afflux corrections are essentially UNREPORTED across every incipient-motion study in this literature.** That is a limitation of the thresholds this project validates against, and our own tank has a computable blockage ratio, so it is also an opportunity. Do not claim the AR&R curves are blockage-corrected.
+Model-scale watertight vehicles **float too shallow**, a sealing scale effect, and full-scale vehicles are somewhat more stable than the conservative AR&R curves (Kramer 2016 prototype; Smith, Modra, Felder). Yaw matters and was varied by several studies, with Kramer finding the critical angle at 45 degrees, and per-study mu varies strongly with yaw: Toda et al. 2013 report 0.26 at 0 degrees against 0.57 at 90 degrees for a sedan.
+
 **G2. The 3.0 m/s velocity cap is administrative.** Imposed to keep vehicle curves consistent with human-stability curves, not derived from vehicle data. The constant D×V form is also administrative, inherited from pedestrian stability work.
 
 **G3. AR&R limits.** Still-water depths 0.3 / 0.4 / 0.5 m and D×V limits 0.30 / 0.45 / 0.60 m2/s for small passenger, large passenger, large 4WD.
@@ -208,7 +241,11 @@ CLAUDE.md item 13 previously named only `:46` and `:48`. **`:47` is a speed that
 
 **G4. Friction. `mu_wet ≈ 0.30` is REFUTED as a wet-road value.** 0.30 is the sand and gravel worst case in Smith, Modra and Felder 2019. Wet AND dry concrete both read about 0.78. Model-scale measurements run 0.52 to 0.68.
 Any skill file asserting "mu_wet 0.3 is the primary, best-sourced defensible value" is WRONG and must be corrected.
-`floor_friction` 0.55 remains defensible as a value between the sand-gravel floor and the concrete figure, but NOT as a conservative wet-road number. The specific attribution "0.55 per Azhar et al. 2023" has never been confirmed against that paper's full text.
+`floor_friction` 0.55 remains defensible as a value between the sand-gravel floor and the concrete figure, but NOT as a conservative wet-road number.
+
+**G4a. AMENDED 2026-08-07. The "0.55 per Azhar et al. 2023" attribution is no longer unverified.** Citation-provenance audit, T2, external report `65474f37`: Azhar, Pauwels and Bui 2023 (DOI 10.1111/jfr3.12885, open access, correct title "Confirmation of vehicle stability criteria through a combination of smoothed particle hydrodynamics and laboratory measurements") **measured 0.55 themselves** with a spring balance on the rubber mat used as their road-surface proxy, and cite Wong, *Theory of Ground Vehicles*, only to show the value falls inside a handbook range of 0.50 to 0.70 for tyres on wet asphalt. Two-hop chain, terminating in a general-automotive handbook, not in a flood-specific measurement. So: it is a genuine measurement, but **of lab rubber mat, not of submerged asphalt**, and it sits at the high end of this literature's assumptions. The canonical paper at `paper/canonical_2026-08-02/conference_101719_1.tex:205` already states exactly this, independently; that text is now corroborated, not merely unrefuted.
+
+**G4b. 0.30 is REFUTED as a measurement and REAL as a convention. Do not collapse the two.** G4 refutes 0.30 as a wet-road measured value, and that stands. Separately, 0.30 genuinely is the flood-vehicle literature's inherited convention: Shand et al. 2011 record that "correspondence with various road experts and test laboratories" settled on mu = 0.3, and Bonham & Hattersley 1967 and Gordon & Stone 1973 both adopt it. Anyone reading only the convention half will try to resurrect 0.30 as best-sourced and will be wrong. Anyone reading only G4 will call the AR&R derivation unsourced and will also be wrong. Measured comparanda, Shu et al. 2011 spring balance on wet carpet: Ford Transit 0.39, Ford Focus 0.50, Volvo XC90 0.68.
 
 **G5. Al-Qadami tested a PERODUA VIVA, not a Toyota Yaris.** Any claim that Al-Qadami found a Yaris floating at 0.40 m under about 11 kN buoyancy is a MISATTRIBUTION and must never be used. The verified full-scale Yaris source is Smith, Modra and Felder 2019, DOI 10.1111/jfr3.12527.
 
@@ -224,11 +261,30 @@ This gap is why Josie's grid study is a potential contribution rather than only 
 **G10. Xia 2011 and Shu 2011 full text are NOT RETRIEVABLE.** Both `isOa: false`, `oaStatus: closed`, `contentDenied: true` on Scite, and absent from the Scholar Gateway corpus. Neither PDF is local. Correct behaviour is to stop, not to reconstruct from citing papers. Route: UT Austin library proxy or ILL.
 Xia, Teo, Lin, Falconer 2011, Natural Hazards 58(1):1-14, DOI 10.1007/s11069-010-9639-x. Shu, Xia, Falconer, Lin 2011, J. Hydraulic Research 49(6):709-717, DOI 10.1080/00221686.2011.616318. Scite records Xia's date as 2010-10-20, the online-first date; 2011 is the correct citation year.
 
+**G10a. AMENDED 2026-08-07. A transcription now exists, T2, and J6 stays open anyway.** External report `266e9a8a` reports retrieving both full texts as author-accepted manuscripts on academia.edu, with Shu matched against the typeset *Journal of Hydraulic Research* version of record. Both final formulas, all force terms, both fitted coefficient tables, flume geometry and model scales are recorded in `docs/RESEARCH_ARTIFACT_INTEGRATION_2026-08-07.md` section 4.1. Load-bearing facts from it: **both papers formulate SLIDING ONLY**, neither derives a toppling equation, and neither publishes numeric CD, CL or mu inside the working formula, all of which are folded into two lumped flume-calibrated parameters. Both are flat-bed.
+**J6 is NOT closed by this and must not be marked closed.** The route stated in G10 (library proxy or ILL) is still required, because the paper must cite the published article, not a transcription of a preprint, and only Shu was cross-checked against the version of record. What changed is that the equations are no longer unknown, so downstream work can proceed in parallel with retrieval. Do not cite the transcribed coefficients in the paper before the publisher PDFs confirm them.
+
+**AMENDED AGAIN 2026-08-08, after reading `266e9a8a` directly instead of through this entry.** The report does substantiate G10a: it claims verbatim transcription from author-accepted manuscripts on academia.edu and Cardiff ORCA, with Shu matched against the typeset *JHR* version of record and equation numbers and coefficient tables confirmed to match. **G10 and G10a are therefore NOT in conflict and must not be "reconciled" by deleting either.** G10 records the *publisher* paywall (Scite `isOa: false`), and a green-OA author manuscript is fully compatible with a closed publisher record.
+
+One narrow contradiction survives and is UNSETTLED: `266e9a8a` says it retrieved full text from **Cardiff ORCA**, while an independent 2026-08-08 check reports that same ORCA record is metadata-only, "Full text not available from this repository," with no download and no request-a-copy control. Both cannot be right about the same repository. Resolve by opening the ORCA record directly, not by preferring the later date. Note separately that the 2026-08-08 run recorded in `docs/semi_empirical_baseline_findings.md` also failed retrieval, but via Scite and Unpaywall, which tests the publisher route and NOT the green-OA route, so it is not evidence against `266e9a8a`.
+
+**Bibliographic note, now settled: Xia 2011 and Xia 2014 are DIFFERENT PAPERS, not a year error.** 2011 (*Natural Hazards*) is the flat-bed sliding formulation; the 2014 companion adds slope and orientation. A document referring to "Xia 2014" is not necessarily misciting G10. `266e9a8a` also records a fourth-author discrepancy on the 2014 accepted manuscript, Caiwen Shu on the post-print against Yejiang Wang on the version of record under the same DOI, which is an author-list revision and not a content difference. Cite the version of record.
+
 **G11. The "simplest sufficient abstraction" principle is PRIOR ART.** VVUQ adequacy-for-purpose (Oberkampf and Roy 2010; National Academies 2012; ASME V&V 40-2018), goal-oriented error estimation, control-relevant model reduction (Gevers and Ljung 1986), MDP state abstraction (Li, Walsh and Littman 2006). Deepest formalism: Blackwell sufficiency and Le Cam deficiency. Mature within silos, fragmented across them. Do not claim to have invented it. Distinguish from MDL/AIC/BIC, which are data-fit conditioned rather than decision conditioned.
 
 **G12. The pipeline shape is also prior art**, as the digital twin decision pipeline (NASEM 2024, doi:10.17226/26894). Full four-criteria exemplars: Cadia tailings dam (doi:10.1680/jgeot.21.00399), rockfall runout back-analysis. It has not been transferred to vehicle flood traversability with external empirical validation. **That fourth criterion is the differentiator.**
 
 **G13. `arXiv 2607.00673`** (Low, Hsiao, Li, Thorpe, Topcu, Kumar) satisfies reconstruction, simulation and decision but explicitly NOT external empirical validation; the authors state the environments "exist only in simulation."
+
+**G14. NEGATIVE FINDING, handle as one. No `v_max(depth, flow_velocity)` exists in the literature.** T2, external report `045982be`. No peer-reviewed paper, standard or design guide expresses a recommended safe crossing speed as a function of BOTH depth and flow velocity. The field is threshold-based, not speed-based. The closest single-variable result is Pregnolato et al. 2017, `v = 0.0009w^2 - 0.5529w + 86.9448` (w in mm, v in km/h, R^2 = 0.95), which is **depth-only**, is a driver-control and serviceability advisory rather than a stability criterion, and treats the road as impassable at 0.30 m. Do not present Pregnolato as a stability result and do not present it as velocity-aware.
+Two bodies of work must never be conflated: driver-visibility, braking and aquaplaning speed advisories (about tyre-road traction) versus vehicle-stability criteria (float, slide, topple). Aquaplaning models (Gallaway, Horne, Ong and Fwa) are genuinely speed-dependent and validated, but they are functions of water-film thickness and tyre pressure, not of floodwater sweep. Citing one for the other is a category error.
+
+**G15. NEGATIVE FINDING, handle as one. No coupled flood simulation applies propulsive force or engine torque.** T2, external report `c963203d`. Across SPH, MPM, CFD and SWE-DEM, the vehicle is universally a passive rigid or rigid-linked body under drag, buoyancy and friction, Azhar et al. 2023 included. No propulsion force or torque value, from any manufacturer spec, dynamometer or assumption, is stated anywhere in that literature.
+The underlying physics IS established: `F_F = mu(W - B - L)`, buoyancy reduces the normal force and therefore the available friction. Smith, Modra and Felder 2019 measured it directly with a winch and dynamometer on full-scale vehicles. Arrighi et al. 2015 states buoyancy and lift "reduce the normal component of the weight thus promoting sliding conditions even for very low water depths." Shah, Mustaffa, Kim and Yusof 2018 (DOI 10.1051/matecconf/201820307003) is the closest prior work, adding an engine driving force `F_DV` to the sliding balance.
+**Consequence for this project: the passive-body treatment is standard practice, not a shortcut, and a self-propelled traction budget is a genuine unfilled gap.** State it that way. Do not describe the passive treatment as a limitation without also stating that every published study shares it.
+
+**G16. There is NO accepted particle or force convergence criterion for SPH or MPM.** T2, external report `211aad60`, and consistent with L-3. No formally validated criterion specifies how many particles or cells must span the flow depth or the body before drag, lift and overturning moment become resolution-independent. Published resolutions are wildly inconsistent, roughly 2 to 60 across a load-bearing feature. Where convergence is claimed it is typically demonstrated on free-surface elevation or pressure and merely asserted for force, not quantified to a stated tolerance.
+Refines G8 and L-4: coarse resolution most often OVER-predicts peak hydrodynamic force, via kernel truncation, particle deficiency and neglected air cushioning, **but this is a documented tendency with clear exceptions, not a law.** Do not write "coarse over-predicts, therefore our NO-FORD verdicts are conservative" as though it were guaranteed. State it as the likely direction and cite the exception.
 
 ---
 
@@ -278,6 +334,17 @@ Any skill file containing any of the following must be corrected in place.
 | "box proxy vehicle" for the 17 runs | Real Yaris hull, E1 |
 | "a flood-vehicle study shows resolution moves the threshold" | Negative finding, G8 |
 | "the splat bridge just needs writing" | Also needs metric scale recovery, F3 |
+| "`coup_friction` is a numerical stability coefficient, not Coulomb" | Refuted, CLAUDE.md and A7 |
+| "warpmpm `friction` is numerical damping" | Coulomb, verified at `mpm_solver_warp.py:2729`, A7 |
+| "the 0.55 / Azhar 2023 attribution is unverified" | Now confirmed, G4a |
+| "1609 and 2337 kg are unsourced" | Nissan Rogue and Dodge Ram, E6a |
+| "NCAC/CCSA meshes are public domain, safe to redistribute" | Contractor works, rights NOT established, E8 |
+| "`b0d2664f` says the CCSA meshes are redistributable" | It says the opposite; the two reports agree, E8 |
+| "DRIFT_THRESHOLD is grounded in Xia 2014 / Shah 2018" | No source at all, D7 |
+| "coarse resolution over-predicts force, so we are conservative" | A tendency with exceptions, not a law, G16 |
+| Pregnolato 2017 cited as velocity-aware or as a stability criterion | Depth-only, control-focused, G14 |
+
+**Correction, 2026-08-07, to this table's own use.** Three of the rows above were found live in `vehicle_geometry_research/flood-mpm-debugging-reference_SKILL_v3_friction_corrected.md` and corrected in place that day: the `coup_friction`-is-numerical claim at `:97`, the "mu_wet ≈ 0.3 is primary" claim at `:58`, and the DRIFT_THRESHOLD sourcing claim at `:62`. The file's name already contained the words "friction_corrected," which is precisely why nobody re-checked it. **A filename asserting a correction is not evidence of one.**
 
 ---
 
@@ -288,11 +355,15 @@ Any skill file containing any of the following must be corrected in place.
 3. CLOSED 2026-08-07, D6h and D6i. The two `failure_modes_result.json` citations were repointed by `841d666`; the surviving independence overclaim in `four_rung_ladder.md` was fixed separately the same day. Note `841d666`'s message claimed to close this item but never edited this register, which is why it sat open for a day after the work was done. **A commit message is not a register edit.**
 4. CLOSED 2026-08-07, D6a and D6b. The classifier ran on all 17 on 2026-08-05 and was re-verified live 2026-08-07. Same caveat as item 3: `841d666` claimed the closure without making it.
 5. Which length `vehicle_params.py` actually uses, E4.
-6. Retrieve Xia 2011 and Shu 2011 via library proxy, G10.
+6. Retrieve Xia 2011 and Shu 2011 via library proxy, G10. **STILL OPEN, but no longer blocking.** A full transcription now exists at T2, G10a, so the equations are known and downstream work can proceed. The publisher PDFs are still required before the paper cites the coefficients.
 7. The velocity tail in `channel_recirc_v2`: 329 of 3.66M particles over the Torricelli cap at bulk mean 1.008 m/s.
 8. CLOSED 2026-08-07, was a false premise: the in/outflow BC paper (Zhao, Bolognin, Liang, Rohe, Vardon 2019, DOI 10.1016/j.compfluid.2018.10.007) is not Kumar's, it was implemented in Anura3D by a Cambridge/TU Delft/Deltares team unrelated to cb-geo/mpm. No reason to expect it merged there.
 9. Whether the p2g source read matches genesis 1.1.1 rather than 1.2.0, C1.
-10. DesignSafe DOI pending Kumar sign-off.
+10. DesignSafe DOI pending Kumar sign-off. **NOW ALSO GATED ON E8:** if the DOI would include any derived NCAC/CCSA geometry, redistribution rights must be established in writing first. Sign-off does not resolve a licence question.
+11. NEW 2026-08-07. Establish CCSA/NCAC mesh redistribution rights, E8. Blocks item 10 and blocks committing any derived mesh publicly. Narrowed 2026-08-08: the first concrete sub-question is whether the canonical Yaris hull is NHTSA-hosted (safe) or CCSA-hosted (licence-silent), which E8 records as unresolved.
+12. NEW 2026-08-07. The three-mass FE swap-in is now *possible* and not done, E6a. The Rogue and Ram decks are LS-DYNA keyword files of shell elements in millimetres, multi-million elements, not watertight, exterior needs extracting. Gated on item 11 for anything public. Note `63a4b5d4`: `lsdyna-mesh-reader` reports element *sections*, not elements, so a "1 shell + 1 solid" count is a parsing artifact, not a mesh count. Verify with `len(deck.element_shell_sections[0].eid)` and grep the deck for `*INCLUDE`.
+13. NEW 2026-08-07. Compute the tank's blockage ratio. G1a records that blockage and afflux corrections are unreported across the entire incipient-motion literature, which makes this both a limitation of the thresholds we validate against and a cheap self-contained contribution. Nobody has computed ours.
+14. NEW 2026-08-07. Write the G14 and G15 negative findings into the paper's related-work and novelty framing. Both are defensible differentiators and neither is currently in the text.
 
 
 ## Addendum, 2026-08-06
@@ -308,6 +379,9 @@ someone actually checks the bridge's output particles or the calibration
 script's derived scale against ground truth.
 
 ## ADDENDUM 2026-08-07
+
+K0. **Research artifact integration.** Twenty-nine external research reports were worked through on 2026-08-07. Their per-report disposition, provenance tier and the two inter-report conflicts are recorded in `docs/RESEARCH_ARTIFACT_INTEGRATION_2026-08-07.md`. That file is NOT canonical: everything from it strong enough to be canonical was written into this register as G1a, G4a, G4b, G10a, G14, G15, G16, E6a, E8 and A7. Anything in it not mirrored here is a lead, not a fact. Note that several reports turned out to be already integrated (G11, G12, G13, G1, G2, G6, G7, G8), so check this register before treating any report finding as new.
+**Located on disk 2026-08-08, and this is how to re-verify any of them: the 8-hex ids in this register are real files**, `~/Downloads/compass_artifact_wf-<id>-*_text_markdown.md`. All ten ids cited in this register resolve. **33 such artifacts exist on disk against the 29 said to have been worked through, so roughly four are un-triaged**; do not assume the sweep was exhaustive. Reading a report directly rather than through a register summary has already caught two errors in this file, the E8 mischaracterisation and the G10a over-reading, so prefer the file over the summary whenever a claim is load-bearing.
 
 K1. drainA COLMAP directory structure is correct, not broken. Confirmed live via find /scratch/11603/jcerrell0629/drainA -maxdepth 3 on LS6: sparse/0/ holds cameras.bin, images.bin, points3D.bin, rigs.bin, frames.bin; images/ holds all captured jpgs. This was already fixed by an earlier session before this one ran. Any earlier note calling the gsplat AssertionError about a missing sparse directory still blocked is stale as of this date.
 
