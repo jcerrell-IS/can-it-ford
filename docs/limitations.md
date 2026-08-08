@@ -135,3 +135,44 @@ paper.
 
 All six rollouts are `n_grid = 64`. No grid-convergence study and therefore no Roache GCI
 exists. Queued as Vista work.
+
+---
+
+## L-11. Ground clearance is unresolved, and CPIC cannot fix it (assessed and rejected)
+
+Added 2026-08-07. NEGATIVE RESULT: this was evaluated and deliberately not built.
+
+The smallest force-bearing feature of the hull is ground clearance, not vehicle length.
+warpmpm ships `Solver.add_cdf_collider`, a CPIC thin-boundary collider, and CPIC is the
+textbook answer to thin features, so reaching for it is the obvious move. It is the wrong
+move, for three independent reasons. Numbers below are from
+`analysis/verify_cpic_ground_clearance.py`, run live 2026-08-07.
+
+1. **The gap is sub-stencil at every affordable resolution.** CPIC severs particle-node
+   transfers across a zero-thickness sheet, which removes the need to resolve a *wall*.
+   Ground clearance is a *gap*. Flow through a gap still needs cells across the gap
+   whatever the collider is made of, and warpmpm's quadratic B-spline stencil is 3 cells
+   wide. Measured clearance over 120 sampled columns: median 0.180554 m, p10 0.161677 m,
+   min 0.146952 m. Cells across the gap: **0.920 at g48, 1.226 at g64 (the baseline),
+   1.840 at g96**. Two cells needs `n_grid >= 104` (about 4x the g64 cell count); a
+   3-cell stencil fitting inside the gap needs `n_grid >= 157` (about 15x).
+
+2. **The canonical hull is closed.** Every CDF entry point specifies an OPEN oriented
+   mid-surface. `yaris_coarse_v1l_watertight.ply` has no boundary edges, so it does not
+   qualify as a CDF sheet.
+
+3. **CDF colliders are kinematic-only (decisive).** `rigid_g2p_accumulate`
+   (`kernels/mpm_utils.py:1370-1412`) gathers `grid_v_out` with no CPIC masking, and
+   `cdf_reaction_force` is only zeroed and read out, never applied to a body. A CDF
+   collider is pose-driven via `set_cdf_pose` and cannot be attached to a free rigid
+   body. Attaching a sheet to the hull would block its p2g deposits while leaving its
+   g2p gather unmasked, which is momentum non-conserving. That would make the coupling
+   worse, not better.
+
+Citation note: the CDF/CPIC contact treatment in this engine is **this repository's own
+implementation**. Its docstring cites Hu et al. 2018 Section 5, but it is not a
+line-by-line reproduction of that paper's projection and penetration handling, and must
+not be described as one.
+
+State this as a limitation of the present model. Do not present it as future work that a
+collider swap would close.

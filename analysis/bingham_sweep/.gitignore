@@ -1,0 +1,3 @@
+# Raw particle rollouts, 59.2 MB each, 769.4 MB total. Regenerable, see RESCUE_PLAN.md.
+# The conclusions live in summary.json / metrics.csv / bingham_sweep_results.csv.
+*.npz

@@ -1,0 +1,22 @@
+SKIP tau0p0_control (already has summary.json)
+=== RUN tau0p1  tau_y=0.1 eta=0.001 K=0.0 n=1.0 ===
+RC_tau0p1=0
+=== RUN tau1p0  tau_y=1.0 eta=0.001 K=0.0 n=1.0 ===
+RC_tau1p0=0
+=== RUN tau3p0  tau_y=3.0 eta=0.001 K=0.0 n=1.0 ===
+RC_tau3p0=0
+=== RUN tau10p0  tau_y=10.0 eta=0.001 K=0.0 n=1.0 ===
+RC_tau10p0=0
+=== RUN tau30p0  tau_y=30.0 eta=0.001 K=0.0 n=1.0 ===
+RC_tau30p0=0
+=== RUN tau100p0  tau_y=100.0 eta=0.001 K=0.0 n=1.0 ===
+RC_tau100p0=0
+=== RUN etacoup_tau3p1  tau_y=3.1 eta=0.300 K=0.0 n=1.0 ===
+RC_etacoup_tau3p1=0
+=== RUN etacoup_tau40p0  tau_y=40.0 eta=2.700 K=0.0 n=1.0 ===
+RC_etacoup_tau40p0=0
+=== RUN hb_tau10_K5_n0p8  tau_y=10.0 eta=0.000 K=5.0 n=0.8 ===
+RC_hb_tau10_K5_n0p8=0
+=== RUN hb_tau0_K5_n0p8  tau_y=0.0 eta=0.000 K=5.0 n=0.8 ===
+RC_hb_tau0_K5_n0p8=0
+ALLDONE

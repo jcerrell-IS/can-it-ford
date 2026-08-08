@@ -1,0 +1,30 @@
+BOUND warpmpm.vehicle -> /Users/josie/can-it-ford/.claude/worktrees/bingham-sweep-2026-08-07/renders/yaris_render_s1/vehicle_live.py
+DETERMINISM load1 n=8905 lim=9.421742314
+DETERMINISM load2 n=8905 lim=9.421742314
+DETERMINISM identical=True
+PARITY_ODD_COLUMNS dropped=0 of 1335 columns (0.0000 percent)
+warpmpm: device auto -> cpu
+Particles initialized from torch data.
+Total particles:  57272
+SCENARIO=STANDING_WATER_SUSTAINED_INFLOW
+grid 64^3 lim=9.42m  water 48367 + vehicle 8905 particles (1100.0 kg)  dt=7.09e-04 (47 substeps/frame)
+INSTRUMENT dx=0.147215 h=0.073607 floor=0.441644 lim=9.421742
+INSTRUMENT water_layers=4
+INSTRUMENT solid_volume=3.55138 m3 hull=3.54274 fill_ratio=1.0024 realized_rho=309.74
+INSTRUMENT carved 917 of 49284 water particles from vehicle cells (1.86 percent)
+SUBSTEP_TERMS eta=1.000e-03 acoustic=311.6253 viscous=1384.263748 advective=20.3784 -> rate=1384.2637 substeps=47
+ACOUSTIC c=12.8452 m/s  vehicle_x=5.6530  downstream_wall=8.8329  round_trip=0.4951 s
+FLOOR_FRICTION=0.550  WATER_ETA=1.000e-03
+RHEOLOGY tau_y=100.0000 Pa  hb_K=0.0000  hb_n=1.0000  eta_cap=5000.001000 Pa.s
+frame   0  |d|=   2.22cm  yaw= -0.02  roll= -0.71  ld_bow=0.2459 ld_foot=0.2322 oob=0 inflow=8984
+frame  10  |d|=  29.32cm  yaw= -0.32  roll= +0.67  ld_bow=0.2985 ld_foot=0.2398 oob=0 inflow=6232
+frame  20  |d|=  41.71cm  yaw= -0.75  roll= +0.39  ld_bow=0.3424 ld_foot=0.2425 oob=0 inflow=3448
+frame  30  |d|=  47.52cm  yaw= -1.11  roll= +0.07  ld_bow=0.3707 ld_foot=0.2458 oob=0 inflow=1115
+frame  40  |d|=  50.38cm  yaw= -1.38  roll= +0.00  ld_bow=0.3914 ld_foot=0.2605 oob=0 inflow=199
+frame  50  |d|=  51.60cm  yaw= -1.52  roll= +0.00  ld_bow=0.3984 ld_foot=0.2725 oob=0 inflow=58
+frame  60  |d|=  51.91cm  yaw= -1.57  roll= -0.00  ld_bow=0.3844 ld_foot=0.2790 oob=0 inflow=99
+frame  70  |d|=  51.96cm  yaw= -1.57  roll= -0.00  ld_bow=0.3575 ld_foot=0.2776 oob=0 inflow=148
+frame  80  |d|=  51.96cm  yaw= -1.57  roll= +0.00  ld_bow=0.3289 ld_foot=0.2725 oob=0 inflow=194
+frame  89  |d|=  51.93cm  yaw= -1.58  roll= -0.00  ld_bow=0.3091 ld_foot=0.2648 oob=0 inflow=228
+SUMMARY {"scenario": "standing_water_sustained_inflow", "label": "tau100p0", "mass_kg": 1100.0, "depth_m": 0.3, "velocity_ms": 1.5, "n_grid": 64, "frames": 90, "grid_lim": 9.421742313727737, "dx": 0.1472147236519959, "h": 0.07360736182599795, "water_layers": 4, "n_water": 48367, "n_vehicle": 8905, "n_carved": 917, "water_eta": 0.001, "tau_y_pa": 100.0, "hb_K": 0.0, "hb_n": 1.0, "eta_cap_pas": 5000.001, "NOT_CANONICAL": "Bingham/HB sensitivity sweep, not one of the 17 gated runs", "floor_friction": 0.55, "bulk_modulus": 150000.0, "substeps": 47, "sound_speed_ms": 12.84523257866513, "term_acoustic": 311.6252878790618, "term_viscous": 1384.2637480496976, "term_advective": 20.37839643738194, "solid_volume_m3": 3.5513843861695054, "hull_m3": 3.542739, "fill_ratio": 1.0024403113437104, "realized_rho": 309.7383668982256, "parity_odd_columns_dropped": 0, "parity_total_columns": 1335, "determinism_identical": true, "final_disp_m": [0.5187063217163086, 0.01345968246459961, -0.020871639251708984], "final_disp_mag_m": 0.5193005204200745, "final_yaw_deg": -1.5780130750590133, "final_roll_deg": -0.0002912269640314624, "final_pitch_deg": -9.008400745610649e-06, "C3_oob_particle_frames": 0, "local_depth_bow_peak": 0.39865287236752917, "local_depth_bow_peak_frame": 49, "local_depth_bow_final": 0.30906512431683947, "local_depth_footprint_peak": 0.2789616792637389, "local_depth_footprint_final": 0.2647726147610228, "C2_veh_zmin_start": 0.4576886296272278, "C2_veh_zmin_final": 0.4416441321372986, "C2_veh_zmin_rise": -0.0160444974899292, "passthrough_max_frac": 0.0874149730187938, "leaked_particle_frames": 45119, "grid_lim_line_verbatim": "grid 64^3 lim=9.42m  water 48367 + vehicle 8905 particles (1100.0 kg)  dt=7.09e-04 (47 substeps/frame)"}
+DONE tau100p0
