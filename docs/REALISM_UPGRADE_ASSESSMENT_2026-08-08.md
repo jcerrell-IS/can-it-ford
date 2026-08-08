@@ -160,9 +160,35 @@ Minimal correct caption addition:
 > force (`kernels/mpm_utils.py:1434`) and registers ≈1.5 % of analytic buoyant
 > response, so displacement and the SLIDE verdict inherit that defect.
 
-The generator, `render_rollout.py`, currently lives in `~/Downloads` and is in **no
-commit**, so the only render in the project is unreproducible. That is the same
-un-regenerable-artifact defect the register records for `c1only.sbatch`.
+### 3a. CORRECTION: the caption cannot be fixed, because the generator does not exist
+
+An earlier revision of this section said the generator was `render_rollout.py` in
+`~/Downloads` and that committing it made the render reproducible. **That is wrong
+and is withdrawn.** `analysis/render_rollout.py` renders the **s3 enhanced-pipeline**
+schema (its own docstring: *"confirmed 2026-08-08 against ctrl_g64 and
+enh_g128_real"*), builds a single 3-D axis, and contains none of the dashboard's
+panels or strings. It did not produce this video.
+
+Searched for the dashboard's own strings (`"Verified state"`, `"Plan view"`,
+`"a real cross-section"`) across the repo, `~/Downloads`, and
+`~/canitford_census_2026-08-07/`. **The only hit anywhere is this document.** The
+nearest candidate in the tree,
+`renders/yaris_render_s1/render_hero_g64_m1100_2026-08-06.py`, is a different
+render entirely: marching-cubes free surface, L0/L1a/L1b/L2 verdict strip, no
+dashboard panels. A Vista-side search timed out at 60 s and is inconclusive.
+
+**Consequence: `renders_preview/g64_m1100_live_2026-08-07.mp4` is unreproducible.**
+The only render in the project cannot be regenerated, so the caption cannot be
+corrected by re-rendering. This is the same un-regenerable-artifact defect the
+register records for `c1only.sbatch` and `c2only.sbatch`, now applied to the one
+headline visual deliverable.
+
+Until the generator is recovered, the caveat in §3 has to travel **alongside** the
+video (figure caption, poster text, paper) rather than inside it.
+
+`analysis/render_rollout.py` was still worth committing on its own merits: it
+renders the s3 enhanced-pipeline rollouts, it existed in no commit, and it is now
+versioned. It is simply not this video's generator.
 
 ---
 
