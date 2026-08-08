@@ -136,6 +136,32 @@ not by file read from the Mac, see the item for its evidence path.
    solidified particle cloud implies. Do not claim NHTSA-measured inertia
    or a measured CG height is in effect in any gated run.
 
+   EXTENDED 2026-08-08: AND DO NOT WIRE THEM. The absence is correct, not a
+   gap. Three reasons, all verified live against source and measured rollout
+   data, full working in docs/REALISM_UPGRADE_ASSESSMENT_2026-08-08.md
+   section 1, guard enforced at .claude/checks/params_check.py
+   check_inertia_wired():
+   (a) It is not measured. compact_sedan's {463.0, 1893.0, 1960.0} reproduces
+       EXACTLY from box_inertia(1100, 4.30, 1.70, 1.47), a solid rectangular
+       box. No measured Yaris tensor exists anywhere: SAE 1999-01-1336 ends
+       Nov 1998. vehicle_params.py:15-19 already says the compact_sedan
+       cg/inertia/ssf are estimates.
+   (b) The solver already computes a better one, from the real hull particle
+       cloud at kernels/mpm_solver_warp.py:859-871. Measured from g64_m1100's
+       8905 rigid particles about the true centroid: Ixx 1501.5, Iyy 395.0,
+       Izz 1685.4, against the box's axis-corrected 1893.0, 463.0, 1959.8. The
+       box overstates every principal moment by +16.3 to +26.1 percent, which
+       is geometrically forced: the hull fills only 33.2 percent of its own
+       bounding box.
+   (c) The axes are transposed. vehicle_params documents (L,W,H) as (x,y,z),
+       but the gated scene puts the hull's LONG AXIS ON Y (measured extents
+       1.7078, 4.2014, 1.4853). A naive write gives Ixx -69.2 percent and
+       Iyy +379.2 percent against the hull truth.
+   Free result worth reporting instead: the cloud CG sits 0.6312 m above the
+   floor, already below bbox mid-height 0.7427 m and 23.8 percent above the
+   0.51 m estimate. A too-high CG biases TOWARD topple, and the 17 runs show
+   zero topples, so the no-topple result is conservative.
+
 5. A grid convergence study exists: g48, g64 and g96 at three masses, depth
    and velocity held fixed, nominal depth identical at 0.2944294 m on all
    three grids. It is non-monotone and unconverged. final_disp_mag_m for
