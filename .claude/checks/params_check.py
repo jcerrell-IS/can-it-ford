@@ -181,11 +181,24 @@ def check_inertia_wired():
         r"\[\s*[\"']inertia_kg_m2[\"']\s*\])"
     )
     AXIS_ACK = "AXIS-CHECKED"
-    for rel in (SIM_DRIVER_REL, "renders/yaris_render_s3_enhanced/sim_enhanced.py"):
-        p = ROOT / rel
-        if not p.exists():
+    # Scan every file that BEHAVES like a solver driver, not a hardcoded path
+    # list. A fixed list silently misses the next driver, and this repo creates
+    # them regularly (validate_coupling_force_ladder.py, the class-specific runs).
+    # An absent hit from a narrow scan is not evidence of absence.
+    IS_SIM_DRIVER = re.compile(r"import\s+warpmpm|from\s+warpmpm|finalize_rigid_bodies|set_material_range")
+    for p in sorted(ROOT.rglob("*.py")):
+        try:
+            rel = str(p.relative_to(ROOT))
+        except ValueError:
             continue
-        body = p.read_text(errors="ignore")
+        if skip_path(rel):
+            continue
+        try:
+            body = p.read_text(errors="ignore")
+        except OSError:
+            continue
+        if not IS_SIM_DRIVER.search(body):
+            continue
         if NAIVE_WIRE.search(body) and AXIS_ACK not in body:
             failures.append(
                 f"{rel} appears to wire an inertia tensor into the solver without an "
