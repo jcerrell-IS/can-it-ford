@@ -123,6 +123,35 @@ Two defects found and recorded rather than silently fixed:
    841d666. No script in the repo writes this CSV by name, so its generation step
    is currently unreproducible; that is an open provenance gap.
 
+**Update 2026-08-11: the gap is now closed by a RECONSTRUCTION, and the original
+is gone.** `analysis/build_class_specific_inventory.py` rebuilds the CSV from the
+seven `summary.json` files and reproduces the committed bytes exactly, verified by
+its own `--check` mode. Read that as regenerability restored, not as provenance
+recovered. The original generator was not found and on the evidence never existed
+as a committed artifact: a live search of the repo including the gitignored
+`renders/` and `data/` trees returned nothing, and two of the CSV's columns hold
+hand-authored English prose that no `summary.json` field supplies, which points at
+hand assembly or a scratch script. The reconstruction says so in its own docstring.
+It must not be cited as the original.
+
+Reconstructing it did surface the derivation rules, which were nowhere written
+down, and one is a live trap:
+
+- `P3_float` is `abs(C2_veh_zmin_rise) <= 0.01` (`gates.py:151`), an **absolute**
+  value, so a hull that SANK fails it exactly as one that rose would. Three of the
+  seven rows carry a small negative rise that passes. A plausible-looking
+  `rise < 0 means fail` rule flips those three and is wrong.
+- `P2_passthrough` is a strict `< 0.10` (`gates.py:148`).
+- `tripwire` is the hull-provenance check that `--vehicle` took effect, against the
+  per-vehicle `yaris_ref_delta_pct` documented at `sim_standing.py:417-419`
+  (about 0 Yaris, +39.7 Rogue, +124.7 Silverado).
+- `verdict` is `final_disp_mag_m > 0.05`. That 0.05 is the internal onset-of-motion
+  tolerance with no peer-reviewed source, declared 24 times under five names across
+  the repo (register D7, count resolved 2026-08-11). Not a cited physical threshold.
+- The committed file is **CRLF**. Regenerating with `\n` differs by exactly 8 bytes
+  and a line-by-line diff shows nothing, so byte comparison is the only check that
+  catches it.
+
 ---
 
 ## 4. Canonical-g64 free-rigid results, with caveats
