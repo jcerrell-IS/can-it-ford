@@ -161,9 +161,23 @@ Realized density is grid-coupled by construction, since `solid_volume = n_partic
 
 **D6i. The defect that actually survived the repoint was the word "independently."** `four_rung_ladder.md` continued to claim the classifier "independently classifies" the three runs after the filename was corrected. It cannot: `simulation/failure_modes.py` reads the same `_incoming/<run>/metrics.csv` the table above it was built from, so it restates one rollout under an explicit criterion and corroborates nothing from a second source. Fixed 2026-08-07. The `_GRIDAWARE` sibling already carried the retraction. **Repointing a citation does not fix an independence claim; check the verb, not just the path.**
 
-**D7. DRIFT_THRESHOLD 0.05 m has no peer-reviewed source.** Re-declared as a literal in 16 places under three names. `gates.py:195-196` records in a print statement that it is a conservative numerical onset-of-motion tolerance.
+**D7. DRIFT_THRESHOLD 0.05 m has no peer-reviewed source.** Re-declared as a literal in 24 places under five names (count resolved 2026-08-11, see below; the earlier "16 places under three names" was a floor produced by a grep that skipped `renders/`). `gates.py:195-196` records in a print statement that it is a conservative numerical onset-of-motion tolerance.
 The attribution to Smith, Modra and Felder 2019 Eq. 6 is a MISATTRIBUTION. That equation contains no such criterion.
-**Count disagreement, unresolved:** this entry says three names, CLAUDE.md item 13 says four (`DRIFT_THRESHOLD`, `DRIFT_THRESHOLD_M`, `DRIFT_M`, `THRESHOLD`). Both counts were produced by a bare recursive grep, which H0 shows skips `renders/`, so both are FLOORS, not totals. Re-run with `/usr/bin/grep` before citing either.
+**Count disagreement, RESOLVED 2026-08-11 by the `/usr/bin/grep` re-run this entry asked for.** Both prior counts were floors, as predicted. The live total is **24 declaration sites under FIVE names**, not 16 under three or four:
+
+| name | sites |
+|---|---|
+| `DRIFT_THRESHOLD` | 9 |
+| `L2_DRIFT_M` | 7 |
+| `DRIFT_THRESHOLD_M` | 5 |
+| `THRESHOLD` | 2 |
+| `DRIFT_M` | 1 |
+
+Scope of the count: `renders/` and `data/` included explicitly; `.git/`, `third_party/`, `__pycache__/`, `archive/`, `_archive/`, `session_archive/` and every `.bak*` file excluded. Counting only assignments of the literal, not mentions in prose or f-string labels.
+
+**`L2_DRIFT_M` is a FIFTH name that neither this entry nor CLAUDE.md item 13 ever named**, and it is the second most common one, at 7 of the 24 sites: `analysis/make_poster_figures{,_BIG,_GRIDAWARE,_BIG_GRIDAWARE}.py`, `deliverables/figures_src/make_poster_figures_accessible.py`, and the two `deliverables/for_kumar*/03_scripts/` copies. Six of those seven are POSTER FIGURE GENERATORS, so the name absent from both inventories is the one closest to a formal deliverable. It was previously recorded only at `docs/COUPLING_VALIDATION_J1_2026-08-07.md.bak-premerge:318`, which is UNTRACKED, i.e. the finding existed solely in a file git would not have preserved.
+
+These 24 are distances. They are separate from the three `0.05` literals in `failure_modes.py` covered by D7a below, one of which is a speed. Total `0.05` literals in live code is therefore 27, of which 26 are distances and 1 is a speed. **Deduplicate by name and unit, never by value.**
 
 **D7a. `simulation/failure_modes.py` carries THREE `0.05` literals, not two, and one of them is not a distance. Verified live 2026-08-07 with `/usr/bin/grep`.**
 
