@@ -522,9 +522,15 @@ categories, landed by aa754dc (NOT 720d1e2, which is a later inertia-re-wire
 block): lit:geometry_bbox, lit:sound_speed_cfl, lit:resolution_convergence_gci
 and lit:manifest_provenance. TRAP: only three exist as literal strings.
 lit:resolution_convergence_gci is assembled at runtime by
-params_check.py:246 from the gate= argument at :404, so grep -F for it
+params_check.py:259 from the gate= argument at :417, so grep -F for it
 returns nothing and a naive audit concludes the gate is missing. It is not.
 Run the script and read its output instead of grepping for the tag.
+SECOND TRAP: four is the count of literature-cited TAGS, not of gates. Six
+lit: tags exist (also lit:floor_restitution and lit:mass_inertia_cog), and
+the four gate= categories are a DIFFERENT four: floor_restitution,
+geometry_bbox, mass_inertia_cog, resolution_convergence_gci. Grepping gate=
+returns names that do not match this list; that is expected, not drift.
+Line numbers verified live 2026-08-08 by running the script.
 
 STILL OPEN, not closed
 - The Overleaf token is off local disk but NOT revoked. ~/can-it-ford-paper
