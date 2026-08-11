@@ -110,6 +110,24 @@
             "command": "python3 $CLAUDE_PROJECT_DIR/.claude/hooks/pretooluse_git_commit_gate.py"
           }
         ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 $CLAUDE_PROJECT_DIR/.claude/hooks/banned_phrase_guard.py"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash|Read|Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 $CLAUDE_PROJECT_DIR/.claude/hooks/stale_csv_guard.py"
+          }
+        ]
       }
     ],
     "PostToolUse": [
@@ -151,6 +169,14 @@
           {
             "type": "command",
             "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/orient_live.sh"
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 $CLAUDE_PROJECT_DIR/.claude/hooks/session_start_protocol.py"
           }
         ]
       }
