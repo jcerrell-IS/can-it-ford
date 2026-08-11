@@ -199,6 +199,8 @@ CLAUDE.md item 13 previously named only `:46` and `:48`. **`:47` is a speed that
 
 **E3. The three AR&R mass classes are one hull with mass overrides only.** 1100 / 1609 / 2337 kg. Run logs print 8,905 particles for all three, so geometry never changes. Class names denote which AR&R limit set was applied by kerb weight, nothing more. Rogue and Silverado meshes exist but never entered a simulation.
 
+**E3a. CORRECTION 2026-08-11. Both hulls entered simulations; the "never entered a simulation" clause above is stale.** Rogue and Silverado ran through the free-rigid path at canonical g64 in job 896273 (class_specific_2026-08-08.sbatch, 2026-08-07T23:16:40) and through a matched-dx / fixed-g96 sweep in job 896302, both verified live 2026-08-11 against Vista summary.json files and tracked non-canonically in data/class_specific_runs_2026-08-08.csv (commit c375adc). See docs/MULTIGEOM_VALIDATION_2026-08-11.md for full results. The rest of E3 is unaffected: the three AR&R mass classes remain one Yaris hull with overrides only, and this correction does not fold Rogue/Silverado into the canonical 17-run store.
+
 **E4. The Yaris class assignment is decided by 1.7 cm.** Length 4.2826 m in the July 24 ledger versus 4.30 m at `paper_draft.md:33`. That margin alone decides Small-passenger versus not. The 1100 versus 1078 kg mass difference does not change the verdict. **UNRESOLVED: which value the live `vehicle_params.py` uses.**
 
 **E5. Three real Yaris masses exist.** 1045 kg (Smith, Modra and Felder), 1078 kg (NCAC), 1100 kg (MASH nominal, used here). Do not silently correct one to another.
