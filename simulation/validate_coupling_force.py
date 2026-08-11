@@ -816,6 +816,11 @@ def run_c3(n_grid, depth_cells=18.0, box_bottom_cells=8.0, settle_frames=600,
     res["rho_local_at_centroid"] = rho_local
     res["a_expected_compressible"] = G * (rho_local / RHO_W - 1.0)
     res["a_as_fraction_of_g"] = res["a_headline_first3"] / G
+    a_exp = res["a_expected_compressible"]
+    res["err_headline_vs_ideal_pct"] = (
+        100.0 * (res["a_late_window"] - a_exp) / a_exp
+        if abs(a_exp) > 1e-12 else float("nan")
+    )
     return res
 
 
