@@ -281,3 +281,31 @@ the verdicts to be unchanged, which this gate reports as a FAILURE by design,
 since an unchanged output is exactly the condition it flags. That is the correct
 reading for a sensitivity probe and the wrong reading for a regression check.
 Do not wire it to item 15 without inverting the interpretation in the caller.
+
+## Tacit defaults and hidden assumptions, added 2026-08-11
+
+Both citations below were carried in from the dispatch that commissioned this
+section and have NOT been checked against a primary record. The blanket
+CITATION STATUS at the top of this file applies to them unchanged.
+
+JutulGPT (Lie et al, arXiv:2603.00214) frames the failure mode in which a
+modelling choice is never made explicitly by anyone, but is resolved tacitly by
+whatever the simulator happens to default to, and is therefore invisible to the
+assumption log because it was never written down as a decision. That is the
+shape of the inertia, CG and SSF defect recorded at `CLAUDE.md` August 4 audit
+item 4: `inertia_kg_m2`, `cg_height_m` and `ssf` are tabulated in
+`vehicle_params.py` and never reach the solver, so the tensor actually in force
+is whatever the solidified particle cloud implies. Nobody chose the
+cloud-derived tensor. It arrived as a default. The project's own resolution of
+item 4, that the default is the better value and must not be overwritten, does
+not weaken the point, because the value was still never logged as an assumption
+until an audit went looking for it.
+
+PhyNiKCE (Fan et al, arXiv:2602.11666) frames physical correctness as
+constraint satisfaction, a set of conditions a candidate result must jointly
+meet, rather than a single fidelity score to be maximised. That is the framing
+under which `.claude/checks/physics_gates_literature.py` exists as a project at
+all: each gate is one named constraint, checked independently against source
+and stored manifests, and a run is not more converged or less converged but
+either satisfies a stated condition or does not. It is also why the honest
+output of that file is a list of named warnings rather than an aggregate score.
