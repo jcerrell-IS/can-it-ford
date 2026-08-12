@@ -69,7 +69,22 @@ cited.
 | context | batch, host c642-002, 2026-08-07T23:16:40 | interactive node, host c642-011, 2026-08-08T00:15:08 |
 | driver sha256 | `7236e474af6722...` | `4696c3b2d39f4e...` |
 | Rogue mass | 1571.3 kg (primary) | 1609.0 kg (primary), 1571.3 as `mass_alt_kg` |
-| Silverado mass | 2270.0 kg (primary) | 2337.0 kg (primary), 2270.0 as `mass_alt_kg` |
+| Silverado mass | 2270.0 kg, deck header (primary) | 2337.0 kg, AR&R class figure; 2270.0 as `mass_alt_kg` |
+
+**LABEL CORRECTED 2026-08-13.** The Silverado row previously called the multigeom
+figure "2337.0 kg (primary)", which inverted the provenance hierarchy section 1
+of this document already states. 2270.0 kg is primary: it is the vehicle's own
+mass, verbatim from `silverado-coarse-v3a.key:28` ("version 3a, 2270 kg"), opened
+directly on Vista. 2337.0 kg is the AR&R `large_4wd` **class threshold** from
+`gates_both_scenarios.py`, recorded as such in the run's own `summary.json`
+`mass_source` field; `vehicle_params.py:42-46` warns that the AR&R class keys and
+the vehicle keys are separate taxonomies and not interchangeable. The 2.9 percent
+figure below is therefore a gap between a vehicle mass and a class threshold, not
+a disagreement between two candidate vehicle masses. No run, CSV or verdict
+changes: every Silverado run is NO-FORD at 1100.0, 2270.0 and 2337.0 alike. Full
+working, including the confirmation that this hull is the **2007** Silverado and
+that register E8's licence blocker names the 2014 model instead, is in
+`docs/SILVERADO_MASS_PROVENANCE_2026-08-13.md`.
 
 **They agree exactly on every mass-independent quantity.** `dx`, `water_layers`,
 `hull_m3`, `solid_volume_m3`, `fill_ratio` and the tripwire `hull_ref_delta_pct`
