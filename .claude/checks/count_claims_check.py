@@ -232,6 +232,16 @@ LEFT_TOTAL = re.compile(
 # totals table. Shape-based, so it survives the wording changing again.
 TABLE_ROW = re.compile(r"^\s*$")
 RIGHT_TABLE = re.compile(r"^[^\n]{0,70}?archive/?\s*(excluded|included)\b", re.I)
+# "declared in 24 places", "declared at 23 sites". Total language, but checked AFTER
+# LEFT_NAME_AT so that "DRIFT_THRESHOLD is declared at 8 sites" still reads as a
+# per-name figure. When a sentence carries both a name and "declared at", per-name
+# wins; that resolution can mis-BLOCK a mixed sentence, which is the visible and
+# overridable failure. The alternative, a silent allow, is the one this file exists
+# to prevent. A bare "N sites" with no cue at all stays unclassified on purpose:
+# "L2_DRIFT_M is the second most common at 7 sites" is a per-name figure, and
+# reading it as a total would BLOCK a correct line.
+LEFT_DECLARED = re.compile(
+    r"\bdeclared\s+(?:as\s+a\s+literal\s+)?(?:in|at)\s+$", re.IGNORECASE)
 # Continuation of a list of totals already begun on this line: "22, 23 or 24",
 # "22 / 23 / 23 / 24". Only honoured AFTER a total was classified on the same line,
 # so "Lines 46, 47 and 48 all read 0.05" cannot be swept in.
@@ -300,15 +310,27 @@ def _scope_from(right):
     return None
 
 
-def extract_assertions(text):
-    """Classify every integer in the text. Unclassifiable integers are ignored."""
+def extract_assertions(text, anchor_required=True):
+    """Classify every integer in the text. Unclassifiable integers are ignored.
+
+    anchor_required=False is for hook mode, where `text` is an edit fragment from a
+    file already known to be watched, so file identity IS the anchor. A fragment
+    carries no drift-family word at all: the four totals-table rows in CLAUDE.md
+    read literally "22   bare literals only, archive/ excluded". Requiring an anchor
+    there let a wrong total through the hook silently, which is the one thing this
+    file exists to stop. Measured 2026-08-12 across all three watched files:
+    dropping the anchor adds ZERO assertions, so the per-integer cues carry the
+    discrimination on their own and the anchor is only a backstop for whole-file
+    CLI scans of unrelated sections.
+    """
     lines = text.splitlines()
     found = []
     for idx, line in enumerate(lines):
-        lo = max(0, idx - ANCHOR_WINDOW)
-        hi = min(len(lines), idx + ANCHOR_WINDOW + 1)
-        if not TOPIC.search("\n".join(lines[lo:hi])):
-            continue
+        if anchor_required:
+            lo = max(0, idx - ANCHOR_WINDOW)
+            hi = min(len(lines), idx + ANCHOR_WINDOW + 1)
+            if not TOPIC.search("\n".join(lines[lo:hi])):
+                continue
         if REFUTATION.search(line):
             continue
         nxt = lines[idx + 1] if idx + 1 < len(lines) else ""
@@ -350,6 +372,8 @@ def extract_assertions(text):
                     hit_at = LEFT_NAME_AT.search(left)
                     if hit_at:
                         kind, label = "per-name", hit_at.group(1)
+                    elif LEFT_DECLARED.search(left):
+                        kind, label = "total", "TOTAL"
                     elif total_on_line and LEFT_LIST.search(left):
                         kind, label, scope = "total", "TOTAL", scope
 
@@ -371,6 +395,13 @@ def extract_assertions(text):
 # --------------------------------------------------------------------------
 
 class CountClaim:
+    """One quantity whose asserted count must match a live re-derivation.
+
+    extractor contract: extractor(text, anchor_required=True) -> [Assertion].
+    A second claim type supplies its own recompute and extractor and is appended
+    to REGISTRY; nothing else changes.
+    """
+
     def __init__(self, claim_id, quantity, files, recompute, extractor, authority):
         self.claim_id = claim_id
         self.quantity = quantity
@@ -460,9 +491,13 @@ def hook_mode(data, root):
     if claim is None:
         sys.exit(0)
     payload = (ti.get("new_string", "") or "") + "\n" + (ti.get("content", "") or "")
-    if not payload.strip() or not TOPIC.search(payload):
+    if not payload.strip():
         sys.exit(0)
-    asserts = claim.extractor(payload)
+    # Deliberately NO topic gate here. The path already matched a watched file, and
+    # an edit fragment routinely contains no drift-family word. The extractor is
+    # pure regex over a small payload, and the expensive repo walk below still only
+    # runs if the extractor actually classified something.
+    asserts = claim.extractor(payload, anchor_required=False)
     if not asserts:
         sys.exit(0)
     readings = claim.recompute(root, None)
