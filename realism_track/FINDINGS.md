@@ -566,22 +566,38 @@ collider because `BoxTank.pin` is a no-op for non-rigid modes
 (`validate_coupling_force.py:365-366`). `--settle N` now means N FRAMES on both
 grids, and the default moved 400 to 600 to match `run_c1_sdf`'s `settle_frames`.
 
-**COST CORRECTION.** An earlier draft of this section put the fix at roughly 9x the
-solver work. That took the 600-frame cap as the expected cost, which is wrong,
-because `settle_pinned` BREAKS EARLY once its quiescence gate trips. The floor is
-`min_settle`, and because `DX_CANON` is a fixed constant rather than `dx`, the
-water depth is grid-independent at 2.6499 m, so the acoustic transit is 0.206292 s
-and `min_settle` is **62 frames on both grids**, confirmed by the Mac run
-reporting `settle_min_frames=62`.
+**COST, settled by measurement after two wrong estimates.** The first estimate said
+9x, using the frame cap as the denominator. The second "corrected" it to roughly
+the cost of what already ran, using `min_settle` (62 frames) as the expected trip
+point. **The second was wrong and the first was right.** `min_settle` is only a
+floor below which the gate is not even tested; the gate does not actually trip
+anywhere near it.
 
-| | substeps/frame | if gate trips at the 62-frame floor | if it runs to the 600 cap | job 3361315 ran |
+The measured trip points are in this repo already, in the committed rung-(a)
+artifacts under `data/coupling_validation/`:
+
+| | substeps/frame | gate tripped at | substeps to settle | job 3361315 ran |
 |---|---|---|---|---|
-| g64 | 11 | 682 substeps | 6600 substeps | 900 |
-| g96 | 16 | 992 substeps | 9600 substeps | 900 |
+| g64 (`c1sdf_sdf_g64.json`) | 11 | frame **354** | 3,894 | 900 |
+| g96 (`c1sdf_sdf_g96.json`) | 16 | frame **776** | 12,416 | 900 |
 
-So the realistic cost is comparable to what already ran, and only the pathological
-no-convergence case is 9x. Budget for the cap, expect the floor, and read
-`settle_frames_run` in the output to see which happened.
+Total 16,310 substeps against 1,800, so **9.1x**, and that is a measurement rather
+than either bound. Job 3361315 took 34:21, so a correctly settled rung (b) will not
+fit `-t 02:00:00` on `gpu-a100-dev` and needs the normal `gpu-a100` queue or one job
+per grid.
+
+**The cap must be 900, not 600.** An earlier revision of this document, and of both
+sbatch files, used 600. That is wrong: `c1sdf_sdf_g96` trips its gate at frame 776,
+so a 600 cap would stop g96 short, return `settle_gate_met=false`, and silently
+reintroduce under-settling at precisely the grid that failed worst. 900 is also what
+the rung-(a) reference actually used, at `scripts/c1sdf.sbatch:38`
+(`--settle-frames 900`); 600 is only the Python default of `run_c1_sdf`, which that
+invocation overrode. Corrected in the driver default and in both sbatch files.
+
+One row is worth noting for expectations: `c1sdf_box_g96` ran the full 900 frames
+and still returned `settle_gate_met=false`, so 900 is not a guarantee at g96 either.
+Read `settle_frames_run` and `settle_gate_met` in the output before trusting any
+number from a run.
 
 ### What is actually outstanding
 

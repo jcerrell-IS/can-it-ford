@@ -50,9 +50,12 @@ def main():
     ap.add_argument("--rho-box", type=float, default=600.0)
     ap.add_argument("--depth-cells", type=float, default=18.0)
     ap.add_argument("--submersion-frac", type=float, default=0.80)
-    ap.add_argument("--settle", type=int, default=600,
+    ap.add_argument("--settle", type=int, default=900,
                     help="settle FRAMES cap, collider fixed; one frame is "
-                         "tank.substeps solver substeps, matching run_c1_sdf")
+                         "tank.substeps solver substeps. 900 matches the rung-a "
+                         "reference invocation at scripts/c1sdf.sbatch:38, whose "
+                         "g96 gate trips at frame 776, so a smaller cap "
+                         "under-settles g96")
     ap.add_argument("--steps", type=int, default=60, help="coupled steps")
     ap.add_argument("--relax", type=float, default=1.0)
     ap.add_argument("--freeze-rotation", action="store_true", default=True)

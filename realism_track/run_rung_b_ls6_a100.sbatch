@@ -47,7 +47,7 @@ for NG in 64 96; do
     --rho-box 600.0 \
     --depth-cells 18.0 \
     --submersion-frac 0.80 \
-    --settle 600 \
+    --settle 900 \
     --steps 120 \
     --out "$OUTDIR/rung_b_g${NG}.json" 2>&1 | tail -40
   echo "exit=$?"
