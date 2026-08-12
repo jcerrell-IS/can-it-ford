@@ -18,9 +18,17 @@ has since been RUN, and it does not carry: buoyancy reads **-18.9% at g64 and
 +115.0% at g96**, and the body sinks at one grid while rising at 4 g at the
 other. Read "the validated path" as validated at full submersion only. It is
 refuted, for now, at the partial submersion where buoyancy is actually generated.
-A settle defect is the leading explanation and is quantified in the last section
-of this document. Do not quote -7.67%/+7.28% as a coupling-accuracy figure for a
-floating vehicle.
+Do not quote -7.67%/+7.28% as a coupling-accuracy figure for a floating vehicle.
+
+**Root cause, corrected 2026-08-13.** The first pass blamed a settle defect. The
+settle defect is real, but it is secondary and it was MASKING the actual problem.
+`added_mass_ratio` is identically **1.000000** for any body floating at
+equilibrium, by algebra, while `coupler.py:72` warns above **0.5** and
+`coupler.py:36-42` calls 1 the divergence point. Every floating-vehicle case this
+project exists to simulate therefore sits at twice the coupling module's own
+warning threshold, by construction and with no parameter escape. Job 3361315
+printed that warning on both grids and ran anyway at `relax = 1.0`. Full working
+in "Primary cause" below.
 
 Path (b), Genesis LegacyCoupler, was not pursued. It is strictly more work for a
 less-validated force: no coupling-force validation exists anywhere in the Genesis
@@ -350,7 +358,88 @@ rounding. The reference is sound.
 and 1.0e-04 relative, inertia within 0.4% of the analytic solid box. Newton-Euler
 is correct. The error is upstream of it.
 
-### Root cause: the settle is 1 substep per iteration, not 1 frame
+### Primary cause: a floating body sits exactly at the scheme's divergence point
+
+This supersedes the settle explanation below, which was written first and is real
+but secondary. Corrected 2026-08-13 after reading `coupler.py` and job 3361315's
+own stdout rather than only the result JSONs.
+
+`coupler.py:121-130` defines
+
+    added_mass_ratio = rho_w * V_displaced / m_body
+
+and `coupler.py:36-42` states that a partitioned explicit scheme over-predicts and
+can diverge as this ratio approaches 1, with `warn_added_mass = 0.5` at
+`coupler.py:72` as the warning threshold.
+
+Now impose flotation. A body floating at equilibrium satisfies
+`m_body * g = rho_w * g * V_displaced`, so `rho_w * V_displaced = m_body`, so
+
+    added_mass_ratio = 1.000000, EXACTLY, for ANY body floating at equilibrium.
+
+That is an identity, not a measurement. It is independent of size, shape, mass and
+density. Checked against this project's own vehicle: the canonical Yaris hull at
+310.494 kg/m3 floats at submersion fraction 0.3105, giving
+`(1000/310.494) * 0.3105 = 1.0000`.
+
+The consequence is structural, not a tuning problem. **Every floating-vehicle case
+this project exists to simulate sits at exactly twice the coupling module's own
+warning threshold, and at the value its documentation calls the divergence point.**
+There is no parameter choice that escapes it while still floating: reaching a ratio
+of 0.5 at the rung-(b) design submersion of 0.80 would require a body density of
+1600 kg/m3, which is denser than water and therefore sinks rather than floats.
+
+Job 3361315 ran at `relax = 1.0`, meaning no under-relaxation, and printed the
+module's own warning on both grids and then continued:
+
+    COUPLING WARNING added_mass_ratio=0.86 exceeds 0.5; a partitioned explicit
+    scheme is at its stability limit here. Reduce dt or set relax<1 and treat the
+    transient as unconverged until a dt study says otherwise.
+
+The measured errors order with the ratio exactly as that warning predicts:
+
+| | added_mass_ratio | error vs analytic |
+|---|---|---|
+| g64 | 0.8644 | -18.9% |
+| g96 | 0.9298 | +115.0% |
+| rung-b design point (frac 0.80) | 1.3333 | not reached |
+| any vehicle at true flotation | 1.0000 | not reached |
+
+### The settle bug was MASKING this, so fixing it alone makes rung (b) worse
+
+This is the counterintuitive part and it should stop anyone from re-running
+naively. The under-settled water left the realized submersion at 0.52 and 0.56
+instead of the requested 0.80, and since `added_mass_ratio` is proportional to
+submersion, that shortfall held the ratio down at 0.86 and 0.93. The settle defect
+was accidentally keeping the run just below 1.0.
+
+Correct the settle and the realized fraction rises toward 0.80, driving the ratio
+toward 1.3333, which is further into the divergence regime, not out of it. A
+settle-only fix should be expected to produce a WORSE rung (b), and that outcome
+must not be read as a new failure. It is this one.
+
+Verified on the Mac after the settle fix landed: a 4-frame run reaches realized
+submersion 0.7758 and `added_mass_ratio = 1.2930`, and the driver's new guard
+correctly reports `valid_accuracy_measurement = false`.
+
+### What this means for the moving-SDF path
+
+Path (a) is not refuted as an idea, but it cannot be validated for flotation in its
+current explicit, unrelaxed form. Mitigation is mandatory rather than optional, and
+the honest options are under-relaxation (`--relax` below 1, which
+`coupler.py:41-42` says damps the transient without moving the equilibrium), a
+reduced `dt`, or an implicit/monolithic coupling that the module explicitly
+disclaims at `coupler.py:35-36`. Choosing among those is a real decision and none
+of them is a threshold tweak.
+
+CAVEAT, stated because this report is otherwise built on primary reads: the claim
+that a partitioned explicit scheme *diverges* near ratio 1 is `coupler.py`'s own,
+attributed there to Zhang et al. 2026. That citation has NOT been checked against
+its source here. What is independently established is the identity (algebra), the
+0.5 threshold (source read), the warning firing twice (job stdout), and the error
+ordering (measured).
+
+### Secondary cause: the settle is 1 substep per iteration, not 1 frame
 
 `rung_b_coupled.py:81-85` settles with
 
@@ -402,18 +491,49 @@ equivalent, so it cannot detect that it stopped early. It stopped early.
 Per the standing instruction, rung (b) gates the ladder and rung (b) has not
 passed. No threshold was adjusted and none should be.
 
-### The fix, and what it costs
+### The settle fix, DONE, and what it actually costs
 
-Change `rung_b_coupled.py:83` to step `tank.substeps`, matching `:625`, and add
-the `settle_gate_met` criterion so the run reports whether it converged rather
-than assuming it. Then `--settle N` means N frames at both grids, which is
-grid-independent by construction.
+Landed in commit `79fec32`. The hand-rolled loop is gone; `rung_b_coupled.py` now
+calls the same `settle_pinned` that `run_c1_sdf` uses, which is safe with an SDF
+collider because `BoxTank.pin` is a no-op for non-rigid modes
+(`validate_coupling_force.py:365-366`). `--settle N` now means N FRAMES on both
+grids, and the default moved 400 to 600 to match `run_c1_sdf`'s `settle_frames`.
 
-The cost is not free and should be a deliberate decision, not a reflex re-run. At
-a canonical 600-frame cap this is 6600 substeps at g64 and 9600 at g96 against the
-900 each that job 3361315 ran, roughly a 9x increase in solver work. That job took
-34:21 including venv build and unit tests, so a full canonical settle will not fit
-the 2-hour `gpu-a100-dev` limit and needs either the normal `gpu-a100` queue or one
-job per grid. A cheaper intermediate, holding physical settle time equal across
-grids rather than matching canonical depth, would cost about 45% more than the
-completed run and would at least make the g64/g96 comparison controlled.
+**COST CORRECTION.** An earlier draft of this section put the fix at roughly 9x the
+solver work. That took the 600-frame cap as the expected cost, which is wrong,
+because `settle_pinned` BREAKS EARLY once its quiescence gate trips. The floor is
+`min_settle`, and because `DX_CANON` is a fixed constant rather than `dx`, the
+water depth is grid-independent at 2.6499 m, so the acoustic transit is 0.206292 s
+and `min_settle` is **62 frames on both grids**, confirmed by the Mac run
+reporting `settle_min_frames=62`.
+
+| | substeps/frame | if gate trips at the 62-frame floor | if it runs to the 600 cap | job 3361315 ran |
+|---|---|---|---|---|
+| g64 | 11 | 682 substeps | 6600 substeps | 900 |
+| g96 | 16 | 992 substeps | 9600 substeps | 900 |
+
+So the realistic cost is comparable to what already ran, and only the pathological
+no-convergence case is 9x. Budget for the cap, expect the floor, and read
+`settle_frames_run` in the output to see which happened.
+
+### The decision that is actually blocking, and it is not the settle
+
+Re-running with the settle fix and `relax = 1.0` is expected to fail HARDER, for
+the reason given under "Primary cause": the better settle raises realized
+submersion toward 0.80 and therefore drives `added_mass_ratio` from 0.86/0.93
+toward 1.3333, deeper into the divergence regime. Spending GPU time on that
+without a mitigation decision buys a worse number and no new information.
+
+What needs deciding first, in order of increasing cost:
+
+1. `--relax` below 1. Cheapest, and `coupler.py:41-42` states under-relaxation
+   damps the transient without moving the equilibrium the body settles to, so it
+   is a stability remedy rather than a tuned threshold. A short relax sweep at g64
+   alone would establish whether the wrench converges at all.
+2. Reduced `dt` at fixed grid, which is the other lever the module's own warning
+   names. Costs linearly in wall time.
+3. Implicit or monolithic coupling, which `coupler.py:35-36` explicitly disclaims
+   for this module. That is new development, not a parameter change.
+
+Until one of those is chosen, rung (b) should stay unrun. The ladder is still
+gated and rung (c) and (d) remain unattempted.
