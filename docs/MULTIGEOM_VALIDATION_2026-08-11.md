@@ -307,3 +307,196 @@ validated SDF buoyancy comparison remains 7.3 to 7.7 percent against analytic.
 4. The Rogue mass remains web-sourced only.
 5. Register E8's licence question is unresolved and gates any publication of
    derived geometry.
+
+---
+
+## 8. Frame renders of the multigeom runs, added 2026-08-11
+
+NON-CANONICAL, same scope statement as the top of this document. Nothing here
+enters the 17-run gated store. `data/all_runs_inventory.csv` and
+`renders/yaris_render_s1/` were not touched.
+
+### Which script rendered these
+
+`analysis/render_multigeom_rollout.py`, written this session because nothing
+existing could do it. Checked live before writing, not assumed:
+
+- `render_frames.py` accepts an arbitrary `--input` path but not this schema. Its
+  `_first_key` matches the 0-d scalar key `frames` as though it were a position
+  array, and `_ensure_TN3` then raises
+  `ValueError: Expected positions shape (T,N,3) or (N,3), got ()`. Reproduced by
+  running it, not inferred from reading. It also has no vehicle path at all, only a
+  static `--box-center` / `--box-size` proxy.
+- `render_hero_shot.py` is a Blender `bpy` single still that reads `pos` / `vel` and
+  draws a hardcoded 0.85 x 0.55 x 0.50 m cube with no rigid transform.
+- `~/Downloads/render_frames_pyvista.py` COULD NOT BE READ. macOS TCC denies this
+  process: `EPERM` on the read tool, `/usr/bin/grep`, `wc` and `cp`; only `ls`
+  metadata succeeds. It is neither confirmed nor ruled out as a candidate.
+- The seven renderers under `renders/yaris_render_s1/` (`render_flood.py`,
+  `render_pv.py`, `render_pv3.py`, `render_pv_fixed.py`, `render_realistic.py`,
+  `t1_car.py`, `render_hero_g64_m1100_2026-08-06.py`) all draw the vehicle as a
+  shaded mesh from a hardcoded Yaris `.ply` (`t1_car.py:17`,
+  `render_hero_g64_m1100_2026-08-06.py:47`, `render_flood.py` via `geom_live`).
+  Neither non-Yaris `.ply` exists on this machine, and register E8 forbids
+  committing derived CCSA geometry. Four of the seven additionally need `pyvista`,
+  which is absent from all seven project venvs probed.
+
+The vehicle is therefore drawn from `veh_particles_scene0`, the rigid particle cloud
+already inside the npz. No mesh is loaded and no geometry was copied off Vista.
+
+### The transform was reused, not rewritten
+
+Verbatim from `gates.py`, the script that produces the published gate verdicts:
+
+    pv    = (veh_particles_scene0 - t[0]) @ R[0]     gates.py:136
+    vp(f) = pv @ R[f].T + t[f]                       gates.py:157
+
+Deriving `pv` from the scene checkpoint rather than from `veh_particles_vehframe` is
+what makes the body-frame offset of `t1_car.py:49-58` unnecessary. The script
+verifies the reconstruction against the stored `veh_check_45` and `veh_check_last`
+every run and aborts above 1e-4 m. Measured max absolute reconstruction error:
+
+| run | max abs error |
+|---|---|
+| `g64_yaris_regression` | 1.287e-06 m |
+| `g64_rogue` | 9.566e-07 m |
+| `g64_silverado` | 2.221e-06 m |
+
+Two axis facts a naive render gets wrong, both confirmed live. The hull's long axis
+is Y, so the car profile is the (y, z) plane; an (x, z) "side view" shows the
+vehicle's WIDTH and makes any hull look like a tall blob. And the npz scalar `floor`
+is the ground plane `3.0 * dx` (`sim_standing.py:164`, used as the domain lower bound
+at `:253`), not the vehicle z-min, though the two coincide for a hull at rest.
+
+### Outputs, local only, not committed
+
+90 PNG frames plus one mp4 each. `fps` 30 was read from the npz, not assumed.
+
+| run | frames | fps | mp4 | size | duration |
+|---|---|---|---|---|---|
+| `g64_rogue` | 90 | 30 | `renders/multigeom_2026-08-08_render/g64_rogue/g64_rogue_multigeom_2026-08-08.mp4` | 1,921,327 B (1.83 MB) | 3.000 s |
+| `g64_silverado` | 90 | 30 | `renders/multigeom_2026-08-08_render/g64_silverado/g64_silverado_multigeom_2026-08-08.mp4` | 1,451,596 B (1.38 MB) | 3.000 s |
+
+Both are h264, 1800x1080. Each output directory also carries a `render_manifest.json`
+recording the transform errors, the floor plane, the z-min trajectory endpoints and
+the exact caption text.
+
+### Caption caveats, and one correction to the prescribed text
+
+Every caption is generated from that run's OWN `summary.json`. Nothing is retyped and
+nothing is taken from another run's row. That distinction is load-bearing here,
+because the runs rendered are NOT the rows in
+`data/class_specific_runs_2026-08-08.csv`. Per section 2 those are a different
+experiment at a different mass, and the CSV holds no row for the multigeom runs.
+
+| quantity | `class_rogue_g64` (CSV, job 896273) | `g64_rogue` (rendered, multigeom) |
+|---|---|---|
+| mass | 1571.3 kg | 1609.0 kg |
+| `C2_veh_zmin_rise` | -0.022170 m | -0.022017 m |
+| `final_disp_mag_m` | 0.710959 m | 0.682727 m |
+| `passthrough_max_frac` | 0.099493 | 0.098428 |
+
+**The prescribed Rogue caption value -0.02217 m belongs to the CSV run, not the
+rendered one.** The rendered run's own value is -0.022017 m. Both fail P-3, so the
+verdict is unchanged; the attribution is not.
+
+**"Sank into the floor plane" is wrong for the rendered Rogue run and was not used.**
+Measured from the verified transform: hull z-min starts 29.095 mm ABOVE the floor
+plane, reaches it at frame 2 (t = 0.067 s) and stays there for the remaining 87
+frames. Deepest excursion below the floor across all 90 frames is -7.1e-08 m, zero to
+float32. The hull settled ONTO the floor plane; it did not penetrate it. The caption
+says so.
+
+**The gate's C2 rise is not the drop visible in the video.** `zmin_start` is sampled
+at `sim_standing.py:445`, before the frame loop, and the loop calls `scene.step()` at
+`:448` before recording the frame-0 checkpoint, so C2 spans one solver step more than
+the 90 rendered frames. For the Rogue the hull rises 7.078 mm in that first step and
+then falls 29.095 mm across the rendered frames, netting the -22.017 mm the gate
+reports. The rendered drop is 32 percent larger in magnitude than the gate rise and
+neither number is wrong. The caption states both and names the mechanism.
+
+The Silverado caveat is carried unchanged, because water layers is a mass-independent
+quantity and section 2 already establishes those match across both datasets. 3 water
+layers against the canonical 4, verified in this run's own `summary.json`, and the
+minimum across all seven CSV rows. Per L-3 the canonical g64 baseline is itself only
+4 particle layers and exactly 2 grid cells across the water depth.
+
+### What the renders show
+
+- **Rogue.** The floor-sink is real but is a two-frame initial settling transient,
+  not a progressive sink, and 29 mm on a 1.73 m hull is not perceptible in the main
+  view. It is legible only in the magnified underside panel and the z-min trace,
+  which is why the figure carries both. Passthrough is visible in the profile panel
+  as water inside the hull silhouette, consistent with its 0.0984 fraction sitting
+  just under the 0.10 gate.
+- **Silverado.** Reads as a pickup with a distinct cab and bed, and sits on the floor
+  plane for all 90 frames (z-min varies by 3e-4 mm, float32 noise). P-2 0.0834 and
+  P-3 -0.00030 m both pass. Nothing anomalous.
+- Both: water reads as one connected body, no particles outside the domain, motion
+  continuous across frames.
+
+### Solid-surface variant, added the same day
+
+`--vehicle-style mesh` (now the default) draws the vehicle as a shaded closed
+surface instead of a particle scatter. `--vehicle-style points` keeps the original.
+The surface is reconstructed from the SIMULATED rigid particles, so it shows the
+body the solver actually integrated, at the resolution it integrated it. No `.ply`
+is read and no geometry was copied off Vista, so register E8 is not engaged.
+
+Method: occupancy lattice of the body-frame particle cloud, dilated by the particle
+half-cell, lightly smoothed, then marching cubes, decimated to 9000 faces. Built
+ONCE in the body frame because the body is rigid, then transformed per frame by the
+same verified `gates.py` pose. Two calibrations were needed and both are measured,
+not asserted:
+
+- **Offset.** `summary.json solid_volume_m3` equals `n_particles * h**3` to five
+  significant figures in all three runs (Yaris 8905 * 0.07360736^3 = 3.5512 against
+  3.551384), so each particle is a cube of side `h` and the true boundary sits at
+  `particle_extreme + h/2`. Marching cubes at level 0.5 lands half a grid cell
+  beyond the outermost occupied cell centre, so the dilation radius must be
+  `r = upsample/2 - 0.5`, integer only for odd `upsample`. Default is 3.
+- **Faithfulness.** Enclosed volume against the solver's own `solid_volume_m3`:
+
+| run | surface volume | solver `solid_volume_m3` | error |
+|---|---|---|---|
+| `g64_rogue` | 4.951871 m3 | 4.960170 m3 | **-0.17 %** |
+| `g64_silverado` | 7.967135 m3 | 7.943659 m3 | **+0.30 %** |
+| `g64_yaris_regression` | 3.479583 m3 | 3.551384 m3 | -2.02 % |
+
+Every particle lies inside the reconstructed surface's bounding box in all three
+runs, and the per-axis margins land on the `h/2` target (Rogue target 0.0408 m,
+measured 0.0366 to 0.0465).
+
+Three defects were found and fixed during this, recorded because each would have
+been invisible in the finished frames:
+
+1. First reconstruction blurred the bare particle lattice and normalised by the
+   field maximum. That ERODED the extremities, putting 209 of the Yaris hull's 8905
+   particles outside the surface and lifting the rendered underside off the floor.
+   Floor contact is the one thing these frames are read for, so the enclosure check
+   now runs every time and warns.
+2. Second reconstruction overshot the other way, +57 mm on every axis against a
+   36.8 mm target, which would have drawn the hull sunk 20 mm INTO the floor and
+   reproduced by accident the very artifact section 8 corrects.
+3. Back-face culling tore holes in the 2D silhouette, because faces near-tangent to
+   the view have an ill-conditioned normal and the centroid-outward orientation fix
+   is unreliable inside the wheel arches. Replaced with a plain painter's sort over
+   every face. `t1_car.py`'s 0.30-of-height wheel threshold also painted black
+   wedges up to 0.85 m on the Yaris and was tightened to 0.18.
+
+Outputs, local only, alongside the point-style versions rather than replacing them:
+
+| run | frames | fps | mp4 | size | duration |
+|---|---|---|---|---|---|
+| `g64_rogue` | 90 | 30 | `renders/multigeom_2026-08-08_render/g64_rogue_solid/g64_rogue_solid_multigeom_2026-08-08.mp4` | 1,362,958 B (1.30 MB) | 3.000 s |
+| `g64_silverado` | 90 | 30 | `renders/multigeom_2026-08-08_render/g64_silverado_solid/g64_silverado_solid_multigeom_2026-08-08.mp4` | 1,013,777 B (0.97 MB) | 3.000 s |
+
+The solid hulls read as blocky, and that is the honest result rather than a
+rendering fault: the Silverado's particle lattice is `h = dx/2 = 0.10209 m`, so a
+5.94 m truck is about 58 particles long. Smoothing it further would hide the
+resolution the verdicts were computed at.
+
+This changed no verdict, no gate and no number in sections 1 to 7. It is a display
+path only. It also required `scikit-image`, `scipy` and `fast_simplification` in
+`~/.venvs/canitford-mpm`, which were installed this session and are not otherwise
+used by the repo.
