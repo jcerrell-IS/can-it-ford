@@ -537,3 +537,102 @@ would start the column at its equilibrium compression instead of driving it ther
 settle reduction is unmeasured.** It is recorded because it attacks the root cause
 found today, and because it is the only identified route by which a physical sound
 speed becomes affordable at all.
+
+## Job 3361443: the settle defect and the force defect are separate
+
+### First, a correction to the section above
+
+The reference runs do **not** use `box_bottom_cells = 8.0`. Both
+`data/coupling_validation/c1sdf_sdf_g64.json` and `..._g96.json` record
+`z_b_nominal_at_spawn = 0.8832883` against `floor = 0.4416442`, exactly 3.0
+DX_CANON above the floor, and `box_top_z = 2.3554356`, exactly 16 DX_CANON. So the
+reference used `box_bottom_cells = 3.0`, which is why the cube ends fully submerged.
+`run_c1_sdf`'s signature default is 8.0 and its docstring quotes the C1 defaults; I
+took the signature default for the reference and was wrong. Job 3361443 therefore
+ran at 75-84% submersion, not full, so its `fixed` arm is not the harness-validating
+control it was meant to be. The claim in the previous section that the reference
+geometry is `box_bottom_cells=8.0` is retracted.
+
+### What the job nevertheless established
+
+| mode | n_grid | frac | gate | settle substeps | steady N | std | ptp | vs full | vs partial | net dz | lat/Fz |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| coupled | 64 | 0.7540 | met | 3,883 | 17,650.9 | 298.1 | 1,278.8 | -43.60% | **-25.21%** | -0.0623 | 0.0028 |
+| fixed | 64 | 0.7548 | met | 3,883 | 11,829.8 | 322.3 | 1,013.8 | -62.20% | **-49.92%** | 0.0 | 0.0355 |
+| coupled | 96 | 0.8389 | NOT met | 14,400 | 18,957.6 | 46.7 | 134.7 | -39.43% | -27.80% | +0.0002 | 0.0616 |
+| fixed | 96 | 0.8406 | NOT met | 14,400 | 19,040.4 | 168.7 | 582.0 | -39.17% | -27.63% | 0.0 | 0.1199 |
+
+**The gated settle works, and it is not the cause of the force offset.** At g64 the
+settle reproduced the reference almost exactly (353 frames vs 354, 3,883 substeps vs
+3,894, `vmax_peak` 9.8143 vs 9.8172, gate met) and it removed the ringing entirely:
+Fz peak-to-peak fell from 27,207 N ungated to 1,014 N, which is reference-quality
+quiet. The mean offset survived that unchanged. So the unsettled tank was a real
+defect that made the signal unusable noise, and a separate defect sets the mean.
+
+**The two g96 rows are discards and must not be quoted.** They failed the
+convergence gate at 900 frames (14,400 substeps), ending at vmax 1.02 and 1.30 m/s
+against the required c/20. They fail a second, independent criterion too: this
+file's own rule is that a lateral force comparable to Fz means the readout is
+unsound, and `lat/Fz` is 0.1199 at g96 fixed against 0.0121 in the reference.
+
+**A caveat on scatter, against my own earlier reasoning.** The g96 rows have very
+low scatter (ptp 135 and 582 N) while failing the gate at vmax ~1 m/s, because the
+residual motion there is slow large-scale sloshing rather than high-frequency
+ringing. Scatter is therefore a necessary but not a sufficient indicator of a
+settled state. The earlier use of a 27,207 N spread as evidence of ringing is sound
+for the ungated runs it described, but it should not be generalized.
+
+### Partial submersion, not resolution, is what breaks the g96 settle
+
+g96 with the waterline cutting through the collider ran the full 900 frames without
+converging. The fully submerged reference at the same resolution met the gate at 776
+frames with `vmax_final` 0.6341. So g96 does not simply need more settling: with the
+free surface intersecting the collider the waterline sustains motion. g64 at the
+same placement did meet the gate, so the effect is resolution dependent. This
+matters because **the flood-vehicle case is intrinsically the partial-submersion
+case.** It is the regime of interest, and it is the regime where both the settle
+criterion and the force reading are worst.
+
+## A pressure-deficit model, with its prediction tested
+
+Collecting the fixed-collider results against the analytic appropriate to each
+geometry:
+
+| configuration | frac | gate | error |
+|---|---|---|---|
+| reference g64, bbc 3.0 | 1.0 | met | -7.67% vs full |
+| reference g96, bbc 3.0 | 1.0 | met | +7.28% vs full |
+| ungated g64, frac request 0.80 | 0.519 | n/a | -48.49% vs partial |
+| gated g64, bbc 8.0 | 0.755 | met | -49.92% vs partial |
+| gated-attempt g96, bbc 8.0 | 0.841 | NOT met | -27.63% vs partial |
+
+A partially submerged box takes its entire upward force from the bottom face's
+**absolute** pressure, `rho*g*L^2*h_sub`. A fully submerged box takes it from the
+**difference** between bottom and top face pressures, where any uniform additive
+pressure deficit cancels. That is exactly the observed split: about -7 to +7% when
+the quantity is a difference, about -50% when it is an absolute. The candidate
+mechanism is that MPM free-surface particles have incomplete kernel support, so J
+stays near 1 and pressure near 0 over a surface layer some cells thick, removing
+`rho*g*(layer)` of head from every pressure beneath it.
+
+That model makes a falsifiable prediction: if the layer is a fixed number of
+**cells**, the error must shrink in proportion to dx. Recorded before reading the
+g96 result, the prediction was about -30% vs partial (-29.88% once the submersion
+actually realized at g96 is used, frac 0.8406 giving h_sub 1.2375 m). **Measured
+-27.63%.** Stated as the invariant the model is about:
+
+| | dx | deficit Pa | deficit in cells of head |
+|---|---|---|---|
+| g64, gate met | 0.147215 | 5,441.6 | **3.768** |
+| g96, gate NOT met | 0.098143 | 3,354.4 | **3.484** |
+
+The deficit falls by a third in Pascals while staying nearly constant in cells,
+which is a fixed-thickness surface layer and not a gradient error.
+
+**This is two points, one of them a discard, and inferred from force rather than
+measured.** Job 3361504 tests it directly: it exports per-particle stress after a
+gated settle and compares the binned pressure against `rho*g*(zs - z)`. A deficit
+constant in cells of head across depth confirms a surface offset; one that grows
+with depth means a gradient error and refutes the model. That job also runs the
+hydrostatic pre-compression test, which matters more now that the settle is
+confirmed to cost 3,883 substeps even at the cheap resolution.
