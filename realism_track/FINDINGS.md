@@ -12,6 +12,16 @@ buoyancy to **-7.67% (g64) and +7.28% (g96)**, and the "a fixed collider cannot
 slide" objection is dissolved: `set_sdf_pose` already exists, so the collider can
 be re-posed each substep from a free-body integration.
 
+**SUPERSEDED IN PART, 2026-08-12 evening, by job 3361315.** The -7.67%/+7.28%
+figures are rung (a), fully submerged and still. Rung (b), partially submerged,
+has since been RUN, and it does not carry: buoyancy reads **-18.9% at g64 and
++115.0% at g96**, and the body sinks at one grid while rising at 4 g at the
+other. Read "the validated path" as validated at full submersion only. It is
+refuted, for now, at the partial submersion where buoyancy is actually generated.
+A settle defect is the leading explanation and is quantified in the last section
+of this document. Do not quote -7.67%/+7.28% as a coupling-accuracy figure for a
+floating vehicle.
+
 Path (b), Genesis LegacyCoupler, was not pursued. It is strictly more work for a
 less-validated force: no coupling-force validation exists anywhere in the Genesis
 repo, so it would have to be built from scratch, while path (a) already has one.
@@ -294,3 +304,116 @@ Recommended sequence, cheapest informative step first:
    feasibility and rough magnitude only.
 3. Treat a full g96 run at c=1480.98 as a separate budget decision, not a
    follow-on.
+
+## Rung (b) RAN on LS6 A100, job 3361315, and FAILED
+
+The GH200 blocker above was routed around: rung (b) does not need Hopper, and LS6
+does import `warpmpm` once the venv is built in `$SCRATCH` (the "LS6 cannot import
+warpmpm at all" claim in the BLOCKED section is refuted by this job's own
+`=== warpmpm import check ===` line). Job 3361315, partition `gpu-a100-dev`, node
+c301-004, `State=COMPLETED ExitCode=0:0`, `Elapsed=00:34:21`. Both grids produced
+output; nothing crashed or timed out.
+
+| | g64 | g96 |
+|---|---|---|
+| `F_buoy_analytic_N` | 16233.24 | 17460.36 |
+| `Fz_measured_median_N` | 13172.21 | 37544.72 |
+| `ratio_median_over_analytic` | **0.8114** | **2.1503** |
+| `a_ideal_ms2` | -1.3299 | -0.6889 |
+| `a_measured_first3_ms2` | **-2.1898** | **+39.8544** |
+| `net_dz_m` | -0.1236 | +0.4007 |
+| `submersion_frac_realized` | 0.5187 | 0.5579 |
+| `nonzero_wrench` / `clamped_steps` | true / 0 | true / 0 |
+
+The force accumulator is alive: the wrench is non-zero and nothing was clamped on
+either grid. That is the one thing rung (b) does confirm. Everything else fails.
+Buoyancy is 18.9% low at g64 and 115.0% high at g96, and the sign of the motion
+flips between grids: the body sinks at g64 and accelerates upward at 39.85 m/s2,
+about 4 g, at g96, when both should sink gently at about -1 m/s2. Refining the
+grid makes the answer worse and reverses it, which is a divergence signature, not
+convergence scatter.
+
+### What is NOT the cause
+
+Two plausible explanations were checked and both are ruled out.
+
+**Not the submersion shortfall.** `submersion_frac_realized` is 0.52 and 0.56
+against 0.80 requested, but `rung_b_coupled.py:87-96` builds the analytic
+reference from the MEASURED settled surface, not the request, exactly as its
+docstring says. Each grid is therefore compared against its own realized `h_sub`,
+and both `F_buoy_analytic_N` values reproduce `RHO_W * G * L^2 * h_sub` to
+rounding. The reference is sound.
+
+**Not the integrator.** `simulation/coupling_force/test_rigid_body.py` passes all
+13 assertions, on the A100 in this job and independently on the Mac: SHM period
+1.73731 s against a theoretical 1.7373, torque-free |L| and E drift of 7.6e-05
+and 1.0e-04 relative, inertia within 0.4% of the analytic solid box. Newton-Euler
+is correct. The error is upstream of it.
+
+### Root cause: the settle is 1 substep per iteration, not 1 frame
+
+`rung_b_coupled.py:81-85` settles with
+
+    tank.solver.step(tank.dt, 1)
+
+one SUBSTEP per iteration. Every canonical path settles through
+`settle_pinned` at `simulation/validate_coupling_force.py:617-643`, which steps
+
+    tank.solver.step(tank.dt, tank.substeps)
+
+one FRAME per iteration, via `BoxTank.step` at `:373-375`. Because `tank.substeps`
+is grid-dependent (`substeps_and_dt`, `:49-56`), a fixed iteration count settles
+each grid for a different physical duration:
+
+| | substeps | dt | 900 iterations | canonical 600-frame cap |
+|---|---|---|---|---|
+| g64 | 11 | 0.00303030 s | **2.7273 s** | 6600 substeps, 20.0 s |
+| g96 | 16 | 0.00208333 s | **1.8750 s** | 9600 substeps, 20.0 s |
+
+Both `dt` values reproduce the JSON bit-for-bit from `substeps_and_dt`, so the
+table is derived, not assumed. Three consequences, and they match every anomaly
+observed:
+
+1. The settle is 13.6% (g64) and 9.4% (g96) of the canonical substep budget, so
+   the water is nowhere near equilibrium when the coupler is attached. That is why
+   `submersion_frac_realized` never reaches the requested 0.80 on either grid.
+2. The two grids settle for DIFFERENT physical times, 2.7273 s against 1.8750 s,
+   a 31.2% shorter settle at g96. That is why the realized fractions differ from
+   each other, and it means the g64/g96 pair was never a controlled refinement
+   comparison.
+3. g96, settled least, is furthest from equilibrium and carries the most residual
+   water motion, which is the natural reading of its 2.15x wrench and 4 g upward
+   launch. The measured force is transient water dynamics, not hydrostatic
+   buoyancy.
+
+This also corrects the "Experimental-design correction for item 1" section above,
+which states that `--settle 900` was chosen "to match the settle depth of the
+gated C1SDF runs". It does not match it. The gated runs cap at 600 FRAMES with a
+convergence gate; 900 iterations of 1 substep is 81.8 frames at g64 and 56.3 at
+g96, with no gate at all.
+
+`settle_pinned` also carries a convergence criterion, `settled = True` once
+`sound_speed / vmax >= 20.0` past a `min_settle` floor derived from acoustic
+transit time, and reports it as `settle_gate_met`. `rung_b_coupled.py` has no
+equivalent, so it cannot detect that it stopped early. It stopped early.
+
+### Do not proceed to rung (c) or (d)
+
+Per the standing instruction, rung (b) gates the ladder and rung (b) has not
+passed. No threshold was adjusted and none should be.
+
+### The fix, and what it costs
+
+Change `rung_b_coupled.py:83` to step `tank.substeps`, matching `:625`, and add
+the `settle_gate_met` criterion so the run reports whether it converged rather
+than assuming it. Then `--settle N` means N frames at both grids, which is
+grid-independent by construction.
+
+The cost is not free and should be a deliberate decision, not a reflex re-run. At
+a canonical 600-frame cap this is 6600 substeps at g64 and 9600 at g96 against the
+900 each that job 3361315 ran, roughly a 9x increase in solver work. That job took
+34:21 including venv build and unit tests, so a full canonical settle will not fit
+the 2-hour `gpu-a100-dev` limit and needs either the normal `gpu-a100` queue or one
+job per grid. A cheaper intermediate, holding physical settle time equal across
+grids rather than matching canonical depth, would cost about 45% more than the
+completed run and would at least make the g64/g96 comparison controlled.
