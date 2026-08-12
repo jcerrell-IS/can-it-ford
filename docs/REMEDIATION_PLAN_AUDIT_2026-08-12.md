@@ -300,3 +300,45 @@ this session.
 
 `stop_signal_and_check.sh` could **not** be wired as instructed. It is **staged for
 deletion by another session** and is absent from disk. See ACTION REQUIRED.
+
+### Independent verification of the STEP 5 diff, and what it caught
+
+A second read-only subagent was dispatched to re-verify **only the CLAUDE.md diff**,
+using different methods than grep. It confirmed 4 claims and contradicted 4. Three of
+the four contradictions were **introduced by the accuracy pass itself**, which is the
+finding that matters: a pass intended to remove stale claims added new ones.
+
+| claim | verdict | reality |
+|---|---|---|
+| `.gitignore` line numbers for `data/*` and `renders` | CONFIRMED (then immediately stale) | see below |
+| `.claude/worktrees/` holds 2, not 27 | CONFIRMED | 2 |
+| nested `./can-it-ford/` is gone | CONFIRMED | gone |
+| `gp_surrogate.py:14` verbatim | CONFIRMED | character-for-character |
+| all four DRIFT_THRESHOLD readings | CONFIRMED | 22 / 23 / 23 / 24, 23 reachable twice |
+| "those .py files are now TRACKED" | **CONTRADICTED** | **2 of 24 tracked.** Un-ignored is not tracked. 22 still have no history, `gates.py` among them |
+| carve-out covers `sim_standing.py` | **CONTRADICTED** | top-level only; `_incoming/sim_standing.py` still ignored, and D4a calls `_incoming/` canonical |
+| "501 generated artifacts" | **CONTRADICTED** | 881 non-`.py` at any depth. The 501 was a `-maxdepth 2` count over four extensions |
+| "5 hits from `.` and 7 with renders/" | **UNVERIFIED** | never named its pattern, so never re-derivable; carve-out invalidated the premise |
+
+### The `.gitignore` line-number reference broke three times in one day
+
+1. `:14 is renders/` went stale when the carve-out replaced the blanket rule.
+2. The replacement `:26 / :28` went stale when a comment was added above them.
+3. `":32-33"`, written specifically to fix (2), was **already wrong at the moment it
+   was written**, because the same commit inserted five lines above it.
+
+Each fix was verified live and each was invalidated by the next edit to the same file.
+The conclusion is not a better number. **Every positional `.gitignore` citation in
+CLAUDE.md has been replaced with a re-derivation command**, keeping one quotation as
+history. A file edited this often cannot be cited by position.
+
+This is the same shape as the count problem: an assertion that was true when written,
+trusted afterwards without re-derivation. The guard for counts is
+`count_claims_check.py`; the guard for line numbers is to not cite them.
+
+### Concurrency note
+
+The verifier reported the repo changing under it mid-audit: `CLAUDE.md` went from
+dirty to committed, and `sim_standing.py` from untracked to tracked, between two of its
+own commands. Two other sessions were active. **Any audit of this repo must pin a
+commit first.**
