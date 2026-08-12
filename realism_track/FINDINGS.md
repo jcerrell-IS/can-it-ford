@@ -1,0 +1,200 @@
+# Realism track findings, 2026-08-12
+
+LS6 node c301-003 (A100), job 3360948. Exploratory track, separate from the
+canonical warpmpm 17-run pipeline at `renders/yaris_render_s1/`, which was not
+touched.
+
+## Verdict up front
+
+**Path (a), the warpmpm SDF collider, is the validated path.** It is the only
+one of the two with a measured coupling force, its force agrees with analytic
+buoyancy to **-7.67% (g64) and +7.28% (g96)**, and the "a fixed collider cannot
+slide" objection is dissolved: `set_sdf_pose` already exists, so the collider can
+be re-posed each substep from a free-body integration.
+
+Path (b), Genesis LegacyCoupler, was not pursued. It is strictly more work for a
+less-validated force: no coupling-force validation exists anywhere in the Genesis
+repo, so it would have to be built from scratch, while path (a) already has one.
+
+**No rendered clips are delivered, and no claim of visual realism is made.** The
+reason is stated in "Not delivered" below. The force number above is a real
+measurement; the visuals are not started.
+
+## Mandatory reading, status
+
+Two of the four required documents do not exist. Verified by name search across
+`/home1`, `/work` (ls6, vista, frontera, stampede3) and `/scratch`:
+
+| Document | Status |
+|---|---|
+| `docs/CANONICAL_CORRECTIONS_REGISTER_2026-08-06.md` | **MISSING everywhere** |
+| `CLAUDE.md` | read in full |
+| `docs/COUPLING_VALIDATION_J1_2026-08-07.md` | **MISSING**; only `..._J1_VISTA_2026-08-07.md` exists, read |
+| `docs/MULTIGEOM_VALIDATION_2026-08-11.md` | **MISSING everywhere** |
+
+This has a direct consequence for the brief's instruction "do not use 8% or 1.6%,
+both are wrong, check the register". The register could not be checked. Instead
+the figure was re-derived from the primary run manifests, which is a stronger
+source than the register would have been. **The brief's 7.3-7.7% is confirmed,
+and its warning about 1.6% is confirmed as well**: 1.62% is
+`err_first3_vs_analytic_pct`, a first-three-frame transient measure, not the
+steady-state figure. Details below.
+
+The J1 Vista doc also disagrees with the brief in a way worth flagging: it reports
+`err_F_pct` of -90.99, -122.33 and -237.34 for rho_box 700/800/1000. Those are
+free-rigid numbers, not fixed-SDF numbers, so they do not contradict the 7.3-7.7%
+result, but anyone reading that doc alone would conclude the coupling is broken by
+two orders of magnitude. The two documents describe different code paths.
+
+`CLAUDE.md` requires reading `docs/VERIFIED_FACTS_LEDGER_july24.md` before
+asserting any parameter as fact, and states Section F records **one** usable
+vehicle mesh, not three. The brief's flood-fill density corrections span three
+vehicles (Yaris, Rogue, Silverado). Those three density values were **not
+verified** here and are not used anywhere in this report.
+
+## Measured force accuracy against analytic buoyancy
+
+Reproduce with `python3 realism_track/verify_coupling_accuracy.py`. Source is the
+29 run manifests under `data/coupling_validation*/`; 69 JSON documents parsed
+including provenance sidecars.
+
+Gated configuration, variant `C1SDF_fixed_collider`:
+
+| run | collider | steady vs analytic | first3 vs analytic |
+|---|---|---|---|
+| `c1sdf_sdf_g64` | sdf | **-7.67%** | 1.62% |
+| `c1sdf_sdf_g96` | sdf | **+7.28%** | 6.12% |
+| `c1sdf_box_g64` | box | -37.91% | -46.63% |
+| `c1sdf_box_g96` | box | -21.28% | -23.21% |
+
+Free-rigid material-8 path, the path the 17 canonical runs use:
+
+| run | err_F_pct | headline vs ideal |
+|---|---|---|
+| `c1_g64` / `c1_rigid_g64` | -48.81 / -48.79 | -122.03 / -121.97 |
+| `c1_g96` / `c1_rigid_g96` | -130.35 / -130.48 | -325.87 / -326.21 |
+| `c3_fixed2_g64` | -203.29 | n/a |
+| `894642_nosubmersion` g64 / g96 | -192.45 / -345.05 | -481.13 / -862.63 |
+| `preclamp_894628` g64 / g96 | +168.48 / -290.54 | +421.19 / -726.36 |
+
+The ordering is unambiguous: SDF collider (7.3-7.7%) beats box collider (21-38%)
+beats free-rigid (49-345%). This is direct quantitative confirmation of the brief's
+core problem statement, that the material-8 free-rigid path exchanges no real
+force.
+
+### Why the smoke runs are excluded
+
+Four further SDF/box runs exist under `coupling_validation/smoke/` with errors of
+-130.76% (sdf g64), -54.33% (sdf g96), -146.51% and -26.90% (box). They are
+excluded from the headline, and the reason is not that they are inconvenient. At
+**identical geometry** (a full key-by-key diff shows zero geometry differences
+against `c1sdf_sdf_g64`), the smoke run's steady vertical force is
+**-9628.7 N, negative**, against the gated run's **+28898.4 N**. A submerged
+buoyant body cannot experience net downward hydrostatic force, and
+`a_free_body_implied` is -14.84 m/s2, below free fall. The smoke runs also sit at
+a different settle state (`submersion_margin_dx` 4.18 vs 2.75,
+`surface_after_settle` 2.97 vs 2.76) and carry 8x the lateral asymmetry
+(`F_lateral_over_Fz` 0.320 vs 0.040). They are unsettled sanity checks with a
+sign-inverted force, not validation runs.
+
+Reporting a single pooled SDF range of 7.28-130.76% would therefore be misleading.
+The honest statement is: **the gated SDF configuration is accurate to 7.3-7.7%,
+and an unsettled SDF configuration at the same geometry can invert the force sign
+entirely.** The settle gate is load-bearing, not decorative.
+
+## The moving-SDF question, answered
+
+The brief asks whether warpmpm's SDF collider can be made to move. It can, and the
+API for it already exists in `mpm-engine/src/warpmpm/core/solver.py`:
+
+- `add_sdf_collider` at :324
+- `set_sdf_pose` at :339, accepting `center`, `quat`, `velocity`, `omega`
+- `reset_sdf_force` at :348
+- `sdf_wrench` at :354, returning force and torque
+- equivalents for other collider types: `cdf_wrench` :401, `tool_force` :420
+
+So the loop is: `reset_sdf_force` -> `step(dt)` -> `sdf_wrench` -> integrate
+Newton-Euler in Python -> `set_sdf_pose`. That yields the validated SDF force
+**and** freedom of motion, which is exactly the combination the brief was looking
+for, and it means the fixed-collider objection was an artifact of how the collider
+was being driven, not a limitation of the engine.
+
+**This is already implemented and must not be duplicated.** The parallel Vista
+session built it during this same window: `simulation/coupling_force/` containing
+`rigid_body.py`, `rung_b_coupled.py`, `inflow_outflow.py`, `test_rigid_body.py`,
+`test_inflow_outflow.py` and a README, with `test_rigid_body.py` reporting 14
+analytic checks passing (free fall, neutral-buoyancy zero drift, Archimedes SHM
+period to 2%, inertia against the analytic solid-box tensor, torque-free
+precession conserving angular momentum and energy). Those validate the
+**integrator**, not the fluid coupling. The coupler has never been run against a
+live solver.
+
+Also relevant, from the Vista side: the briefing premise that "no
+force/impulse/torque accumulator exists anywhere in this engine" is false. The
+accumulators exist for SDF, box, cup and CDF colliders. What is missing is a force
+path for a **free** body, which is precisely what re-posing an SDF collider
+supplies.
+
+## Not delivered, and why
+
+The brief asks for 2-3 rendered clips and photoreal water. None are delivered.
+This is a hard toolchain limit on this node, not a shortfall of effort. Measured
+on LS6 login1 and c301-003, 2026-08-12:
+
+| Needed | Status on LS6 |
+|---|---|
+| `splashsurf` (free-surface meshing) | absent |
+| `blender`, `mitsuba`, `pvpython` | absent |
+| `ffmpeg` (clip encode) | absent |
+| `pyvista`, `trimesh`, `skimage`, `open3d` | not importable |
+| `warpmpm`, `genesis`, `taichi` | not importable |
+
+With no mesher, no renderer, no encoder and no solver on this node, the visual
+half of the task cannot begin here, and the coupling-force experiments cannot be
+run here either. Per the brief's own instruction not to claim visual realism
+without a force-accuracy number backing it, the inverse also holds and is
+respected here: a force-accuracy number exists, the visuals do not, and nothing in
+this report claims otherwise.
+
+The `drainA` gsplat reconstruction the brief cites does exist and is intact:
+`/work/11603/jcerrell0629/ls6/gsplat_results_backup/drainA/ply/point_cloud_29999_merged_3ranks.ply`,
+270,857,262 bytes, dated 2026-08-07.
+
+Separately, the multigeom renders the brief's predecessor treated as missing now
+exist, produced by Vista during this window:
+`renders/multigeom_2026-08-12_render/g64_rogue/multigeom_rogue_2026-08-12.mp4`
+(5,468,214 B) and `.../g64_silverado/multigeom_silverado_2026-08-12.mp4`
+(4,496,217 B). They are outputs of the kinematic path, so they predate any real
+coupling force and should not be presented as physically coupled results.
+
+## Next steps, in dependency order
+
+1. **Run the rung-b coupled test on GH200.** `simulation/coupling_force/rung_b_coupled.py`
+   has never been exercised against a live solver, and it is the single blocker
+   for everything downstream: physical correctness, visual realism, and any future
+   surrogate training corpus. Budgeted at about 1 GPU-hour. Cannot run on LS6.
+2. **Re-measure force accuracy with the collider moving.** The 7.3-7.7% figure is
+   for a *fixed* collider. Re-posing it each substep changes the coupling, so the
+   number must be re-established, not inherited. Target the same 5-10% band.
+3. **Sound speed at the physical value.** Run c = 1480.98 m/s directly rather than
+   interpolating, per the brief and job 895378. Note the existing runs sit at
+   bulk 1.5e5 Pa, i.e. c = 12.845 m/s, two orders of magnitude low, and that
+   `sim_enhanced.py` already exposes `--bulk-modulus` as a parameter for exactly
+   this sweep.
+4. **Meshing and rendering.** Needs a node with splashsurf plus Blender or
+   Mitsuba, and ffmpeg. Neither LS6 login nor this A100 node has them. Decide
+   whether to install into `$WORK` or move this stage to a machine that has them.
+5. **Density correction.** Deferred until the three flood-fill values can be
+   traced to a primary source, since the register that would carry them is
+   missing and `CLAUDE.md` records one usable mesh rather than three.
+
+## Unresolved conflicts worth a decision
+
+- `CLAUDE.md` states physical mu is 0.3-0.55 "per Azhar et al. 2023", while
+  `vehicle_geometry_research/flood-mpm-debugging-reference_SKILL_v3_friction_corrected.md`
+  records that this project's own forensic audit found the specific Azhar
+  attribution **unverified** against that paper's full text, and gives
+  mu_wet ~= 0.3 as the primary value with 0.25-0.75 as the sensitivity range.
+  Two project-canonical files disagree about the provenance of the same number.
+- The brief's three-vehicle density corrections versus `CLAUDE.md` Section F's
+  "one usable mesh, not three".
