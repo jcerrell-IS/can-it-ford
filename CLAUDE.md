@@ -261,7 +261,11 @@ not by file read from the Mac, see the item for its evidence path.
     the 17-run pipeline," went stale on 2026-08-05. Do not restate it.
     Three traps survive. (a) triggered_* is the verdict, ratio_* is
     peak magnitude; they disagree, and filtering on ratio >= 1 reports
-    13 topples that never happened. (b) STUCK is the none-sustained
+    12 topples that never happened. That tally read 13 until
+    2026-08-12, when the G unification in register A6 (commit 6ea4329)
+    moved it: g48_m2337 sat at 1.000244 and lands at 0.999903, and NO
+    verdict moved. That is the trap in miniature, a magnitude tally
+    shifting while every verdict holds. (b) STUCK is the none-sustained
     case, not a fourth mode scored on its own scale; its winning-mode
     columns are empty by design, not missing. (c) metrics.csv
     pitch_deg/roll_deg are vehicle-body-sense, not raw Euler
@@ -405,6 +409,26 @@ not by file read from the Mac, see the item for its evidence path.
     been tested. To close: set failure_modes.py:14 to 9.81, re-run
     analysis/classify_failure_modes.py, and confirm the verdicts are
     byte-identical. Do not close it by assertion.
+
+     CLOSED 2026-08-12, commit 6ea4329, by regeneration and NOT by
+     assertion. failure_modes.py:14 now reads G = 9.81. Verdicts hold at
+     16 SLIDE / 1 STUCK: the mode column and all three triggered_*
+     columns are byte-identical across all 17 runs.
+     READ "confirm the verdicts are byte-identical" ABOVE AS THE VERDICT
+     COLUMNS, NOT THE FILE. The file is not byte-identical and never
+     could have been: 3 of 33 columns move, the two TOPPLE magnitude
+     columns by -0.034 percent and weight_n by +0.034 percent. A
+     whole-file compare also fails for a second, unrelated reason: the
+     generator writes CRLF while .gitattributes pins that CSV to eol lf,
+     so every regeneration differs on every line until git normalises at
+     staging. Anyone running a naive cmp will get a false alarm.
+     The invariance is structural, not lucky: G reaches only :170 and
+     :174, weight_n feeds no criterion, surge_accel_g feeds only TOPPLE,
+     raising G lowers it, and TOPPLE already triggered in 0 of 17.
+     The second 9.80665 site, viability_dashboard_scaffold.py:11, was
+     set to 9.81 too, but it was DEAD CODE: declared once, never used,
+     imported by nothing. The fork's reach was always one site, not two.
+     See register A6 and A6a.
 
 16. gates.py:16-31 forks the AR&R table and L1_verdict instead of
     importing from vehicle_params, while gates_all_runs.py:10 and

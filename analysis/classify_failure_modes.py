@@ -27,8 +27,11 @@ PROVENANCE
   SSF           vehicle_params.get_vehicle('compact_sedan')['ssf'] = 1.42. get_vehicle
                 accepts only compact_sedan|midsize_suv|light_pickup, NOT the AR&R labels
                 in the inventory's `label` column.
-  G             9.80665, failure_modes.py:14 (post-processing only; the solver itself
-                hardcodes 9.81, core/solver.py:167-169, a 0.034 percent fork).
+  G             9.81 since 2026-08-12, failure_modes.py:14. It held 9.80665 until
+                then, a 0.034 percent fork against the solver's own hardcoded 9.81
+                (core/solver.py:167-169). Unified and both stores regenerated:
+                verdicts held at 16 SLIDE / 1 STUCK, and only ratio_topple,
+                peak_surge_accel_g and weight_n moved. Register A6 and A6a.
 
 OUTCOME STRUCTURE
   Three possible outcomes per run: SLIDE, TOPPLE, FLOAT. STUCK is not a fourth mode
@@ -191,7 +194,11 @@ def classify_all(ssf: float) -> list[dict]:
 
 def write_csv(records: list[dict]) -> None:
     with open(OUT_CSV, "w", newline="") as fh:
-        w = csv.DictWriter(fh, fieldnames=CSV_COLUMNS)
+        # lineterminator="\n" because .gitattributes pins this CSV to eol=lf, while the
+        # csv module's default excel dialect emits \r\n. Without it every regeneration
+        # differed from the committed copy on all 18 lines on line endings alone, which
+        # silently defeats the byte-compare this file exists to make possible.
+        w = csv.DictWriter(fh, fieldnames=CSV_COLUMNS, lineterminator="\n")
         w.writeheader()
         for r in records:
             flat = {

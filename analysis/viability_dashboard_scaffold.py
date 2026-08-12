@@ -8,7 +8,7 @@ from typing import Optional, Sequence
 import numpy as np
 
 
-G = 9.80665
+G = 9.81  # unified with the solver 2026-08-12, was 9.80665; register A6. Unused here.
 
 RIGID_REQUIRED_COLUMNS = ("t", "dx", "dy", "dz", "vx", "vy", "vz")
 OMEGA_COLUMNS = ("wx", "wy", "wz")
