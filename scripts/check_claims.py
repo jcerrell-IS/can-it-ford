@@ -222,10 +222,16 @@ RULES: list[Rule] = [
     Rule("C10c", ERROR,
          r"ratio_(slide|topple|float)|magnitude_ratio|criterion ratio",
          "ratio_* is PEAK MAGNITUDE, not the verdict. triggered_* is the verdict, and "
-         "they disagree: SLIDE has ratio >= 1 in 17 of 17 runs but triggers in 16, and "
-         "TOPPLE has ratio >= 1 in 13 and triggers in 0. Counting runs by ratio >= 1 "
-         "reports 13 topples that never happened.",
-         "register D6c; failure_modes.py:179-185",
+         "they disagree: SLIDE has ratio >= 1 in 17 of 17 runs but triggers in 16, "
+         "while TOPPLE triggers in 0 of 17. Counting runs by ratio >= 1 reports "
+         "topples that never happened. NOTE the ratio >= 1 count is CODE-STATE "
+         "DEPENDENT and is deliberately not quoted here: it was 13 until 2026-08-12 "
+         "and is 12 after the G 9.80665 -> 9.81 unification, because g48_m2337 sat "
+         "0.0244 percent above 1.0 and crossed. This rule previously hardcoded 13 "
+         "and went stale the moment register D6c was corrected, which is the same "
+         "defect as rule C8's stale '16 places under four names': a fact-enforcement "
+         "tool carrying a fact. Cite 'TOPPLE triggers in 0 of 17', which is stable.",
+         "register D6c and A6; failure_modes.py:179-185",
          # Context must describe a COUNT or COMPARISON, not merely mention a mode. An
          # earlier version used "count|runs|verdict|classif|topple|exceed|met", which
          # self-satisfied on any line listing the columns together: "ratio_slide",
