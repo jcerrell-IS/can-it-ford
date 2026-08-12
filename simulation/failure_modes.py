@@ -11,7 +11,9 @@ import numpy as np
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from vehicle_params import get_vehicle
 
-G = 9.80665
+G = 9.81  # unified 2026-08-12 with the solver and the five 9.81 post-processing
+          # sites (register A6). Was 9.80665, a 0.0342 percent fork that fed the
+          # published 16 SLIDE / 1 STUCK verdicts via :170 and :174.
 
 SURGE_AXIS = 0
 LONG_AXIS = 1
