@@ -472,3 +472,68 @@ quoted.
 Until that returns, the standing statement is unchanged and now better founded:
 **no validated coupling force exists for the realism track, so no visual-realism
 claim is backed.**
+
+## Item 2 re-costed against the gated settle, and a route that could make it possible
+
+The earlier item-2 estimate priced the measurement window but not the settle. Now
+that the settle is known to be the binding constraint, the real cost is much worse,
+and the number is worth stating exactly.
+
+Reproducing the solver's own CFL rule (`substeps_and_dt`,
+`validate_coupling_force.py:49-56`) with the true `LIM = 9.421742313727737` gives
+11 substeps at dt 3.030e-3 (g64) and 16 at dt 2.083e-3 (g96), matching every run
+in this track, so the cost model is validated before being extrapolated.
+
+| n_grid | dx | substeps at bulk 1.5e5 | at bulk 1.9939e9 | factor | gated settle now | gated settle at c = 1480.98 |
+|---|---|---|---|---|---|---|
+| 64 | 0.147215 | 11 | 1,198 | 108.9x | 3,894 substeps | **424,092 substeps** |
+| 96 | 0.098143 | 16 | 1,797 | 112.3x | 12,416 substeps | **1,394,472 substeps** |
+
+The settle columns use the frame counts at which the reference runs actually met
+the convergence gate (354 and 776 frames). At the throughput measured in job
+3361423, roughly 11 substeps/s at g64 and 8.5/s at g96 once startup is excluded,
+the settle alone is about **11 hours** at g64 and about **46 hours** at g96, per
+run, before a single measurement substep. The g96 figure exceeds a normal LS6
+single-job wall clock. So at physical sound speed, with this explicit solver and
+this settle criterion, the sweep is not merely expensive, it is out of reach.
+
+### A caution: monkeypatching BULK would be worse than having no knob
+
+`BULK` reaches three places, and they do not respond alike. `sound_speed()` and
+`substeps_and_dt()` take it as a **default argument**, bound at function definition
+time, and `BoxTank` calls both with no argument (`:267-268`). `set_material` reads
+the module global at call time (`:272`). Reassigning `BULK` before constructing a
+tank therefore changes the fluid's stiffness while leaving the timestep and the
+reported sound speed at their 12.845 m/s values. The run would be under-resolved by
+a factor of about 110, and worse, the settle gate itself (`sound_speed / vmax >= 20`)
+would be evaluated against the wrong speed and would pass far too early. A correct
+knob has to thread bulk through `BoxTank.__init__` into all three call sites. That
+edit is deliberately not made here while job 3361443 is reading the file.
+
+### The lead that could remove most of the settle cost
+
+The settle exists only because the water is seeded uncompressed. `set_material`
+gives every particle density `RHO_W` with the deformation gradient at identity, so
+J = 1 everywhere and the column has no pressure gradient at t = 0. It then collapses
+into its own hydrostatic profile, and the reference runs record that collapse
+peaking at `settle_vmax_peak` 9.82 m/s (g64) and 12.43 m/s (g96) against
+c = 12.845 m/s. The tank is very nearly shocked at startup, and the thousands of
+settle substeps are spent bleeding that off.
+
+Two pieces needed to skip it are already present:
+
+1. `hydrostatic_density(zeta)` at `validate_coupling_force.py:74` already computes
+   the compressible hydrostatic density profile for this EOS. It is currently used
+   only for reporting a local density in `run_c3` (`:1008`), never at seeding.
+2. The engine exposes `import_particle_F_from_torch`
+   (`mpm-engine/src/warpmpm/kernels/mpm_solver_warp.py`). `Solver` has no `set_F`
+   wrapper, but `_sim` is reachable directly, which is the same route `BoxTank.pin`
+   already uses to write `sim.rigid_x_cm` (`:365-372`). So no engine change is
+   required.
+
+Seeding F = J^(1/3) * I per particle, with J = rho_w / hydrostatic_density(depth),
+would start the column at its equilibrium compression instead of driving it there.
+**This is a lead, not a result: nothing here has been run, and the size of the
+settle reduction is unmeasured.** It is recorded because it attacks the root cause
+found today, and because it is the only identified route by which a physical sound
+speed becomes affordable at all.
