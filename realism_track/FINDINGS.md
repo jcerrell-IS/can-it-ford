@@ -636,3 +636,96 @@ constant in cells of head across depth confirms a surface offset; one that grows
 with depth means a gradient error and refutes the model. That job also runs the
 hydrostatic pre-compression test, which matters more now that the settle is
 confirmed to cost 3,883 substeps even at the cheap resolution.
+
+## Job 3361504: the deficit is a constant PRESSURE offset, and two of my own claims fall
+
+The probe reproduced the reference configuration exactly at both resolutions, which
+validates it before anything is concluded from it: g64 settled in 354 frames / 3,894
+substeps with `vmax_peak` 9.8172 and surface 2.760394, against the reference's 354 /
+3,894 / 9.8172 / 2.760142; g96 in 777 frames / 12,432 substeps with surface 2.877205
+against 776 / 12,416 / 2.881011.
+
+### The surface-layer model is refuted
+
+| | dx | deficit in cells of head | deficit in Pa |
+|---|---|---|---|
+| g64 | 0.147215 | 4.238 | **6,121** |
+| g96 | 0.098143 | 6.508 | **6,266** |
+
+The fixed-cell model required the cell figure to be constant across dx. It changes by
+54%. The Pascal figure changes by 2.4%. So the deficit is a **resolution-independent
+pressure offset of about 6.1 to 6.3 kPa**, not a fixed-thickness surface layer. The
+prediction was recorded before the g96 force result and its apparent success there
+was coincidental: a single force-inferred aggregate can match a mean while the
+profile it is supposed to describe is wrong.
+
+### The offset model does explain the full-versus-partial split
+
+A constant additive offset cancels in a pressure **difference** and survives in an
+**absolute** pressure. That is the whole pattern:
+
+| case | force depends on | predicted | measured |
+|---|---|---|---|
+| full submersion, g64 | p_bottom - p_top | 0% (offset cancels) | -7.67% |
+| full submersion, g96 | p_bottom - p_top | 0% (offset cancels) | +7.28% |
+| partial, g64, gate met | p_bottom absolute | -56.2% | **-49.92%** |
+| partial, g96, gate NOT met | p_bottom absolute | -51.6% | -27.63% (discard) |
+
+The residual -7.67% and +7.28% at full submersion are not explained by this model,
+but they are small and they bracket zero. The g64 partial prediction lands within
+6.3 percentage points of measurement. The g96 partial row is a discard and is listed
+only for completeness.
+
+**An earlier apparent contradiction dissolves.** Differencing two measured bins gave
+a force implying -54.9% at full submersion against the wrench's -7.67%, a factor of
+2.05, which looked like the wrench and the pressure field disagreeing. Both bins were
+unfit for the purpose: the deep one (depth 1.8679) is an outlier carrying a
+11,355 Pa deficit against a 6,121 Pa mean, and the shallow one (depth 0.4509) has
+`p_analytic` 4,423 Pa below the offset itself, so its pressure is floored near zero
+and its deficit is clipped. No cup test is needed to resolve it.
+
+### The velocity gate does not certify hydrostatic equilibrium
+
+At g64, comparing the measured J per depth bin against the EOS's own hydrostatic
+requirement `J(zeta) = (1 + b*zeta)^(-1/(gamma-1))` with `b = 0.00594545` per m, the
+column reached on average **0.459 of the required compression** (std 0.258) at the
+moment the gate passed. At the bottom, J measured 0.948 where hydrostatic needs
+0.875. So the gate certifies quiet velocities, not a hydrostatic pressure field, and
+a run can pass it while its pressure is a third to a half short. Both resolutions
+stop at the same `c/vmax >= 20` criterion, which is consistent with both ending the
+same amount short in Pascals.
+
+Per-particle J spans [0.227, 1.978] at g64 and [0.367, 2.030] at g96, where
+equilibrium needs [0.875, 1.0]. At bulk 1.5e5 the equilibrium signal is a 4.6%
+compression, so it sits well inside the particle-level noise.
+
+### Hydrostatic pre-compression: refuted, and my "no engine change" claim retracted
+
+Pre-compression changed **nothing**: 354 frames with and without, `vmax_peak` 9.8172
+both, and vmax traces identical value by value (first six 0.336, 0.710, 1.104, 1.458,
+1.773, 2.076 in both). The write itself succeeded, J applied in
+[0.856393, 0.998687] and `detF_matches_J` True on read-back.
+
+The source says why. For mat 6, 10 and 12, `mpm_utils.py:1086-1089` does
+
+    J = wp.determinant(state.particle_F_trial[p])
+    Jcbr = J ** (1.0 / 3.0)
+    state.particle_F[p] = wp.mat33(Jcbr, 0, 0, 0, Jcbr, 0, 0, 0, Jcbr)
+
+so for a fluid `particle_F` is **overwritten from `particle_F_trial`** at every stress
+evaluation. The engine imports `particle_x`, `particle_v`, `particle_F`, `particle_C`,
+`particle_selection` and `particle_material`, but there is **no importer for
+`particle_F_trial`**. So the earlier statement in this file that hydrostatic seeding
+"requires no engine change" is **wrong and is retracted**. Writing `particle_F` is
+discarded for fluids; the array that governs fluid pressure cannot currently be set
+from outside. My verification was also insufficient: it confirmed the write landed,
+not that the write mattered.
+
+### Two defects in the probe itself, to fix before it is used again
+
+`np.clip(np.digitize(z, edges) - 1, 0, nbins - 1)` dumps every particle at or below
+the floor into bin 0, which is why bin 0 holds 126,017 particles against about 25,000
+elsewhere. Bin 0 is uninterpretable and was excluded from every number above. And the
+settled free surface is rough, `column_surface` IQR 0.347 m at g64 which is 2.36
+cells, so a single median surface is a poor per-particle depth reference and the
+near-surface bins inherit that error.
