@@ -198,3 +198,99 @@ coupling force and should not be presented as physically coupled results.
   Two project-canonical files disagree about the provenance of the same number.
 - The brief's three-vehicle density corrections versus `CLAUDE.md` Section F's
   "one usable mesh, not three".
+
+## Attempt to run rung (b) on GH200, 2026-08-12, BLOCKED
+
+The coupled run was requested and could not be executed from this session.
+
+**Blocker: Vista is unreachable from LS6 without MFA.** `ssh vista.tacc.utexas.edu`
+returns `Permission denied (keyboard-interactive)`. TACC requires an interactive
+multi-factor token, which a non-interactive session cannot supply. GH200 is a
+Vista resource; LS6 has A100s and cannot import `warpmpm` at all. So there is no
+path from here to a GH200 run. The job must be submitted from a Vista session by
+the user.
+
+Rather than leave that as a dead end, the run was made submit-ready and the two
+follow-up items were costed.
+
+### Readiness audit of rung_b_coupled.py, passed
+
+The driver has never touched a live solver, so it was checked statically before
+anyone spends GPU time on it:
+
+- imports resolve: `simulation/coupling_force/__init__.py` exports `RigidBodyState`,
+  `ForceCoupledBody`, `CouplingConfig` as the driver expects
+- every symbol it pulls from `validate_coupling_force` exists: `BoxTank`,
+  `box_bottom_cells_for_submersion`, `DX_CANON`, `RHO_W`, `G`, `LIM`
+- both `rung_b_coupled.py` and `rigid_body.py` byte-compile clean
+- the only file write is `Path(a.out).write_text(...)`, so it cannot clobber
+  anything outside the path passed to `--out`
+
+Nothing static blocks the run. What remains untested is the physics, which is the
+whole point of running it.
+
+### Experimental-design correction for item 1
+
+`rung_b_coupled.py` defaults to `--n-grid 32`. The fixed-collider figures this run
+must be compared against (-7.67% and +7.28%) were measured at **g64 and g96**. A
+g32 coupled run would not be a like-for-like comparison and would confound the
+moving-collider effect with a resolution change. `realism_track/run_rung_b_gh200.sbatch`
+therefore runs g64 and g96, with `--settle 900` to match the settle depth of the
+gated C1SDF runs rather than the driver's default 400.
+
+Submit from a Vista session:
+
+    cd /work/11603/jcerrell0629/vista/can-it-ford
+    sbatch realism_track/run_rung_b_gh200.sbatch
+
+Partition is `gh`, matching all 12 of the project's existing sbatch scripts;
+`gh-dev` is the interactive idev queue Vista used for job 906873, not the batch
+queue.
+
+### Item 2, sound speed: the driver has no knob, and the cost is ~110x
+
+Two findings, both blocking a naive attempt.
+
+**First, `rung_b_coupled.py` exposes no bulk-modulus or sound-speed argument at
+all** (zero matches for `bulk`, `BULK`, or `sound_speed`). It inherits
+`BULK = 1.5e5` from `validate_coupling_force.py`. So `c = 1480.98` is not
+reachable through this driver as written. `sim_enhanced.py` is the file that
+exposes `--bulk-modulus`, but it is a *standing-flood* driver, not this rung. One
+of the two has to be extended; that is a code change, not a run.
+
+**Second, the physical sound speed costs about 110x more compute.** Derived from
+the solver's own CFL rule, `substeps_and_dt` at `validate_coupling_force.py:49-56`,
+where `rate = max(c/(0.28*dx), 6*eta/(rho*dx^2), 1e-6/(0.5*dx))` and
+`substeps = ceil(rate/fps)`:
+
+| n_grid | dx (m) | substeps at bulk 1.5e5 | substeps at c=1480.98 | cost |
+|---|---|---|---|---|
+| 32 | 0.29443 | 6 | 599 | 100x |
+| 48 | 0.19629 | 8 | 899 | 112x |
+| 64 | 0.14721 | 11 | 1198 | 109x |
+| 96 | 0.09814 | 16 | 1797 | 112x |
+| 128 | 0.07361 | 21 | 2396 | 114x |
+
+Required bulk for c = 1480.98 m/s is **1.9939e9 Pa** (from
+`c = sqrt(GAMMA*bulk/rho)` with GAMMA=1.1, rho=1000), a **13,293x** increase over
+the current 1.5e5. Sanity check: real water's bulk modulus is about 2.2e9 Pa, same
+order, so the target value is physically right.
+
+The consequence is the part worth deciding on before submitting anything: **a run
+that costs 1 GPU-hour at the current bulk costs roughly 100-115 GPU-hours at the
+physical sound speed.** Against a remaining Vista budget of about 670 SU expiring
+2026-09-30, that is a large fraction of what is left, and it should not be spent at
+g96 on a first attempt. The SU-per-node-hour conversion on Vista GH200 was not
+verified from this session and should be checked with `taccinfo` before committing.
+
+Recommended sequence, cheapest informative step first:
+
+1. Submit the g64/g96 coupled run at the current bulk. This answers item 1, whether
+   the moving collider preserves the 5-10% force accuracy, for about 1 GPU-hour.
+2. Only then, add a `--bulk-modulus` argument to `rung_b_coupled.py` and run the
+   sound-speed point at **g32 or g48**, where the 100-112x multiplier lands on the
+   cheapest grid. Note job 895378's finding that the response is not monotone in
+   grid resolution, so a g32 result cannot be extrapolated to g96; it establishes
+   feasibility and rough magnitude only.
+3. Treat a full g96 run at c=1480.98 as a separate budget decision, not a
+   follow-on.
