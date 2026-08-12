@@ -384,3 +384,91 @@ model is wrong at both resolutions.** Sweeping the single most expensive paramet
 in the project on a model that accelerates a sinking body upward at 4g would spend
 roughly 100x a run's cost measuring an artifact. Sound speed should follow, not
 precede, a coupling path that reproduces analytic buoyancy.
+
+## Item 1 CORRECTED: the defect is the settle state, not the pose-update loop
+
+Job **3361423** ran the three-mode wrench diagnostic
+(`realism_track/diag_wrench_fixed_pose.py`, results in
+`realism_track/diag_wrench_3361423/`), six runs, all completed. The mode named
+`fixed` reads the force through the identical new code path but never updates the
+collider pose, so it isolates the wrench read from the pose loop.
+
+| n_grid | `fixed` | `pose_zero_vel` | `pose_full` | rung (b), for reference |
+|---|---|---|---|---|
+| 64 | **-48.49%** | -45.53% | -18.86% | -18.86% |
+| 96 | **+349.55%** | +62.33% | +114.94% | +115.03% |
+
+`pose_full` reproduces rung (b) to within 0.09 percentage points at both
+resolutions, so the diagnostic is a faithful stand-in for rung (b).
+
+**The `fixed` mode did not reproduce -7.67%. It came in at -48.49%.** Both
+hypotheses in the previous section were therefore wrong: the wrench read is not
+sound in this configuration, and the pose-update loop is not the primary defect.
+With the body held completely still, the force is already off by a factor of two
+at g64 and a factor of 4.5 at g96.
+
+### Root cause, verified in the source and in the reference data
+
+`rung_b_coupled.py` and `run_c1_sdf` never shared a configuration. Two differences,
+both material, both checked live:
+
+**1. Submersion.** `run_c1_sdf` (`validate_coupling_force.py:899-1000`) places the
+cube with `box_bottom_cells=8.0`, which puts `box_top` exactly at the nominal free
+surface, and after the displacement rise the cube ends up **fully** submerged. The
+reference JSONs confirm it: `submerged_height_frac` = 1.0 with margin +2.75 dx
+(g64) and +5.36 dx (g96) of water above the cube top, measured against
+`F_buoy_analytic = rho_w * V * g` = 31,298.44 N. `rung_b_coupled.py` instead calls
+`box_bottom_cells_for_submersion(0.80, 18)` and realizes frac **0.5187**, against a
+partial-submersion reference of 16,233 N. Different geometry, different reference,
+different physics.
+
+**2. Settling.** `settle_pinned` (`validate_coupling_force.py:620-646`) advances
+`tank.substeps` substeps per iteration (11 at g64, 16 at g96) and exits on a
+convergence gate, `sound_speed / vmax >= 20`. The reference runs met that gate at
+354 frames = **3,894 substeps** (g64) and 776 frames = **12,416 substeps** (g96),
+finishing at vmax 0.510 and 0.634 m/s. `rung_b_coupled.py`'s settle loop advances
+**one** substep per iteration with no gate: at 900 substeps it delivers **23%** of
+the settling the reference needed at g64 and **7.2%** at g96.
+
+The force scatter confirms the water is still ringing. The reference tail standard
+deviation is 828 N at g64 (2.9% of the mean) and 102 N at g96 (0.3%). In rung (b)'s
+configuration, Fz sweeps -3,360 to +23,847 N at g64 with the body fixed, a
+peak-to-peak of 27,207 N against an analytic 16,233 N, and 35,077 to 118,831 N at
+g96. A hydrostatic measurement cannot swing by 1.7 times the quantity it is
+measuring. `settle_vmax_peak` in the reference runs is 9.82 and 12.43 m/s against
+c = 12.845 m/s, so the initial collapse is very nearly sonic and needs the full
+gated settle to decay.
+
+### What this retracts
+
+The previous section's headline, "the moving collider does not preserve 7.3-7.7%",
+is correct as a bare observation but wrong in attribution. It charged the
+difference to collider motion. Most of it is geometry and settle state: an
+unsettled, half-submerged tank measured against a partial reference. The 7.3-7.7%
+figure was never inheritable by rung (b), and not because the collider moves.
+**Treat that section as superseded on cause, retained only for the raw numbers.**
+
+### One genuine positive result about the API
+
+Comparing `pose_zero_vel` with `pose_full` isolates the velocity argument to
+`set_sdf_pose`. At g64 the steady force moves from -45.53% to -18.86% and the net
+descent halves, from -0.2449 m to -0.1236 m; at g96 it moves from +62.33% to
++114.94%. Both shifts are in the same direction, more upward reaction when the
+body's velocity is communicated. So `set_sdf_pose`'s `velocity` argument does reach
+the grid coupling and is not silently dropped, which is a prerequisite for the
+moving-collider path and is now confirmed rather than assumed.
+
+### The test that actually settles it
+
+Job **3361443** puts the reference geometry through both code paths:
+`realism_track/rung_b_settled.py`, modes `fixed` and `coupled`, at g64 and g96,
+with `box_bottom_cells=8.0` and `settle_pinned` including the convergence gate,
+scored on the same steady-tail-mean statistic against `rho_w * V * g`. The `fixed`
+arm must reproduce -7.67% and +7.28%, which validates the harness; the `coupled`
+arm is then the first honest measurement of the moving collider. Any run that
+fails the settle gate is flagged `settle_is_discard` in its JSON and must not be
+quoted.
+
+Until that returns, the standing statement is unchanged and now better founded:
+**no validated coupling force exists for the realism track, so no visual-realism
+claim is backed.**
