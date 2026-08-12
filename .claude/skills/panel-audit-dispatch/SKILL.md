@@ -231,10 +231,28 @@ defaulting to a single generic mention:
 
 Fast inline sanity checks that don't need a full skill call, useful while
 composing a pane block: water 1000 kg/m^3, vehicle effective density
-100 to 300 kg/m^3 band, sedan mass 1000 to 1600 kg, g = 9.81, realistic
-depth 0 to 1.0 m, velocity 0 to 3.0 m/s. `coup_friction` is a numerical
-stability coefficient, not physical mu. Physical mu is 0.3 to 0.55 per
-Azhar et al. 2023. Particle count shouldn't silently change between runs.
+310.494 kg/m^3 for the canonical Yaris hull, sedan mass 1000 to 1600 kg,
+g = 9.81, realistic depth 0 to 1.0 m, velocity 0 to 3.0 m/s.
+
+Three claims that used to sit in this paragraph were corrected 2026-08-12 against
+the corrections register. Do not restore them.
+- The old low plausibility band for vehicle effective density was STALE and has been
+  deleted here. Register B5 gives the canonical hull as 310.494 kg/m^3, and register
+  Section I lists that former band for deletion on sight. All 17 gated runs realise
+  values above it. Realized density is also grid-coupled by construction, since
+  solid_volume = n_particles * h^3, so it is not an independent physics check.
+- `coup_friction` is NOT a numerical stability coefficient. Register C10 and A7: it
+  is genuine Coulomb friction, |v_t_new| = max(0, |v_t| - mu|v_n|), at
+  legacy_coupler.py:322, default 0.1. The numerical regularisation parameter is
+  `coup_softness`, default 0.002. Never conflate it with the warpmpm `floor_friction`
+  of 0.55 used in the 17 gated runs; different parameters, different engines.
+- "mu is 0.3 to 0.55 per Azhar et al. 2023" misattributes the low end. Register G4a:
+  Azhar, Pauwels and Bui 2023 measured 0.55 themselves, on a rubber mat used as a
+  road-surface proxy, not on submerged asphalt. Register G4b: 0.30 comes from Shand
+  et al. 2011 and Bonham and Hattersley 1967 as an inherited convention, and G4
+  refutes it as a measured wet-road value.
+
+Particle count shouldn't silently change between runs.
 Buoyancy must oppose gravity. Never justify a number by physical intuition
 alone; every physical claim traces to a formula, a conservation law, a
 cited value, or a direct measurement.

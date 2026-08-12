@@ -37,8 +37,14 @@ restitution=0.05 on the floor and all four walls, which satisfies that gate. The
 SDF-collider validation, job 894731, is 7.3 to 7.7 percent of analytic buoyancy;
 reject the 1.6 figure, which is a conflation with the free-rigid late-window fit and
 measures the path being criticised rather than the validated one. The vehicle mass
-sweep uses 1100, 1609 and 2337 kg, of which only 1100 traces to vehicle_params.py; the
-other two are unsourced against that file's actual classes.
+sweep uses 1100, 1609 and 2337 kg. Only 1100 traces to vehicle_params.py, whose actual
+classes are 1100, 1990 and 2300. Do NOT state flatly that 1609 and 2337 are unsourced:
+register E6a and the Section I deletion table both refute that wording. They trace to
+named CCSA / George Mason FE decks, 1609 kg to a 2020 Nissan Rogue and 2337 kg to a
+2018 Dodge Ram 1500. The correct phrasing is that all three masses are externally
+sourced but only one appears in vehicle_params.py, and that this remains a
+mass-sensitivity study on ONE Yaris hull, because register E3 records 8,905 particles
+for all three, so geometry never changes.
 
 11. Citations. Any DOI, author name, or year must be verified, not assumed. Flag any
 claim that a vehicle-mechanical basis exists for the 3.0 m/s AR&R velocity cap; it is
@@ -80,3 +86,41 @@ vehicle_params.py are compact_sedan at :131, midsize_suv at :157 and light_picku
 so there is no per-class reference for the other two hulls to be compared against.
 Flag any proposal to loop that check over three vehicle classes as resting on a class
 list that does not exist.
+
+Checks 16 to 18, added 2026-08-12. Same evidence standard as above.
+
+16. Rogue and Silverado HAVE run. Register E3a, added 2026-08-11: both hulls went
+through the free-rigid path at canonical g64 in job 896273 and through a matched-dx /
+fixed-g96 sweep in job 896302, tracked non-canonically at
+data/class_specific_runs_2026-08-08.csv (commit c375adc, resolves live) with full
+results in docs/MULTIGEOM_VALIDATION_2026-08-11.md. FAIL any claim that they "never
+entered a simulation," which was true in E3 and went stale. Also FAIL any statement
+that folds them into the canonical 17, and any statement that a cross-vehicle run at
+the same n_grid is the same resolution or the same depth: grid_lim derives from the
+loaded hull's extent, so a different hull at g64 gets a different dx AND a different
+realized water depth.
+
+17. Threshold deduplication. FIVE names is settled, not three or four. The TOTAL is
+scope-sensitive and no bare total is safe to quote: FAIL any claim that gives one
+without its scope. Enumerated live 2026-08-12 by a Python walk, assignments only:
+DRIFT_THRESHOLD_M 5, L2_DRIFT_M 7, DRIFT_THRESHOLD 8, DRIFT_M 1, THRESHOLD 1, total
+22 in-scope .py sites. Register D7's 24 does NOT reproduce: its DRIFT_THRESHOLD 9
+counts an archive/ file that D7's own scope statement excludes, and its THRESHOLD 2
+is unreproducible, since exactly one bare-THRESHOLD site exists at
+scripts/plot_hailuo_comparison.py:7. Two code-shaped sites sit outside scope and
+likely explain a 24, the archive/ copy and
+simulation/can_it_ford_mu_sweep.py.DO_NOT_RUN:60, which no *.py glob matches.
+L2_DRIFT_M is the name absent from every earlier inventory and six of its seven sites
+are poster figure generators, so it is the one closest to a formal deliverable; that
+part of D7 stands. Separately, register D7a:
+simulation/failure_modes.py:46-48 holds three 0.05 literals and :47 slide_speed_ms is
+METRES PER SECOND, not metres. FAIL any proposal to deduplicate by value. The rule is
+deduplicate by NAME and UNIT. A guard now denies value-keyed substitution at
+.claude/hooks/audit_integrity_guard.py.
+
+18. Run provenance. params_check.py reports lit:manifest_provenance across 32
+manifests: canitford_git_commit, grid_density, mesh_sha256, solver_git_sha and
+vehicle_mass are each missing in all 32, and bulk_modulus in 3. FAIL any claim that a
+result is reproducible, or that a run traces to code plus data plus environment, until
+those fields exist. This is an open gap, not a disclosed limitation, and it is
+distinct from the sound-speed and resolution limitations, which ARE disclosed.
