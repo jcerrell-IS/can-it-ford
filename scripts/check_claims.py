@@ -170,20 +170,22 @@ RULES: list[Rule] = [
 
     Rule("C8", ERROR,
          r"drift[_ ]?threshold",
-         "DRIFT_THRESHOLD 0.05 m has NO peer-reviewed source. FIVE names is settled; "
-         "the TOTAL is scope-sensitive, so never quote one without its scope. "
-         "Enumerated live 2026-08-12: DRIFT_THRESHOLD_M 5, L2_DRIFT_M 7, "
-         "DRIFT_THRESHOLD 8, DRIFT_M 1, THRESHOLD 1, total 22 in-scope .py sites. "
-         "Neither the old '16 under four names' nor register D7's '24' reproduces: "
-         "D7's DRIFT_THRESHOLD 9 counts an archive/ file its own scope excludes, and "
-         "its THRESHOLD 2 cannot be reproduced at all, only one bare-THRESHOLD site "
-         "exists at scripts/plot_hailuo_comparison.py:7. Two further code-shaped "
-         "sites sit outside scope and likely explain a 24: the archive/ file and "
-         "simulation/can_it_ford_mu_sweep.py.DO_NOT_RUN:60, which any *.py filter "
-         "misses. Deduplicate by name and unit, never by value: failure_modes.py:47 "
-         "slide_speed_ms is 0.05 m/s, a SPEED, not a distance. Do not cite the "
-         "tolerance as sourced, and do not quote a bare total.",
-         "CLAUDE.md item 13 (enumerated 2026-08-12); register D7 and D7a; gates.py:195-196",
+         "DRIFT_THRESHOLD 0.05 m has NO peer-reviewed source. FIVE names is settled. "
+         "The TOTAL depends on TWO independent choices, so never quote one without "
+         "saying which you made: (1) archive/ in or out, (2) bare literals only, or "
+         "also analysis/gp_surrogate.py:14 where THRESHOLD defaults to 0.05 via a "
+         "CLI-overridable expression. Four defensible totals result, and 23 is "
+         "reachable two ways: 22 strict/no-archive, 23 strict/archive, 23 "
+         "loose/no-archive, 24 loose/archive. Register D7's 24 is CORRECT under "
+         "loose/archive; an earlier 2026-08-12 recount calling it unreproducible was "
+         "itself wrong, because its strict regex could not see the gp_surrogate "
+         "default. Only '16 under four names' is refuted outright. Separately, "
+         "simulation/can_it_ford_mu_sweep.py.DO_NOT_RUN:60 is a real code site no "
+         "*.py glob matches, worth +1 on any reading. Deduplicate by name and unit, "
+         "never by value: failure_modes.py:47 slide_speed_ms is 0.05 m/s, a SPEED, "
+         "not a distance. Do not cite the tolerance as sourced, and do not quote a "
+         "bare total. .claude/checks/count_claims_check.py enforces this live.",
+         "CLAUDE.md item 13 (re-derived 2026-08-12, three methods); register D7 and D7a; gates.py:195-196",
          context=r"peer[- ]review|\bcited\b|literature|standard|established|sourced"),
 
     Rule("C9", WARN,

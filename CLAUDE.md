@@ -9,17 +9,29 @@ restate them in chat prompts.
   rather than trust at face value.
 - `grep` IN THIS ENVIRONMENT IS NOT `grep`. Confirmed live 2026-08-07
   by `declare -f grep`: it is a shell function wrapping ugrep with
-  `--ignore-files`, so it SKIPS EVERY GITIGNORED PATH. `.gitignore:14`
-  is `renders/` and `:10` is `data/*`, so a repo-wide
-  `grep -rn "pattern" .` silently omits renders/yaris_render_s1/,
-  which holds sim_standing.py, vehicle_live.py, gates_all_runs.py,
-  gates_both_scenarios.py and all 17 runs' metrics.csv, plus most of
-  data/. Measured: the same pattern returned 5 hits from `.` and 7 when
-  renders/ was named explicitly. An absent hit is NOT evidence of
-  absence. For any inventory or audit claim, use `/usr/bin/grep -rn`,
-  or name renders/ and data/ explicitly, and exclude ./can-it-ford/,
-  ./third_party/ and ./.claude/worktrees/ (27 stale copies that
-  otherwise multiply every hit ~20x).
+  `--ignore-files`, so it SKIPS EVERY GITIGNORED PATH. `.gitignore:10`
+  is `data/*` and the `renders` rules are at `:26` and `:28`, so a
+  repo-wide `grep -rn "pattern" .` silently omits most of
+  renders/yaris_render_s1/ and most of data/. Measured: the same
+  pattern returned 5 hits from `.` and 7 when renders/ was named
+  explicitly. An absent hit is NOT evidence of absence. For any
+  inventory or audit claim, use `/usr/bin/grep -rn`, or name renders/
+  and data/ explicitly, and exclude ./third_party/ and
+  ./.claude/worktrees/.
+  LINE NUMBERS UPDATED 2026-08-12, and the rule they describe CHANGED.
+  This clause used to read "`.gitignore:14` is `renders/`". The blanket
+  `renders/` was replaced that day by a walk-down carve-out, because it
+  was also hiding 24 SOURCE scripts, among them sim_standing.py and
+  vehicle_live.py, which this file cites by file:line as the primary
+  source for A1, A2, A5 and F5 and which implement the Contribution 1
+  code. Those .py files are now TRACKED and therefore NO LONGER hidden
+  from the shell `grep`. Generated output under renders/ is still
+  ignored, so the H0 warning still applies to metrics.csv, frames and
+  every other artifact, just not to the source scripts.
+  ALSO CORRECTED 2026-08-12, verified live: `./.claude/worktrees/` holds
+  2 directories, not 27, so the "multiplies every hit ~20x" figure is
+  stale; re-measure before quoting it. And `./can-it-ford/` no longer
+  exists, so excluding it is now a no-op, see the section below.
 - Any parameter assigned to a variable (rho, coup_friction, box
   dimensions, mass, thresholds) must trace to a primary source before
   being written into a script or command.
@@ -263,26 +275,49 @@ not by file read from the Mac, see the item for its evidence path.
     session_archive/, .claude/worktrees/, the nested ./can-it-ford/ and
     every .bak* excluded; assignments of the literal only, not prose.
 
-    TWO DEFECTS IN D7's COUNT, both verified:
-    (a) D7's DRIFT_THRESHOLD 9 includes
-        docs/session_notes/archive/mu_sweep_recovered_from_staging.py:60,
-        which sits under an archive/ directory that D7's OWN scope
-        statement excludes. It is also gitignored at .gitignore:12.
-        In scope the count is 8.
-    (b) D7's THRESHOLD 2 cannot be reproduced. Exactly ONE bare
-        THRESHOLD assignment exists, scripts/plot_hailuo_comparison.py:7,
-        tracked and not ignored. Confirmed by a full-repo Python walk.
-    So D7's per-name split does not reproduce. Do not cite 16, 24,
-    "three names" or "four names". Cite the enumeration above, or re-run
-    and re-enumerate.
+    RETRACTION 2026-08-12, SAME DAY, SECOND PASS. An earlier version of
+    this item claimed "D7's THRESHOLD 2 cannot be reproduced" and "D7's
+    per-name split does not reproduce". BOTH OF THOSE WERE WRONG and are
+    withdrawn. D7's 24 is CORRECT. It reproduces exactly, and the
+    refutation was itself an assertion nobody re-derived, which is the
+    very failure this item is about.
 
-    LIKELY RECONSTRUCTION OF D7's 24, stated as a hypothesis and not as
-    fact: 22 in-scope .py sites, plus the archive/ site in (a), plus a
-    THIRD code-shaped site that a *.py filter misses entirely,
-    simulation/can_it_ford_mu_sweep.py.DO_NOT_RUN:60. That file is
-    code, carries DRIFT_THRESHOLD = 0.05, and is deliberately suffixed
-    so it cannot be executed or globbed as Python. 22 + 1 + 1 = 24.
-    It does not reconcile D7's THRESHOLD 2, so treat this as unproven.
+    What the refutation missed is analysis/gp_surrogate.py:14:
+
+      THRESHOLD = float(sys.argv[1]) if len(sys.argv) > 1 else 0.05
+
+    That is a genuine fifth-name declaration of the 0.05 default. It is
+    CLI-overridable rather than a hard-coded constant, so a strict
+    `NAME = 0.05` regex does not match it, which is exactly why a
+    strict recount "could not find" D7's second THRESHOLD. Verified
+    live 2026-08-12 by three independent methods that now agree: a
+    /usr/bin/grep loop, a subagent Python re walk, and
+    .claude/checks/count_claims_check.py.
+
+    THERE ARE TWO INDEPENDENT BINARY CHOICES, NOT ONE. That is the real
+    finding, and it is why this count has moved three times:
+      1. include the archive/ copy, or honour D7's stated exclusion
+      2. count only bare literals, or also count the gp_surrogate default
+    Two choices give FOUR totals, and 23 is reachable by TWO different
+    routes, so two counts can appear to agree while counting different
+    things:
+
+      22   bare literals only, archive/ excluded
+      23   bare literals only, archive/ included
+      23   plus the gp_surrogate default, archive/ excluded
+      24   plus the gp_surrogate default, archive/ included   <- D7
+
+    Every one of those is defensible WITH its scope stated. A bare
+    number is what is wrong, not any particular value. Do not cite 16.
+    Do not cite any total without saying which of the two choices you
+    made. `.claude/checks/count_claims_check.py` now enforces this and
+    accepts 22, 23 or 24.
+
+    SEPARATE, still true, and NOT part of any total above:
+    simulation/can_it_ford_mu_sweep.py.DO_NOT_RUN:60 is code, carries
+    DRIFT_THRESHOLD = 0.05, and is deliberately suffixed so no *.py glob
+    will ever match it. Count it as +1 on whichever reading you use, and
+    say so.
 
     Prose mentions, correctly excluded from every count above: 122
     further occurrences in .md files, heavily concentrated in
@@ -421,7 +456,18 @@ covers only what those rules do NOT block:
   it and .gitignore lines 17-18 explicitly un-ignore it. Do not source a paper
   figure or a density number from it; use data/all_runs_inventory.csv instead.
 
-## Nested ./can-it-ford/ duplicate directory, do not read data from it
+## Nested ./can-it-ford/ duplicate directory, GONE as of 2026-08-12
+
+**STATUS CHANGE, verified live 2026-08-12 by `ls -d /Users/josie/can-it-ford/can-it-ford`:
+the nested duplicate NO LONGER EXISTS.** Every exclusion of `./can-it-ford/` in this
+file, in skill files and in audit scripts is now a no-op rather than a load-bearing
+guard. Do not conclude from a passing grep that the duplicate was handled; there is
+nothing left to handle. The section below is retained as history, because the hazard
+returns the moment anyone re-clones into the repo root, and because several committed
+scripts still carry the exclusion. Do not cite it as a live hazard without re-running
+that `ls` first.
+
+### Historical, when the duplicate existed
 
 There is a second copy of this project nested at ./can-it-ford/ inside the repo
 root. It is NOT a synced mirror. Verified live 2026-07-29 by filecmp: paper/

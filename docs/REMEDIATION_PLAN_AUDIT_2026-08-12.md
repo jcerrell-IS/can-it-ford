@@ -222,3 +222,81 @@ every site with a Python `re` walk and print the paths.
 5. `check_claims.py` C5 and C8 fire on any line that quotes a banned phrase in order to
    retire it. Several such false positives were hit while writing these corrections.
    The rules are per-line and cannot distinguish an assertion from a retraction.
+
+---
+
+## STEP 5 CLAUDE.md accuracy pass, 2026-08-12 continuation
+
+### RETRACTION, and it is the important part
+
+An earlier section of this document, and commit `950d654`, claimed **register D7's
+count of 24 "does not reproduce"**. That claim was **WRONG** and is withdrawn. D7's 24
+is correct.
+
+What the refutation missed is `analysis/gp_surrogate.py:14`:
+
+```python
+THRESHOLD = float(sys.argv[1]) if len(sys.argv) > 1 else 0.05
+```
+
+That is a genuine fifth-name declaration of the 0.05 default. It is CLI-overridable
+rather than a hard-coded constant, so a strict `NAME = 0.05` regex cannot see it. The
+recount then declared D7's second `THRESHOLD` unreproducible on the strength of a
+check that was structurally incapable of finding it. **A refutation is an assertion
+too, and this one was not re-derived before being trusted.** Found by an independent
+read-only subagent tasked with re-deriving the count in Python rather than grep.
+
+**There are TWO independent binary choices, not one.** That is why the number has
+moved four times now:
+
+| reading | total |
+|---|---|
+| bare literals only, `archive/` excluded | 22 |
+| bare literals only, `archive/` included | 23 |
+| plus the gp_surrogate default, `archive/` excluded | 23 |
+| plus the gp_surrogate default, `archive/` included | **24, register D7** |
+
+**23 is reachable two different ways**, which is exactly how two counts can appear to
+agree while counting different things. Every total above is defensible *with its scope
+stated*. A bare number is what is wrong, not any particular value.
+
+Separately and not in any total: `simulation/can_it_ford_mu_sweep.py.DO_NOT_RUN:60` is
+real code carrying the literal, and no `*.py` glob will ever match it.
+
+Three independent methods now agree: a `/usr/bin/grep` loop, a subagent Python `re`
+walk, and `.claude/checks/count_claims_check.py`.
+
+### Structural guard added
+
+`.claude/checks/count_claims_check.py` re-derives the count live and denies any edit to
+CLAUDE.md, `check_claims.py` or `audit_integrity_guard.py` that asserts a total outside
+the defensible set. It handles the two traps this session actually hit: it accepts the
+whole set rather than one hardcoded number, and it steps aside for a line that quotes a
+number in order to retire it. Wired as a PreToolUse hook on `Edit|Write`. Verified
+against 10 cases.
+
+While being built it counted **its own docstring** as a sixth declaration site, because
+it quotes the gp_surrogate line as documentation. Fixed by skipping comment lines and
+its own file. A counting tool counting its own prose about a declaration is the exact
+failure class it exists to catch.
+
+### Claims checked, one falsifying command each
+
+| claim | verdict | evidence |
+|---|---|---|
+| `vehicle_params.py` `mass_kg` is 1100.0 | CONFIRMED | `:125` reads `"mass_kg": 1100.0` |
+| `data/all_runs_inventory.csv` holds 17 runs | CONFIRMED | csv parse: 18 rows incl header |
+| `failure_modes.py:14` is `G = 9.80665` | CONFIRMED | direct read |
+| `gates.py:12` EXT_REF, `:13` RHO_REF 310.49 | CONFIRMED | direct read |
+| `.gitignore:14` is `renders/`, `:10` is `data/*` | **CONTRADICTED** | `data/*` is still `:10`, but `renders` is now `:26`/`:28`. **Self-inflicted** by this session's carve-out. Fixed. |
+| nested `./can-it-ford/` duplicate exists | **CONTRADICTED** | does not exist. An entire CLAUDE.md section and every `./can-it-ford/` grep exclusion is now a no-op. Marked as history. |
+| `.claude/worktrees/` holds 27 stale copies | **CONTRADICTED** | holds 2. The "multiplies every hit ~20x" figure is stale. |
+
+Bounded pass: 7 checkable claims, not the whole file. The remaining numbered items were
+either pure narrative or cite `sim_standing.py` line numbers already verified earlier in
+this session.
+
+### Not done, and why
+
+`stop_signal_and_check.sh` could **not** be wired as instructed. It is **staged for
+deletion by another session** and is absent from disk. See ACTION REQUIRED.
