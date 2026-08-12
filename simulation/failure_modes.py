@@ -11,7 +11,7 @@ import numpy as np
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from vehicle_params import get_vehicle
 
-G = 9.80665
+G = 9.81  # unified with the solver 2026-08-12, was 9.80665; register A6
 
 SURGE_AXIS = 0
 LONG_AXIS = 1
