@@ -702,6 +702,32 @@ def run_c1(n_grid, rho_box=600.0, depth_cells=18.0, box_bottom_cells=8.0,
     }
 
 
+def box_bottom_cells_for_submersion(submersion_frac, depth_cells):
+    """box_bottom_cells that puts `submersion_frac` of the cube below the free surface.
+
+    EXACT, not tuned, and not fitted to any measured value. The water is CARVED against
+    the cube (BoxTank.__init__ deletes the lattice points inside the cube's AABB) rather
+    than displaced by it, so the volume the carve removes is exactly the volume the
+    submerged part of the cube displaces. The still-water balance
+
+        V_w = a_tank*(s - floor) - L_BOX^2*(s - z_b0)
+
+    then solves to s = floor + depth_cells*DX_CANON for ANY z_b0 whose cube bottom lies
+    below that surface: the box position cancels. Verified symbolically and numerically
+    at box_bottom_cells 8..12, all giving s = 21.000000 dx at depth_cells=18.
+
+    With the surface pinned there, h_sub = (depth_cells - box_bottom_cells)*DX_CANON and
+    the cube is L_BOX/DX_CANON = 10 cells tall, giving the inverse below.
+
+    This is the INCOMPRESSIBLE balance. The EOS is compressible (gamma=1.1, bulk=1.5e5),
+    so the settled column stands slightly lower and the realised fraction lands slightly
+    under the request. That is why the analytic reference in run_c1b is computed from the
+    MEASURED surface, and why both the requested and the realised fraction are reported.
+    """
+    cells_per_side = L_BOX / DX_CANON            # 10.0 exactly, by construction
+    return depth_cells - submersion_frac * cells_per_side
+
+
 def run_c1_sdf(n_grid, rho_box=600.0, depth_cells=18.0, box_bottom_cells=8.0,
                settle_frames=600, measure_substeps=120, collider="sdf",
                sdf_res=64, device="auto", seed=0):

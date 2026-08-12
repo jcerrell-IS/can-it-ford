@@ -32,7 +32,7 @@ import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 from simulation.validate_coupling_force import (  # noqa: E402
-    BoxTank, box_bottom_cells_for_submersion, DX_CANON, RHO_W, G, LIM,
+    BoxTank, box_bottom_cells_for_submersion, settle_pinned, DX_CANON, RHO_W, G, LIM,
 )
 from simulation.coupling_force import (  # noqa: E402
     RigidBodyState, ForceCoupledBody, CouplingConfig,
@@ -50,7 +50,9 @@ def main():
     ap.add_argument("--rho-box", type=float, default=600.0)
     ap.add_argument("--depth-cells", type=float, default=18.0)
     ap.add_argument("--submersion-frac", type=float, default=0.80)
-    ap.add_argument("--settle", type=int, default=400, help="settle steps, collider fixed")
+    ap.add_argument("--settle", type=int, default=600,
+                    help="settle FRAMES cap, collider fixed; one frame is "
+                         "tank.substeps solver substeps, matching run_c1_sdf")
     ap.add_argument("--steps", type=int, default=60, help="coupled steps")
     ap.add_argument("--relax", type=float, default=1.0)
     ap.add_argument("--freeze-rotation", action="store_true", default=True)
@@ -77,12 +79,17 @@ def main():
           f"n_water={tank.n_water} dt={tank.dt:.3e} substeps={tank.substeps} "
           f"collider_handle={tank.collider}")
 
-    # --- settle with the collider held fixed (its pose is never updated here) ---
-    for i in range(a.settle):
-        tank.project_water()
-        tank.solver.step(tank.dt, 1)
-        if i % max(1, a.settle // 4) == 0:
-            print(f"  settle {i}/{a.settle}", flush=True)
+    settle = settle_pinned(tank, a.settle)
+    print(f"SETTLE frames_run={settle['settle_frames_run']}/{settle['settle_frames_cap']} "
+          f"gate_met={settle['settle_gate_met']} "
+          f"min_frames={settle['settle_min_frames']} "
+          f"vmax_final={settle['settle_vmax_final']:.6e} "
+          f"substeps_per_frame={tank.substeps} "
+          f"physical_s={settle['settle_frames_run'] / 30.0:.4f}", flush=True)
+    if not settle["settle_gate_met"]:
+        print("SETTLE GATE NOT MET: the water never reached the quiescence ratio. "
+              "Every force number below is a transient, not a hydrostatic reading.",
+              flush=True)
 
     zs, n_free_cols, iqr = tank.column_surface()
     h_sub = float(np.clip(zs - z_b0, 0.0, L))
@@ -110,6 +117,20 @@ def main():
                             displaced_volume_m3=L ** 2 * h_sub)
     print(f"COUPLER added_mass_ratio={body.added_mass_ratio():.3f}  "
           f"expected_static_buoyancy={body.expected_static_buoyancy():.2f} N")
+
+    amr = body.added_mass_ratio()
+    stability_unmitigated = bool(
+        amr is not None and amr > cfg.warn_added_mass and a.relax >= 1.0
+    )
+    if stability_unmitigated:
+        print("=" * 78, flush=True)
+        print(f"VALIDITY FAIL: added_mass_ratio={amr:.4f} exceeds warn_added_mass="
+              f"{cfg.warn_added_mass} while relax={a.relax:.3f}, so no mitigation is "
+              f"active. Per coupler.py:36-42 a partitioned explicit scheme "
+              f"over-predicts and can diverge in exactly this regime. Numbers below "
+              f"are NOT a valid coupling-accuracy measurement. Reduce dt or pass "
+              f"--relax below 1.", flush=True)
+        print("=" * 78, flush=True)
 
     z0 = float(state.x_cm[2])
     for i in range(a.steps):
@@ -152,7 +173,21 @@ def main():
         "submersion_frac_requested": a.submersion_frac,
         "submersion_frac_realized": frac_real, "h_sub_m": h_sub,
         "L_m": L, "mass_kg": mass, "dt": tank.dt,
-        "settle_steps": a.settle, "coupled_steps": a.steps,
+        "settle_frames_cap": settle["settle_frames_cap"],
+        "settle_frames_run": settle["settle_frames_run"],
+        "settle_min_frames": settle["settle_min_frames"],
+        "settle_gate_met": settle["settle_gate_met"],
+        "settle_vmax_final": settle["settle_vmax_final"],
+        "settle_physical_s": settle["settle_frames_run"] / 30.0,
+        "substeps_per_frame": tank.substeps,
+        "coupled_steps": a.steps,
+        "relax": a.relax,
+        "warn_added_mass": cfg.warn_added_mass,
+        "added_mass_ratio_exceeds_warn": bool(
+            amr is not None and amr > cfg.warn_added_mass),
+        "stability_unmitigated": stability_unmitigated,
+        "valid_accuracy_measurement": bool(
+            settle["settle_gate_met"] and not stability_unmitigated),
         "F_buoy_analytic_N": f_buoy_analytic,
         "Fz_measured_mean_N": Fz_mean, "Fz_measured_median_N": Fz_med,
         "ratio_median_over_analytic": (Fz_med / f_buoy_analytic) if f_buoy_analytic else None,
