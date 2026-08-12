@@ -134,6 +134,11 @@ Selected output fields:
 ```
 See F-2, this is the most consequential finding in the pass.
 
+> NAMING, added 2026-08-12: the identifier in the transcript above was renamed
+> `C2_equilibrium_draft` -> `CV2_equilibrium_draft` to clear a collision with the gate
+> metric `C2_veh_zmin_rise`. The quoted output is left exactly as observed on
+> 2026-08-11 and is not retroactively edited. See register Section J item 1.
+
 **W-10 `[MAC]` The `--n-grid 32` rejection is a deliberate guard, not a bug.**
 ```
 /Users/josie/.venvs/canitford-mpm/bin/python3 simulation/validate_coupling_force.py \

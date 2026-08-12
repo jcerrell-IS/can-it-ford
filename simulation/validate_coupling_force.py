@@ -583,7 +583,7 @@ def run_c2(n_grid, rho_box=600.0, depth_cells=10, offset_cells=0.0,
     tail = np.asarray(drafts[-window:])
     d_meas = float(tail.mean())
     return {
-        "variant": "C2_equilibrium_draft",
+        "variant": "CV2_equilibrium_draft",
         "geometry": tank.geometry(),
         "settle": settle_state,
         "offset_cells": offset_cells,

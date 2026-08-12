@@ -374,7 +374,20 @@ Any skill file containing any of the following must be corrected in place.
 
 ## SECTION J: open, do not state as resolved
 
-1. Run the coupling-force validation. Variant C on the free particle rigid body: C2 equilibrium float draft against Archimedes, C1 initial submerged acceleration `a = g(rho_w/rho_box - 1)` giving `F_buoy = m(a+g)`. Run at the canonical resolution AND one refinement. A coarse-case miss is a finding, not a failure. Never tune a threshold to force a pass.
+1. Run the coupling-force validation. Variant C on the free particle rigid body: CV2 equilibrium float draft against Archimedes, C1 initial submerged acceleration `a = g(rho_w/rho_box - 1)` giving `F_buoy = m(a+g)`. Run at the canonical resolution AND one refinement. A coarse-case miss is a finding, not a failure. Never tune a threshold to force a pass.
+
+   NAMING, 2026-08-12: the coupling-validation variant formerly written `C2` is now
+   `CV2` (`CV2_equilibrium_draft`, emitted at `simulation/validate_coupling_force.py:586`).
+   It collided with the unrelated gate metric `C2_veh_zmin_rise`, a summary-JSON key
+   written by `renders/yaris_render_s3_enhanced/sim_enhanced.py:709` and gated at
+   `gates.py:150-151`. `CV2` was the one renamed because it is the only one of the four
+   colliding `C`-series identifiers that appears in **zero** stamped artifacts under
+   `data/coupling_validation/`; coupling `C1_initial_submerged_acceleration` and
+   `C3_neutral_buoyancy_null`, and the gate `C2_veh_*` keys, are all stamped and were
+   therefore left alone. **The `C3` collision is unresolved and deliberately so**: gate
+   `C3_oob_particle_frames` and coupling `C3_neutral_buoyancy_null` still share a token,
+   and neither can be renamed without desynchronising a stamped artifact from its source.
+   The CLI token `--variant c2` is unchanged, so existing sbatch invocations still work.
 2. CLOSED 2026-08-07, superseded: H5.
 3. CLOSED 2026-08-07, D6h and D6i. The two `failure_modes_result.json` citations were repointed by `841d666`; the surviving independence overclaim in `four_rung_ladder.md` was fixed separately the same day. Note `841d666`'s message claimed to close this item but never edited this register, which is why it sat open for a day after the work was done. **A commit message is not a register edit.**
 4. CLOSED 2026-08-07, D6a and D6b. The classifier ran on all 17 on 2026-08-05 and was re-verified live 2026-08-07. Same caveat as item 3: `841d666` claimed the closure without making it.
