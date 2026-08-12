@@ -29,12 +29,12 @@ records where it came from.
 
 ## The four numbers
 
-| kg | What it actually is | Source, read live |
-|---|---|---|
-| **2270.0** | This specific vehicle's mass, from its own FE deck header | `silverado-coarse-v3a.key:28`, as cited by `MULTIGEOM_VALIDATION_2026-08-11.md` section 1 |
-| **2337.0** | The AR&R **large_4wd class** figure used by the canonical 17-run sweep | `renders/yaris_render_s1/gates_both_scenarios.py`, `RUNS` table; cited by the run's own `mass_source` field |
-| **2337** | 2007 Chevrolet Silverado curb test weight, CCSA vehicle description table | `vehicle_data_master_reference_2026-07-21.json`, key `pickup_2007_chevrolet_silverado`, on Vista |
-| **2367** | 2014 Chevrolet Silverado 1500, a different vehicle | External report `b0d2664f`, line 14 |
+| kg | What it actually is | Source, read live | Status |
+|---|---|---|---|
+| **2270.0** | This vehicle's own mass, stated in its FE deck header | `silverado-coarse-v3a.key:28` on Vista, opened directly | **CORRECT, primary** |
+| **2337.0** | The AR&R **large_4wd class** figure used by the canonical 17-run sweep | `renders/yaris_render_s1/gates_both_scenarios.py`, `RUNS` table; cited by the run's own `mass_source` field | Real, but not a vehicle mass |
+| **2337** | Claimed as 2007 Silverado curb test weight | `vehicle_data_master_reference_2026-07-21.json`, key `pickup_2007_chevrolet_silverado`, on Vista | **CONTRADICTED by the deck** |
+| **2367** | 2014 Chevrolet Silverado 1500, a different vehicle | External report `b0d2664f`, line 14 | Correct, irrelevant here |
 
 For completeness, because it caused the original confusion: `b0d2664f` line 13
 gives the **2018 Dodge Ram 1500** as 2,337 kg, class 2270P. The 2014 Silverado is
@@ -99,26 +99,28 @@ The conclusion survives, because they genuinely do differ. But the 2.9 percent i
 a gap between a vehicle mass and a class threshold, not between two candidate
 vehicle masses, and it should not be described as a mass disagreement.
 
-## A separate, unresolved conflict inside the project
+## A second conflict, now RESOLVED by opening the deck
 
-The deck header and the CCSA vehicle description table disagree about the same
-vehicle:
+The deck header and the project's own master reference disagreed about the same
+vehicle. The deck was opened on Vista 2026-08-13 and settles it:
 
 ```
-2270.0 kg   silverado-coarse-v3a.key:28          (deck header)
-2337   kg   pickup_2007_chevrolet_silverado      (CCSA description table, via
-                                                  vehicle_data_master_reference_2026-07-21.json)
+$- Model units:  tons,mm,N,sec
+$- version 3a, 2270 kg          <- silverado-coarse-v3a.key:28, verbatim
 ```
 
-That is a 2.95 percent disagreement on one vehicle from two primary sources, and
-no document in this repo currently records it. It is not resolved here. Whoever
-resolves it should open the deck rather than reason from either summary.
+**2270 kg is correct.** The `2337` recorded against
+`pickup_2007_chevrolet_silverado` in `vehicle_data_master_reference_2026-07-21.json`
+is contradicted by the model's own header and should be corrected there. That
+file describes itself as "source-verified [...] pulled live from a primary
+source," which makes the error easy to propagate; it is the kind of entry a later
+audit would treat as authoritative.
 
-Note the trap this creates: 2337 is reachable from **two** unrelated directions,
-the AR&R class figure and the CCSA table for the 2007 Silverado, plus a third
-from the Dodge Ram. A future audit that finds 2337 and concludes "this traces to
-the 2007 Silverado" would be right by accident, since the run that used it cites
-the AR&R table.
+Note the trap that remains: 2337 is reachable from **three** unrelated directions,
+the AR&R `large_4wd` class figure, the erroneous master-reference entry, and the
+2018 Dodge Ram's genuine mass. A future audit that finds 2337 and concludes "this
+traces to the 2007 Silverado" would be wrong twice over, since the run that used
+it cites the AR&R table and the Silverado is 2270.
 
 ## Secondary finding: the licence blocker may be on the wrong Silverado
 
@@ -139,14 +141,42 @@ URL for the **2007** Chevrolet Silverado
 > [...] written permission before publishing derived geometry.
 
 So the 2007 Silverado sits in the safe set, and the licence-silent set names the
-**2014** Silverado, a different vehicle at a different mass (2,367 kg). If the
-hull here is the 2007 coarse v3a, register E8's blocker does not reach it.
+**2014** Silverado, a different vehicle at a different mass (2,367 kg).
 
-**This is inferred, not proven.** The chain is deck filename to master-reference
-URL, and no one has opened the deck or diffed it against the 2007 download to
-confirm. It matters because E8 gates register item 11 and blocks item 10, the
-DesignSafe DOI. Confirming it would unblock the Silverado half of that. The Rogue
-is unaffected and stays blocked either way.
+**CONFIRMED 2026-08-13, from the deck header itself, not inferred.**
+`silverado-coarse-v3a.key` line 7 reads:
+
+> The FE model is based on a 2007 CHEVROLET SILVERADO and has been validated
+> for available impact test configurations.
+
+and it is extracted from `2007-chevrolet-silverado-coarse-v3a.zip`, which is the
+exact URL the master reference gives for the 2007 model. **This hull is the 2007
+Silverado. Register E8's licence blocker names the 2014 Silverado and does not
+reach it.** E8 gates register item 11 and blocks item 10, the DesignSafe DOI;
+the Silverado half of that gate can be lifted. The Rogue is unaffected and stays
+blocked.
+
+## New finding: the deck asks for acknowledgment, and nothing records that
+
+Not a licence term, and not previously recorded anywhere in this repo. The same
+header, lines 16-17:
+
+> We ask that the CCSA at GMU and the FHWA be acknowledged for any use of this
+> FE model resulting in papers and publications.
+
+The model was developed under a **Federal Highway Administration** contract by
+the team now at CCSA / George Mason. Named contacts in the header are Dhafer
+Marzougui, Fadi Tahan and Steve Kan. Since this hull enters a paper, that
+acknowledgment belongs in the paper's acknowledgments section. It costs one
+sentence and it is asked for explicitly by the asset being used.
+
+The header also carries a disclaimer worth knowing before any result is
+published: neither CCSA, GMU, FHWA nor NHTSA "assume any responsibility for the
+validity, accuracy, or applicability of any results obtained from this model,"
+and "the user must verify his own results."
+
+Incidental but useful to anyone re-extracting: the deck declares
+`Model units: tons,mm,N,sec`.
 
 ## What to do
 
@@ -155,17 +185,25 @@ is unaffected and stays blocked either way.
    class figure, matching what section 1 and the run's own `mass_source` already
    say. Do not change any run, any CSV, or any verdict. No number is wrong, only
    the label.
-2. **Record the 2270 against 2337 deck-vs-table conflict** in the register, as an
-   open item. It is currently recorded nowhere.
-3. **Settle which Silverado the hull is**, by opening `silverado-coarse-v3a.key`
-   or diffing against the 2007 download. This is the one that unblocks something.
-4. **Do not touch the verdicts.** Every Silverado run returns NO-FORD at every
+2. **Fix `vehicle_data_master_reference_2026-07-21.json` on Vista**, key
+   `pickup_2007_chevrolet_silverado`, `weight_kg` 2337 to 2270. The deck header
+   contradicts it. That file presents itself as source-verified, so the error
+   will propagate if left.
+3. **Lift E8's licence blocker for the Silverado half.** Settled: the hull is the
+   2007 model, which `b0d2664f` line 16 places in the NHTSA-hosted safe set. E8
+   names the 2014 Silverado. The Rogue stays blocked.
+4. **Add the CCSA / FHWA acknowledgment to the paper.** Asked for explicitly by
+   the deck header. One sentence.
+5. **Do not touch the verdicts.** Every Silverado run returns NO-FORD at every
    mass tried, 1100.0, 2270.0 and 2337.0 alike, so no verdict in this project
    turns on which figure is used. The defect is in provenance labelling, not in
    any published result.
 
 ## Sources, all read live 2026-08-13
 
+- Vista `can-it-ford/vehicle_geometry_research/2007-chevrolet-silverado-coarse-v3a/`
+  `2007-chevrolet-silverado-course-v3a/silverado-coarse-v3a.key`, lines 7, 16-17,
+  26 and 28. This is the decisive source and it was opened directly.
 - `docs/MULTIGEOM_VALIDATION_2026-08-11.md`, `HEAD` blob, sections 1 and 2
 - `data/class_specific_runs_2026-08-08.csv`
 - Vista `class_specific_2026-08-08/class_silverado_g64/summary.json`
