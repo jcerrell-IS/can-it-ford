@@ -294,3 +294,93 @@ Recommended sequence, cheapest informative step first:
    feasibility and rough magnitude only.
 3. Treat a full g96 run at c=1480.98 as a separate budget decision, not a
    follow-on.
+
+## Item 1 ANSWERED: the moving collider does NOT preserve 7.3-7.7%
+
+Executed on LS6, not Vista. Vista stayed unreachable (MFA), so the run was moved
+to the A100, which is where the brief's own resource guidance puts warpmpm
+SDF-collider work anyway. Zero Vista SU spent. `warpmpm` was installed into
+`/scratch/11603/jcerrell0629/warpmpm_ls6_env` (warp-lang + torch + numpy, 6.7 GB,
+24 minutes on BeeGFS); LS6 is x86_64, which sidesteps the aarch64 failure class
+entirely.
+
+Jobs: **3361315** (baseline, g64 + g96) and **3361371** (relax sweep), node
+c301-004, 3x A100-PCIE-40GB, driver 570.195.03. Results in
+`realism_track/rung_b_ls6_3361315/` and `realism_track/rung_b_relax_3361371/`.
+
+The 14 analytic integrator tests passed first, on GPU, exactly as the Vista session
+reported on CPU (SHM period 1.73731 s against theory 1.7373 s, |L| drift 7.6e-5,
+E drift 1.0e-4, R orthonormal to 1.1e-16).
+
+**The coupling force is real.** `nonzero_wrench=true`, `clamped_steps=0` in every
+run, 445,184 water particles at g64 and 1,502,496 at g96. The material-8 objection
+does not apply to this path: force genuinely transfers.
+
+**But the accuracy does not carry over, and gets worse with refinement:**
+
+| grid | relax | moving-collider err | fixed-collider err | added_mass_ratio | net_dz | a_first3 | a_ideal |
+|---|---|---|---|---|---|---|---|
+| g64 | 1.00 | **-18.86%** | -7.67% | 0.864 | -0.124 m | -2.19 | -1.330 |
+| g64 | 0.50 | -19.94% | -7.67% | 0.864 | -0.127 m | -3.04 | -1.330 |
+| g64 | 0.25 | -23.12% | -7.67% | 0.864 | -0.131 m | -5.20 | -1.330 |
+| g96 | 1.00 | **+115.03%** | +7.28% | 0.930 | +0.401 m | +39.85 | -0.689 |
+| g96 | 0.50 | +119.91% | +7.28% | 0.930 | +0.396 m | +34.66 | -0.685 |
+| g96 | 0.25 | +132.28% | +7.28% | 0.930 | +0.389 m | +20.48 | -0.687 |
+
+Error is `(Fz_measured_median - F_buoy_analytic) / F_buoy_analytic`, against the
+analytic reference the driver builds from its own measured settled surface.
+
+Three conclusions, in order of importance.
+
+**1. The brief's instruction not to inherit 7.3-7.7% was correct.** Freeing the
+collider degrades g64 from -7.67% to -18.86%, a factor of 2.5, and destroys g96,
+from +7.28% to +115.03%. Any realism claim resting on the fixed-collider number
+would have been wrong by an order of magnitude at g96.
+
+**2. Under-relaxation does not fix it, so this is not simple partitioned-explicit
+instability.** Both runs tripped the coupler's own guard
+(`added_mass_ratio` 0.864 and 0.930, against its stated 0.5 limit), which made
+scheme instability the obvious suspect. It is refuted: relax 1.0 -> 0.5 -> 0.25
+made the force error monotonically **worse** (-18.86 -> -19.94 -> -23.12 at g64;
++115 -> +120 -> +132 at g96). `added_mass_ratio` is unchanged by relax because it
+is a property of the geometry and density ratio, not of the scheme parameter.
+Relaxation damps the body's motion response (g96 `a_first3` falls 39.85 -> 20.48)
+without improving the measured wrench. The error is systematic, not oscillatory
+divergence.
+
+**3. The g96 behaviour is unphysical, and divergence under refinement points at a
+bug rather than discretisation error.** A box at rho_box=600 in water of 1000 must
+sink gently: `a_ideal` = -0.689 m/s2. Instead it accelerates **upward** at
++39.85 m/s2, four times gravity, and rises 0.40 m. Refining g64 -> g96 makes the
+error worse (-19% -> +115%) and flips its sign. Convergent schemes do not behave
+this way. Something in the re-pose loop, most plausibly double-counting between
+`set_sdf_pose` and the grid velocity update, or a sign or frame error in how the
+wrench is applied, is wrong.
+
+**So the moving-SDF path is not validated, and must not be presented as such.**
+The fixed collider remains the only configuration meeting the 5-10% target. The
+realism track does not yet have a coupling force it can build visuals on.
+
+Recommended next step, cheap and diagnostic rather than more sweeping: run rung (b)
+with the body held fixed through the *same* new code path (force read via
+`sdf_wrench`, pose never updated). If that reproduces -7.67% at g64, the wrench
+read is sound and the defect is isolated to the pose-update loop. If it does not,
+the defect is in the wrench read itself. That single run separates the two
+hypotheses and needs no new physics.
+
+## Item 2, sound speed: not run, and deliberately so
+
+Two reasons, one practical and one now evidential.
+
+`rung_b_coupled.py` exposes no bulk-modulus argument (zero matches for `bulk`,
+`BULK`, `sound_speed`); it inherits `BULK = 1.5e5` from `validate_coupling_force.py`.
+Reaching c = 1480.98 m/s therefore requires a code change, not a flag. Required
+bulk is **1.9939e9 Pa**, a 13,293x increase, and by the solver's own CFL rule
+(`substeps_and_dt`, `validate_coupling_force.py:49-56`) substeps rise from 11 to
+1198 at g64 and 16 to 1797 at g96, about **109-112x more compute**.
+
+The evidential reason is the stronger one: **item 1 has just shown the moving-collider
+model is wrong at both resolutions.** Sweeping the single most expensive parameter
+in the project on a model that accelerates a sinking body upward at 4g would spend
+roughly 100x a run's cost measuring an artifact. Sound speed should follow, not
+precede, a coupling path that reproduces analytic buoyancy.
