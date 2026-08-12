@@ -20,15 +20,27 @@ other. Read "the validated path" as validated at full submersion only. It is
 refuted, for now, at the partial submersion where buoyancy is actually generated.
 Do not quote -7.67%/+7.28% as a coupling-accuracy figure for a floating vehicle.
 
-**Root cause, corrected 2026-08-13.** The first pass blamed a settle defect. The
-settle defect is real, but it is secondary and it was MASKING the actual problem.
-`added_mass_ratio` is identically **1.000000** for any body floating at
-equilibrium, by algebra, while `coupler.py:72` warns above **0.5** and
-`coupler.py:36-42` calls 1 the divergence point. Every floating-vehicle case this
-project exists to simulate therefore sits at twice the coupling module's own
-warning threshold, by construction and with no parameter escape. Job 3361315
-printed that warning on both grids and ran anyway at `relax = 1.0`. Full working
-in "Primary cause" below.
+**Root cause, after one wrong turn and a retraction, 2026-08-13.** Two causes,
+both established, neither of them exotic:
+
+1. **The water was never settled.** `rung_b_coupled.py:83` advanced one substep per
+   iteration where the reference `settle_pinned` advances one frame under a
+   quiescence gate. The gate needs 3,894 substeps at g64 and 12,416 at g96, so the
+   900 that ran were 23 percent and 7.2 percent of the settling the reference
+   required. A fixed body in that tank shows `Fz` sweeping 27,207 N peak to peak
+   against a 16,233 N analytic: a ringing tank, not a hydrostatic reading. Fixed in
+   `79fec32`.
+2. **The comparison was never like-for-like.** `run_c1_sdf`, source of the
+   -7.67/+7.28 percent figures, is FULLY submerged at frac 1.0; rung (b) realizes
+   frac 0.5187 against a partial reference. The two were never the same experiment.
+
+**A retracted third explanation, kept visible on purpose.** An intermediate revision
+of this document argued the added-mass ratio was the primary cause. It is not.
+Under-relaxation, the documented remedy, makes the error monotonically WORSE at both
+grids, and the error persists at -48.49/+349.55 percent with the body held
+completely still. The underlying identity (any floating body sits at ratio exactly
+1.0) is still true and still constrains scheme choice, but it did not cause this.
+Full retraction below.
 
 Path (b), Genesis LegacyCoupler, was not pursued. It is strictly more work for a
 less-validated force: no coupling-force validation exists anywhere in the Genesis
@@ -358,11 +370,39 @@ rounding. The reference is sound.
 and 1.0e-04 relative, inertia within 0.4% of the analytic solid box. Newton-Euler
 is correct. The error is upstream of it.
 
-### Primary cause: a floating body sits exactly at the scheme's divergence point
+### RETRACTED as a cause: the added-mass identity is true but does not explain rung (b)
 
-This supersedes the settle explanation below, which was written first and is real
-but secondary. Corrected 2026-08-13 after reading `coupler.py` and job 3361315's
-own stdout rather than only the result JSONs.
+**Retracted 2026-08-13, same day it was written, by experiment.** An earlier
+revision of this section claimed the added-mass ratio was the PRIMARY cause of
+rung (b)'s failure and demoted the settle defect to secondary. That causal claim is
+withdrawn. The settle defect is primary after all. The identity below is still
+mathematically true and still worth knowing, but it is not the failure mechanism.
+
+What refuted it, verified here by reading the artifacts directly rather than
+accepting the claim: job 3361371 swept `--relax` and under-relaxation, which is the
+documented remedy for added-mass instability, makes the error **monotonically
+worse** at both grids while `added_mass_ratio` stays fixed.
+
+| grid | relax 1.0 | relax 0.5 | relax 0.25 | added_mass_ratio |
+|---|---|---|---|---|
+| g64 | 0.8114 | 0.8006 | 0.7688 | 0.8644 |
+| g96 | 2.1503 | 2.1991 | 2.3228 | 0.9300 |
+
+If this were partitioned-explicit added-mass divergence, relaxation would have
+improved it. It did the opposite, monotonically, at both grids. Two further
+results from job 3361423's fixed-pose diagnostic close it off: with the body held
+**completely still** the error is -48.49 percent at g64 and +349.55 percent at g96,
+so the error does not require body motion at all, and fixed-body `Fz` sweeps
+27,207 N peak to peak against a 16,233 N analytic, which is a ringing tank rather
+than a hydrostatic measurement.
+
+A caution for anyone re-deriving this from the relax-sweep JSONs: every one of them
+records `relax` as absent, so a reader has only the FILENAME to tell 0.25 from 1.0.
+That provenance gap is closed going forward by `79fec32`, which records `relax` in
+the artifact.
+
+**The identity itself still stands and is still a design constraint**, just not the
+diagnosis:
 
 `coupler.py:121-130` defines
 
@@ -405,41 +445,68 @@ The measured errors order with the ratio exactly as that warning predicts:
 | rung-b design point (frac 0.80) | 1.3333 | not reached |
 | any vehicle at true flotation | 1.0000 | not reached |
 
-### The settle bug was MASKING this, so fixing it alone makes rung (b) worse
+### ALSO RETRACTED: the prediction that fixing the settle makes rung (b) worse
 
-This is the counterintuitive part and it should stop anyone from re-running
-naively. The under-settled water left the realized submersion at 0.52 and 0.56
-instead of the requested 0.80, and since `added_mass_ratio` is proportional to
-submersion, that shortfall held the ratio down at 0.86 and 0.93. The settle defect
-was accidentally keeping the run just below 1.0.
+An earlier revision predicted that correcting the settle would raise realized
+submersion toward 0.80, drive `added_mass_ratio` toward 1.3333, and therefore make
+rung (b) fail harder. That prediction rested entirely on the added-mass mechanism
+retracted above, so it carries no weight and is withdrawn. **Do not use it to
+argue against re-running.**
 
-Correct the settle and the realized fraction rises toward 0.80, driving the ratio
-toward 1.3333, which is further into the divergence regime, not out of it. A
-settle-only fix should be expected to produce a WORSE rung (b), and that outcome
-must not be read as a new failure. It is this one.
+The observation underneath it is still factual and still worth recording: after the
+settle fix landed, a 4-frame Mac run reaches realized submersion 0.7758 with
+`added_mass_ratio = 1.2930`, so the ratio does rise as the water settles further.
+What is withdrawn is the claim that this causes the force error.
 
-Verified on the Mac after the settle fix landed: a 4-frame run reaches realized
-submersion 0.7758 and `added_mass_ratio = 1.2930`, and the driver's new guard
-correctly reports `valid_accuracy_measurement = false`.
+Job 3361443 (`rung_b_settled.py`) runs the reference geometry through both the
+fixed and coupled paths with the gated settle and is the direct test of what a
+properly settled rung (b) reads. As of this writing it is **PENDING**, so its
+outcome is unknown and is deliberately not predicted here.
+
+### The comparison was never like-for-like, which matters more than either cause
+
+Job 3361423's diagnostic established something that undercuts the whole rung
+(a) versus rung (b) framing: **`run_c1_sdf` and `rung_b_coupled` never shared a
+configuration.** `run_c1_sdf`, which produced the -7.67 and +7.28 percent figures,
+is FULLY submerged, frac 1.0, with 2.75 dx and 5.36 dx of water standing above the
+cube top, and is scored against `rho_w*V*g` for the whole cube. Rung (b) realizes
+frac 0.5187 and is scored against a partial-submersion reference.
+
+So the headline "buoyancy accuracy does not carry from rung (a) to rung (b)" was
+comparing two different experiments. That is a design defect in the ladder step,
+not only an execution defect in the run, and it has to be fixed before any number
+from rung (b) can be set beside the rung (a) figures at all.
 
 ### What this means for the moving-SDF path
 
-Path (a) is not refuted as an idea, but it cannot be validated for flotation in its
-current explicit, unrelaxed form. Mitigation is mandatory rather than optional, and
-the honest options are under-relaxation (`--relax` below 1, which
-`coupler.py:41-42` says damps the transient without moving the equilibrium), a
-reduced `dt`, or an implicit/monolithic coupling that the module explicitly
-disclaims at `coupler.py:35-36`. Choosing among those is a real decision and none
-of them is a threshold tweak.
+Less than the retracted section claimed. The pose-update loop is NOT the primary
+defect: with the body held completely still the error is still -48.49 percent and
++349.55 percent. Confirmed in passing by the same diagnostic, `set_sdf_pose`'s
+velocity argument does reach the grid coupling, and enabling it moves g64 from
+-45.53 to -18.86 percent, so the moving-collider machinery works as intended.
 
-CAVEAT, stated because this report is otherwise built on primary reads: the claim
-that a partitioned explicit scheme *diverges* near ratio 1 is `coupler.py`'s own,
-attributed there to Zhang et al. 2026. That citation has NOT been checked against
-its source here. What is independently established is the identity (algebra), the
-0.5 threshold (source read), the warning firing twice (job stdout), and the error
-ordering (measured).
+The live explanation is the plain one: an unsettled, ringing tank measured against
+a mismatched reference. Both are fixable, and neither refutes path (a).
 
-### Secondary cause: the settle is 1 substep per iteration, not 1 frame
+The added-mass identity remains a real constraint on SCHEME CHOICE for later work,
+since any floating body sits at ratio 1.0 against a module that warns above 0.5.
+It is simply not what went wrong here.
+
+CAVEAT retained, and now doubly relevant: the claim that a partitioned explicit
+scheme *diverges* near ratio 1 is `coupler.py`'s own, attributed there to Zhang et
+al. 2026, and that citation has NOT been checked against its source. The relax
+sweep is evidence against that mechanism operating here, which is one more reason
+to verify the citation before relying on it.
+
+### Primary cause, confirmed independently: the settle is 1 substep per iteration, not 1 frame
+
+Reinstated as primary after the added-mass retraction above. Job 3361423 reached the
+same conclusion from a different direction and measured the deficit better than the
+cap-based figures below: `settle_pinned`'s gate is met at **3,894 substeps at g64 and
+12,416 at g96**, so the 900 substeps rung (b) ran were **23 percent and 7.2 percent**
+of the settling the reference actually needed. Prefer those numbers to the
+cap-relative ones in the table below, which use the 600-frame ceiling as denominator
+and therefore understate how close the run came to the floor.
 
 `rung_b_coupled.py:81-85` settles with
 
@@ -516,24 +583,24 @@ So the realistic cost is comparable to what already ran, and only the pathologic
 no-convergence case is 9x. Budget for the cap, expect the floor, and read
 `settle_frames_run` in the output to see which happened.
 
-### The decision that is actually blocking, and it is not the settle
+### What is actually outstanding
 
-Re-running with the settle fix and `relax = 1.0` is expected to fail HARDER, for
-the reason given under "Primary cause": the better settle raises realized
-submersion toward 0.80 and therefore drives `added_mass_ratio` from 0.86/0.93
-toward 1.3333, deeper into the divergence regime. Spending GPU time on that
-without a mitigation decision buys a worse number and no new information.
+Both mitigations an earlier revision proposed have already been tried or are in
+flight, so the open question is narrower than it looked.
 
-What needs deciding first, in order of increasing cost:
+- **Under-relaxation: DONE and refuted.** Job 3361371 swept relax 1.0, 0.5, 0.25.
+  Monotonically worse at both grids. Do not re-propose it as the fix.
+- **Gated settle at the reference geometry: SUBMITTED, job 3361443**
+  (`rung_b_settled.py`), running the reference geometry through both the fixed and
+  coupled paths. PENDING as of this writing. This is the decisive test and its
+  result should be read before anything else is decided.
+- **Configuration match: still unresolved and probably the real blocker.** Rung (b)
+  at frac 0.5187 cannot be set against a rung (a) reference at frac 1.0. Either
+  rung (b) must be rerun fully submerged to isolate the partial-submersion variable,
+  or a partial-submersion fixed-collider reference has to be produced so there is
+  something legitimate to compare against.
+- **Reduced `dt` at fixed grid:** untried, and it is the one lever the module's
+  warning names that has not been exercised.
 
-1. `--relax` below 1. Cheapest, and `coupler.py:41-42` states under-relaxation
-   damps the transient without moving the equilibrium the body settles to, so it
-   is a stability remedy rather than a tuned threshold. A short relax sweep at g64
-   alone would establish whether the wrench converges at all.
-2. Reduced `dt` at fixed grid, which is the other lever the module's own warning
-   names. Costs linearly in wall time.
-3. Implicit or monolithic coupling, which `coupler.py:35-36` explicitly disclaims
-   for this module. That is new development, not a parameter change.
-
-Until one of those is chosen, rung (b) should stay unrun. The ladder is still
-gated and rung (c) and (d) remain unattempted.
+Rung (c) and (d) remain unattempted, the ladder is still gated, and no threshold has
+been tuned at any point.

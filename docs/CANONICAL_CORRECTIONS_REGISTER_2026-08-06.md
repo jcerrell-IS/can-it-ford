@@ -389,15 +389,38 @@ Any skill file containing any of the following must be corrected in place.
    and neither can be renamed without desynchronising a stamped artifact from its source.
    The CLI token `--variant c2` is unchanged, so existing sbatch invocations still work.
 
-   J1a. STRUCTURAL LIMIT ON THE FORCE-COUPLED PATH, 2026-08-13. Rung (b),
+   J1a. RUNG (b) RAN AND FAILED; CAUSE CORRECTED ONCE, 2026-08-13. Rung (b),
    partially submerged, RAN on LS6 A100 as job 3361315 (`COMPLETED`, `0:0`,
    `00:34:21`) and FAILED: buoyancy read -18.9 percent at g64 and +115.0 percent at
    g96, and the body sank at one grid while accelerating upward at about 4 g at the
    other. Artifacts and full working are committed at
    `realism_track/rung_b_ls6_3361315/` and `realism_track/FINDINGS.md`.
 
-   The cause is structural, not a tuning miss, and it is an identity rather than a
-   measurement. `simulation/coupling_force/coupler.py:121-130` defines
+   **CAUSE CORRECTED SAME DAY, 2026-08-13. Read this before the paragraphs below.**
+   The first version of J1a named the added-mass ratio as the cause. That is
+   WITHDRAWN. It was an inference, and an experiment refuted it: job 3361371 swept
+   `--relax` 1.0, 0.5, 0.25 and under-relaxation, the documented remedy for
+   added-mass instability, made the error **monotonically worse** at both grids
+   (g64 0.8114 -> 0.8006 -> 0.7688; g96 2.1503 -> 2.1991 -> 2.3228) while
+   `added_mass_ratio` held fixed. Job 3361423 closes it off: with the body held
+   completely still the error is -48.49 percent at g64 and +349.55 percent at g96,
+   so it does not require body motion, and fixed-body `Fz` sweeps 27,207 N peak to
+   peak against a 16,233 N analytic, which is a ringing tank.
+
+   THE ACTUAL CAUSES, both established:
+   (i) The water was never settled. `rung_b_coupled.py:83` advanced one substep per
+   iteration where `settle_pinned` (`simulation/validate_coupling_force.py:617-643`)
+   advances one frame under a `sound_speed/vmax >= 20` gate. That gate is met at
+   3,894 substeps at g64 and 12,416 at g96, so the 900 that ran were 23 percent and
+   7.2 percent of the settling the reference needed. Fixed in `79fec32`.
+   (ii) The comparison was never like-for-like. `run_c1_sdf`, which produced the
+   -7.67/+7.28 percent rung-(a) figures, is FULLY submerged at frac 1.0 with 2.75 dx
+   and 5.36 dx of water above the cube top; rung (b) realizes frac 0.5187 against a
+   partial reference. Two different experiments were being compared.
+
+   The identity below is RETAINED because it is true and constrains future scheme
+   choice, but it is NOT the diagnosis for this failure.
+   `simulation/coupling_force/coupler.py:121-130` defines
    `added_mass_ratio = rho_w * V_displaced / m_body`; `coupler.py:72` warns above
    0.5 and `coupler.py:36-42` calls a ratio near 1 the divergence point for a
    partitioned explicit scheme. A body floating at equilibrium satisfies
@@ -406,29 +429,30 @@ Any skill file containing any of the following must be corrected in place.
    and density. The canonical Yaris hull confirms it numerically: 310.494 kg/m3
    floats at fraction 0.3105 and `(1000/310.494)*0.3105 = 1.0000`.
 
-   Consequence, and it bears on every future coupling claim: **every
+   Consequence for SCHEME CHOICE in later work, not for this failure: **every
    floating-vehicle case this project exists to simulate sits at twice that module's
    own warning threshold, by construction, with no parameter escape.** Reaching 0.5
    at the rung-b design submersion of 0.80 would require a body density of
-   1600 kg/m3, which sinks rather than floats. Job 3361315 printed the module's
-   warning on both grids and continued at `relax = 1.0`; the measured errors order
-   with the ratio exactly as that warning predicts (0.8644 -> -18.9 percent,
-   0.9298 -> +115.0 percent).
+   1600 kg/m3, which sinks rather than floats. Job 3361315 did print the module's
+   warning on both grids and continue at `relax = 1.0`. Note that the error ordering
+   with the ratio (0.8644 -> -18.9 percent, 0.9298 -> +115.0 percent) is a
+   CORRELATION that the relax sweep has since shown is not causal; an earlier version
+   of this entry read it as confirmation, which is exactly the trap.
 
-   TRAP for whoever picks this up. A settle defect at `rung_b_coupled.py:83`
-   (one substep per iteration against the canonical one frame in `settle_pinned`,
-   `simulation/validate_coupling_force.py:617-643`) was MASKING this by holding
-   realized submersion at 0.52 and 0.56 instead of 0.80. That defect is fixed in
-   `79fec32`, and fixing it drives the ratio from 0.86/0.93 toward 1.3333, so a
-   settle-only re-run is expected to fail HARDER. Do not read that as a new failure,
-   and do not spend GPU time on it before choosing a mitigation: `--relax` below 1,
-   a reduced `dt`, or an implicit coupling that `coupler.py:35-36` disclaims.
+   STATE OF THE MITIGATIONS, so none is re-proposed as untried:
+   under-relaxation is DONE and refuted (job 3361371). The gated-settle rerun at the
+   reference geometry is SUBMITTED as job 3361443 (`rung_b_settled.py`) and was
+   PENDING when this was written; it is the decisive test. Reduced `dt` at fixed grid
+   is untried. Implicit or monolithic coupling is disclaimed by `coupler.py:35-36`
+   and would be new development.
 
    NOT VERIFIED, stated so it is not later mistaken for a primary read: the claim
    that a partitioned explicit scheme *diverges* near ratio 1 is `coupler.py`'s own,
    attributed there to Zhang et al. 2026, and that citation has not been checked
-   against its source. The identity, the 0.5 threshold, the warning firing twice and
-   the error ordering are all independently established.
+   against its source. The relax sweep is now evidence AGAINST that mechanism
+   operating here, which is a further reason to verify it before relying on it. What
+   is independently established is the identity (algebra), the 0.5 threshold (source
+   read), and the two settle/configuration causes above (measured).
 2. CLOSED 2026-08-07, superseded: H5.
 3. CLOSED 2026-08-07, D6h and D6i. The two `failure_modes_result.json` citations were repointed by `841d666`; the surviving independence overclaim in `four_rung_ladder.md` was fixed separately the same day. Note `841d666`'s message claimed to close this item but never edited this register, which is why it sat open for a day after the work was done. **A commit message is not a register edit.**
 4. CLOSED 2026-08-07, D6a and D6b. The classifier ran on all 17 on 2026-08-05 and was re-verified live 2026-08-07. Same caveat as item 3: `841d666` claimed the closure without making it.
