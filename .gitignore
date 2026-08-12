@@ -12,7 +12,12 @@ reference_docs/
 docs/session_notes/archive/
 session_archive/
 # renders/ holds BOTH generated output and source. Under renders/yaris_render_s1/
-# alone there are 24 .py source files against 501 generated artifacts. A blanket
+# alone there are 24 top-level .py source files against 881 non-.py files at any
+# depth. (Corrected 2026-08-12: an earlier version of this comment, and the message
+# of commit 00b735c, said "501 generated artifacts". That 501 was a -maxdepth 2
+# count restricted to four extensions, not a total, and it is wrong as stated. The
+# commit message cannot be corrected without rewriting history, so it stands wrong;
+# this comment is the correction.) A blanket
 # "renders/" ignored the source too, which meant sim_standing.py, vehicle_live.py
 # and gates*.py had NO commit history at all, even though CLAUDE.md and the
 # corrections register cite them by file:line as the primary source for the

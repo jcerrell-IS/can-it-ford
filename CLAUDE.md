@@ -9,12 +9,17 @@ restate them in chat prompts.
   rather than trust at face value.
 - `grep` IN THIS ENVIRONMENT IS NOT `grep`. Confirmed live 2026-08-07
   by `declare -f grep`: it is a shell function wrapping ugrep with
-  `--ignore-files`, so it SKIPS EVERY GITIGNORED PATH. `.gitignore:10`
-  is `data/*` and the `renders` rules are at `:26` and `:28`, so a
+  `--ignore-files`, so it SKIPS EVERY GITIGNORED PATH. `data/*` and a
+  `renders/*` pair are among the rules, so a
   repo-wide `grep -rn "pattern" .` silently omits most of
-  renders/yaris_render_s1/ and most of data/. Measured: the same
-  pattern returned 5 hits from `.` and 7 when renders/ was named
-  explicitly. An absent hit is NOT evidence of absence. For any
+  renders/yaris_render_s1/ and most of data/. An absent hit is NOT
+  evidence of absence.
+  THE OLD "5 hits from `.` and 7 when renders/ was named" MEASUREMENT
+  IS WITHDRAWN, 2026-08-12. It never named the pattern, so nobody can
+  re-derive it, and the 2026-08-12 carve-out invalidated its premise
+  anyway: the shell `grep` now reaches 22 previously-hidden .py files,
+  so the gap it measured no longer exists in that form. Re-measure with
+  a named pattern before quoting any figure here. For any
   inventory or audit claim, use `/usr/bin/grep -rn`, or name renders/
   and data/ explicitly, and exclude ./third_party/ and
   ./.claude/worktrees/.
@@ -24,10 +29,26 @@ restate them in chat prompts.
   was also hiding 24 SOURCE scripts, among them sim_standing.py and
   vehicle_live.py, which this file cites by file:line as the primary
   source for A1, A2, A5 and F5 and which implement the Contribution 1
-  code. Those .py files are now TRACKED and therefore NO LONGER hidden
-  from the shell `grep`. Generated output under renders/ is still
-  ignored, so the H0 warning still applies to metrics.csv, frames and
-  every other artifact, just not to the source scripts.
+  code. Those 24 .py files are now UN-IGNORED, so the shell `grep`
+  reaches them and the H0 blind spot no longer covers them. Generated
+  output under renders/ is still ignored, so the H0 warning still
+  applies to metrics.csv, frames and every other artifact.
+  DO NOT READ "un-ignored" AS "tracked". Corrected 2026-08-12 after an
+  independent check caught this exact conflation here: only 2 of the 24
+  are tracked, sim_standing.py and vehicle_live.py, committed in
+  00b735c. The other 22, including gates.py, gates_all_runs.py and
+  gates_both_scenarios.py, are visible to grep but still UNTRACKED and
+  still have no commit history. Verify with
+  `git ls-files --cached -- renders/yaris_render_s1/` before citing any
+  of them as having provenance.
+  The carve-out is also TOP-LEVEL ONLY. A second copy of the driver
+  exists at renders/yaris_render_s1/_incoming/sim_standing.py and is
+  STILL ignored by the `renders/yaris_render_s1/*` rule, which
+  `git check-ignore -v` will locate for you; do not cite its line
+  number, see the .gitignore note below. "sim_standing.py is no longer
+  hidden" is true only of the top-level copy, and register D4a records
+  `_incoming/` as the canonical per-run tree, so check which copy you
+  are reading.
   ALSO CORRECTED 2026-08-12, verified live: `./.claude/worktrees/` holds
   2 directories, not 27, so the "multiplies every hit ~20x" figure is
   stale; re-measure before quoting it. And `./can-it-ford/` no longer
@@ -453,7 +474,13 @@ covers only what those rules do NOT block:
 - data/track1_sweep_v2/ — superseded box-proxy sweep (1390 kg box, 4.7352 m3
   solid volume vs the real hull's 3.542739 m3). Not archived, because
   analysis/gp_surrogate.py and analysis/build_poster_phase_space.py still read
-  it and .gitignore lines 17-18 explicitly un-ignore it. Do not source a paper
+  it and .gitignore explicitly un-ignores it with a `!data/track1_sweep_v2/` pair.
+  DO NOT CITE A LINE NUMBER FOR .gitignore. Re-derive it every time:
+  `/usr/bin/grep -n track1_sweep_v2 .gitignore`. This clause said ":17-18" until
+  2026-08-12, then ":32-33", and both went stale within one session because two
+  separate edits inserted lines above them. .gitignore line numbers have now been
+  wrong three times in one day; the file is edited too often to cite positionally.
+  Do not source a paper
   figure or a density number from it; use data/all_runs_inventory.csv instead.
 
 ## Nested ./can-it-ford/ duplicate directory, GONE as of 2026-08-12
