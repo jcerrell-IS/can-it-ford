@@ -241,11 +241,70 @@ not by file read from the Mac, see the item for its evidence path.
     2026-08-07: the classifier reads the same metrics.csv the tables
     were built from, so it can never be independent confirmation.
 
-13. DRIFT_THRESHOLD 0.05 m is declared as a literal in 16 places under
-    four names, DRIFT_THRESHOLD, DRIFT_THRESHOLD_M, DRIFT_M and
-    THRESHOLD. There is no single definition and no peer-reviewed
-    source. Register D7 says "three names" against this item's four;
-    that disagreement is unresolved, treat both counts as floors.
+13. DRIFT_THRESHOLD 0.05 m is declared as a literal under FIVE names.
+    There is no single definition and no peer-reviewed source.
+    FIVE NAMES is settled. THE TOTAL IS NOT, and the number is
+    scope-sensitive, so never quote a total without its scope.
+
+    UPDATED 2026-08-12, superseding both this item's earlier "16 places
+    under four names" and register D7's "24 places". Full enumeration,
+    every site listed, reproduced live 2026-08-12 by a Python walk
+    (see below for why not grep):
+
+      DRIFT_THRESHOLD_M  5
+      L2_DRIFT_M         7
+      DRIFT_THRESHOLD    8 in scope, 9 if archive/ is counted
+      DRIFT_M            1
+      THRESHOLD          1
+      TOTAL             22 in scope, 23 with archive/
+
+    Scope, matching D7's own stated scope: renders/ and data/ included
+    explicitly; .git/, third_party/, __pycache__/, archive/, _archive/,
+    session_archive/, .claude/worktrees/, the nested ./can-it-ford/ and
+    every .bak* excluded; assignments of the literal only, not prose.
+
+    TWO DEFECTS IN D7's COUNT, both verified:
+    (a) D7's DRIFT_THRESHOLD 9 includes
+        docs/session_notes/archive/mu_sweep_recovered_from_staging.py:60,
+        which sits under an archive/ directory that D7's OWN scope
+        statement excludes. It is also gitignored at .gitignore:12.
+        In scope the count is 8.
+    (b) D7's THRESHOLD 2 cannot be reproduced. Exactly ONE bare
+        THRESHOLD assignment exists, scripts/plot_hailuo_comparison.py:7,
+        tracked and not ignored. Confirmed by a full-repo Python walk.
+    So D7's per-name split does not reproduce. Do not cite 16, 24,
+    "three names" or "four names". Cite the enumeration above, or re-run
+    and re-enumerate.
+
+    LIKELY RECONSTRUCTION OF D7's 24, stated as a hypothesis and not as
+    fact: 22 in-scope .py sites, plus the archive/ site in (a), plus a
+    THIRD code-shaped site that a *.py filter misses entirely,
+    simulation/can_it_ford_mu_sweep.py.DO_NOT_RUN:60. That file is
+    code, carries DRIFT_THRESHOLD = 0.05, and is deliberately suffixed
+    so it cannot be executed or globbed as Python. 22 + 1 + 1 = 24.
+    It does not reconcile D7's THRESHOLD 2, so treat this as unproven.
+
+    Prose mentions, correctly excluded from every count above: 122
+    further occurrences in .md files, heavily concentrated in
+    _inbox/LIVE_SESSION_LOG.md, docs/CONTEXT_CENSUS_2026-08-07.md and
+    the duplicated deliverables/for_kumar trees. Plus 17 more in
+    .claude/worktrees/ctx-census/ and docs/session_notes/archive/.
+    None of those is a declaration site. Do not let a future count sweep
+    them in.
+
+    L2_DRIFT_M is a FIFTH name that neither this item nor D7 originally
+    named, and it is the second most common at 7 sites. Six of those
+    seven are POSTER FIGURE GENERATORS, so the name missing from both
+    inventories is the one closest to a formal deliverable. That part of
+    D7 stands.
+
+    TOOLING WARNING, this is why the counts kept moving. Three separate
+    commands gave three answers on the same tree. A `^`-anchored grep
+    missed indented assignments; an ERE `(^|[^A-Za-z0-9_])THRESHOLD`
+    form returned ZERO on a line Python matched; and the shell `grep`
+    function skips gitignored paths entirely (H0). For any count that
+    will be published, enumerate every site with a Python `re` walk and
+    print the paths, so the number can be audited instead of trusted.
 
     CORRECTED 2026-08-07: failure_modes.py carries THREE 0.05
     literals, not two. Verified live by /usr/bin/grep:

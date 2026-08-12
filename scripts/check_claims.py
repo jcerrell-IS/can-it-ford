@@ -170,9 +170,20 @@ RULES: list[Rule] = [
 
     Rule("C8", ERROR,
          r"drift[_ ]?threshold",
-         "DRIFT_THRESHOLD 0.05 m has NO peer-reviewed source and is declared as a "
-         "literal in 16 places under four names. Do not cite it as sourced.",
-         "CLAUDE.md item 13; gates.py:195-196",
+         "DRIFT_THRESHOLD 0.05 m has NO peer-reviewed source. FIVE names is settled; "
+         "the TOTAL is scope-sensitive, so never quote one without its scope. "
+         "Enumerated live 2026-08-12: DRIFT_THRESHOLD_M 5, L2_DRIFT_M 7, "
+         "DRIFT_THRESHOLD 8, DRIFT_M 1, THRESHOLD 1, total 22 in-scope .py sites. "
+         "Neither the old '16 under four names' nor register D7's '24' reproduces: "
+         "D7's DRIFT_THRESHOLD 9 counts an archive/ file its own scope excludes, and "
+         "its THRESHOLD 2 cannot be reproduced at all, only one bare-THRESHOLD site "
+         "exists at scripts/plot_hailuo_comparison.py:7. Two further code-shaped "
+         "sites sit outside scope and likely explain a 24: the archive/ file and "
+         "simulation/can_it_ford_mu_sweep.py.DO_NOT_RUN:60, which any *.py filter "
+         "misses. Deduplicate by name and unit, never by value: failure_modes.py:47 "
+         "slide_speed_ms is 0.05 m/s, a SPEED, not a distance. Do not cite the "
+         "tolerance as sourced, and do not quote a bare total.",
+         "CLAUDE.md item 13 (enumerated 2026-08-12); register D7 and D7a; gates.py:195-196",
          context=r"peer[- ]review|\bcited\b|literature|standard|established|sourced"),
 
     Rule("C9", WARN,

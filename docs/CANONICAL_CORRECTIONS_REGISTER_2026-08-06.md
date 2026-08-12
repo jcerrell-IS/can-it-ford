@@ -21,6 +21,7 @@ DELETE every claim that gravity is unknown or unset.
 
 **A3. No force accessor exists on the 17-run path.**
 `rigid_state()` at `solver.py:194-205` returns exactly `com` (3,), `v` (3,), `omega` (3,), `R` (3,3). `MPM_Simulator_WARP` allocates only `rigid_x_cm`, `rigid_v_cm`, `rigid_omega`, `rigid_orientation`, `rigid_mass`, `rigid_inv_inertia_body` at `mpm_solver_warp.py:497-502, 822-830`. No force, impulse or torque accumulator exists anywhere. Momentum exchange happens on the grid and is never materialized. Verified byte-identical at `fd390d6` and `544c93dd`.
+**Provenance note added 2026-08-12, found by `.claude/checks/register_integrity.py`.** Both of those are UPSTREAM `kks32/mpm-engine` SHAs, not can-it-ford commits, and neither resolves in this clone: `git cat-file -e fd390d6` returns "Not a valid object name". Resolve them this way instead. `544c93dd` is the pin, recorded in full at `third_party/mpm-engine-544c93dd-solver-core/PINNED_SHA.txt` and `third_party/mpm-engine-544c93dd/PINNED_SHA.txt` as `544c93dd02cb9c7ead89e1155a62967243244fce`. `fd390d6` is `fd390d69ecfd1598f56803a215bb8d0eb7231d85`, recorded as the `repo_head` field at `renders/yaris_render_s1/geom_live.py:12` and `analysis/render_v1/geom_live.py:12`. **Never read either as a can-it-ford commit**, and do not conclude from a failed `git cat-file` that the citation is fabricated.
 The four wrench readouts attach only to kinematic colliders the 17 runs never create: `tool_force` :420 via `add_box`, `sdf_wrench` :354, `cdf_wrench` :401, `cup_wrench` :302, plus offline `coupling/wrench.py:15`.
 Independently corroborated from a separate 2026-07-24 read: `add_sdf_collider` is kinematic and its wrench is write-only.
 **`cfrc_coupling_vel` has no counterpart in warpmpm.** That name is Genesis-only. Any skill file naming it in a warpmpm context is engine-conflated and must be corrected.
@@ -130,7 +131,7 @@ Realized density is grid-coupled by construction, since `solid_volume = n_partic
 **D4. Canonical results stores.** `data/all_runs_inventory.csv` (17 rows) and `renders/yaris_render_s1/gates_results_all_runs.json` (20 records = 17 standing plus 3 dry_start), plus per-run `summary.json`.
 `renders/yaris_render_s1/gates_results.json` is NOT a 17-run store; it holds 3 dry_start records.
 `analysis/render_v1/` is a duplicate tree with a 6-record file.
-`track1_sweep_v2/manifest.csv` is superseded box-proxy output.
+`data/track1_sweep_v2/manifest.csv` is superseded box-proxy output. Path corrected 2026-08-12: this entry previously cited it bare as `track1_sweep_v2/manifest.csv`, which does not exist at the repo root. The file is real and lives under `data/`, un-ignored by `.gitignore:17-18` because `analysis/gp_surrogate.py` and `analysis/build_poster_phase_space.py` still read it.
 
 **D4a. `_incoming/` is the canonical per-run tree, and the sibling trees are NOT all safe.** `data/all_runs_inventory.csv`'s `summary_path` column resolves to `renders/yaris_render_s1/_incoming/<run>/`. Verified live 2026-08-07 by byte-comparing `metrics.csv`:
 `renders/yaris_render_s1/g64_m{1100,1609,2337}/` ARE byte-identical to their `_incoming/` counterparts, so `analysis/fig4_velocity_regime.py:60`, which reads the `g64_m1100` sibling for its v=1.5 point, is reading correct data.
