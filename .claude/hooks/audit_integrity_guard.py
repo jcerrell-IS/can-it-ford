@@ -31,11 +31,15 @@ CHECK 2, threshold deduplication by value. Register D7a.
     Separately, DRIFT_THRESHOLD 0.05 m is declared under FIVE names
     (DRIFT_THRESHOLD, L2_DRIFT_M, DRIFT_THRESHOLD_M, THRESHOLD, DRIFT_M), so a
     value-keyed sweep across the repo hits all of them plus the speed.
-    FIVE names is settled. The TOTAL is scope-sensitive and no single number is
-    safe to quote: 22 in-scope .py sites enumerated 2026-08-12, 23 counting the
-    archive/ copy, and a 24th code-shaped site hides behind a .DO_NOT_RUN suffix
-    that no *.py glob will match. See CLAUDE.md item 13 for the enumeration.
-    That is precisely why this check keys on the NAME and not on a count.
+    FIVE names is settled. The TOTAL is not, and no single number is safe to quote.
+    Two independent binary choices give four defensible totals, 22 / 23 / 23 / 24,
+    with 23 reachable two different ways: archive/ in or out, and whether to count
+    analysis/gp_surrogate.py:14 where THRESHOLD defaults to 0.05 through a
+    CLI-overridable expression rather than a bare literal. Register D7's 24 is
+    correct under the loose-plus-archive reading. A separate real site,
+    simulation/can_it_ford_mu_sweep.py.DO_NOT_RUN:60, matches no *.py glob at all.
+    See CLAUDE.md item 13, and .claude/checks/count_claims_check.py which enforces
+    this live. That is precisely why this check keys on the NAME, not on a count.
     This check denies a value-keyed in-place substitution of 0.05.
 
 Exit code is always 0. The decision is carried in the JSON payload, matching the
@@ -103,8 +107,11 @@ def main():
             "slide_speed_ms is a SPEED in m/s, not a distance. It feeds the joint "
             "sustained condition at :179-185 that produced the published 16 SLIDE / "
             "1 STUCK verdicts, so a value-keyed replace changes published output "
-            "with no error. DRIFT_THRESHOLD is also declared at 24 sites under five "
-            "names. Deduplicate by NAME and UNIT, never by value: target "
+            "with no error. The drift tolerance is also declared under five names, "
+            "and its total depends on two independent choices (archive/ in or out, "
+            "and whether to count the CLI-overridable default at gp_surrogate.py:14), "
+            "giving 22, 23 or 24. Quote the scope with any total. "
+            "Deduplicate by NAME and UNIT, never by value: target "
             "slide_m, slide_speed_ms, float_m, DRIFT_THRESHOLD, L2_DRIFT_M, "
             "DRIFT_THRESHOLD_M, THRESHOLD or DRIFT_M explicitly.",
         )
