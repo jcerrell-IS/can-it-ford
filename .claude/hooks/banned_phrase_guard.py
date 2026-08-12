@@ -26,6 +26,24 @@ banned = [
     (r"sign.?inverted?\s+coupling", "retracted, was a np.polyfit artifact, not physics"),
     (r"1\.6\s*(to|-)\s*7\.7\s*percent", "SDF error range is 7.3 to 7.7 percent, not 1.6 to 7.7"),
     (r"blob\s*7e5c7cd2", "that blob does not exist, do not cite it"),
+    # Added 2026-08-12. Register Section I writes this row with a GREEK mu, so an
+    # ASCII-only sweep for "mu_wet" returns nothing and reports the file clean. That
+    # is exactly how the claim survived at two sites in the live
+    # .claude/skills/flood-mpm-debugging-reference/SKILL.md until 2026-08-12.
+    # Match both characters, and match the assertion rather than the bare symbol so
+    # a correct discussion of the value is not blocked.
+    # Note the character class is [^\n] and NOT [^.\n]. The phrase being caught
+    # always contains the decimal point of "0.3", so excluding dots makes the
+    # pattern silently never match. That bug was found by testing it, not by
+    # reading it.
+    (r"(?:mu|μ|µ)_wet[^\n]{0,80}?(?:primary|best.?sourced|defensible)",
+     "register G4 refutes 'mu_wet 0.3 is the primary, best-sourced defensible value'. "
+     "Hold three things apart: 0.3 is REFUTED as a measured wet-road value (G4), it is "
+     "REAL as an inherited convention (G4b), and 0.55 per Azhar 2023 is now CONFIRMED "
+     "as their own spring-balance measurement on a rubber mat (G4a)"),
+    (r"0\.55[^\n]{0,40}Azhar[^\n]{0,60}(?:unverified|not\s+(?:been\s+)?(?:independently\s+)?confirmed)",
+     "register G4a: the 0.55 / Azhar 2023 attribution is no longer unverified, they "
+     "measured it themselves, DOI 10.1111/jfr3.12885"),
 ]
 hits = [msg for pat, msg in banned if re.search(pat, scanned, re.IGNORECASE)]
 if hits:
