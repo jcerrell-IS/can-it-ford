@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import json
 import math
+import sys
 from pathlib import Path
 
 import numpy as np
@@ -11,6 +12,11 @@ import warp as wp
 
 from warpmpm.core.solver import GridConfig, Solver
 from warpmpm.materials import newtonian
+
+# rigid6dof sits beside this file and imports nothing from warpmpm, so it stays importable
+# whether this module is run as a script or imported from the repo root.
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from rigid6dof import RigidBody6DOF, added_mass_ratio, cube_inertia  # noqa: E402
 
 LIM = 9.421742313727737
 DX_CANON = LIM / 64.0
@@ -829,6 +835,163 @@ def run_c1_sdf(n_grid, rho_box=600.0, depth_cells=18.0, box_bottom_cells=8.0,
     }
 
 
+def collider_pose(tank):
+    """Read an SDF collider's live centre and quaternion straight off the solver.
+
+    There is no public accessor, so this reaches into collider_params the same way
+    reseat() already reaches into _sim. It exists to CHECK the driver's own pose mirror
+    against the solver's truth rather than to drive anything.
+    """
+    p = tank.solver._sim.collider_params[tank.collider]
+    return (np.array([float(p.center[0]), float(p.center[1]), float(p.center[2])]),
+            np.array([float(p.quat[0]), float(p.quat[1]), float(p.quat[2]),
+                      float(p.quat[3])]))
+
+
+def run_c4_free_sdf(n_grid, rho_box=600.0, depth_cells=18.0, box_bottom_cells=8.0,
+                    settle_frames=600, n_ticks=600, tick_substeps=1, sdf_res=64,
+                    free_rotation=True, abort_on_tunneling=True, device="auto", seed=0):
+    """C4-FREE: the C1-SDF cube, released as a free 6-DOF body on the moving-SDF path.
+
+    C1-SDF establishes that an SDF collider forms a real, calibrated buoyant force while
+    held FIXED. It cannot move, so it answers nothing about motion. This variant closes
+    that loop: same cube, same water, same wrench readout, but the measured wrench now
+    drives a driver-level rigid-body integrator whose velocity and omega are commanded
+    back through set_sdf_pose each tick.
+
+    Nothing in warpmpm changes. The solver already accepts a 6-DOF pose and integrates it
+    per substep (mpm_solver_warp.py:2756-2760); the missing piece was the Python loop, and
+    that lives in simulation/rigid6dof.py, unit-tested without a GPU in
+    tests/test_rigid6dof.py.
+
+    Three things here are easy to get wrong and are handled explicitly:
+
+    1. NORMALISATION. sdf_wrench divides the accumulated impulse by the dt it is handed,
+       and the accumulator spans every substep since reset_sdf_force. A tick of
+       ``tick_substeps`` substeps must therefore be normalised by the TICK duration. Using
+       tank.dt for a multi-substep tick would inflate the force by exactly tick_substeps.
+    2. NO TELEPORTING. Only velocity and omega are commanded. center and quat are left for
+       the solver to integrate, per the set_box contract (solver.py:240-246). Passing a
+       centre would double-apply the motion.
+    3. STAGGERING. The wrench read on tick i was produced with the collider moving at the
+       velocity commanded on tick i-1, which is what an explicit partitioned scheme is.
+       The pose mirror is checked against the solver's live pose every tick, so a
+       misunderstanding of the contract fails loudly instead of drifting.
+
+    STABILITY IS NOT CLAIMED. Register J1a's identity is that added_mass_ratio is exactly
+    1.000000 for any body floating at equilibrium, which is the stability limit of this
+    scheme class, and J1a also records that under-relaxation was tried and REFUTED (job
+    3361371). No under-relaxation is applied here and none is proposed. The ratio is
+    reported per run so the result can be read against it. Whether this loop is stable at
+    rho_box near RHO_W is an open question this harness is built to ANSWER, not one it
+    presumes.
+    """
+    dx = LIM / n_grid
+    floor = 3.0 * DX_CANON
+    z_b0 = floor + box_bottom_cells * DX_CANON
+    tank = BoxTank(n_grid, rho_box, depth_cells, z_b0, water=True, device=device,
+                   seed=seed, box_mode="collider_sdf", sdf_res=sdf_res)
+    settle = settle_pinned(tank, settle_frames)
+    zs_settle, _, _ = tank.column_surface()
+
+    tick_dt = tick_substeps * tank.dt
+    body = RigidBody6DOF(
+        mass=tank.mass,
+        inertia_body=cube_inertia(tank.mass, tank.length),
+        center=np.asarray(tank.box_center, dtype=float),
+        gravity=(0.0, 0.0, -G),
+    )
+    # farthest surface point of a cube from its centre, the r_max the solver's own
+    # tunnelling guard uses (mpm_solver_warp.py:2747-2748)
+    r_max = 0.5 * tank.length * math.sqrt(3.0)
+    band = float(tank.sdf_info.get("sdf_band_m", dx))
+
+    traj, f_series, t_series = [], [], []
+    max_margin = 0.0
+    max_mirror_err = 0.0
+    tunneled_at = None
+    for i in range(n_ticks):
+        tank.project_water()
+        tank.reset_wrench()
+        tank.solver.step(tank.dt, tick_substeps)
+        f, tau = tank.wrench(tick_dt)          # normalised by the TICK, not the substep
+
+        # the solver's live pose is where this wrench was actually measured; the mirror
+        # must already agree with it before we integrate
+        c_live, q_live = collider_pose(tank)
+        mirror_err = float(np.linalg.norm(c_live - body.center))
+        max_mirror_err = max(max_mirror_err, mirror_err)
+        if mirror_err > max(1e-6, 1e-3 * tank.length):
+            raise RuntimeError(
+                f"pose mirror diverged from the solver at tick {i}: driver has "
+                f"{body.center.tolist()}, collider is at {c_live.tolist()} "
+                f"(|d| = {mirror_err:.3e} m). The set_sdf_pose velocity contract is not "
+                f"behaving as the driver assumes; do not trust this run.")
+
+        if not free_rotation:
+            tau = np.zeros(3)
+        v_cmd, w_cmd = body.integrate(f, tau, tick_dt)
+        if not free_rotation:
+            w_cmd = np.zeros(3)
+
+        margin = body.tunneling_margin(r_max, band, tank.dt)
+        max_margin = max(max_margin, margin)
+        if margin > 1.0 and tunneled_at is None:
+            tunneled_at = i
+            if abort_on_tunneling:
+                break
+
+        tank.solver.set_sdf_pose(tank.collider, velocity=tuple(float(c) for c in v_cmd),
+                                 omega=tuple(float(c) for c in w_cmd))
+
+        f_series.append([float(f[0]), float(f[1]), float(f[2])])
+        t_series.append((i + 1) * tick_dt)
+        traj.append(body.state())
+
+    z = np.array([s["center"][2] for s in traj]) if traj else np.zeros(0)
+    fz = np.asarray(f_series)[:, 2] if f_series else np.zeros(0)
+    draft_eq = draft_incompressible(rho_box, tank.length)
+    z_eq = zs_settle - draft_eq + tank.length / 2.0
+
+    return {
+        "variant": "C4FREE_sdf_six_dof_driver",
+        "free_rotation": bool(free_rotation),
+        "geometry": tank.geometry(),
+        "settle": settle,
+        "surface_after_settle": zs_settle,
+        "tick_substeps": tick_substeps,
+        "tick_dt": tick_dt,
+        "n_ticks_run": len(traj),
+        "n_ticks_requested": n_ticks,
+        # the scheme's own stability constraint, reported, not corrected
+        "added_mass_ratio": added_mass_ratio(rho_box, RHO_W),
+        "added_mass_ratio_note": "register J1a: exactly 1.0 at flotation equilibrium; "
+                                 "under-relaxation tried and REFUTED (job 3361371)",
+        "sdf_band_m": band,
+        "r_max_m": r_max,
+        "tunneling_margin_max": max_margin,
+        "tunneling_margin_note": "per-substep surface sweep / contact band; >1 can tunnel",
+        "tunneled_at_tick": tunneled_at,
+        "pose_mirror_max_err_m": max_mirror_err,
+        "z_start": float(tank.box_center[2]),
+        "z_end": float(z[-1]) if z.size else None,
+        "z_equilibrium_predicted": z_eq,
+        "draft_equilibrium_incompressible": draft_eq,
+        "draft_equilibrium_compressible": draft_compressible(rho_box, tank.length),
+        "z_err_vs_equilibrium_m": (float(z[-1]) - z_eq) if z.size else None,
+        "speed_max": max((s["speed"] for s in traj), default=None),
+        "omega_mag_max": max((s["omega_mag"] for s in traj), default=None),
+        "F_z_first": float(fz[0]) if fz.size else None,
+        "F_z_tail_mean": float(fz[len(fz) // 2:].mean()) if fz.size else None,
+        "F_buoy_analytic_full_submersion": RHO_W * tank.volume * G,
+        "box_weight": tank.mass * G,
+        "t_series": t_series,
+        "f_series": f_series,
+        "trajectory": traj,
+        "diagnostics": tank.diagnostics(),
+    }
+
+
 def run_c3(n_grid, depth_cells=18.0, box_bottom_cells=8.0, settle_frames=600,
            measure_substeps=120, device="auto", seed=0):
     res = run_c1(n_grid, RHO_W, depth_cells, box_bottom_cells, settle_frames,
@@ -853,7 +1016,7 @@ def run_c3(n_grid, depth_cells=18.0, box_bottom_cells=8.0, settle_frames=600,
 def main():
     p = argparse.ArgumentParser()
     p.add_argument("--variant", default="c2",
-                   choices=["c0", "c1", "c2", "c3", "c1sdf"])
+                   choices=["c0", "c1", "c2", "c3", "c1sdf", "c4free"])
     p.add_argument("--collider", default="sdf", choices=["sdf", "box"],
                    help="c1sdf only: mesh-SDF collider (primary) or axis-aligned box "
                         "collider (cross-check, exact geometry, no SDF interpolation)")
@@ -868,6 +1031,17 @@ def main():
     p.add_argument("--substeps-c0", type=int, default=20)
     p.add_argument("--box-bottom-cells", type=float, default=8.0)
     p.add_argument("--measure-substeps", type=int, default=120)
+    p.add_argument("--n-ticks", type=int, default=600,
+                   help="c4free only: control ticks of the 6-DOF driver loop")
+    p.add_argument("--tick-substeps", type=int, default=1,
+                   help="c4free only: solver substeps per control tick. The wrench is "
+                        "normalised by tick_substeps*dt, not dt")
+    p.add_argument("--no-free-rotation", action="store_true",
+                   help="c4free only: zero the torque and omega, leaving 3-DOF "
+                        "translation. Isolates heave before admitting rotation")
+    p.add_argument("--no-abort-on-tunneling", action="store_true",
+                   help="c4free only: keep running past a tunnelling margin > 1 instead "
+                        "of stopping. The wrench is not trustworthy past that point")
     p.add_argument("--device", default="auto")
     p.add_argument("--seed", type=int, default=0)
     p.add_argument("--out", default=None)
@@ -882,6 +1056,11 @@ def main():
         res = run_c1_sdf(a.n_grid, a.rho_box, a.depth_cells, a.box_bottom_cells,
                          a.settle_frames, a.measure_substeps, a.collider,
                          a.sdf_res, a.device, a.seed)
+    elif a.variant == "c4free":
+        res = run_c4_free_sdf(a.n_grid, a.rho_box, a.depth_cells, a.box_bottom_cells,
+                              a.settle_frames, a.n_ticks, a.tick_substeps, a.sdf_res,
+                              not a.no_free_rotation, not a.no_abort_on_tunneling,
+                              a.device, a.seed)
     elif a.variant == "c3":
         res = run_c3(a.n_grid, a.depth_cells, a.box_bottom_cells,
                      a.settle_frames, a.measure_substeps, a.device, a.seed)
@@ -891,7 +1070,8 @@ def main():
     res["provenance"] = PROVENANCE
 
     print(json.dumps({k: v for k, v in res.items()
-                      if k not in ("draft_series", "v_series", "t_series", "f_series")},
+                      if k not in ("draft_series", "v_series", "t_series", "f_series",
+                                   "trajectory")},
                      indent=2, default=float))
     if a.out:
         out = Path(a.out)
