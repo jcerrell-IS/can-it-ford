@@ -119,6 +119,49 @@ bounding run-to-run scatter far below every gap above.
 
 Register item **J1d**.
 
+## The regime ladder at the GATED geometry: rungs (b), (c) and (d)
+
+With allocation time still open, the ladder proper ran:
+`simulation/validate_coupling_force_ladder.py`, byte-identical to the origin/main copy.
+This is a DIFFERENT experiment from everything above: it puts the body's bottom face ON
+the floor at frac 0.20 with water depth 0.2944294473039918 m and 4 layers, the g64_m1100
+gated values exactly. Predictions were pre-registered in the module docstring.
+
+The settle cap bit again. At the default 1200 both rungs were discards (ratio 13.78 and
+12.40 against 20). Raised to 5000, rung (b) meets the gate at 3490 frames and rung (c) at
+1843. That is the THIRD place this session where a cap, not the physics, produced a
+discard.
+
+| rung | contact | a_late / a_ideal | v_mean_late | vertical travel |
+|------|---------|------------------|-------------|-----------------|
+| (b) | none | -4.2041 | -1.5854 m/s | -0.21208 m |
+| (c) | floor rest. 0.05 | -0.0006 | -0.0441 m/s | -0.03660 m |
+| (d) | (c) + flow 1.5 m/s | -0.0040 | -0.0408 m/s | **0.00000 m** |
+
+**Prediction (b) refuted.** Pre-registered as a_late ~ 0 with drift -0.13 m/s bounded to
+-0.09/-0.17. Measured drift -1.5854 m/s, about 12x and outside the band, a_late +28.4.
+Rung (b) here is best read as DEGENERATE: at frac 0.20 and rho_box 600 the body must sink
+and with every plane at restitution 0.0 nothing holds it, so it ends below the floor
+plane (box_bottom 0.2319 against floor_z 0.4416). There is no equilibrium to measure.
+
+**Prediction (c) confirmed.** Floor restitution 0.05 arrests the descent: travel falls
+82.7 percent, drift 97.2 percent, and a_late lands at 0.06 percent of analytic.
+
+**What it means.** In the regime the 17 runs occupy, with gated floor contact and then
+gated flow, vertical acceleration is 0.06 and 0.40 percent of analytic and vertical
+travel is 0.037 m then exactly 0.000 m. The floor, not the buoyancy coupling, sets the
+vertical dynamics there, so the ~30 percent deficit above has little leverage on a
+floor-supported body.
+
+**What it does NOT mean, and this is the real blocker.** The ladder records vertical
+quantities only. box_bottom_travel_m, v_series and zb_series are all z, and there is no
+horizontal displacement, surge drift or x velocity anywhere in its output. It cannot
+produce, refute or bound a SLIDE outcome, and SLIDE is 16 of the 17 verdicts. Rung (d)
+confirms the flow reaches the body (water vx near the box, mean 0.0018 to 0.8304 m/s over
+2735 particles) but not what that flow does horizontally.
+
+Register item **J1e**.
+
 ## STEP 6, Rogue and Silverado grid sweep, non-canonical
 
 `data/rogue_silverado_grid_sweep_2026-08-13.csv`, 8 rows. Nothing was written to
@@ -196,5 +239,17 @@ has 17 rows, **16 SLIDE / 1 STUCK**; `triggered_topple` is true in **0 of 17**;
    against the direct probe's roughly 6.2 kPa resolution-independent offset.
 3. Re-run the failure-mode classifier on the Rogue/Silverado rollouts, since displacement
    falls 65 to 78 percent under refinement and the SLIDE margin narrows sharply.
-4. Rungs (c) floor contact and (d) flow, still unattempted.
-5. `FINDINGS.md` is merged but still two voices. The seam says so explicitly.
+4. DONE this session, see J1e. Rungs (b), (c) and (d) all ran at the GATED geometry
+   (body on the floor, frac 0.20, depth 0.2944294473039918 m, 4 layers) and all met the
+   settle gate. Prediction (b) refuted, prediction (c) confirmed. With the gated floor
+   contact and flow the body's vertical acceleration is 0.06 and 0.40 percent of
+   analytic and its vertical travel is 0.037 m then exactly 0.000 m, so the floor, not
+   the buoyancy coupling, sets vertical dynamics in the gated regime.
+5. NEW, and it is the blocker for the whole question. The ladder instruments VERTICAL
+   motion only. It has no horizontal displacement, surge drift or x velocity output at
+   all, so it cannot bound a SLIDE outcome, and SLIDE is 16 of the 17 verdicts. A
+   horizontal-drift instrument does not exist yet and is what closing this loop needs.
+6. `FINDINGS.md` is merged but still two voices. The seam says so explicitly.
+7. The settle cap has now produced a false discard in THREE separate places (job
+   3361443 g96 at 900, the ladder at 1200, and by implication anywhere else the default
+   is trusted). Caps should be set high and left to break early on the gate.

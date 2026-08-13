@@ -549,6 +549,53 @@ Any skill file containing any of the following must be corrected in place.
    are an effective repeat measurement and agree to 0.04 (coupled) and 0.06 (fixed)
    points, bounding run-to-run scatter far below every gap above.
 
+   J1e. THE LADDER RAN TO RUNG (d) AT THE GATED GEOMETRY, 2026-08-13. Rungs (b), (c)
+   and (d) of `simulation/validate_coupling_force_ladder.py` all ran on LS6 and all
+   met the settle gate. Artifacts at
+   `realism_track/ladder_gated_geometry_3362208/`. **Note this is a DIFFERENT
+   experiment from J1b and J1d**: those float a cube mid-water at frac 0.75 to 0.86,
+   this puts the body's bottom face ON the floor at frac 0.20 with `water_depth_m`
+   0.2944294473039918 and 4 layers, the `g64_m1100` gated values exactly.
+
+   Settle cap again: at the default 1200 both rungs were `settle_is_discard true`
+   (ratio 13.78 and 12.40 against 20). Raised to 5000, rung (b) meets it at 3490 and
+   rung (c) at 1843. **Third distinct place a settle cap rather than the physics
+   produced a discard.** The numbers barely moved between discard and gate-met
+   versions.
+
+   | rung | contact | a_late / a_ideal | v_mean_late | vertical travel |
+   |------|---------|------------------|-------------|-----------------|
+   | (b) | none | -4.2041 | -1.5854 m/s | -0.21208 m |
+   | (c) | floor rest. 0.05 | -0.0006 | -0.0441 m/s | -0.03660 m |
+   | (d) | (c) + flow 1.5 m/s | -0.0040 | -0.0408 m/s | 0.00000 m |
+
+   **PREDICTION (b) REFUTED.** The pre-registered value was `a_late ~ 0` with drift
+   -0.13 m/s bounded to -0.09/-0.17. Measured drift -1.5854 m/s, about 12x and far
+   outside the band, with `a_late` +28.4 m/s2. Treat rung (b) here as DEGENERATE
+   rather than merely wrong: at frac 0.20 and `rho_box` 600 the body must sink and
+   with all planes at restitution 0.0 nothing holds it, so it ends at `box_bottom`
+   0.2319 against `floor_z` 0.4416, below the floor plane. There is no equilibrium to
+   measure.
+
+   **PREDICTION (c) CONFIRMED.** Registering the floor at restitution 0.05 arrests the
+   descent: travel -0.21208 -> -0.03660 m (82.7 percent), drift -1.5854 -> -0.0441 m/s
+   (97.2 percent), `a_late` +28.4 -> +0.0042 m/s2, which is 0.06 percent of analytic.
+
+   **CONSEQUENCE.** In the regime the 17 runs occupy, with the gated floor contact and
+   then the gated flow, vertical acceleration is 0.06 and 0.40 percent of analytic and
+   vertical travel is 0.037 m then exactly 0.000 m. **The floor contact, not the
+   buoyancy coupling, sets the vertical dynamics there**, so the roughly 30 percent
+   buoyancy deficit of J1b/J1d has very little leverage on a floor-supported body.
+
+   **THIS DOES NOT CLEAR THE VERDICTS, and the limitation is structural.** The ladder
+   records vertical quantities ONLY: `box_bottom_travel_m`, `v_series` and `zb_series`
+   are all z, and there is no horizontal displacement, surge drift or x velocity
+   anywhere in its output. It therefore cannot produce, refute or bound a SLIDE
+   outcome, and SLIDE is 16 of the 17 verdicts. Rung (d) confirms the flow reaches the
+   body (water `vx` near the box, mean 0.0018 -> 0.8304 m/s over 2735 particles) but
+   not what that flow does horizontally. Closing the loop needs a horizontal-drift
+   instrument that does not currently exist.
+
    J1c. THE RUNG-B EVIDENCE EXISTED ON ONE CLONE ONLY UNTIL 2026-08-13. The result
    JSONs and drivers for jobs 3361371, 3361423, 3361443 and 3361504 were committed on
    `/work/11603/jcerrell0629/vista/can-it-ford`, a clone 166 commits behind

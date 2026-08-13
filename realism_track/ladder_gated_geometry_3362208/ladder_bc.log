@@ -1,0 +1,98 @@
+
+-----------------------------------------------------------------
+           Welcome to the Lonestar6 Supercomputer                
+-----------------------------------------------------------------
+
+No reservation for this job
+--> Verifying valid submit host (login1)...OK
+--> Verifying valid jobname...OK
+--> Verifying valid ssh keys...OK
+--> Verifying access to desired queue (gpu-a100-dev)...OK
+--> Checking available allocation (BCS20003)...OK
+--> Verifying that quota for filesystem /home1/11603/jcerrell0629 is at 47.80% allocated...OK
+--> Verifying that quota for filesystem /work/11603/jcerrell0629/ls6 is at  5.41% allocated...OK
+c301-003.ls6.tacc.utexas.edu
+
+############ RUNG (b) g64 gated-scene geometry ############
+Thu Aug 13 05:42:23 CDT 2026
+    "sound_speed_over_vmax": 13.820684190181735,
+    "advective_cfl": 0.019131421536854914,
+    "inverted_count": 0,
+    "leaked_cumulative": 17376284,
+    "escaped_water": 0,
+    "escaped_water_frac": 0.0,
+    "max_floor_penetration_dx": 0.25603667279673675,
+    "max_wall_penetration_dx": 0.2501849080440809,
+    "water_inside_box": 0,
+    "water_inside_box_frac": 0.0
+  },
+  "provenance": {
+    "register_item": "J.1",
+    "solver_source": "third_party/mpm-engine-544c93dd-solver-core/",
+    "pinned_sha": "544c93dd02cb9c7ead89e1155a62967243244fce",
+    "no_force_accessor": "core/solver.py:200-210 rigid_state returns com/v/omega/R only; register A3",
+    "gravity": "core/solver.py:167-169 hardcodes g=[0,0,-9.81]; applied on grid at kernels/mpm_utils.py:940",
+    "rigid_integrator": "kernels/mpm_utils.py:1416-1459 v_cm = rigid_linear_mom / M, no force term",
+    "rigid_no_stress": "kernels/mpm_utils.py:1090-1091 F=I for mat 8, no stress branch assigns mat 8",
+    "eos": "kernels/mpm_utils.py:43 pressure = -bulk*(J**-1.1 - 1), gamma=1.1",
+    "plane_rigid_gate": "kernels/mpm_solver_warp.py:1915 'if restitution != 0.0' registers rigid contact",
+    "deviation_from_canonical": "all planes use restitution=0.0 and friction=0.0 so they act on water only",
+    "internal_access": "pin() writes _sim.rigid_x_cm and calls _sim.set_rigid_body_velocity; Solver exposes no pin API",
+    "rigid_mass_is_particle_sum": "kernels/mpm_solver_warp.py:856 mass_np[b] = m_b.sum(); with v_cm = mom/M this makes the body adopt a mass-weighted AVERAGE grid velocity, never a force",
+    "collider_wrench_sign": "core/solver.py:305-307 a static cup of m kg reads (0,0,-m*g), so buoyancy on a submerged collider is +z",
+    "sdf_impulse": "kernels/mpm_solver_warp.py:2731-2734 impulse = m*(v_free - v_new), accumulated before the node velocity is overwritten",
+    "box_impulse": "kernels/mpm_solver_warp.py:2082-2085 same accounting for the axis-aligned box collider; solver.py:358 calls sdf_wrench its 6-DOF analogue",
+    "coupling_pkg_unused": "warpmpm.coupling (admittance/wrench/backend) is imported by warpmpm/__init__.py but never called here; it drives add_box tool handles, not material-8 rigid bodies",
+    "ladder_dispatch": "docs/REGIME_LADDER_DISPATCH_2026-08-07.md",
+    "floor_restitution_source": "renders/yaris_render_s1/sim_standing.py:132-133 floor restitution=0.05 friction=0.55; :136 walls restitution=0.05 friction=0.0. Read live 2026-08-07. This ladder walks restitution only; floor friction stays at BoxTank's 0.0.",
+    "inflow_source": "renders/yaris_render_s1/sim_standing.py:190-198 per-frame clamp, :160-162 one-shot additive kick. Both reproduced; read live 2026-08-07.",
+    "depth_source": "data/all_runs_inventory.csv realized_depth_m = 0.2944294473039918 m in all 17 runs == 2*DX_CANON, so --depth-cells 2 matches it exactly. Read live 2026-08-07."
+  }
+}
+wrote /scratch/11603/jcerrell0629/ladder_bc_3362208/rung_b_g64.json
+exit=0
+
+############ RUNG (c) g64 gated-scene geometry ############
+Thu Aug 13 05:43:07 CDT 2026
+    "sound_speed_over_vmax": 32.41055705596632,
+    "advective_cfl": 0.008158123746948654,
+    "inverted_count": 0,
+    "leaked_cumulative": 20623792,
+    "escaped_water": 0,
+    "escaped_water_frac": 0.0,
+    "max_floor_penetration_dx": 0.2507391919952596,
+    "max_wall_penetration_dx": 0.25018774222060264,
+    "water_inside_box": 9,
+    "water_inside_box_frac": 0.00018527667984189722
+  },
+  "provenance": {
+    "register_item": "J.1",
+    "solver_source": "third_party/mpm-engine-544c93dd-solver-core/",
+    "pinned_sha": "544c93dd02cb9c7ead89e1155a62967243244fce",
+    "no_force_accessor": "core/solver.py:200-210 rigid_state returns com/v/omega/R only; register A3",
+    "gravity": "core/solver.py:167-169 hardcodes g=[0,0,-9.81]; applied on grid at kernels/mpm_utils.py:940",
+    "rigid_integrator": "kernels/mpm_utils.py:1416-1459 v_cm = rigid_linear_mom / M, no force term",
+    "rigid_no_stress": "kernels/mpm_utils.py:1090-1091 F=I for mat 8, no stress branch assigns mat 8",
+    "eos": "kernels/mpm_utils.py:43 pressure = -bulk*(J**-1.1 - 1), gamma=1.1",
+    "plane_rigid_gate": "kernels/mpm_solver_warp.py:1915 'if restitution != 0.0' registers rigid contact",
+    "deviation_from_canonical": "all planes use restitution=0.0 and friction=0.0 so they act on water only",
+    "internal_access": "pin() writes _sim.rigid_x_cm and calls _sim.set_rigid_body_velocity; Solver exposes no pin API",
+    "rigid_mass_is_particle_sum": "kernels/mpm_solver_warp.py:856 mass_np[b] = m_b.sum(); with v_cm = mom/M this makes the body adopt a mass-weighted AVERAGE grid velocity, never a force",
+    "collider_wrench_sign": "core/solver.py:305-307 a static cup of m kg reads (0,0,-m*g), so buoyancy on a submerged collider is +z",
+    "sdf_impulse": "kernels/mpm_solver_warp.py:2731-2734 impulse = m*(v_free - v_new), accumulated before the node velocity is overwritten",
+    "box_impulse": "kernels/mpm_solver_warp.py:2082-2085 same accounting for the axis-aligned box collider; solver.py:358 calls sdf_wrench its 6-DOF analogue",
+    "coupling_pkg_unused": "warpmpm.coupling (admittance/wrench/backend) is imported by warpmpm/__init__.py but never called here; it drives add_box tool handles, not material-8 rigid bodies",
+    "ladder_dispatch": "docs/REGIME_LADDER_DISPATCH_2026-08-07.md",
+    "floor_restitution_source": "renders/yaris_render_s1/sim_standing.py:132-133 floor restitution=0.05 friction=0.55; :136 walls restitution=0.05 friction=0.0. Read live 2026-08-07. This ladder walks restitution only; floor friction stays at BoxTank's 0.0.",
+    "inflow_source": "renders/yaris_render_s1/sim_standing.py:190-198 per-frame clamp, :160-162 one-shot additive kick. Both reproduced; read live 2026-08-07.",
+    "depth_source": "data/all_runs_inventory.csv realized_depth_m = 0.2944294473039918 m in all 17 runs == 2*DX_CANON, so --depth-cells 2 matches it exactly. Read live 2026-08-07."
+  }
+}
+wrote /scratch/11603/jcerrell0629/ladder_bc_3362208/rung_c_g64.json
+exit=0
+=== results ===
+total 91
+drwx------  2 jcerrell0629 G-819066     1 Aug 13 05:43 .
+drwx------ 25 jcerrell0629 G-819066    48 Aug 13 05:42 ..
+-rw-------  1 jcerrell0629 G-819066 40657 Aug 13 05:43 rung_b_g64.json
+-rw-------  1 jcerrell0629 G-819066 50354 Aug 13 05:43 rung_c_g64.json

@@ -1276,3 +1276,80 @@ g96's submersion exactly. The two near-duplicate g64 rows at 0.8567 and 0.8572 a
 useful side effect: they are an effective repeat measurement, and they agree to 0.04
 points (coupled) and 0.06 points (fixed), which bounds run-to-run scatter well below
 every gap discussed here.
+
+---
+
+## The regime ladder at the GATED geometry: rungs (b), (c) and (d) all ran and all met the gate
+
+Allocation 3362208, LS6 A100. Driver `simulation/validate_coupling_force_ladder.py`,
+byte-identical to the `origin/main` copy. Artifacts in
+`realism_track/ladder_gated_geometry_3362208/`, wrappers `run_ladder_bc.sh`,
+`run_ladder_bc2.sh`, `run_ladder_d.sh`.
+
+**This is a DIFFERENT experiment from everything above.** `rung_b_settled.py` floats a cube
+mid-water at frac 0.75 to 0.86. This ladder puts the body's bottom face ON the floor at
+frac 0.20, with `water_depth_m` 0.2944294473039918 and 4 water layers, which are the
+`g64_m1100` gated values to the last digit. It is the regime the 17 gated runs actually
+occupy. Predictions were pre-registered in the module docstring before any of this ran.
+
+### The settle cap was too low here too, and raising it changed nothing material
+
+At the default 1200-frame cap both rungs were `settle_is_discard true`, ratio 13.78 and
+12.40 against 20. Raised to 5000, rung (b) meets the gate at 3490 frames (ratio 22.02)
+and rung (c) at 1843 (20.69). **This is the third distinct place in this project where a
+settle cap, not the physics, produced a discard.** The measured numbers moved barely at
+all between the discard and gate-met versions, which is itself worth knowing: the cap
+defect was real but was not driving these particular results.
+
+### Results, all gate-met
+
+| rung | contact | a_ideal | a_late | a_late / ideal | v_mean_late | vertical travel |
+|------|---------|---------|--------|----------------|-------------|-----------------|
+| (b) | none | -6.7550 | **+28.3986** | -4.2041 | -1.5854 m/s | -0.21208 m (1.44 dx) |
+| (c) | floor rest. 0.05 | -6.7641 | +0.0042 | -0.0006 | -0.0441 m/s | -0.03660 m (0.25 dx) |
+| (d) | (c) + flow 1.5 m/s | -6.3459 | +0.0253 | -0.0040 | -0.0408 m/s | **0.00000 m** |
+
+Rung (d)'s flow reached the body: water `vx` near the box goes from mean 0.0018 to
+0.8304 m/s (p95 1.0756) over 2735 particles, `flow_reached_body true`, at the gated
+`velocity_ms` 1.5.
+
+### PREDICTION (b): REFUTED
+
+The docstring pre-registered `a_late ~ 0` with a sustained drift of order -0.13 m/s,
+explicitly bounded to -0.09 to -0.17 as an order-of-magnitude claim. Measured drift is
+**-1.5854 m/s, about 12x the prediction and far outside the stated band**, and `a_late`
+is **+28.4 m/s2**, neither zero nor negative. The dry-fraction fixed-point model behind
+that prediction does not describe this configuration.
+
+There is a reason to treat rung (b) here as degenerate rather than merely wrong. At frac
+0.20 with `rho_box` 600 the body is far denser than the displaced water can support, so
+it must sink, and with every plane at restitution 0.0 nothing can hold it: it ends at
+`box_bottom` 0.2319 against `floor_z` 0.4416, **below the floor plane**. The +28 m/s2 is
+read from a body that has left the physical domain. Rung (b) at this geometry has no
+equilibrium to measure.
+
+### PREDICTION (c): CONFIRMED
+
+The docstring predicted that registering the floor at restitution 0.05 would arrest the
+descent and collapse the drift toward zero. It does, decisively: travel falls 0.21208 to
+0.03660 m (**82.7 percent**), drift falls 1.5854 to 0.0441 m/s (**97.2 percent**), and
+`a_late` falls from +28.4 to +0.0042 m/s2, which is **0.06 percent of the analytic
+buoyant value**.
+
+### What rungs (c) and (d) mean for the 17 gated verdicts
+
+In the gated configuration, with the gated floor contact and then the gated flow, the
+body's vertical acceleration is 0.06 and 0.40 percent of analytic and its vertical travel
+is 0.037 m and then exactly 0.000 m. **The floor contact, not the buoyancy coupling,
+determines the vertical dynamics in the regime the 17 runs occupy.** A body resting on a
+floor is held by the floor, and the roughly 30 percent buoyancy deficit measured in the
+floating-cube experiments above has very little leverage on it.
+
+**This does NOT clear the verdicts, and the reason is a hard limitation of this
+instrument.** The ladder records vertical quantities only: `box_bottom_travel_m`,
+`v_series` and `zb_series` are all z. There is **no horizontal displacement, no surge
+drift and no x velocity anywhere in its output**, so it cannot produce, refute or bound a
+SLIDE outcome, and SLIDE is what 16 of the 17 verdicts are. Rung (d) adds flow and
+confirms the flow reaches the body, but what that flow does horizontally is not measured.
+Closing the loop to the gated verdicts needs a horizontal-drift instrument this ladder
+does not have.
