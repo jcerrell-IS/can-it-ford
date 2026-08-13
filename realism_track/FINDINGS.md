@@ -6,19 +6,40 @@ touched.
 
 ## Verdict up front
 
-**Path (a), the warpmpm SDF collider, is the validated path.** It is the only
-one of the two with a measured coupling force, its force agrees with analytic
-buoyancy to **-7.67% (g64) and +7.28% (g96)**, and the "a fixed collider cannot
-slide" objection is dissolved: `set_sdf_pose` already exists, so the collider can
-be re-posed each substep from a free-body integration.
+*This document is chronological and later sections supersede earlier ones. Every
+retraction is marked in place rather than deleted, so the reasoning stays
+auditable. This summary is current as of 2026-08-13.*
+
+**Path (a), the warpmpm SDF collider, is the validated path, and its static force
+is accurate to about 1%.** With the free surface measured as mass per unit area
+rather than taken from `column_surface`, two gate-met g64 runs at box positions
+five cells apart agree with analytic buoyancy to **+1.00% and +1.28%**. The "a
+fixed collider cannot slide" objection is dissolved: `set_sdf_pose` exists and its
+velocity argument demonstrably reaches the grid coupling.
+
+**The -7.67% and +7.28% figures quoted in earlier versions of this verdict are
+superseded**, along with everything between them and the +115% seen on the moving
+collider. That whole spread was dominated by a free-surface reference error: water
+leaks through the floor, `project_water` clamps it to one plane and deletes its
+downward momentum, roughly a fifth of all particles pile there, and the
+volume-based surface estimator cannot see the collapse, so it reports a surface
+about 0.57 m too high and every analytic built on it is inflated. Raising the bulk
+modulus removes the leak and the gap together, which confirms the chain by
+intervention.
+
+Two things are **not** established. The 1% result stands only at g64; the one g96
+run with a direct histogram failed the settle gate and is a discard, and the g96
+settle turns out not to be reproducible run to run. And the **moving** collider
+still reads about 6,164 N high against corrected static buoyancy, which added mass
+cannot explain. That is the single open defect.
 
 Path (b), Genesis LegacyCoupler, was not pursued. It is strictly more work for a
 less-validated force: no coupling-force validation exists anywhere in the Genesis
 repo, so it would have to be built from scratch, while path (a) already has one.
 
 **No rendered clips are delivered, and no claim of visual realism is made.** The
-reason is stated in "Not delivered" below. The force number above is a real
-measurement; the visuals are not started.
+reason is stated in "Not delivered" below. The force numbers are real measurements;
+the visuals are not started.
 
 ## Mandatory reading, status
 
