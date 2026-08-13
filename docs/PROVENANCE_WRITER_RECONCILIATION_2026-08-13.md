@@ -78,8 +78,13 @@ writer's target set are DISJOINT: not one file appears in both.** [read]
 
 | glob | on the Mac | on Vista |
 |---|---|---|
-| `*summary.json`, repo-wide, excluding `.git/` and `worktrees/` | **32** | **0** |
+| `*summary.json`, repo-wide, excluding `.git/` and `worktrees/` | **32** at 17:37, **38** by 18:08 | **0** |
 | `data/coupling_validation*/**/*.json`, excluding `*.provenance.json` | **21** | **60** |
+
+The `*summary.json` count moved during this session: a concurrent session began writing
+`data/g128_canonical_2026-08-13/` and added six. **Every count in this document is a
+snapshot with a timestamp**, which is the only honest way to quote a number from a live,
+gitignored tree. The structural finding below is unaffected by the growth.
 
 Reproduce:
 
@@ -143,7 +148,7 @@ That leaves **56 usable** of Vista's 60. [read]
 | Mac term | Vista term | Merged term | What it actually means |
 |---|---|---|---|
 | `recorded` | — | **`recorded`** | Present in the manifest under the audited name, written at run time. Untouched. Strongest. |
-| `aliased` | `measured` | **`aliased`** | Same quantity, the manifest's own value, different key. Exact, no inference. |
+| `aliased` | `measured` | **`aliased`** | **The same quantity**, the manifest's own value, different key. Exact, no inference. The words "the same quantity" are load-bearing: see defect 1 in section 5a, where a cube's mass was about to be aliased into `vehicle_mass`. |
 | — | `derived` | **`derived`** | Computed from a value the manifest recorded, by a stated invertible formula. Exact. |
 | `resolved` | `recorded` | **`resolved`** | Matched to a primary source by a measured discriminator, or read from a pin file. |
 | — | `inapplicable` | **`inapplicable`** | The run genuinely has no such quantity. A positive assertion, never a synonym for absent. |
@@ -269,31 +274,53 @@ modulus, the recorded value always wins and the derivation is only a consistency
 
 ### Populations A and B together, on the Mac
 
-```
-$ python3 analysis/run_provenance.py --backfill --root /Users/josie/can-it-ford
+**These counts are a SNAPSHOT and population A is growing while this is written.** A
+concurrent session began writing `data/g128_canonical_2026-08-13/` during this session;
+`*summary.json` went 32 (17:37) to 34 to 36 to **38 (18:08)**. Quote a count only with its
+timestamp, and re-run the dry run before acting on any number here.
 
-root      /Users/josie/can-it-ford
-manifests 53
+```
+$ python3 analysis/run_provenance.py --backfill --root /Users/josie/can-it-ford   # 18:08
+
+manifests 59
 mode      DRY RUN, nothing will be modified
 
 manifests by family
   coupling_validation      21
-  run_manifest             32
+  run_manifest             38
 
 per-field confidence census
-  canitford_git_commit  reconstructed=53
-  grid_density          aliased=53
-  mesh_sha256           resolved=32, inapplicable=21
-  solver_git_sha        resolved=32, aliased=21
-  vehicle_mass          aliased=53
-  bulk_modulus          recorded=29, derived=21, unknown=3
+  canitford_git_commit  reconstructed=59
+  grid_density          aliased=59
+  mesh_sha256           resolved=38, inapplicable=21
+  solver_git_sha        resolved=38, aliased=21
+  vehicle_mass          aliased=38, inapplicable=21
+  bulk_modulus          recorded=35, derived=21, unknown=3
 
-manifests that would change: 53/53
+manifests that would change: 59/59
 ```
 
-Reading it: **not one field is `recorded`** except the 29 bulk moduli. Every other value
-is aliased, resolved, derived or reconstructed. That is the honest state of provenance for
-these runs, and it is exactly what a presence-only gate cannot tell you.
+The earlier 17:37 run over 53 manifests read identically except for the counts:
+`run_manifest 32`, `bulk_modulus recorded=29`.
+
+Reading it: **not one field is `recorded`** except the bulk moduli. Every other value is
+aliased, resolved, derived, inapplicable or reconstructed. That is the honest state of
+provenance for these runs, and it is exactly what a presence-only gate cannot tell you.
+
+### The single most important consequence, and it is uncomfortable
+
+`params_check.py` used to warn that five fields were missing in all 32. It now warns only
+`bulk_modulus missing in 3`. **Not one run became more reproducible.** The 2026-08-12
+in-place back-fill wrote those five fields; no run recorded them.
+
+Per the effective labels: **zero** manifests carry a `recorded` `canitford_git_commit`
+(all 59 are `reconstructed`), and `grid_density` and `vehicle_mass` are aliases of values
+that were always present under other names. The gate's warning shrank from six fields to
+one **without a single run becoming traceable to code plus data plus environment**.
+
+That is the strongest possible argument for this module's own thesis: a presence gate
+cannot distinguish a recorded field from a reconstructed one, so **passing it is necessary
+and not sufficient**. The gate should be taught to read `field_confidence`.
 
 ### Vista's population, via a read-only local mirror
 
@@ -336,6 +363,78 @@ older manifests record `provenance.pinned_sha` themselves. The **27 newer `fric_
 `smoke_e` runs do not record it at all** [read], so the writer falls back to reading this
 tree's pin file, which is a strictly weaker claim: it describes the pin as it stands now,
 not the pin the run used. Worth fixing at the source in the friction-rung driver.
+
+---
+
+## 5a. Adversarial review, and the two defects it caught
+
+The `physics-skeptic` subagent reviewed this work before it was finalised. It **confirmed**
+the physics, the numerics, the counts, the refusal logic and the hull matching, and it
+**found two blocking defects**, both since fixed and both re-verified independently here
+rather than taken on the reviewer's word.
+
+**Defect 1, and it is the one that matters: `vehicle_mass` was about to record a cube.**
+The merged writer aliased `geometry.box_mass_kg` into `vehicle_mass` for all 21
+coupling-validation manifests, under a label the vocabulary defines as "exact, no
+inference". That rigid body is **not a vehicle**. It is a procedural calibration cube, and
+its mass reproduces exactly from the cube parameters:
+
+```
+rho_box_requested 600.0  x  box_side_m 1.4721472365199588 ** 3  =  1914.277939765707
+                                          geometry.box_mass_kg  =  1914.277939765707
+```
+
+The value is dangerous precisely because it is **plausible**: 1914 kg sits squarely in the
+SUV band, so nothing downstream would flag it. Worse, the same block asserted two keys
+away that no mesh exists *because the geometry is a procedural cube*. The block would have
+contradicted itself, and register D6a and D6h are about exactly this class of defect.
+
+Fixed: for that family `vehicle_mass` is now **`inapplicable`**, the field is left absent,
+and the cube's mass is recorded under its own name `rigid_body_mass` with the
+`rho * side**3` reproduction attached as evidence. Verified: the census now reads
+`vehicle_mass  aliased=38, inapplicable=21`.
+
+**Defect 2: `--family` did not restrict.** `--family coupling_validation` processed **55**
+manifests, not 21: the filter was applied to one glob only and never to the detected
+family. Combined with `--write-in-place` on untracked, gitignored files, an operator
+scoping to 21 files would have rewritten 55, **including manifests a concurrent session was
+writing at that moment**. Fixed by filtering on the detected family in `main()`, before any
+counting or writing. Verified: `--family coupling_validation` now reports
+`21` processed and `38 of the other family skipped, untouched`.
+
+Seven non-blocking findings were also raised. Four are fixed:
+
+* The block hardcoded `"date": "2026-08-13"` and **overwrote** the true prior
+  `2026-08-12`, and would have made every future run rewrite every file. A prior date now
+  wins, for the same reason a prior label does.
+* `mtime_basis_is_reliable` overstated what it tests. Renamed
+  `mtime_not_corrupted_by_backfill`: it tests one specific corruption and can never test
+  whether an mtime is the run time at all.
+* The gamma citation pointed only at the drivers, which each duplicate a bare `1.1`
+  literal. The **definition** is the solver kernel,
+  `kernels/mpm_utils.py:43`, `pressure = -bulk * (J**-gamma - 1)`, now cited as the
+  authority with the drivers named as its consumers.
+* The cross-check constrains only the **ratio** `rho/gamma = 909.0909`, not `rho` and
+  `gamma` separately, because no manifest records a water density. Now stated in the
+  emitted block rather than implied.
+
+Three are recorded and not fixed, as open items in section 9.
+
+### What the review confirmed, including one thing worth keeping
+
+The reviewer independently derived the worst relative error as
+`1.241763432820638e-16`, confirming the 1.242e-16 quoted here, and located the EOS in the
+solver kernel, which settles the gamma question from the primary source rather than from
+the drivers: `p = K((rho/rho0)^gamma - 1)` gives `c^2 = gamma*K/rho0`, hence
+`K = c^2*rho/gamma`. The no-gamma variant `K = c^2*rho` is refuted numerically, not merely
+formally: on the real-water runs it yields 2.1933e9 against a recorded 1.9939e9, a **10.0
+percent** error, so it would fail against all 29 cross-checks rather than pass quietly.
+
+It also noted the cross-check has **3 degrees of freedom, not 29**: only three distinct
+`(c, bulk)` pairs occur across the 29. That is a fair reduction of the evidence and is
+recorded here rather than left to inflate the result. The independent corroboration is
+that the coupling family, where **no** manifest records a bulk modulus to check against,
+derives to exactly `150000.0`, matching `validate_coupling_force.py:19 BULK = 1.5e5`.
 
 ---
 
@@ -461,3 +560,23 @@ Expected: 60 manifests, 4 index files skipped, 56 sidecars, and
    now passes on manifests whose values are `reconstructed` and `aliased`. The gate should
    read `field_confidence`, not just the key set. Until it does, passing it is necessary
    and not sufficient, and that is stated in every block the writer emits.
+5. **The mtime guard is unreachable on the population that needs it.** For the already
+   back-filled manifests, `canitford_git_commit` is present, so the writer takes the
+   branch that does not emit `mtime_not_corrupted_by_backfill` at all. The stored values
+   are sound only by an accident of ordering: the 2026-08-12 pass resolved them **before**
+   its own writes reset the mtimes. Re-derived today they would all resolve to a commit
+   dated after every run. Raised by the adversarial review; not fixed, because fixing it
+   means emitting a warning about a field this run does not touch.
+6. **Cross-repo reconstruction is not disclosed per manifest.** `render_s2/multigeom_.../
+   summary.json` records `hull_source: /work/11603/jcerrell0629/vista/can-it-ford/...`, so
+   those runs executed on **Vista**, while `commit_at_time` resolves against **Mac**
+   history. The two clones share no history after `b00bf7b` (2026-07-25), which predates
+   every reconstructed SHA. The `reconstructed` label warns generically; it does not say
+   "this id may not exist in the repository that ran the job". Worth adding.
+7. **`CANONICAL_YARIS_PLY` and `pinned_solver_sha()` resolve against the writer's own
+   tree, not `--root`.** Harmless today, both `.ply` copies hash to `b379fa44...`, but a
+   `--root` pointing at another checkout would stamp this tree's digest and pin onto that
+   tree's manifests.
+8. **The population is live.** `*summary.json` grew 32 to 38 during this session as a
+   concurrent session wrote `data/g128_canonical_2026-08-13/`. Any count here is a
+   snapshot; re-run the dry run before acting on one.

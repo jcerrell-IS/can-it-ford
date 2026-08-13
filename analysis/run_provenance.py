@@ -164,9 +164,19 @@ ORPHAN_DIRS = ("renders/yaris_render_s1/m1100", "renders/yaris_render_s1/m1609",
 # docstring for the cross-check that validates them before they are used.
 RHO_W = 1000.0
 GAMMA = 1.1
-RHO_GAMMA_SOURCE = ("renders/yaris_render_s1/sim_standing.py:225 (c = sqrt(1.1 * "
-                    "bulk_modulus / water_density)); simulation/validate_coupling_"
-                    "force.py:18,19,22 (RHO_W=1000.0, BULK=1.5e5, GAMMA=1.1)")
+RHO_GAMMA_SOURCE = (
+    # The DEFINITION of gamma is the solver kernel, not either driver. Both drivers
+    # duplicate the literal 1.1, so a solver-side change would desynchronise them
+    # silently; cite the kernel as the authority and the drivers as its consumers.
+    "definition: third_party/mpm-engine-544c93dd-solver-core/kernels/mpm_utils.py:43 "
+    "(pressure = -bulk * (J**-gamma - 1), gamma = 1.1), so c^2 = gamma*K/rho at J=1 and "
+    "K = c^2*rho/gamma exactly. Consumers, both duplicating the literal: "
+    "renders/yaris_render_s1/sim_standing.py:225 (c = sqrt(1.1 * bulk_modulus / "
+    "water_density)), whose per-run canonical copy is "
+    "renders/yaris_render_s1/_incoming/sim_standing.py:147 with identical text; and "
+    "simulation/validate_coupling_force.py:18,19,22 (RHO_W=1000.0, BULK=1.5e5, "
+    "GAMMA=1.1). NOTE the cross-check constrains only the RATIO rho/gamma = 909.0909, "
+    "not rho and gamma separately: no manifest records a water density.")
 
 # Family definitions. `detect` reads document SHAPE, never the path, because the same
 # family lives at different paths on different machines. Each field maps to an ordered
@@ -176,6 +186,8 @@ FAMILIES = {
     "run_manifest": {
         "detect": lambda d: "hull_m3" in d or "solid_volume_m3" in d,
         "glob": "*summary.json",
+        # The rigid body IS a vehicle hull here, so `vehicle_mass` names it correctly.
+        "rigid_body_is_vehicle": True,
         "fields": {
             "vehicle_mass": ["vehicle_mass", "mass_kg"],
             "grid_density": ["grid_density", "n_grid"],
@@ -190,8 +202,19 @@ FAMILIES = {
         "detect": lambda d: isinstance(d.get("geometry"), dict)
                             and "box_side_m" in d["geometry"],
         "glob": "*.json",
+        # THE RIGID BODY IS NOT A VEHICLE. It is a procedural calibration cube:
+        # geometry.box_mass_kg reproduces EXACTLY as rho_box_requested * box_side_m**3,
+        # verified live 2026-08-13 (600.0 * 1.4721472365199588**3 = 1914.277939765707).
+        # Aliasing that into `vehicle_mass` would write a number that sits squarely in
+        # the plausible SUV band into a field a reader will take for a real vehicle mass,
+        # in the very same block that declares the geometry non-vehicular because no mesh
+        # asset exists. That is the fabrication this module exists to prevent, so
+        # `vehicle_mass` is `inapplicable` here and the cube's mass is recorded under its
+        # own name instead. Caught by the physics-skeptic review, 2026-08-13.
+        "rigid_body_is_vehicle": False,
+        "rigid_body_mass_source": "geometry.box_mass_kg",
         "fields": {
-            "vehicle_mass": ["vehicle_mass", "geometry.box_mass_kg"],
+            "vehicle_mass": ["vehicle_mass"],
             "grid_density": ["grid_density", "geometry.n_grid"],
             "bulk_modulus": ["bulk_modulus"],
             "solver_git_sha": ["solver_git_sha", "provenance.pinned_sha"],
@@ -470,9 +493,30 @@ def plan_for(path: Path, root: Path, first_backfill_epoch: float | None = None):
                                       f"under a name the audit did not look for")
                 break
         else:
-            refused[target] = _label("unknown")
-            detail[target] = ("present under none of "
-                              + ", ".join(family["fields"][target]))
+            # A run whose rigid body is not a vehicle has no vehicle mass. That is a
+            # positive fact about the run, not a gap in the record, so it is declared
+            # `inapplicable` and the body's actual mass is recorded under its own name.
+            if target == "vehicle_mass" and not family.get("rigid_body_is_vehicle", True):
+                how[target] = _label("inapplicable")
+                d: dict = {"reason": "this run's rigid body is a procedural calibration "
+                                     "cube, not a vehicle, so it has no vehicle mass. "
+                                     "Recorded as rigid_body_mass instead.",
+                           "evidence": list(PROCEDURAL_BOX_KEYS)}
+                msrc = family.get("rigid_body_mass_source")
+                fnd, mval = dig(payload, msrc) if msrc else (False, None)
+                if fnd and mval is not None:
+                    add["rigid_body_mass"] = mval
+                    d["rigid_body_mass"] = mval
+                    d["rigid_body_mass_source"] = msrc
+                    rho = _num(dig(payload, "geometry.rho_box_requested")[1])
+                    side = _num(dig(payload, "geometry.box_side_m")[1])
+                    if rho and side:
+                        d["reproduces_as_rho_times_side_cubed"] = rho * side ** 3
+                detail[target] = d
+            else:
+                refused[target] = _label("unknown")
+                detail[target] = ("present under none of "
+                                  + ", ".join(family["fields"][target]))
 
     # --- bulk modulus: recorded wins, else derived, else refused ---
     found_bulk, bulk_val = dig(payload, "bulk_modulus")
@@ -565,7 +609,11 @@ def plan_for(path: Path, root: Path, first_backfill_epoch: float | None = None):
             detail["canitford_git_commit"] = {
                 "basis": "the manifest's mtime, resolved with git rev-list -1 --before",
                 "mtime_utc": datetime.fromtimestamp(mtime, timezone.utc).isoformat(),
-                "mtime_basis_is_reliable": reliable,
+                # Deliberately NOT called "reliable". This tests one specific corruption,
+                # that an in-place back-fill has already reset the mtime. It can never
+                # test the thing that matters, whether the mtime is the run time at all.
+                "mtime_not_corrupted_by_backfill": reliable,
+                "resolved_against_repo": str(root),
                 "warning": "NOT evidence of what ran. It cannot see whether the tree was "
                            "dirty, and this repo is edited by concurrent sessions. Treat "
                            "it as an upper bound on the code date, not an identity."
@@ -768,7 +816,11 @@ def render(payload: dict, plan: dict) -> tuple[str, dict]:
 
     block.update({
         "mode": "backfilled_after_the_fact",
-        "date": "2026-08-13",
+        # The date of the FIRST back-fill, preserved. Overwriting it with today's date
+        # claimed a back-fill happened on a day when nothing was added, and stamping the
+        # current date would also make every re-run rewrite every file, destroying
+        # idempotency. A prior date wins for the same reason a prior label does.
+        "date": block.get("date") or "2026-08-13",
         "script": "analysis/run_provenance.py",
         "family": plan["family"],
         "field_confidence": conf,
@@ -801,11 +853,20 @@ def write_atomic(path: Path, text: str) -> None:
     os.replace(tmp, path)
 
 
-def discover(root: Path, family: str | None = None) -> list[Path]:
-    """Every manifest under root, of either family, deduplicated and sorted."""
+def discover(root: Path) -> list[Path]:
+    """Every candidate manifest under root, deduplicated and sorted.
+
+    Deliberately takes no `family` argument. Family is a property of a document's SHAPE,
+    not of its name, so it cannot be decided here: a `*summary.json` could in principle
+    carry either schema. Discovery casts wide and main() filters on the DETECTED family.
+
+    An earlier version filtered only the `*.json` glob, so `--family coupling_validation`
+    still swept every `*summary.json` and reported 55 manifests where the operator asked
+    for 21. Paired with --write-in-place on untracked, gitignored files that another
+    session is actively writing, that is a rewrite of work nobody asked to touch.
+    """
     seen: dict[Path, None] = {}
-    globs = {"*summary.json"} | ({"*.json"} if family != "run_manifest" else set())
-    for g in globs:
+    for g in ("*summary.json", "*.json"):
         for p in root.rglob(g):
             if g == "*.json" and "coupling_validation" not in p.as_posix():
                 continue
@@ -832,7 +893,7 @@ def main() -> int:
         print("choose one of --write-sidecar or --write-in-place, not both", file=sys.stderr)
         return 2
     root = Path(a.root).resolve()
-    files = discover(root, a.family)
+    files = discover(root)
 
     # The mtime of the earliest existing back-fill marks the point after which an mtime
     # can no longer be trusted as a run date; see commit_at_time.
@@ -847,11 +908,16 @@ def main() -> int:
     print(f"manifests {len(files)}")
     print(f"mode      {mode}\n")
 
-    fam_counts, conf_census, changed, written = {}, {}, 0, 0
+    fam_counts, conf_census, changed, written, skipped_family = {}, {}, 0, 0, 0
     for p in files:
         payload, plan = plan_for(p, root, first_backfill)
         if payload is None:
             print(f"  SKIP {p.relative_to(root)}: {plan['error']}")
+            continue
+        # The authoritative --family filter, on the DETECTED family. Applied before any
+        # counting or writing, so a restricted run cannot touch the other family.
+        if a.family and plan["family"] != a.family:
+            skipped_family += 1
             continue
         fam_counts[plan["family"]] = fam_counts.get(plan["family"], 0) + 1
         new_text, block = render(payload, plan)
@@ -886,6 +952,9 @@ def main() -> int:
     print("manifests by family")
     for k, v in sorted(fam_counts.items()):
         print(f"  {k:<24} {v}")
+    if a.family:
+        print(f"  (--family {a.family}: {skipped_family} of the other family skipped, "
+              f"untouched)")
 
     print("\nper-field confidence census")
     width = max(len(f) for f in AUDIT_FIELDS)
