@@ -846,3 +846,111 @@ If that prediction holds, the sound-speed work is re-motivated by a concrete
 mechanism rather than a noise argument, and the realism track has, for the first
 time, a coupling force that agrees with analytic buoyancy to about 8% in every
 static configuration tested.
+
+## Job 3362500: the artifact confirmed by direct measurement, and by intervention
+
+### Direct measurement replaces the inference
+
+Run A repeats the partial-submersion case and measures the free surface from a raw
+z-histogram instead of inferring it from binned counts:
+
+| quantity | inferred earlier | measured in run A |
+|---|---|---|
+| water below the floor plane | not obtainable | **80,186 = 18.08%** |
+| excess piled near the floor | 100,246 = 22.6% | 96,869 = **21.84%** |
+| surface gap | 0.5951 m | **0.5698 m** |
+| leak rescues per particle | 21.4 | **22.24** |
+| partial-submersion error, corrected | +7.83% | **+2.98%** |
+
+Run B repeats the reference geometry and reproduces the canonical run essentially
+exactly: `leaked_cumulative` 9,496,478 against the reference's 9,496,472, and
+surface 2.760561 against 2.760142.
+
+### The reference case is not fully submerged, which corrects the canonical figure
+
+Run B's measured surface is 2.1813, and the box top is at 2.3554. **The free
+surface is below the box top.** The reference configuration, the one the project's
+canonical 7.3 to 7.7% figure rests on, is about 88% submerged, not fully submerged.
+
+That withdraws my own claim from the previous section that full submersion "has no
+surface term so was never affected". `rho*V*g` is surface-independent only if the
+body is genuinely submerged, and it is not.
+
+| g64, gate met | analytic used | error |
+|---|---|---|
+| A, bbc 8.0, reported surface | 23,601 N | -49.88% |
+| A, bbc 8.0, measured surface | 11,487 N | **+2.98%** |
+| B, bbc 3.0, full-submersion assumption | 31,298 N | -9.32% |
+| B, bbc 3.0, measured surface, h = 1.2980 m | 27,596 N | **+2.85%** |
+
+Two very different geometries, corrected independently, agree to 0.13 percentage
+points. **The SDF collider wrench reproduces analytic buoyancy to about +2.9% at
+g64.** The spread that this track has been chasing since the beginning, -7.67% to
++115%, was almost entirely a free-surface reference error.
+
+### The causal chain, confirmed by intervention
+
+Runs C and D raise the bulk modulus with the timestep and sound speed correctly
+re-derived, guarded by an abort if `tank.sound_speed` does not match:
+
+| bulk | c (m/s) | leaks per substep | per particle | below floor | piled | surface gap |
+|---|---|---|---|---|---|---|
+| 1.5e5 | 12.85 | 2,541.2 | 22.24 | 18.08% | 21.84% | 0.5698 m (5,590 Pa) |
+| 1.5e6 | 40.62 | 397.0 | 1.83 | 3.04% | 1.72% | 0.0939 m (921 Pa) |
+| 1.5e7 | 128.45 | **13.1** | **0.06** | **1.18%** | **0.41%** | **0.0544 m (533 Pa)** |
+
+Monotone across three points, and the reduction is large: 194x fewer rescues, 53x
+less piling, 10.5x smaller surface gap. This closes the loop:
+
+    water too soft to resist floor penetration
+      -> particles sink through the floor plane
+      -> project_water clamps them to one z plane and deletes their downward momentum
+      -> a spatially overpacked sheet accumulates at the floor
+      -> column_surface, which sums bookkept volume, cannot see the collapse
+      -> the reported free surface is ~0.57 m too high
+      -> every analytic reference built on it is inflated
+      -> the wrench appears to be ~50% low when it is actually within ~3%
+
+Raising the stiffness removes the first link and the last one disappears with it.
+
+### A second defect in the settle criterion
+
+The gate is `sound_speed / vmax >= 20`, so its velocity threshold **scales with c**
+and becomes easier as the fluid stiffens:
+
+| bulk | gate threshold vmax | stopped at vmax | frames used |
+|---|---|---|---|
+| 1.5e5 | 0.642 m/s | 0.510 | 354 |
+| 1.5e6 | 2.031 m/s | 1.950 | 62 |
+| 1.5e7 | 6.423 m/s | 4.028 | **20** |
+
+Run D stopped at exactly `settle_min_frames`, the floor of the allowed range. So C
+and D are far **less** settled in absolute terms than the baseline, and **their force
+numbers are not usable**: D reads -48.67% even after correction simply because its
+tank has barely settled. They are reported here only for the leak trend.
+
+That makes the leak result stronger rather than weaker. Run D leaks 194 times less
+than the baseline while ending at eight times the absolute velocity, which is the
+opposite of what more violent motion would produce.
+
+It also means a bulk sweep cannot use this gate. An absolute criterion is needed,
+for instance `vmax < 0.05 m/s` or a fixed physical settle time, or every stiffer run
+will silently stop earlier and look worse.
+
+### The moving collider is now the only open defect
+
+With the reference corrected, the coupled g64 run still reads high. Its recorded
+force and displacement are internally consistent, reintegrating `f_series`
+reproduces `net_dz` to the digit. Against corrected static buoyancy of 11,486 N it
+measures 17,651 N, an excess of 6,164 N. Explaining that as added mass requires
+7,731 kg, which is 2.42 times the displaced mass of the **entire** cube while the
+body is only about 37% submerged, against a physical bluff-body coefficient of 0.5
+to 1.0. So it is not added mass.
+
+The leading candidate is the velocity handed to `set_sdf_pose`. The three-mode
+diagnostic showed `pose_zero_vel` to `pose_full` adding roughly 4,300 N at g64, the
+same order as this excess, and for a separable collider the impulse is
+`m*(v_free - v_surf - v_tan)`, so every node in the contact band contributes once
+`v_surf` is nonzero, which a fixed collider never exercises. The test is a
+kinematic sweep: drive the collider at several prescribed constant velocities and
+check whether the wrench scales like physical drag or like a node count.
