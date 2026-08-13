@@ -412,3 +412,33 @@ show a bow wave is the channel scene from Step 3, which this shader can render.
 NOT DONE, and not claimed: no animation was produced, only the three stills. The
 interpolation path exists and is exercised by fractional --frame, but a full
 240-frame sequence at 27 s/frame was not run.
+
+## 2026-08-13 13:40 | realism-exploration
+THE res=96 SDF REBUILD DIED, AND THE ESTIMATE THAT SENT IT THERE WAS MINE.
+Job 908672 hit TIMEOUT at 06:32:32 node time, 2:00:03 against a 2:00:00 limit
+(sacct, read live). The build had run 86 minutes against my predicted 55 and had
+produced NOTHING: hull_sdf_r96.log is 0 bytes, no npz, no json. Nothing was
+recoverable and no partial state exists.
+ROOT CAUSE OF THE BAD ESTIMATE, worth keeping: I timed _winding_number at 266
+pts/s on a FOUR THOUSAND point batch and extrapolated linearly to 884,736 points.
+That extrapolation is invalid. A dense points-by-faces array at that size would be
+279 TB, so the routine must chunk internally and goes memory-bandwidth bound
+instead of holding the cache-resident rate. NEVER size an HPC allocation from a
+cache-resident microbenchmark. Second error compounding it: I put a ~55 min job
+inside an idev with 87 min left and no batch fallback, so a single overrun lost
+everything. A CPU-only job of that length belongs in a batch submission
+(scripts/tacc_submit.sh), which is the sanctioned route anyway.
+RECOVERED WITHOUT SPENDING A SINGLE SU. The whole rebuild was unnecessary on
+Vista: the sweep runs on the LAPTOP. Wrote simulation/realism/sdf_resolution_probe.py,
+which reproduces build_sdf's exact grid (cell = span/(res-1-2*margin_cells),
+L = cell*(res-1), origin = centre - L/2, read from source) with a cKDTree distance
+exactly as the engine does, and substitutes trimesh `contains` for the generalized
+winding number. That substitution is the only deliberate difference and it is
+CONTROLLED: res=48 must reproduce the 3.058270 m^3 measured on the engine's own
+yaris_sdf_r48_v2.npz. It returns 3.055573, -0.09 pct, so the substitution is
+verified inert and the sweep measures the same object. It also runs res=48 in
+17.2 s against the engine's 6.9 min, about 24x faster, so the entire sweep to
+res=128 is minutes on a laptop rather than hours of GH200 time.
+Needed two pip installs into the render-p5 venv, both trivial: OpenEXR (so the
+specified .exr could be used rather than substituted) and rtree (trimesh's
+`contains` needs an rtree or embree backend and errors without one).
