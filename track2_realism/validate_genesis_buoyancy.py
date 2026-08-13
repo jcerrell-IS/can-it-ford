@@ -100,10 +100,14 @@ def main():
     f_analytic = RHO_W * G * vol
 
     # ---- domain sized around the body ----
+    # 2 dx of air headroom above the free surface. Without it the water top lands
+    # exactly on (upper_bound - pad) and the seeder throws "particles outside solver
+    # boundary" as a float coin-flip: it passed at gd16 and failed at gd32.
+    headroom = 2.0 * dx
     inner = np.array([
         ext[0] + 2 * a.clear_lat,
         ext[1] + 2 * a.clear_lat,
-        a.clear_bot + ext[2] + a.cover,
+        a.clear_bot + ext[2] + a.cover + headroom,
     ])
     dom = inner + 2 * pad
     lo = np.zeros(3)

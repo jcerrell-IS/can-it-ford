@@ -20,6 +20,13 @@ LegacyCoupler path was tested to destruction and FAILED. The moving-SDF path was
 run here (correctly, it is Track 1 territory) but source inspection shows it needs
 essentially NO solver change, only a driver-level rigid-body loop.**
 
+The Genesis failure is characterised, not just observed. Under grid refinement the
+spurious contact force collapses (peak-to-peak 8345 N → 594 N) and the measured force
+converges toward **zero**, never toward analytic buoyancy. `LegacyCoupler` is the only
+MPM-rigid path in Genesis 1.1.1 and exposes no scheme-level tunable, so this is not a
+wrong-option or wrong-resolution result. Six runs, two independent measurement modes,
+three geometries including the real hull.
+
 The instruction's framing was "whichever path shows a real, validated coupling force
 first, continue with it." Genesis did not show one, so there was nothing to continue
 with, and no percentage-agreement number from Genesis is reportable. That is the
@@ -174,6 +181,42 @@ So some upward reaction exists but is far too weak. The -39.9% figure is an arti
 fitting an acceleration to a decelerating descent and **must not be quoted as a
 buoyancy agreement figure.**
 
+### Grid refinement: the failure is resolution-independent
+
+The instruction required at least one iteration on mesh/grid settings before accepting a
+worse result. Free cube, grid_density 16 → 32, a genuine 2x refinement (water particles
+57,600 → 460,800, 8x):
+
+| grid_density | dx (m) | particles | a_fit (m/s^2) | F_measured (N) | error |
+|---|---|---|---|---|---|
+| 16 | 0.0625 | 57,600 | +1.9857 | 3019.7108 | -39.879 % |
+| 32 | 0.03125 | 460,800 | +1.5973 | 2920.2619 | -41.859 % |
+
+The error moves 2 percentage points, in the WRONG direction, and the body sinks at both
+resolutions (gd32: z 0.793750 → 0.523660, net -0.270 m). Refinement does not converge
+toward the analytic answer. This is the signature of an architectural defect, not a
+discretization error, and it is consistent with register L-5 / Steffen, Kirby and Berzins
+2008 on MPM losing convergence under refinement at fixed particles-per-cell, though that
+mechanism is not established as the cause here.
+
+### There is no better coupler to switch to. Checked, not assumed.
+
+The obvious objection to everything above is "you picked the wrong coupler." Genesis
+1.1.1 ships three (`engine/couplers/__init__.py`): `LegacyCoupler`, `SAPCoupler`,
+`IPCCoupler`. Verified live:
+
+- `mpm_grid_op` is defined in **`legacy_coupler.py` only**.
+- `sap_coupler.py` contains **zero** occurrences of `mpm`. It is the Semi-Analytic Primal
+  contact solver from Drake, for rigid/FEM contact.
+- `ipc_coupler/` contains **zero** occurrences of `mpm`.
+- `LegacyCouplerOptions` (`options/solvers.py:80-113`) exposes only on/off booleans
+  (`rigid_mpm`, `rigid_sph`, ... all defaulting True). There is **no scheme-level
+  tunable** — nothing to trade accuracy against, no alternative contact model.
+
+**LegacyCoupler is the only MPM-rigid coupling path in Genesis 1.1.1**, and it has no
+knob that could change the result. The failure cannot be attributed to a bad option
+choice, and cannot be fixed from the options layer.
+
 ### What this means
 
 Two independent measurement modes, one reading an internal force accumulator and one
@@ -231,9 +274,61 @@ confirmed above), so the defect is not the absence of an accumulator; it is that
 accumulated quantity is a collision-projection impulse, which goes to zero as the water
 comes to rest, rather than a surface pressure integral, which does not.
 
-**That last sentence is a mechanism hypothesis, not an established finding.** It is
-consistent with all four measurements but was not isolated by a dedicated experiment,
-and it should be labelled as a hypothesis anywhere it is repeated.
+**That last sentence began as a hypothesis and was then tested. Two versions of it were
+refuted and a sharper statement survived.** The working is below, kept in full because
+the refutations are the useful part.
+
+### Mechanism: two hypotheses killed, one statement survives
+
+**Hypothesis 1, "the coupler registers the overburden (weight of water above)."
+REFUTED.** Analytic buoyancy on a fully submerged body is independent of depth, so
+overburden-sensitivity is a clean discriminator. Fixed cube, grid_density 16, cover
+swept 2.40 / 5.60 / 11.20 dx:
+
+| cover | F (2nd half) | sd | verdict |
+|---|---|---|---|
+| 2.40 dx | -777.5084 N | 54.2 | converged |
+| 5.60 dx | -779.7575 N | 752.7 | marginal |
+| 11.20 dx | -308.2206 N | 1306.3 | **not converged**, sd is 4x its own mean |
+
+The two usable points agree to 0.3% across a 2.3x depth change. Force does not scale
+with overburden. The third point is discarded as unconverged, not read as counter-
+evidence: the settle cap was insufficient at that depth. So the force is
+depth-independent, which is qualitatively RIGHT for buoyancy, while having the wrong
+sign and roughly the wrong magnitude.
+
+**Hypothesis 2, "the force is the weight of ~2 grid layers resting on the top face."**
+Post-hoc arithmetic fitted the converged points to within 1%:
+`0.64 m^2 * 2 * 0.0625 m * 1000 * 9.81 = 784.8 N` against a measured -777.5 N. Its
+prediction was that halving dx halves the force, to about -392 N. **Tested and REFUTED.**
+
+**What survived, and it is a stronger result than either hypothesis.** Fixed cube,
+cover held at 0.15 m, grid_density 16 → 32:
+
+| grid_density | particles | F (2nd half) | sd | peak-to-peak | error | settled at |
+|---|---|---|---|---|---|---|
+| 16 | 49,600 | -599.9761 N | 465.7 | 8345.19 N | -111.945 % | step 100 |
+| 32 | 396,800 | **+123.6381 N** | 50.7 | 593.91 N | -97.538 % | step 700 |
+
+Under refinement the spurious force collapses by roughly 5x, the ringing collapses by
+14x (peak-to-peak 8345 → 594), and the measured force heads toward **zero** — not toward
+the analytic 5022.72 N. The error improves only from -112% to -97.5% precisely because
+-100% *is* the zero-force limit.
+
+**The surviving statement: the LegacyCoupler's MPM-rigid exchange converges to no force
+at all on a body in still water. Refinement removes the spurious contact noise and
+reveals that there is no buoyant force underneath it.** That is consistent with register
+A-1's architectural reading: the quantity accumulated at `:337-338` is a
+collision-projection impulse, which vanishes as the water comes to rest, and not a
+surface pressure integral, which would not. The coupler is a collision handler being
+asked to do hydrostatics.
+
+Two supporting details, both pointing the same way:
+- `settled_at` moved 100 → 700 under refinement, echoing J1a's warpmpm observation that
+  the finer grid needed far more settling (3,894 substeps at g64, 12,416 at g96).
+- The gd16 number moved from -777.5 N to -600.0 N when 2 dx of **air headroom** was added
+  above the free surface, a purely geometric change well away from the body. A real
+  buoyant force is not sensitive to headroom. A contact-band artifact is.
 
 ---
 
@@ -353,22 +448,24 @@ warpmpm's g64/g96 labels.
 
 1. **Implement the driver-level 6-DOF loop on the moving-SDF path, in a Track 1
    session.** Highest value item. Nothing in the solver blocks it.
-2. **Isolate the Genesis mechanism hypothesis** (collision-projection impulse vs surface
-   pressure integral) with a dedicated experiment, or drop the hypothesis. Cheapest
-   decisive test: measure net coupling force against water cover depth on a fixed body.
-   A pressure integral scales with the cover; a collision-projection impulse does not.
-3. **Grid refinement on the Genesis control was not completed.** The instruction asked
-   for at least one iteration on mesh/grid settings before accepting a worse result. I
-   iterated on *measurement mode* (fixed-body force read, then free-body kinematics) and
-   on the settle gate, but a second grid_density on the same harness did not run before
-   the window closed. The qualitative direction failure is resolution-independent in the
-   sense that no resolution makes a sinking body float, but this should be closed
-   properly.
-4. **The settle gate `c/vmax >= 20` is too loose.** It passed at step 100 with
+2. **DONE this session, no longer deferred.** The mechanism was isolated: cover sweep
+   plus a grid-refinement prediction test refuted two hypotheses and established that the
+   coupler converges to zero force. See the mechanism section above.
+3. **DONE this session, no longer deferred.** Grid refinement ran on both harnesses
+   (free body gd16 vs gd32, fixed body gd16 vs gd32). The failure is
+   resolution-independent in direction and converges to zero in magnitude.
+4. **Re-run the deepest cover point (11.20 dx) with a real settle.** It was the one
+   unconverged measurement (sd 1306 against a mean of -308) and was discarded rather
+   than used. It is the only loose end in the mechanism argument.
+5. **The settle gate `c/vmax >= 20` is too loose.** It passed at step 100 with
    vmax = 0.4977 m/s, which is not a settled tank. Inherited from warpmpm's criterion
    via J1a; it needs re-deriving for Genesis rather than porting.
-5. **Fix the misleading `DIRECTION` label** in `validate_free_body.py`, which reports
+6. **Fix the misleading `DIRECTION` label** in `validate_free_body.py`, which reports
    "UP" from the sign of a fitted acceleration even while the body descends.
+7. **Add the 2 dx air-headroom fix to the free-body harness too.** It was added to
+   `validate_genesis_buoyancy.py` only, after the seeder threw "particles outside solver
+   boundary" at gd32 but not gd16. `validate_free_body.py` carries the same latent
+   coincidence and will trip on some future grid density.
 
 ---
 

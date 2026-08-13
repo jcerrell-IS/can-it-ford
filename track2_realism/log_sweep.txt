@@ -1,0 +1,74 @@
+########## A. GRID REFINEMENT: free cube gd32 (2x finer than gd16) ##########
+INFO:    gocryptfs not found, will not be able to use gocryptfs
+==========================================================================
+GENESIS FREE-BODY BUOYANCY CHECK (NON-CANONICAL, TRACK 2)
+==========================================================================
+[cfg] body=cube gd=32.0 dx=0.031250 (Genesis convention)
+[cfg] V=0.512000 m^3  rho_body=500.0  mass=256.000 kg
+[cfg] extents=[0.8 0.8 0.8]  domain=[1.7875 1.7875 1.6375]  grid=[57 57 52]
+[cfg] cover=0.35 m = 11.20 dx   submerged frac = 1.000 (FULL)
+[cfg] F_analytic = 5022.7200 N
+[cfg] a_ideal (no added mass) = g(rho_w/rho_b - 1) = 9.8100 m/s^2
+/usr/local/lib/python3.10/dist-packages/quadrants/_test_tools/warnings_helper.py:11: UserWarning: cannot create weak reference to 'tuple' object. Template mapper caching disabled.
+  warnings.warn(message)
+[ok] built. water particles=460800
+[ok] genesis-reported body mass = 256.0000 kg (analytic rho*V = 256.0000)
+[ok] initial body z = 0.793750
+--------------------------------------------------------------------------
+PHASE 1  settle (body free the whole time; a settle that MOVES the body
+         is itself the signal, so z is logged throughout)
+  [settle   50] z=0.756808  dz=-0.036942  vz=-0.590730
+  [settle  100] z=0.701112  dz=-0.092638  vz=-0.409011
+  [settle  150] z=0.678257  dz=-0.115493  vz=-0.159204
+  [settle  200] z=0.648709  dz=-0.145041  vz=-0.492706
+--------------------------------------------------------------------------
+PHASE 2  measure vertical kinematics
+  [meas   20] t=0.0400 z=0.626113 vz=-0.627615
+  [meas   40] t=0.0800 z=0.599975 vz=-0.665925
+  [meas   60] t=0.1200 z=0.574038 vz=-0.611166
+  [meas   80] t=0.1600 z=0.551488 vz=-0.493846
+  [meas  100] t=0.2000 z=0.535112 vz=-0.340240
+  [meas  120] t=0.2400 z=0.523660 vz=-0.217480
+==========================================================================
+RESULT  (Genesis convention: dx = 1/grid_density)
+  net dz over measure window = -0.124054 m
+  vz first -> last           = -0.500729 -> -0.217480 m/s
+  a_fit (dv/dt)              = +1.5973 m/s^2
+  a_ideal                    = +9.8100 m/s^2
+  DIRECTION                  = UP (buoyant)
+  F_measured = m(a+g)        = 2920.2619 N
+  F_analytic = rho*g*V       = 5022.7200 N
+  ERROR                      = -41.8590 %
+==========================================================================
+[saved] track2_realism/results_free_cube_gd32.json
+########## B. MECHANISM TEST: fixed cube, force vs water cover ##########
+# Analytic buoyancy on a FULLY submerged body is INDEPENDENT of cover depth.
+# force ~constant with cover  => scheme is buoyancy-like, wrong magnitude
+# force scales with cover     => scheme registers overburden, not buoyancy
+----- cover=0.15 m -----
+[cfg] water_top=1.4375 cover=0.1500 m = 2.40 dx
+[cfg] F_analytic = rho*g*V = 1000.0*9.81*0.512000 = 5022.7200 N
+  F_analytic          =      5022.7200 N
+  F_measured  (mean)  =      -780.5485 N   sd=1108.6434
+  F_measured  (2nd h) =      -777.5084 N   sd=54.2032
+  peak-to-peak        =      8372.8782 N
+  ERROR second half   = -115.4798 %
+  settled_at          = 100
+----- cover=0.35 m -----
+[cfg] water_top=1.6375 cover=0.3500 m = 5.60 dx
+[cfg] F_analytic = rho*g*V = 1000.0*9.81*0.512000 = 5022.7200 N
+  F_analytic          =      5022.7200 N
+  F_measured  (mean)  =      -455.4332 N   sd=2010.9498
+  F_measured  (2nd h) =      -779.7575 N   sd=752.7127
+  peak-to-peak        =      9833.5464 N
+  ERROR second half   = -115.5246 %
+  settled_at          = 100
+----- cover=0.70 m -----
+[cfg] water_top=1.9875 cover=0.7000 m = 11.20 dx
+[cfg] F_analytic = rho*g*V = 1000.0*9.81*0.512000 = 5022.7200 N
+  F_analytic          =      5022.7200 N
+  F_measured  (mean)  =       159.3189 N   sd=2886.9269
+  F_measured  (2nd h) =      -308.2206 N   sd=1306.3055
+  peak-to-peak        =     11741.8560 N
+  ERROR second half   = -106.1365 %
+  settled_at          = 100
