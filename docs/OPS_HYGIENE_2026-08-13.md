@@ -177,41 +177,58 @@ afterwards, which is the intended cost, not a regression.
 
 ## 4. Proposed routing rule
 
-### The evidence, and an honest problem with it
+### The evidence: the stored measurement is SOUND, and the method is the whole story
 
-The dispatch asked for this rule to cite the recorded measurement of **150.35 vs
-1.29 node-hours** (164 interactive jobs at 99.1 % of the total against 23 batch jobs
-that produced every gated result, 80 interactive jobs ending in `TIMEOUT`), stored in
-project memory as `vista-su-burn-is-idev-not-science`.
+**CORRECTION, same day, appended after this document was first committed and
+pushed. The first version of this section claimed the stored 150.35-vs-1.29
+measurement "does not reproduce". That was WRONG and is withdrawn.** It reproduces
+closely under its own stated method. The failure was in the re-derivation, not in
+the stored figure, and the correction is recorded here rather than silently edited
+because the wrong version is already in the pushed history at `a01e6e9`.
 
-**That measurement does not reproduce, and the discrepancy is a method difference,
-not the passage of time.** Re-derived live from `sacct -X` on 2026-08-13, node-hours
-computed as `ElapsedRaw * NNodes / 3600`, jobs classed interactive by an `idv*` name:
+The measurement, stored in project memory as `vista-su-burn-is-idev-not-science`:
+164 interactive jobs, **150.35 node-hours, 99.1 %**, against 23 batch jobs at
+**1.29 node-hours**, with 80 interactive jobs ending in `TIMEOUT`. Critically, the
+memory **also records its method**: `sacct -X -S 2026-07-01`, with interactive
+defined as job names matching `idv*` **or `holder`**.
 
-| Vista, scope | Interactive jobs | Interactive node-h | TIMEOUTs | Batch jobs | Batch node-h | Interactive share |
-|---|---|---|---|---|---|---|
-| All 2026 (live today) | 187 | 157.32 | 98 | 42 | 16.62 | **90.44 %** |
-| Cut off at 2026-08-08 | 174 | 147.72 | 89 | 42 | 16.62 | **89.89 %** |
-| Recorded in memory | 164 | 150.35 | 80 | 23 | **1.29** | **99.1 %** |
+Re-derived live 2026-08-13, node-hours as `ElapsedRaw * NNodes / 3600`:
 
-The interactive side is close (164 vs 174 jobs, 150.35 vs 147.72 node-hours). **The
-batch side is off by more than 12x and does not converge at any cutoff** — batch is
-16.62 node-hours across 42 jobs both today and before 2026-08-08, so no amount of
-new work explains a stored figure of 1.29 across 23 jobs. The stored figure was
-probably scoped to can-it-ford job names only, or computed in SUs rather than
-node-hours, or windowed to one allocation period. The method was not recorded with
-it, so it cannot be re-derived.
+| Vista | Window | Interactive = | Int. jobs | Int. node-h | TIMEOUT | Batch jobs | Batch node-h | Int. share |
+|---|---|---|---|---|---|---|---|---|
+| **Stored, 2026-08-07** | `-S 2026-07-01` | `idv*` or `holder` | 164 | 150.35 | 80 | 23 | **1.29** | **99.1 %** |
+| **Same method, today** | `-S 2026-07-01` | `idv*` or `holder` | 184 | 166.14 | 95 | 40 | **2.46** | **98.54 %** |
+| Wrong method | `-S 2026-01-01` | `idv*` only | 187 | 157.32 | 98 | 42 | 16.62 | 90.44 % |
 
-**Cite the conclusion, not the 99.1 %.** The qualitative finding is robust under
-every scope tested: interactive work dominates Vista's burn (90 % live, 99 % as
-recorded) and it fails constantly, **98 of 187 interactive jobs ended in TIMEOUT**
-against 1 of 42 batch jobs. Do not quote "99.1 %" or "1.29 node-hours" again without
-re-deriving them and recording the method.
+**Row 2 reproduces row 1.** Every difference is six additional days of jobs:
++20 interactive jobs, +15.79 node-hours, +15 timeouts, +17 batch jobs, +1.17 batch
+node-hours. The share moved 99.1 % → 98.54 %, which is drift, not disagreement.
 
-**LS6 is a different machine in this respect, and that is new.** Interactive share
-there is only **47.41 %** (47.43 interactive node-hours against 52.62 batch), with
-**27 of 56** interactive jobs timing out but **0 of 26** batch jobs. LS6 already has
-the healthier pattern, which strengthens the case for sending work there.
+**The error was mine, and it is worth recording because it is easy to repeat.**
+Re-deriving with an `idv*`-only classifier silently reclassifies every `holder` job
+as **batch**. `holder` jobs are interactive placeholders, and they are large. That
+one substitution inflates apparent batch node-hours **6.8x, from 2.46 to 16.62**,
+and drags the interactive share from 98.5 % down to 90.4 %. Widening the window from
+`-S 2026-07-01` to `-S 2026-01-01` compounds it.
+
+This is the same failure mode `CLAUDE.md` already documents for the
+`DRIFT_THRESHOLD` count: **the number is scope-sensitive, so a bare number without
+its method is what is wrong, not any particular value.** The memory got this right
+by storing its method alongside its figure. Quote the figure only with
+`-S 2026-07-01` and `idv*|holder` stated, and re-derive rather than trusting either
+number in isolation.
+
+**The conclusion is stronger than the first version of this section allowed.**
+Interactive work is **98.5 to 99.1 %** of Vista's burn, not 90 %, and it fails
+constantly: **95 of 184 interactive jobs ended in TIMEOUT**, against **1 of 42**
+batch jobs. 55 interactive jobs recorded zero elapsed time.
+
+**LS6 is a genuinely different machine here, and that result is method-robust.**
+Interactive share on LS6 is **45.09 %** under the memory's exact method (41.64
+interactive node-hours against 50.71 batch, 24 of 53 interactive timing out, **0 of
+21** batch), and 47.41 % under the wider `idv*`-only method. Batch exceeds
+interactive on LS6 either way. LS6 already has the healthy pattern that Vista does
+not.
 
 Live queue at snapshot time: Vista is running `909166 idv52247` with 1:40 left of a
 2-hour interactive reservation against a 651-SU balance. LS6 is running
@@ -226,8 +243,8 @@ problem.
 
 1. **Open `idev` only for work that needs an interactive GPU *and* has a stated exit
    condition and a wall time set to it.** File checks, git operations, `grep`, quota
-   and `squeue` monitoring, and anything CPU-only run on the **login node**. 98 of
-   187 Vista interactive jobs died on the clock, so an `idev` without a written exit
+   and `squeue` monitoring, and anything CPU-only run on the **login node**. 95 of
+   184 Vista interactive jobs died on the clock, so an `idev` without a written exit
    condition is a timeout that has not happened yet.
 2. **GPU work goes to LS6, not Vista.** LS6 holds **9,615 SUs** against Vista's
    **651**, both expiring 2026-09-30, and `$SCRATCH/warpmpm_ls6_env` is already
@@ -236,8 +253,8 @@ problem.
    genuinely requires GH200 or aarch64; everything else is an LS6 job.
 3. **Anything unattended, longer than ~15 minutes, or reproducible is `sbatch` via
    `scripts/tacc_submit.sh`, never `idev`.** On Vista the batch path produced every
-   gated result for 16.62 node-hours while interactive burned 157.32 for none, at a
-   1-in-42 failure rate against 98-in-187.
+   gated result for **2.46 node-hours** while interactive burned **166.14** for
+   none, a **67.5x** ratio, at a **1-in-42** failure rate against **95-in-184**.
 
 ---
 
