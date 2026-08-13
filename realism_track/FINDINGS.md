@@ -729,3 +729,120 @@ elsewhere. Bin 0 is uninterpretable and was excluded from every number above. An
 settled free surface is rough, `column_surface` IQR 0.347 m at g64 which is 2.36
 cells, so a single median surface is a poor per-particle depth reference and the
 near-surface bins inherit that error.
+
+## The -50% was a measurement artifact. Corrected, the wrench is accurate to about 8%
+
+This section overturns the central negative result of this track. It is built on
+numbers already in hand, re-read rather than re-run, and the confirming run is
+job 3362500.
+
+### The tank leaks continuously and the rescue piles water at the floor
+
+The reference runs record their own leak counters, and they are extraordinary:
+
+| | n_water | `leaked_cumulative` after settle | per substep | per particle |
+|---|---|---|---|---|
+| g64 | 443,584 | **9,496,472** | 2,439 | **21.4** |
+| g96 | 1,502,496 | **24,873,999** | 2,003 | **16.6** |
+
+`escaped_water` reads 0 and `max_floor_penetration_dx` reads 0.2599, which is
+exactly the `eps = 0.25*dx` clamp target in `project_water`
+(`validate_coupling_force.py:331-352`). That routine clamps an escaped particle's
+position to a single plane and then zeroes the offending velocity component,
+`vw[out_lo] = np.maximum(vw[out_lo], 0.0)`. So water sinks through the floor about
+0.55% of all particles per substep, gets teleported back to one z plane with its
+downward momentum deleted, and does so 21 times per particle over a settle.
+
+The result is a particle sheet at the floor. Measured from the probe histograms,
+with bin 0 handled explicitly:
+
+| | excess particles packed at the floor | fraction of all water |
+|---|---|---|
+| g64 | 100,246 | **22.6%** |
+| g96 | 231,948 | **15.5%** |
+
+Their `J_mean` is 0.948, so they are not physically compressed. They are spatially
+overpacked while their bookkeeping volume is untouched, which is precisely what a
+position clamp does.
+
+### That inflates the free-surface estimate, and the estimate is the reference
+
+`column_surface` (`:395-405`) is a good estimator of the wrong thing here. It sums
+particle **volume** per column and divides by column area, so it reports the height
+the water would have if it were distributed normally. It cannot see that a fifth of
+the water has been spatially collapsed into a sheet. Two independent estimates of
+the true surface agree:
+
+| | reported (volume-based) | half-density surface | gap | gap as head |
+|---|---|---|---|---|
+| g64 | 2.7604 | 2.1653 | 0.5951 m | 5,838 Pa |
+| g96 | 2.8772 | 2.2918 | 0.5854 m | 5,743 Pa |
+
+A sheet-corrected estimate gives 5,911 Pa (g64) and 6,376 Pa (g96). **The measured
+pressure offsets were 6,121 Pa and 6,266 Pa.** The agreement is 2 to 8%.
+
+So the "constant pressure deficit" is real as a measurement and is **not a defect in
+the MPM pressure field**. It is `rho*g*` the amount by which the free-surface
+reference is too high. Its dx-independence, which refuted the surface-layer model,
+now follows immediately: the gap is about 0.59 m at both resolutions because it is
+set by the piled mass fraction, which is a physical quantity, not a cell count.
+
+### The force errors follow, and they collapse
+
+`f_partial = rho*g*L^2*h_sub` takes `h_sub` from that same inflated surface, so the
+partial-submersion reference was too large by the same 0.6 m of head:
+
+| g64, gate met | h_sub used | analytic | measured | error |
+|---|---|---|---|---|
+| fixed, reported surface | 1.1111 m | 23,623 N | 11,830 N | **-49.92%** |
+| fixed, half-density surface | 0.5160 m | 10,971 N | 11,830 N | **+7.83%** |
+
+Full submersion uses `F = rho*V*g`, which contains no surface term at all. That is
+why -7.67% and +7.28% were never affected, and why the two cases looked so
+different. Corrected, every static configuration agrees with analytic buoyancy to
+within about 8%:
+
+| configuration | error |
+|---|---|
+| full submersion, g64 | -7.67% |
+| full submersion, g96 | +7.28% |
+| partial submersion, g64, corrected | +7.83% |
+
+**The SDF collider wrench was sound the whole time.** The apparent -50% catastrophe
+was an inflated reference.
+
+### What this retracts
+
+- "Partial submersion is where the force reading is worst" is **withdrawn**. Partial
+  submersion is where the *reference* is worst.
+- The constant-offset explanation of the full-versus-partial split stands as
+  arithmetic, but its stated cause, an under-compressed column, is **wrong**. The
+  column is not meaningfully under-compressed; the surface estimate is too high.
+- The earlier reading that the velocity gate leaves the column at 0.459 of
+  hydrostatic compression is **an artifact of the same inflated surface**, since the
+  required compression was computed from an over-deep column.
+
+### Confidence, stated plainly
+
+The gap is interpolated from binned histograms with a bin width of 0.875 dx, so it
+carries roughly half a bin of uncertainty, about 0.06 m, which is about 600 Pa and
+about 6 percentage points on the corrected force error. So the honest statement is
+**+8% with an uncertainty near 6 points**, not a precise 7.83%. That is still
+decisively different from -50%. Job 3362500 measures the surface directly from a
+raw z-histogram rather than inferring it, on both the partial and full geometries.
+
+### The leak is still a real defect, and it now has a testable cause
+
+None of the above makes the pile-up acceptable. A fifth of the water sitting in a
+clamped sheet with deleted momentum is a genuine pathology, and it is the reason the
+free surface cannot be estimated by volume. The likely cause is that at bulk 1.5e5,
+c = 12.845 m/s, the water is too soft to resist floor penetration, so particles sink
+through and the clamp stacks them. That predicts the leak rate should fall sharply
+as bulk rises. Job 3362500 tests exactly that at bulk 1.5e5, 1.5e6 and 1.5e7, with a
+guard that aborts if the patched bulk does not reach `tank.sound_speed`, so a
+desynchronized timestep cannot be measured by mistake.
+
+If that prediction holds, the sound-speed work is re-motivated by a concrete
+mechanism rather than a noise argument, and the realism track has, for the first
+time, a coupling force that agrees with analytic buoyancy to about 8% in every
+static configuration tested.
