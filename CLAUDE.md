@@ -674,3 +674,100 @@ STILL OPEN, not closed
   fresh Overleaf Git authentication token is needed before the next push; and
   the old token stays valid server-side until rotated in Overleaf account
   settings.
+
+## STANDING OPERATING PROTOCOL, adopted 2026-08-13
+
+Applies to every session in this repo on every machine. Adopted from the three
+RTFD dispatches of 2026-08-13, which repeated it verbatim; recorded once here so
+no future dispatch has to restate it. It does not replace the Multi-Pane Standing
+Rules above, it sits under them.
+
+BEFORE STARTING: check `git log`, `.remember/` files, and the research citations
+you were given, in that order. Do not duplicate work already done elsewhere.
+The point is not ceremony. On 2026-08-13 a dispatch asked for a composite whose
+premise had been retracted hours earlier on another branch, and another asked for
+a backfill that had already run.
+
+WHEN YOU HIT AN OBSTACLE: try a fix. If it fails, try a second GENUINELY DIFFERENT
+approach, not a variation. Before concluding you are stuck, check whether a
+connector or subagent resolves it:
+  - DeepWiki, for how a library or repo actually behaves. Its answer is a
+    hypothesis to verify against source, never a fact.
+  - The physics-skeptic subagent, before finalising any claim involving a
+    percentage, force, verdict count or distance. If unavailable, say so
+    explicitly and mark the claim unreviewed. Never fake the review.
+  - Wolfram, for any physical parameter, unit conversion or equation.
+  - Scite, for any citation, DOI or threshold before it is written as settled.
+  - `.claude/checks/register_integrity.py` before any commit.
+
+PREFER A LABELLED, REVERSIBLE ASSUMPTION OVER STOPPING. State it in the commit
+message or write-up so it can be revisited without re-deriving it.
+
+TAG EVERY FACTUAL CLAIM BY SOURCE: read directly, recalled from context, or
+inferred. Tag every solver claim by ENGINE. Never state a number from memory when
+you could check it live.
+
+KEEP WORKING on everything else in scope even if one item is blocked.
+
+FLAG, rather than silently proceed past, only these four:
+  1. About to discard, overwrite or force-push over work you did not create and
+     cannot verify is safe to lose.
+  2. Two independently-reported results genuinely disagree about the same
+     physical quantity, and resolving it needs a judgment call, not more data.
+     "Genuinely" excludes one result read twice: see register J18.
+  3. About to edit a canonical file outside your declared scope.
+  4. A hard stop: real financial cost, an exposed credential, a destructive or
+     irreversible action, or anything matching the standing hard rules.
+Write the flag to a NAMED FILE, not an inline comment, keep working on everything
+else, and do not treat the flag as ending the session.
+
+FALSIFIABLE OVER PLAUSIBLE: a no-forcing control, a held-fixed comparison, a
+second seed. Write a result up the same way whether it confirms or overturns
+something already published.
+
+BEFORE ANY PUSH: confirm the target branch, stage EXPLICIT PATHS only, never a
+blanket add, and confirm the push actually landed. A command exiting 0 is not
+evidence the remote updated.
+
+### Specifics verified live 2026-08-13, correcting things stated elsewhere
+
+- **CLAUDE.md IS NOT SYNCED ACROSS MACHINES, despite the session-start banner
+  saying "confirmed synced Mac/Vista/LS6/GitHub".** Measured by md5 on
+  2026-08-13: Mac and `$SCRATCH/canitford_track1b/can-it-ford` on LS6 both
+  `ef341c3e`, 676 lines; `$SCRATCH/can-it-ford` on LS6 is **49 lines**; Vista's
+  `/work/11603/jcerrell0629/vista/can-it-ford` is **88 lines** and locally
+  MODIFIED. Re-measure before believing any sync claim.
+- **VISTA HAS 12 UNPUSHED COMMITS** on `main` (tip `4b38aa3`, a `realism_track:`
+  series from `1e4c6d5` through `4b38aa3`), plus 5 modified tracked files and
+  ~22 untracked, while sitting 173 behind `origin/main`. Any statement that
+  "Vista made no commits to lose" is false. **Do not scp over that tree.**
+- **THE "PHANTOM" DECLARATION IN VISTA'S LOCAL CLAUDE.md IS WRONG.** It says
+  `docs/REMEDIATION_PLAN_AUDIT_2026-08-12.md` "never existed on disk or in git on
+  any branch". It exists: 21,900 bytes on the Mac, committed in **`13187c0`**, and
+  present in four working trees. The Vista session reached "never existed" from a
+  clone 126 commits behind, where `git log --all` covers only fetched refs. The
+  citation to it at the head of `analysis/run_provenance.py` is therefore SOUND.
+  **A clone that is behind cannot prove a file never existed.**
+- **`.claude/checks/count_claims_check.py` FALSE-BLOCKS FROM A WORKTREE.** From
+  `.claude/worktrees/*` it reports 25 blocking defects and totals 16/17, because
+  the declaration sites live in untracked and gitignored paths a worktree checkout
+  does not carry. From `/Users/josie/can-it-ford` it reports **0 blocking
+  defects** and 22/23/24, matching item 13. Always pass
+  `--root /Users/josie/can-it-ford`.
+- **NEVER HARDCODE AN idev NODE NAME.** It changes every allocation: `c307-006`
+  was live at 17:28 on 2026-08-13 and gone by 17:52, replaced by `c305-006`. Read
+  it from `squeue` at point of use.
+- **PREFER LS6 FOR GPU WORK.** LS6 held 9,615 SUs on 2026-08-13 against Vista's
+  651, both expiring 2026-09-30. Submit batch via `scripts/tacc_submit.sh`; do not
+  propose idev. `sacct` shows jobs 3362340, 3362386 and 3362478 all ending
+  TIMEOUT at 00:30:01 with nobody attached.
+- **THE FORCE-COUPLED PATH HAS NO FLOOR FRICTION.**
+  `simulation/realism/dynamic_body.py:216-221` is the whole floor treatment, a
+  z-position clamp plus a normal-velocity clamp; `friction`, `tangent` and
+  `coulomb` appear zero times in that file. `floor_friction=0.55` acts only on the
+  canonical path, at `renders/yaris_render_s1/sim_standing.py:210-211`. Do not
+  describe the two tracks as combinable without new physics.
+- **+0.035% IS NOT A BUOYANCY VALIDATION.** It is `100*a_z/g`, an identity forced
+  by `dynamic_body.py:207`, verified to 1.4e-16 (commit `d8a479f`). The
+  SDF-collider wrench validation is the real one, 7.3 to 7.7 percent. Never merge
+  the two numbers or present 0.035 as agreement with Archimedes.
