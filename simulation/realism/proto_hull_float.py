@@ -118,6 +118,77 @@ def sdf_inside(sdf, centre, quat, pts, band=0.0):
     return out
 
 
+def submerged_volume(sdf, centre, quat, surface_z, level=0.0, spacing=0.02):
+    """GEOMETRIC displaced volume below `surface_z`, integrated over the SDF directly.
+
+    WHY THIS EXISTS: Fz_settled -> M g IS VERY NEARLY A TAUTOLOGY.
+    ------------------------------------------------------------
+    `DynamicSDFBody._step` integrates `dv = J/(M + m_add) + g*dt` (dynamic_body.py:207).
+    Set dv = 0 and it rearranges to J/dt = M*g EXACTLY. So once the body stops
+    accelerating, the measured wrench is forced to equal the weight by the integrator's
+    own algebra, whatever the fluid is doing. The identity is exact:
+
+        Fz_err_pct = 100 * (Fz - Mg)/Mg = 100 * a_z / g
+
+    i.e. +0.035 percent is a residual acceleration of 3.5e-4 g. That is a real and useful
+    CONVERGENCE statement ("the body has come to rest") but it is NOT a validation of
+    Archimedes, and it must never be reported as one.
+
+    The non-circular question is geometric: at the draft the hull actually settled to,
+    does it displace M/rho_w = 1.100 m^3? Nothing in the integrator forces that. This
+    function answers it by integrating the same SDF the collide kernel queries.
+
+    `level` selects which isosurface counts as the hull boundary:
+      * 0.0          the true mesh surface;
+      * `band`       the surface the kernel ACTUALLY enforces, since it gates the whole
+                     boundary condition on `if sd <= param.band`
+                     (mpm_solver_warp.py:2711) and `band` defaults to the water cell size
+                     `model.dx` (:2626-2627). So the effective collider is inflated by
+                     roughly one water cell, and that inflation SHRINKS AS THE GRID
+                     REFINES. Reporting both levels separates hull geometry from the
+                     discretisation of the contact.
+
+    Midpoint occupancy over a lattice of `spacing`, chunked to bound memory. Calibrate it
+    by passing surface_z = +inf, which must return the SDF's own enclosed volume.
+    """
+    vals = np.asarray(sdf.values, dtype=float)
+    res = vals.shape[0]
+    origin = np.asarray(sdf.origin, dtype=float)
+    cell = float(sdf.cell)
+    ext = (res - 1) * cell
+    n = int(math.ceil(ext / spacing))
+    step = ext / n
+    ax = [origin[k] + (np.arange(n) + 0.5) * step for k in range(3)]
+
+    R = quat_to_R(quat)
+    c = np.asarray(centre, dtype=float)
+    tot = 0
+    Y, Z = np.meshgrid(ax[1], ax[2], indexing="ij")
+    yz = np.stack([Y.ravel(), Z.ravel()], axis=1)
+    for xi in ax[0]:
+        body = np.empty((len(yz), 3))
+        body[:, 0] = xi
+        body[:, 1:] = yz
+        f = (body - origin) / cell
+        i0 = np.clip(np.floor(f).astype(int), 0, res - 2)
+        t = f - i0
+        v = np.zeros(len(body))
+        for dx_ in (0, 1):
+            for dy_ in (0, 1):
+                for dz_ in (0, 1):
+                    w = ((t[:, 0] if dx_ else 1 - t[:, 0])
+                         * (t[:, 1] if dy_ else 1 - t[:, 1])
+                         * (t[:, 2] if dz_ else 1 - t[:, 2]))
+                    v += w * vals[i0[:, 0] + dx_, i0[:, 1] + dy_, i0[:, 2] + dz_]
+        m = v <= level
+        if not m.any():
+            continue
+        # body -> world is the transpose of the world -> body map used in sdf_inside
+        world_z = body[m] @ R[2, :] + c[2]
+        tot += int((world_z <= surface_z).sum())
+    return tot * step ** 3
+
+
 def measure_surface(solver, n_water, centre_xy, foot, h, floor):
     """Free-surface height measured from particles AWAY from the hull.
 
@@ -150,6 +221,15 @@ def main():
     ap.add_argument("--cfl", type=float, default=0.4)
     ap.add_argument("--settle", type=int, default=40)
     ap.add_argument("--added-mass", type=float, default=0.0)
+    ap.add_argument("--band", type=float, default=None,
+                    help="SDF contact band in metres. LEFT UNSET the engine uses "
+                         "model.dx (mpm_solver_warp.py:2626-2627), so the band tracks "
+                         "the water grid and a resolution sweep varies two things at "
+                         "once. Pin it to hold the contact geometry fixed and isolate "
+                         "the discretisation. Must stay under the SDF's boundary_min or "
+                         "the engine's own containment guard (:2639) refuses the run.")
+    ap.add_argument("--vol-spacing", type=float, default=0.02,
+                    help="lattice spacing for the geometric displaced-volume integral")
     ap.add_argument("--out", default="hull_float.json")
     args = ap.parse_args()
 
@@ -216,7 +296,15 @@ def main():
     s.add_domain_walls()
 
     handle = s.add_sdf_collider(sdf, centre, quat=quat, velocity=(0.0, 0.0, 0.0),
-                                surface="separable", friction=0.4)
+                                surface="separable", friction=0.4, band=args.band)
+    band = float(s._sim.collider_params[handle].band)
+
+    # Calibrate the volume integrator against a number it cannot influence: with the
+    # waterline at +inf it must return the SDF's own enclosed volume, which is the
+    # DECIMATED hull volume, not the 3.542739 m^3 source. The decimation deficit does not
+    # bias the equilibrium (the target 1.100 m^3 comes from mass and rho_w alone), it just
+    # seats the hull marginally deeper.
+    vol_calib = submerged_volume(sdf, centre, quat, np.inf, 0.0, args.vol_spacing)
 
     weight = HULL_MASS * G
     print(json.dumps({"setup": {
@@ -231,6 +319,13 @@ def main():
         "target_disp_fraction": (HULL_MASS / RHO_W) / HULL_VOLUME,
         "I_body_diag": np.diag(I_body).tolist(),
         "start_draft_m": args.start_draft,
+        "band_m": band, "band_is_engine_default": args.band is None,
+        "band_over_dx": band / dx,
+        "sdf_res": int(np.asarray(sdf.values).shape[0]),
+        "sdf_cell_m": float(sdf.cell),
+        "vol_integrator_calib_m3": vol_calib,
+        "vol_integrator_calib_err_pct": 100.0 * (vol_calib - hull_vol) / hull_vol,
+        "vol_spacing_m": args.vol_spacing,
     }}, indent=2), flush=True)
 
     for _ in range(args.settle):
@@ -266,13 +361,72 @@ def main():
 
     tail = hist[-max(1, len(hist) // 5):]
     Fz_settled = float(np.mean([r["Fz_N"] for r in tail]))
+    z_settled = float(np.mean([r["z"] for r in tail]))
+    target_V = HULL_MASS / RHO_W
+
+    # THE INDEPENDENT CHECK. Everything above is force-side and therefore partly
+    # self-referential (see submerged_volume's docstring). This is geometry: put the hull
+    # at the pose it settled to, at the free surface that was measured, and integrate.
+    centre_settled = np.array([centre[0], centre[1], z_settled])
+    V_true = submerged_volume(sdf, centre_settled, body.q, surface, 0.0, args.vol_spacing)
+    V_band = submerged_volume(sdf, centre_settled, body.q, surface, band, args.vol_spacing)
+
+    # ---- water bookkeeping, so the waterline is not taken on the percentile's word ----
+    # `measure_surface` is a 99.5th percentile plus half a particle spacing, which splash
+    # biases upward and a depressed far field biases downward. A tank has a second, wholly
+    # independent constraint: the water it still holds. Solving
+    #     A * (z_s - floor) - V_sub(z_s) = V_water_retained
+    # for z_s uses only conserved volume and the SDF, never a percentile. If the two
+    # disagree, the percentile is the suspect measurement, and the gap is reported rather
+    # than averaged away.
+    xw = np.asarray(s.x()[:n_water], dtype=float)
+    span_w = nxy * h
+    inb = np.all((xw > 0.0) & (xw < lim), axis=1)
+    V_water_ret = float(inb.sum()) * h ** 3
+    A_tank = span_w ** 2
+
+    def _resid(z):
+        return A_tank * (z - floor) - submerged_volume(
+            sdf, centre_settled, body.q, z, 0.0, 2.0 * args.vol_spacing) - V_water_ret
+
+    z_lo, z_hi = floor, floor + 3.0
+    for _ in range(28):
+        z_mid = 0.5 * (z_lo + z_hi)
+        if _resid(z_mid) < 0.0:
+            z_lo = z_mid
+        else:
+            z_hi = z_mid
+    z_massbal = 0.5 * (z_lo + z_hi)
+    V_massbal = submerged_volume(sdf, centre_settled, body.q, z_massbal, 0.0,
+                                 args.vol_spacing)
+
     out = {"wall_s": time.time() - t0, "diverged": bool(body.diverged),
            "weight_N": weight, "Fz_settled_N": Fz_settled,
            "Fz_over_weight": Fz_settled / weight,
            "Fz_err_pct": 100.0 * (Fz_settled - weight) / weight,
+           "residual_accel_z_ms2": Fz_settled / HULL_MASS - G,
            "implied_disp_volume_m3": Fz_settled / (RHO_W * G),
-           "target_disp_volume_m3": HULL_MASS / RHO_W,
+           "target_disp_volume_m3": target_V,
+           "geom_disp_volume_true_m3": V_true,
+           "geom_disp_volume_band_m3": V_band,
+           "geom_err_true_pct": 100.0 * (V_true - target_V) / target_V,
+           "geom_err_band_pct": 100.0 * (V_band - target_V) / target_V,
+           "band_m": band, "band_over_dx": band / dx, "dx": dx, "n_grid": n_grid,
+           "vol_integrator_calib_m3": vol_calib,
+           "vol_integrator_calib_err_pct": 100.0 * (vol_calib - hull_vol) / hull_vol,
+           "n_water_initial": int(n_water),
+           "n_water_retained": int(inb.sum()),
+           "water_retained_frac": float(inb.sum()) / n_water,
+           "V_water_initial_m3": n_water * h ** 3,
+           "V_water_retained_m3": V_water_ret,
+           "tank_area_m2": A_tank,
+           "surface_massbal_m": z_massbal,
+           "surface_massbal_minus_measured_m": z_massbal - float(surface),
+           "geom_disp_volume_massbal_m3": V_massbal,
+           "geom_err_massbal_pct": 100.0 * (V_massbal - target_V) / target_V,
            "settled_draft_m": float(np.mean([r["draft_m"] for r in tail])),
+           "settled_z_m": z_settled,
+           "final_quat": [float(v) for v in body.q],
            "measured_surface_m": float(surface),
            "fill_height_m": float(floor + args.depth),
            "settled_vz": float(np.mean([r["vz"] for r in tail])),
