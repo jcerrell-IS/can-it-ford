@@ -48,13 +48,44 @@ THE DATA, which is worse than an ugly frame:
      steepness. Self-normalising, so it produced foam at t=0 on still water and
      looked identical at t=2.33 s. It was an unfalsifiable decoration. Replaced by
      the Weber-number criterion above, with a FIXED physical scale.
-  D4 v1 smoothed with an arbitrary sigma of 1 cell. Loschner, Bender et al. 2023
-     (splashsurf) give smoothing length ~2.0x particle radius for particle-to-
-     surface reconstruction without volume loss; that guidance is used instead.
+  D4 v1 smoothed with an arbitrary sigma of 1 cell. The LENGTH SCALE is now taken
+     from the splashsurf guidance (Loschner, Bender et al. 2023), ~2.0x particle
+     radius. READ THE NEXT PARAGRAPH BEFORE CITING THIS AS A SPLASHSURF METHOD.
   D5 The right-edge "shelf" that read as a solid ramp was a consequence of D2.
 Source for D3 and D4: research report b0d2664f Part 3 items 13 and 15, on disk at
 ~/Downloads/compass_artifact_wf-b0d2664f-*.md. That report is T2 and its Ihmsen and
 Loschner citations have NOT been checked against a primary record here.
+
+WHAT IS AND IS NOT BORROWED FROM SPLASHSURF. Corrected 2026-08-13, because the
+earlier wording invited the reading that this is a splashsurf reconstruction.
+It is not. splashsurf runs marching cubes over a 3D SPH DENSITY FIELD and then
+applies weighted Laplacian MESH smoothing. free_surface() at :242 bins particles
+into (x,y) columns, takes a per-column max-z, and Gaussian-blurs the resulting
+2D HEIGHTFIELD. Those are different objects, and swapping one for the other is a
+rewrite, not a drop-in. ONLY THE LENGTH SCALE IS BORROWED, by analogy.
+
+The numeric value is nonetheless correctly derived, and here is the derivation so
+it can be audited instead of trusted. Every rollout .npz stores BOTH `dx` and `h`,
+and `h` is the particle SPACING: verified 2026-08-13 across g64_rogue, g64_silverado
+and g64_m1100, where h/dx = 0.500000 exactly, and the frame caption prints
+"h = dx/2". A splashsurf particle RADIUS is half the spacing, so radius = h/2, and
+2.0 x radius = h. `hpart = 0.5*dx = h` is what :473 passes, so the cited 2.0x IS
+what the code applies, on nominal spacing.
+
+Three caveats that a reader is entitled to, none of which the number alone shows:
+  (a) A Gaussian sigma is not an SPH kernel support radius. Equating them is an
+      approximation of convenience; splashsurf's smoothing length is not a sigma.
+  (b) Measured, the water is denser than nominal. Median nearest-neighbour
+      distance at frame 0 is 0.816 to 0.820 x h (0.0669 m rogue, 0.0837 m
+      silverado, 0.0601 m yaris), because the water compacts during the settle
+      phase. Against MEASURED spacing the applied smoothing is 1.22x the
+      2x-radius target, not 1.00x. That is inside the 1.4-1.6x latitude b0d2664f
+      item 13 itself quotes for the related particle-radius parameter, so it is
+      recorded, not treated as a defect.
+  (c) The max(0.6, .) floor at :276 binds for exactly one geometry at the default
+      --surf-cell 0.125: yaris 0.5889 -> 0.60, a +1.9 percent effect. Rogue
+      (0.6527) and silverado (0.8168), the two this script actually renders, are
+      unclamped.
 
 Register B7: no pressure field exists in warpmpm. Register A3: no force accessor
 exists on this path. Neither is used or implied here.
@@ -268,11 +299,19 @@ def free_surface(w, sp, cx, cy, half, floor, cell, smooth_len_m):
     wet = np.isfinite(Hh)          # D2: this is the ONLY place water exists
 
     from scipy.ndimage import gaussian_filter
-    # D4. Smoothing length from the splashsurf guidance (Loschner, Bender et al.
-    # 2023, via research report b0d2664f item 13): ~2.0x the particle radius, not
-    # the arbitrary 1 cell v1 used. particle radius ~ h/2, so 2.0*h/2 = h metres,
-    # expressed here in cells. Smoothing is what turns a particle staircase into a
-    # sheet that can carry a surface normal at all.
+    # D4. Smoothing LENGTH SCALE borrowed from the splashsurf guidance (Loschner,
+    # Bender et al. 2023, via research report b0d2664f item 13): ~2.0x the particle
+    # radius, not the arbitrary 1 cell v1 used. The .npz stores h as the particle
+    # SPACING (h/dx = 0.5 exactly in every run), so the radius is h/2 and
+    # 2.0*(h/2) = h metres, expressed here in cells. Smoothing is what turns a
+    # particle staircase into a sheet that can carry a surface normal at all.
+    #
+    # THIS IS NOT A SPLASHSURF RECONSTRUCTION. splashsurf marching-cubes an SPH
+    # density field in 3D; this Gaussian-blurs a 2D column-max heightfield, and a
+    # Gaussian sigma is not an SPH kernel support radius. Only the length is
+    # borrowed. See the module docstring for the measured 1.22x against ACTUAL
+    # (post-settle, compacted) spacing and for which geometry the floor below
+    # binds.
     sig_cells = max(0.6, smooth_len_m / cell)
     # NORMALISED convolution: smooth only over wet cells and divide by the smoothed
     # indicator, so dry ground never leaks into the surface height. A plain
@@ -404,8 +443,10 @@ def caption_lines(z, zmin, floor, extra: str, optics_frag: str = None) -> list[s
     lines.append(
         "WATER SHADING IS DISPLAY ONLY. warpmpm computes no optics, no free surface "
         "and no air phase (register B7: not even a pressure field). Surface = "
-        "per-column max-z of the particles, smoothed at ~2x particle radius per "
-        "Loschner/splashsurf; drawn ONLY where particles exist. Optics = Schlick + "
+        "per-column max-z of the particles, Gaussian-smoothed as a 2D heightfield "
+        "at a length borrowed from splashsurf (Loschner et al. 2023), ~2x particle "
+        "radius = h; NOT a splashsurf reconstruction, which marching-cubes a 3D SPH "
+        "density field. Drawn ONLY where particles exist. Optics = Schlick + "
         "Beer-Lambert + GGX against assets/DaySkyHDRI002A_1K_HDR.exr, %s. FOAM is a "
         "POST-HOC Weber-number diagnostic, We = rho|v_rel|^2 L/sigma, onset We %.0f "
         "(Ihmsen et al. 2012): the solver entrained no air, and no verdict depends "
@@ -716,11 +757,21 @@ def main():
                     % (RHO_W, SIGMA_W, WE_LO, WE_HI),
             "foam_mean_over_wet_by_frame": foam_stats,
             "We_p99_over_wet_by_frame": we_stats,
-            "surface_smoothing": "normalised convolution over WET cells only, "
-                                 "smoothing length ~2x particle radius "
-                                 "(Loschner/splashsurf, report b0d2664f item 13). "
-                                 "Dry columns are DROPPED, not floor-filled; "
-                                 "floor-filling was defect D2.",
+            "surface_smoothing": "normalised Gaussian convolution over WET cells "
+                                 "only, on a 2D column-max heightfield. Length "
+                                 "scale ~2x particle radius = h BORROWED from "
+                                 "splashsurf (Loschner/splashsurf, report b0d2664f "
+                                 "item 13, T2, not checked against a primary "
+                                 "record). NOT a splashsurf reconstruction: "
+                                 "splashsurf marching-cubes a 3D SPH density field "
+                                 "and a Gaussian sigma is not an SPH kernel support "
+                                 "radius, so only the length is taken. h is the "
+                                 "particle SPACING (h/dx = 0.5 exactly), so the "
+                                 "radius is h/2. Against MEASURED post-settle "
+                                 "spacing (0.82h) the applied smoothing is 1.22x "
+                                 "the 2x-radius target, not 1.00x. Dry columns are "
+                                 "DROPPED, not floor-filled; floor-filling was "
+                                 "defect D2.",
             "v2_defects_fixed": [
                 "D1 vehicle sliced by the water sheet (separate matplotlib artists)",
                 "D2 water drawn on dry ground (floor-filled empty columns)",
