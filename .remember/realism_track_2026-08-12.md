@@ -249,3 +249,117 @@ The improvement to +0.035 pct came from re-measuring the free surface and
 settling longer, NOT from changing any physics parameter.
 Still open: rendering (goals 5-7, not started); register B7's particle-
 deactivation outflow (untried); the naive periodic channel stays refuted.
+
+## 2026-08-13 11:50 | realism-exploration
+Committed the whole track as 9705bf2, 7 files, 1782 insertions, and pushed it.
+Branch realism-exploration had NO upstream and did not exist on origin; it does
+now, verified by ls-remote returning 9705bf2 against an identical local HEAD and
+0/0 divergence. Before this the hour of validated physics existed only in an
+untracked local worktree. Node c642-031 is DEAD (ssh RC=255); c642-001 is live
+under the same user with an idle GH200 (6 MiB of 97871), so I used it rather than
+starting a second idev, which would have pended behind QOSMaxJobsPerUserLimit and
+spent from a 656 SU balance.
+
+## 2026-08-13 12:20 | realism-exploration
+STEP 2, RESOLUTION. THE 0.035 PCT NUMBER DOES NOT MEAN WHAT IT LOOKED LIKE, AND
+THIS IS THE MOST IMPORTANT FINDING OF THE SESSION.
+[READ] dynamic_body.py:207 integrates dv = J/(M + m_add) + g*dt. Set dv = 0 and
+it rearranges to J/dt = M*g EXACTLY. So Fz_err_pct IS 100*a_z/g, an identity, not
+an agreement. Verified to machine precision on all 8 runs, max |diff| 1.4e-16.
++0.035 pct is a residual acceleration of 3.5e-4 g. implied_disp_volume_m3 is
+Fz/(rho*g), the same quantity restated, so it is circular the same way. NEITHER
+may be cited as reproducing Archimedes. I wrote that claim yesterday and it was
+wrong.
+[READ] The SDF/water-grid coupling question, answered from source rather than
+assumed, because it was asked that way. SDF RESOLUTION IS INDEPENDENT: the collide
+kernel maps the node world position into the SDF's own origin/cell frame and
+trilerps (mpm_solver_warp.py:2697-2711); param.res is never compared with
+model.dx. No SDF rebuild is needed when n_grid changes. BUT THE CONTACT BAND IS
+COUPLED: add_sdf_collider does `if band is None: band = float(self.mpm_model.dx)`
+(:2626-2627) and the kernel gates the whole BC on `if sd <= param.band` (:2711).
+So a naive n_grid sweep moves two things at once. That is why I ran a second arm
+with band pinned.
+Ran g72/g96/g128 at a constant ratio r = 4/3, two arms, 5 runs, plus a 3-run
+re-run adding water bookkeeping. Every arm reaches equilibrium, none diverged,
+|a_z| <= 0.0039 m/s^2. So the CONVERGENCE claim is resolution-stable.
+The independent geometric check is NOT. Submerged volume at settled draft against
+the 1.100 m^3 the mass requires: +2.4 / +16.9 / +26.6 pct (band = dx) and
++10.7 / +16.9 / +22.1 pct (band pinned). Monotone, worsening with refinement.
+Richardson at r = 4/3 gives p = 1.423 -> 1.6026 m^3 and p = 0.649 -> 1.6208 m^3,
+two arms landing within 1.1 pct of each other, about +46 pct over target. The
+hull settles ~46 pct deeper than its mass allows, i.e. the coupling delivers
+about 69 pct of analytic buoyancy at a given submergence.
+NEW SEPARATE DEFECT, converged across a 6.7x spacing sweep so it is not my
+integrator: the trilerp'd res=48 SDF the kernel actually collides against encloses
+3.0587 m^3 against the 3.466632 m^3 mesh it was built from, -11.76 pct, and
+-13.66 pct against the canonical 3.542739. Cause is a cubic SDF grid sized on the
+longest axis: cell 0.10979 m gives ~16 cells across the width and the deepest
+interior value is only -0.1957 m, under 2 cells. Priced a rebuild live at 266
+winding-number pts/s: res=48 6.9 min, res=96 55 min, res=128 131 min.
+HONEST OPEN ITEM, not papered over: section 3 depends on the free surface, and
+two estimators disagree. water_retained_frac is 1.0000 at every grid so it is NOT
+leakage. A flat-surface mass balance over the wall-to-wall footprint puts the
+surface 0.12-0.14 m HIGHER, which would make the overshoot +58 to +74 pct instead
+of +2 to +27. Using the full domain area nearly closes the gap, pointing at water
+spreading past the inner slip planes into the 4-cell margin. Unconfirmed. Both
+estimators agree on the SIGN and on the failure to converge, so the conclusion
+holds and only the magnitude is bracketed.
+Also a confound in the study as built: floor and side walls sit at 4*dx, so the
+tank geometry moves with n_grid. Clearance under the hull stayed 0.28-0.29 m so
+it never grounded.
+
+## 2026-08-13 12:35 | realism-exploration
+STEP 3, REGISTER B7's DEPTH-CONTROLLED DEACTIVATION OUTFLOW. THIS ONE WORKS, and
+it is the first thing in this track to beat the closed tank.
+[READ] The sink is real, verified in the kernels not taken on the comment's word.
+warp_utils.py:116 declares particle_selection "only particle_selection[p] = 0 will
+be simulated", and FOUR per-particle kernels test it, all launched every substep:
+compute_stress_from_F_trial (mpm_utils.py:1157, launched :1047),
+p2g_apic_with_stress (:922, launched :1049), g2p (:1049, launched :1061),
+g2p_stress_p2g (:1173, launched :1078). So a deactivated particle deposits no mass
+and no momentum, develops no stress, and does not move. It is also FROZEN where it
+died, and it dies at the top of the column by construction, so every depth
+measurement must mask on the active set or it reports the surface the BC just
+removed. That is why active_depth_at exists.
+Built simulation/realism/outflow_deactivate.py (DepthControlledOutflow) and added
+two arms to proto_channel.py so the comparison is matched by construction.
+BOTH CONTROLS REPRODUCE EXACTLY: tank 53/90 = 58.9 pct and channel 27/90 = 30.0
+pct, identical to yesterday, which proves the harness change (active_depth_at
+replacing water_depth_at) is inert.
+    tank           58.9 pct   53/90   pileup 1.78   keep 100.0 pct
+    channel        30.0 pct   27/90   pileup 1.99   keep 100.0 pct
+    outflow_sink   21.1 pct   19/90   pileup 1.12   keep  69.4 pct
+    outflow_pair   62.2 pct   56/90   pileup 1.13   keep  74.3 pct
+outflow_sink is B7 AS LITERALLY WRITTEN, sink with no source. It drains, loses
+30.6 pct of its water in 3 s, and scores worst of everything. Reporting it because
+it is what the prescription alone does; the prescription specifies the OUTflow
+only and needs Zhao's inlet to close the pair.
+At 270 frames the separation is decisive and it runs the RIGHT way with time:
+    tank          67.8 pct  183/270,  by thirds 53 / 68 / 62,  mean depth falling
+                            0.2895 -> 0.2893 -> 0.2774
+    outflow_pair  84.1 pct  227/270,  by thirds 56 / 81 / 90,  mean depth rising
+                            0.2918 -> 0.3051 -> 0.3117
+The final third of outflow_pair is 90/90. The tank degrades; the outflow converges.
+The pile-up the assessment measured at 2.5x is the thing actually fixed: 1.13
+against the tank's 1.78, a 37 pct reduction.
+CAVEAT THAT MUST TRAVEL WITH THIS: outflow_pair keeps only 62.7 pct of its water
+at 270 frames and is still falling, so a sustainable steady state is NOT
+demonstrated. The source only fires when the INLET band is below target, and the
+inlet stays full, so the outlet drains net. Depth-hold improves over the window
+measured, but the window is 9 s. Do not call this a steady-state open channel.
+Also unchanged: the depth EXCURSIONS are essentially identical to the tank
+(-25.7/+22.1 against -26.2/+22.3), so the outflow fixes the pile-up, not the
+excursion. Whatever drives the excursion is upstream of the downstream boundary.
+
+## 2026-08-13 12:45 | realism-exploration
+GITIGNORE TRAP, recorded because it nearly lost the evidence silently.
+renders/ is excluded wholesale at .gitignore:14, so every result file written
+under renders/realism_track_2026-08-12/ is invisible to `git add` AND to the shell
+grep function (CLAUDE.md H0). Because the DIRECTORY is excluded rather than
+`renders/*`, a `!` negation cannot re-include a subpath: git will not re-include a
+file whose parent directory is excluded. Fixing it properly would mean rewriting
+line 14 to `renders/*`, which changes ignore semantics for the whole tree in a
+repo with a live concurrent-session warning. Force-added these files instead
+(precedent: 841d666 did the same for data/failure_modes_by_run.json). Tracked
+files stay tracked, so this is a one-time action, but ANY new file dropped into
+renders/ later will be silently untracked again.
