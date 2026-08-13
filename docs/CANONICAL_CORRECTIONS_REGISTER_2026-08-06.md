@@ -594,7 +594,54 @@ Any skill file containing any of the following must be corrected in place.
    outcome, and SLIDE is 16 of the 17 verdicts. Rung (d) confirms the flow reaches the
    body (water `vx` near the box, mean 0.0018 -> 0.8304 m/s over 2735 particles) but
    not what that flow does horizontally. Closing the loop needs a horizontal-drift
-   instrument that does not currently exist.
+   instrument that does not currently exist. **SUPERSEDED SAME DAY by `ed8bf8e`**, which
+   added surge to the ladder: it now writes `t,dx,dy,dz,dmag,...` in the exact format
+   `failure_modes.REQUIRED_COLUMNS` consumes, plus `surge_drift_final_m` and
+   `surge_drift_max_m`. The instrument exists; what has not happened is a rung run that
+   USES it to bound a SLIDE outcome.
+
+   J1f. BUOYANCY RE-VERIFICATION IS NOW AUTOMATED, AND DELIBERATELY RENDERS NO VERDICT,
+   2026-08-13. `analysis/viability_dashboard_scaffold.py` gains
+   `check_buoyancy_consistency`, a seventh dashboard invariant that recomputes Archimedes
+   from geometry as `rho * V_submerged * g` and reports the relative error against the
+   measured force. It returns `Status.INDETERMINATE` with the error as its value and
+   **asserts no tolerance at all**. That is the design, not an omission: the measured
+   deficit on this path is still moving (a separate dispatch is running the newly
+   validated force-coupled body on a canonical arm), so a check pinned to J1b/J1d's
+   -25.21/-29.64/-32.51/-49.92 would go stale and then fail for the wrong reason. What it
+   removes is the manual step, the analytic reference is recomputed every time rather than
+   re-derived by hand and pasted into a doc, which is where this project's stale-number
+   failures have actually come from. Backed by 20 tests, `tests/test_buoyancy_consistency.py`,
+   including one that pins the check to never return PASS or FAIL and one that pins the
+   displaced-vs-total volume distinction, since scoring a partial run against the fully
+   submerged analytic manufactures a deficit that is not there.
+
+   **A G fork was found and closed in the same file.** `viability_dashboard_scaffold.py:11`
+   was the LAST file in the tree still carrying `G = 9.80665`, against 9.81 in
+   `four_rung_ladder.py`, `gates_both_scenarios.py`, `semi_empirical_baseline.py`,
+   `test_rigid_body.py`, `failure_modes.py` and `validate_coupling_force.py`.
+   `failure_modes.py:14` records that unification as done on 2026-08-12 against the solver;
+   this file was missed by it. Verified by `git grep` over tracked files at
+   `a6a707c`, not from memory. The constant was DEAD in that file until this check used it,
+   so correcting it changes no existing result, but leaving it would have put a 0.0342
+   percent fork directly into `rho*V*g`.
+
+   **The Track 2 cross-check is PENDING, and is not claimed here.** The intended
+   confirmation is that this check's deficit agrees in DIRECTION with Track 2's independent
+   submerged-volume deficit, which would be corroboration from a separate origin rather
+   than the same measurement read twice. That agreement is NOT asserted yet, for a specific
+   reason: the cited Track 2 figures (2.4 / 16.9 / 26.6 percent, growing with resolution)
+   were not found in any view searched. The views were: the Track 2 findings doc, which
+   lives on branch `track2/coupled-realism-explore` and is NOT present on `main` (so it
+   will not resolve from this branch, and that is expected, not a dangling citation);
+   tracked markdown on `origin/main`; and the `realism-exploration` and `warpmpm-continue`
+   branches. Untracked and gitignored files were not searched, so this is an absence in
+   those views only, not proof the figures do not exist. The nearest located finding,
+   `docs/POSTER_ASSET_TABLE.md:45`, reports 60 / 30 / 8.3 percent DECREASING with n_grid and
+   is itself marked **UNVERIFIED** because "the divergence-theorem clipping routine that
+   produced 0.432718 / 0.452204 m3 is not in the repo; only its outputs are." Opposite
+   trend, unverified provenance: treating it as the corroborating source would be a false
+   agreement. Resolve which measurement is meant before recording any cross-check.
 
    J1c. THE RUNG-B EVIDENCE EXISTED ON ONE CLONE ONLY UNTIL 2026-08-13. The result
    JSONs and drivers for jobs 3361371, 3361423, 3361443 and 3361504 were committed on

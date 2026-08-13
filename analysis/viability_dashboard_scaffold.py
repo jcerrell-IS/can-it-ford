@@ -8,7 +8,16 @@ from typing import Optional, Sequence
 import numpy as np
 
 
-G = 9.80665
+# Was 9.80665, the last file in the tree still carrying the pre-unification value. Every
+# other G in the tree is 9.81 (four_rung_ladder, gates_both_scenarios, semi_empirical_
+# baseline, test_rigid_body, failure_modes, validate_coupling_force), and failure_modes.py:14
+# records that unification as done on 2026-08-12 against the solver. This file was missed.
+# The constant was dead here until check_buoyancy_consistency below, so correcting it
+# changes no existing result; leaving it would have put a 0.0342 percent fork straight into
+# rho*V*g. Verified by git grep over tracked files at this HEAD, not from memory.
+G = 9.81
+
+RHO_WATER = 1000.0
 
 RIGID_REQUIRED_COLUMNS = ("t", "dx", "dy", "dz", "vx", "vy", "vz")
 OMEGA_COLUMNS = ("wx", "wy", "wz")
@@ -250,9 +259,116 @@ def check_zero_penetration(continuum: object = None) -> InvariantResult:
     )
 
 
+@dataclass
+class BuoyancyCase:
+    """One measured buoyant force, plus the geometry needed to recompute it analytically.
+
+    ``submerged_volume_m3`` is the DISPLACED volume, not the body's total volume. For a
+    partially submerged body those differ, and scoring a partial run against the fully
+    submerged analytic is the single easiest way to manufacture a large fake deficit.
+    """
+    run_tag: str
+    f_measured_n: float
+    submerged_volume_m3: float
+    rho_fluid: float = RHO_WATER
+    g: float = G
+    provenance: str = ""
+
+
+def submerged_volume_box(length_m: float, width_m: float, submerged_height_m: float) -> float:
+    """Displaced volume of a box floating with ``submerged_height_m`` below the surface."""
+    for name, v in (("length_m", length_m), ("width_m", width_m),
+                    ("submerged_height_m", submerged_height_m)):
+        if not np.isfinite(v) or v < 0.0:
+            raise ValueError(f"{name} must be finite and non-negative, got {v}")
+    return float(length_m) * float(width_m) * float(submerged_height_m)
+
+
+def check_buoyancy_consistency(case: Optional[BuoyancyCase] = None) -> InvariantResult:
+    """Recompute Archimedes from geometry and rho, and REPORT the error. No verdict.
+
+    Deliberately carries no tolerance. The measured deficit on this path is a moving
+    target: a separate dispatch is running the newly validated force-coupled body on a
+    canonical arm, and a check that asserted today's figures as ground truth would go
+    stale the moment those land and would then fail for the wrong reason. So this returns
+    Status.INDETERMINATE with the error as its value, and whoever reads the certificate
+    decides. That is the point of it, not a gap in it.
+
+    What it does remove is the manual step: the analytic reference is recomputed from
+    rho * V_submerged * g every time rather than being re-derived by hand and pasted into
+    a doc, which is where the stale-number failures in this project have actually come
+    from.
+
+    Sign convention matches the engine's, so a body being pushed up reads a POSITIVE
+    f_measured_n; the relative error is (measured - analytic) / analytic, so a shortfall
+    is negative.
+    """
+    if case is None:
+        return InvariantResult(
+            name="buoyancy_consistency",
+            paper_constraint="archimedes",
+            coverage=Coverage.RIGID_HELD,
+            status=Status.NOT_IMPLEMENTED,
+            tolerance=None,
+            provenance="needs a BuoyancyCase: measured force + displaced volume + rho + g",
+            note="no case supplied; nothing measured",
+        )
+
+    if not np.isfinite(case.submerged_volume_m3) or case.submerged_volume_m3 < 0.0:
+        raise ValueError(f"submerged_volume_m3 must be finite and non-negative, "
+                         f"got {case.submerged_volume_m3}")
+    if not np.isfinite(case.rho_fluid) or case.rho_fluid <= 0.0:
+        raise ValueError(f"rho_fluid must be finite and positive, got {case.rho_fluid}")
+    if not np.isfinite(case.g) or case.g <= 0.0:
+        raise ValueError(f"g must be finite and positive, got {case.g}")
+    if not np.isfinite(case.f_measured_n):
+        raise ValueError(f"f_measured_n must be finite, got {case.f_measured_n}")
+
+    f_analytic = case.rho_fluid * case.submerged_volume_m3 * case.g
+    detail = {
+        "run_tag": case.run_tag,
+        "f_measured_n": float(case.f_measured_n),
+        "f_analytic_n": float(f_analytic),
+        "submerged_volume_m3": float(case.submerged_volume_m3),
+        "rho_fluid": float(case.rho_fluid),
+        "g": float(case.g),
+    }
+
+    if f_analytic == 0.0:
+        return InvariantResult(
+            name="buoyancy_consistency",
+            paper_constraint="archimedes",
+            coverage=Coverage.RIGID_LIVE,
+            status=Status.INDETERMINATE,
+            value=None,
+            tolerance=None,
+            provenance=case.provenance or "measured force + displaced volume",
+            note="displaced volume is zero, so there is no analytic reference to divide "
+                 "by; the body is not in contact with the fluid",
+            detail=detail,
+        )
+
+    err_rel = (case.f_measured_n - f_analytic) / f_analytic
+    detail["error_rel"] = float(err_rel)
+    detail["error_pct"] = float(100.0 * err_rel)
+    return InvariantResult(
+        name="buoyancy_consistency",
+        paper_constraint="archimedes",
+        coverage=Coverage.RIGID_LIVE,
+        status=Status.INDETERMINATE,
+        value=float(100.0 * err_rel),
+        tolerance=None,
+        provenance=case.provenance or "measured force + displaced volume",
+        note="reported, not judged: no tolerance is asserted because the measured deficit "
+             "on this path is still moving. Value is percent error vs rho*V_sub*g",
+        detail=detail,
+    )
+
+
 def run_dashboard(
     rigid: Optional[RigidTrajectory] = None,
     inertia: Optional[np.ndarray] = None,
+    buoyancy: Optional[BuoyancyCase] = None,
 ) -> list[InvariantResult]:
     return [
         check_mass_conservation(),
@@ -261,6 +377,7 @@ def run_dashboard(
         check_energy_monotonicity(),
         check_angular_momentum(rigid, inertia),
         check_zero_penetration(),
+        check_buoyancy_consistency(buoyancy),
     ]
 
 

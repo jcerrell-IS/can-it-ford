@@ -1353,3 +1353,77 @@ SLIDE outcome, and SLIDE is what 16 of the 17 verdicts are. Rung (d) adds flow a
 confirms the flow reaches the body, but what that flow does horizontally is not measured.
 Closing the loop to the gated verdicts needs a horizontal-drift instrument this ladder
 does not have.
+
+---
+
+## Buoyancy re-verification is now automated, and it deliberately renders no verdict
+
+Vista, 2026-08-13, warpmpm only. Register item J1f.
+
+The paragraph immediately above is **superseded on the instrument question**. `ed8bf8e`
+added surge to the ladder the same day: it now writes `t,dx,dy,dz,dmag,...` in the exact
+format `failure_modes.REQUIRED_COLUMNS` consumes, plus `surge_drift_final_m` and
+`surge_drift_max_m`. The horizontal-drift instrument exists. What has not happened is a
+rung run that USES it to bound a SLIDE outcome, so the verdicts are still not cleared.
+The limitation moved from "no instrument" to "instrument not yet exercised."
+
+### What was built
+
+`analysis/viability_dashboard_scaffold.py` gains `check_buoyancy_consistency`, a seventh
+dashboard invariant. It recomputes Archimedes from geometry, `rho * V_submerged * g`, and
+reports the relative error against the measured force.
+
+**It asserts no tolerance and returns `Status.INDETERMINATE`.** That is the design. The
+measured deficit on this path is still moving while a separate dispatch runs the newly
+validated force-coupled body on a canonical arm, so a check pinned to the current
+-25.21 / -29.64 / -32.51 / -49.92 figures would go stale and then fail for the wrong
+reason. It reports the number; the reader judges it.
+
+What it removes is the manual step. The analytic reference is recomputed from geometry
+every time rather than re-derived by hand and pasted into a document, which is where this
+project's stale-number failures have actually come from.
+
+20 tests in `tests/test_buoyancy_consistency.py`. Two of them are the ones that matter:
+one pins the check to never return PASS or FAIL, and one pins the displaced-versus-total
+volume distinction, because scoring a partially submerged run against the fully submerged
+analytic manufactures a deficit that is not physically there.
+
+### A G fork was found and closed in the same file
+
+`viability_dashboard_scaffold.py:11` was the **last file in the tree** still carrying
+`G = 9.80665`, against 9.81 in `four_rung_ladder.py`, `gates_both_scenarios.py`,
+`semi_empirical_baseline.py`, `test_rigid_body.py`, `failure_modes.py` and
+`validate_coupling_force.py`. `failure_modes.py:14` records that unification as done on
+2026-08-12 against the solver; this file was missed by it. Verified by `git grep` over
+tracked files at `a6a707c`, not from memory.
+
+The constant was **dead** in that file until this check used it, so correcting it changes
+no existing result. Leaving it would have put a 0.0342 percent fork straight into
+`rho*V*g`.
+
+### The Track 2 cross-check is PENDING and is NOT claimed here
+
+The intended confirmation is that this check's deficit agrees in direction with Track 2's
+independent submerged-volume deficit. That would be corroboration from a separate origin
+rather than one measurement read twice, which is the only kind worth recording.
+
+It is not asserted yet, for a specific reason. The cited Track 2 figures, 2.4 / 16.9 /
+26.6 percent growing with resolution, were **not found in any view searched**: the Track 2
+findings doc on branch `track2/coupled-realism-explore` (not present on `main`), tracked
+markdown on `origin/main`, and the `realism-exploration` and `warpmpm-continue` branches.
+Untracked and gitignored files were not searched, so this is an absence in those views
+only, not proof the figures do not exist.
+
+The nearest finding actually located, `docs/POSTER_ASSET_TABLE.md:45`, reports
+60 / 30 / 8.3 percent **decreasing** with n_grid, and is itself marked UNVERIFIED because
+"the divergence-theorem clipping routine that produced 0.432718 / 0.452204 m3 is not in
+the repo; only its outputs are." Opposite trend, unverified provenance. Treating it as the
+corroborating source would be a false agreement, so it is not treated as one. Resolve
+which measurement is meant before recording any cross-check.
+
+### Unreviewed
+
+No physics-skeptic subagent was available this session; the offered agent types were
+`claude`, `claude-code-guide`, `Explore`, `general-purpose`, `Plan` and
+`statusline-setup`. Nothing above has been adversarially reviewed. This is the third
+consecutive session with that gap.
