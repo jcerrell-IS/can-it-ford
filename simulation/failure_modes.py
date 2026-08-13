@@ -11,9 +11,7 @@ import numpy as np
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from vehicle_params import get_vehicle
 
-G = 9.81  # unified 2026-08-12 with the solver and the five 9.81 post-processing
-          # sites (register A6). Was 9.80665, a 0.0342 percent fork that fed the
-          # published 16 SLIDE / 1 STUCK verdicts via :170 and :174.
+G = 9.81  # unified 2026-08-12 with the solver and the five 9.81 post-processing sites; was 9.80665, a 0.0342 percent fork that fed the published verdicts via :170 (surge_accel_g) and :174 (weight_n). Register A6, A6a, A6b. ONE PHYSICAL LINE ON PURPOSE: 33 tracked sites in 18 files index this file by line number above :14, so any line added above :46 silently repoints all of them. See A6b before editing.
 
 SURGE_AXIS = 0
 LONG_AXIS = 1

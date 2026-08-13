@@ -148,11 +148,38 @@ not by file read from the Mac, see the item for its evidence path.
    in the sweep, so substeps and dt are identical across the whole velocity
    sweep.
 
-3. The vehicle is a free rigid body, registered at :129-131 and never
+3. EVERY LINE NUMBER IN THIS ITEM AND IN ITEM 2 IS AGAINST THE GATED
+   DRIVER: sha256 5215c38bed607ef6..., 389 lines, 17435 bytes, the code
+   that produced the 17 runs. Its surviving copy is
+   renders/yaris_render_s1/_incoming/sim_standing.py, which is gitignored
+   and UNTRACKED; git holds no blob for it at any commit, including the
+   d43081a6 that all 17 summary.json stamp. The on-node record is
+   _incoming/conv_2026-07-26_idev/00_provenance.txt:6. Register D8c.
+   THE PATH IS NOT THE DISCRIMINATOR. This code lived at the TOP-LEVEL
+   path renders/yaris_render_s1/sim_standing.py at run time and that path
+   was OVERWRITTEN IN PLACE on 2026-08-08 by a 564-line revision which ran
+   none of the 17. Against that revision every citation below is off by
+   roughly +78 lines. The floor add_plane call is byte-identical between
+   the two, merely relocated, so no VALUE below changes either way; 13
+   other lines did change, including the fill_ratio denominator, so do not
+   call them the same program. Re-verified live 2026-08-13.
+   A line number without a content identity is not a citation.
+   The vehicle is a free rigid body, registered at :129-131 and never
    written again. Every velocity and position write in the driver is sliced
    to the water range (:161, :183-186, :196). The only constraints are the
    floor plane at friction 0.55 and the four slip walls at friction 0.0
-   (:132-137). Gravity is confirmed 9.81 m/s^2 in -z, corrected 2026-08-07
+   (:132-137, floor at :132-133 and walls at :134-136; in the 2026-08-08
+   revision those are :210-211 and :213-214).
+   THE ":132-137 IS STALE, REPOINT IT TO :210-211" CORRECTION WAS PROPOSED
+   ON 2026-08-13 AND IS REFUSED. It came from register D8b, which
+   re-verified against the 2026-08-08 revision. Making it would have
+   pointed this item away from the code that produced the published
+   verdicts. Full working, the sha256 and the on-node record are in
+   register D8c. Sanity check anyone can run: all TEN line citations in
+   items 2 and 3 resolve exactly against the gated driver and to unrelated
+   code against the revision. Ten citations written by different sessions
+   on different dates do not all land correctly by chance.
+   Gravity is confirmed 9.81 m/s^2 in -z, corrected 2026-08-07
    per docs/OPTION_A_SESSION1_FINDINGS.md F-2, against freshly vendored
    solver core at third_party/mpm-engine-544c93dd-solver-core/.
    core/solver.py:167-169 hardcodes g=[0,0,-9.81] inside
@@ -160,8 +187,13 @@ not by file read from the Mac, see the item for its evidence path.
    this wrapper's own hardcoded value. sim_standing.py:127 calls
    set_material(newtonian(...)) and newtonian() carries no g key to
    override it. All 17 gated runs ran at exactly 9.81 m/s^2.
-   gates_all_runs.py:12 (G=9.81) matches; failure_modes.py:14
-   (G=9.80665) is a 0.034 percent fork, numerically immaterial.
+   gates_all_runs.py:12 (G=9.81) matches. failure_modes.py:14 held
+   G=9.80665, a 0.034 percent fork, until 2026-08-12; it now reads 9.81
+   and both data/ stores were regenerated with the verdicts unchanged.
+   Do not restate that fork as live. It was NOT "numerically immaterial"
+   in the sense that phrase implies: it moved ratio_topple, and
+   g48_m2337 crossed 1.0 because of it. It changed no verdict, and the
+   reason is structural rather than a margin. Register A6, A6a, A6b.
 
 4. inertia_kg_m2, cg_height_m and ssf in vehicle_params.py never reach the
    solver. Only mass does, via vehicle_density = vehicle_mass /
@@ -261,7 +293,11 @@ not by file read from the Mac, see the item for its evidence path.
     the 17-run pipeline," went stale on 2026-08-05. Do not restate it.
     Three traps survive. (a) triggered_* is the verdict, ratio_* is
     peak magnitude; they disagree, and filtering on ratio >= 1 reports
-    13 topples that never happened. (b) STUCK is the none-sustained
+    12 topples that never happened. That tally read 13 until
+    2026-08-12, when the G unification in register A6 (commit 6ea4329)
+    moved it: g48_m2337 sat at 1.000244 and lands at 0.999903, and NO
+    verdict moved. That is the trap in miniature, a magnitude tally
+    shifting while every verdict holds. (b) STUCK is the none-sustained
     case, not a fourth mode scored on its own scale; its winning-mode
     columns are empty by design, not missing. (c) metrics.csv
     pitch_deg/roll_deg are vehicle-body-sense, not raw Euler
@@ -405,6 +441,26 @@ not by file read from the Mac, see the item for its evidence path.
     been tested. To close: set failure_modes.py:14 to 9.81, re-run
     analysis/classify_failure_modes.py, and confirm the verdicts are
     byte-identical. Do not close it by assertion.
+
+     CLOSED 2026-08-12, commit 6ea4329, by regeneration and NOT by
+     assertion. failure_modes.py:14 now reads G = 9.81. Verdicts hold at
+     16 SLIDE / 1 STUCK: the mode column and all three triggered_*
+     columns are byte-identical across all 17 runs.
+     READ "confirm the verdicts are byte-identical" ABOVE AS THE VERDICT
+     COLUMNS, NOT THE FILE. The file is not byte-identical and never
+     could have been: 3 of 33 columns move, the two TOPPLE magnitude
+     columns by -0.034 percent and weight_n by +0.034 percent. A
+     whole-file compare also fails for a second, unrelated reason: the
+     generator writes CRLF while .gitattributes pins that CSV to eol lf,
+     so every regeneration differs on every line until git normalises at
+     staging. Anyone running a naive cmp will get a false alarm.
+     The invariance is structural, not lucky: G reaches only :170 and
+     :174, weight_n feeds no criterion, surge_accel_g feeds only TOPPLE,
+     raising G lowers it, and TOPPLE already triggered in 0 of 17.
+     The second 9.80665 site, viability_dashboard_scaffold.py:11, was
+     set to 9.81 too, but it was DEAD CODE: declared once, never used,
+     imported by nothing. The fork's reach was always one site, not two.
+     See register A6 and A6a.
 
 16. gates.py:16-31 forks the AR&R table and L1_verdict instead of
     importing from vehicle_params, while gates_all_runs.py:10 and
