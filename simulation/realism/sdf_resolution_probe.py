@@ -91,7 +91,17 @@ def build_sdf_local(verts, faces, res, margin_cells=4.0):
     tree = cKDTree(sample_surface(verts, faces, 0.4 * cell))
     unsigned, _ = tree.query(pts, workers=-1)
     mesh = trimesh.Trimesh(vertices=verts, faces=faces, process=False)
-    inside = mesh.contains(pts)
+
+    # CHUNKED, and not as a precaution. `mesh.contains` on the whole grid at once was
+    # killed twice at res=80 on this machine: peak RSS 2.4 GB and then a 0-byte output
+    # file, and a 0-byte file on a BUFFERED stream means the process was SIGKILLed before
+    # it could flush, not that it exited cleanly. Memory scales with the point count, so
+    # res=96 and res=128 would be worse. Chunking bounds it at a fixed working set and
+    # changes no result: containment is per-point and has no cross-point coupling.
+    inside = np.empty(len(pts), dtype=bool)
+    step_n = 50_000
+    for lo_ in range(0, len(pts), step_n):
+        inside[lo_:lo_ + step_n] = mesh.contains(pts[lo_:lo_ + step_n])
     signed = np.where(inside, -unsigned, unsigned).reshape(res, res, res)
     return signed.astype(np.float64), origin.astype(np.float64), float(cell)
 

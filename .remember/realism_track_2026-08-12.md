@@ -442,3 +442,38 @@ res=128 is minutes on a laptop rather than hours of GH200 time.
 Needed two pip installs into the render-p5 venv, both trivial: OpenEXR (so the
 specified .exr could be used rather than substituted) and rtree (trimesh's
 `contains` needs an rtree or embree backend and errors without one).
+
+## 2026-08-13 14:10 | realism-exploration
+SWEEP COMPLETE. THE SDF DEFICIT IS A RESOLUTION ARTIFACT, MEASURED NOT ARGUED.
+    res  cell_m   cells across hull width   V_trilerp   vs mesh   vs canonical
+     48  0.10979          15.9              3.050598    -12.00 %   -13.89 %
+     64  0.07785          22.4              3.220544     -7.10 %    -9.09 %
+     80  0.06031          28.9              3.241964     -6.48 %    -8.49 %
+     96  0.04922          35.5              3.310170     -4.51 %    -6.56 %
+Monotone toward the 3.466632 m^3 decimated mesh; the deficit more than halves from
+res=48 to res=96. Control held throughout: res=48 reproduces the engine's own
+yaris_sdf_r48_v2.npz to -0.09 to -0.25 pct.
+DO NOT RICHARDSON-EXTRAPOLATE THIS. The increments are +0.1699, +0.0214, +0.0682,
+which is NOT monotone, so no observed order can be extracted and any limit quoted
+from it would be invented. Some of that is trimesh's randomized ray directions,
+about 0.16 pct run to run, but not all: the 64->80 step is far smaller than the
+noise band explains. Report the trend and the direction, not a converged value.
+IMPORTANT SCOPE LIMIT, so this is not overread: the SDF was IDENTICAL (res=48) in
+every one of the g72/g96/g128 runs, so this deficit is a FIXED OFFSET there and
+cannot explain the equilibrium-draft non-convergence, which trends with the water
+grid and the contact band. Two separate defects. Step 2's conclusion is unchanged.
+THE FIX THAT MADE IT RUN, and it is the real lesson. res=80 was SIGKILLed twice,
+peak RSS 2.4 GB, and the tell was a 0-byte output file on a buffered stream: a
+clean exit flushes, so an empty file means the process was killed. Chunking
+mesh.contains to 50k points bounds the working set and changes no result, since
+containment is per-point with no cross-point coupling. After chunking, res=80 ran
+in 61 s, FASTER than the unchunked res=64's 172.7 s, because it stopped thrashing.
+res=96 then took 108 SECONDS on the laptop, against the 86 minutes it failed to
+finish on a GH200. The whole Vista excursion was unnecessary, and the SU cost of
+finding that out was zero only because the retry moved off the cluster.
+SECOND TOOLING TRAP, cost me a wrong status report: `python ... | tee f` returns
+TEE's exit code, so a SIGKILLed python still reports 0 and the harness calls the
+task successful. And `pgrep -af <pattern>` matches the calling shell when the
+pattern appears in its own command line, so it reported a dead process as alive.
+Check with `ps -p <pid>`, and never pipe a long job through tee if the exit code
+matters.

@@ -1,0 +1,20 @@
+SDF resolution sweep, 2026-08-13, run on the laptop for zero SUs.
+Driver: simulation/realism/sdf_resolution_probe.py
+Control: res=48 must reproduce the engine's own yaris_sdf_r48_v2.npz (3.058270 m^3).
+         It returns 3.050598-3.055573 across repeats, -0.09 to -0.25 pct, so the
+         trimesh-contains sign substitution is verified inert.
+res=48 and res=64 rows below are from the first pass (11.7 s and 172.7 s);
+res=80 and res=96 are from the chunked pass. Chunking mesh.contains to 50k points
+bounds memory and changes no result.
+
+   48   0.10979                15.9    3.050598   -12.00%   -13.89%    11.7
+   64   0.07785                22.4    3.220544    -7.10%    -9.09%   172.7
+
+DO NOT Richardson-extrapolate: increments are +0.1699, +0.0214, +0.0682, not
+monotone, so no observed order can be extracted.
+
+decimated mesh: 39381 faces, volume 3.466632 m^3 (-2.148% vs canonical)
+
+  res    cell_m  cells_across_width   V_trilerp   vs mesh  vs canon    secs
+   80   0.06031                28.9    3.241964    -6.48%    -8.49%    61.1
+   96   0.04922                35.5    3.310170    -4.51%    -6.56%   108.0
