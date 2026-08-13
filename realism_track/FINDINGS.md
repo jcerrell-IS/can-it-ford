@@ -1192,3 +1192,87 @@ but the discrepancy is unresolved and is recorded here rather than smoothed over
 ladder still stands. What changed is the reason: it is no longer that rung (b) has no
 valid measurement, because it now has four. It is that the deficit rung (b) exposes is
 unexplained and is not specific to the coupling path the ladder was built to test.
+
+---
+
+## The matched-submersion design: the COUPLED path is grid-converged, the FIXED one is not
+
+Same allocation 3362208, later the same session. Artifacts in
+`realism_track/rung_b_matched_submersion_3362208/`, drivers `run_matched_sub.sh` and
+`run_matched_2x2.sh`.
+
+The section above closes on an explicit caveat: the four-row refinement pair moves
+realized submersion with the grid (0.754 at g64 against 0.844 at g96), so it is a
+refinement comparison with a second variable in it. That caveat is now resolved, and
+resolving it changes the reading.
+
+### Ten gate-met points, submersion varied independently of grid
+
+Submersion is moved with `--depth-cells` at fixed grid. Every row below is
+`settle_gate_met true`.
+
+| grid | mode | frac_sub | err vs partial |
+|------|---------|----------|----------------|
+| 64 | coupled | 0.7540 | -25.21 % |
+| 64 | coupled | 0.8567 | -30.16 % |
+| 64 | coupled | 0.8572 | -30.20 % |
+| 96 | coupled | 0.7800 | -24.96 % |
+| 96 | coupled | 0.8437 | -29.64 % |
+| 64 | fixed | 0.7548 | -49.92 % |
+| 64 | fixed | 0.8564 | -45.16 % |
+| 64 | fixed | 0.8573 | -45.22 % |
+| 96 | fixed | 0.7757 | -29.88 % |
+| 96 | fixed | 0.8445 | -32.51 % |
+
+### The comparison, with grid isolated
+
+Fitting the g64 rows against `frac_submerged` and evaluating that fit at each g96 row's
+realized submersion, so grid is the only thing left differing:
+
+| mode | at frac | g64 interpolates | g96 measures | grid gap |
+|------|---------|------------------|--------------|----------|
+| coupled | 0.7800 | -26.47 % | -24.96 % | **1.51 pts** |
+| coupled | 0.8437 | -29.54 % | -29.64 % | **0.10 pts** |
+| fixed | 0.7757 | -48.95 % | -29.88 % | **19.07 pts** |
+| fixed | 0.8445 | -45.76 % | -32.51 % | **13.25 pts** |
+
+**The free-rigid force-coupled path is grid-converged between g64 and g96, to 0.10 and
+1.51 points. The fixed SDF collider is not, by 13.25 and 19.07 points.**
+
+### What this corrects in the section above
+
+The section above reports that under refinement "the fixed collider improves sharply,
+the coupled path degrades slightly", from -25.21 to -29.64 percent. **The coupled
+path does not degrade under refinement.** That apparent degradation was entirely the
+submersion confound the same section flagged: at fixed grid, moving submersion 0.754 to
+0.857 moves the coupled error -25.21 to -30.16, and g96 at 0.844 sits exactly on that
+g64 curve. The coupled error is a function of submersion, and essentially not of grid.
+
+The convergence between the two paths at g96 is real but its mechanism is the reverse of
+the natural reading. The two do not meet at a shared physical answer. **The fixed
+collider is converging toward the coupled path's already grid-stable value.**
+
+### What this does and does not say about the coupling
+
+It does NOT say the coupled path is correct. It carries a large residual deficit at every
+point measured, about -25 percent at frac 0.78 rising to about -30 percent at frac 0.86,
+and that deficit is the unexplained physics. What it says is narrower and still
+important: **that deficit is grid-converged, and it is not a resolution artifact of the
+coupling.** The 30 percent is a real property of this scheme at partial submersion, not
+something a finer grid will remove.
+
+It also inverts the working framing this ladder was built on. Treating the force-coupled
+path as the broken one and the fixed SDF collider as the trustworthy baseline is not
+supported at partial submersion. On grid convergence the ordering is the other way round,
+by more than an order of magnitude in the gap.
+
+### A driver property worth knowing before anyone repeats this
+
+**Submersion is quantized.** `--depth-cells` 18.78 and 18.89 both realize frac 0.856 to
+0.857 at g64, a 0.0009 spread across a 0.11-cell request, because water is seeded in
+whole layers. Requested depth-cells cannot be used to land on an arbitrary submersion,
+which is why the comparison above interpolates the g64 curve rather than trying to hit
+g96's submersion exactly. The two near-duplicate g64 rows at 0.8567 and 0.8572 are a
+useful side effect: they are an effective repeat measurement, and they agree to 0.04
+points (coupled) and 0.06 points (fixed), which bounds run-to-run scatter well below
+every gap discussed here.

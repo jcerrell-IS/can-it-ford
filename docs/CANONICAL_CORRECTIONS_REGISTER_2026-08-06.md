@@ -495,7 +495,8 @@ Any skill file containing any of the following must be corrected in place.
    **NOT ESTABLISHED, recorded so this entry is not over-read.** The pair is
    confounded: realized `frac_submerged` is 0.754 at g64 against 0.844 at g96, so a
    second variable moves with the grid. A clean refinement test at matched realized
-   submersion has NOT been run. And the constant-offset model is not confirmed by
+   submersion has NOT been run. **SUPERSEDED SAME DAY by J1d, which ran it.** And the
+   constant-offset model is not confirmed by
    these numbers: the deficits as pressure over the 2.1662 m2 cross-section are 2747,
    5444, 3613 and 3967 Pa, not a resolution-independent constant, and none is the
    roughly 6.2 kPa job 3361504's direct profile reports. That discrepancy is open.
@@ -506,6 +507,47 @@ Any skill file containing any of the following must be corrected in place.
    to test. A fixed-collider ladder cannot close this gap on its own in any case: a
    fixed collider cannot slide, so it can never reproduce a SLIDE outcome, and it can
    only bound how wrong the load is by a known factor.
+
+   J1d. THE MATCHED-SUBMERSION TEST RAN, AND IT REVERSES J1b'S MECHANISM,
+   2026-08-13. J1b's stated confound, that realized submersion moves with the grid,
+   was removed by varying submersion with `--depth-cells` at fixed grid. Ten gate-met
+   points, artifacts at `realism_track/rung_b_matched_submersion_3362208/`.
+
+   Fitting the g64 rows against `frac_submerged` and evaluating at each g96 row's
+   realized submersion leaves grid as the only difference:
+
+   | mode | at frac | g64 interpolates | g96 measures | grid gap |
+   |------|---------|------------------|--------------|----------|
+   | coupled | 0.7800 | -26.47 % | -24.96 % | **1.51 pts** |
+   | coupled | 0.8437 | -29.54 % | -29.64 % | **0.10 pts** |
+   | fixed | 0.7757 | -48.95 % | -29.88 % | **19.07 pts** |
+   | fixed | 0.8445 | -45.76 % | -32.51 % | **13.25 pts** |
+
+   **The free-rigid force-coupled path is grid-converged between g64 and g96, to 0.10
+   and 1.51 points. The fixed SDF collider is not, by 13.25 and 19.07 points.**
+
+   **CORRECTS J1b's mechanism.** J1b says the coupled path "degrades slightly" under
+   refinement, -25.21 to -29.64. It does not. That was the confound J1b flagged: at
+   fixed grid, moving submersion 0.754 to 0.857 moves the coupled error -25.21 to
+   -30.16, and the g96 point at 0.844 lies on that same g64 curve. J1b's convergence
+   observation survives, but not its reading: the two paths do not meet at a shared
+   physical answer, **the fixed collider converges toward the coupled path's already
+   grid-stable value.**
+
+   What this does NOT say: that the coupled path is correct. It carries a residual
+   deficit at every point measured, about -25 percent at frac 0.78 rising to about
+   -30 percent at frac 0.86. What it says is that the deficit is grid-converged and
+   is therefore not a resolution artifact, so a finer grid will not remove it. It
+   also means the working framing of the whole ladder, force-coupled path broken and
+   fixed SDF collider trustworthy, is not supported at partial submersion; on grid
+   convergence the ordering is reversed by more than an order of magnitude.
+
+   DRIVER PROPERTY, so nobody repeats the dead end: **submersion is quantized.**
+   `--depth-cells` 18.78 and 18.89 both realize frac 0.856 to 0.857 at g64 because
+   water seeds in whole layers, so an arbitrary target submersion cannot be dialled
+   in and the comparison above interpolates instead. The two near-duplicate g64 rows
+   are an effective repeat measurement and agree to 0.04 (coupled) and 0.06 (fixed)
+   points, bounding run-to-run scatter far below every gap above.
 
    J1c. THE RUNG-B EVIDENCE EXISTED ON ONE CLONE ONLY UNTIL 2026-08-13. The result
    JSONs and drivers for jobs 3361371, 3361423, 3361443 and 3361504 were committed on

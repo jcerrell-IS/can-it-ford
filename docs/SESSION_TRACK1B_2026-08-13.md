@@ -8,7 +8,7 @@ GPU work ran on LS6 A100 node `c301-003` inside allocation 3362208.
 The prompt set rung (b) of the coupling ladder as the single highest-value open item and
 budgeted about a GPU-hour for it, on the premise that it was **the untested rung**. That
 premise was stale by roughly twelve hours. Before running anything, a live check of
-`sacct` and the register showed rung (b) had already run **four times**:
+`sacct` and the register showed **five GPU jobs had already been spent on rung (b)**:
 
 | job | what | state |
 |-----|------|-------|
@@ -82,6 +82,43 @@ predicts, nor its roughly 6.2 kPa. That discrepancy is open.
 
 Recorded as register item **J1b**.
 
+## The matched-submersion follow-up, which reversed the mechanism
+
+The four-row result above carries an explicit confound: realized submersion moves with
+the grid (0.754 at g64, 0.844 at g96). With allocation time left, that confound was
+removed by varying submersion with `--depth-cells` at fixed grid. Ten gate-met points.
+
+Fitting the g64 rows against submersion and evaluating at each g96 row's realized
+submersion isolates grid as the only remaining difference:
+
+| mode | at frac | g64 interpolates | g96 measures | grid gap |
+|------|---------|------------------|--------------|----------|
+| coupled | 0.7800 | -26.47 % | -24.96 % | **1.51 pts** |
+| coupled | 0.8437 | -29.54 % | -29.64 % | **0.10 pts** |
+| fixed | 0.7757 | -48.95 % | -29.88 % | **19.07 pts** |
+| fixed | 0.8445 | -45.76 % | -32.51 % | **13.25 pts** |
+
+**The force-coupled path is grid-converged between g64 and g96. The fixed SDF collider
+is not, by 13 to 19 points.**
+
+This corrects the mechanism reported earlier in this same session. The coupled path does
+NOT degrade under refinement; that was the confound. The convergence between the two
+paths at g96 is real, but the fixed collider is converging toward the coupled path's
+already-stable value, not both meeting at a shared answer.
+
+It does not say the coupled path is correct: it carries a residual deficit of about -25
+percent at frac 0.78 rising to about -30 percent at frac 0.86. It says that deficit is
+grid-converged, so a finer grid will not remove it, and that the ladder's working framing
+(coupled broken, fixed collider trustworthy) is reversed at partial submersion on the
+grid-convergence criterion.
+
+Driver property worth knowing: **submersion is quantized.** `--depth-cells` 18.78 and
+18.89 both realize frac 0.856 to 0.857 because water seeds in whole layers. The two
+near-duplicate g64 rows act as a repeat measurement and agree to 0.04 and 0.06 points,
+bounding run-to-run scatter far below every gap above.
+
+Register item **J1d**.
+
 ## STEP 6, Rogue and Silverado grid sweep, non-canonical
 
 `data/rogue_silverado_grid_sweep_2026-08-13.csv`, 8 rows. Nothing was written to
@@ -153,8 +190,8 @@ has 17 rows, **16 SLIDE / 1 STUCK**; `triggered_topple` is true in **0 of 17**;
 
 ## Open, carried forward
 
-1. A rung (b) refinement pair at **matched realized submersion**. The current pair moves
-   submersion with the grid.
+1. DONE this session, see J1d. The matched-submersion test ran and reversed J1b's
+   mechanism.
 2. The pressure discrepancy: force-residual deficits (2747 to 5444 Pa, grid-dependent)
    against the direct probe's roughly 6.2 kPa resolution-independent offset.
 3. Re-run the failure-mode classifier on the Rogue/Silverado rollouts, since displacement

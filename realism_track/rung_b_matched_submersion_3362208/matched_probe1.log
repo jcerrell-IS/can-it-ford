@@ -1,0 +1,69 @@
+
+-----------------------------------------------------------------
+           Welcome to the Lonestar6 Supercomputer                
+-----------------------------------------------------------------
+
+No reservation for this job
+--> Verifying valid submit host (login1)...OK
+--> Verifying valid jobname...OK
+--> Verifying valid ssh keys...OK
+--> Verifying access to desired queue (gpu-a100-dev)...OK
+--> Checking available allocation (BCS20003)...OK
+--> Verifying that quota for filesystem /home1/11603/jcerrell0629 is at 47.80% allocated...OK
+--> Verifying that quota for filesystem /work/11603/jcerrell0629/ls6 is at  5.41% allocated...OK
+=== node ===
+c301-003.ls6.tacc.utexas.edu
+
+############ n_grid=64 mode=coupled depth-cells=18.89 (target frac 0.8437) ############
+Thu Aug 13 05:25:06 CDT 2026
+Warp DeprecationWarning: The namespace `warp.torch` will soon be removed from the public API. It can still be accessed from `warp._src.torch` but might be changed or removed without notice.
+Warp DeprecationWarning: Support for Python 3.9 is deprecated and will be removed in Warp 1.13. Please upgrade to Python 3.10 or newer.
+warpmpm: device auto -> cuda:0
+Particles initialized from torch data.
+Total particles:  468672
+MODE=coupled n_grid=64 dx=0.147215 dt=3.030303e-03 substeps/frame=11 n_water=468672 c=12.8452 handle=17
+SETTLE frames=355/3000 substeps=3905 gate_met=True vmax_peak=10.1556 vmax_final=0.5667 ratio_c_over_vmax=22.66
+GEOM surface=2.880516 box_top=3.091509 margin_dx=-1.4332 frac_submerged=0.8567 fully_submerged=False
+REFERENCE F_full=31298.44 N  F_partial=26812.63 N  mass=1914.28 kg
+COUPLER added_mass_ratio=1.4278
+COUPLING WARNING added_mass_ratio=1.43 exceeds 0.5; a partitioned explicit scheme is at its stability limit here. Reduce dt or set relax<1 and treat the transient as unconverged until a dt study says otherwise.
+============================================================================
+MODE coupled  n_grid 64  relax 1.0
+  Fz steady tail mean =    +18725.67 N  std 259.18  ptp 1118.70
+  Fz median (all)     =    +17952.61 N  min +12652.92 max +19105.27
+  F_analytic (full)   =    +31298.44 N
+  ERROR steady vs full submersion = -40.17 %
+  ERROR first3 vs full submersion = -53.58 %
+  lateral/Fz = 0.0012   net dz = -0.059020 m
+============================================================================
+wrote /scratch/11603/jcerrell0629/rungb_matched_probe1/matched_coupled_g64_dc18.89.json
+exit=0
+
+############ n_grid=64 mode=fixed depth-cells=18.89 (target frac 0.8437) ############
+Thu Aug 13 05:26:04 CDT 2026
+Warp DeprecationWarning: The namespace `warp.torch` will soon be removed from the public API. It can still be accessed from `warp._src.torch` but might be changed or removed without notice.
+Warp DeprecationWarning: Support for Python 3.9 is deprecated and will be removed in Warp 1.13. Please upgrade to Python 3.10 or newer.
+warpmpm: device auto -> cuda:0
+Particles initialized from torch data.
+Total particles:  468672
+MODE=fixed n_grid=64 dx=0.147215 dt=3.030303e-03 substeps/frame=11 n_water=468672 c=12.8452 handle=17
+SETTLE frames=355/3000 substeps=3905 gate_met=True vmax_peak=10.1556 vmax_final=0.5666 ratio_c_over_vmax=22.67
+GEOM surface=2.881497 box_top=3.091509 margin_dx=-1.4266 frac_submerged=0.8573 fully_submerged=False
+REFERENCE F_full=31298.44 N  F_partial=26833.50 N  mass=1914.28 kg
+============================================================================
+MODE fixed  n_grid 64  relax 1.0
+  Fz steady tail mean =    +14699.47 N  std 938.29  ptp 2974.62
+  Fz median (all)     =    +12678.74 N  min +11321.20 max +15677.08
+  F_analytic (full)   =    +31298.44 N
+  ERROR steady vs full submersion = -53.03 %
+  ERROR first3 vs full submersion = -59.87 %
+  lateral/Fz = 0.0568   net dz = +0.000000 m
+============================================================================
+wrote /scratch/11603/jcerrell0629/rungb_matched_probe1/matched_fixed_g64_dc18.89.json
+exit=0
+=== results ===
+total 26
+drwx------  2 jcerrell0629 G-819066     2 Aug 13 05:26 .
+drwx------ 23 jcerrell0629 G-819066    42 Aug 13 05:25 ..
+-rw-------  1 jcerrell0629 G-819066 12424 Aug 13 05:26 matched_coupled_g64_dc18.89.json
+-rw-------  1 jcerrell0629 G-819066 12220 Aug 13 05:26 matched_fixed_g64_dc18.89.json
