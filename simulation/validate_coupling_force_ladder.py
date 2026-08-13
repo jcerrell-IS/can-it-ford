@@ -308,6 +308,57 @@ def a_ideal_partial(h_sub, length, rho_box, rho_w=None, g=None):
     return g * (rho_w * h_sub / (rho_box * length) - 1.0)
 
 
+def _write_timeseries_csv(res, path):
+    """Write the rung-d surge trace in the exact format the failure-mode classifier eats.
+
+    Header and column order are FloodHistory.to_csv (renders/yaris_render_s1/
+    vehicle_live.py:315-325), the same 15 columns the 17 gated metrics.csv files carry,
+    so simulation/failure_modes.classify_timeseries reads it unmodified. Its hard
+    requirement is t,dx,dy,dz,vx,vy,vz (failure_modes.REQUIRED_COLUMNS); the extra
+    columns are ignored by the classifier and kept only for shape parity. Angles are
+    written as 0.0: this harness's body is a cube whose orientation the ladder does not
+    reduce to Euler angles, and the classifier reads none of them.
+
+    Frame cadence, not substep cadence, because sustain_frames=3 is a SAMPLE count and
+    the gated runs sample once per frame at 30 fps.
+    """
+    if not res.get("flow_com_series"):
+        raise SystemExit("--emit-timeseries needs a rung-d run: no flow trace was "
+                         "recorded (rungs b and c have no flow phase).")
+    t = np.asarray(res["flow_t_series"], dtype=float)
+    com = np.asarray(res["flow_com_series"], dtype=float)
+    vel = np.asarray(res["flow_vel_series"], dtype=float)
+    om = np.asarray(res["flow_omega_series"], dtype=float)
+    disp = com - np.asarray(res["flow_com0"], dtype=float)
+    zero = np.zeros((len(t), 1))
+    rows = np.column_stack([t, disp, np.linalg.norm(disp, axis=1),
+                            zero, zero, zero,
+                            vel, np.linalg.norm(vel, axis=1), om])
+    header = ("t,dx,dy,dz,dmag,yaw_deg,pitch_deg,roll_deg,"
+              "vx,vy,vz,vmag,wx,wy,wz")
+    p = Path(path)
+    p.parent.mkdir(parents=True, exist_ok=True)
+    np.savetxt(p, rows, delimiter=",", header=header, comments="")
+    return len(t)
+
+
+def _first_sustained(mask, sustain):
+    """Index where `mask` first holds for `sustain` consecutive samples, else -1.
+
+    Reproduces simulation/failure_modes.py:135-151 `_first_sustained_index` so the
+    ladder can report the classifier's own SLIDE trigger without importing it (this
+    file's standing rule is that it imports validate_coupling_force read-only and
+    restates nothing else). Verified against the classifier on the same arrays.
+    """
+    mask = np.asarray(mask, dtype=bool)
+    run = 0
+    for i, b in enumerate(mask):
+        run = run + 1 if b else 0
+        if run >= sustain:
+            return int(i - sustain + 1)
+    return -1
+
+
 def late_window_slope(t, v, measure_substeps):
     """a_late_window, computed exactly as run_c1 computes it.
 
@@ -397,8 +448,23 @@ def run_rung(rung, n_grid, rho_box=RHO_BOX, depth_cells=DEPTH_CELLS,
     # arrive first, and vx_before/vx_after record whether it actually did.
     inflow_x = tank.wall + INFLOW_LEN
     flow = None
+    flow_t = flow_com = flow_vel = flow_omega = flow_com0 = None
     if rung == "d":
         vx0 = water_vx_near_box(tank)
+        # SURGE INSTRUMENTATION, added 2026-08-13. The body is FREE for the whole flow
+        # phase and this phase runs entirely BEFORE the measure window, so any downstream
+        # drift accumulated here was previously invisible: the window only ever recorded
+        # rigid_state()["v"][2] and z_bottom(). In the 17 gated runs SLIDE onset is frame
+        # 2 to 5 (onset_frame_slide in data/failure_modes_by_run_classified.csv), which
+        # falls INSIDE this phase, not inside the window. Sampling is per FRAME here so
+        # the series is directly comparable to the gated runs' 30 fps frame cadence.
+        _rs0 = tank.solver.rigid_state()
+        flow_com0 = [float(c) for c in _rs0["com"]]
+        flow_t = [0.0]
+        flow_com = [flow_com0]
+        flow_vel = [[float(c) for c in _rs0["v"]]]
+        flow_omega = [[float(c) for c in _rs0["omega"]]]
+        frame_dt = tank.dt * tank.substeps
         n_kicked = kick_water(tank, velocity)
         n_band = 0
         flow_frames_run = 0
@@ -412,6 +478,11 @@ def run_rung(rung, n_grid, rho_box=RHO_BOX, depth_cells=DEPTH_CELLS,
             n_band = sustain_inflow(tank, velocity, inflow_x)
             tank.solver.step(tank.dt, tank.substeps)
             flow_frames_run += 1
+            _rs = tank.solver.rigid_state()
+            flow_t.append(flow_frames_run * frame_dt)
+            flow_com.append([float(c) for c in _rs["com"]])
+            flow_vel.append([float(c) for c in _rs["v"]])
+            flow_omega.append([float(c) for c in _rs["omega"]])
         vx1 = water_vx_near_box(tank)
         flow = {
             "flow_frames_run": flow_frames_run,
@@ -426,6 +497,33 @@ def run_rung(rung, n_grid, rho_box=RHO_BOX, depth_cells=DEPTH_CELLS,
             "water_vx_near_box_after": {"mean": vx1[0], "p95": vx1[1], "n": vx1[2]},
             "flow_reached_body": bool(np.isfinite(vx1[0]) and vx1[0] > 0.25 * velocity),
         }
+        # SURGE SUMMARY. disp is com minus the pre-flow com, which is this harness's
+        # analogue of the gated runs' spawn com0: the body is at rest and unforced at
+        # that instant. Axis convention is failure_modes.SURGE_AXIS = 0 = scene +x, the
+        # same axis kick_water and sustain_inflow drive.
+        _fc = np.asarray(flow_com, dtype=float)
+        _fv = np.asarray(flow_vel, dtype=float)
+        _disp = _fc - np.asarray(flow_com0, dtype=float)
+        flow.update({
+            "frame_dt_s": frame_dt,
+            "surge_drift_final_m": float(_disp[-1, 0]),
+            "surge_drift_max_m": float(np.abs(_disp[:, 0]).max()),
+            "surge_speed_max_ms": float(np.abs(_fv[:, 0]).max()),
+            "surge_speed_final_ms": float(_fv[-1, 0]),
+            "lift_final_m": float(_disp[-1, 2]),
+            # The classifier's own SLIDE test, applied here so the ladder reports the
+            # same quantity the 17 gated verdicts are made of. Thresholds are the
+            # failure_modes.FailureThresholds defaults, restated rather than imported so
+            # this file keeps its "imports validate_coupling_force read-only" property.
+            "slide_m_threshold": 0.05,
+            "slide_speed_ms_threshold": 0.05,
+            "sustain_frames": 3,
+            "slide_ratio": float(np.abs(_disp[:, 0]).max() / 0.05),
+            "slide_sustained": bool(_first_sustained(
+                (np.abs(_disp[:, 0]) >= 0.05) & (np.abs(_fv[:, 0]) >= 0.05), 3) >= 0),
+            "slide_onset_frame": int(_first_sustained(
+                (np.abs(_disp[:, 0]) >= 0.05) & (np.abs(_fv[:, 0]) >= 0.05), 3)),
+        })
         zs_settle, n_free_cols, col_iqr = tank.column_surface()
 
     h_sub0, frac0, zb0 = submersion(tank, zs_settle)
@@ -528,6 +626,13 @@ def run_rung(rung, n_grid, rho_box=RHO_BOX, depth_cells=DEPTH_CELLS,
         "t_series": ts,
         "v_series": vs,
         "zb_series": zbs,
+        # Rung-d surge trace, frame cadence, None on rungs b and c. com0 is the pre-flow
+        # pose the displacements are measured from.
+        "flow_com0": flow_com0,
+        "flow_t_series": flow_t,
+        "flow_com_series": flow_com,
+        "flow_vel_series": flow_vel,
+        "flow_omega_series": flow_omega,
         "diagnostics": tank.diagnostics(),
     }
 
@@ -834,6 +939,10 @@ def main():
     p.add_argument("--device", default="auto")
     p.add_argument("--seed", type=int, default=0)
     p.add_argument("--out", default=None)
+    p.add_argument("--emit-timeseries", default=None, metavar="CSV",
+                   help="rung d only: write the surge trace as a classifier-ready CSV "
+                        "(FloodHistory.to_csv format), consumable unmodified by "
+                        "simulation/failure_modes.classify_timeseries.")
     p.add_argument("--geometry-only", action="store_true",
                    help="print the derived rung geometry and exit; no solver, no GPU")
     p.add_argument("--fix-a", nargs="*", metavar="JSON",
@@ -900,8 +1009,15 @@ def main():
         "data/all_runs_inventory.csv realized_depth_m = 0.2944294473039918 m in all 17 "
         "runs == 2*DX_CANON, so --depth-cells 2 matches it exactly. Read live 2026-08-07.")
 
+    if a.emit_timeseries:
+        n = _write_timeseries_csv(res, a.emit_timeseries)
+        print(f"wrote timeseries {a.emit_timeseries} ({n} frames), "
+              f"classifier-ready: simulation/failure_modes.classify_timeseries")
+
     print(json.dumps({k: v for k, v in res.items()
-                      if k not in ("t_series", "v_series", "zb_series")},
+                      if k not in ("t_series", "v_series", "zb_series",
+                                   "flow_t_series", "flow_com_series",
+                                   "flow_vel_series", "flow_omega_series")},
                      indent=2, default=float))
     if a.out:
         out = Path(a.out)
