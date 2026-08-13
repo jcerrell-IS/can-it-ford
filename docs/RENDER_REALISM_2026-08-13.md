@@ -459,4 +459,72 @@ where Kumar's own GNS/CB-Geo work uses **viridis**.
   to a 1/m per mg/L slope without sediment density and particle size, so it will
   not drop straight into a shader constant.
 - Whether the canonical Yaris hull is NHTSA- or CCSA-hosted, per E8. This gates
-  publishing anything from the `--vehicle-mesh` path.
+  publishing anything from the `--vehicle-mesh` path. **Answered 2026-08-13,
+  CCSA-hosted; see the E8 verdict section. The gate stays shut.**
+
+## Fourth pass: what adversarial review found, 2026-08-13
+
+Run against the splashsurf primary source rather than against report `b0d2664f`.
+Three findings landed on work done earlier the same day, including one of mine.
+
+**RETRACTED, mine.** An earlier version of this pass claimed the water compacts
+to a measured spacing of 0.82h, so the applied smoothing was "1.22x the target".
+That was wrong, and the mistake was using median nearest-neighbour distance as a
+spacing estimator: it is a minimum over 6+ neighbours and is biased downward by
+seeding jitter. The no-forcing control settles it. A pure lattice of pitch h with
+the code's own +/-0.2h jitter (`sim_standing.py:183`) and **zero dynamics**
+returns median NN = 0.8196 h, reproducing the "measurement" exactly. Frame 0
+matches the reconstructed seed to 0.4-0.5 percent, and a jitter-insensitive
+estimator puts it within 0.25 percent of the seeded pitch. **The applied smoothing
+is 1.00x, not 1.22x.** Real compaction appears only by the last frame (median NN
+0.54-0.58 h). Lesson worth keeping: a measurement without its no-forcing control
+is not a measurement.
+
+**The citation was miscited three ways, all now fixed in source and manifest.**
+Against the splashsurf README, fetched live: (1) the 2.0x smoothing length is a
+**CLI convention** at README:134/:162 for restating a source SPH kernel, not a
+result of Loschner/Bottcher/Jeske/Bender 2023, which is the separate,
+off-by-default weighted Laplacian **mesh** smoothing stage (README:147); (2)
+"without volume loss" was attached to the wrong stage and inverted, since
+README:141 says larger smoothing lengths "artificially increase the fluid
+volume"; (3) `b0d2664f` item 13 conflates two mutually exclusive recipe blocks,
+pairing particle-radius 1.4-1.6x with smoothing-length 2.0 when the README pairs
+1.4-1.6x with **1.2** and reserves 2.0 for the same-radius block. Anyone
+"correcting" the code toward the report would land at 1.4-1.6 h. The analogy is
+also weaker than a unit mismatch: warpmpm is MPM and has **no SPH kernel to
+restate**, and matching second moments an M4 spline of length H is equivalent to
+sigma = 0.547723 H, so sigma = H is **1.8257x too wide** under its own premise.
+Verified numerically here, not taken on the reviewer's word.
+
+### Defects found but deliberately NOT fixed in this pass
+
+These change rendered geometry or output, which is beyond "correct the citation",
+so they are recorded with their fixes rather than applied silently.
+
+- **BLOCKING. `hull_footprint_mask()` misregistration, `:233-234`.** It indexes
+  with `np.rint((vp[:,0]-x0)/cell)`, but the grid built at `:291-292` has pitch
+  `(x1-x0)/nx`, which at `--half 3.9 --surf-cell 0.125` is `7.8/63 = 0.1238095 m`,
+  not `0.125`. Index drift grows linearly with distance from `X[0,0]`: -0.077
+  cells at 1 m, **-0.300 cells (-0.0371 m) at the 3.9 m edge**. The water cut-out
+  and the hull it is meant to match are misregistered by up to ~3.7 cm. Fix:
+  divide by `X[1,0]-X[0,0]` in both places, not by `cell`.
+- Same root cause, smaller effect, at `:276`: the sigma conversion divides by the
+  nominal `cell`, so every run's applied sigma is 0.99048x the intended metres.
+  For the yaris this partly cancels the clamp, netting +0.92 percent rather than
+  +1.89.
+- **The free surface is drawn at particle CENTRES**, so the sheet sits roughly
+  h/2 below the true interface: measured deficit 0.77-0.88 h, i.e. **19 to 29
+  percent of the realized depth**. This is not cosmetic, because `depth = Hh -
+  floor` at `:333-334` feeds the Beer-Lambert path length, so every optical-depth
+  number in the caption is biased thin. It belongs in the docstring.
+- `render_manifest.json` carries no repo SHA, solver SHA or mesh hash, so a
+  render is not reproducible from its own manifest.
+- Two accessors for one quantity: `vehicle_mesh_transform.py:295-297` prefers
+  `npz["h"]` and falls back to `0.5*dx`, while `render_multigeom_shaded.py:473`
+  always recomputes `0.5*dx` (`load_run` does not even expose `h`). Identical
+  today; a driver that ever writes `h != dx/2` breaks them apart silently. That
+  same line's pointer "`render_multigeom_shaded:465`" is stale, the value is at
+  `:473`.
+- Every on-disk manifest under `renders/multigeom_2026-08-12_render/` predates
+  these fixes and still reads `"gaussian sigma=1 cell"`. No render artifact from
+  the corrected code exists outside this session's scratch output.
