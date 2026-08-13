@@ -214,6 +214,75 @@ has 17 rows, **16 SLIDE / 1 STUCK**; `triggered_topple` is true in **0 of 17**;
 `ratio_topple >= 1` in **12**, matching the corrected count and not the stale 13. So
 16 SLIDE / 1 STUCK is validated against the solver's own precision.
 
+## A SLIDE verdict is resolution-dependent, and the canonical set has a one-frame margin
+
+Run as no-GPU work in parallel with the GPU queue, not sequenced after it.
+
+### The sweep, through the real classifier
+
+`analysis/classify_rogue_silverado_sweep.py` calls
+`simulation/failure_modes.classify_timeseries`, the same library function behind the 17
+gated verdicts, on each sweep run's `metrics.csv`. Output
+`data/rogue_silverado_slide_classification_2026-08-13.csv`, NON-CANONICAL.
+
+| run | grid | mode | sustained | ratio_slide | drift m | onset |
+|-----|------|------|-----------|-------------|---------|-------|
+| rogue | 64 | SLIDE | True | 14.4857 | 0.7243 | 3 |
+| rogue | 96 | SLIDE | True | 11.5573 | 0.5779 | 3 |
+| rogue | 128 | SLIDE | True | 5.1829 | 0.2591 | 4 |
+| silverado | 64 | SLIDE | True | 6.9669 | 0.3483 | 3 |
+| silverado | 96 | SLIDE | True | 1.8105 | 0.0905 | 5 |
+| silverado | 128 | **STUCK** | **False** | 1.5557 | 0.0778 | -1 |
+
+**Silverado flips SLIDE to STUCK between g96 and g128.** Not a drift-threshold failure:
+at g128 its max drift is 0.0778 m, still 1.56x the 0.05 m `slide_m`. It fails the JOINT
+condition, drift and speed together for 3 consecutive frames. Same signature as the one
+canonical STUCK run, `sweepV_g64_v0p5`.
+
+Mechanism: the initial surge impulse weakens with refinement, peak |vx| 0.771 -> 0.360
+-> 0.204 m/s for Silverado. Passthrough does NOT explain it: Rogue's passthrough is flat
+across its ladder (9.95 -> 9.88 percent) while its drift still falls 67 percent.
+
+### The canonical set, answered without new runs
+
+The 17 runs' `metrics.csv` DO exist, at `/work/11603/jcerrell0629/vista/render_s2/`, with
+the full 15-column `FloodHistory` header including `vx,vy,vz`. They are absent from the
+checkout only because `.gitignore` re-includes `*.py` alone under `renders/`.
+
+Re-classifying live reproduces **all 17 verdicts**, 16 SLIDE / 1 STUCK, so the headline
+is unaffected. It reproduces only **11 of 17 `ratio_slide` values**. The six `g48_*` and
+`g96_*` directories were overwritten 2026-07-26 03:08-03:10 by job 866887, while `g64_*`
+still dates 2026-07-25 20:12. Their frozen margins came from outputs no longer on this
+machine, and no other copy exists on disk. Largest gap `g96_m2337`, frozen 1.80047
+against 1.74225 live.
+
+`analysis/slide_verdict_fragility.py` then measures how close each run is to flipping.
+The assumption-free metric is `margin_frames`: the longest run of consecutive frames
+holding the joint condition, minus the 3 required.
+
+| run | joint frames | margin | k_crit | headroom |
+|-----|--------------|--------|--------|----------|
+| **g96_m2337** | **4** | **1** | 0.8721 | 1.15x |
+| g64_m2337 | 10 | 7 | 0.5234 | 1.91x |
+| g48_m2337 | 11 | 8 | 0.3772 | 2.65x |
+| every other SLIDE run | 15 to 59 | 12 to 56 | <= 0.44 | >= 2.3x |
+| sweepV_g64_v0p5 (STUCK) | 0 | -3 | 1.4957 | - |
+
+**`g96_m2337` is one frame from STUCK**, 0.033 s at 30 fps. Its series collapses
+11 -> 10 -> 4 across g48/g64/g96: the margin is closing with refinement, fastest for the
+heaviest vehicle, which is the same mass-ordering as the Silverado flip. The STUCK run
+returning margin -3 and k_crit > 1 is the built-in check that the metric is oriented
+correctly.
+
+Bounding what this claims: `k_crit` scales `dx` and `vx` together, a first-order
+stand-in for a weaker impulse; refinement also changes trajectory shape, as the onset
+frame moving 3 -> 5 shows. `margin_frames` assumes none of that. Neither is a prediction
+that a named run flips at a named grid. **The direct test, the canonical set at g128, has
+never been run**, and that is now the single highest-value open item in the project.
+
+Uncomfortable coincidence worth stating plainly: the most fragile verdict in the
+canonical set is also one of the six whose margin cannot be independently verified.
+
 ## Environment notes for the next LS6 session
 
 - The warpmpm venv already exists at `$SCRATCH/warpmpm_ls6_env`, warp 1.12.1, torch
