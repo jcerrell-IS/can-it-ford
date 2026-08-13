@@ -516,10 +516,23 @@ warpmpm's g64/g96 labels.
 7. **DONE this session.** The 2 dx air-headroom fix was added to `validate_free_body.py`
    as well. The free-body results above predate it; the change affects domain height only
    and those runs did not trip the boundary.
-8. **Re-run the free-body cases under the strict settle gate.** All three free-body runs
-   used the loose gate now known to be inadequate. Their qualitative result (bodies do
-   not rise) is unlikely to move, since the strict-settle forces are still 7x too small
-   to float anything, but this has not been shown.
+8. **Re-running the free-body cases under the strict gate is NOT needed to support the
+   conclusion**, and the force balance is why. The largest upward force measured under
+   any strict-settle configuration is **+712.1 N**. The bodies weigh:
+
+   | body | mass | weight | max measured upward force | shortfall |
+   |---|---|---|---|---|
+   | cube, rho 500 | 256.0 kg | 2511.4 N | +712.1 N | 3.5x too small |
+   | Yaris hull, rho 310.494 | 1100.0 kg | 10790.9 N | +712.1 N | 15.2x too small |
+
+   A body cannot rise while the upward force on it is a third to a fifteenth of its
+   weight, so "bodies do not rise" follows from the strict-settle force measurements
+   directly and does not depend on the loosely-settled free-body runs. Those runs remain
+   useful as an independent qualitative cross-check, not as the load-bearing evidence.
+   A direct strict-gate free-body run is still worth doing for completeness, and is noted
+   as optional rather than blocking. It is also intrinsically awkward: a free body drifts
+   during any settle, so "settle then release" is not cleanly definable for it, which is
+   the reason the fixed-body measurement is the primary one here.
 
 ---
 
@@ -547,6 +560,34 @@ warpmpm's g64/g96 labels.
    and explicit staging satisfies both. Flagging rather than silently choosing.
 
 ---
+
+## Appendix: rigid-mass citation check (mid-session request, verified, no edits made)
+
+Asked mid-session to confirm commit `35b7ed0` had already repointed the rigid-mass
+citation from `:851-853` to `:856`. Verified, read-only:
+
+- `35b7ed0` "Correct the rigid-mass citation from :851-853 to :856 in the C1/C3 harness",
+  Sat Aug 8 2026, confirmed an ancestor of this branch's HEAD.
+- All three sites read `:856`, checked in BOTH the committed `origin/main` state and the
+  LIVE canonical working tree: `simulation/validate_coupling_force.py` (two sites) and
+  `scripts/c1sdf.sbatch:18`.
+- **Line drift worth noting**: the second site is at `:740` in the committed file but
+  `:908` in the live canonical working tree. A concurrent Track 1 session has ~168 lines
+  of uncommitted edits above it. This is CLAUDE.md's "do not cite line numbers
+  positionally" hazard occurring live, in the very file being audited for a line-number
+  citation.
+- No stale `:851-853` remains in `simulation/`, `scripts/`, `analysis/` or `renders/`.
+  The only remaining occurrences outside `data/coupling_validation/` are three `.bak*`
+  snapshots (`.bak-c1trace2`, `.bak-preboundingbox`, `.bak-preC1b-20260807T194258`).
+  CLAUDE.md item 13 already excludes `.bak*` from scope; they are pre-fix historical
+  snapshots and were **not** edited, on the same reasoning that protects the stamped
+  artifacts.
+- **Nothing under `data/coupling_validation/` was read for modification or written.**
+  Those 37 files are stamped run provenance.
+
+This check was requested as a gate before "Step 4". Step 4 (physics-skeptic) did not
+fire, for the reasons in the section above: the agent is unavailable in this session and
+no agreement claim exists for it to scrutinise.
 
 ## Reproduction
 
