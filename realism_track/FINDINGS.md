@@ -954,3 +954,57 @@ same order as this excess, and for a separable collider the impulse is
 `v_surf` is nonzero, which a fixed collider never exercises. The test is a
 kinematic sweep: drive the collider at several prescribed constant velocities and
 check whether the wrench scales like physical drag or like a node count.
+
+## The correct estimator: mass above the face, not a half-density crossing
+
+The half-density surface used above is a proxy. The physically correct quantity is
+the mass of water per unit area above the face in question, because that is what
+sets the pressure there, and it assumes nothing about the shape of a diffuse
+interface. From the raw histograms,
+
+    h_eff = (particles above the box bottom) / (bulk linear particle density)
+
+| run | gate | h_eff | analytic | measured | error |
+|---|---|---|---|---|---|
+| A, g64, bbc 8.0 partial | met | 0.5509 m | 11,712 N | 11,829 N | **+1.00%** |
+| B, g64, bbc 3.0 "full" | met | 1.3181 m | 28,023 N | 28,382 N | **+1.28%** |
+| E, g96, bbc 3.0 | **NOT met** | 1.3978 m | 29,719 N | 32,948 N | +10.87% |
+
+At g64 the two gate-met runs, at box positions five cells apart, agree with analytic
+buoyancy to **+1.0% and +1.3%**. The more principled estimator gives the better
+agreement, which is itself evidence the correction is real rather than a fitted
+fudge: a spurious correction does not improve when it is made more rigorous.
+
+The half-density numbers above (+2.98%, +2.85%) are superseded by these.
+
+**So the SDF collider wrench reproduces analytic buoyancy to about 1% at g64.** The
+entire -50% to +115% history of this track was a free-surface reference error caused
+by leaked water piling at the floor.
+
+## The g96 settle is not reproducible, and that is its own problem
+
+Run E used a configuration byte-identical to the earlier pressure probe: dx
+0.0981431491013306, dt 2.083333e-03, 16 substeps per frame, `n_water` 1,497,096,
+bulk 1.5e5, c 12.8452. The outcomes differ:
+
+| run | frames to gate | vmax_final | gate |
+|---|---|---|---|
+| canonical reference | 776 | 0.6341 | met |
+| pressure probe | 777 | 0.6232 | met |
+| run E | 900 (cap) | **1.5132** | **not met** |
+
+That is not a marginal miss. E ends at more than twice the threshold. At g64 the
+same comparison is tight, three independent runs meeting the gate at 353, 354 and
+354 frames, so reproducibility degrades with particle count and settle length.
+warp's P2G uses atomic adds, which are order-nondeterministic in floating point, and
+`vmax` is an extreme-value statistic over 1.5 million particles, so a long near-sonic
+settle can diverge.
+
+Consequences worth stating:
+
+- **Run E is a discard** and its +10.87% cannot be quoted. The +1% result stands only
+  at g64 until a gate-met g96 run with a direct histogram exists.
+- **The canonical "gate met at 776 frames" is not a reproducible property.** Any
+  validation number taken from a single g96 settle needs repeat runs and an error
+  bar, not a single value. That applies to the project's existing 7.3 to 7.7%
+  figure, which came from one run per resolution.
