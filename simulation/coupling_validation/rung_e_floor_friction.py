@@ -15,7 +15,7 @@ WHY THIS RUNG AND NOT A RE-RUN OF RUNG (b)
   three reasons the ladder cannot yet say, and only one of them is cheap to close:
 
     "Floor friction. This ladder walked restitution only. Its floor stays at BoxTank's
-     friction=0.0; the 17 gated runs carry floor_friction=0.55 (sim_standing.py:132).
+     friction=0.0; the 17 gated runs carry floor_friction=0.55 (sim_standing.py:210).
      Since section 5.3 concludes any buoyancy error in this regime lands in the normal
      force, and sliding resistance is friction times normal force, floor friction is the
      obvious next rung and it was not run here."
@@ -30,6 +30,9 @@ WHY THIS RUNG AND NOT A RE-RUN OF RUNG (b)
   (validate_coupling_force_ladder.py:186-188) says friction "defaults to 0.0, matching
   BoxTank's own floor ... The 17 gated runs additionally carry floor friction 0.55
   (sim_standing.py:132); that is a THIRD variable and this ladder does not walk it."
+  [The :132 in that quoted docstring is STALE. The gated floor is sim_standing.py:210-211,
+   verified live 2026-08-13; :132 is triangle-rasterisation arithmetic. The quote is left
+   verbatim because it is a quote, and the ladder is not this file's to edit.]
   This script walks it, by passing the parameter that function already exposes.
 
 WHAT IS NEW HERE AND WHAT IS NOT
@@ -91,7 +94,11 @@ sys.path.insert(0, str(REPO))
 
 import validate_coupling_force_ladder as L  # noqa: E402
 
-# sim_standing.py:132, the gated floor. Read live 2026-08-07 per the ladder's own
+# sim_standing.py:210, the gated floor. Line number corrected 2026-08-13: the :132
+# this file carried is STALE and is triangle-rasterisation arithmetic. Re-read live
+# from :210-211. Existing arm JSONs on Vista carry the stale string in
+# arm_provenance.friction_source; the VALUE 0.55 was always right.
+# Original provenance note, retained:
 # provenance block, which records "floor restitution=0.05 friction=0.55".
 GATED_FLOOR_FRICTION = 0.55
 
@@ -136,8 +143,12 @@ def _enable_with_friction(tank, restitution=L.FLOOR_RESTITUTION,
 #            for flow_frames frames while inflow is sustained, so this is the longest
 #            horizontal window in the run and the one closest to a gated scene.
 #   measure  n_substeps == 1, the substep-resolution window run_rung fits a_late over.
-# The pin flag is what separates settle from flow, so the classification does not depend
-# on substeps > 1 and stays correct if a future grid gives substeps == 1.
+# The pin flag separates SETTLE from the other two. It does NOT separate flow from
+# measure: _blocks() splits those on n_substeps == 1 alone. An earlier revision of this
+# comment claimed the split "does not depend on substeps > 1"; that was WRONG and is
+# withdrawn 2026-08-13. At substeps == 1 a flow block would be silently absorbed into the
+# measure block. Harmless at g96, where substeps == 16, but assert it rather than assume
+# it if this is ever run on a grid whose substeps_and_dt returns 1.
 #
 # AXIS. The tank's x IS the flow axis: sustain_inflow and kick_water drive vx, and the
 # inflow band is placed on x (validate_coupling_force_ladder.py:398). That matches
@@ -333,22 +344,52 @@ def horizontal_summary(res):
     out = {
         "thresholds": th,
         "x_at_release_m": x_release,
+        "phase_split_reliable": bool(substeps > 1),
+        "phase_split_note": (
+            "flow and measure are separated by n_substeps == 1 alone; at substeps == 1 a "
+            "flow block would be absorbed into the measure block. substeps here is "
+            f"{substeps}."),
         "blocks": {
             "settle": _window_stats(settle, x_settle0 if settle else x_release, frame_dt),
             "flow": _window_stats(flow, x_release, frame_dt),
             "measure": _window_stats(measure, x_release, dt),
         },
         "settle_pin_selfcheck": {
-            "what": "the body is pinned every settle frame, so settle drift must be ~0",
+            "what": "POST-STEP, PRE-PIN intra-frame excursion during settle. The recorder "
+                    "samples inside the step wrapper, which runs BEFORE settle_pinned "
+                    "calls tank.pin (validate_coupling_force.py:625-626), so this is NOT "
+                    "expected to be zero: the body moves within the frame and pin then "
+                    "rewrites rigid_x_cm. The check is that the excursion is BOUNDED and "
+                    "NON-ACCUMULATING, i.e. the pin is holding. An earlier revision "
+                    "compared it against 1e-9 as if the sample were post-pin; that "
+                    "criterion was wrong and always failed. Corrected 2026-08-13.",
             "surge_drift_max_abs_m": (None if not settle else
                                       max(abs(_HTRACE["x"][i] - x_settle0)
                                           for i in settle)),
+            "peak_to_peak_m": (None if not settle else
+                               max(_HTRACE["x"][i] for i in settle)
+                               - min(_HTRACE["x"][i] for i in settle)),
+            "net_signed_m": (None if not settle else
+                             _HTRACE["x"][settle[-1]] - x_settle0),
+            "accumulating": None,
+            "fraction_of_slide_m": None,
             "reads_as_expected": None,
         },
     }
     sc = out["settle_pin_selfcheck"]
-    if sc["surge_drift_max_abs_m"] is not None:
-        sc["reads_as_expected"] = bool(sc["surge_drift_max_abs_m"] < 1e-9)
+    if sc["peak_to_peak_m"] is not None:
+        # Accumulating means the net walk is most of the peak-to-peak range, i.e. the
+        # body left and did not come back. Oscillating about the pin gives |net| well
+        # under the range. 0.9 is a deliberately loose bar: this is a plumbing check.
+        pp = sc["peak_to_peak_m"]
+        sc["accumulating"] = bool(pp > 0 and abs(sc["net_signed_m"]) > 0.9 * pp)
+        if "error" not in th:
+            sc["fraction_of_slide_m"] = pp / th["slide_m"] if th["slide_m"] else None
+        # Bounded means the whole settle excursion is negligible against the criterion
+        # this rung exists to test. 1 percent of slide_m is the bar.
+        bounded = (sc["fraction_of_slide_m"] is not None
+                   and sc["fraction_of_slide_m"] < 0.01)
+        sc["reads_as_expected"] = bool(bounded and not sc["accumulating"])
 
     if "error" not in th:
         sustain = th["sustain_frames"]
@@ -407,7 +448,7 @@ def run_arm(base_rung, mu, n_grid, seed, args):
     res["arm_provenance"] = {
         "script": "simulation/coupling_validation/rung_e_floor_friction.py",
         "walks": "floor friction only; every other variable is imported unchanged",
-        "friction_source": "renders/yaris_render_s1/sim_standing.py:132, floor "
+        "friction_source": "renders/yaris_render_s1/sim_standing.py:210-211, floor "
                            "restitution=0.05 friction=0.55",
         "why": "REGIME_LADDER_RESULTS_2026-08-07.md section 8 names floor friction as "
                "the obvious next rung and records that it was not run. Section 5.3 puts "
@@ -493,6 +534,17 @@ def main():
                    help="drop the six g64 arms. Five of those six were settle discards on "
                         "2026-08-12 and no g64 arm of this ladder is quotable, so a g64 "
                         "horizontal number would be unusable the moment it was measured.")
+    p.add_argument("--no-kick", action="store_true",
+                   help="disable kick_water so sustain_inflow is the ONLY forcing. The "
+                        "default rung-d forcing is a one-shot +velocity applied to EVERY "
+                        "water particle (ladder:402, n_kicked = all of them) plus a clamp "
+                        "on ~0.13 percent per frame, so the flow block is a slosh "
+                        "transient rather than a sustained inflow. This flag is the "
+                        "falsification test for that confound and needs a much longer "
+                        "--flow-frames to let the flow actually transit.")
+    p.add_argument("--g96-df-seeds", type=int, default=1,
+                   help="replicates of the decisive inflow pair (rungs d and f) at g96. "
+                        "One pair cannot separate a friction effect from a seed draw.")
     p.add_argument("--tag-suffix", default="",
                    help="appended to every output tag, so an instrumented re-run cannot "
                         "silently overwrite the 2026-08-12 arms it must be compared to.")
@@ -500,6 +552,12 @@ def main():
 
     out_dir = Path(a.out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
+
+    if a.no_kick:
+        # run_rung looks kick_water up as a module global at call time (ladder:402), the
+        # same mechanism enable_floor_restitution is swapped through, so no source edit.
+        L.kick_water = lambda tank, velocity: 0
+        print("kick_water DISABLED: sustain_inflow is the only forcing")
 
     vcf = install_horizontal_instrumentation()
     print(f"horizontal instrumentation attached to {vcf.BoxTank.__name__}")
@@ -516,8 +574,13 @@ def main():
                 plan.append(("c", GATED_FLOOR_FRICTION, 64, s, f"fric_e_g64_mu055_s{s}"))
         plan.append(("c", 0.0, 96, 0, "fric_c_g96_mu000_s0"))
         plan.append(("c", GATED_FLOOR_FRICTION, 96, 0, "fric_e_g96_mu055_s0"))
-        plan.append(("d", 0.0, 96, 0, "fric_d_g96_mu000_s0"))
-        plan.append(("d", GATED_FLOOR_FRICTION, 96, 0, "fric_f_g96_mu055_s0"))
+        # The d/f pair is the decisive one: rung d adds the sustained inflow, so it is
+        # the only arm where a horizontal force acts at all. It gets the replicates,
+        # because a single pair cannot separate a friction effect from a seed draw and
+        # section 5.5 already records non-determinism at fixed configuration.
+        for s in range(a.g96_df_seeds):
+            plan.append(("d", 0.0, 96, s, f"fric_d_g96_mu000_s{s}"))
+            plan.append(("d", GATED_FLOOR_FRICTION, 96, s, f"fric_f_g96_mu055_s{s}"))
 
     if a.tag_suffix:
         plan = [(r, mu, g, s, t + a.tag_suffix) for r, mu, g, s, t in plan]

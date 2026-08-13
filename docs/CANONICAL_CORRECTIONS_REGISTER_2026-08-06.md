@@ -196,6 +196,43 @@ These 24 are distances. They are separate from the three `0.05` literals in `fai
 
 CLAUDE.md item 13 previously named only `:46` and `:48`. **`:47` is a speed that shares the numeral.** Any deduplication done by find-and-replace on the value `0.05` would silently convert a speed threshold into a distance threshold. `slide_speed_ms` participates in the JOINT sustained condition at `failure_modes.py:179-185` that produces the 16 SLIDE / 1 STUCK verdicts (D6b, D6c), so corrupting it changes published output without raising an error. **Deduplicate by name and unit, never by value.**
 
+**D8. Floor friction FLIPS the SLIDE verdict at g96. Measured 2026-08-13, warpmpm, 3 seeds per arm, plus a forcing-independence re-run.** The regime ladder walked restitution only and left its floor at friction 0.0; the 17 gated runs carry `floor_friction = 0.55` (`sim_standing.py:210-211`). `docs/FLOOR_FRICTION_RUNG_2026-08-12.md` ran that variable but recorded **vertical motion only**, so it could not speak to SLIDE, which is horizontal. `docs/FRICTION_RUNG_HORIZONTAL_INSTRUMENTATION_2026-08-13.md` adds the missing channel. Evaluating the FULL criterion, `failure_modes.py:179-181` ANDed with `driven_downstream` at `:176`, on the per-frame flow block:
+
+| arm | drift max vs `slide_m` 0.05 | speed max vs `slide_speed_ms` 0.05 | SLIDE |
+|---|---|---|---|
+| mu = 0.00, 3 seeds | 22.63 to 22.64x **over** | 16.65x **over** | **True, 3 of 3** |
+| mu = 0.55, 3 seeds | 0.525 to 0.578x, **under** | 3.99 to 4.18x, **over** | **False, 0 of 3** |
+
+**ONE clause flips, not two.** The gated arm remains about **4x OVER the speed threshold** and fails the joint condition on the **drift clause alone**. An earlier draft of this entry claimed it crossed BOTH thresholds; that was produced by pairing a max drift against a late-window MEAN speed, a statistic `failure_modes` neither computes nor uses. **Never pair a max against a mean when quoting against these thresholds.**
+
+**It is a verdict, not a "kinematic pair."** An earlier draft hedged that `driven_downstream` was unevaluable because the material-8 path accumulates no contact force (A3, CLAUDE.md A-1). **Withdrawn.** `failure_modes.py:127-128` is `accel = np.gradient(vel, t, axis=0)` then `force = mass_kg * accel`, i.e. mass times finite-difference acceleration of the body's own velocity, fully derivable from `(t, vx)`. A3 is a fact about the **solver** and does not transfer to this **classifier**. `driven_downstream` is True in every arm and gates nothing (`:176` takes `max|.|`, so it is direction-blind).
+
+**Not a seed draw, and not an artefact of the forcing.** Gap 1.104 m against a worst within-arm spread of 0.002656 m. The flip also reproduces with `kick_water` DISABLED and `sustain_inflow` as the only forcing over 200 frames: drift 1.161353 m SLIDE True at mu=0.00 against 0.017969 m SLIDE False at mu=0.55, a 64.6x ratio.
+
+**"Sustained inflow" is the wrong label for the DEFAULT rung-d forcing.** `kick_water` (`validate_coupling_force_ladder.py:402`) adds +1.5 m/s to **all 163,944** water particles **once**; `sustain_inflow` then clamps **220 per frame, 0.134 percent**. The default flow block is a decaying slosh transient (mean `|vx|` per 10 frames: 0.271, 0.531, 0.709, 0.808, 0.781, 0.301; final sample 0.1135 m/s). **Do not cite its 0.6303 m/s late-window mean as a characteristic speed.** Cite the verdict.
+
+**Three limits that bound this entry.** (a) The harness's own arrival gate `flow_reached_body` is **False for all three mu=0.55 arms and for both `--no-kick` arms**; it tracks the box, which moved 1.1 m in the control, so it is not a clean between-arm test, but no arm here is measured under a verified-arrived flow. (b) **Single grid.** Only g96 was run; **no grid-refinement check of the horizontal channel exists.** (c) Every number sits on an artificial sound speed of **12.845 m/s**, about 118x below real water, never swept, which Isik and He 2022 record can qualitatively flip a rigid-body outcome.
+
+**Two things this does NOT license.** It measures **friction**, not the coupling defect; it shows the route from a buoyancy error into the normal force and thence into `mu*N` is dominant in the horizontal channel, which is what section 5.3 posited and section 8 of `REGIME_LADDER_RESULTS_2026-08-07.md` could not test, but how much the rung-b buoyancy error moves a verdict stays open. And the body is a **600 kg/m^3 cube**, not the 310.494 hull, so nothing transfers numerically to the 17 runs. Do not read it as contradicting the 16 SLIDE verdicts (D6b).
+
+**Consequence for every earlier rung.** All prior ladder rungs ran at mu = 0.0, the arm that slides. The ladder's configuration **overstates horizontal motion by 40 to 65x relative to the gated one**.
+
+**D8a. Register A7 extended: warpmpm applies Coulomb friction at THREE distinct sites, and A7's line number is the SDF path, not the plane.** Verified live 2026-08-13 against the pinned vendored core, `third_party/mpm-engine-544c93dd-solver-core/kernels/mpm_solver_warp.py`:
+
+| site | path | acts on |
+|---|---|---|
+| `:1986` | plane grid BC, inside `add_surface_collider` (def `:1880`) | water and deformable particles |
+| `:2729` | **SDF collider** grid BC, inside `add_sdf_collider` (def `:2621`) | water and deformable particles |
+| `:967-977` | `_apply_rigid_restitution`, contact impulse | **the rigid body** |
+
+A7 cites `:2729` as warpmpm's Coulomb site. That is correct as a Coulomb site but it is the **SDF collider's**, not the plane's; the plane's water-side friction is `:1986`. An earlier draft of this entry called it "the plane grid BC" and counted only TWO paths. Both corrected.
+
+The rigid site is `J_t = min(v_t_mag / denom_t, mu * J_n)` applied to `v_cm` and `omega`, opposing tangential contact velocity, capped at the Coulomb limit. `add_surface_collider` sets `collider_param.friction` at `:1913` unconditionally for the water, and the `restitution != 0.0` gate at `:1915` additionally appends the plane to `rigid_surface_colliders` for the body. Since the gated floor is `add_plane(..., "slip", friction=0.55, restitution=0.05)` (`sim_standing.py:210-211`), **the 17 gated runs carry Coulomb floor friction on the vehicle itself, not only on the water.**
+
+Caveat: `J_n` is the restitution impulse from the approach velocity, not a weight-supported steady normal force, so the resistance is not exactly `mu*N` in the static sense. **Fidelity gap in D8's arms:** `enable_floor_restitution` (`validate_coupling_force_ladder.py:190-199`) bypasses `add_surface_collider` and appends the entry directly, so there `friction` reaches the rigid path ONLY and never the water. The gated floor drives both channels; the rung reproduces the rigid half.
+
+**D8b. `sim_standing.py:132` is a STALE citation for the gated floor and is baked into shipped artifacts.** The gated floor is `:210-211`; `:132` is triangle-rasterisation arithmetic. Verified live 2026-08-13. Enumerated live rather than taken on report: `simulation/coupling_validation/rung_e_floor_friction.py` carried it at four sites (**fixed 2026-08-13**), and `simulation/validate_coupling_force_ladder.py` carries it at **three, in two variants**: `:188` and `:893` say `:132`, and `:97` says `:133`. All are stale for the same reason. That file is **not fixed**, being held under the read-only rule. Its `:208`, `:220` and `:897` cite `:160-162` and `:190-198` for the kick and clamp; those were NOT checked here and are not covered by this entry. Every friction-rung arm JSON on Vista carries the stale string inside `arm_provenance.friction_source`; those are not retro-edited. **The VALUE 0.55 was always correct**; only the line number was wrong.
+
 ---
 
 ## SECTION E: vehicle and mesh, T1
