@@ -77,6 +77,7 @@ from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import render_multigeom_rollout as RMR          # proven transform + surface code
+import flood_water_optics as FWO                # SSC -> beam attenuation, see :87
 
 BANNER = ("NON-CANONICAL COMPANION EXPERIMENT   not part of the 17-run gated "
           "inventory   (class_specific and hullsweep batches kept distinct)")
@@ -84,14 +85,77 @@ BANNER = ("NON-CANONICAL COMPANION EXPERIMENT   not part of the 17-run gated "
 # Water optical constants.
 F0_WATER = 0.0204          # Schlick F0 for air->water, ((1.333-1)/(1.333+1))**2
 IOR = 1.333
-# Beer-Lambert absorption, 1/m, red absorbed hardest. Real clear-water values are
-# about (0.45, 0.07, 0.03) 1/m, which over a 0.30 m tank is a ~13% red loss and is
-# invisible. VIS_GAIN exaggerates it so the depth cue reads on screen. This is a
-# display choice and is stated in the caption; it is not a measurement.
+# Beer-Lambert extinction, 1/m, red absorbed hardest. TWO MUTUALLY EXCLUSIVE
+# MODES, selected by --ssc-mg-l.
+#
+#   LEGACY (--ssc-mg-l < 0, the default). Clear-water absorption multiplied by
+#     VIS_GAIN so the depth cue reads on screen. Real clear-water values are
+#     about (0.45, 0.07, 0.03) 1/m, which over a 0.30 m tank is a ~13% red loss
+#     and is invisible; the gain makes it visible. A display choice, stated in
+#     the caption, not a measurement. Effective k = (4.05, 0.63, 0.27) 1/m.
+#
+#   TURBID (--ssc-mg-l >= 0). k = clear-water absorption + sediment beam
+#     attenuation at the given suspended-sediment concentration, and the
+#     in-water tint comes from the same concentration. VIS_GAIN IS NOT APPLIED.
+#     Multiplying a sourced coefficient by an unsourced 9x would be less
+#     defensible than either alone, so the modes are exclusive by construction.
+#
+# NEITHER MODE IS A MEASUREMENT OF THIS SCENE. There is no site, no water sample
+# and no measured SSC for these runs. The preset is a SCENARIO CHOICE, and the
+# caption and manifest say so in both modes.
 SIGMA_RGB = np.array([0.45, 0.07, 0.03], dtype=np.float32)
 VIS_GAIN = 9.0
 BOTTOM_RGB = np.array([0.050, 0.050, 0.050], dtype=np.float32)   # wet asphalt
 SCATTER_RGB = np.array([0.020, 0.160, 0.200], dtype=np.float32)  # in-water tint
+
+
+def optics_from_ssc(ssc_mg_l):
+    """-> (k_rgb 1/m, scatter_rgb, caption_fragment, provenance dict).
+
+    ssc < 0 or None selects legacy mode. FWO reproduces SIGMA_RGB and
+    SCATTER_RGB exactly at SSC = 0, so the turbid branch is a strict
+    generalisation of the legacy one rather than a competing model.
+    """
+    if ssc_mg_l is None or ssc_mg_l < 0.0:
+        return (SIGMA_RGB * VIS_GAIN), SCATTER_RGB, (
+            "absorption exaggerated %.0fx (CLEAR-water sigma, display choice, "
+            "no sediment modelled)" % VIS_GAIN), {
+            "mode": "legacy_exaggerated_clear_water",
+            "sigma_rgb_1_per_m": SIGMA_RGB.tolist(),
+            "vis_gain": VIS_GAIN,
+            "effective_k_1_per_m": (SIGMA_RGB * VIS_GAIN).tolist(),
+            "STATUS": "DISPLAY ONLY, hand-tuned exaggeration, not a measurement",
+        }
+    ssc = float(ssc_mg_l)
+    k = np.asarray(FWO.extinction_coefficient_rgb(ssc, warn=False), dtype=np.float32)
+    tint = np.asarray(FWO.scatter_albedo_rgb(ssc), dtype=np.float32)
+    extrapolated = ssc > FWO.LINEAR_REGIME_MAX_SSC_MG_L
+    frag = ("turbid water at SSC %g mg/L, beam attenuation k = (%.1f, %.1f, %.1f) "
+            "1/m, black-disc visual range %.2f m, NO display exaggeration"
+            % (ssc, k[0], k[1], k[2], FWO.visual_range_m(ssc)))
+    if extrapolated:
+        frag += "; k EXTRAPOLATED above the %.0f mg/L linear bound" % \
+            FWO.LINEAR_REGIME_MAX_SSC_MG_L
+    prov = {
+        "mode": "turbid_ssc_driven",
+        "ssc_mg_l": ssc,
+        "ssc_is": "ASSUMED SCENARIO INPUT, not measured for this run",
+        "effective_k_1_per_m": k.tolist(),
+        "in_water_scatter_rgb": tint.tolist(),
+        "black_disc_visual_range_m": float(FWO.visual_range_m(ssc)),
+        "vis_gain_applied": False,
+        "extrapolated_beyond_linear_regime": bool(extrapolated),
+        "NOT_DERIVED": (
+            "c* = %.3f m2/g is a central value from a %.3f to %.3f m2/g band "
+            "bounded by clarity relationships and geometric-optics scattering; "
+            "the point within the band is a choice, and grain size, the dominant "
+            "control, is not modelled. The scatter RGB is a chosen colour "
+            "consistent with iron-oxide spectral behaviour, not a colorimetric "
+            "conversion." % ((FWO.SEDIMENT_CSTAR_M2_PER_G,)
+                             + FWO.SEDIMENT_CSTAR_BAND_M2_PER_G)),
+    }
+    prov.update({"references": FWO.REFERENCES})
+    return k, tint, frag, prov
 
 # Weber-number foam criterion (Ihmsen et al. 2012). ABSOLUTE physical scale, which
 # is the whole point: unlike v1's per-frame percentile, still water returns zero.
@@ -230,13 +294,19 @@ def free_surface(w, sp, cx, cy, half, floor, cell, smooth_len_m):
     return X, Y, Hh, S, wet
 
 
-def shade_water(X, Y, Hh, S, floor, view, sky, sun, h_particle, exposure):
+def shade_water(X, Y, Hh, S, floor, view, sky, sun, h_particle, exposure,
+                k_rgb=None, scatter_rgb=None):
     """Analytic water shading. DISPLAY ONLY, see the module docstring.
 
     Returns (rgb, foam, We) with rgb already tone-mapped and gamma-encoded.
     Hh may carry NaN in dry columns (D2); gradients are taken on a NaN-filled
     copy and the caller drops the dry quads, so no colour is invented there.
     """
+    # Legacy defaults preserved, so an unparameterised call behaves as before.
+    k_rgb = (SIGMA_RGB * VIS_GAIN) if k_rgb is None else np.asarray(k_rgb, np.float32)
+    scatter_rgb = SCATTER_RGB if scatter_rgb is None else \
+        np.asarray(scatter_rgb, np.float32)
+
     dry = ~np.isfinite(Hh)
     Hf = np.where(dry, np.nanmedian(Hh) if np.isfinite(Hh).any() else floor, Hh)
     gx = np.gradient(Hf, X[1, 0] - X[0, 0], axis=0)
@@ -262,8 +332,8 @@ def shade_water(X, Y, Hh, S, floor, view, sky, sun, h_particle, exposure):
     cos_t = np.sqrt(np.clip(k, 1e-4, 1.0))
     depth = np.clip(Hh - floor, 0.0, None)
     path = depth / np.clip(cos_t, 0.2, 1.0)
-    trans = np.exp(-(SIGMA_RGB * VIS_GAIN)[None, None, :] * path[..., None])
-    refr = BOTTOM_RGB[None, None, :] * trans + SCATTER_RGB[None, None, :] * (1.0 - trans)
+    trans = np.exp(-k_rgb[None, None, :] * path[..., None])
+    refr = BOTTOM_RGB[None, None, :] * trans + scatter_rgb[None, None, :] * (1.0 - trans)
 
     # ---- foam: WEBER-NUMBER criterion, Ihmsen et al. 2012 (D3 fix) ---------
     # We = rho |v_rel|^2 L / sigma. Inertia over surface tension: above a critical
@@ -305,7 +375,7 @@ def shade_water(X, Y, Hh, S, floor, view, sky, sun, h_particle, exposure):
     return rgb, foam, We
 
 
-def caption_lines(z, zmin, floor, extra: str) -> list[str]:
+def caption_lines(z, zmin, floor, extra: str, optics_frag: str = None) -> list[str]:
     """Numbers from this run's OWN summary.json / rollout.npz. Nothing retyped."""
     s = z["summary"]
     rise = s["C2_veh_zmin_rise"]
@@ -336,11 +406,11 @@ def caption_lines(z, zmin, floor, extra: str) -> list[str]:
         "and no air phase (register B7: not even a pressure field). Surface = "
         "per-column max-z of the particles, smoothed at ~2x particle radius per "
         "Loschner/splashsurf; drawn ONLY where particles exist. Optics = Schlick + "
-        "Beer-Lambert + GGX against assets/DaySkyHDRI002A_1K_HDR.exr, absorption "
-        "exaggerated %.0fx. FOAM is a POST-HOC Weber-number diagnostic, "
-        "We = rho|v_rel|^2 L/sigma, onset We %.0f (Ihmsen et al. 2012): the solver "
-        "entrained no air, and no verdict depends on any of this."
-        % (VIS_GAIN, WE_LO))
+        "Beer-Lambert + GGX against assets/DaySkyHDRI002A_1K_HDR.exr, %s. FOAM is a "
+        "POST-HOC Weber-number diagnostic, We = rho|v_rel|^2 L/sigma, onset We %.0f "
+        "(Ihmsen et al. 2012): the solver entrained no air, and no verdict depends "
+        "on any of this."
+        % (optics_frag or ("absorption exaggerated %.0fx" % VIS_GAIN), WE_LO))
     if extra:
         lines.append(extra)
     return lines
@@ -369,7 +439,27 @@ def main():
     ap.add_argument("--upsample", type=int, default=3)
     ap.add_argument("--sigma", type=float, default=1.0)
     ap.add_argument("--max-faces", type=int, default=9000)
+    ap.add_argument("--ssc-mg-l", type=float, default=-1.0,
+                    help="suspended-sediment concentration, mg/L. Negative (the "
+                         "default) keeps the legacy exaggerated clear-water "
+                         "optics. Zero or more switches to turbid optics with no "
+                         "exaggeration. Presets: %s"
+                         % ", ".join("%s=%g" % kv
+                                     for kv in sorted(FWO.SSC_PRESET_MG_L.items(),
+                                                      key=lambda kv: kv[1])))
+    ap.add_argument("--ssc-preset", default=None,
+                    choices=sorted(FWO.SSC_PRESET_MG_L),
+                    help="named SSC preset; overrides --ssc-mg-l")
+    ap.add_argument("--vehicle-mesh", default=None,
+                    help="path to the source hull .ply. Default (omitted) keeps "
+                         "the marching-cubes reconstruction of the simulated "
+                         "particles. Supplying a mesh registers it to the "
+                         "simulated pose and REFUSES if it does not fit. "
+                         "REGISTER E8: the resulting frame contains derived "
+                         "NCAC/CCSA geometry and must not be published.")
     a = ap.parse_args()
+    if a.ssc_preset:
+        a.ssc_mg_l = FWO.preset_ssc(a.ssc_preset)
 
     run, out = Path(a.run), Path(a.outdir)
     out.mkdir(parents=True, exist_ok=True)
@@ -381,8 +471,59 @@ def main():
     print("[shade] transform check : max|err| %.3e m  (gates.py:136/:157 reused)" % worst)
 
     hpart = 0.5 * z["dx"]
-    Vb, Fb, n_raw = RMR.build_surface(pv, hpart, upsample=a.upsample,
-                                      sigma=a.sigma, max_faces=a.max_faces)
+    if a.vehicle_mesh:
+        # E8 PATH. Register E8 forbids DISTRIBUTION of derived NCAC/CCSA
+        # geometry ("do not commit any derived NCAC/CCSA geometry to the public
+        # repo, and do not include it in a DesignSafe DOI"), and records the
+        # canonical Yaris hull's provenance as UNRESOLVED between an
+        # NHTSA-hosted (safe) and a CCSA-hosted (licence-silent) origin. Nothing
+        # in E8 restricts reading or rendering. So this path is available for
+        # internal review renders, and the caption and manifest both say loudly
+        # that the frame contains source hull geometry, so no output of this
+        # path can be published by accident.
+        import vehicle_mesh_transform as VMT
+        reg = VMT.load_and_register(a.vehicle_mesh, z, max_faces=a.max_faces)
+        Vb, Fb = reg["vertices_body"], reg["faces"]
+        n_raw = reg["n_faces"]
+        veh_prov = {
+            "source": "REAL HULL MESH, %s" % a.vehicle_mesh,
+            "yaw_deg": reg["yaw_deg"],
+            "height_profile_corr_vs_particles": reg["profile_corr"],
+            "extent_residual_m": reg["residual_m"],
+            "extent_residual_cells": reg["residual_cells"],
+            "faces": int(len(Fb)),
+            "E8": "Derived NCAC/CCSA geometry. Register E8: DO NOT commit this "
+                  "frame or the derived geometry to a public repo or a "
+                  "DesignSafe DOI. Yaris hull provenance (NHTSA vs CCSA) is "
+                  "recorded as UNRESOLVED in E8. Internal review only.",
+        }
+        veh_caption = (
+            "vehicle surface = REAL SOURCE HULL %s, registered to the simulated "
+            "body by derived yaw %d deg (height-profile corr %+.4f), extent "
+            "residual %.4f m = %.2f particle cells, %d faces. THIS FRAME "
+            "CONTAINS DERIVED NCAC/CCSA GEOMETRY: register E8 forbids "
+            "publishing it. It shows the hull the solver was BUILT FROM, not "
+            "the geometry it integrated."
+            % (Path(a.vehicle_mesh).name, reg["yaw_deg"], reg["profile_corr"],
+               reg["residual_m"], reg["residual_cells"], len(Fb)))
+        print("[shade] vehicle mesh    : %s, yaw %d deg, corr %+.4f, residual "
+              "%.4f m (%.2f cells), %d faces"
+              % (Path(a.vehicle_mesh).name, reg["yaw_deg"], reg["profile_corr"],
+                 reg["residual_m"], reg["residual_cells"], len(Fb)))
+        print("[shade] E8 WARNING      : frame contains derived source-hull "
+              "geometry, do not publish")
+    else:
+        Vb, Fb, n_raw = RMR.build_surface(pv, hpart, upsample=a.upsample,
+                                          sigma=a.sigma, max_faces=a.max_faces)
+        veh_prov = {
+            "source": "marching-cubes isosurface of the SIMULATED rigid particles",
+            "faces": int(len(Fb)),
+            "E8": "No .ply is read, so register E8 is not engaged.",
+        }
+        veh_caption = ("vehicle surface = marching-cubes isosurface of the %d "
+                       "SIMULATED rigid particles (h = dx/2 = %.5f m, %d faces); "
+                       "no .ply is read, so register E8 is not engaged."
+                       % (len(pv), hpart, len(Fb)))
     base, n_tire = RMR.base_colours(Vb, Fb)
     outside = int(((pv < Vb.min(0) - 1e-9) | (pv > Vb.max(0) + 1e-9)).any(1).sum())
     print("[shade] surface         : %d faces, encloses %d/%d particles"
@@ -412,11 +553,10 @@ def main():
     el, az = np.radians(a.elev), np.radians(a.azim)
     view = np.array([np.cos(el) * np.cos(az), np.cos(el) * np.sin(az), np.sin(el)])
 
-    cap = caption_lines(z, zmin, floor,
-                        "vehicle surface = marching-cubes isosurface of the %d "
-                        "SIMULATED rigid particles (h = dx/2 = %.5f m, %d faces); "
-                        "no .ply is read, so register E8 is not engaged."
-                        % (len(pv), hpart, len(Fb)))
+    k_water, scatter_water, optics_frag, optics_prov = optics_from_ssc(a.ssc_mg_l)
+    print("[shade] water optics    : %s" % optics_frag)
+
+    cap = caption_lines(z, zmin, floor, veh_caption, optics_frag=optics_frag)
     idx = list(range(0, nf, a.stride)) if a.frames == "all" else [int(a.frames)]
     slab = a.slab_cells * dx
     foam_stats, we_stats = [], []
@@ -436,7 +576,8 @@ def main():
         X, Y, Hh, S, wet = free_surface(w, sp, cx, cy, a.half, floor,
                                         a.surf_cell, hpart)
         wrgb, foam, We = shade_water(X, Y, Hh, S, floor, view, sky, sun,
-                                     hpart, a.exposure)
+                                     hpart, a.exposure,
+                                     k_rgb=k_water, scatter_rgb=scatter_water)
         # foam and We reported over WET cells only; averaging over dry ground
         # would silently dilute both and make the diagnostic unreadable.
         foam_stats.append(float(foam[wet].mean()) if wet.any() else 0.0)
@@ -537,6 +678,7 @@ def main():
                             "gated inventory; class_specific and hullsweep batches "
                             "kept distinct per register E3a",
         "frames_written": len(idx), "fps_from_npz": z["fps"],
+        "vehicle_surface": veh_prov,
         "transform_source": "gates.py:136 and gates.py:157, reused verbatim",
         "transform_max_reconstruction_error_m": worst,
         "transform_errors_by_frame_m": {str(k): v for k, v in errs.items()},
@@ -549,11 +691,16 @@ def main():
         "P3_pass": bool(abs(z["summary"]["C2_veh_zmin_rise"]) <= 0.01),
         "water_shading": {
             "STATUS": "DISPLAY ONLY, not simulated optics",
-            "free_surface": "per-column max-z of water particles, gaussian sigma=1 "
-                            "cell; warpmpm has no free-surface field",
+            # Was "gaussian sigma=1 cell". That was stale and contradicted the
+            # adjacent surface_smoothing key: the smoothing is computed at :276
+            # as max(0.6, h / surf_cell), which is never 1.0 for any run in this
+            # batch (0.60 to 0.82 at --surf-cell 0.125).
+            "free_surface": "per-column max-z of water particles, gaussian "
+                            "sigma = max(0.6, h / surf_cell) = %.4f cells; "
+                            "warpmpm has no free-surface field"
+                            % max(0.6, hpart / a.surf_cell),
             "fresnel": "Schlick, F0=%.4f (IOR %.3f)" % (F0_WATER, IOR),
-            "absorption": "Beer-Lambert sigma_rgb=%s 1/m, exaggerated %.1fx for "
-                          "legibility" % (SIGMA_RGB.tolist(), VIS_GAIN),
+            "absorption": optics_prov,
             "specular": "GGX against the HDRI sun direction",
             "environment": "assets/DaySkyHDRI002A_1K_HDR.exr, READ not regenerated",
             "sun_dir_xyz": sun.tolist(),
