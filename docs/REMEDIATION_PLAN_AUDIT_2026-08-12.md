@@ -4,6 +4,21 @@
 **Subject:** a 592-line plan proposing 7 configuration features and an 18-item
 remediation punch list, authored in a chat session that states in its own caveats
 that it had **no live read access to this repo**.
+**Subject file, recorded 2026-08-13 so this audit is re-derivable:**
+`~/Downloads/compass_artifact_wf-aae75abf-0f67-59aa-8289-cee140b44819_text_markdown.md`,
+artifact id `aae75abf`, 42,709 bytes, sha256
+`4b2469e7020c2b60773a4ee9971d6a9fad1136a04a13a375a99423dddd4dbdb8`.
+The id appeared nowhere in the repo until this line, so this audit could not be checked
+against its own subject. Register K0 establishes the practice being followed here: the
+8-hex ids are real files at `~/Downloads/compass_artifact_wf-<id>-*_text_markdown.md`,
+recorded so any claim can be re-verified against the report it came from. K0 scopes that
+to ids cited *in the register*; extending it to this audit is a deliberate application of
+the same rule, not a claim that K0 already covered this file.
+The file is 591 newlines with **no trailing newline**, hence 592 lines; that
+off-by-one is why a `wc -l` check reports 591 against the "592-line" subject above.
+Identity confirmed by content, not filename alone: it opens with
+"Claude Code Configuration and Remediation Plan for \"Can It Ford?\"", and its TL;DR
+states the 18-item punch list and the no-live-read-access caveat.
 **Method:** every claim re-derived against live files, plus a 12-agent parallel audit
 (6 documentation researchers, 5 item verifiers, 1 adversarial completeness critic).
 
