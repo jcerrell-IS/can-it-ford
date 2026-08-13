@@ -71,6 +71,34 @@ should be 7 to 29 1/m:
 The two overlap on `c* ~ 0.1 m2/g`, now the default. It sits at the transparent
 end of the band deliberately, so some depth cue survives.
 
+**What is chosen rather than derived, do not oversell.** This admission is
+load-bearing and must travel with the model wherever it is described, including
+into any caption, poster panel or paper sentence built from it. Quoting
+`analysis/flood_water_optics.py:66-77` rather than paraphrasing it: `c* = 0.10
+m2/g` "is a central value from a band spanning 0.023 to 0.24 m2/g. The band is
+derived; the point within it is a choice. Grain size, the dominant control, is
+not modelled." `SEDIMENT_ALBEDO_RGB` "is a qualitative colour consistent with
+the cited iron-oxide spectral behaviour, NOT a colorimetric conversion of a
+published reflectance spectrum." Sediment extinction is taken as spectrally
+flat. The same text ships in the render manifest under the `NOT_DERIVED` key
+(`render_multigeom_shaded.py:148-155`), and SSC itself is recorded there as
+"ASSUMED SCENARIO INPUT, not measured for this run", because no SSC was measured
+for any of these runs.
+
+**Status of the earlier "tuned for visual plausibility" slope.** An earlier draft
+of this work used a green-channel slope of 0.0016 per mg/L per m and described it,
+verbatim, as "tuned for visual plausibility". That admission has NOT been deleted
+and must not be: it survives in full at `flood_water_optics.py:25-31`, where it is
+recorded together with the reason it was withdrawn. It was not softened, it was
+**refuted on physical grounds** by the two routes above, which agree it was
+roughly 45x too transparent (it implies a 13.6 m black-disc visual range at
+120 mg/L, i.e. floodwater clearer than a swimming pool). So the honest statement
+that now ships is the stronger "chosen rather than derived" block quoted above,
+not the retired tuning claim. Do not re-import the 0.0016 slope, and do not
+describe the current `c*` as tuned: it is a documented choice inside a derived
+band, which is a different and better-supported thing. Both statements should
+stay on the record so the change is auditable.
+
 **4. The colour mix used an invented constant and rendered grey, not brown.**
 Mixing by `SSC / (SSC + 100)` gave a 0.545 fraction at 120 mg/L and produced a
 neutral olive. The physically correct weight is the ratio of scattering
@@ -350,6 +378,49 @@ re-derives Yaris and Silverado geometry in OpenRadioss/VTKHDF. A CC BY 4.0
 geometry would carry clear redistribution rights and would dissolve E8 for
 render purposes entirely. Unverified by me; worth one hour before assuming E8
 blocks publication permanently.
+
+### The operative verdict: may a real-mesh render go in a public deliverable?
+
+**No, not yet, and E8 is OPEN rather than resolved.** Re-verified independently
+2026-08-13 by opening the zips again rather than trusting the section above:
+`2010-toyota-yaris-coarse-v1l.zip` (11,228,299 bytes) and
+`2007-chevrolet-silverado-coarse-v3a.zip` (7,384,870 bytes) each contain a
+`README.md`, each is banner-branded "Center for Collision Safety and Analysis /
+George Mason University", and each carries a warranty disclaimer plus the
+attribution request quoted above and **no redistribution grant of any kind**.
+`b0d2664f` set a two-step test for CCSA-hosted models: "(a) open the zip and
+check for an embedded README / license and (b) email CCSA / NHTSA for written
+permission before publishing derived geometry in a public GitHub repo or a
+DesignSafe DOI dataset." Step (a) is now done. **Step (b) has not been
+attempted**, and finding no licence grant does not establish rights, it confirms
+their absence. The `.remember/today-2026-08-13.md` entry reading "E8 resolved
+CCSA zip (no embedded license = redistribution forbidden)" is therefore wrong
+twice over: an embedded README does exist, and a finding of "forbidden" closes
+no blocker, it confirms one. The chain is corroborated at the DOI layer too, by
+`289743f7`: the Yaris README's own citation DOI, 10.13021/G8JS5D, has an **empty
+`rightsList`** and points at a validation presentation PDF, not a CC0-waived
+dataset, so the DOI supplies no grant either. Until written permission from the
+named addressees exists, the operative rule for this render layer is unchanged:
+`--vehicle-mesh` frames are for **internal review only**, the manifest and
+caption must keep saying so, and no frame containing source-hull geometry goes
+into the poster, the paper, a public GitHub path or a DesignSafe DOI. The
+default marching-cubes path is unaffected, reads no `.ply`, and stays publishable.
+
+One obligation is live *regardless* of how E8 closes, and is currently unmet:
+the README asks that "the CCSA at GMU and the FHWA be acknowledged for any use
+of this FE model resulting in papers and publications." The 17 gated runs use
+this hull, so the paper and poster owe that acknowledgement now, independent of
+any redistribution question.
+
+**Hand-off, not a register edit.** The register is the corrections authority and
+it belongs to DP-1. Verified live 2026-08-13: register line 223 still reads
+"redistribution rights are NOT established. Treat as a blocker, not a footnote",
+and line 621 still lists establishing them as open and blocking the DesignSafe
+DOI. Nothing above changes that, so nothing here was written into the register.
+What DP-1 should take from this file is the narrower sub-question at line 621,
+"whether the canonical Yaris hull is NHTSA-hosted (safe) or CCSA-hosted
+(licence-silent)", which the zip banner and embedded README now answer:
+**CCSA-hosted**, the licence-silent branch.
 
 ## Renderer architecture: matplotlib is the root cause of D1
 
