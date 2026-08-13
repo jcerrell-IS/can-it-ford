@@ -36,9 +36,21 @@ Two things here are NOT superseded and are worth reading before any reimplementa
      1960} box-fallback inertia, and the reason (axis-transposed, +379.2% on the
      pitch axis). coupler.py/rigid_body.py must not silently lose that guard.
 
+ONE CLAIM IN THE ORIGINAL DOCSTRING BELOW IS NOW KNOWN TO BE TOO STRONG.
+"No force is ever formed" (WHY THIS EXISTS, below) is correct about a
+HYDRODYNAMIC force and correct that :1434 is an assignment, but it is not a
+correct description of the whole substep. mpm_solver_warp.py:887
+_apply_rigid_restitution runs at :1362, between rigid_body_integrate and
+rigid_particle_update, and applies normal and Coulomb friction impulses that
+INCREMENT v_cm and omega at :963-964 and :976-977, with lever arms. It is live
+in all 17 gated runs: :1915 gates on restitution != 0.0, and
+sim_standing.py:211 and :214 set restitution=0.05 on the floor and all four
+walls. The original text below is left as written, since it is the historical
+rationale for this file; do not cite it as a current description of the path.
+Corrected account: docs/LIMITATION_COUPLING_KINEMATIC_VS_FORCE_2026-08-13.md.
+
 Nothing here is deleted, because deletion needs explicit confirmation per
-CLAUDE.md. Physics context for the path this file was written to replace:
-docs/LIMITATION_COUPLING_KINEMATIC_VS_FORCE_2026-08-13.md.
+CLAUDE.md.
 =================================================================
 
 Written 2026-08-12. Status: IMPLEMENTED AND ANALYTICALLY SELF-TESTED ON CPU.

@@ -51,6 +51,20 @@ The free-rigid path (material 8) never forms a force:
 The body therefore **adopts a mass-weighted average of the surrounding grid velocity**.
 No force is integrated, so density cannot drive motion and buoyancy cannot arise.
 
+> **CORRECTION 2026-08-13.** The three rows above are right, and the mass-weighted
+> average is exact (`mpm_solver_warp.py:852-856` builds `rigid_mass[b]` from the same
+> particle set `:1411` sums over). But "no force is integrated" is **too strong as a
+> description of the substep**. A third stage, `mpm_solver_warp.py:887
+> _apply_rigid_restitution`, runs at `:1362` between the integrate and the push-back,
+> and applies normal and Coulomb friction impulses that *increment* `v_cm` and `omega`
+> at `:963-964` and `:976-977`, with lever arms. It is live in all 17 gated runs:
+> `:1915` gates on `restitution != 0.0` and `sim_standing.py:211`/`:214` set
+> `restitution=0.05` on the floor and all four walls. What is genuinely absent is a
+> **hydrodynamic** force: the net acceleration cannot be decomposed into hydrodynamic,
+> contact and gravitational parts. There is also a third rigid kernel this table omits,
+> `mpm_utils.py:1463 rigid_particle_update`, which is the back-reaction limb.
+> Full working: `docs/LIMITATION_COUPLING_KINEMATIC_VS_FORCE_2026-08-13.md`.
+
 Measured consequence, from the 2026-08-08 multigeom runs (`render_s2/multigeom_2026-08-08/*/summary.json`):
 
 | case | `realized_rho` kg/m³ | `C2_veh_zmin_rise` m | `passthrough_max_frac` |

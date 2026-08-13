@@ -37,10 +37,18 @@ which is why this file is the authority and not the note's `## Citations` sectio
 | DiffFR pages | omitted | **1-17** |
 | DiffFR title case | "SPH-based fluid-rigid" | "SPH-Based Fluid-Rigid" |
 
+**KEY DISAMBIGUATED 2026-08-13, do not revert to `akinci2012`.** An adversarial
+review caught a live collision: `analysis/render_multigeom_shaded.py:31`, `:270`
+and `:562` cite a *different* 2012 paper, "Ihmsen, Akinci, Akinci and Teschner
+2012", for the foam/spray diagnostic. A bare `akinci2012` key would collide with
+it and invite readers to conflate two different papers that share an author and a
+year. The coupling paper is therefore keyed `akinciN2012coupling` (N for Nadir,
+the first author). If the foam paper is ever added, key it `ihmsen2012foam`.
+
 ## The entries
 
 ```bibtex
-@article{akinci2012,
+@article{akinciN2012coupling,
   author  = {Akinci, Nadir and Ihmsen, Markus and Akinci, Gizem and Solenthaler, Barbara and Teschner, Matthias},
   title   = {Versatile Rigid-Fluid Coupling for Incompressible {SPH}},
   journal = {ACM Transactions on Graphics},
@@ -85,7 +93,7 @@ python3 -c "import re,pathlib; s=pathlib.Path('/Users/josie/can-it-ford/docs/PEN
 Verify the append landed, and that no key was duplicated:
 
 ```bash
-/usr/bin/grep -c "^@" /Users/josie/can-it-ford/paper/can_it_ford_references_IEEE.bib && /usr/bin/grep -n "akinci2012\|li2023difffr" /Users/josie/can-it-ford/paper/can_it_ford_references_IEEE.bib
+/usr/bin/grep -c "^@" /Users/josie/can-it-ford/paper/can_it_ford_references_IEEE.bib && /usr/bin/grep -n "akinciN2012coupling\|li2023difffr" /Users/josie/can-it-ford/paper/can_it_ford_references_IEEE.bib
 ```
 
 Success looks like: the `@` count rises by exactly 2, and the second command
