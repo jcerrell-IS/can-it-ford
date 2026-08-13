@@ -1,6 +1,46 @@
 #!/usr/bin/env python3
 """Force-based fluid-rigid coupling for warpmpm. NEW PATH, nothing existing touched.
 
+SUPERSEDED 2026-08-13. DO NOT USE FOR NEW WORK.
+=================================================================
+This module is superseded by coupler.py (ForceCoupledBody, CouplingConfig,
+CouplingTrace) and rigid_body.py (RigidBodyState, integrate,
+inertia_from_particles); it is imported by nothing and retained for reference
+only, so start from `simulation/coupling_force/__init__.py` instead.
+
+Why this file lost, and how that was established (all verified live 2026-08-13,
+none of it taken from a summary):
+  - `__init__.py` exports ONLY the coupler.py/rigid_body.py API. Nothing in this
+    file is re-exported, so `from simulation.coupling_force import ...` cannot
+    reach CoupledRigidState, step_newton_euler or accumulate_impulse_numpy.
+  - rung_b_coupled.py:37-38, the only in-repo driver, imports the surviving API.
+  - A `/usr/bin/grep` for CoupledRigidState, force_coupling, step_newton_euler
+    and accumulate_impulse_numpy across *.py, *.md, *.json and *.sbatch (shell
+    `grep` skips gitignored paths, register H0) found NO importer anywhere. The
+    only hits are this file's own definitions and two prose mentions in
+    .remember/vista_session_2026-08-12.md:95,108.
+  - Both clusters were checked, because an importer there would have changed the
+    answer. Vista's /work/.../can-it-ford/simulation/coupling_force/ does not
+    contain force_coupling.py AT ALL, while carrying __init__.py, coupler.py,
+    rigid_body.py and README.md at byte sizes identical to this tree's
+    pre-2026-08-13 copies (sizes compared, contents not diffed). LS6's only hit
+    is a copy of this file under canitford_track1b/, self-references at the same
+    line numbers, not an importer.
+
+Two things here are NOT superseded and are worth reading before any reimplementation:
+  1. The commissioning-brief correction below ("no accumulator exists anywhere"
+     is too strong; :2223-2224 has one, on kinematic collider paths only). That
+     correction is what makes the force path an adaptation rather than an
+     invention, and it is not recorded in coupler.py.
+  2. CoupledRigidState's outright REFUSAL of vehicle_params.py's {463, 1893,
+     1960} box-fallback inertia, and the reason (axis-transposed, +379.2% on the
+     pitch axis). coupler.py/rigid_body.py must not silently lose that guard.
+
+Nothing here is deleted, because deletion needs explicit confirmation per
+CLAUDE.md. Physics context for the path this file was written to replace:
+docs/LIMITATION_COUPLING_KINEMATIC_VS_FORCE_2026-08-13.md.
+=================================================================
+
 Written 2026-08-12. Status: IMPLEMENTED AND ANALYTICALLY SELF-TESTED ON CPU.
 NOT yet run against the GPU solver, NOT validated against a gated run, and no
 verdict anywhere in this repo depends on it. Do not cite it as validated.

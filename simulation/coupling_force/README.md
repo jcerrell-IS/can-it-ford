@@ -3,6 +3,41 @@
 Created 2026-08-12. **Additive module.** It does not modify, patch, or monkey-patch the
 existing kinematic path. `kernels/mpm_utils.py:1434` is untouched and still reachable.
 
+## START HERE — there is ONE surviving API
+
+Two coupling implementations grew on two machines and were reconciled on 2026-08-13.
+**Only one survives. Do not re-derive this.**
+
+**Entry point: `from simulation.coupling_force import ...`** — i.e. `__init__.py`,
+which re-exports exactly the surviving API and nothing else:
+
+| symbol | from | role |
+|---|---|---|
+| `ForceCoupledBody`, `CouplingConfig`, `CouplingTrace`, `RHO_WATER` | `coupler.py` | the partitioned loop against a warpmpm `Solver` |
+| `RigidBodyState`, `integrate`, `inertia_from_particles`, `quat_to_matrix`, `quat_normalize` | `rigid_body.py` | Newton-Euler state, symplectic integrator, geometry-derived inertia |
+
+The worked driver is `rung_b_coupled.py:37-38`, which imports from that entry point.
+
+**`force_coupling.py` is SUPERSEDED as of 2026-08-13 and must not be used for new
+work.** Its `CoupledRigidState` / `step_newton_euler` / `accumulate_impulse_numpy` are
+*not* re-exported by `__init__.py`, so they are unreachable through the entry point
+above. Verified live 2026-08-13: a `/usr/bin/grep` across `*.py`, `*.md`, `*.json` and
+`*.sbatch` (the shell `grep` here skips gitignored paths, register H0) found **no
+importer anywhere in the repo**, and none on Vista or LS6 either. Vista's copy of this
+directory does not contain `force_coupling.py` at all, while carrying `__init__.py`,
+`coupler.py`, `rigid_body.py` and `README.md` at byte sizes identical to this tree's
+pre-2026-08-13 copies (sizes compared, contents not diffed). The file is retained,
+not deleted, because deletion needs explicit confirmation per `CLAUDE.md`.
+
+Its docstring still holds two things `coupler.py` does not record, and they should be
+read before anyone reimplements this: the correction that warpmpm *does* already
+accumulate a force and torque (`kernels/mpm_solver_warp.py:2223-2224`, on kinematic
+collider paths only), and the hard refusal of `vehicle_params.py`'s axis-transposed
+`{463, 1893, 1960}` box-fallback inertia.
+
+Physics context for the kinematic path this module was written to replace:
+`docs/LIMITATION_COUPLING_KINEMATIC_VS_FORCE_2026-08-13.md`.
+
 ## The defect this replaces
 
 The free-rigid path (material 8) never forms a force:
@@ -146,9 +181,13 @@ Performed before implementing, as instructed.
 
 | file | role |
 |---|---|
+| `__init__.py` | **the entry point.** Re-exports the surviving API and nothing else. |
 | `rigid_body.py` | Newton-Euler state + symplectic integrator + geometry-derived inertia. No warpmpm import. |
 | `coupler.py` | `ForceCoupledBody`, the partitioned loop against a warpmpm `Solver`. |
 | `test_rigid_body.py` | analytic self-tests, CPU only. |
+| `rung_b_coupled.py` | worked driver, item 6 below. Imports the entry point at `:37-38`. |
+| `force_coupling.py` | **SUPERSEDED 2026-08-13, imported by nothing.** Reference only, see "START HERE" above. Its CPU self-test still passes (re-run 2026-08-13). |
+| `inflow_outflow.py` | item 7 below, Zhao et al. 2019 in/outflow. Unrelated to the coupling API split. |
 
 ---
 
