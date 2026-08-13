@@ -37,7 +37,17 @@ file is render_s2/conv_2026-07-25/00_provenance.txt, start 2026-07-26T03:07:17),
 g64_* still dates from 2026-07-25 20:12 and the sweeps from the 01:54 idev run. Their
 frozen margins came from run outputs that no longer exist on this machine. Largest gap:
 g96_m2337, frozen 1.80047 against 1.74225 live, 3.2 percent, on the smallest-margin run
-in the set. Only the 11 that reproduce bit-exactly are used here.
+in the set. All 17 are reported, each carrying a `reproduces_frozen` flag; the six
+marked False have margins that cannot be independently checked against the canonical
+store, so weight them accordingly rather than dropping them.
+
+THE SHARPEST NUMBER HERE is not k_crit, it is `margin_frames`, which assumes nothing.
+g96_m2337 holds the joint SLIDE condition for 4 consecutive frames against the 3
+required: a ONE-FRAME margin, 0.033 s at 30 fps. Its series runs 11 -> 10 -> 4 frames
+across g48/g64/g96, so the margin is collapsing with refinement. Every other run in the
+set has a margin of 7 frames or more. Note the uncomfortable coincidence: the most
+fragile verdict in the canonical set is also one of the six whose margin does not
+reproduce.
 """
 import csv
 import os
@@ -60,6 +70,22 @@ SSF = get_vehicle("compact_sedan")["ssf"]
 
 # Measured peak-|vx| weakening g64 -> g128 in the Rogue/Silverado sweep, for reference.
 MEASURED_WEAKENING = {"rogue": 0.546, "silverado": 0.265}
+
+
+def longest_joint_run(dx, vx, slide_m, slide_v):
+    """Longest run of consecutive frames satisfying the joint SLIDE condition.
+
+    This is the most direct fragility statement available: the classifier needs
+    sustain_frames (3) consecutive, so longest_run - 3 is the margin IN FRAMES, and a
+    margin of 0 means one frame from STUCK. It makes no scaling assumption at all,
+    unlike k_crit.
+    """
+    j = (np.abs(dx) >= slide_m) & (np.abs(vx) >= slide_v)
+    best = cur = 0
+    for x in j:
+        cur = cur + 1 if x else 0
+        best = max(best, cur)
+    return int(best)
 
 
 def k_crit(dx, vx, slide_m, slide_v, sustain):
@@ -90,12 +116,16 @@ def main():
                       and abs(res.ratios[S] - float(fz["ratio_slide"])) < 1e-6)
         d = np.genfromtxt(path, delimiter=",", names=True)
         k = k_crit(d["dx"], d["vx"], TH.slide_m, TH.slide_speed_ms, TH.sustain_frames)
+        L = longest_joint_run(d["dx"], d["vx"], TH.slide_m, TH.slide_speed_ms)
         rows.append({
             "run": run, "n_grid": meta["n_grid"], "mass_kg": meta["mass_kg"],
             "velocity_ms": meta["velocity_ms"], "requested_depth_m": meta["requested_depth_m"],
             "mode_live": res.mode.value, "mode_frozen": fz["mode"],
             "ratio_slide_live": res.ratios[S], "ratio_slide_frozen": float(fz["ratio_slide"]),
             "reproduces_frozen": reproduces,
+            "longest_joint_frames": L,
+            "sustain_frames_required": TH.sustain_frames,
+            "margin_frames": L - TH.sustain_frames,
             "k_crit": k, "headroom_x": (1.0 / k) if k > 0 else float("inf"),
             "flips_under_rogue_weakening": k > MEASURED_WEAKENING["rogue"],
             "flips_under_silverado_weakening": k > MEASURED_WEAKENING["silverado"],
@@ -110,15 +140,16 @@ def main():
     print(f"wrote {OUT}, {len(rows)} rows "
           f"({sum(r['reproduces_frozen'] for r in rows)} reproduce the frozen store)")
     print()
-    print("%-20s%6s%8s%9s%11s%11s%8s" %
-          ("run", "grid", "mode", "k_crit", "headroom", "repro", "flips"))
+    print("%-20s%6s%8s%9s%10s%9s%8s%8s" %
+          ("run", "grid", "mode", "k_crit", "headroom", "joint_fr", "margin", "repro"))
     for r in rows:
         flips = ("silverado" if r["flips_under_silverado_weakening"] and
                  r["flips_under_rogue_weakening"] else
                  "sil-only" if r["flips_under_silverado_weakening"] else "-")
-        print("%-20s%6s%8s%9.4f%10.2fx%11s%8s" %
+        print("%-20s%6s%8s%9.4f%9.2fx%9d%8d%8s" %
               (r["run"], r["n_grid"], r["mode_live"], r["k_crit"], r["headroom_x"],
-               "yes" if r["reproduces_frozen"] else "NO", flips))
+               r["longest_joint_frames"], r["margin_frames"],
+               "yes" if r["reproduces_frozen"] else "NO"))
     print()
     print("k_crit > 1 means the run does not slide at all. sweepV_g64_v0p5 is the one")
     print("canonical STUCK run and is the built-in check that the metric is oriented right.")
