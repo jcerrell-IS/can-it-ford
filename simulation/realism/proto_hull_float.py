@@ -230,6 +230,15 @@ def main():
                          "the engine's own containment guard (:2639) refuses the run.")
     ap.add_argument("--vol-spacing", type=float, default=0.02,
                     help="lattice spacing for the geometric displaced-volume integral")
+    ap.add_argument("--dump-hf", default=None,
+                    help="write a per-frame water HEIGHTFIELD + surface-speed field here "
+                         "(.npz) for rendering. A heightfield rather than raw particles "
+                         "because the free surface IS a height field for this scene, and "
+                         "765k particles/frame is ~9 MB/frame against ~0.26 MB for a "
+                         "256^2 field. Dumped from the SAME run that is scored, so the "
+                         "render shows the validated physics and not a second scene.")
+    ap.add_argument("--dump-every", type=int, default=2)
+    ap.add_argument("--hf-res", type=int, default=256)
     ap.add_argument("--out", default="hull_float.json")
     args = ap.parse_args()
 
@@ -343,9 +352,45 @@ def main():
     surface = measure_surface(s, n_water, centre[:2], foot, h, floor)
     print(f"[settle] MEASURED surface = {surface:.5f} m vs fill height "
           f"{floor + args.depth:.5f} m", flush=True)
+    # ---- render dump state ------------------------------------------------------------
+    hf_lo, hf_hi = float(ax.min()), float(ax.max())
+    hf_R = int(args.hf_res)
+    hf_frames, hf_speed, hf_pose = [], [], []
+
+    def _heightfield():
+        """Water surface height and surface speed on a regular (x, y) lattice.
+
+        Max-z per bin, which is the free surface for a single-valued column and is what a
+        refraction/specular shader needs. Surface speed is the mean |v| of the particles
+        in the top layer of each bin, so a bow wave and a wake show up as fast-moving
+        surface, which is what foam keys off. Empty bins come back as NaN and the renderer
+        must treat them as dry, not as z = 0.
+        """
+        xp = np.asarray(s.x()[:n_water], dtype=np.float32)
+        vp = np.asarray(s.v()[:n_water], dtype=np.float32)
+        gi = np.clip(((xp[:, 0] - hf_lo) / (hf_hi - hf_lo) * hf_R).astype(np.int32), 0, hf_R - 1)
+        gj = np.clip(((xp[:, 1] - hf_lo) / (hf_hi - hf_lo) * hf_R).astype(np.int32), 0, hf_R - 1)
+        flat = gi * hf_R + gj
+        z = np.full(hf_R * hf_R, -np.inf, dtype=np.float32)
+        np.maximum.at(z, flat, xp[:, 2])
+        # top layer = within one particle spacing of that column's surface
+        near = xp[:, 2] >= z[flat] - h
+        sp = np.zeros(hf_R * hf_R, dtype=np.float32)
+        cnt = np.zeros(hf_R * hf_R, dtype=np.float32)
+        np.add.at(sp, flat[near], np.linalg.norm(vp[near], axis=1))
+        np.add.at(cnt, flat[near], 1.0)
+        sp = np.where(cnt > 0, sp / np.maximum(cnt, 1.0), 0.0)
+        z = np.where(np.isfinite(z), z + 0.5 * h, np.nan)
+        return z.reshape(hf_R, hf_R), sp.reshape(hf_R, hf_R)
+
     t0, hist = time.time(), []
     for f in range(args.frames):
         s.step(dt, substeps)
+        if args.dump_hf and f % args.dump_every == 0:
+            zf, sf = _heightfield()
+            hf_frames.append(zf)
+            hf_speed.append(sf)
+            hf_pose.append(np.concatenate([body.x, body.q]).astype(np.float32))
         if f % 10 == 0:
             surface = measure_surface(s, n_water, centre[:2], foot, h, floor)
         Fz = float(np.mean([r["F"][2] for r in body.trace[-substeps:]])) if body.trace else 0.0
@@ -436,6 +481,18 @@ def main():
     with open(args.out, "w") as fh:
         json.dump(out, fh, indent=2)
     print(f"wrote {args.out}")
+
+    if args.dump_hf and hf_frames:
+        np.savez_compressed(
+            args.dump_hf,
+            height=np.stack(hf_frames), speed=np.stack(hf_speed),
+            pose=np.stack(hf_pose),
+            extent=np.array([hf_lo, hf_hi, hf_lo, hf_hi], dtype=np.float32),
+            floor=np.float32(floor), fps=np.float32(args.fps / args.dump_every),
+            dump_every=np.int32(args.dump_every),
+            hull_extents=hull_ext.astype(np.float32),
+            surface_settled=np.float32(surface), n_grid=np.int32(n_grid))
+        print(f"wrote {args.dump_hf}  {len(hf_frames)} frames at {hf_R}^2")
 
 
 if __name__ == "__main__":

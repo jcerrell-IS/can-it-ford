@@ -363,3 +363,52 @@ repo with a live concurrent-session warning. Force-added these files instead
 (precedent: 841d666 did the same for data/failure_modes_by_run.json). Tracked
 files stay tracked, so this is a one-time action, but ANY new file dropped into
 renders/ later will be silently untracked again.
+
+## 2026-08-13 13:35 | realism-exploration
+STEP 4, RENDERING. Three cameras delivered as stills at 960x540.
+[READ] THE REFERENCE PATH CANNOT DO WHAT WAS ASKED, and says so itself.
+renders/yaris_render_s1/render_hero_g64_m1100_2026-08-06.py's own docstring:
+"This VTK build ships no OSPRay raytracing module, so there is no true
+refraction, transmission or caustics." Refraction was on the list. It is also
+moot here: pyvista and vtk are importable in NO interpreter on this Mac (checked
+four, including three venvs), and render_frames.py and render_frames_pyvista.py
+are both pyvista-based. Correction to something I said earlier this session: both
+named reference scripts DO exist (render_hero at can-it-ford/renders/
+yaris_render_s1/, render_frames_pyvista.py in ~/Downloads); my first search
+excluded */can-it-ford/* and so excluded the directory they were in.
+Wrote simulation/realism/render_water.py, a dependency-light CPU raytracer on
+numpy/scipy/PIL/trimesh/OpenEXR. Real Snell refraction at n=1.333, Schlick
+Fresnel, Beer-Lambert transmission with per-channel extinction (red 0.45, blue
+0.035 per metre, which is what produces depth-appropriate colour falloff rather
+than a tint), GGX sun glint, and an EXACT analytic intersection of the refracted
+ray with the floor plane. Screen-space only for the hull seen THROUGH water; that
+limit is stated in the docstring, not hidden.
+Used the assets as specified and did not regenerate them: OpenEXR was missing so
+I pip-installed it into the render-p5 venv rather than substituting the .hdr, so
+DaySkyHDRI002A_1K_HDR.exr is the actual light source. Sun direction is taken from
+the brightest texel of that EXR, not invented. Asphalt015 colour map on the floor.
+Data path: added --dump-hf to proto_hull_float.py, writing a per-frame water
+HEIGHTFIELD plus surface-speed field plus rigid pose, from the SAME g96 run that
+is scored, so the render shows the validated physics and not a second scene.
+765k particles/frame is ~9 MB; a 256^2 heightfield is ~0.26 MB. 240 frames, 107 MB.
+MOTION INTERPOLATION is implemented and needed: the dump is every 2nd physics
+frame, i.e. 15 fps against a 30 fps render. Height and speed lerp; the pose
+quaternion SLERPS, because a lerped quaternion is not a rotation.
+TWO DEFECTS FOUND BY LOOKING AT THE OUTPUT, both mine.
+(a) First render was 98.7 pct hull pixels: the cameras were placed as a fraction
+    of the DOMAIN (6.42 m) while the hull is 4.28 m long, so the camera sat inside
+    the car. Reframed on hull length instead.
+(b) The whole water surface came out white. Cause measured, not guessed: the dump
+    bins at 0.0250 m while the particle spacing at g96 is 0.0365 m, so a bin holds
+    at most ONE particle and the raw max-z field has a MEDIAN slope of 2.137, i.e.
+    65 degrees, pure sub-particle noise. It saturated the slope-driven foam term.
+    Fixed by reconstructing the surface with a gaussian at sigma 2.0 cells (about
+    one particle spacing), which drops median slope to 0.183.
+FOAM, STATED HONESTLY: the term keys on surface speed and slope, which is where a
+bow wave and wake live, but THIS SCENE HAS NEITHER. It is a static float with no
+through-flow and a measured maximum surface speed of 0.193 m/s, so foam is
+correctly near-absent. That is the data, not a broken shader. The arm that would
+show a bow wave is the channel scene from Step 3, which this shader can render.
+NOT DONE, and not claimed: no animation was produced, only the three stills. The
+interpolation path exists and is exercised by fractional --frame, but a full
+240-frame sequence at 27 s/frame was not run.
