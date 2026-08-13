@@ -43,6 +43,7 @@ import numpy as np
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from open_channel import ChannelRecycler, depth_hold_fraction, water_depth_at  # noqa: E402
+from outflow_deactivate import DepthControlledOutflow, active_depth_at  # noqa: E402
 
 RHO_W = 1000.0
 G = 9.81
@@ -52,7 +53,15 @@ ETA = 1.0e-3
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--arm", choices=["tank", "channel"], required=True)
+    ap.add_argument("--arm",
+                    choices=["tank", "channel", "outflow_sink", "outflow_pair"],
+                    required=True,
+                    help="tank/channel are the two arms already run and scored. "
+                         "outflow_sink is register B7 as literally written, a "
+                         "depth-controlled deactivation outflow with NO source, which is "
+                         "expected to drain and is run to show what the prescription "
+                         "alone does. outflow_pair adds the depth-controlled inlet that "
+                         "makes it a closed in/outflow pair.")
     ap.add_argument("--n-grid", type=int, default=64)
     ap.add_argument("--lim", type=float, default=3.0)
     ap.add_argument("--depth", type=float, default=0.30)
@@ -105,15 +114,23 @@ def main():
 
     x_in = float(ax.min() - 0.5 * h)
     x_out = float(ax.max() + 0.5 * h)
-    rec = ChannelRecycler(s, n_water, x_in, x_out, args.u,
-                          relax_gain=args.relax_gain,
-                          sponge_gain=args.sponge_gain) if args.arm == "channel" else None
 
-    # Both arms get the same upstream forcing: the inlet relaxation band. In the tank arm
-    # it is applied without any wrap, which is exactly the canonical Dirichlet-slab setup.
-    forcing = ChannelRecycler(s, n_water, x_in, x_out, args.u,
-                              relax_len=0.25 * (x_out - x_in),
-                              relax_gain=args.relax_gain, wrap=False) if rec is None else rec
+    outflow = None
+    if args.arm in ("outflow_sink", "outflow_pair"):
+        outflow = DepthControlledOutflow(
+            s, n_water, x_in, x_out, floor, args.depth, args.u, h,
+            mode="sink_only" if args.arm == "outflow_sink" else "sink_source",
+            relax_len=0.25 * (x_out - x_in), relax_gain=args.relax_gain)
+        forcing = outflow
+    else:
+        rec = ChannelRecycler(s, n_water, x_in, x_out, args.u,
+                              relax_gain=args.relax_gain,
+                              sponge_gain=args.sponge_gain) if args.arm == "channel" else None
+        # Both arms get the same upstream forcing: the inlet relaxation band. In the tank
+        # arm it is applied without any wrap, which is the canonical Dirichlet-slab setup.
+        forcing = ChannelRecycler(s, n_water, x_in, x_out, args.u,
+                                  relax_len=0.25 * (x_out - x_in),
+                                  relax_gain=args.relax_gain, wrap=False) if rec is None else rec
 
     probe_x = 0.5 * lim
     probe_y = 0.5 * lim
@@ -131,17 +148,29 @@ def main():
 
     depths, wall_depths, hist = [], [], []
     t0 = time.time()
+    all_active = np.ones(n_water, dtype=bool)
     for f in range(args.frames):
         s.step(dt, substeps)
         forcing.apply()
-        d = water_depth_at(s, n_water, probe_x, probe_y, half_win, floor, h)
-        dw = water_depth_at(s, n_water, x_out - 4 * h, probe_y, half_win, floor, h)
+        # Mask on the ACTIVE set. Deactivated particles are frozen where they died, which
+        # is at the top of the column by construction, so an unmasked percentile would
+        # keep reporting the free surface this boundary condition has just removed. For
+        # tank and channel the mask is all-True and this is identical to the
+        # `water_depth_at` used before, which the tank control arm re-verifies.
+        act = outflow.active_mask() if outflow is not None else all_active
+        xs_now = s.x()[:n_water]
+        d = active_depth_at(xs_now, act, probe_x, probe_y, half_win, floor, h)
+        dw = active_depth_at(xs_now, act, x_out - 4 * h, probe_y, half_win, floor, h)
         depths.append(d)
         wall_depths.append(dw)
-        hist.append({"frame": f, "depth_mid": d, "depth_downstream": dw})
+        hist.append({"frame": f, "depth_mid": d, "depth_downstream": dw,
+                     "n_active": int(act.sum())})
         if f % 10 == 0:
-            print(f"  frame {f:4d}  mid={d:.4f} m  downstream={dw:.4f} m  "
-                  f"wrapped={getattr(forcing, 'n_wrapped_total', 0)}", flush=True)
+            extra = (f"kill={forcing.n_deactivated_total} act={forcing.n_activated_total} "
+                     f"live={int(act.sum())}" if outflow is not None
+                     else f"wrapped={getattr(forcing, 'n_wrapped_total', 0)}")
+            print(f"  frame {f:4d}  mid={d:.4f} m  downstream={dw:.4f} m  {extra}",
+                  flush=True)
 
     frac, n_ok, n_tot = depth_hold_fraction(depths, args.depth, tol=0.10)
     dw_arr = np.asarray(wall_depths)
@@ -158,6 +187,13 @@ def main():
                              "last": float(dw_arr[-1]),
                              "pileup_ratio": float(dw_arr.max() / max(dw_arr[0], 1e-9))},
         "n_wrapped_total": int(getattr(forcing, "n_wrapped_total", 0)),
+        "n_deactivated_total": int(getattr(forcing, "n_deactivated_total", 0)),
+        "n_activated_total": int(getattr(forcing, "n_activated_total", 0)),
+        "n_active_final": int((outflow.active_mask().sum()) if outflow else n_water),
+        "water_retained_frac": float((outflow.active_mask().sum() / n_water)
+                                     if outflow else 1.0),
+        "V_water_initial_m3": n_water * h ** 3,
+        "V_water_final_m3": float(outflow.water_volume()) if outflow else n_water * h ** 3,
         "sponge_gain": args.sponge_gain, "relax_gain": args.relax_gain,
         "resolution": {"depth_over_dx": args.depth / dx, "water_layers": nz,
                        "canonical_depth_over_dx": 2.000, "canonical_water_layers": 4},
