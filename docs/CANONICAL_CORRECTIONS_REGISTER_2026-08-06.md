@@ -453,6 +453,73 @@ Any skill file containing any of the following must be corrected in place.
    operating here, which is a further reason to verify it before relying on it. What
    is independently established is the identity (algebra), the 0.5 threshold (source
    read), and the two settle/configuration causes above (measured).
+
+   J1b. RUNG (b) NOW HAS FOUR VALID MEASUREMENTS, AND THEY POINT AWAY FROM THE
+   COUPLING, 2026-08-13. Job 3362208 on LS6 A100 re-ran rung (b) at g96 with the
+   settle cap raised from 900 to 3000 frames and changed nothing else. Artifacts at
+   `realism_track/rung_b_g96_gated_3362208/`, working in `realism_track/FINDINGS.md`.
+
+   **The g96 discard was a cap artifact.** J1a's "the gated-settle rerun is the
+   decisive test" ran as job 3361443 and BOTH its g96 runs were self-declared
+   discards, `settle_gate_met false` at the 900-frame cap. With the cap at 3000 the
+   gate is met at 1030 frames (coupled) and 1031 (fixed), `ratio_c_over_vmax` 20.54
+   and 20.91. 900 was about 13 percent short. The g96 settle is reachable at partial
+   submersion; it costs about 2.9x the frames g64 needs.
+
+   **The four gate-met rows**, scored against `F_buoy_analytic_partial_N`, which is
+   the correct reference for a partially submerged body and not the full-submersion
+   number the stdout banner prints:
+
+   | grid | mode | frac_sub | err vs partial |
+   |------|---------|----------|----------------|
+   | 64 | coupled | 0.7540 | -25.21 % |
+   | 64 | fixed | 0.7548 | -49.92 % |
+   | 96 | coupled | 0.8437 | -29.64 % |
+   | 96 | fixed | 0.8445 | -32.51 % |
+
+   **The divergence signature is retired.** J1a records the unsettled pair as -18.9
+   percent at g64 and +115.0 percent at g96 and reads it as divergence. Settled, the
+   same comparison is -25.21 and -29.64 percent: same sign, 4.4 points apart. The
+   sign flip was an artifact of settling two grids for different physical durations.
+
+   **THE LOAD-BEARING RESULT.** Fixed and coupled are 24.71 points apart at g64 and
+   **2.87 points apart at g96**. A deficit that an SDF-fixed collider and a
+   free-rigid force-coupled body both reproduce to within 2.9 points at the finer
+   grid **is not primarily an artifact of the free-rigid coupling**. Any framing that
+   calls the force-coupled path the broken one and the fixed collider the trustworthy
+   baseline is unsupported at partial submersion, and at g64 it is backwards: the
+   fixed collider is worse by 24.7 points. Note this is a FORCE-error comparison at
+   partial submersion and does not by itself overturn the rung-(a) fully-submerged
+   figures, which are a different metric at a different configuration.
+
+   **NOT ESTABLISHED, recorded so this entry is not over-read.** The pair is
+   confounded: realized `frac_submerged` is 0.754 at g64 against 0.844 at g96, so a
+   second variable moves with the grid. A clean refinement test at matched realized
+   submersion has NOT been run. And the constant-offset model is not confirmed by
+   these numbers: the deficits as pressure over the 2.1662 m2 cross-section are 2747,
+   5444, 3613 and 3967 Pa, not a resolution-independent constant, and none is the
+   roughly 6.2 kPa job 3361504's direct profile reports. That discrepancy is open.
+
+   **Rungs (c) and (d) still unattempted**, and the reason has changed. It is no
+   longer that rung (b) lacks a valid measurement. It is that the deficit rung (b)
+   exposes is unexplained and is not specific to the coupling path the ladder exists
+   to test. A fixed-collider ladder cannot close this gap on its own in any case: a
+   fixed collider cannot slide, so it can never reproduce a SLIDE outcome, and it can
+   only bound how wrong the load is by a known factor.
+
+   J1c. THE RUNG-B EVIDENCE EXISTED ON ONE CLONE ONLY UNTIL 2026-08-13. The result
+   JSONs and drivers for jobs 3361371, 3361423, 3361443 and 3361504 were committed on
+   `/work/11603/jcerrell0629/vista/can-it-ford`, a clone 166 commits behind
+   `origin/main` with a dirty working tree, and never pushed. `origin/main` carried
+   the prose ABOUT those jobs (`6434258`, `ca9bdeb`, `d98837f`, `be20075`) while the
+   evidence those commits cite was absent from the repo entirely. Recovered by
+   `8695539`. `realism_track/FINDINGS.md` had also diverged on both clones from a
+   shared base (`02f08eb` = `cdcdf9d`, sha256 `185968e0`); it was reconciled by
+   three-way merge, purely additive at 496 insertions and 0 deletions, with a
+   RECONCILIATION SEAM section marking which narrative supersedes which. **The
+   standing lesson: a commit is not a backup. Prose about an experiment on one clone
+   and the experiment's evidence on another is the state this project was in for a
+   day, and neither clone alone was sufficient to check the other's claims.**
 2. CLOSED 2026-08-07, superseded: H5.
 3. CLOSED 2026-08-07, D6h and D6i. The two `failure_modes_result.json` citations were repointed by `841d666`; the surviving independence overclaim in `four_rung_ladder.md` was fixed separately the same day. Note `841d666`'s message claimed to close this item but never edited this register, which is why it sat open for a day after the work was done. **A commit message is not a register edit.**
 4. CLOSED 2026-08-07, D6a and D6b. The classifier ran on all 17 on 2026-08-05 and was re-verified live 2026-08-07. Same caveat as item 3: `841d666` claimed the closure without making it.

@@ -1,0 +1,36 @@
+Warp DeprecationWarning: The namespace `warp.torch` will soon be removed from the public API. It can still be accessed from `warp._src.torch` but might be changed or removed without notice.
+PREFLIGHT vehicle=rogue class=large_passenger hull=/work/11603/jcerrell0629/vista/can-it-ford/vehicle_geometry_research/rogue_g96_pd8_coarse_watertight.ply
+PREFLIGHT watertight=True hull_m3=4.950341 solid_volume=4.942998 fill_ratio=0.9985
+PREFLIGHT mass=1571.3 kg source=explicit --mass  realized_rho=317.88 kg/m3
+PREFLIGHT mass_alt=1571.3 kg source=Rogue web-sourced curb mass; the Rogue deck states no mass at all  realized_rho_alt=317.88 kg/m3
+PREFLIGHT published_hull_m3=4.950341 deviation=0.0000%
+DETERMINISM load1 n=72827 lim=10.442536068
+DETERMINISM load2 n=72827 lim=10.442536068
+DETERMINISM identical=True
+PARITY_ODD_COLUMNS dropped=0 of 5137 columns (0.0000 percent)
+Warp DeprecationWarning: Support for Python 3.9 is deprecated and will be removed in Warp 1.13. Please upgrade to Python 3.10 or newer.
+warpmpm: device auto -> cuda:0
+Particles initialized from torch data.
+Total particles:  472347
+SCENARIO=STANDING_WATER_SUSTAINED_INFLOW
+grid 128^3 lim=10.44m  water 399520 + vehicle 72827 particles (1571.3 kg)  dt=1.75e-03 (19 substeps/frame)
+INSTRUMENT dx=0.081582 h=0.040791 floor=0.244747 lim=10.442536
+INSTRUMENT water_layers=7
+INSTRUMENT solid_volume=4.94300 m3 hull=4.95034 fill_ratio=0.9985 realized_rho=317.88
+INSTRUMENT hull_source=/work/11603/jcerrell0629/vista/can-it-ford/vehicle_geometry_research/rogue_g96_pd8_coarse_watertight.ply hull_m3=4.950341 watertight=True yaris_ref_delta_pct=+39.732
+INSTRUMENT carved 3680 of 403200 water particles from vehicle cells (0.91 percent)
+SUBSTEP_TERMS eta=1.000e-03 acoustic=562.3257 viscous=0.000901 advective=36.7727 -> rate=562.3257 substeps=19
+ACOUSTIC c=12.8452 m/s  vehicle_x=6.2655  downstream_wall=10.1162  round_trip=0.5996 s
+FLOOR_FRICTION=0.550  WATER_ETA=1.000e-03
+frame   0  |d|=   1.26cm  yaw= -0.07  roll= -0.10  ld_bow=0.2987 ld_foot=0.3021 oob=0 inflow=62160
+frame  10  |d|=  16.58cm  yaw= +0.19  roll= +1.05  ld_bow=0.4040 ld_foot=0.3741 oob=0 inflow=42122
+frame  20  |d|=  23.04cm  yaw= +0.17  roll= +1.05  ld_bow=0.4649 ld_foot=0.4325 oob=0 inflow=22824
+frame  30  |d|=  24.28cm  yaw= +0.12  roll= +1.05  ld_bow=0.4892 ld_foot=0.4302 oob=0 inflow=6810
+frame  40  |d|=  25.10cm  yaw= +0.12  roll= +1.05  ld_bow=0.4592 ld_foot=0.4052 oob=0 inflow=476
+frame  50  |d|=  25.80cm  yaw= +0.07  roll= +1.05  ld_bow=0.4227 ld_foot=0.3903 oob=0 inflow=428
+frame  60  |d|=  25.44cm  yaw= +0.07  roll= +0.78  ld_bow=0.4141 ld_foot=0.4370 oob=0 inflow=388
+frame  70  |d|=  25.47cm  yaw= +0.01  roll= +0.91  ld_bow=0.3805 ld_foot=0.4185 oob=0 inflow=333
+frame  80  |d|=  25.31cm  yaw= -0.04  roll= +0.95  ld_bow=0.3125 ld_foot=0.4035 oob=0 inflow=332
+frame  89  |d|=  24.77cm  yaw= -0.09  roll= +0.77  ld_bow=0.2686 ld_foot=0.4119 oob=0 inflow=375
+SUMMARY {"scenario": "standing_water_sustained_inflow", "label": "rs_rogue_g128", "mass_kg": 1571.3, "depth_m": 0.3, "velocity_ms": 1.5, "n_grid": 128, "frames": 90, "grid_lim": 10.442536067962648, "dx": 0.08158231303095818, "h": 0.04079115651547909, "water_layers": 7, "n_water": 399520, "n_vehicle": 72827, "n_carved": 3680, "water_eta": 0.001, "floor_friction": 0.55, "bulk_modulus": 150000.0, "substeps": 19, "sound_speed_ms": 12.84523257866513, "term_acoustic": 562.3256920980061, "term_viscous": 0.00090148648818511, "term_advective": 36.772676436148416, "solid_volume_m3": 4.9429984716689335, "hull_m3": 4.950340735545738, "fill_ratio": 0.998516816463949, "hull_source": "/work/11603/jcerrell0629/vista/can-it-ford/vehicle_geometry_research/rogue_g96_pd8_coarse_watertight.ply", "hull_watertight": true, "hull_yaris_ref_m3": 3.542739, "hull_ref_delta_pct": 39.732019083137025, "realized_rho": 317.8839744754104, "vehicle_key": "rogue", "vehicle_class": "large_passenger", "mass_source": "explicit --mass", "mass_alt_kg": 1571.3, "mass_alt_source": "Rogue web-sourced curb mass; the Rogue deck states no mass at all", "realized_rho_mass_alt": 317.8839744754104, "hull_m3_published": 4.950341, "preflight_fill_ratio": 0.998516816463949, "parity_odd_columns_dropped": 0, "parity_total_columns": 5137, "determinism_identical": true, "final_disp_m": [0.24746179580688477, -0.00971841812133789, -0.0023632049560546875], "final_disp_mag_m": 0.24766382575035095, "final_yaw_deg": -0.09137745235728419, "final_roll_deg": 0.7746835241182841, "final_pitch_deg": 1.4756997227782784, "C3_oob_particle_frames": 0, "local_depth_bow_peak": 0.48916791304945945, "local_depth_bow_peak_frame": 30, "local_depth_bow_final": 0.2685941897332668, "local_depth_footprint_peak": 0.44351528510451316, "local_depth_footprint_final": 0.4118773780763149, "C2_veh_zmin_start": 0.24474692344665527, "C2_veh_zmin_final": 0.24474692344665527, "C2_veh_zmin_rise": 0.0, "passthrough_max_frac": 0.09876351621946336, "leaked_particle_frames": 484436, "grid_lim_line_verbatim": "grid 128^3 lim=10.44m  water 399520 + vehicle 72827 particles (1571.3 kg)  dt=1.75e-03 (19 substeps/frame)"}
+DONE rs_rogue_g128

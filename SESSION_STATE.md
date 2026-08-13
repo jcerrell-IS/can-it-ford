@@ -94,3 +94,15 @@ Poster PDF upload Mon Jul 27 09:00 CST, `Cerrell_TACC_42x56.pdf`, PDF only, unde
 ## Where the pre-restructure history went
 
 All 396 lines of the pre-restructure file are preserved byte-for-byte at `.claude/handoffs/2026-07-24_ARCHIVE_session-state-pre-restructure.md`, md5 `565d5b308e5f9b4e90de3354e655155f`. Nothing was deleted.
+
+---
+
+## 2026-08-13, Track 1B, LS6 (pointer only)
+
+`docs/SESSION_TRACK1B_2026-08-13.md`. Rung (b) now has four gate-met measurements and the
+fixed and coupled paths converge to about -30 percent at g96, 2.87 points apart, so the
+partial-submersion deficit is not primarily a free-rigid coupling artifact. Register
+items J1b and J1c. The rung-b evidence for four GPU jobs was unpushed on a single clone
+and is now recovered (`8695539`). Rogue/Silverado grid sweep is in
+`data/rogue_silverado_grid_sweep_2026-08-13.csv`, NON-CANONICAL per Part 2.7: passthrough
+does not improve with resolution for either hull.

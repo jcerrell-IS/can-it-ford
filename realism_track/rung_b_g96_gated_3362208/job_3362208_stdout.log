@@ -1,0 +1,78 @@
+
+-----------------------------------------------------------------
+           Welcome to the Lonestar6 Supercomputer                
+-----------------------------------------------------------------
+
+No reservation for this job
+--> Verifying valid submit host (login1)...OK
+--> Verifying valid jobname...OK
+--> Verifying valid ssh keys...OK
+--> Verifying access to desired queue (gpu-a100-dev)...OK
+--> Checking available allocation (BCS20003)...OK
+--> Verifying that quota for filesystem /home1/11603/jcerrell0629 is at 47.78% allocated...OK
+--> Verifying that quota for filesystem /work/11603/jcerrell0629/ls6 is at  5.40% allocated...OK
+=== node ===
+c301-003.ls6.tacc.utexas.edu
+NVIDIA A100-PCIE-40GB, 40960 MiB, 570.195.03
+NVIDIA A100-PCIE-40GB, 40960 MiB, 570.195.03
+NVIDIA A100-PCIE-40GB, 40960 MiB, 570.195.03
+Warp DeprecationWarning: The namespace `warp.torch` will soon be removed from the public API. It can still be accessed from `warp._src.torch` but might be changed or removed without notice.
+warpmpm /work/11603/jcerrell0629/vista/can-it-ford/mpm-engine/src/warpmpm/__init__.py
+warp 1.12.1 cuda True
+
+############ n_grid=96 mode=coupled settle-frames=3000 ############
+Thu Aug 13 05:08:30 CDT 2026
+Warp DeprecationWarning: The namespace `warp.torch` will soon be removed from the public API. It can still be accessed from `warp._src.torch` but might be changed or removed without notice.
+Warp DeprecationWarning: Support for Python 3.9 is deprecated and will be removed in Warp 1.13. Please upgrade to Python 3.10 or newer.
+warpmpm: device auto -> cuda:0
+Particles initialized from torch data.
+Total particles:  1497096
+MODE=coupled n_grid=96 dx=0.098143 dt=2.083333e-03 substeps/frame=16 n_water=1497096 c=12.8452 handle=17
+SETTLE frames=1030/3000 substeps=16480 gate_met=True vmax_peak=9.9626 vmax_final=0.6254 ratio_c_over_vmax=20.54
+GEOM surface=2.861478 box_top=3.091509 margin_dx=-2.3438 frac_submerged=0.8437 fully_submerged=False
+REFERENCE F_full=31298.44 N  F_partial=26407.88 N  mass=1914.28 kg
+COUPLER added_mass_ratio=1.4062
+COUPLING WARNING added_mass_ratio=1.41 exceeds 0.5; a partitioned explicit scheme is at its stability limit here. Reduce dt or set relax<1 and treat the transient as unconverged until a dt study says otherwise.
+============================================================================
+MODE coupled  n_grid 96  relax 1.0
+  Fz steady tail mean =    +18580.05 N  std 110.38  ptp 303.65
+  Fz median (all)     =    +18437.99 N  min +17301.59 max +18742.05
+  F_analytic (full)   =    +31298.44 N
+  ERROR steady vs full submersion = -40.64 %
+  ERROR first3 vs full submersion = -44.19 %
+  lateral/Fz = 0.0202   net dz = -0.008817 m
+============================================================================
+wrote /scratch/11603/jcerrell0629/rungb_g96_gated_3362208/settled_coupled_g96_gated.json
+exit=0
+Thu Aug 13 05:13:13 CDT 2026
+
+############ n_grid=96 mode=fixed settle-frames=3000 ############
+Thu Aug 13 05:13:13 CDT 2026
+Warp DeprecationWarning: The namespace `warp.torch` will soon be removed from the public API. It can still be accessed from `warp._src.torch` but might be changed or removed without notice.
+Warp DeprecationWarning: Support for Python 3.9 is deprecated and will be removed in Warp 1.13. Please upgrade to Python 3.10 or newer.
+warpmpm: device auto -> cuda:0
+Particles initialized from torch data.
+Total particles:  1497096
+MODE=fixed n_grid=96 dx=0.098143 dt=2.083333e-03 substeps/frame=16 n_water=1497096 c=12.8452 handle=17
+SETTLE frames=1031/3000 substeps=16496 gate_met=True vmax_peak=10.0098 vmax_final=0.6142 ratio_c_over_vmax=20.91
+GEOM surface=2.862562 box_top=3.091509 margin_dx=-2.3328 frac_submerged=0.8445 fully_submerged=False
+REFERENCE F_full=31298.44 N  F_partial=26430.94 N  mass=1914.28 kg
+============================================================================
+MODE fixed  n_grid 96  relax 1.0
+  Fz steady tail mean =    +17837.30 N  std 87.95  ptp 314.40
+  Fz median (all)     =    +17678.67 N  min +17392.03 max +17995.74
+  F_analytic (full)   =    +31298.44 N
+  ERROR steady vs full submersion = -43.01 %
+  ERROR first3 vs full submersion = -44.42 %
+  lateral/Fz = 0.0411   net dz = +0.000000 m
+============================================================================
+wrote /scratch/11603/jcerrell0629/rungb_g96_gated_3362208/settled_fixed_g96_gated.json
+exit=0
+Thu Aug 13 05:18:09 CDT 2026
+
+=== results ===
+total 25
+drwx------  2 jcerrell0629 G-819066     1 Aug 13 05:18 .
+drwx------ 22 jcerrell0629 G-819066    39 Aug 13 05:16 ..
+-rw-------  1 jcerrell0629 G-819066 12271 Aug 13 05:13 settled_coupled_g96_gated.json
+-rw-------  1 jcerrell0629 G-819066 12144 Aug 13 05:18 settled_fixed_g96_gated.json

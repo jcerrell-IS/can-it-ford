@@ -620,3 +620,575 @@ flight, so the open question is narrower than it looked.
 
 Rung (c) and (d) remain unattempted, the ladder is still gated, and no threshold has
 been tuned at any point.
+
+---
+
+## RECONCILIATION SEAM, added 2026-08-13. Read this before the sections below.
+
+Everything above this line and everything below it were written in parallel, by two
+sessions, on two clones that shared a base and never saw each other. The base is
+`realism_track/FINDINGS.md` at `02f08eb` on `origin/main`, byte-identical to the same
+file at `cdcdf9d` on the unpushed `/work/11603/jcerrell0629/vista/can-it-ford` clone
+(sha256 `185968e0`). Both sides then appended, and neither side's additions are in the
+other. This file is the three-way merge of the two, with the common base kept once.
+
+**Above the seam** is the `origin/main` narrative: `6434258`, `ca9bdeb`, `d98837f`,
+`be20075`. It analyses job 3361315 and lands on two causes, the one-substep settle and
+the not-like-for-like comparison, after retracting the added-mass identity as the cause.
+
+**Below the seam** is the unpushed vista narrative: `001a62c`, `20e2063`, `a3ab0d0`,
+`0d81f2f`, `45be8c3`. It is CHRONOLOGICALLY LATER and covers three jobs the sections
+above never saw: 3361423 (fixed-pose wrench diagnostic), 3361443 (the gated-settle
+rerun), and 3361504 (the pressure probe).
+
+### What the later sections supersede in the earlier ones
+
+1. **The settle is not the whole cause.** The section above titled "Primary cause,
+   confirmed independently: the settle is 1 substep per iteration, not 1 frame" is
+   correct that the settle was defective and correct that `79fec32` fixes it. It is
+   wrong to read it as sufficient. Job 3361443 ran WITH the gated settle and the error
+   did not close. Job 3361504 then isolated the residual as a resolution-independent
+   constant pressure offset of about 6.2 kPa.
+
+2. **"Do not proceed to rung (c) or (d)" still stands**, and for a stronger reason than
+   the section above gives. It is not only that the settle was wrong; it is that at
+   g96 the settle gate is still not met even at a 900-frame cap, so the controlled
+   refinement pair rung (b) exists to produce does not exist yet.
+
+3. **The added-mass retraction is consistent across both sides.** The identity itself,
+   `added_mass_ratio = 1.000000` for any body floating at equilibrium, is retained by
+   both as true and as a constraint on future scheme choice, and rejected by both as
+   the diagnosis for this failure.
+
+### What is NOT reconciled, and is therefore still open
+
+The two narratives were not rewritten into a single argument, only concatenated in
+chronological order with this seam between them. Specific claims above may be stated
+more confidently than the sections below leave warranted, and the prose still contains
+two independent voices. Anyone quoting this file should quote the LATER section when
+the two touch the same question, and should treat a claim that appears only above the
+seam and concerns jobs 3361423, 3361443 or 3361504 as untested by the section that
+makes it.
+
+### Verification status of this seam
+
+Independently re-derived from the committed JSONs during the merge: the 3361443 result
+table, specifically that only g64 carries `settle_gate_met true` and
+`settle_is_discard false`, that both g96 runs are self-declared discards, and the
+`err_steady_vs_partial_pct` figures of -25.21 (coupled) and -49.92 (fixed) at g64.
+NOT independently re-derived, and reproduced here from the vista commit messages and
+the sections below: the 6.2 kPa offset figure, the J-compression numbers behind
+"the velocity gate does not certify hydrostatic equilibrium", and the
+`mpm_utils.py:1086-1089` mechanism behind the pre-compression retraction.
+
+---
+## Item 1 ANSWERED: the moving collider does NOT preserve 7.3-7.7%
+
+Executed on LS6, not Vista. Vista stayed unreachable (MFA), so the run was moved
+to the A100, which is where the brief's own resource guidance puts warpmpm
+SDF-collider work anyway. Zero Vista SU spent. `warpmpm` was installed into
+`/scratch/11603/jcerrell0629/warpmpm_ls6_env` (warp-lang + torch + numpy, 6.7 GB,
+24 minutes on BeeGFS); LS6 is x86_64, which sidesteps the aarch64 failure class
+entirely.
+
+Jobs: **3361315** (baseline, g64 + g96) and **3361371** (relax sweep), node
+c301-004, 3x A100-PCIE-40GB, driver 570.195.03. Results in
+`realism_track/rung_b_ls6_3361315/` and `realism_track/rung_b_relax_3361371/`.
+
+The 14 analytic integrator tests passed first, on GPU, exactly as the Vista session
+reported on CPU (SHM period 1.73731 s against theory 1.7373 s, |L| drift 7.6e-5,
+E drift 1.0e-4, R orthonormal to 1.1e-16).
+
+**The coupling force is real.** `nonzero_wrench=true`, `clamped_steps=0` in every
+run, 445,184 water particles at g64 and 1,502,496 at g96. The material-8 objection
+does not apply to this path: force genuinely transfers.
+
+**But the accuracy does not carry over, and gets worse with refinement:**
+
+| grid | relax | moving-collider err | fixed-collider err | added_mass_ratio | net_dz | a_first3 | a_ideal |
+|---|---|---|---|---|---|---|---|
+| g64 | 1.00 | **-18.86%** | -7.67% | 0.864 | -0.124 m | -2.19 | -1.330 |
+| g64 | 0.50 | -19.94% | -7.67% | 0.864 | -0.127 m | -3.04 | -1.330 |
+| g64 | 0.25 | -23.12% | -7.67% | 0.864 | -0.131 m | -5.20 | -1.330 |
+| g96 | 1.00 | **+115.03%** | +7.28% | 0.930 | +0.401 m | +39.85 | -0.689 |
+| g96 | 0.50 | +119.91% | +7.28% | 0.930 | +0.396 m | +34.66 | -0.685 |
+| g96 | 0.25 | +132.28% | +7.28% | 0.930 | +0.389 m | +20.48 | -0.687 |
+
+Error is `(Fz_measured_median - F_buoy_analytic) / F_buoy_analytic`, against the
+analytic reference the driver builds from its own measured settled surface.
+
+Three conclusions, in order of importance.
+
+**1. The brief's instruction not to inherit 7.3-7.7% was correct.** Freeing the
+collider degrades g64 from -7.67% to -18.86%, a factor of 2.5, and destroys g96,
+from +7.28% to +115.03%. Any realism claim resting on the fixed-collider number
+would have been wrong by an order of magnitude at g96.
+
+**2. Under-relaxation does not fix it, so this is not simple partitioned-explicit
+instability.** Both runs tripped the coupler's own guard
+(`added_mass_ratio` 0.864 and 0.930, against its stated 0.5 limit), which made
+scheme instability the obvious suspect. It is refuted: relax 1.0 -> 0.5 -> 0.25
+made the force error monotonically **worse** (-18.86 -> -19.94 -> -23.12 at g64;
++115 -> +120 -> +132 at g96). `added_mass_ratio` is unchanged by relax because it
+is a property of the geometry and density ratio, not of the scheme parameter.
+Relaxation damps the body's motion response (g96 `a_first3` falls 39.85 -> 20.48)
+without improving the measured wrench. The error is systematic, not oscillatory
+divergence.
+
+**3. The g96 behaviour is unphysical, and divergence under refinement points at a
+bug rather than discretisation error.** A box at rho_box=600 in water of 1000 must
+sink gently: `a_ideal` = -0.689 m/s2. Instead it accelerates **upward** at
++39.85 m/s2, four times gravity, and rises 0.40 m. Refining g64 -> g96 makes the
+error worse (-19% -> +115%) and flips its sign. Convergent schemes do not behave
+this way. Something in the re-pose loop, most plausibly double-counting between
+`set_sdf_pose` and the grid velocity update, or a sign or frame error in how the
+wrench is applied, is wrong.
+
+**So the moving-SDF path is not validated, and must not be presented as such.**
+The fixed collider remains the only configuration meeting the 5-10% target. The
+realism track does not yet have a coupling force it can build visuals on.
+
+Recommended next step, cheap and diagnostic rather than more sweeping: run rung (b)
+with the body held fixed through the *same* new code path (force read via
+`sdf_wrench`, pose never updated). If that reproduces -7.67% at g64, the wrench
+read is sound and the defect is isolated to the pose-update loop. If it does not,
+the defect is in the wrench read itself. That single run separates the two
+hypotheses and needs no new physics.
+
+## Item 2, sound speed: not run, and deliberately so
+
+Two reasons, one practical and one now evidential.
+
+`rung_b_coupled.py` exposes no bulk-modulus argument (zero matches for `bulk`,
+`BULK`, `sound_speed`); it inherits `BULK = 1.5e5` from `validate_coupling_force.py`.
+Reaching c = 1480.98 m/s therefore requires a code change, not a flag. Required
+bulk is **1.9939e9 Pa**, a 13,293x increase, and by the solver's own CFL rule
+(`substeps_and_dt`, `validate_coupling_force.py:49-56`) substeps rise from 11 to
+1198 at g64 and 16 to 1797 at g96, about **109-112x more compute**.
+
+The evidential reason is the stronger one: **item 1 has just shown the moving-collider
+model is wrong at both resolutions.** Sweeping the single most expensive parameter
+in the project on a model that accelerates a sinking body upward at 4g would spend
+roughly 100x a run's cost measuring an artifact. Sound speed should follow, not
+precede, a coupling path that reproduces analytic buoyancy.
+
+## Item 1 CORRECTED: the defect is the settle state, not the pose-update loop
+
+Job **3361423** ran the three-mode wrench diagnostic
+(`realism_track/diag_wrench_fixed_pose.py`, results in
+`realism_track/diag_wrench_3361423/`), six runs, all completed. The mode named
+`fixed` reads the force through the identical new code path but never updates the
+collider pose, so it isolates the wrench read from the pose loop.
+
+| n_grid | `fixed` | `pose_zero_vel` | `pose_full` | rung (b), for reference |
+|---|---|---|---|---|
+| 64 | **-48.49%** | -45.53% | -18.86% | -18.86% |
+| 96 | **+349.55%** | +62.33% | +114.94% | +115.03% |
+
+`pose_full` reproduces rung (b) to within 0.09 percentage points at both
+resolutions, so the diagnostic is a faithful stand-in for rung (b).
+
+**The `fixed` mode did not reproduce -7.67%. It came in at -48.49%.** Both
+hypotheses in the previous section were therefore wrong: the wrench read is not
+sound in this configuration, and the pose-update loop is not the primary defect.
+With the body held completely still, the force is already off by a factor of two
+at g64 and a factor of 4.5 at g96.
+
+### Root cause, verified in the source and in the reference data
+
+`rung_b_coupled.py` and `run_c1_sdf` never shared a configuration. Two differences,
+both material, both checked live:
+
+**1. Submersion.** `run_c1_sdf` (`validate_coupling_force.py:899-1000`) places the
+cube with `box_bottom_cells=8.0`, which puts `box_top` exactly at the nominal free
+surface, and after the displacement rise the cube ends up **fully** submerged. The
+reference JSONs confirm it: `submerged_height_frac` = 1.0 with margin +2.75 dx
+(g64) and +5.36 dx (g96) of water above the cube top, measured against
+`F_buoy_analytic = rho_w * V * g` = 31,298.44 N. `rung_b_coupled.py` instead calls
+`box_bottom_cells_for_submersion(0.80, 18)` and realizes frac **0.5187**, against a
+partial-submersion reference of 16,233 N. Different geometry, different reference,
+different physics.
+
+**2. Settling.** `settle_pinned` (`validate_coupling_force.py:620-646`) advances
+`tank.substeps` substeps per iteration (11 at g64, 16 at g96) and exits on a
+convergence gate, `sound_speed / vmax >= 20`. The reference runs met that gate at
+354 frames = **3,894 substeps** (g64) and 776 frames = **12,416 substeps** (g96),
+finishing at vmax 0.510 and 0.634 m/s. `rung_b_coupled.py`'s settle loop advances
+**one** substep per iteration with no gate: at 900 substeps it delivers **23%** of
+the settling the reference needed at g64 and **7.2%** at g96.
+
+The force scatter confirms the water is still ringing. The reference tail standard
+deviation is 828 N at g64 (2.9% of the mean) and 102 N at g96 (0.3%). In rung (b)'s
+configuration, Fz sweeps -3,360 to +23,847 N at g64 with the body fixed, a
+peak-to-peak of 27,207 N against an analytic 16,233 N, and 35,077 to 118,831 N at
+g96. A hydrostatic measurement cannot swing by 1.7 times the quantity it is
+measuring. `settle_vmax_peak` in the reference runs is 9.82 and 12.43 m/s against
+c = 12.845 m/s, so the initial collapse is very nearly sonic and needs the full
+gated settle to decay.
+
+### What this retracts
+
+The previous section's headline, "the moving collider does not preserve 7.3-7.7%",
+is correct as a bare observation but wrong in attribution. It charged the
+difference to collider motion. Most of it is geometry and settle state: an
+unsettled, half-submerged tank measured against a partial reference. The 7.3-7.7%
+figure was never inheritable by rung (b), and not because the collider moves.
+**Treat that section as superseded on cause, retained only for the raw numbers.**
+
+### One genuine positive result about the API
+
+Comparing `pose_zero_vel` with `pose_full` isolates the velocity argument to
+`set_sdf_pose`. At g64 the steady force moves from -45.53% to -18.86% and the net
+descent halves, from -0.2449 m to -0.1236 m; at g96 it moves from +62.33% to
++114.94%. Both shifts are in the same direction, more upward reaction when the
+body's velocity is communicated. So `set_sdf_pose`'s `velocity` argument does reach
+the grid coupling and is not silently dropped, which is a prerequisite for the
+moving-collider path and is now confirmed rather than assumed.
+
+### The test that actually settles it
+
+Job **3361443** puts the reference geometry through both code paths:
+`realism_track/rung_b_settled.py`, modes `fixed` and `coupled`, at g64 and g96,
+with `box_bottom_cells=8.0` and `settle_pinned` including the convergence gate,
+scored on the same steady-tail-mean statistic against `rho_w * V * g`. The `fixed`
+arm must reproduce -7.67% and +7.28%, which validates the harness; the `coupled`
+arm is then the first honest measurement of the moving collider. Any run that
+fails the settle gate is flagged `settle_is_discard` in its JSON and must not be
+quoted.
+
+Until that returns, the standing statement is unchanged and now better founded:
+**no validated coupling force exists for the realism track, so no visual-realism
+claim is backed.**
+
+## Item 2 re-costed against the gated settle, and a route that could make it possible
+
+The earlier item-2 estimate priced the measurement window but not the settle. Now
+that the settle is known to be the binding constraint, the real cost is much worse,
+and the number is worth stating exactly.
+
+Reproducing the solver's own CFL rule (`substeps_and_dt`,
+`validate_coupling_force.py:49-56`) with the true `LIM = 9.421742313727737` gives
+11 substeps at dt 3.030e-3 (g64) and 16 at dt 2.083e-3 (g96), matching every run
+in this track, so the cost model is validated before being extrapolated.
+
+| n_grid | dx | substeps at bulk 1.5e5 | at bulk 1.9939e9 | factor | gated settle now | gated settle at c = 1480.98 |
+|---|---|---|---|---|---|---|
+| 64 | 0.147215 | 11 | 1,198 | 108.9x | 3,894 substeps | **424,092 substeps** |
+| 96 | 0.098143 | 16 | 1,797 | 112.3x | 12,416 substeps | **1,394,472 substeps** |
+
+The settle columns use the frame counts at which the reference runs actually met
+the convergence gate (354 and 776 frames). At the throughput measured in job
+3361423, roughly 11 substeps/s at g64 and 8.5/s at g96 once startup is excluded,
+the settle alone is about **11 hours** at g64 and about **46 hours** at g96, per
+run, before a single measurement substep. The g96 figure exceeds a normal LS6
+single-job wall clock. So at physical sound speed, with this explicit solver and
+this settle criterion, the sweep is not merely expensive, it is out of reach.
+
+### A caution: monkeypatching BULK would be worse than having no knob
+
+`BULK` reaches three places, and they do not respond alike. `sound_speed()` and
+`substeps_and_dt()` take it as a **default argument**, bound at function definition
+time, and `BoxTank` calls both with no argument (`:267-268`). `set_material` reads
+the module global at call time (`:272`). Reassigning `BULK` before constructing a
+tank therefore changes the fluid's stiffness while leaving the timestep and the
+reported sound speed at their 12.845 m/s values. The run would be under-resolved by
+a factor of about 110, and worse, the settle gate itself (`sound_speed / vmax >= 20`)
+would be evaluated against the wrong speed and would pass far too early. A correct
+knob has to thread bulk through `BoxTank.__init__` into all three call sites. That
+edit is deliberately not made here while job 3361443 is reading the file.
+
+### The lead that could remove most of the settle cost
+
+The settle exists only because the water is seeded uncompressed. `set_material`
+gives every particle density `RHO_W` with the deformation gradient at identity, so
+J = 1 everywhere and the column has no pressure gradient at t = 0. It then collapses
+into its own hydrostatic profile, and the reference runs record that collapse
+peaking at `settle_vmax_peak` 9.82 m/s (g64) and 12.43 m/s (g96) against
+c = 12.845 m/s. The tank is very nearly shocked at startup, and the thousands of
+settle substeps are spent bleeding that off.
+
+Two pieces needed to skip it are already present:
+
+1. `hydrostatic_density(zeta)` at `validate_coupling_force.py:74` already computes
+   the compressible hydrostatic density profile for this EOS. It is currently used
+   only for reporting a local density in `run_c3` (`:1008`), never at seeding.
+2. The engine exposes `import_particle_F_from_torch`
+   (`mpm-engine/src/warpmpm/kernels/mpm_solver_warp.py`). `Solver` has no `set_F`
+   wrapper, but `_sim` is reachable directly, which is the same route `BoxTank.pin`
+   already uses to write `sim.rigid_x_cm` (`:365-372`). So no engine change is
+   required.
+
+Seeding F = J^(1/3) * I per particle, with J = rho_w / hydrostatic_density(depth),
+would start the column at its equilibrium compression instead of driving it there.
+**This is a lead, not a result: nothing here has been run, and the size of the
+settle reduction is unmeasured.** It is recorded because it attacks the root cause
+found today, and because it is the only identified route by which a physical sound
+speed becomes affordable at all.
+
+## Job 3361443: the settle defect and the force defect are separate
+
+### First, a correction to the section above
+
+The reference runs do **not** use `box_bottom_cells = 8.0`. Both
+`data/coupling_validation/c1sdf_sdf_g64.json` and `..._g96.json` record
+`z_b_nominal_at_spawn = 0.8832883` against `floor = 0.4416442`, exactly 3.0
+DX_CANON above the floor, and `box_top_z = 2.3554356`, exactly 16 DX_CANON. So the
+reference used `box_bottom_cells = 3.0`, which is why the cube ends fully submerged.
+`run_c1_sdf`'s signature default is 8.0 and its docstring quotes the C1 defaults; I
+took the signature default for the reference and was wrong. Job 3361443 therefore
+ran at 75-84% submersion, not full, so its `fixed` arm is not the harness-validating
+control it was meant to be. The claim in the previous section that the reference
+geometry is `box_bottom_cells=8.0` is retracted.
+
+### What the job nevertheless established
+
+| mode | n_grid | frac | gate | settle substeps | steady N | std | ptp | vs full | vs partial | net dz | lat/Fz |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| coupled | 64 | 0.7540 | met | 3,883 | 17,650.9 | 298.1 | 1,278.8 | -43.60% | **-25.21%** | -0.0623 | 0.0028 |
+| fixed | 64 | 0.7548 | met | 3,883 | 11,829.8 | 322.3 | 1,013.8 | -62.20% | **-49.92%** | 0.0 | 0.0355 |
+| coupled | 96 | 0.8389 | NOT met | 14,400 | 18,957.6 | 46.7 | 134.7 | -39.43% | -27.80% | +0.0002 | 0.0616 |
+| fixed | 96 | 0.8406 | NOT met | 14,400 | 19,040.4 | 168.7 | 582.0 | -39.17% | -27.63% | 0.0 | 0.1199 |
+
+**The gated settle works, and it is not the cause of the force offset.** At g64 the
+settle reproduced the reference almost exactly (353 frames vs 354, 3,883 substeps vs
+3,894, `vmax_peak` 9.8143 vs 9.8172, gate met) and it removed the ringing entirely:
+Fz peak-to-peak fell from 27,207 N ungated to 1,014 N, which is reference-quality
+quiet. The mean offset survived that unchanged. So the unsettled tank was a real
+defect that made the signal unusable noise, and a separate defect sets the mean.
+
+**The two g96 rows are discards and must not be quoted.** They failed the
+convergence gate at 900 frames (14,400 substeps), ending at vmax 1.02 and 1.30 m/s
+against the required c/20. They fail a second, independent criterion too: this
+file's own rule is that a lateral force comparable to Fz means the readout is
+unsound, and `lat/Fz` is 0.1199 at g96 fixed against 0.0121 in the reference.
+
+**A caveat on scatter, against my own earlier reasoning.** The g96 rows have very
+low scatter (ptp 135 and 582 N) while failing the gate at vmax ~1 m/s, because the
+residual motion there is slow large-scale sloshing rather than high-frequency
+ringing. Scatter is therefore a necessary but not a sufficient indicator of a
+settled state. The earlier use of a 27,207 N spread as evidence of ringing is sound
+for the ungated runs it described, but it should not be generalized.
+
+### Partial submersion, not resolution, is what breaks the g96 settle
+
+g96 with the waterline cutting through the collider ran the full 900 frames without
+converging. The fully submerged reference at the same resolution met the gate at 776
+frames with `vmax_final` 0.6341. So g96 does not simply need more settling: with the
+free surface intersecting the collider the waterline sustains motion. g64 at the
+same placement did meet the gate, so the effect is resolution dependent. This
+matters because **the flood-vehicle case is intrinsically the partial-submersion
+case.** It is the regime of interest, and it is the regime where both the settle
+criterion and the force reading are worst.
+
+## A pressure-deficit model, with its prediction tested
+
+Collecting the fixed-collider results against the analytic appropriate to each
+geometry:
+
+| configuration | frac | gate | error |
+|---|---|---|---|
+| reference g64, bbc 3.0 | 1.0 | met | -7.67% vs full |
+| reference g96, bbc 3.0 | 1.0 | met | +7.28% vs full |
+| ungated g64, frac request 0.80 | 0.519 | n/a | -48.49% vs partial |
+| gated g64, bbc 8.0 | 0.755 | met | -49.92% vs partial |
+| gated-attempt g96, bbc 8.0 | 0.841 | NOT met | -27.63% vs partial |
+
+A partially submerged box takes its entire upward force from the bottom face's
+**absolute** pressure, `rho*g*L^2*h_sub`. A fully submerged box takes it from the
+**difference** between bottom and top face pressures, where any uniform additive
+pressure deficit cancels. That is exactly the observed split: about -7 to +7% when
+the quantity is a difference, about -50% when it is an absolute. The candidate
+mechanism is that MPM free-surface particles have incomplete kernel support, so J
+stays near 1 and pressure near 0 over a surface layer some cells thick, removing
+`rho*g*(layer)` of head from every pressure beneath it.
+
+That model makes a falsifiable prediction: if the layer is a fixed number of
+**cells**, the error must shrink in proportion to dx. Recorded before reading the
+g96 result, the prediction was about -30% vs partial (-29.88% once the submersion
+actually realized at g96 is used, frac 0.8406 giving h_sub 1.2375 m). **Measured
+-27.63%.** Stated as the invariant the model is about:
+
+| | dx | deficit Pa | deficit in cells of head |
+|---|---|---|---|
+| g64, gate met | 0.147215 | 5,441.6 | **3.768** |
+| g96, gate NOT met | 0.098143 | 3,354.4 | **3.484** |
+
+The deficit falls by a third in Pascals while staying nearly constant in cells,
+which is a fixed-thickness surface layer and not a gradient error.
+
+**This is two points, one of them a discard, and inferred from force rather than
+measured.** Job 3361504 tests it directly: it exports per-particle stress after a
+gated settle and compares the binned pressure against `rho*g*(zs - z)`. A deficit
+constant in cells of head across depth confirms a surface offset; one that grows
+with depth means a gradient error and refutes the model. That job also runs the
+hydrostatic pre-compression test, which matters more now that the settle is
+confirmed to cost 3,883 substeps even at the cheap resolution.
+
+## Job 3361504: the deficit is a constant PRESSURE offset, and two of my own claims fall
+
+The probe reproduced the reference configuration exactly at both resolutions, which
+validates it before anything is concluded from it: g64 settled in 354 frames / 3,894
+substeps with `vmax_peak` 9.8172 and surface 2.760394, against the reference's 354 /
+3,894 / 9.8172 / 2.760142; g96 in 777 frames / 12,432 substeps with surface 2.877205
+against 776 / 12,416 / 2.881011.
+
+### The surface-layer model is refuted
+
+| | dx | deficit in cells of head | deficit in Pa |
+|---|---|---|---|
+| g64 | 0.147215 | 4.238 | **6,121** |
+| g96 | 0.098143 | 6.508 | **6,266** |
+
+The fixed-cell model required the cell figure to be constant across dx. It changes by
+54%. The Pascal figure changes by 2.4%. So the deficit is a **resolution-independent
+pressure offset of about 6.1 to 6.3 kPa**, not a fixed-thickness surface layer. The
+prediction was recorded before the g96 force result and its apparent success there
+was coincidental: a single force-inferred aggregate can match a mean while the
+profile it is supposed to describe is wrong.
+
+### The offset model does explain the full-versus-partial split
+
+A constant additive offset cancels in a pressure **difference** and survives in an
+**absolute** pressure. That is the whole pattern:
+
+| case | force depends on | predicted | measured |
+|---|---|---|---|
+| full submersion, g64 | p_bottom - p_top | 0% (offset cancels) | -7.67% |
+| full submersion, g96 | p_bottom - p_top | 0% (offset cancels) | +7.28% |
+| partial, g64, gate met | p_bottom absolute | -56.2% | **-49.92%** |
+| partial, g96, gate NOT met | p_bottom absolute | -51.6% | -27.63% (discard) |
+
+The residual -7.67% and +7.28% at full submersion are not explained by this model,
+but they are small and they bracket zero. The g64 partial prediction lands within
+6.3 percentage points of measurement. The g96 partial row is a discard and is listed
+only for completeness.
+
+**An earlier apparent contradiction dissolves.** Differencing two measured bins gave
+a force implying -54.9% at full submersion against the wrench's -7.67%, a factor of
+2.05, which looked like the wrench and the pressure field disagreeing. Both bins were
+unfit for the purpose: the deep one (depth 1.8679) is an outlier carrying a
+11,355 Pa deficit against a 6,121 Pa mean, and the shallow one (depth 0.4509) has
+`p_analytic` 4,423 Pa below the offset itself, so its pressure is floored near zero
+and its deficit is clipped. No cup test is needed to resolve it.
+
+### The velocity gate does not certify hydrostatic equilibrium
+
+At g64, comparing the measured J per depth bin against the EOS's own hydrostatic
+requirement `J(zeta) = (1 + b*zeta)^(-1/(gamma-1))` with `b = 0.00594545` per m, the
+column reached on average **0.459 of the required compression** (std 0.258) at the
+moment the gate passed. At the bottom, J measured 0.948 where hydrostatic needs
+0.875. So the gate certifies quiet velocities, not a hydrostatic pressure field, and
+a run can pass it while its pressure is a third to a half short. Both resolutions
+stop at the same `c/vmax >= 20` criterion, which is consistent with both ending the
+same amount short in Pascals.
+
+Per-particle J spans [0.227, 1.978] at g64 and [0.367, 2.030] at g96, where
+equilibrium needs [0.875, 1.0]. At bulk 1.5e5 the equilibrium signal is a 4.6%
+compression, so it sits well inside the particle-level noise.
+
+### Hydrostatic pre-compression: refuted, and my "no engine change" claim retracted
+
+Pre-compression changed **nothing**: 354 frames with and without, `vmax_peak` 9.8172
+both, and vmax traces identical value by value (first six 0.336, 0.710, 1.104, 1.458,
+1.773, 2.076 in both). The write itself succeeded, J applied in
+[0.856393, 0.998687] and `detF_matches_J` True on read-back.
+
+The source says why. For mat 6, 10 and 12, `mpm_utils.py:1086-1089` does
+
+    J = wp.determinant(state.particle_F_trial[p])
+    Jcbr = J ** (1.0 / 3.0)
+    state.particle_F[p] = wp.mat33(Jcbr, 0, 0, 0, Jcbr, 0, 0, 0, Jcbr)
+
+so for a fluid `particle_F` is **overwritten from `particle_F_trial`** at every stress
+evaluation. The engine imports `particle_x`, `particle_v`, `particle_F`, `particle_C`,
+`particle_selection` and `particle_material`, but there is **no importer for
+`particle_F_trial`**. So the earlier statement in this file that hydrostatic seeding
+"requires no engine change" is **wrong and is retracted**. Writing `particle_F` is
+discarded for fluids; the array that governs fluid pressure cannot currently be set
+from outside. My verification was also insufficient: it confirmed the write landed,
+not that the write mattered.
+
+### Two defects in the probe itself, to fix before it is used again
+
+`np.clip(np.digitize(z, edges) - 1, 0, nbins - 1)` dumps every particle at or below
+the floor into bin 0, which is why bin 0 holds 126,017 particles against about 25,000
+elsewhere. Bin 0 is uninterpretable and was excluded from every number above. And the
+settled free surface is rough, `column_surface` IQR 0.347 m at g64 which is 2.36
+cells, so a single median surface is a poor per-particle depth reference and the
+near-surface bins inherit that error.
+
+---
+
+## Job 3362208: the g96 settle gate IS reachable, and the two coupling paths converge
+
+Run 2026-08-13 on LS6 A100 c301-003, inside idev allocation 3362208, driver
+`realism_track/run_g96_gated.sh`, results in `realism_track/rung_b_g96_gated_3362208/`.
+Identical to `run_rung_b_settled.sbatch` in every argument except `--n-grid` fixed at 96
+and `--settle-frames` raised from 900 to 3000.
+
+### The 900-frame cap was short by about 13 percent, nothing more
+
+Both g96 runs in job 3361443 were self-declared discards, `settle_gate_met false`, and
+the sections above treat that as a property of g96. It is not. It is a property of the
+cap. With the cap at 3000 the gate is met at **1030 frames (coupled)** and **1031 frames
+(fixed)**, `ratio_c_over_vmax` 20.54 and 20.91 against the 20 required. Nothing about
+the configuration needed to change. 900 was roughly 13 percent short of a gate that both
+modes clear at essentially the same frame.
+
+This also retires "Partial submersion, not resolution, is what breaks the g96 settle" as
+a statement about reachability. The g96 settle is reachable at partial submersion; it
+simply costs about 2.9x the frames g64 needs (1030 against 353).
+
+### The first valid controlled refinement pair rung (b) has produced
+
+All four rows below are `settle_gate_met true`. Errors are against
+`F_buoy_analytic_partial_N`, the correct reference for a partially submerged body, and
+NOT against the full-submersion figure the stdout banner prints.
+
+| grid | mode | frames | frac_sub | Fz steady N | F_partial N | err vs partial |
+|------|---------|--------|----------|-------------|-------------|----------------|
+| 64   | coupled | 353    | 0.7540   | 17650.9     | 23600.6     | -25.21 %       |
+| 64   | fixed   | 353    | 0.7548   | 11829.8     | 23623.2     | -49.92 %       |
+| 96   | coupled | 1030   | 0.8437   | 18580.0     | 26407.9     | -29.64 %       |
+| 96   | fixed   | 1031   | 0.8445   | 17837.3     | 26430.9     | -32.51 %       |
+
+**No divergence, and no sign flip.** The unsettled pair from job 3361315 read -18.9
+percent at g64 and +115.0 percent at g96, and the sections above call that divergence.
+Settled, the same comparison is -25.21 and -29.64 percent: same sign, same order of
+magnitude, a 4.4 point spread. The divergence signature was an artifact of comparing two
+grids settled for different physical durations. That is now measured, not argued.
+
+### The result that matters most: fixed and coupled converge under refinement
+
+At g64 the two paths are **24.71 points apart** (-25.21 against -49.92). At g96 they are
+**2.87 points apart** (-29.64 against -32.51). The fixed collider improves sharply with
+refinement, the coupled path degrades slightly, and they meet near -30 percent.
+
+The consequence is the important part. **A deficit that both an SDF-fixed collider and a
+free-rigid force-coupled body reproduce, to within 2.9 points at the finer grid, is not
+primarily an artifact of the free-rigid coupling.** Whatever produces the roughly 30
+percent shortfall at partial submersion is common to both paths. Any framing that treats
+the force-coupled path as the broken one and the fixed collider as the trustworthy
+baseline is not supported at partial submersion, and at g64 it is backwards: the fixed
+collider is the worse of the two by 24.7 points.
+
+### What this does NOT establish, stated so it is not read as more than it is
+
+**The pair is confounded by submersion.** The two grids settle to different surfaces, so
+realized `frac_submerged` is 0.754 at g64 and 0.844 at g96. Each grid is scored against
+its own reference so neither number is wrong, but this is a refinement comparison with a
+second variable moving. A clean refinement test needs the same realized submersion at
+both grids and that has not been run.
+
+**The constant-offset model is not confirmed by these numbers.** Taking the deficits as a
+pressure over the 2.1662 m2 horizontal cross-section gives 2747 Pa (g64 coupled), 5444 Pa
+(g64 fixed), 3613 Pa (g96 coupled) and 3967 Pa (g96 fixed). Those are not a
+resolution-independent constant, and none is the roughly 6.2 kPa the section above
+reports from job 3361504's direct pressure profile. The two measurements may be probing
+different things, the probe being a direct profile read and this being a force residual,
+but the discrepancy is unresolved and is recorded here rather than smoothed over.
+
+**Rungs (c) and (d) remain unattempted**, and the guidance above not to advance the
+ladder still stands. What changed is the reason: it is no longer that rung (b) has no
+valid measurement, because it now has four. It is that the deficit rung (b) exposes is
+unexplained and is not specific to the coupling path the ladder was built to test.

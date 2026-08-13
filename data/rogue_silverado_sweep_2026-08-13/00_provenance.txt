@@ -1,0 +1,17 @@
+start=2026-08-13T05:16:09-05:00 host=c301-003.ls6.tacc.utexas.edu
+driver sha256: 4696c3b2d39f4e28f9c49c9f96c5c28a786c237f19204cc32036f703277d10d9  /scratch/11603/jcerrell0629/canitford_track1b/can-it-ford/renders/yaris_render_s1/sim_standing.py
+common: --depth 0.30 --velocity 1.5 --frames 90 --eta 1.0e-3 --floor-friction 0.55
+mass rogue 1571.3 (web-sourced), mass silverado 2270.0 (deck header, primary)
+RC_rs_rogue_g64=0
+INSTRUMENT hull_source=/work/11603/jcerrell0629/vista/can-it-ford/vehicle_geometry_research/rogue_g96_pd8_coarse_watertight.ply hull_m3=4.950341 watertight=True yaris_ref_delta_pct=+39.732
+RC_rs_silverado_g64=0
+INSTRUMENT hull_source=/work/11603/jcerrell0629/vista/can-it-ford/vehicle_geometry_research/silverado_g96_pd8_coarse_watertight.ply hull_m3=7.962083 watertight=True yaris_ref_delta_pct=+124.744
+RC_rs_rogue_g96=0
+INSTRUMENT hull_source=/work/11603/jcerrell0629/vista/can-it-ford/vehicle_geometry_research/rogue_g96_pd8_coarse_watertight.ply hull_m3=4.950341 watertight=True yaris_ref_delta_pct=+39.732
+RC_rs_silverado_g96=0
+INSTRUMENT hull_source=/work/11603/jcerrell0629/vista/can-it-ford/vehicle_geometry_research/silverado_g96_pd8_coarse_watertight.ply hull_m3=7.962083 watertight=True yaris_ref_delta_pct=+124.744
+RC_rs_rogue_g128=0
+INSTRUMENT hull_source=/work/11603/jcerrell0629/vista/can-it-ford/vehicle_geometry_research/rogue_g96_pd8_coarse_watertight.ply hull_m3=4.950341 watertight=True yaris_ref_delta_pct=+39.732
+RC_rs_silverado_g128=0
+INSTRUMENT hull_source=/work/11603/jcerrell0629/vista/can-it-ford/vehicle_geometry_research/silverado_g96_pd8_coarse_watertight.ply hull_m3=7.962083 watertight=True yaris_ref_delta_pct=+124.744
+ALLDONE end=2026-08-13T05:19:09-05:00
