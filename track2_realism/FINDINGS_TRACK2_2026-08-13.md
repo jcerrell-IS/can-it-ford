@@ -20,12 +20,18 @@ LegacyCoupler path was tested to destruction and FAILED. The moving-SDF path was
 run here (correctly, it is Track 1 territory) but source inspection shows it needs
 essentially NO solver change, only a driver-level rigid-body loop.**
 
-The Genesis failure is characterised, not just observed. Under grid refinement the
-spurious contact force collapses (peak-to-peak 8345 N → 594 N) and the measured force
-converges toward **zero**, never toward analytic buoyancy. `LegacyCoupler` is the only
-MPM-rigid path in Genesis 1.1.1 and exposes no scheme-level tunable, so this is not a
-wrong-option or wrong-resolution result. Six runs, two independent measurement modes,
-three geometries including the real hull.
+The Genesis failure is characterised, not just observed. **The decisive point: the
+best-converged measurements are not the best-agreeing ones.** Under a strict settle gate
+the numerical noise collapses to sd ~8 N and peak-to-peak ~50 N, and the measured force
+is still wrong by -86% to -104% against analytic buoyancy. The disagreement cannot be
+attributed to ringing, resolution, settling, mesh quality, mass wiring or coupler choice,
+because each of those was removed or ruled out in turn. `LegacyCoupler` is the only
+MPM-rigid path in Genesis 1.1.1 and exposes no scheme-level tunable. Eight runs, two
+independent measurement modes, three geometries including the real hull, two grid
+densities, three cover depths, two settle gates.
+
+One sub-claim made earlier in this session was **retracted** on better data: see the
+depth-independence retraction in the mechanism section.
 
 The instruction's framing was "whichever path shows a real, validated coupling force
 first, continue with it." Genesis did not show one, so there was nothing to continue
@@ -281,9 +287,10 @@ the refutations are the useful part.
 ### Mechanism: two hypotheses killed, one statement survives
 
 **Hypothesis 1, "the coupler registers the overburden (weight of water above)."
-REFUTED.** Analytic buoyancy on a fully submerged body is independent of depth, so
-overburden-sensitivity is a clean discriminator. Fixed cube, grid_density 16, cover
-swept 2.40 / 5.60 / 11.20 dx:
+REFUTED, though the first attempt to refute it was itself wrong, see the retraction
+below.** Analytic buoyancy on a fully submerged body is independent of depth, so
+depth-sensitivity is a clean discriminator. Fixed cube, grid_density 16, cover swept
+2.40 / 5.60 / 11.20 dx under the ORIGINAL loose settle gate (`c/vmax >= 20`):
 
 | cover | F (2nd half) | sd | verdict |
 |---|---|---|---|
@@ -291,11 +298,32 @@ swept 2.40 / 5.60 / 11.20 dx:
 | 5.60 dx | -779.7575 N | 752.7 | marginal |
 | 11.20 dx | -308.2206 N | 1306.3 | **not converged**, sd is 4x its own mean |
 
-The two usable points agree to 0.3% across a 2.3x depth change. Force does not scale
-with overburden. The third point is discarded as unconverged, not read as counter-
-evidence: the settle cap was insufficient at that depth. So the force is
-depth-independent, which is qualitatively RIGHT for buoyancy, while having the wrong
-sign and roughly the wrong magnitude.
+#### RETRACTION, same session: "the force is depth-independent" is WITHDRAWN
+
+The first two rows above agree to 0.3%, and I read that as depth-independence. **That
+reading was an artifact of an inadequate settle and is withdrawn.** Re-running the
+matched pair under a STRICT gate (`c/vmax >= 200`, i.e. vmax <= 0.083 m/s, settle cap
+6000) changes the answer:
+
+| cover | settle gate | settled at | F (2nd half) | sd | peak-to-peak | error |
+|---|---|---|---|---|---|---|
+| 2.40 dx | strict | step 2750 (MET) | **-197.7128 N** | 8.21 | 63.58 N | -103.936 % |
+| 11.20 dx | strict | NOT MET at 6000 | **+712.0993 N** | 8.28 | 46.59 N | -85.822 % |
+
+Under a real settle the two covers do **not** agree: -197.7 N against +712.1 N. The
+apparent depth-independence existed only in the under-settled data. This is the same
+trap J1a documents, caught here in my own numbers, and it is recorded rather than
+quietly overwritten.
+
+The strict settle is dramatically better numerically: ringing collapses by roughly 150x
+(peak-to-peak 8345 N → 64 N) and the standard deviation falls from 465.7 to 8.21. These
+are now precise measurements.
+
+**Hypothesis 1 stays refuted, but on better evidence.** Overburden would push the body
+DOWN harder as cover deepens. Going from 2.40 to 11.20 dx adds 0.55 m of water over a
+0.64 m^2 top face, an overburden weight of about 3453 N downward. The measured force
+moves +909.8 N, i.e. *upward*, roughly a quarter of that magnitude and in the opposite
+direction. Not overburden.
 
 **Hypothesis 2, "the force is the weight of ~2 grid layers resting on the top face."**
 Post-hoc arithmetic fitted the converged points to within 1%:
@@ -315,20 +343,38 @@ Under refinement the spurious force collapses by roughly 5x, the ringing collaps
 the analytic 5022.72 N. The error improves only from -112% to -97.5% precisely because
 -100% *is* the zero-force limit.
 
-**The surviving statement: the LegacyCoupler's MPM-rigid exchange converges to no force
-at all on a body in still water. Refinement removes the spurious contact noise and
-reveals that there is no buoyant force underneath it.** That is consistent with register
-A-1's architectural reading: the quantity accumulated at `:337-338` is a
-collision-projection impulse, which vanishes as the water comes to rest, and not a
-surface pressure integral, which would not. The coupler is a collision handler being
-asked to do hydrostatics.
+**THE SURVIVING STATEMENT, and it is the one to carry forward.** Every measured force,
+across two grid densities, three cover depths, two settle gates and three geometries,
+lands between roughly -200 N and +712 N against an analytic +5022.7 N. The errors span
+-86% to -116%. Critically, **the best-converged measurements are not the best-agreeing
+ones**: under the strict settle the noise falls to sd ~8 N and peak-to-peak ~50 N, and
+the answer is still wrong by -86% to -104%.
 
-Two supporting details, both pointing the same way:
-- `settled_at` moved 100 → 700 under refinement, echoing J1a's warpmpm observation that
-  the finer grid needed far more settling (3,894 substeps at g64, 12,416 at g96).
-- The gd16 number moved from -777.5 N to -600.0 N when 2 dx of **air headroom** was added
-  above the free surface, a purely geometric change well away from the body. A real
-  buoyant force is not sensitive to headroom. A contact-band artifact is.
+That is the whole finding. The disagreement cannot be blamed on ringing (removed),
+resolution (refined, twice), settling (gated strictly), mesh quality (an exact cube),
+mass wiring (reproduced to 1e-6), or coupler choice (there is no other). The Genesis
+LegacyCoupler simply does not transport hydrostatic buoyancy to a rigid body.
+
+The best available mechanism reading remains register A-1's: the quantity accumulated at
+`:337-338` is a collision-projection impulse, which has no reason to equal a surface
+pressure integral, and the branch that produces it only fires when water moves INTO the
+surface (`:312`, `if rvel_normal_magnitude < 0`). The coupler is a collision handler
+being asked to do hydrostatics. **This is a reading consistent with all the data, not a
+mechanism isolated by a decisive experiment**, and it should keep that label.
+
+One supporting detail worth carrying: within a single strict-settle run, as the water
+came to rest (vmax 0.438 → 0.199 m/s) the measured force decayed alongside it
+(-796.7 → -393.5 N). Force tracking the residual water motion rather than the constant
+displaced volume is what a collision-projection quantity does, and is not what a pressure
+integral does.
+
+Also recorded, because it is diagnostic in its own right: the gd16 number moved from
+-777.5 N to -600.0 N when 2 dx of **air headroom** was added above the free surface, a
+purely geometric change well away from the body. A real buoyant force is insensitive to
+headroom.
+
+`settled_at` moved 100 → 700 under refinement, echoing J1a's warpmpm observation that the
+finer grid needed far more settling (3,894 substeps at g64, 12,416 at g96).
 
 ---
 
@@ -454,18 +500,26 @@ warpmpm's g64/g96 labels.
 3. **DONE this session, no longer deferred.** Grid refinement ran on both harnesses
    (free body gd16 vs gd32, fixed body gd16 vs gd32). The failure is
    resolution-independent in direction and converges to zero in magnitude.
-4. **Re-run the deepest cover point (11.20 dx) with a real settle.** It was the one
-   unconverged measurement (sd 1306 against a mean of -308) and was discarded rather
-   than used. It is the only loose end in the mechanism argument.
-5. **The settle gate `c/vmax >= 20` is too loose.** It passed at step 100 with
-   vmax = 0.4977 m/s, which is not a settled tank. Inherited from warpmpm's criterion
-   via J1a; it needs re-deriving for Genesis rather than porting.
-6. **Fix the misleading `DIRECTION` label** in `validate_free_body.py`, which reports
-   "UP" from the sign of a fitted acceleration even while the body descends.
-7. **Add the 2 dx air-headroom fix to the free-body harness too.** It was added to
-   `validate_genesis_buoyancy.py` only, after the seeder threw "particles outside solver
-   boundary" at gd32 but not gd16. `validate_free_body.py` carries the same latent
-   coincidence and will trip on some future grid density.
+4. **DONE this session, no longer deferred.** The deepest cover point was re-run under a
+   strict gate. It overturned the depth-independence sub-claim, which is retracted above.
+5. **DONE this session.** The loose `c/vmax >= 20` gate was replaced by `>= 200` and the
+   difference is large: ringing fell ~150x and one conclusion was overturned. **Standing
+   recommendation: `c/vmax >= 20`, inherited from warpmpm via J1a, is not fit for
+   purpose in Genesis and should not be ported again.** Note that even `>= 200` was NOT
+   reached at 11.20 dx cover within 6000 steps, so deep tanks need a different strategy
+   than brute-force settling.
+6. **DONE this session.** The misleading `DIRECTION` label in `validate_free_body.py` now
+   reports direction from net displacement and end velocity, and explicitly states that
+   the sign of `a_fit` is not direction. The free-body results above were produced BEFORE
+   this fix, so their printed `DIRECTION` lines are the old, misleading ones; the
+   underlying z and vz series in the JSON are unaffected.
+7. **DONE this session.** The 2 dx air-headroom fix was added to `validate_free_body.py`
+   as well. The free-body results above predate it; the change affects domain height only
+   and those runs did not trip the boundary.
+8. **Re-run the free-body cases under the strict settle gate.** All three free-body runs
+   used the loose gate now known to be inadequate. Their qualitative result (bodies do
+   not rise) is unlikely to move, since the strict-settle forces are still 7x too small
+   to float anything, but this has not been shown.
 
 ---
 

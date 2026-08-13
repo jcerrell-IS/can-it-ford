@@ -1,0 +1,112 @@
+### STRICT-SETTLE COVER TEST: gate c/vmax>=200 (vmax<=0.083 m/s), matched pair ###
+===== cover=0.15 m, strict gate =====
+INFO:    gocryptfs not found, will not be able to use gocryptfs
+==========================================================================
+GENESIS LegacyCoupler BUOYANCY VALIDATION  (NON-CANONICAL, TRACK 2)
+==========================================================================
+[cfg] body=cube grid_density=16.0 dx=0.062500 m (Genesis convention)
+[cfg] body extents=[0.8 0.8 0.8] V=0.512000 m^3
+[cfg] domain=[1.975 1.975 1.75 ] grid=[32 32 28]
+[cfg] body center=[0.9875 0.9875 0.8875] top=1.2875
+[cfg] water_top=1.4375 cover=0.1500 m = 2.40 dx
+[cfg] submerged fraction = 1.000 (FULL, deliberate; see J1a)
+[cfg] sound_speed=16.6667 m/s  settle gate c/vmax>=200.0
+[cfg] F_analytic = rho*g*V = 1000.0*9.81*0.512000 = 5022.7200 N
+/usr/local/lib/python3.10/dist-packages/quadrants/_test_tools/warnings_helper.py:11: UserWarning: cannot create weak reference to 'tuple' object. Template mapper caching disabled.
+  warnings.warn(message)
+[ok] built. water particles=49600
+--------------------------------------------------------------------------
+PHASE 1  gated settle (J1a cause (i): a step count is not a settle)
+  [settle   250] vmax=  0.43839 m/s  c/vmax=      38.02  Fz=       169.803 N
+  [settle   500] vmax=  0.45320 m/s  c/vmax=      36.78  Fz=      -609.615 N
+  [settle   750] vmax=  0.41104 m/s  c/vmax=      40.55  Fz=      -796.656 N
+  [settle  1000] vmax=  0.31885 m/s  c/vmax=      52.27  Fz=      -458.680 N
+  [settle  1250] vmax=  0.24005 m/s  c/vmax=      69.43  Fz=      -492.188 N
+  [settle  1500] vmax=  0.19897 m/s  c/vmax=      83.76  Fz=      -393.535 N
+  [settle  1750] vmax=  0.16026 m/s  c/vmax=     104.00  Fz=      -352.920 N
+  [settle  2000] vmax=  0.11853 m/s  c/vmax=     140.61  Fz=      -317.080 N
+  [settle  2250] vmax=  0.09662 m/s  c/vmax=     172.49  Fz=      -292.788 N
+  [settle  2500] vmax=  0.08980 m/s  c/vmax=     185.59  Fz=      -268.125 N
+  [settle  2750] vmax=  0.07324 m/s  c/vmax=     227.56  Fz=      -247.594 N
+  [GATE MET] c/vmax=227.56 >= 200.0 at step 2750
+--------------------------------------------------------------------------
+PHASE 2  averaged force measurement (instantaneous read rings; see smoke test)
+  [meas   200] running mean Fz=    -239.741 N  sd=     4.378  err=-104.773%
+  [meas   400] running mean Fz=    -232.622 N  sd=     8.249  err=-104.631%
+  [meas   600] running mean Fz=    -225.883 N  sd=    11.853  err=-104.497%
+  [meas   800] running mean Fz=    -219.516 N  sd=    15.159  err=-104.370%
+  [meas  1000] running mean Fz=    -213.457 N  sd=    18.237  err=-104.250%
+==========================================================================
+RESULT  (Genesis convention: dx = 1/grid_density)
+  F_analytic          =      5022.7200 N
+  F_measured  (mean)  =      -213.4570 N   sd=18.2369
+  F_measured  (2nd h) =      -197.7128 N   sd=8.2133
+  peak-to-peak        =        63.5795 N
+  ERROR full window   = -104.2498 %
+  ERROR second half   = -103.9364 %
+  |Fx|,|Fy| mean      = 7.8224, 1.9148 N (should be ~0 by symmetry)
+  settled_at          = 2750
+==========================================================================
+[saved] track2_realism/results_strict_cover_0.15.json
+===== cover=0.70 m, strict gate =====
+INFO:    gocryptfs not found, will not be able to use gocryptfs
+==========================================================================
+GENESIS LegacyCoupler BUOYANCY VALIDATION  (NON-CANONICAL, TRACK 2)
+==========================================================================
+[cfg] body=cube grid_density=16.0 dx=0.062500 m (Genesis convention)
+[cfg] body extents=[0.8 0.8 0.8] V=0.512000 m^3
+[cfg] domain=[1.975 1.975 2.3  ] grid=[32 32 37]
+[cfg] body center=[0.9875 0.9875 0.8875] top=1.2875
+[cfg] water_top=1.9875 cover=0.7000 m = 11.20 dx
+[cfg] submerged fraction = 1.000 (FULL, deliberate; see J1a)
+[cfg] sound_speed=16.6667 m/s  settle gate c/vmax>=200.0
+[cfg] F_analytic = rho*g*V = 1000.0*9.81*0.512000 = 5022.7200 N
+/usr/local/lib/python3.10/dist-packages/quadrants/_test_tools/warnings_helper.py:11: UserWarning: cannot create weak reference to 'tuple' object. Template mapper caching disabled.
+  warnings.warn(message)
+[ok] built. water particles=72000
+--------------------------------------------------------------------------
+PHASE 1  gated settle (J1a cause (i): a step count is not a settle)
+  [settle   250] vmax=  0.89340 m/s  c/vmax=      18.66  Fz=     -4677.841 N
+  [settle   500] vmax=  0.79089 m/s  c/vmax=      21.07  Fz=     -2507.492 N
+  [settle   750] vmax=  0.63554 m/s  c/vmax=      26.22  Fz=     -1281.581 N
+  [settle  1000] vmax=  0.44583 m/s  c/vmax=      37.38  Fz=      -556.692 N
+  [settle  1250] vmax=  0.29270 m/s  c/vmax=      56.94  Fz=      -184.835 N
+  [settle  1500] vmax=  0.22829 m/s  c/vmax=      73.01  Fz=        49.395 N
+  [settle  1750] vmax=  0.22917 m/s  c/vmax=      72.73  Fz=       164.136 N
+  [settle  2000] vmax=  0.16806 m/s  c/vmax=      99.17  Fz=       273.183 N
+  [settle  2250] vmax=  0.16109 m/s  c/vmax=     103.46  Fz=       312.798 N
+  [settle  2500] vmax=  0.14227 m/s  c/vmax=     117.15  Fz=       366.025 N
+  [settle  2750] vmax=  0.12553 m/s  c/vmax=     132.77  Fz=       405.873 N
+  [settle  3000] vmax=  0.11923 m/s  c/vmax=     139.79  Fz=       456.966 N
+  [settle  3250] vmax=  0.11808 m/s  c/vmax=     141.15  Fz=       489.753 N
+  [settle  3500] vmax=  0.10846 m/s  c/vmax=     153.67  Fz=       525.511 N
+  [settle  3750] vmax=  0.10457 m/s  c/vmax=     159.38  Fz=       550.615 N
+  [settle  4000] vmax=  0.10574 m/s  c/vmax=     157.62  Fz=       574.067 N
+  [settle  4250] vmax=  0.10272 m/s  c/vmax=     162.26  Fz=       593.233 N
+  [settle  4500] vmax=  0.09250 m/s  c/vmax=     180.18  Fz=       608.663 N
+  [settle  4750] vmax=  0.10120 m/s  c/vmax=     164.70  Fz=       621.932 N
+  [settle  5000] vmax=  0.10487 m/s  c/vmax=     158.93  Fz=       636.549 N
+  [settle  5250] vmax=  0.10900 m/s  c/vmax=     152.90  Fz=       652.462 N
+  [settle  5500] vmax=  0.11201 m/s  c/vmax=     148.80  Fz=       663.659 N
+  [settle  5750] vmax=  0.12142 m/s  c/vmax=     137.27  Fz=       674.346 N
+  [settle  6000] vmax=  0.10651 m/s  c/vmax=     156.48  Fz=       678.114 N
+  [GATE NOT MET] ran full 6000 settle steps without reaching c/vmax>=200.0. Reporting anyway, flagged.
+--------------------------------------------------------------------------
+PHASE 2  averaged force measurement (instantaneous read rings; see smoke test)
+  [meas   200] running mean Fz=     680.002 N  sd=     1.241  err= -86.461%
+  [meas   400] running mean Fz=     683.175 N  sd=     3.686  err= -86.398%
+  [meas   600] running mean Fz=     687.736 N  sd=     7.400  err= -86.307%
+  [meas   800] running mean Fz=     693.257 N  sd=    11.645  err= -86.198%
+  [meas  1000] running mean Fz=     698.703 N  sd=    15.116  err= -86.089%
+==========================================================================
+RESULT  (Genesis convention: dx = 1/grid_density)
+  F_analytic          =      5022.7200 N
+  F_measured  (mean)  =       698.7033 N   sd=15.1161
+  F_measured  (2nd h) =       712.0993 N   sd=8.2755
+  peak-to-peak        =        46.5948 N
+  ERROR full window   = -86.0891 %
+  ERROR second half   = -85.8224 %
+  |Fx|,|Fy| mean      = 61.4054, 58.6859 N (should be ~0 by symmetry)
+  settled_at          = None
+==========================================================================
+[saved] track2_realism/results_strict_cover_0.70.json

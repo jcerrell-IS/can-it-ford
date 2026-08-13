@@ -71,8 +71,12 @@ def main():
     f_analytic = RHO_W * G * vol
     a_ideal = G * (RHO_W / a.rho_body - 1.0)
 
+    # 2 dx of air headroom above the free surface. Without it water_top lands exactly on
+    # (upper_bound - pad) and seeding becomes a float coin-flip: the sibling harness
+    # passed at gd16 and threw "particles outside solver boundary" at gd32.
+    headroom = 2.0 * dx
     inner = np.array([ext[0] + 2 * a.clear_lat, ext[1] + 2 * a.clear_lat,
-                      a.clear_bot + ext[2] + a.cover])
+                      a.clear_bot + ext[2] + a.cover + headroom])
     dom = inner + 2 * pad
     body_c = np.array([dom[0] / 2, dom[1] / 2, pad + a.clear_bot + ext[2] / 2])
     water_top = body_c[2] + ext[2] / 2 + a.cover
@@ -158,7 +162,15 @@ def main():
     print(f"  vz first -> last           = {vs[0]:+.6f} -> {vs[-1]:+.6f} m/s", flush=True)
     print(f"  a_fit (dv/dt)              = {a_fit:+.4f} m/s^2", flush=True)
     print(f"  a_ideal                    = {a_ideal:+.4f} m/s^2", flush=True)
-    print(f"  DIRECTION                  = {'UP (buoyant)' if a_fit > 0 else 'DOWN (sinking)'}", flush=True)
+    # Report direction from what the body ACTUALLY did, not from the sign of a fitted
+    # acceleration. A body decelerating its descent has a_fit > 0 while still sinking,
+    # and an earlier version of this line printed "UP (buoyant)" for exactly that case.
+    net_dz = float(zs[-1] - zs[0])
+    rose = net_dz > 0 and float(vs[-1]) > 0
+    print(f"  net_dz={net_dz:+.6f} m  vz_end={vs[-1]:+.6f} m/s  mean_vz={vs.mean():+.6f} m/s", flush=True)
+    print(f"  DIRECTION                  = "
+          f"{'ROSE' if rose else 'DID NOT RISE (sinking or oscillating)'} "
+          f"[a_fit sign alone is NOT direction]", flush=True)
     print(f"  F_measured = m(a+g)        = {f_measured:.4f} N", flush=True)
     print(f"  F_analytic = rho*g*V       = {f_analytic:.4f} N", flush=True)
     print(f"  ERROR                      = {err:+.4f} %", flush=True)
