@@ -1,0 +1,19 @@
+start=2026-08-13T10:57:44-05:00 host=c301-001.ls6.tacc.utexas.edu
+driver sha256: 4696c3b2d39f4e28f9c49c9f96c5c28a786c237f19204cc32036f703277d10d9  /scratch/11603/jcerrell0629/canitford_track1b/can-it-ford/renders/yaris_render_s1/sim_standing.py
+engine: /work/11603/jcerrell0629/vista/mpm-engine/src
+common: --depth 0.30 --velocity 1.5 --frames 90 --eta 1.0e-3 --floor-friction 0.55
+purpose: register J15 direct test, canonical Yaris set at g128 with an in-job g96 control
+expected g96 anchor: g96_m2337 ratio_slide 1.80047 frozen / 1.74225 live re-classified (register J16)
+RC_canon_g96_m1100=0
+INSTRUMENT hull_source=/work/11603/jcerrell0629/vista/can-it-ford/vehicle_geometry_research/yaris_coarse_v1l_watertight.ply hull_m3=3.542739 watertight=True yaris_ref_delta_pct=-0.000
+RC_canon_g96_m1609=0
+INSTRUMENT hull_source=/work/11603/jcerrell0629/vista/can-it-ford/vehicle_geometry_research/yaris_coarse_v1l_watertight.ply hull_m3=3.542739 watertight=True yaris_ref_delta_pct=-0.000
+RC_canon_g96_m2337=0
+INSTRUMENT hull_source=/work/11603/jcerrell0629/vista/can-it-ford/vehicle_geometry_research/yaris_coarse_v1l_watertight.ply hull_m3=3.542739 watertight=True yaris_ref_delta_pct=-0.000
+RC_canon_g128_m1100=0
+INSTRUMENT hull_source=/work/11603/jcerrell0629/vista/can-it-ford/vehicle_geometry_research/yaris_coarse_v1l_watertight.ply hull_m3=3.542739 watertight=True yaris_ref_delta_pct=-0.000
+RC_canon_g128_m1609=0
+INSTRUMENT hull_source=/work/11603/jcerrell0629/vista/can-it-ford/vehicle_geometry_research/yaris_coarse_v1l_watertight.ply hull_m3=3.542739 watertight=True yaris_ref_delta_pct=-0.000
+RC_canon_g128_m2337=0
+INSTRUMENT hull_source=/work/11603/jcerrell0629/vista/can-it-ford/vehicle_geometry_research/yaris_coarse_v1l_watertight.ply hull_m3=3.542739 watertight=True yaris_ref_delta_pct=-0.000
+ALLDONE end=2026-08-13T11:03:57-05:00
