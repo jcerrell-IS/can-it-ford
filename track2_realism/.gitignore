@@ -1,0 +1,8 @@
+# Derived vehicle meshes are DELIBERATELY not committed.
+# Register J-item 11 / E8: CCSA/NCAC mesh redistribution rights are unresolved and
+# explicitly "block committing any derived mesh publicly". yaris_hull*.obj are derived
+# from the canonical yaris_coarse_v1l_watertight.ply, so they fall under that block.
+# They are regenerable in one trimesh command, documented in FINDINGS_TRACK2_2026-08-13.md.
+yaris_hull.obj
+yaris_hull_centered.obj
+*.obj

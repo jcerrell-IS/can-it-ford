@@ -1,0 +1,42 @@
+INFO:    gocryptfs not found, will not be able to use gocryptfs
+==========================================================================
+GENESIS FREE-BODY BUOYANCY CHECK (NON-CANONICAL, TRACK 2)
+==========================================================================
+[cfg] body=yaris gd=16.0 dx=0.062500 (Genesis convention)
+[cfg] V=3.542739 m^3  rho_body=310.494  mass=1099.999 kg
+[cfg] extents=[4.28261015 1.746378   1.51800813]  domain=[5.45761015 2.921378   2.54300813]  grid=[87 47 41]
+[cfg] cover=0.35 m = 5.60 dx   submerged frac = 1.000 (FULL)
+[cfg] F_analytic = 34754.2675 N
+[cfg] a_ideal (no added mass) = g(rho_w/rho_b - 1) = 21.7848 m/s^2
+[38;5;226m[Genesis] [04:53:31] [WARNING] At least one of the meshes contain many faces (655308). Consider setting 'morph.decimate=True' to speed up collision detection and improve numerical stability.[0m
+[38;5;226m[Genesis] [04:53:33] [WARNING] Beware that SDF pre-processing of mesh (/work/11603/jcerrell0629/vista/can-it-ford-track2-realism/track2_realism/yaris_hull_centered.obj) having more than 50000 vertices may take a very long time (>10min) and require large RAM allocation (>20Gb). Please either enable convexify or decimation. (see FileMorph options)[0m
+/usr/local/lib/python3.10/dist-packages/quadrants/_test_tools/warnings_helper.py:11: UserWarning: cannot create weak reference to 'tuple' object. Template mapper caching disabled.
+  warnings.warn(message)
+[ok] built. water particles=438912
+[ok] genesis-reported body mass = 1099.9991 kg (analytic rho*V = 1099.9991)
+[ok] initial body z = 1.204389
+--------------------------------------------------------------------------
+PHASE 1  settle (body free the whole time; a settle that MOVES the body
+         is itself the signal, so z is logged throughout)
+  [settle   50] z=1.162697  dz=-0.041691  vz=-0.688799
+  [settle  100] z=1.095056  dz=-0.109333  vz=-0.579456
+  [settle  150] z=1.063539  dz=-0.140850  vz=-0.005335
+--------------------------------------------------------------------------
+PHASE 2  measure vertical kinematics
+  [meas   20] t=0.0400 z=1.066804 vz=+0.178700
+  [meas   40] t=0.0800 z=1.075576 vz=+0.262327
+  [meas   60] t=0.1200 z=1.085768 vz=+0.249396
+  [meas   80] t=0.1600 z=1.093924 vz=+0.157811
+  [meas  100] t=0.2000 z=1.097263 vz=+0.006664
+==========================================================================
+RESULT  (Genesis convention: dx = 1/grid_density)
+  net dz over measure window = +0.033747 m
+  vz first -> last           = +0.005627 -> +0.006664 m/s
+  a_fit (dv/dt)              = -0.1376 m/s^2
+  a_ideal                    = +21.7848 m/s^2
+  DIRECTION                  = DOWN (sinking)
+  F_measured = m(a+g)        = 10639.5975 N
+  F_analytic = rho*g*V       = 34754.2675 N
+  ERROR                      = -69.3862 %
+==========================================================================
+[saved] track2_realism/results_free_yaris_gd16.json

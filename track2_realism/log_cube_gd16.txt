@@ -1,0 +1,39 @@
+INFO:    gocryptfs not found, will not be able to use gocryptfs
+==========================================================================
+GENESIS LegacyCoupler BUOYANCY VALIDATION  (NON-CANONICAL, TRACK 2)
+==========================================================================
+[cfg] body=cube grid_density=16.0 dx=0.062500 m (Genesis convention)
+[cfg] body extents=[0.8 0.8 0.8] V=0.512000 m^3
+[cfg] domain=[1.975 1.975 1.825] grid=[32 32 29]
+[cfg] body center=[0.9875 0.9875 0.8875] top=1.2875
+[cfg] water_top=1.6375 cover=0.3500 m = 5.60 dx
+[cfg] submerged fraction = 1.000 (FULL, deliberate; see J1a)
+[cfg] sound_speed=16.6667 m/s  settle gate c/vmax>=20.0
+[cfg] F_analytic = rho*g*V = 1000.0*9.81*0.512000 = 5022.7200 N
+/usr/local/lib/python3.10/dist-packages/quadrants/_test_tools/warnings_helper.py:11: UserWarning: cannot create weak reference to 'tuple' object. Template mapper caching disabled.
+  warnings.warn(message)
+[ok] built. water particles=57600
+--------------------------------------------------------------------------
+PHASE 1  gated settle (J1a cause (i): a step count is not a settle)
+  [settle   100] vmax=  0.49767 m/s  c/vmax=      33.49  Fz=      5236.024 N
+  [GATE MET] c/vmax=33.49 >= 20.0 at step 100
+--------------------------------------------------------------------------
+PHASE 2  averaged force measurement (instantaneous read rings; see smoke test)
+  [meas   200] running mean Fz=    -433.474 N  sd=  3153.967  err=-108.630%
+  [meas   400] running mean Fz=    -445.525 N  sd=  2429.759  err=-108.870%
+  [meas   600] running mean Fz=    -455.432 N  sd=  2010.951  err=-109.067%
+  [meas   800] running mean Fz=    -436.121 N  sd=  1745.704  err=-108.683%
+  [meas  1000] running mean Fz=    -406.028 N  sd=  1563.185  err=-108.084%
+  [meas  1200] running mean Fz=    -373.527 N  sd=  1428.910  err=-107.437%
+==========================================================================
+RESULT  (Genesis convention: dx = 1/grid_density)
+  F_analytic          =      5022.7200 N
+  F_measured  (mean)  =      -373.5266 N   sd=1428.9095
+  F_measured  (2nd h) =      -291.6208 N   sd=161.9413
+  peak-to-peak        =      9833.5625 N
+  ERROR full window   = -107.4367 %
+  ERROR second half   = -105.8060 %
+  |Fx|,|Fy| mean      = 129.4729, 75.0010 N (should be ~0 by symmetry)
+  settled_at          = 100
+==========================================================================
+[saved] track2_realism/results_cube_gd16.json

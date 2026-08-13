@@ -1,0 +1,42 @@
+INFO:    gocryptfs not found, will not be able to use gocryptfs
+==========================================================================
+GENESIS FREE-BODY BUOYANCY CHECK (NON-CANONICAL, TRACK 2)
+==========================================================================
+[cfg] body=cube gd=16.0 dx=0.062500 (Genesis convention)
+[cfg] V=0.512000 m^3  rho_body=500.0  mass=256.000 kg
+[cfg] extents=[0.8 0.8 0.8]  domain=[1.975 1.975 1.825]  grid=[32 32 29]
+[cfg] cover=0.35 m = 5.60 dx   submerged frac = 1.000 (FULL)
+[cfg] F_analytic = 5022.7200 N
+[cfg] a_ideal (no added mass) = g(rho_w/rho_b - 1) = 9.8100 m/s^2
+/usr/local/lib/python3.10/dist-packages/quadrants/_test_tools/warnings_helper.py:11: UserWarning: cannot create weak reference to 'tuple' object. Template mapper caching disabled.
+  warnings.warn(message)
+[ok] built. water particles=57600
+[ok] genesis-reported body mass = 256.0000 kg (analytic rho*V = 256.0000)
+[ok] initial body z = 0.887500
+--------------------------------------------------------------------------
+PHASE 1  settle (body free the whole time; a settle that MOVES the body
+         is itself the signal, so z is logged throughout)
+  [settle   50] z=0.852044  dz=-0.035456  vz=-0.552289
+  [settle  100] z=0.807548  dz=-0.079952  vz=-0.230713
+  [settle  150] z=0.798244  dz=-0.089256  vz=-0.080584
+  [settle  200] z=0.771902  dz=-0.115598  vz=-0.450892
+--------------------------------------------------------------------------
+PHASE 2  measure vertical kinematics
+  [meas   20] t=0.0400 z=0.752867 vz=-0.493986
+  [meas   40] t=0.0800 z=0.732901 vz=-0.499985
+  [meas   60] t=0.1200 z=0.713803 vz=-0.430471
+  [meas   80] t=0.1600 z=0.700012 vz=-0.258995
+  [meas  100] t=0.2000 z=0.692259 vz=-0.146305
+  [meas  120] t=0.2400 z=0.687123 vz=-0.120515
+==========================================================================
+RESULT  (Genesis convention: dx = 1/grid_density)
+  net dz over measure window = -0.083874 m
+  vz first -> last           = -0.454083 -> -0.120515 m/s
+  a_fit (dv/dt)              = +1.9857 m/s^2
+  a_ideal                    = +9.8100 m/s^2
+  DIRECTION                  = UP (buoyant)
+  F_measured = m(a+g)        = 3019.7108 N
+  F_analytic = rho*g*V       = 5022.7200 N
+  ERROR                      = -39.8790 %
+==========================================================================
+[saved] track2_realism/results_free_cube_gd16.json
