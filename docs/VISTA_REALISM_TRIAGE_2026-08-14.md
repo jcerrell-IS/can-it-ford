@@ -93,11 +93,23 @@ standing project rule.
   SU spent.**"
 - `a3ab0d0` adds a file literally named `.remember/ls6_session_2026-08-12.md`.
 
-`[live]` corroboration that does not depend on those sentences: every job id cited
-across the 12 is 7-digit in the 336xxxx range (3361315, 3361371, 3361423, 3361443,
-3361504, 3362500, 3362516, 3362547), which is the LS6 series. This project's Vista
-jobs are 6-digit (866887, 894731, 895330, per CLAUDE.md and the session-start
-reminders).
+**Corroboration that is genuinely independent**, which matters because the three
+sentences above are all from the same authoring session and are therefore one source
+quoted three times, not three sources. `[live]` `main`'s commit `6434258`, written by
+the *other* line of work, states it in its own subject: "**Rung (b) ran on LS6 A100**
+and FAILED", and its body records "Job 3361315, gpu-a100-dev, node c301-004". That is
+a different session, on a different branch, naming the same job id.
+
+**A weaker argument, retained but demoted.** Every job id cited across the 12 is
+7-digit in the 336xxxx range (3361315, 3361371, 3361423, 3361443, 3361504, 3362500,
+3362516, 3362547) while this project's Vista job ids are 6-digit. This is suggestive
+but is **not** independent: those ids come from the branch's own commits and directory
+names, the same source as the quoted sentences. A job number is also a per-cluster
+counter, not a machine identifier. `[live]` correcting a citation error in an earlier
+draft of this section: of `866887`, `894731` and `895330`, only **`894731`** actually
+appears in CLAUDE.md; the other two do not, so CLAUDE.md cannot be cited for the Vista
+id range. The LS6 conclusion rests on `6434258` and on the commit bodies, not on digit
+counting.
 
 **Unresolved attribution, stated rather than guessed.** `main`'s recovery commit
 `8695539` says `[body]` the artifacts "were committed on
@@ -111,8 +123,11 @@ called.
 
 ### 2.2 `main` grew an independent, parallel `realism_track` line that went further
 
-`[live]` `main` already contains `realism_track/` with 58 files, and 8 commits on
-`main` touch it that are not on this branch. Interleaving the two lines by commit
+`[live]` `main` already contains `realism_track/` with 58 files. Commits on `main`
+touching `realism_track/` that are not on this branch: **10 by ancestry, of which 8
+are the 08-13 00:16 to 05:50 line** shown below; the other 2 are `4513d40` and
+`02f08eb`, the re-commits of this branch's own first two. Both numbers are given
+because a bare count here is scope-sensitive. Interleaving the two lines by commit
 timestamp:
 
 | When (2026) | Line | Commit | Subject |
@@ -194,7 +209,7 @@ finding.
 | 8 | `45be8c3` | 12 18:32 | **retraction (2 of 2)** | **Discard.** Both retractions already on `main` |
 | 9 | `d59c48e` | 13 10:25 | **merge-candidate, high value** | **Merge**, after the section 4 adjudication |
 | 10 | `c74ac23` | 13 10:31 | **merge-candidate, high value** | **Merge**, after the section 4 adjudication |
-| 11 | `a6b66b6` | 13 10:36 | merge-candidate with caveat | **Merge**, but see the provenance gap |
+| 11 | `a6b66b6` | 13 10:36 | **merge-candidate, high value** | **Merge.** Figures verified reproducible; also extract its g96 non-reproducibility finding |
 | 12 | `4b38aa3` | 13 10:38 | **exploratory-park** | **Park.** Rewrites a verdict `main` has independently rewritten |
 
 ### The two explicit retractions
@@ -254,11 +269,25 @@ two-namespace collision") and one of the two `a_expected_compressible` usages
 (`e7a1fd6`, the C3 estimator fix). `[inferred]` taking the branch side of this file
 in a merge would revert both.
 
-One thing in that commit **does** verify and is worth keeping: `[live]` the branch
-blob's sha256 is `2e437a293e2cfd17fc78b96ace03881...`, exactly the value the commit
-body claims and the value recorded in all 29 `coupling_validation` manifests. So the
-commit's provenance pin is sound even though its "untracked" premise is not
-repo-wide. Preserve that sentence; discard the commit.
+One half of that commit's provenance claim verifies and one half does not. Stated
+separately, because an earlier draft of this document merged them under a single
+`[live]` tag, which was a false provenance tag:
+
+- **Verified `[live]`:** the branch blob's sha256 is
+  `2e437a293e2cfd17fc78b96ace03881...`, exactly the value the commit body claims.
+- **NOT verified, `[body]` only, and unverifiable from this checkout:** that this
+  value is "the sha256 recorded in all 29 `coupling_validation` manifests".
+  `[live]` `/usr/bin/grep -rl '2e437a293e2cfd17' data/` returns **0 hits**, and only
+  **1** `coupling_validation*` directory is present locally, not 29. The manifests may
+  exist on the LS6 clone; they are not here. **Do not restate the 29-manifest claim as
+  confirmed.**
+
+And the pin is weaker than "sound" even on the branch's own account. `868302e` says so
+itself `[body]`: the hash was taken at backfill time on 2026-08-12, the manifests
+record `tracked_in_git: false`, and it "does not retroactively prove the file was
+identical during the 2026-08-07 runs; that caveat in the manifests still stands."
+Preserve the sha256 and that caveat together, never the sha256 alone. Discard the
+commit.
 
 ### Commit 6, `a3ab0d0`, has one item that exists on no other ref
 
@@ -282,6 +311,31 @@ global and the `__defaults__` of `sound_speed`/`substeps_and_dt`, then aborts un
 `tank.sound_speed` matches." **Recommendation: lift this paragraph into the code as a
 comment or into `FINDINGS.md`, and drop the commit.** It is the one thing in commits
 1-8 that would be lost by discarding them.
+
+### Two further extraction candidates, from commits 10 and 11
+
+Both were missed in an earlier draft of this document. Neither is a reason to change a
+merge recommendation, and both should survive whatever happens to the commits.
+
+**A settle gate whose threshold moves with the thing it gates**, from `c74ac23`
+`[body]`: "the settle gate `c/vmax >= 20` has a threshold that scales with c, so it
+gets easier as the fluid stiffens. Frames used fall 354 to 62 to 20, with D stopping
+at exactly `settle_min_frames`. C and D are therefore less settled in absolute terms
+and their force numbers are unusable; they are quoted for the leak trend only. A bulk
+sweep needs an absolute criterion." `[live]` confirmed in the artifacts: C and D report
+`settle_gate_met` **True** at 62 and 20 frames against A's 353. This matters beyond
+this branch because the gate is shared with `main`'s runs, and it is a second instance
+of the pattern register item 6 already names, a check that cannot fail.
+
+**A g96 settle that does not reproduce**, from `a6b66b6` `[body]`: on a
+byte-identical configuration the canonical run and the probe met the gate at 776 and
+777 frames with vmax 0.6341 and 0.6232, while run E ran the full 900 and ended at
+1.5132. Attributed there to warp's order-nondeterministic P2G atomics with vmax as an
+extreme-value statistic over 1.5M particles. **This collides with `main`'s
+explanation of the same symptom.** `main`'s `b62d554` attributes the g96 discards to a
+**cap artifact** ("900 was about 13 percent short", gate met at 1030 once the cap rose
+to 3000). Both cannot be the whole story, and the two accounts have never been put
+side by side. Worth recording as an open item wherever the register lands it.
 
 ### Commits 9-12, the only genuinely new content
 
@@ -324,16 +378,35 @@ c = 12.8452 reproduces the field exactly (12.8452 / 1.5131868 = 8.4889), which a
 confirms that c is the g96 value and not a g64 one carried across. Its own
 `surface_gap_m` is 0.5994 and `surface_gap_Pa` 5880.4.
 
-**One provenance gap, and it is the reason commit 11 carries a caveat.** `[live]` the
-`+1.00%` and `+1.28%` mass-based-head figures, which are the branch's final headline
-and which `a6b66b6` says supersede `+2.98%`/`+2.85%`, exist **only as prose** in
-`realism_track/FINDINGS.md` (lines 16 and 990-991). They are not a field in any
-artifact, and `[live]` no committed code computes them: `surface_and_leak.py` has no
-`h_eff`, `mass_based` or `linear_particle_density` symbol, and `a6b66b6` adds no
-script. The artifacts store `err_vs_half_density_pct` instead. So the number that
-`4b38aa3` promotes to the top-line verdict **cannot currently be regenerated from the
-repository.** That is fixable cheaply, by committing the recomputation, and it should
-be fixed before the figure is quoted anywhere.
+**A provenance gap I asserted in an earlier draft is RETRACTED.** That draft said the
+`+1.00%` and `+1.28%` mass-based-head figures "cannot currently be regenerated from
+the repository", because `surface_and_leak.py` contains no `h_eff`, `mass_based` or
+`linear_particle_density` symbol and `a6b66b6` adds no script. Both of those
+observations are true `[live]` and **the conclusion drawn from them was wrong.**
+Absence of a symbol is not absence of the inputs.
+
+`[live]` the artifacts store the full free-surface histogram, `hist_z` and
+`hist_count`, 183 bins each, alongside `bulk_density_particles_per_m`. That is
+everything `a6b66b6`'s definition needs. I regenerated all three published rows from
+committed fields only, taking `z_b0 = z_half_density - h_sub_half_density_m` and
+`rho*g*A = F_partial_half_density_N / h_sub_half_density_m`, then
+`h_eff = (sum of hist_count above z_b0) / bulk_density_particles_per_m`:
+
+| Run | `z_b0` | n above | `h_eff` | analytic | measured | error | gate |
+|---|---|---|---|---|---|---|---|
+| A, g64, bbc 8.0 | 1.6194 | 99,898 | 0.5509 m | 11,712 N | 11,829 N | **+1.00%** | met |
+| B, g64, bbc 3.0 | 0.8833 | 249,944 | 1.3181 m | 28,023 N | 28,382 N | **+1.28%** | met |
+| E, g96, bbc 3.0 | 0.8833 | 906,074 | 1.3978 m | 29,719 N | 32,948 N | **+10.87%** | **NOT met** |
+
+Identical to `FINDINGS.md:990-992` in every column. **The figures are reproducible from
+the committed artifacts**, and commit 11's recommendation is a plain merge, not a
+merge-with-caveat. Committing the six-line recomputation would still be worth doing so
+the next reader does not have to re-derive `z_b0`, but that is tidiness, not a
+blocker.
+
+**The regenerated g96 row is the most decision-relevant number in this document and
+the branch never puts it in a headline.** Post-correction, the same fixed collider
+reads `+1.28%` at g64 and `+10.87%` at g96, a **9.59-point** grid gap. See section 4.
 
 `4b38aa3` is parked rather than merged for a structural reason, not a physics one:
 `[live]` it rewrites `FINDINGS.md`'s top-line verdict block, and `main` independently
@@ -349,9 +422,26 @@ Merge 9-11 first, adjudicate section 4, then write one verdict block deliberatel
 **This is flagged, not resolved. Resolving it is a judgment call and needs data I
 cannot get within this dispatch's scope.**
 
-The disagreement is about **the same physical quantity**: the force deficit measured
-on a partially submerged body in the warpmpm rung-b geometry. Engine tag: **warpmpm
-throughout this section.** No Genesis result appears here.
+Engine tag: **warpmpm throughout this section.** No Genesis result appears here.
+
+**Scope correction, and it is essential.** An earlier draft of this section said the
+two lines disagree about "the same physical quantity". That was too broad, and it
+committed the exact merge-two-different-things error that constraint 1 below forbids.
+`[live]` `realism_track/surface_and_leak.py:92` hardcodes
+`box_mode="collider_sdf"` with no CLI override, so **every branch run, A through E, is
+a fixed SDF collider.** The branch has zero free-rigid coupled-path measurements.
+`main`'s load-bearing claim in `8590313` is about the coupled path
+("THE FREE-RIGID FORCE-COUPLED PATH IS GRID-CONVERGED"), taken from rows with
+`"mode": "coupled"`.
+
+So the genuine overlap is narrower and must be stated as one row, not as a whole
+result: **the g64 fixed-collider partial-submersion error.** `main`'s `b62d554`
+records that row as **-49.92%**; the branch's run A re-measures the same
+configuration at **-49.8787%** `[live]`, which is the same row to four significant
+figures, and then re-scores it to **+2.98%** (half-density surface) or **+1.00%**
+(mass-based head). That is a real disagreement about one shared quantity. Everything
+`main` says about the *coupled* path is untouched by this branch, because the branch
+never measured it.
 
 **`main`'s position**, `[body]` from `8590313` and `b62d554`: the deficit is real and
 grid-converged. Coupled path about -25% at frac 0.78 rising to about -30% at frac
@@ -380,24 +470,46 @@ inferred surface error is 0.5951 m at g64 and 0.5854 m at g96, "which is 5,838 a
 attribution holds, `main`'s -25%/-30% is measured against an inflated reference and is
 not a physical deficit.
 
-**What is not resolved, and what would resolve it.** `[inferred]` the surface error
-differs slightly by grid (0.5951 vs 0.5854 m), so applying the correction shifts the
-g64 and g96 errors by different amounts. `8590313`'s conclusion is a statement about
-the *gap* between g64-interpolated and g96-measured values, so it does not
-automatically survive or automatically fall; it has to be recomputed. The falsifiable
-test is cheap and already specified by both lines: **re-score `main`'s ten gate-met
-matched-submersion points using the measured surface instead of `column_surface`, and
-see whether the 0.10/1.51 coupled gaps and the 13.25/19.07 fixed gaps survive.**
+**The evidence does not leave this fully open, and an earlier draft of this document
+hedged where it should not have.** Two things can be said now.
 
-The instrument for it already exists and is committed on this branch. `[live]`
-`realism_track/surface_and_leak.py:32` builds a raw z-histogram
-(`np.histogram(z, bins=edges)`), `:59` emits `z_half_density`, `:135` takes
-`h_true = z_half_density - z_b0`, and `:171` emits `err_vs_half_density_pct`. Note
-the method actually implemented is the **half-density** surface, which is the
-`+2.98%`/`+2.85%` result; the mass-based `h_eff` that `a6b66b6` says supersedes it as
-"more principled" has no committed implementation, per the provenance gap above. So a
-re-scoring can be run today at the `+2.98%` level of rigour and would need the `h_eff`
-definition recovered to reach the `+1.00%` level.
+**First, the correction may overshoot rather than dissolve the deficit.** `d59c48e`'s
+own next sentence, which the earlier draft quoted around, is `[body]`: "Correcting it
+moves the g64 gate-met fixed run from **-49.92% to +7.83%**." A deficit that crosses
+zero to a surplus is not a deficit that has been explained away, it is a reference that
+has been over-corrected, under-corrected, or both at different submersions. The branch
+itself then produces three different corrected values for the same family of runs
+(+7.83%, +2.98%, +1.00%) as its surface estimator improves, which is consistent with
+the estimator, not the physics, doing the moving.
+
+**Second, and this is the strongest single piece of evidence in either direction,
+`main`'s "the fixed SDF collider is not grid-converged" appears to SURVIVE the
+correction.** `[live]` from my own regeneration in section 3: post-correction the fixed
+collider reads **+1.28% at g64 and +10.87% at g96, a 9.59-point gap**, which is the
+same order as the 13.25 and 19.07 points `8590313` reports for the fixed collider
+pre-correction. The correction therefore does not remove the fixed collider's
+grid-dependence; it shifts both grids and leaves a comparable spread.
+
+**The caveat that stops this being decisive**, stated because it is load-bearing:
+`[live]` the g96 run E is `settle_gate_met` **false**, so by the branch's own rule it
+is a discard, and `a6b66b6` says so. A 9.59-point gap resting on one gate-failed point
+is an indication, not a result. It is still more evidence than the earlier draft's
+"has to be recomputed" implied, and it points toward `main`.
+
+**What would actually settle it, and what it costs.** Re-score `main`'s ten gate-met
+matched-submersion points against a directly measured surface and see whether the
+0.10/1.51 coupled gaps and the 13.25/19.07 fixed gaps survive. **This is NOT free, and
+an earlier draft of this document was wrong to say it costs no SU.** `[live]` the
+instrument reads live particle positions (`surface_and_leak.py:25`,
+`z = tank.solver.x()[:n_w, 2]`), and **none of `main`'s `realism_track` artifacts
+stores them**: 0 hits for `hist_z`, `hist_count`, `z_half_density` and
+`n_below_floor`, and 0 `.npz` files. Re-scoring `main`'s points therefore requires
+re-running the settle on GPU. Route it to LS6 as batch.
+
+What *is* free is the branch's own side: `[live]` its artifacts do commit the
+histogram, which is how section 3's regeneration was possible without any compute. So
+the asymmetry to plan around is that the branch's runs are fully re-analysable today
+and `main`'s are not.
 
 `[live]` the same script also defends against `a3ab0d0`'s BULK trap in code, which is
 independent evidence that the trap is real: `:19-20` patch
@@ -405,17 +517,33 @@ independent evidence that the trap is real: `:19-20` patch
 `sys.exit("BULK PATCH FAILED: ...")` unless `tank.sound_speed` matches the expected
 value.
 
-Either way this is a re-analysis of committed artifacts, not a new GPU run, so it
-costs no SU on either machine.
-
 **A second, larger consequence, stated because it must not be buried.** `c74ac23`
 says `[body]` "The reference case is **NOT** fully submerged. Measured surface 2.1813
 sits below the box top at 2.3554, about 88% submerged." `run_c1_sdf` at `frac 1.0` is
 the source of the project's canonical **7.3 to 7.7%** buoyancy figure, and `frac` is
 computed from the same `column_surface` this branch says is inflated. `a6b66b6` adds
-`[body]` that the 7.3-7.7% figure is "taken from one run per resolution, needs
-repeats and an error bar". **If the branch is right, the canonical figure's stated
-premise is wrong.** I have not tested this and am not asserting it.
+`[body]` that the 7.3-7.7% figure is "taken from one run per resolution, needs repeats
+and an error bar".
+
+An earlier draft said "I have not tested this". That was an unnecessary hedge: the test
+is two subtractions on data already in hand, and `[live]` **it fails on both grids**,
+where `box_top_z = 2.3554356` per `FINDINGS.md:569`:
+
+| Run | reported surface | measured surface | box top | fully submerged? |
+|---|---|---|---|---|
+| B, g64 | 2.7606 | **2.1813** | 2.3554 | **No**, 0.174 m short |
+| E, g96 | 2.8759 | **2.2765** | 2.3554 | **No**, 0.079 m short |
+
+Both artifacts nonetheless carry `fully_submerged_by_reported_surface = True`, which is
+the defect in one line: the flag and the measurement disagree, and the flag is what the
+`frac` premise rests on.
+
+**Two limits on how far that carries.** These are the branch's *reproduction* of the
+reference geometry, not the canonical `run_c1_sdf` artifacts themselves, so this is
+evidence about the premise and not a direct measurement of the canonical run. And E is
+gate-failed. **So: the frac 1.0 premise is now doubtful on reproduced runs at both
+grids, which is a stronger statement than "untested" and a weaker one than "the
+canonical figure is wrong".** Adjudicating it is Dispatch 4's, on the register.
 
 Three constraints on anyone who picks this up, carried from the dispatch and
 preserved verbatim in force:
@@ -456,18 +584,41 @@ paths are already byte-identical and 11 are clean additions.
 
 Resolution guidance, `[inferred]` from the evidence above:
 
-- `simulation/validate_coupling_force.py`: **take `main`'s side wholesale.** Section 3
-  commit 4 gives the reason. The branch side is a different lineage missing two landed
-  fixes.
+- `simulation/validate_coupling_force.py`: **resolve by hand, keeping `main`'s `CV2`
+  rename and C3 estimator fix.** An earlier draft said "take `main`'s side wholesale".
+  That is **wrong**, and it is contradicted by `main`'s own commit `79fec32:12`
+  `[live]`: "divergence is BIDIRECTIONAL, so no wholesale copy is safe." `[live]` the
+  numbers: going branch to `main` the diff is 7 insertions and 178 deletions, so 178
+  lines exist only on the branch and 7 only on `main`.
+
+  `[live]` at the API level the branch-only surface is small and specific: two items,
+  `def run_c1b(n_grid, rho_box=600.0, depth_cells=18.0, submersion_frac=0.80, ...)` and
+  `--submersion-frac`. `main` has **zero** functions or CLI arguments the branch lacks.
+  Note also, against a claim made during review, that `run_c1b` is **not** missing from
+  `main`: `[live]` it is present in both `main:simulation/validate_coupling_force.py`
+  and `main:simulation/coupling_force/rung_b_coupled.py`, with a different signature.
+  So the branch's 178 lines are largely a *different revision* of shared functionality,
+  not functionality absent from `main`.
+
+  Judgement `[inferred]`: `main` reaches the same capability by another route, varying
+  submersion with `--depth-cells` at fixed grid (`8590313`), so `--submersion-frac` is
+  probably redundant rather than a loss. Confirm that before dropping it.
 - `realism_track/FINDINGS.md`: **do not take either side wholesale**, which is
   `8695539`'s own recorded warning and is what `b62d554` had to do by hand once
   already. `main`'s copy is 1355 lines and has the RECONCILIATION SEAM section; the
   branch's is 1031 lines. The content unique to the branch is the final four commits'
   sections only, since `[live]` everything through `45be8c3` is already merged in.
 - A cheaper alternative that avoids the `FINDINGS.md` conflict entirely: cherry-pick
-  only the 9 artifact and script files from commits 9-11, which are pure additions
-  touching no existing path, exactly the shape `8695539` used successfully. Then write
-  the `FINDINGS.md` section once, deliberately, after section 4 is adjudicated.
+  only the **8** artifact and script files from commits 9-11, which are pure additions
+  touching no existing path, exactly the shape `8695539` used successfully. `[live]`
+  the count is 8, not the 9 an earlier draft gave: `run_surface_leak.sbatch`,
+  `run_surface_leak_g96.sbatch`, `surface_and_leak.py`, the four
+  `surface_leak_3362500/*.json`, and `surface_leak_g96_3362516/E_full_g96.json`. The
+  ninth file in the "absent from `main`" set,
+  `realism_track/run_surface_leak_repeat.sbatch`, belongs to commit **12**, which this
+  document recommends parking, so taking it would quietly import part of the parked
+  commit. Then write the `FINDINGS.md` section once, deliberately, after section 4 is
+  adjudicated.
 
 ---
 
@@ -479,14 +630,21 @@ Stated so no reader mistakes an unchecked item for a checked one.
   that Vista's clone is "1 ahead / 5 behind" and that `1e4c6d5`/`4b38aa3` "no longer
   resolve there" are **carried, not verified**. They do not affect any conclusion
   here: section 1's correction rests entirely on `git ls-remote` against GitHub.
-- **Whether `main`'s -25%/-30% survives the surface correction.** Section 4. Not
-  computed. Requires re-scoring committed artifacts.
-- **Whether `run_c1_sdf`'s `frac 1.0` is really full submersion**, and therefore
-  whether the canonical 7.3-7.7% premise holds. Not tested here.
-- **The `+1.00%`/`+1.28%` figures themselves.** `[live]` confirmed to exist only as
-  prose with no committed generator; I did not attempt to recompute them, and doing so
-  would need the `h_eff` definition, which is not in the repository.
-- **`physics-skeptic` review.** Recorded in the commit message for this document.
+- **Whether `main`'s coupled-path -25%/-30% survives the surface correction.**
+  Section 4. Not computed, and **not computable without new GPU time**, because
+  `main`'s artifacts do not store particle z. The fixed-collider half of the question
+  now has partial evidence (the 9.59-point post-correction gap), which points toward
+  `main`, but rests on one gate-failed run.
+- **Whether the canonical `run_c1_sdf` runs themselves are fully submerged.** Section 4
+  shows the branch's *reproductions* are not, at both grids. I did not open the
+  canonical `data/coupling_validation/c1sdf_sdf_g{64,96}.json` artifacts to test the
+  same thing on the runs that actually produced the 7.3-7.7% figure. That is the next
+  cheap step for whoever adjudicates it, and it needs no compute.
+- **The 29-manifest sha256 claim in `868302e`.** `[live]` 0 hits under `data/` and only
+  1 `coupling_validation*` directory present locally. Unverifiable from this checkout;
+  marked `[body]` in section 3, not `[live]`.
+- **`physics-skeptic` review: RUN, and it changed this document.** See the review
+  record below.
 - The 12 commits' content was read at commit-body and artifact level. I did not read
   all 1031 lines of the branch's `FINDINGS.md` or all 1355 of `main`'s; the
   comparisons in section 2.2 are string-presence counts, which establish presence and
@@ -508,9 +666,45 @@ Stated so no reader mistakes an unchecked item for a checked one.
   headline numbers reproduce from their own artifacts, and 1 should be parked
   (`4b38aa3`).
 - **1 flag raised** (section 4): the branch's final four commits answer a question
-  `main` explicitly left open, and their answer would reclassify `main`'s -25%/-30%
-  deficit as a reference artifact. A cheap, purely re-analytical test is specified.
-  Not adjudicated here.
+  `main` explicitly left open. The overlap is **one row**, the g64 fixed collider, not
+  a whole result, because the branch measured only the fixed SDF collider and never the
+  coupled path. On the evidence now in hand `main`'s grid-convergence finding appears to
+  **survive** the correction. Not adjudicated here.
 
 No merge was performed. Nothing was pushed. `main`, the corrections register,
 `claude/rtfd-test-phase-1-4-569130`, Vista and every credential file were untouched.
+
+---
+
+## 8. Review record
+
+`physics-skeptic` reviewed this document adversarially and **found five errors that
+inverted its own recommendations.** All five were then re-verified independently
+against the repository before being accepted, and all five are corrected above:
+
+1. **§4 compared two different coupling paths.** The branch is fixed-SDF-collider only
+   (`surface_and_leak.py:92`); `main`'s headline is the coupled path. Corrected, and
+   the overlap narrowed to the single g64 fixed row.
+2. **§4's "costs no SU" was wrong.** `main` stores no particle z, so re-scoring its
+   points needs a GPU run. Corrected.
+3. **§3's provenance gap on `+1.00%`/`+1.28%` was refuted.** The histogram is
+   committed; I regenerated all three rows exactly. The claim is retracted in place and
+   commit 11 upgraded to a plain merge.
+4. **§4 hedged where evidence existed**, omitting a sign flip and a 9.59-point
+   post-correction grid gap that favour `main`. Corrected.
+5. **§5's two resolution instructions were both wrong**: 8 files not 9, and "take
+   `main`'s side wholesale" is contradicted by `79fec32:12`. Both corrected.
+
+Also corrected from the same review: a false `[live]` tag on the 29-manifest sha256
+claim, an overstated "provenance pin is sound", a non-independent job-id argument with
+a wrong CLAUDE.md citation, a scope-free commit count, and two missed extraction
+candidates.
+
+**One review finding was checked and NOT adopted.** The review stated that `run_c1b`
+exists only on the branch. `[live]` it is present on `main` in two files; the real
+difference is its signature and the `--submersion-frac` argument. Section 5 records
+the corrected version.
+
+The review's own scope limit, carried here because it bounds finding 3 above: it
+searched tracked `main`, the branch, and the on-disk working tree, but not `.git/`,
+`third_party/`, or any other machine.
