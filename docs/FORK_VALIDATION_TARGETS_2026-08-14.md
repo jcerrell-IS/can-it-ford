@@ -19,7 +19,7 @@ shown. Engine tags are given wherever a solver claim appears.
 | Editorial notices, retraction / correction / concern / erratum | **Scite** `[live]` | **None** on any of the 8 core flood-vehicle DOIs |
 | Equation, units, and every percentage in section 2 | **Wolfram Language** `[live]` | Independently reproduced, see section 2 |
 | **Adversarial review of every percentage, force and ratio** | **physics-skeptic subagent** `[live]` | **RAN, and returned "Not CLEAN" with 7 blocking issues.** All 7 are resolved in this version; see "What adversarial review changed" below |
-| Register consistency before commit | **`.claude/checks/register_integrity.py`** `[live]` | **0 blocking defects**, exit 0. 106 items, 10 sections. Its 5 WARNs are pre-existing and none is in a file I touched |
+| Full local factual-integrity stack (`audit-facts`) | **`register_integrity.py` + `params_check.py` + `check_claims`** `[live]` | **0 BLOCKING DEFECTS in all three.** Details and the three warnings that are NOT in the known-explained set are below |
 | Bibliography audit | **Scholar Sidekick `auditBibliography`** | **NOT AVAILABLE this session**, confirmed by tool search, not assumed |
 
 ### What adversarial review changed, listed because the errors were mine
@@ -47,6 +47,40 @@ desk study; `mu` 0.78 wet-or-dry flagged as conflicting with the dispatch;
 **1:18** not 18:1; Pregnolato's quadratic has no real root; the Al-Qadami 25
 percent does not reproduce; C_D moves M **inversely**; "Matthias" withdrawn as
 unevidenced; the Perodua Viva named; the 3 m/s cap marked administrative.
+
+### Full factual-integrity stack, run per the `audit-facts` skill
+
+**0 blocking defects in all three tools.** Reporting only what is NEW relative to
+that skill's known-explained set, since an expected warning is not a finding:
+
+| New warning | Register coverage `[live]` | Read |
+|---|---|---|
+| `lit:geometry_bbox`, **17/17 runs** exceed the 0.002 m³ solid-volume tolerance (e.g. g48_m1100 hull 3.635710 m³ against canonical 3.542739 m³) | gate tag not in the register; `fill_ratio` **is** (1 hit) | Expected given `fill_ratio` 1.0023, so the underlying cause is known even though the gate tag is not registered. Not a new physical defect |
+| `lit:manifest_provenance`, `bulk_modulus` missing in **3 of 44** manifests | `bulk_modulus` appears twice in the register | Genuine provenance gap, small. Belongs to whoever owns manifests, not to this dispatch |
+| unresolved-path `render_s2/conv_2026-07-25/00_provenance.txt` | the path **is** in the register (1 hit) | Same class as the three known-explained unresolved paths: a quoted historical path, not a live dependency |
+
+**Not reported as findings** because they are in the skill's known-explained set:
+the three other unresolved paths, `lit:sound_speed_cfl` on 15/17 (register B8),
+`lit:resolution_convergence_gci` on all three masses (register B2, genuinely
+non-monotone), the inertia/`cg_height`/`ssf` absences (CLAUDE.md item 4, correct and
+must not be "fixed"), and the vehicle-density literal in the abandoned Track 2 file
+`simulation/can_it_ford_L2_mpm.py:27`. On that last one: **CLAUDE.md item 9 is the
+authority and should be read rather than restated here.** It records several
+incompatible live density values across the repo. **This document uses only the
+canonical Yaris hull figure, 310.494 kg/m³** (section 2). The Track 2 literal is
+flagged not-blocking because that path is abandoned, not because the fork is
+resolved.
+
+**One scope caveat on `check_claims`.** It reported `0 ERROR, 0 WARN` with
+`scope = staged index`, and my index was **empty** at that moment, so that run
+checked nothing. It is not evidence about this document. The meaningful
+`check_claims` signal this session was the PostToolUse hook, which **did** fire
+twice on my text and is recorded in the engine-audit note below.
+
+**Self-consistent, not validated.** Per register D5, no gate in this stack is a
+physics validation; every one is a self-consistency or numerical-containment check.
+The correct statement is that the repo's factual state is **self-consistent right
+now**, and nothing here licenses the word "validated".
 
 ### Engine audit, with its scope stated so it can be audited
 
@@ -172,6 +206,8 @@ hydrodynamics, not for the verdict.**
 | 1.5 | Hu, Li, Wang, Fang 2023, *J Hydrology* 620:129525 | `10.1016/j.jhydrol.2023.129525` | Stability thresholds at different flow orientations | Model | Orientation dependence | Any single-vehicle C_D. See the C_D warning in section 5 |
 | 1.6 | Martínez-Gomariz, Gómez, Russo, Djordjević 2017, *Urban Water J* 14(9):930-939 | `10.1080/1573062X.2017.1301501` | Experiments-based stability threshold methodology for any vehicle | Model | A threshold method transferable across vehicles | A moving-vehicle threshold |
 | 1.7 | Xia, Falconer, Xiao, Wang **2014**, *Nat Hazards* 70(2):1619-1630 | `10.1007/s11069-013-0889-2` | Vehicle stability criterion, theory plus experiment | Model | Incipient-motion criterion | **Cite as 2014.** `[live]` print and journal-issue are 2014-01, online 2013-10-11. This reproduces the standing project trap exactly |
+| 1.7a | **Xia, Teo, Lin, Falconer 2011**, *Nat Hazards* 58(1):1-14 | `10.1007/s11069-010-9639-x` | *Formula of incipient velocity for flooded vehicles.* Flat-bed formulation | Model | Incipient sliding velocity | **SLIDING ONLY, no toppling equation.** Cite as **2011** (print); Scite shows online-first 2010-10-20 |
+| 1.7b | **Shu, Xia, Falconer, Lin 2011**, *J Hydraulic Research* 49(6):709-717 | `10.1080/00221686.2011.616318` | *Incipient velocity for partially submerged vehicles.* The head-to-head partner of 1.7a | Model | Incipient sliding velocity, partial submergence | **SLIDING ONLY.** See the transcription caveat below |
 | 1.8 | Teo, Xia, Falconer, Lin 2012, *Int J River Basin Manag* 10(2):149-160 | `10.1080/15715124.2012.674040` | Vehicle/floodplain-flow interaction | Model | Interaction forces | Full-scale thresholds |
 | 1.9 | Kramer, Terheiden, Wieprecht 2016, *Int J Disaster Risk Reduct* 17:77-84 | `10.1016/J.IJDRR.2016.04.003` | Two scaled watertight models plus **one prototype car**; total-head criterion | Model **and** full scale | Total head 0.3 m passenger car, 0.6 m emergency vehicle | See the watertightness caveat in section 6 |
 
@@ -195,6 +231,27 @@ page-by-page PDF read** `[live]` `citations/smith_modra_felder_2019_velocity_gro
    static traction, `C_D = 1.38` measured on a **1:18** model Yaris in a flume, and
    `mu`. Only the 1:18 model drag experiments involved real flowing water. **Do not
    cite Smith 2019 as a measured full-scale velocity threshold.**
+
+**Rows 1.7a / 1.7b: two caveats and a resolved year trap** `[live]` register G10a,
+which reads external report `266e9a8a` (one of the three artifacts currently
+unreadable, recovered here through the register instead):
+
+- **Both papers formulate SLIDING ONLY.** Neither derives a toppling equation.
+  Do not cite either for topple.
+- **DO NOT CITE THE TRANSCRIBED COEFFICIENTS.** Register item J6 is explicitly
+  **not closed** by that transcription: the paper must cite the published article,
+  not a transcription of an author-accepted manuscript, and only Shu was
+  cross-checked against the version of record. Equations may be used to proceed
+  downstream; coefficients need the publisher PDFs first. An unsettled contradiction
+  also survives about whether Cardiff ORCA actually serves the Xia full text.
+- **The Xia year trap is RESOLVED, and it is not a year error at all.** `[live]`
+  **Xia 2011 and Xia 2014 are DIFFERENT PAPERS**: 2011 (`s11069-010-9639-x`) is the
+  flat-bed sliding formulation, and the 2014 companion (`s11069-013-0889-2`, row
+  1.7) adds slope and orientation. So "Xia 2014" is not necessarily a miscitation of
+  Xia 2011. This supersedes the simpler "Xia is 2014 not 2013" framing in memory.
+  Separately, the 2014 accepted manuscript lists **Caiwen Shu** as fourth author
+  where the version of record lists **Yejiang Wang**, under the same DOI. That is an
+  author-list revision, not a content difference. **Cite the version of record.**
 
 ### Tier 2, moving-vehicle sources, which is our case
 
@@ -414,12 +471,45 @@ reported at all, label it an **upper bound that overstates the contact limit by
 | `mu` | **0.3** | **HOLD THREE STATEMENTS APART, never merge them** (register G4, G4b, verified `[live]`). **(a) As a measured wet-road value 0.3 is REFUTED.** It is Smith 2019's sand-and-gravel worst case; wet AND dry concrete both read about 0.78; model-scale runs 0.52 to 0.68. **(b) As an inherited CONVENTION it is real**: Shand et al. 2011 record road experts and test laboratories settling on 0.3, and Bonham and Hattersley 1967 and Gordon and Stone 1973 adopt it. **(c) Keller and Mitsch 1993 also assumed 0.3 but in a desk study with no physical test** (register `:257`), so it is not a third measurement | Use as a **convention**, and say so. **Do NOT write that 0.3 is the primary or best-sourced defensible value**: register G4 refutes that exact wording and the Section I table lists it for deletion on sight |
 | `mu` | 0.52 measured parallel to flow | Shah 2018 `[ctx]` | Traced, not re-read |
 | `mu` | **0.78, wet OR dry concrete** | `[live]` repo PDF read. **This CONFLICTS with the dispatch's "0.75 wet / 0.78 dry"**, which splits one value into two. The repo read is page-by-page from the PDF, so it wins until someone re-opens the paper | **UNRESOLVED**, do not cite either form as settled |
+| `mu` | **0.55**, the project's canonical `floor_friction` | **Fully traced, and it is a LAB RUBBER MAT, not a road.** `[ctx]` external report `65474f37`, corroborated `[live]` by register G4a. Azhar, Pauwels and Bui 2023 measured it themselves with a **spring balance** on the rubber mat used as their road-surface proxy, verbatim: "a rubber mat has been used as a representative of the road surface with a wet coefficient of friction of 0.55." Two-hop chain terminating outside flood work: Azhar's measurement → Wong, *Theory of Ground Vehicles* (2008), wet asphalt peak 0.50-0.70, sliding 0.45-0.60 → **SAE 690214**, Harned, Johnston and Scharpf 1969, a General Motors tyre brake-force study. Genuine, general-automotive, **not flood and not submerged** | **Defensible as a wet lab-surrogate. OPTIMISTIC for a submerged paved road**, see below |
 | `mu_RO` | 0.092 rolling | Shah 2018 `[ctx]` | Traced, not re-read. **Longitudinal only, see the equation note** |
 | `W` | 1100.0 kg × 9.81 = 10791.0 N | `vehicle_params.py` mass_kg, CLAUDE.md canonical | `[live]` arithmetic |
 | `B` | rho·g·V_sub, V_hull = 3.542739 m³ | canonical Yaris hull | `[live]` arithmetic |
 | `L` | **0 only under subcritical flow** | Shah, Mustaffa, Yusof, Nor 2018 report lift insignificant subcritically; Martínez-Gomariz 2017 states buoyancy is negligible at high velocity and lift is not `[live]` via Scite | Conditional |
 | `C_D` | **unresolved, see section 5** | four incompatible published ranges | **Weakest link** |
 | `A_D` | depth-dependent submerged frontal area | geometry | Must be recomputed per depth, not fixed |
+
+### The canonical `floor_friction` = 0.55 is nearly double the safety convention
+
+This bears on every verdict in both tracks, so it belongs beside the equation rather
+than in a footnote. `[ctx]` from report `65474f37`, with the pieces I could check
+`[live]` against register G4/G4a/G4b agreeing:
+
+| Value | What it is | Source |
+|---|---|---|
+| **0.30** | The flood-safety **convention**, used for safety-criteria derivation | Bonham and Hattersley 1967 (WRL Report 100, measured range 0.3-0.5); Gordon and Stone 1973 (73/12); Keller and Mitsch 1993 (UWRAA 69); **Shand et al. 2011 (P10/S2/020), which underpins ARR** |
+| 0.52 | measured sliding | Shah 2018 |
+| **0.55** | **our canonical `floor_friction`**, measured on a lab rubber mat | Azhar et al. 2023 |
+| ~0.76 | measured average, full scale | Smith, Modra, Felder 2019 |
+| 0.78 | used | WRL TR 2017/07 |
+
+Shand et al. 2011 state verbatim why 0.3 persists: *"While the assumed coefficient
+of friction of mu = 0.3 is likely conservative, the present lack of suitable data
+and wide range of road surfaces and tyre tread conditions prohibits the refinement
+of the coefficient."* The published field spans roughly **0.25 to 0.78**.
+
+**Why this matters for the verdict, stated with its direction.** `[inf]` `T_avail`
+is linear in `mu`, so **0.55 against the 0.3 convention raises available traction by
+83 percent**, and a higher `mu` makes a **NO-SLIDE verdict easier to reach**. That
+is the third systematic bias in the unsafe direction identified in this document,
+alongside the unsteady-flow drag increase (section 5) and yaw dependence (section 6).
+Azhar et al. themselves note the value "could drop to as low as 0.30 in case of poor
+road conditions", which is the convention exactly.
+
+**Reporting rule, and it costs nothing:** wherever a verdict is reported, state `mu`
+**with its provenance as an Azhar lab-rubber-mat measurement, and name the 0.3
+safety convention beside it**, so a reader can see the direction of the assumption.
+Do not change any existing run over this; label it.
 
 ### Consistency check of the recommendation against its own anchor
 
@@ -552,28 +642,68 @@ understatements, the 8.333 percent d×v spread, and `W/(rho·V) = 0.310494`.
   **driver control and serviceability, not stability**, and it is the depth-only
   baseline to contrast against.
 
-  > **ORIGINALITY CLAIM SUSPENDED PENDING A DIRECT TEST, 2026-08-14.** This document
-  > previously carried, from the dispatch `[ctx]`, that a graded surface
-  > `v_max(depth, flow velocity)` "does not exist in the literature and is claimable
-  > as original". **Do not state that as settled and do not put it in the paper
-  > yet.** A Claude research artifact on this machine,
-  > `~/Downloads/compass_artifact_wf-045982be*`, is titled *"Safe Maximum Crossing
-  > Speed as a Function of Flood Depth and Flow Velocity: A Literature Assessment"*
-  > and assessed **exactly this question**. It is not in the corpus index and has
-  > not been read by anyone in this track.
+  > **SUSPENSION LIFTED, 2026-08-14, same day. THE ORIGINALITY CLAIM SURVIVES.**
+  > This document briefly suspended the claim that a graded surface
+  > `v_max(depth, flow velocity)` does not exist, because a Claude research artifact
+  > on this machine, `compass_artifact_wf-045982be*`, had assessed exactly that
+  > question and `~/Downloads` was TCC-denied so nobody could read it.
   >
-  > Two outcomes, and they point opposite ways, which is why the claim cannot stand
-  > in the meantime: if it found such a surface, **the originality claim is dead**
-  > and must be revised before it lands. If it confirms none exists, it is
-  > supporting evidence, **but only if its sources do not overlap mine**; shared
-  > sources make it the same source cited twice, not independent corroboration.
+  > **Routed around the block via the register, which already records its verdict.**
+  > `[live]` Register **G14**: *"NEGATIVE FINDING, handle as one. No
+  > `v_max(depth, flow_velocity)` exists in the literature. T2, external report
+  > `045982be`. No peer-reviewed paper, standard or design guide expresses a
+  > recommended safe crossing speed as a function of BOTH depth and flow velocity.
+  > The field is threshold-based, not speed-based."* So the artifact **confirms** the
+  > gap rather than closing it.
   >
-  > **Blocked, not skipped.** `~/Downloads` is TCC-denied to this process as of
-  > 18:24 today: `ls` returns "Operation not permitted" and reads fail, while
-  > `stat` gives `nlink=429` and `test -e` succeeds on known files, so **the files
-  > are present and unreadable, not missing**. A glob there currently returns "no
-  > matches" as a **false negative**. Access worked earlier in this same session, so
-  > this is a mid-session state change. Unblock recipe is in section 9, item 13.
+  > **Independence, checked rather than assumed, because it cuts both ways.** G14's
+  > closest single-variable result is Pregnolato 2017, which is also my source, so
+  > the two are **not fully independent on the closest result**. But G14 is a
+  > *negative* finding over a whole searched corpus rather than a claim resting on
+  > one paper, and it was produced by a separate assessment. Treat it as a **second
+  > search reaching the same negative**, not as two papers agreeing. Landing on the
+  > same closest result is what two competent searches should do.
+  >
+  > **FOUR QUALIFICATIONS THAT MUST TRAVEL WITH THE CLAIM**, or a reviewer will
+  > supply them. The artifact's full title is *"...A Literature Assessment for AV
+  > Flood-Road Traversability"* and it calls the result "a genuine, citable negative
+  > finding".
+  >
+  > 1. **Say no STABILITY speed law exists, because a TRACTION one does.** `[live]`
+  >    Aquaplaning models (Gallaway, Horne, Ong and Fwa) are genuinely
+  >    speed-dependent, quantitative and validated, so an unqualified "no speed law
+  >    exists" is refutable in one line. They are functions of **water-film
+  >    thickness in mm and tyre pressure**, not fording depth or floodwater sweep,
+  >    and they are driver-control advisories, not stability criteria. **Never cite
+  >    an aquaplaning speed model as a vehicle-stability result**, and never claim
+  >    the broader form of the gap.
+  > 2. **Pregnolato's own authors name this gap as open.** `[ctx]` Theirs is, by
+  >    their own claim, the **first** function relating flood depth to vehicle
+  >    speed, and they flag **adding flow velocity as future work**. Cite that:
+  >    the originators of the depth-only baseline say the velocity-aware version
+  >    does not exist yet. It is much stronger than asserting the gap ourselves.
+  > 3. **State the gap precisely: the sub-literature reports FORCES, not SPEEDS.**
+  >    `[ctx]` Shah et al. 2020 and Al-Qadami et al. 2022 are the moving-vehicle
+  >    frontier, and Al-Qadami's full-scale tests found drag "increased
+  >    significantly with the increment of flow velocity, Froude number, **and
+  >    vehicle speed**". So **vehicle speed is already a measured variable**. What
+  >    is missing is the conversion to a **prescriptive `v_max`**. Claiming "vehicle
+  >    speed is unstudied" would be false; claiming "no prescriptive speed surface
+  >    exists" is true.
+  > 4. **The benchmark paper has the same binary limitation, which locates our
+  >    contribution exactly.** `[ctx]` Emerging MPM-plus-Gaussian-splat "physically
+  >    viable world model" work produces **FEASIBLE / INFEASIBLE** traversal
+  >    judgments, not a graded speed surface. That is **arXiv 2607.00673**, this
+  >    fork's own benchmark target. So the gap is not a hole in an obscure corner:
+  >    the closest comparable pipeline stops at the same binary verdict we do.
+  >
+  > **A coincidence to note and refuse to lean on.** `[ctx]` Driver guidance
+  > recommends roughly 3 to 4 mph to maintain a protective bow wave, which the
+  > artifact labels **qualitative folk-engineering, not a validated function**.
+  > Dispatch 9's render shows a bow wave forming at 1.5 m/s, and `[inf]`
+  > **1.5 m/s = 3.36 mph**, inside that band. That is worth one sentence as an
+  > interesting coincidence and **must not be presented as validation**: an
+  > unsourced rule of thumb agreeing with a render corroborates neither.
 
   **The quadratic has NO REAL ROOT, and this matters if anyone extrapolates it.**
   `[inf]` Discriminant `0.5529² - 4(0.0009)(86.9448) = -0.00730`. The vertex is at
@@ -588,11 +718,32 @@ understatements, the 8.333 percent d×v spread, and `W/(rho·V) = 0.310494`.
   "total heads of h_E = 0.3 m = const. and h_E = 0.6 m = const." for passenger
   cars and emergency vehicles respectively.
 
-**Standing warning, restated because it is the easiest error to make.** The
-Australian small-car limit is a limiting **still-water depth of 0.3 m**, not a
-depth-times-velocity product of 0.3 m²/s. ARR Book 6 (Ball et al. 2019) uses
-limiting depths 0.3 / 0.4 / 0.5 m for small car, large passenger car and large
-4WD, with velocity capped at 3 m/s `[ctx]`. **That 3 m/s cap is ADMINISTRATIVE**,
+**Standing warning, and an earlier version of it here was TOO STRONG.** This
+document previously said the Australian small-car limit "is a limiting still-water
+depth of 0.3 m, **not** a depth-times-velocity product of 0.3 m²/s". That phrasing
+implies the D×V form does not exist. **It does.** `[live]` Register **G3**:
+*"AR&R limits. Still-water depths 0.3 / 0.4 / 0.5 m **and** D×V limits
+0.30 / 0.45 / 0.60 m²/s for small passenger, large passenger, large 4WD."*
+
+| Class | Still-water depth | D×V limit |
+|---|---|---|
+| small passenger | **0.3 m** | **0.30 m²/s** |
+| large passenger | 0.4 m | 0.45 m²/s |
+| large 4WD | 0.5 m | 0.60 m²/s |
+
+`[inf]` **ARR carries both, per class, and for the small car the two are both 0.3.
+That is a numerical coincidence in different units, and it is precisely why the two
+keep being conflated.** The correct rule is therefore not "the D×V form is wrong"
+but: **never quote a bare 0.3 without its unit.** 0.3 m and 0.30 m²/s are different
+physical quantities that happen to share a numeral for one vehicle class only.
+
+**A second collision on the same table** `[live]` register G3: **0.45 m²/s is both
+the AR&R large-passenger threshold and, separately, a value Azhar et al. 2026
+propose for small passenger vehicles** under combined critical conditions, with
+their own caveat that it "needs to be verified by further scenario testing." Never
+conflate those two uses either.
+
+Velocity is capped at 3 m/s `[ctx]`. **That 3 m/s cap is ADMINISTRATIVE**,
 set to stay below human-stability curves, not derived from vehicle data
 (CLAUDE.md L-2). Never present it as a vehicle-derived limit. Never conflate a depth cap with a
 hazard product.
@@ -775,6 +926,41 @@ figure.** Do not leave it implicit.
 - **Most of Tier 1 is model scale.** Froude scaling preserves gravity-to-inertia
   but not friction or viscous ratios, and this verdict depends on a friction
   coefficient `[ctx]`. Every row in section 1 is scale-tagged for this reason.
+
+**What was PHYSICALLY DONE in these experiments** `[live]` register G1a, which reads
+external report `baa355db`, the third currently-unreadable artifact, recovered here
+through the register. This is the primary evidence behind the scale tags:
+
+| Study | What was physically done |
+|---|---|
+| Bonham and Hattersley 1967 | **1:25**, restraint by fine threads read as force |
+| Gordon and Stone 1973 | **1:16**, same thread-restraint method |
+| Keller and Mitsch 1993 | **Desk study, no physical test at all.** Assumed mu = 0.3 and C_D = 1.1 |
+| Smith, Modra, Felder 2017 and 2019 | **The first direct buoyancy measurement on a real full-scale vehicle**, UNSW WRL |
+
+`[inf]` That last row is why rows 1.1 and 1.2 head this table: **everything earlier
+inferred buoyancy from displaced volume or model float depth rather than measuring
+it.** The ranking is not a preference, it is a measurement-versus-inference split.
+
+**Three consequences that bear directly on the verdict:**
+
+1. **Channel blockage ratio and afflux corrections are essentially UNREPORTED across
+   every incipient-motion study in this literature.** `[live]` So the thresholds
+   this project validates against are **not blockage-corrected**, and must never be
+   described as such. `[inf]` This is also an opportunity rather than only a
+   limitation: **our own tank has a computable blockage ratio**, so we can report
+   the one quantity the reference literature omits.
+2. **`mu` is strongly YAW-dependent, which the margin currently ignores.** `[live]`
+   Toda et al. 2013 report **0.26 at 0 degrees against 0.57 at 90 degrees** for a
+   sedan, and Kramer finds the critical angle at **45 degrees**. `[inf]` That is a
+   **2.2x** spread in the single parameter `T_avail` is linear in, comparable to the
+   C_D uncertainty in section 5 and to the unsteady-flow factor. Section 2's margin
+   treats `mu` as a constant; it is a function of yaw and should be swept or the
+   orientation stated.
+3. **Full-scale vehicles are somewhat MORE stable than the conservative AR&R
+   curves** `[live]`, consistent with the model-scale sealing effect below. So
+   model-scale-derived thresholds are conservative for a real vehicle, which is the
+   safe direction.
 - **Model-scale watertight vehicles float too shallow, confirmed at source.**
   `[live]` Kramer 2016's abstract: "the prototype experiments indicate that
   floating water depths are higher in prototype than in model scale, which is due
@@ -797,6 +983,17 @@ the vehicle as passive under drag, buoyancy and friction, or imposes prescribed
 kinematics. Shah 2018 is the sole published force balance carrying an explicit
 drive term, and that term measured 0.0017 to 0.021 N at 1:10 scale, so it supplies
 an equation and constrains nothing.
+
+**A second, independent line supporting this, with a separate origin.** `[live]`
+Register **G15**: *"NEGATIVE FINDING, handle as one. No coupled flood simulation
+applies propulsive force or engine torque. T2, external report `c963203d`. Across
+SPH, MPM, CFD and SWE-DEM, the vehicle is universally a passive rigid or rigid-linked
+body under drag, buoyancy and friction, Azhar et al. 2023 included. No propulsion
+force or torque value, from any manufacturer spec, dynamometer or assumption, is
+stated anywhere in that literature."* `[inf]` That is a **different external report**
+(`c963203d`) from the one behind the speed-surface finding (`045982be`) and from the
+44-paper search the dispatch cites, so this is genuine corroboration rather than one
+source counted twice. Note it also spans **SWE-DEM**, which none of my sources cover.
 
 **One necessary correction to the dispatch's F1, which claims no source anywhere
 applies propulsion in a coupled fluid-vehicle simulation.** `[live]` That is too
@@ -1089,18 +1286,39 @@ concern or erratum** on any of the eight core flood-vehicle DOIs checked.
     done. Re-derive or test before writing it down. Both corrections are recorded
     in place rather than silently patched so the entry path stays visible.
 
-13. **THREE UNREAD ARTIFACTS BEAR DIRECTLY ON THIS TABLE, and one of them tests a
-    claim this document makes.** All three are in `~/Downloads`, none is in the
-    corpus index, and **`~/Downloads` is TCC-denied to this process** (see the
-    suspended-claim box in section 2). Desktop reads fine, so the block is
-    Downloads-specific, and no readable copy of any of the three exists elsewhere
-    (`find` over `~/Desktop` and the repo: none).
+13. **THREE UNREADABLE ARTIFACTS, ALL THREE RECOVERED THROUGH THE REGISTER.**
+    `~/Downloads` is TCC-denied to this process, but **all three are already cited
+    in the corrections register**, which records their load-bearing verdicts. So
+    reading the originals is now **confirmation, not a blocker**, and every finding
+    below is already applied above.
 
-    | Artifact | Bears on | Priority |
-    |---|---|---|
-    | `compass_artifact_wf-045982be*` *Safe Maximum Crossing Speed as a Function of Flood Depth and Flow Velocity* | **Directly tests the suspended originality claim.** Also check source overlap: shared sources are not independent support | **FIRST** |
-    | `compass_artifact_wf-baa355db*` *Experimental Configuration of the Flood-Vehicle Stability Literature: What Was Physically Done* | The model-versus-full-scale tagging in section 1, which the dispatch calls the latent variable. This is the primary evidence for those tags | second |
-    | `compass_artifact_wf-266e9a8a*` *Incipient-Velocity Equations: Xia et al. (2011) vs Shu et al. (2011)* | Tier 1 currently has Xia 2014 but not the 2011 pair. Read alongside memory `xia-2014-not-2013-citation-trap.md`, since this author group carries a live year trap | third |
+    | Artifact | Register entry | Verdict recovered | Applied |
+    |---|---|---|---|
+    | `045982be` *Safe Maximum Crossing Speed vs Depth and Flow Velocity* | **G14** `:303` | **No `v_max(depth, flow_velocity)` exists.** Field is threshold-based, not speed-based. Plus the aquaplaning category-error warning | Section 2, suspension lifted |
+    | `baa355db` *What Was Physically Done* | **G1a** `:256` | Scale/restraint per study, blockage ratio unreported everywhere, yaw-dependent `mu` 0.26 to 0.57 | Section 6 |
+    | `266e9a8a` *Xia 2011 vs Shu 2011* | **G10a** `:288-295` | Both sliding-only; Xia 2011 and 2014 are different papers; do not cite transcribed coefficients | Tier 1 rows 1.7a/1.7b |
+
+    **Still worth reading when access returns**, to confirm the register summaries
+    against the originals, since the register itself records at `:648` that reading
+    a report directly rather than through a register summary has already caught two
+    errors in that file. Lower priority than it was, not zero.
+
+13a. **A FALSE DATA-LOSS ALARM THIS SESSION PRODUCED, worth knowing before someone
+    else hits it.** `register_integrity.py` resolves research-artifact SHAs by
+    globbing `~/Downloads/compass_artifact_wf-<id>-*`. Its hex summary moved, in one
+    session, **with the register file unchanged**:
+
+    ```
+    17:0x  30 cited: 15 git, 4 upstream-pinned, 10 research-artifact,  1 unresolved
+    18:2x  30 cited: 15 git, 4 upstream-pinned,  0 research-artifact, 11 unresolved
+    ```
+
+    `[inf]` 10 + 1 = 11 exactly: the ten previously-resolved artifacts flipped, and
+    only `185968e0` was genuinely unresolved in **both** runs. The cause is the TCC
+    block, not fabrication, and the tool's own wording ("it may be fabricated") reads
+    alarmingly. **Only `185968e0` is a real open question.** This reproduces memory
+    `checker-counts-reflect-process-visibility.md` exactly; the test that settles it
+    is `stat` nlink plus `test -e`, not `ls`.
 
     **Cheapest unblock, and it also closes the corpus-indexing gap:**
     ```
