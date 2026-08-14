@@ -220,25 +220,46 @@ class SelectionOutflow:
 
     Design follows `simulation/realism/outflow_deactivate.py` on branch
     realism-exploration, which established that this is the mechanism that
-    works. Two of its lessons are reproduced deliberately:
+    works. Three of its lessons are reproduced deliberately:
       * `active_mask()` must be used for every measurement, because deactivated
         particles freeze in place at the top of the column and an unmasked
         percentile keeps reporting the surface just removed;
       * particle state (F, F_trial, C, Jp, stress) must be RESET on reissue, or
         the pool carries the surge's deformation and pressure history back to
-        the inlet, which is the recirculation the periodic wrap was refuted for.
+        the inlet, which is the recirculation the periodic wrap was refuted for;
+      * the inlet must be DEMAND-DRIVEN on a depth deficit, not driven by the
+        nominal discharge.
+
+    THE THIRD LESSON WAS LEARNED HERE THE HARD WAY, AND IT IS WORTH THE SPACE.
+    The first version of this class took its inlet rate from
+    `InletBC.particles_per_step`, i.e. n = Q*dt/v_p, because that is what the
+    tracked CPU reference does. At the canonical geometry that is 304 particles
+    per tick against an outflow of order tens, so the retired pool drained on
+    every tick and EVERY retired particle was re-injected at the inlet in the
+    same tick it left. That is precisely the streamwise periodic wrap that was
+    tested on 2026-08-12 and LOST to the closed tank (30.0 percent against 58.9
+    percent on depth-hold) because a wrap has no mass or energy sink. The class
+    would have reported a working outflow the whole time.
+
+    `tests/test_fork_scene_outflow.py::test_retirement_reaches_the_solver_array`
+    is what caught it, and `wrap_ratio()` is what makes it visible from now on:
+    sustained ~1.0 with a pool that never accumulates means this BC has
+    degenerated into the refuted one. Default `inlet_mode` is therefore "depth".
     """
 
     SELECTION_ACTIVE = 0      # warp_utils: only selection == 0 is simulated
     SELECTION_RETIRED = 1
 
     def __init__(self, solver, n_water: int, spec: dict, seed: int = 0,
-                 mode: str = "depth"):
+                 mode: str = "depth", inlet_mode: str = "depth",
+                 relax_len: float | None = None, max_activate: int = 20000):
         from simulation.coupling_force.inflow_outflow import (  # noqa: PLC0415
             InletBC, OutflowRetirement,
         )
         import numpy as np  # noqa: PLC0415
 
+        if inlet_mode not in ("depth", "discharge"):
+            raise ValueError("inlet_mode must be 'depth' or 'discharge'")
         self._np = np
         self.s = solver
         self.sim = solver._sim
@@ -249,6 +270,15 @@ class SelectionOutflow:
             velocity=spec["velocity"], rho=WATER_DENSITY)
         self.outflow = OutflowRetirement(
             x_out=spec["x_out"], mode=mode, z_target=spec["z_target"])
+        self.inlet_mode = inlet_mode
+        self.spec = dict(spec)
+        self.floor = float(spec["floor"])
+        self.target_depth = float(spec["z_target"]) - self.floor
+        self.y_span = tuple(float(c) for c in spec["y_span"])
+        self.relax_len = float(
+            relax_len if relax_len is not None
+            else 0.25 * (spec["x_out"] - spec["x_in"]))
+        self.max_activate = int(max_activate)
         self.h = float(spec["h"])
         self.particle_volume = self.h ** 3
         self.rng = np.random.default_rng(seed)
@@ -306,6 +336,64 @@ class SelectionOutflow:
         sits retired it is mass that has genuinely left the domain."""
         return 1.0 - float(self.active_mask().mean())
 
+    def wrap_ratio(self) -> float:
+        """reissued / retired over the run so far. THE DEGENERACY DIAGNOSTIC.
+
+        If this sits at ~1.0 with a pool that never accumulates, every particle
+        that leaves the outlet is immediately re-injected at the inlet and the
+        boundary condition has silently become the STREAMWISE PERIODIC WRAP that
+        was already tested on 2026-08-12 and LOST to the closed tank, 30.0
+        percent against 58.9 percent on depth-hold, because a wrap has no mass
+        or energy sink. Publish it with any run that uses this BC. A BC that has
+        degenerated into a refuted BC while its counters look healthy is exactly
+        the failure this project keeps finding after the fact.
+        """
+        if self.retired_total == 0:
+            return float("nan")
+        return self.reissued_total / self.retired_total
+
+    def inlet_depth(self, x, act) -> float:
+        """Active-masked water depth in the inlet relaxation band.
+
+        MUST be masked: deactivated particles freeze where they died, and they
+        die at the TOP of the column by construction, so an unmasked percentile
+        reports the surface this BC just removed.
+        """
+        np = self._np
+        x0 = self.spec["x_in"]
+        sel = (act
+               & (x[:self.n, 0] >= x0)
+               & (x[:self.n, 0] < x0 + self.relax_len))
+        if sel.sum() < 20:
+            return 0.0
+        return float(np.percentile(x[:self.n][sel, 2], 99.0)) + 0.5 * self.h - self.floor
+
+    def _demand(self, x, act, dt) -> int:
+        """How many particles the inlet asks for this tick.
+
+        'depth'     DEMAND-DRIVEN, register B7 / outflow_deactivate.py. The pool
+                    absorbs the difference between outflow and inflow, so a surge
+                    can be SWALLOWED rather than re-injected. This is the whole
+                    reason deactivation is a different boundary condition from
+                    the refuted wrap, and it is the default for that reason.
+        'discharge' Zhao's velocity inlet read as a flux, n = Q*dt/v_p. Honest,
+                    and the mode to use when the question is "what does a
+                    prescribed discharge do". DANGEROUS AS A DEFAULT: whenever
+                    the nominal Q exceeds the outflow rate, the pool drains every
+                    tick and this degenerates into the wrap. `wrap_ratio()` is
+                    what makes that visible instead of silent.
+        """
+        np = self._np
+        if self.inlet_mode == "discharge":
+            self._pending += self.inlet.particles_per_step(self.particle_volume, dt)
+            return int(math.floor(self._pending))
+        deficit = self.target_depth - self.inlet_depth(x, act)
+        if deficit <= 0.0:
+            return 0
+        width = self.y_span[1] - self.y_span[0]
+        return int(min(deficit * self.relax_len * width / self.particle_volume,
+                       self.max_activate))
+
     def apply(self, dt: float) -> tuple[int, int]:
         """One control tick. Retire first, then reissue, so a particle that
         leaves this tick is available to re-enter this tick."""
@@ -321,8 +409,7 @@ class SelectionOutflow:
             self.retired_total += n_ret
             act = self.active_mask()
 
-        self._pending += self.inlet.particles_per_step(self.particle_volume, dt)
-        want = int(math.floor(self._pending))
+        want = self._demand(x, act, dt)
         pool = np.flatnonzero(self.sel[:self.n] == self.SELECTION_RETIRED)
         n_iss = int(min(want, pool.size))
         if n_iss > 0:
@@ -331,18 +418,18 @@ class SelectionOutflow:
             v[idx] = 0.0
             v[idx, 0] = self.inlet.velocity_at(x[idx][:, 2])
             self.sel[:self.n][idx] = self.SELECTION_ACTIVE
-            self._pending -= n_iss
+            if self.inlet_mode == "discharge":
+                self._pending -= n_iss
             self.reissued_total += n_iss
             self.s.set_x(x)
             self.s.set_v(v)
             self._reset_particle_state(idx)
-        elif n_ret:
-            pass                        # positions unchanged; only selection moved
 
         if n_ret or n_iss:
             self._push_selection()
         self.history.append({"n_retired": n_ret, "n_reissued": n_iss,
-                             "n_active": int(self.active_mask().sum())})
+                             "n_active": int(self.active_mask().sum()),
+                             "wrap_ratio": self.wrap_ratio()})
         return n_ret, n_iss
 
 
