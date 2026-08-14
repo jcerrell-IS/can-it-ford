@@ -158,6 +158,36 @@ the part that is specific to Dispatch 10's arithmetic, phrased so the answer
 maps directly onto a column of the table in
 `docs/FORK_SCENE_DESIGN_2026-08-14.md` section 2.3.
 
+### UPDATE 2026-08-14: what the FOSS assessment already answered, so node time is not wasted
+
+`[inherited, documentation]` A documentation-based engine assessment was relayed
+after this request was written. It **closes the terrain-ingest question** and
+**partly** addresses domain shape. It does **not** touch the other three asks.
+Revised status:
+
+| ask | status after the assessment |
+|---|---|
+| terrain ingest (OBJ / heightfield) | **ANSWERED from docs.** `RigidTerrain::AddPatch` takes a Wavefront OBJ for both contact and visualisation; `SCM` initialises from a height-map image or OBJ. No node time needed. |
+| domain **SHAPE** | **PARTLY.** No cubic or aspect-ratio constraint is *documented*, and BCE markers update rigidly from body pose with no single-scalar grid limit described. Absence of a documented limit is not proof, so **still worth one direct check**. |
+| cell/particle **SPACING**, per-axis or single scalar | **UNTOUCHED.** Still Q1 below, and it is the half that decides whether the resolution story changes at all. |
+| explicit timestep vs smallest spacing | **UNTOUCHED.** Still Q2. |
+| fluid particles across a 0.2944 m depth | **UNTOUCHED.** Still Q3. |
+
+**The SPACING half is now the highest-value single measurement**, because the
+shape half has a documented presumptive answer and the spacing half has none, and
+they buy completely different things (see the table below).
+
+`[inherited]` **One further item worth carrying into any Chrono writeup, not a
+request:** semi-empirical tyre models (Fiala, LuGre, Pacejka) query `GetHeight`
+and `GetNormal`, which may be incomplete for an arbitrary rigid mesh, while rigid
+and FEA tyres go through the contact engine and are unaffected. So the **terrain
+representation constrains the tyre model, and the tyre model is where μ comes
+from**. That lands directly on Dispatch 10's traction closed form; see
+`docs/FORK_SCENE_DESIGN_2026-08-14.md` section 4.4. A cross-slope is a
+heightfield and needs no arbitrary OBJ, so staying on a heightfield keeps the
+semi-empirical tyre path and keeps μ a cited parameter rather than a contact-model
+output.
+
 ### The distinction that decides it, and it is routinely conflated
 
 Two *different* capabilities get talked about as one:

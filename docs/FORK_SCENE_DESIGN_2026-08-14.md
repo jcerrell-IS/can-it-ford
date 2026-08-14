@@ -40,9 +40,69 @@ read straight off the same table: see 2.5 for exactly which column becomes
 operative under each answer, and `docs/FORK_SCENE_FLAGGED_FOR_OWNERS_2026-08-14.md`
 F-5 for the measurement request handed to D13.
 
-Subject to that, the GO makes the cubic-domain constraint below **potentially
-escapable by switching engines rather than by patching a grid**. It does not
-make this document obsolete either way, for three reasons:
+### 0.1 What the FOSS engine assessment says, as hypotheses not findings
+
+`[inherited, documentation]` Relayed 2026-08-14. **None of this is measured on a
+Chrono build; this dispatch has none.** Recorded here because it changes what the
+cross-slope test is *for*, and tagged so it cannot later be mistaken for a
+result.
+
+- **Chrono terrain ingest is real and covers what a scene needs.**
+  `RigidTerrain::AddPatch` takes a Wavefront OBJ used for *both* contact and
+  visualisation; `SCMDeformableTerrain` initialises from a height-map image or an
+  OBJ. Rigid plane, rigid heightfield, rigid triangle mesh, CRG and deformable
+  SCM are all available. A photogrammetry or splat reconstruction exported as
+  heightfield or OBJ **can** be ingested.
+- **Domain shape: no cubic or aspect-ratio constraint is documented for
+  Chrono::FSI.** BCE markers attach to bodies and update rigidly from body pose,
+  with no SDF rebuild and no single-scalar grid limit described. That is
+  *consistent* with escaping warpmpm's constraint. **Absence of a documented
+  limit is not proof there is none**, and this is still the measurement that
+  could reverse section 2's conclusion. See F-5.
+
+### 0.2 The validation ceiling, stated plainly wherever the switch is recommended
+
+`[inherited]` Chrono ships a vehicle water-fording demo (SBEL, ~1.4-1.5 M SPH
+markers, Mazhar et al. SBEL TR-2016-01). It is **a physics demonstration, not a
+benchmark validated against experimental fording data.** Chrono's rigorously
+validated off-road work is soil terramechanics (CRM/SCM), against single-wheel
+experiments and DEM ground truth.
+
+> **Switching to Chrono buys ARCHITECTURE, not VALIDATION.** It buys genuine
+> accumulated-force two-way coupling and an actuated-drivetrain vehicle, which is
+> unique to Chrono among the five engines assessed. It does **not** inherit a
+> validated fording result. **No NG-NRMM fording error-reduction percentage may
+> be cited**; a search for one found none.
+
+### 0.3 A false premise in that assessment, checked here rather than accepted
+
+`[run]` The same assessment states that `kks32/mpm-engine` "appears not to
+exist", treats this project's engine as **CB-Geo mpm**, and concludes it has no
+rigid-fluid coupling of any kind and is "not applicable". **That is false for
+this stack**, verified directly against the vendored tree:
+
+- `third_party/mpm-engine-544c93dd-solver-core/` is **7 files: 4 `.py`, plus
+  `VENDORED.md`, `PINNED_SHA.txt` and `LICENSE`**. **Zero** C, C++, header or
+  CUDA files.
+- It imports Warp: `kernels/mpm_utils.py:1` and `core/solver.py:15`, both
+  `import warp as wp`.
+- `PINNED_SHA.txt` is `544c93dd02cb9c7ead89e1155a62967243244fce`.
+- **The SDF force accumulator is present at that SHA**: `add_sdf_collider`
+  `core/solver.py:324`, `reset_sdf_force` `:348`, `sdf_wrench` `:354`.
+- **Zero occurrences of "CB-Geo" or "cb_geo"** anywhere in the vendored tree.
+
+> **Correction to the relay's own figure:** the "11 Python files" is the count
+> across **both** vendored trees (4 in `-solver-core/` plus 7 in
+> `mpm-engine-544c93dd/`). The solver core alone is **4** `.py` files. Stated
+> because item 0.3 exists precisely because a wrong file inventory produced a
+> wrong engine identification, so the corrected inventory should be exact.
+
+**The CB-Geo framing must not enter any writeup.** This engine is real,
+Warp-based, and does have an SDF force accumulator.
+
+Subject to 0.1's caveat, the GO makes the cubic-domain constraint below
+**potentially escapable by switching engines rather than by patching a grid**. It
+does not make this document obsolete either way, for three reasons:
 
 1. **Section 2 is the evidence for the switch, not a casualty of it.** The cost
    of road scale in warpmpm is the quantitative case for paying Chrono's
@@ -417,7 +477,45 @@ dominates for *any* μ, because μ multiplies only the second-order part. The
 fractional loss scales as `1/μ`, so it is **worst exactly where the flood case
 lives**, at low tyre friction.
 
-### 4.4 What this reframes
+### 4.4 The tyre model is coupled to the terrain representation, and that lands on μ
+
+`[inherited, documentation]` A caveat in the Chrono assessment turns out to bear
+directly on the closed form above, and it would be easy to miss because it is
+filed under "terrain" rather than under "friction":
+
+> semi-empirical tyre models (Fiala, LuGre, Pacejka) query `GetHeight` and
+> `GetNormal`, which **may be incomplete for an arbitrary rigid mesh**. Rigid
+> tyres and FEA tyres go through the contact engine instead and are unaffected.
+
+So **the terrain representation constrains the tyre model, and the tyre model is
+where μ comes from.** Section 4.3's `ΔM = -(W-B)[sin θ + μ(1-cos θ)]` assumes a
+Coulomb μ at the tyre-road interface. Which μ that is depends on a choice made
+one layer away:
+
+| terrain representation | tyre models available | where μ comes from |
+|---|---|---|
+| rigid plane, or **heightfield** | semi-empirical **and** rigid/FEA | a model parameter you set (e.g. 0.30 parked, 0.75 wet concrete) |
+| arbitrary **OBJ** mesh | rigid / FEA only, per the caveat | the **contact material**, not a value you quote from Bonham and Hattersley |
+
+The closed form survives either way, because it is statics; what changes is
+whether μ is something you set or something you read out of a contact model. A
+result reported with a cited μ under a rigid-tyre-on-OBJ configuration would be
+quoting a number the simulation did not use.
+
+**And this argues for a specific design choice.** A cross-slope *is* a
+heightfield: a plane with a constant gradient. It needs no arbitrary OBJ. So if
+section 4.6's hydrodynamic leftover turns out to be small, the scene can stay on
+a heightfield, **the semi-empirical tyre path stays open, and μ stays a
+first-class cited parameter**. Escalating to reconstructed OBJ terrain would
+close that path as a side effect. That cost is not obvious from the terrain
+question alone, and it should be counted before anyone reaches for a
+reconstruction.
+
+`[unverified]` This whole subsection rests on documentation relayed to this
+dispatch, not on a Chrono build. It is a hypothesis for D13 to check, not a
+finding.
+
+### 4.5 What this reframes
 
 The dispatch asked whether cross-slope changes the traction margin, and framed a
 null result as the publishable outcome. The answer is **yes, materially, and by
@@ -434,7 +532,7 @@ experiment now queued. **It is also the test that prices Chrono's terrain
 ingest:** if the leftover is inside the noise, then the ability to load an OBJ
 terrain buys less than it appears to, on any engine.
 
-### 4.5 The measurement, and its confound predicted in advance
+### 4.6 The measurement, and its confound predicted in advance
 
 `[run]` LS6 job **3364533**, `gpu-a100`, four arms at g64 / 90 frames,
 formulation G. Three-way decomposition:
