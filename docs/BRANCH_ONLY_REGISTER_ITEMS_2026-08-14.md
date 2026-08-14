@@ -116,6 +116,27 @@ criteria.
   **how to report** a refinement study. The contrast is the contribution: their study
   converged and selected a cell size, this project's does not converge.
 
+## Ownership overlap, declared rather than left to be discovered
+
+A standing ops addendum issued 2026-08-14 17:30 lists
+`docs/CANONICAL_CORRECTIONS_REGISTER_2026-08-06.md` as **DISPATCH 4 only**. This session
+edited that file before the addendum was issued, because DISPATCH 1's own definition of
+done required it: *"Correct register item 18's phrase ... to 'one measurement'."*
+
+**This is not a collision on disk.** The edit is confined to
+`claude/rtfd-test-phase-1-4-569130`. DISPATCH 4 writes the register on its own new branch
+off main, and its concrete first step is to `git show` this branch's copy read-only. No
+shared file, no shared index, no shared worktree. Main's register is untouched, verified
+live: `git diff origin/main -- <register>` in the main checkout returns empty, and the main
+tree's dirty set is unchanged at 26 entries.
+
+**The one thing that changed for DISPATCH 4** is the baseline. Its three-way diff will now
+see this branch at **689** lines, not the 681 its brief quotes. The delta is exactly the two
+changes described above: the item 18 strengthening plus its correction notice, and the
+Al-Qadami paragraph in item 19. Nothing else in the register was touched. If DISPATCH 4
+prefers to reconcile from the pre-edit state, that is `658ecfa:docs/CANONICAL_CORRECTIONS_REGISTER_2026-08-06.md`
+at 681 lines.
+
 ## What DISPATCH 4 needs to decide
 
 1. Whether items 17, 18 and 19 merge into the reconciled register, and in what order
