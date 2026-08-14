@@ -338,6 +338,34 @@ if not n: print("no pane is waiting on a prompt")
 PY
 }
 
+# ------------------------------------------------------------- pushcheck ----
+# What must never reach a PUBLIC remote: third-party-derived mesh geometry
+# (register E8, the CCSA/NCAC zips carry no redistribution grant), credential
+# material, and run artifacts. Checks the diff against main, per branch.
+pushcheck() {
+  local bad=0
+  for d in $(echo "$DISPATCHES" | tr -d ' ' | /usr/bin/grep -v '^$'); do
+    local id lbl dir br
+    id=$(echo "$d" | cut -d'|' -f1); lbl=$(echo "$d" | cut -d'|' -f2)
+    dir=$(echo "$d" | cut -d'|' -f3); br=$(echo "$d" | cut -d'|' -f4)
+    [ "$br" = "-" ] && continue
+    case "$br" in *DO-NOT-PUSH*) echo "D$id  SKIP, DO-NOT-PUSH by design"; continue ;; esac
+    local wt; wt=$(echo "$dir" | /usr/bin/sed 's|^@||')
+    [ "${dir:0:1}" != "@" ] && wt="$REPO/$dir"
+    local n; n=$(git -C "$wt" rev-list --count "$br" --not --remotes=origin 2>/dev/null)
+    [ "${n:-0}" = "0" ] && { echo "D$id  nothing unpushed"; continue; }
+    local files; files=$(git -C "$wt" diff --name-only "main..$br" 2>/dev/null)
+    local risky; risky=$(echo "$files" | /usr/bin/grep -iE '\.(ply|obj|stl|npz|npy|env|key|pem|pth)$|secret|token|credential|id_rsa')
+    local big;   big=$(git -C "$wt" diff --stat "main..$br" 2>/dev/null | tail -1)
+    if [ -n "$risky" ]; then
+      echo "D$id  !! BLOCK, $n commit(s), risky paths:"; echo "$risky" | /usr/bin/sed 's/^/        /'; bad=1
+    else
+      echo "D$id  OK, $n commit(s), $(echo "$files" | wc -l | tr -d ' ') files, no mesh/credential/artifact"
+    fi
+  done
+  [ $bad -eq 0 ] && echo "ALL CLEAR" || echo "SOME BLOCKED, do not authorise those"
+}
+
 legend() {
   cat <<'EOF'
 HOW TO WATCH
@@ -369,6 +397,7 @@ case "${1:-status}" in
   spread)     spread ;;
   status)     report ;;
   triage)     triage "${2:-}" ;;
+  pushcheck)  pushcheck ;;
   watch)      while true; do clear; report; sleep "${2:-20}"; done ;;
   read)       read_pane "${2:?dispatch number}" "${3:-120}" ;;
   reply)      id="${2:?dispatch number}"; shift 2; reply_pane "$id" "$@" ;;
