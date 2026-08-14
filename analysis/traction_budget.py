@@ -98,7 +98,14 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--ply", required=True, type=Path)
-    ap.add_argument("--mass-key", default="arr_reference_1609", choices=list(ROGUE_MASSES))
+    ap.add_argument("--mass-key", default="arr_reference_1609", choices=list(ROGUE_MASSES),
+                    help="Rogue-specific presets; ignored when --mass is given")
+    ap.add_argument("--mass", type=float, default=None,
+                    help="override mass in kg for a different vehicle, e.g. the "
+                         "canonical Yaris at 1100.0 (vehicle_params.py mass_kg)")
+    ap.add_argument("--mass-source", default=None,
+                    help="provenance string for --mass; REQUIRED with --mass so no "
+                         "unsourced mass can enter a result")
     ap.add_argument("--velocity", type=float, default=1.5,
                     help="driven speed for the drag-demand band, m/s")
     ap.add_argument("--spacing", type=float, default=0.025,
@@ -126,7 +133,14 @@ def main() -> int:
     mesh_vol = float(abs(v.mesh.volume))
     fill_vol = len(parts) * h ** 3
 
-    mass, mass_src = ROGUE_MASSES[args.mass_key]
+    if args.mass is not None:
+        if not args.mass_source:
+            ap.error("--mass requires --mass-source: an unsourced mass must not enter "
+                     "a result. CLAUDE.md item 10 exists because two of three masses in "
+                     "the canonical sweep had no traceable source.")
+        mass, mass_src = float(args.mass), args.mass_source
+    else:
+        mass, mass_src = ROGUE_MASSES[args.mass_key]
     W = mass * G
     rho_veh = mass / mesh_vol
 
