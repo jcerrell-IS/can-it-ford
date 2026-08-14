@@ -247,26 +247,81 @@ def vehicle_mesh_at_frame(vertices_body, R, t, frame):
     return np.asarray(vertices_body, np.float64) @ R[frame].T + t[frame]
 
 
+def mesh_volume(vertices, faces):
+    """Signed volume of a closed triangle mesh, divergence theorem, no deps.
+
+    V = (1/6) sum_t (a x b) . c over the triangles. Returned as a magnitude, so
+    a mesh whose winding is inward still reports a positive volume. Reproduces
+    trimesh's `.volume` on the canonical Yaris hull to 3.542739 m3.
+
+    THIS IS A RENDER-LAYER MEASUREMENT ONLY. The solver never sees this number:
+    it works from the solidified particle cloud, whose own volume is reported as
+    `solid_volume_m3` in each run's summary.json. The two are close but not
+    equal, e.g. g64_yaris_regression records solid 3.5513843861695054 m3 against
+    hull 3.542738790016075 m3, fill_ratio 1.0024.
+    """
+    V = np.asarray(vertices, np.float64)
+    F = np.asarray(faces, np.int64)
+    a, b, c = V[F[:, 0]], V[F[:, 1]], V[F[:, 2]]
+    return float(abs(np.einsum("ij,ij->i", np.cross(a, b), c).sum()) / 6.0)
+
+
 def decimate(vertices, faces, max_faces):
     """Reduce face count for renderers that cannot carry the full hull.
 
     The canonical Yaris hull is 655,308 faces; render_multigeom_rollout caps its
-    reconstructed surface at 9,000. Returns the input unchanged if trimesh is
-    absent or decimation fails, so a missing optional dependency degrades the
+    reconstructed surface at 9,000. Returns the input unchanged if no backend is
+    available or decimation fails, so a missing optional dependency degrades the
     render rather than breaking it.
+
+    OPEN3D IS TRIED FIRST, AND THAT ORDER IS THE POINT. The project's own mesh
+    qualification found that `trimesh.simplify_quadric_decimation` BREAKS
+    WATERTIGHTNESS on this exact geometry at every level from 320k to 10k faces,
+    producing 49 to 172 non-manifold edges, while Open3D 0.19.0 preserves both
+    watertightness and genus. Re-verified live 2026-08-14 on the canonical Yaris
+    hull with Open3D 0.19.0: at 30,000 faces watertight True, euler_number -442
+    (unchanged from the source), volume 3.519367 m3 against 3.542739, i.e.
+    -0.660 percent; at 9,000 faces watertight True, euler -442, volume 3.467026,
+    -2.137 percent.
+
+    THAT VOLUME LOSS IS WHY THE CALLER IS TOLD ABOUT IT. Displaced volume is the
+    physical quantity the three-class comparison rests on, so a hull that quietly
+    lost 2.1 percent of it while being made drawable would misstate the one thing
+    the figure is for. `load_and_register` records source and drawn volume and
+    the percentage between them, and the caption prints it.
+
+    Also note the trimesh fallback silently needs a THIRD package: on
+    trimesh 5.0.0 `simplify_quadric_decimation` raises
+    ModuleNotFoundError: fast_simplification. With neither backend installed the
+    full hull is drawn, which is correct but slow.
+
+    Returns (vertices, faces, backend_name).
     """
     faces = np.asarray(faces)
+    V = np.asarray(vertices, np.float64)
     if not max_faces or len(faces) <= max_faces:
-        return np.asarray(vertices, np.float64), faces
+        return V, faces, "none (already at or below the cap)"
+    try:
+        import open3d as o3d
+        m = o3d.geometry.TriangleMesh(o3d.utility.Vector3dVector(V),
+                                      o3d.utility.Vector3iVector(faces))
+        m = m.simplify_quadric_decimation(target_number_of_triangles=int(max_faces))
+        return (np.asarray(m.vertices, np.float64), np.asarray(m.triangles),
+                "open3d %s" % o3d.__version__)
+    except Exception as exc:
+        print("[vehicle_mesh] open3d decimation unavailable (%s: %s), trying trimesh"
+              % (type(exc).__name__, exc))
     try:
         import trimesh
-        m = trimesh.Trimesh(vertices=np.asarray(vertices, np.float64),
-                            faces=faces, process=False)
+        m = trimesh.Trimesh(vertices=V, faces=faces, process=False)
         m = m.simplify_quadric_decimation(face_count=max_faces)
-        return np.asarray(m.vertices, np.float64), np.asarray(m.faces)
+        print("[vehicle_mesh] WARNING: decimated with trimesh, which is recorded "
+              "as breaking watertightness on this geometry at every level tested")
+        return (np.asarray(m.vertices, np.float64), np.asarray(m.faces),
+                "trimesh %s (WATERTIGHTNESS NOT PRESERVED)" % trimesh.__version__)
     except Exception as exc:
         print("[vehicle_mesh] decimation skipped (%s: %s)" % (type(exc).__name__, exc))
-        return np.asarray(vertices, np.float64), faces
+        return V, faces, "none (no backend, full hull drawn)"
 
 
 def load_and_register(ply_path, npz, max_faces=None, tolerance_cells=RESIDUAL_TOLERANCE_CELLS):
@@ -301,8 +356,16 @@ def load_and_register(ply_path, npz, max_faces=None, tolerance_cells=RESIDUAL_TO
 
     P = body_frame_particles(scene0, R, t)
     reg = register_mesh_to_body(V, P, cell_h, tolerance_cells)
-    Vb, F = decimate(reg["vertices_body"], F, max_faces)
+    vol_src = mesh_volume(reg["vertices_body"], F)
+    n_src = len(F)
+    Vb, F, backend = decimate(reg["vertices_body"], F, max_faces)
+    vol_drawn = mesh_volume(Vb, F)
     reg["vertices_body"] = Vb
     reg["faces"] = F
     reg["n_faces"] = len(F)
+    reg["n_faces_source"] = n_src
+    reg["decimation_backend"] = backend
+    reg["volume_source_m3"] = vol_src
+    reg["volume_drawn_m3"] = vol_drawn
+    reg["volume_delta_pct"] = 100.0 * (vol_drawn - vol_src) / vol_src if vol_src else 0.0
     return reg
