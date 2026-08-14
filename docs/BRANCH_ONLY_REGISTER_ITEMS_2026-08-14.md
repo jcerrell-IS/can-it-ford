@@ -137,6 +137,34 @@ Al-Qadami paragraph in item 19. Nothing else in the register was touched. If DIS
 prefers to reconcile from the pre-edit state, that is `658ecfa:docs/CANONICAL_CORRECTIONS_REGISTER_2026-08-06.md`
 at 681 lines.
 
+## SUPERSEDED 2026-08-14 17:46 by DISPATCH 4. Read their version, not this branch's.
+
+This branch's register says the measurement has **three** write-ups. **D4 reached four**, and
+four is right. Verified independently here before writing this: register item **15** itself
+carries "max drift at g128 is 0.0778 m, still 1.56x `slide_m`", and the primary store's
+`rs_silverado_g128` row is `max_surge_drift_m` 0.07778644561767578, `ratio_slide`
+1.5557289123535156. Same measurement. **So the register is itself one of the write-ups**,
+which is a sharper statement of item 18's own rule than item 18 makes.
+
+**Authoritative text is D4's items 18a(i) through 18a(iv)** on
+`claude/fork-register-reconcile`, tip `75d9569`. Do not re-derive it from here. 18a(iv)
+records that three and four are **both defensible** and that a **bare number is the
+defect**, the same discipline CLAUDE.md applies to the DRIFT_THRESHOLD count. It also
+records that `54aa806` landed independently mid-reconciliation, that neither session knew
+of the other, and that both refuted the same false dispatch premise by the same method and
+agreed on `1a868f3` and on 19 minutes after.
+
+**This branch's register was deliberately NOT edited again for this.** D4 completed its
+reconciliation at 17:46 having already folded in `54aa806` by SHA; a further edit here
+would re-stale finished work in the file CLAUDE.md calls the sole authority. The pointer
+lives in this doc instead.
+
+**One thing `54aa806` does NOT need.** It was checked on 2026-08-14 against the concern that
+it carried the refuted `b62d554` / "44 minutes before" attribution into a public remote. It
+does not. Those strings appear only inside an explicit refutation that labels both halves
+false and supplies the corrected provenance. No correcting commit was required on that
+ground.
+
 ## What DISPATCH 4 needs to decide
 
 1. Whether items 17, 18 and 19 merge into the reconciled register, and in what order
