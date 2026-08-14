@@ -47,6 +47,9 @@ DOIS = [
     ("Tison 2021 amphibious egress, drivetrain",  "10.4271/2021-01-0252"),
     ("Liu 2023 self-propelled river crossing",    "10.1063/5.0174148"),
 
+    # --- Actuated-body prior art (NOT a flood study; control, not validation) ---
+    ("DiffFR 2023 SPH fluid-rigid control",       "10.1145/3618318"),
+
     # --- The two IJRBM Shah papers the year amendment actually refers to ---
     ("Shah IJRBM 19:1-23  issued2019/print2021",  "10.1080/15715124.2019.1566240"),
     ("Shah IJRBM 19:25-41 issued2019/print2021",  "10.1080/15715124.2019.1687487"),

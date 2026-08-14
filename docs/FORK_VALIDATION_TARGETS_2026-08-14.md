@@ -64,15 +64,32 @@ review is marked incomplete rather than faked.
    order parameters*, CMAME 395:114965 (2022). It is not Qian, not 2022 water
    entry, and not a half-buoyant cylinder. **Removed. Do not cite.**
 
-2. **The Shah 2019-to-2021 amendment is right in substance and would be wrong if
-   applied where it points.** `[live]` The Tier 2 entry `10.1111/jfr3.12657` is
-   **2020** by every field Crossref carries (issued 2020-07-28, print 2020-12,
-   volume 13 issue 4). There is no 2021 in that record. Two *different*
-   Shah/Mustaffa/Martínez-Gomariz papers are issued-2019 / print-2021, both in
-   *International Journal of River Basin Management*:
-   `10.1080/15715124.2019.1566240` and `10.1080/15715124.2019.1687487`. The
-   amendment belongs to those two. Applying it to the Tier 2 entry introduces an
-   error where none existed.
+2. **The Shah 2019-to-2021 correction is right in substance and points at the wrong
+   paper. DECLINED for the Tier 2 entry, twice, on the record below.** This
+   instruction has now arrived twice, once as a dispatch amendment and once as a
+   coordinator research delivery saying "fix it in your table". `[live]` Crossref
+   was queried twice, on separate occasions, for `10.1111/jfr3.12657`:
+
+   ```
+   issued  [[2020, 7, 28]]   print [[2020, 12]]
+   online  [[2020, 7, 28]]   journal-issue [[2020, 12]]
+   J Flood Risk Management, volume 13, issue 4
+   ```
+
+   **There is no 2021 in that record, in any field.** The paper is 2020. Two
+   *different* Shah/Mustaffa/Martínez-Gomariz papers ARE issued-2019 / print-2021,
+   a companion pair in *Int J River Basin Management* volume 19:
+   `10.1080/15715124.2019.1566240` (pp. 1-23) and
+   `10.1080/15715124.2019.1687487` (pp. 25-41). **The correction belongs to those
+   two**, which are reviews and are not in any tier (see open item 5).
+   Relabelling the Tier 2 entry 2021 would introduce an error where none existed,
+   so the table stays at 2020. If a third request arrives, re-run the query before
+   acting, do not act on the instruction alone.
+
+   Related, and the coordinator is right to flag it: **Shah et al. 2018**
+   (MATEC 203:07003, the force balance) is a **different paper** from Shah et al.
+   2020 (`jfr3.12657`, non-stationary vehicles). This document keeps them separate
+   throughout and they must never be merged.
 
 3. **The dispatch's target list omits the closest computational analogue that
    exists, and it was already on this disk.** `[live]`
@@ -692,12 +709,44 @@ and a deep search will not resolve them; settle the provenance separately via DT
 and the Army Publishing Directorate as primary documents, or do not cite it as a
 target at all.
 
-**Chrono does not change this.** `[ctx]` Chrono's fording capability is a physics
-demonstration and visualisation, not a benchmark validated against experimental
-fording data; its rigorously validated off-road work is soil and terramechanics.
-This **strengthens** the novelty position: even the strongest existing stack, the
-only one shipping both accumulated-force two-way coupling and a self-propelled
-multibody vehicle, has not validated a fording verdict.
+**Chrono does not change this, and the detail sharpens the claim.** `[ctx]` Chrono
+ships a vehicle water-fording demo (SBEL, roughly 1.4 to 1.5 million SPH markers,
+Mazhar et al., SBEL TR-2016-01). It is a **physics demonstration and visualisation,
+not a benchmark validated against experimental fording data.** Chrono's rigorously
+validated off-road work is soil terramechanics (CRM and SCM), against single-wheel
+experiments and DEM ground truth. So the one engine that can natively drive an
+actuated vehicle through water still has **no validated fording result**, and
+adopting Chrono would inherit a validated *soil* result and a demo-level fluid one.
+
+**Do not cite any NG-NRMM fording error-reduction percentage.** `[ctx]` It was
+searched for and none exists; none should be stated as fact.
+
+**How to phrase the resulting claim, precisely.** The tempting sentence is "no
+validated vehicle-fording chain exists in any engine." `[inf]` **That is one word
+too strong**, because He 2026 does validate a coupled vehicle-water model against
+free-running experiments (section 3). The defensible form keeps the distinction
+this document has maintained throughout:
+
+> No engine, open-source or commercial, has a fording **verdict** validated against
+> experimental fording data. What has been validated is *transient response*
+> (He 2026, model scale, CFD/MBD). Chrono's fording capability is demo-level, and
+> no MPM equivalent of either exists.
+
+**Actuated-body prior art, and one correction to how it is usually summarised.**
+`[ctx]` The actuated-body work outside flood studies is delta-plus-SPH
+self-propelled swimmers, **DiffFR** (`[live]` Li, Xu, Ye, Ren, Liu, *DiffFR:
+Differentiable SPH-Based Fluid-Rigid Coupling for Rigid Body Control*, ACM TOG
+42, **2023**, DOI `10.1145/3618318`, Crossref-confirmed; note **2023**, not 2024),
+and Chrono's wheeled vehicles. The usual summary is that coupling an actuated
+**ground vehicle with a drivetrain** to a fluid is essentially unique to Chrono.
+
+`[inf]` **That holds for engines you could adopt, but not for the published
+literature**, and section 3 of this document is the counter-evidence: Tison 2021
+couples 6-DOF to VOF in STAR-CCM+ **with drivetrain power distribution to the
+wheels**; Liu, Xu and Pan 2023 model self-propelled river crossing; Wasfy 2015
+carries an engine and differential in an MBD model coupled to SPH. All three are
+commercial or in-house stacks rather than adoptable open-source ones. State it as
+"unique among available open-source engines", not "unique in the literature".
 
 ---
 
@@ -769,6 +818,17 @@ which was intended.
 `docs/CANONICAL_CORRECTIONS_REGISTER_2026-08-06.md` are **Dispatch 4's** files, so
 I have not edited them. Dispatch 4 should decide which Steffen 2008 supports L-5
 and disambiguate both citations by DOI.
+
+**A framing that must NOT enter this document, checked for and absent.** `[live]`
+An independent FOSS engine assessment states that `kks32/mpm-engine` "appears not
+to exist" and treats this project's engine as **CB-Geo mpm** with no rigid-fluid
+coupling at all. That is false for our stack: the vendored core at
+`third_party/mpm-engine-544c93dd-solver-core/` is 11 Python files and zero C++,
+imports `warp`, and `VENDORED.md` records the pinned SHA `544c93dd` with every file
+sha256-compared. The SDF collider API is present at that SHA, and per RB-3 the
+**SDF path has always had a force accumulator** (`param.force`/`param.torque`, read
+via `sdf_wrench()`), unlike the material-8 free-rigid path. I grepped this document
+for `CB-Geo`: **zero hits**, so the framing has not entered. Keep it out.
 
 **Do not cite Smith 2019 for a drift threshold.** `[live]` The project already
 records that "Smith et al. 2019, Eq. 6" does not exist, and that the
