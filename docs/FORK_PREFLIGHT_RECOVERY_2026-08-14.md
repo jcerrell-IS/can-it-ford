@@ -27,8 +27,8 @@ needed nothing.
 09d2b8fb1763ca85ef3e53d4fc71a7d135e126b5  refs/heads/track1/sdf-6dof-driver
 ```
 
-The rescue branch has advanced to `b988779` since that read, carrying the hull sweep and
-this document; the closing push is recorded at the end of this file.
+That read was taken before the hull sweep and this document were committed. The closing
+state, read after the final push, is in "Closing verification" at the end of this file.
 
 `git rev-list <branch> --not --remotes=origin` returns **0** for all three branches.
 
@@ -197,3 +197,24 @@ cleaned up; the durable second copies are origin plus the Vista bundle.
 - **`main` was not touched.** The modified `.mcp.json` and the ~22 untracked
   `renders/yaris_render_s1/*.py` in the main worktree are another session's and were left
   exactly as found.
+
+## Closing verification
+
+Read after the final push. This document's own commit is the only thing added after it,
+so the rescue branch tip below is one commit behind the branch as you read it.
+
+```
+$ git ls-remote --heads origin
+cdc61979c5f2917057fdff2424d11b7afcaf5756  refs/heads/claude/fork-s3-rescue-2026-08-14
+187d8689413c9d2a20e0c5f9eaac03131b8a1169  refs/heads/claude/moving-vehicle-exploratory-2026-08-11
+09d2b8fb1763ca85ef3e53d4fc71a7d135e126b5  refs/heads/track1/sdf-6dof-driver
+
+$ git rev-list <branch> --not --remotes=origin        # per branch
+claude/fork-s3-rescue-2026-08-14                0
+claude/moving-vehicle-exploratory-2026-08-11    0
+track1/sdf-6dof-driver                          0
+```
+
+Both worktrees written to this session are clean, 0 dirty entries each. The main worktree
+still shows the same 26 entries it showed at session start: 1 modified `.mcp.json` and 25
+untracked paths, none of them ours.
