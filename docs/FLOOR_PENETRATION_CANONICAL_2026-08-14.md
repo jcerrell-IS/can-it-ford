@@ -114,6 +114,48 @@ is a real modulation and is not claimed to be noise; what the data rule out is
 penetration being a *hull* phenomenon, since that would show enrichment of order
 `1/0.09 = 11x`, not 1.5x.
 
+## The literature position, from the 16-paper search at 99 percent coverage
+
+Delivered after the measurement above and consistent with it. Three negatives and a
+ranked set of anchors **[cited; none re-verified against a primary record here]**.
+
+**N-1. The moving-scene 0.93 to 1.01 dx plateau is unanchored, and that is the result.**
+No paper among the 16 reports it. Direct free-surface-water studies validate *global*
+flow observables and provide no convertible near-wall thickness. So there is no citation
+to go looking for, and the honest write-up is "novel and unanchored", which is
+publishable. Note the plateau is the **moving** scene's measurement, not this document's;
+the canonical result reported here is a separate measurement that is also unanchored.
+
+**N-2. There is no defensible minimum cell count across a shallow water layer.** No
+retrieved record supplies one. Canonical g64 sits at `realized_depth/dx` = exactly 2.000
+**[measured, and CLAUDE.md L-3]**. **Therefore 2.000 cells cannot be called too few by
+citation, and it equally cannot be called sufficient by this measurement.** What is
+measured here is penetration depth, and penetration depth is not adequacy. This document
+answers "is the column boundary-corrupted in the ~50 percent sense the inference feared",
+and the answer is no; it does not answer "is 2 cells enough", which remains open and is
+not settled either way by anything in this file.
+
+**N-3. No accepted correction protocol exists.** No retrieved record reports calibration
+or subtraction of a smeared wall layer. Nothing here is corrected, calibrated or
+subtracted, and no such step should be described as standard practice.
+
+**Mechanistic anchors, in the order the report ranks them.**
+
+| Source | DOI | What it is, and what it is not |
+|---|---|---|
+| **Steffen, Wallstedt, Guilkey, Kirby, Berzins 2008** | 10.3970/CMES.2008.031.107 | **Strongest.** Systematically varies basis functions, boundary treatments and GIMP smoothing length. **Transferable numerical analysis, NOT water validation.** Supports the kernel-support hypothesis (quadratic/cubic B-spline sees 1.5 to 2 cells); does **not** establish the plateau. |
+| Schulz and Sutmann 2019 | - | Grid boundary treatment distorts stress **multiple grid lengths into the body**; image particles reduce it. Secondary mechanistic evidence, **explicitly not validated for free-surface water**. |
+| Baumgarten and Kamrin 2023 | 10.1002/nme.7217 | MPM spatial integration error analysis and mitigation. Same label. |
+| Mao, Chen, Li, Feng 2016 | 10.1061/(ASCE)EM.1943-7889.0000981 | The one **direct water** record testing ghost-cell slip and no-slip walls. **Contains no wall-penetration measurement and no resolution data sufficient to reconstruct cell units.** Cite as closest direct water evidence and say what it lacks. |
+| Zhao, Bolognin, Liang, Rohe, Vardon 2019 | 10.1016/J.COMPFLUID.2018.10.007 | Direct water, open-channel depth/pressure/acceleration. Already this project's in/outflow citation. Same gap: **no near-wall thickness**. |
+
+**GIMP and CPDI do not demonstrably fix this.** The report finds no evidence that any
+particle-domain method eliminates the error. Do not imply otherwise, and in particular do
+not present a switch to GIMP or CPDI as a known remedy.
+
+An earlier draft of this document credited Steffen 2008 to "Steffen, Kirby and Berzins";
+the full author list is Steffen, Wallstedt, Guilkey, Kirby and Berzins, corrected here.
+
 ## Result 4: the mechanism hypothesis is not supported here
 
 Steffen, Kirby and Berzins 2008 (10.3970/CMES.2008.031.107) is the strongest
@@ -168,9 +210,15 @@ evidence only **[cited]**. A column only 1.5 to 3.0 cells deep also has no "bulk
 compare a near-floor layer against, so a profile-based corruption test is not available
 in this scene at all.
 
+**Not licensed either:** "2.000 cells is enough". Per N-2 no defensible minimum cell
+count exists in the literature, and penetration depth does not measure adequacy. This
+document rules out one specific failure mode at one specific magnitude. It does not
+certify the resolution, and CLAUDE.md L-3 already records the 2-cell depth as a stated
+limitation, which it remains.
+
 **Not attempted:** no correction or calibration. No paper reports an accepted correction
 for a smeared near-wall layer, so inventing one and calling it standard is not on the
-table **[cited]**.
+table **[cited, N-3]**.
 
 ## FLAG FOR A HUMAN, not actioned here
 

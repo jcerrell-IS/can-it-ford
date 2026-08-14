@@ -163,6 +163,80 @@ this. It compares `n_particles` and `lim` only **[read, `sim_standing.py:387-390
 the particle count was stable across loads here **[measured]**, which is consistent with
 the standing observation that the flag reports True while `metrics.csv` files differ.
 
+## Addendum, same day: the `interior_probe` question, and three claims corrected
+
+### `interior_probe` is real. DeepWiki was right and the grep was a false negative.
+
+A check reported that `grep -rn "interior_probe"` against the pinned tree "returned
+NOTHING, so that answer is stale relative to 544c93dd". The grep result is accurate; the
+inference from it is not, for **two independent reasons**, either of which alone would
+invalidate it.
+
+**Reason 1: `geometry/mesh_sdf.py` is not vendored at all.** The pinned tree
+`third_party/mpm-engine-544c93dd-solver-core/` contains exactly **four `.py` files**
+**[measured]**: `core/solver.py`, `kernels/mpm_solver_warp.py`, `kernels/mpm_utils.py`,
+`materials/__init__.py`. Its own `VENDORED.md` says so, and the companion tree
+`third_party/mpm-engine-544c93dd/` is described there as "a partial pull for render". A
+combined walk of both trees returns **0 hits** for `_hashkey`, `build_sdf_cached` and
+`interior_probe` **[measured]** — because the entire SDF cache module is absent from the
+repo, not because the symbol is absent from the engine. Searching a partial vendoring
+for a symbol it never contained cannot date anything.
+
+**Reason 2: the upstream copy is now unreadable, and the recursive form fails
+silently.** `~/Downloads/mpm-engine-main/` became TCC-blocked partway through this
+session (it was readable earlier: `warpmpm/vehicle.py` and `geometry/mesh_sdf.py` were
+both read directly, and `vehicle.py` was imported successfully). After the block:
+
+```
+grep -rn "interior_probe" <dir>/   ->  0 hits, exit folded into the pipe   <-- LOOKS ABSENT
+grep -n  "interior_probe" <file>   ->  "Operation not permitted"           <-- HONEST ERROR
+```
+
+**[measured]** The recursive form needs directory enumeration, which is what TCC blocks,
+so it reports zero rather than failing. A Python `re` walk behaves the same way and
+worse: `Path.rglob("*.py")` returned **0 files** for a tree that has dozens, with
+`exists()` still True. **On this Mac, "a recursive search returned nothing" under
+`~/Downloads` is not evidence of absence.** That is the H0 rule again in a new place:
+the blind spot is now TCC, not `.gitignore`, and the standard H0 fix (`/usr/bin/grep`)
+does **not** help because the block is per-directory, not per-tool.
+
+**What `interior_probe` actually is**, read directly from
+`warpmpm/geometry/mesh_sdf.py:520-535` while the tree was still readable **[read]**:
+it is the fifth parameter of `_hashkey`, and when it is `None` it defaults to
+`0.5 * (verts64.min(axis=0) + verts64.max(axis=0))`, the vertex bounding-box midpoint.
+So it is a **function of `verts`**, not an independent input. It therefore adds no
+variation of its own, and **the Part B conclusion is unchanged**: the key moves because
+the vertices move.
+
+### The RNG, cited from a path that is actually in the repo
+
+`third_party/mpm-engine-544c93dd/vehicle_main.py:134` **[read]**:
+
+```python
+pos = np.asarray(mesh.sample(60_000), dtype=np.float64)
+```
+
+That is an in-repo, readable, pinned-SHA confirmation of the 60,000-sample draw, and it
+should be the citation from now on rather than a `~/Downloads` path that may be blocked.
+
+**But do not cite it as the code the canonical runs ran.** `sim_standing.py:12` imports
+`solidify_watertight` **[read]**, and `vehicle_main.py` contains **zero** occurrences of
+that name **[measured]**, so this vendored copy is an earlier or partial variant of
+`warpmpm/vehicle.py` despite carrying the same pinned SHA in `PINNED_SHA.txt`. It
+corroborates the *mechanism*; it is not the gated code path.
+
+### Three claims corrected against measurement
+
+| Claim as received | Measured here | Status |
+|---|---|---|
+| "differs by one ULP (2.22e-16 m) between back-to-back calls" | The **draw** differs by **2.67e-04 m**. Only *after* `canonicalize()` does it collapse to **5.55e-17 to 1.11e-16 m**, which is a **half** of float64 eps, not one eps. | Right mechanism, wrong number, and the 2.67e-04 m is the physically meaningful one |
+| "the SDF cache never hits and every run pays a full rebuild" | **20 unseeded loads gave 13 distinct keys**, most common recurring 7 times, so a persistent cache misses about **two runs in three**. | Overstated |
+| "This is your Part B item and it is now measured" (in canonical) | The **unseeded double load** is confirmed in canonical, exactly as described. But `sim_standing.py` contains **zero SDF references**, so the canonical runs build no SDF and pay **no** rebuild. | Half confirmed: the driver defect is real, the cost lands on the SDF-collider path only |
+
+The distinction in the third row is the one that matters for a write-up: **the 17 gated
+runs did not pay this cost**, and saying they did would be a claim about published runs
+that the source refutes.
+
 ## Reproduce
 
 ```
