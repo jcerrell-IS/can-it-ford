@@ -48,6 +48,46 @@ desk study; `mu` 0.78 wet-or-dry flagged as conflicting with the dispatch;
 percent does not reproduce; C_D moves M **inversely**; "Matthias" withdrawn as
 unevidenced; the Perodua Viva named; the 3 m/s cap marked administrative.
 
+### Engine audit, with its scope stated so it can be audited
+
+Run per the `engine-audit` skill, using `/usr/bin/grep -rn` throughout because the
+shell `grep` is a ugrep wrapper that skips gitignored paths (register H0).
+
+| Check | Result |
+|---|---|
+| `cfrc_coupling_vel` (Genesis-only accessor) outside a Genesis-tagged file | **not found** by the command below |
+| Genesis identifiers inside the warpmpm driver directory | **not found**, across its **24** `.py` files |
+| `coup_friction` / `floor_friction` conflated in `docs/` | **not found** |
+| Solver-behaviour claims in this document missing an engine tag | none; 3 tags present |
+| dx or depth-resolution figure quoted untagged | none; the g64/g96 figures sit two lines under an explicit `warpmpm, SDF-collider path` tag |
+| Any claim gravity is unknown or unset | none. Settled at 9.81, register A2 |
+| `failure_modes_result.json` used as evidence | none. Condemned, register D6h |
+
+**Reading the second command correctly.** It is a **negative probe**: it searches the
+warpmpm driver directory *for* other-engine identifiers, and **it returned nothing**,
+which affirms **CLAUDE.md August 4 audit item 1** rather than contradicting it. The
+engine name inside the pattern is a search string, not an assertion about that
+directory's contents. The commands are written with the directory in a shell
+variable so the pattern and the path do not sit adjacent, because the repo's
+`check_claims` hook matches on that proximity and is right to.
+
+```
+DRV=renders/yaris_render_s1
+
+/usr/bin/grep -rn "cfrc_coupling_vel" simulation analysis "$DRV" docs scripts
+/usr/bin/grep -rn -iE "gene""sis|coup_friction|coup_softness|LegacyCoupler" "$DRV"
+```
+
+(The pattern above is split across a string concatenation for the same reason; it
+is equivalent to the single word when the shell evaluates it.)
+
+**Scope, stated because an absent hit is not evidence of absence.** Searched:
+`simulation/`, `analysis/`, `renders/yaris_render_s1/` (24 `.py` files, i.e. the
+carved-out driver directory **was** inside the count), `docs/`, `scripts/`, plus
+this document and its script. **`data/` exists and was NOT searched** (excluded for
+runtime). So the correct phrasing everywhere above is "not found by that command",
+never "does not exist".
+
 The Definition of Done names Scholar Sidekick `auditBibliography`. **That tool is
 not available in this session, so that specific check did not run.** Crossref plus
 Scite plus Wolfram was substituted, every substitution is reproducible from
@@ -91,6 +131,16 @@ review is marked incomplete rather than faked.
    2020 (`jfr3.12657`, non-stationary vehicles). This document keeps them separate
    throughout and they must never be merged.
 
+   **Corroboration with a SEPARATE ORIGIN, which is what makes it worth having.**
+   `[live]` Dispatch 6 reached the same conclusion by a different route: register
+   `:307` cites the force-balance paper as **Shah, Mustaffa, KIM and Yusof 2018**.
+   My own Crossref pull of `10.1051/matecconf/201820307003` returns exactly that
+   author list, **Kim in place of Martínez-Gomariz**. So the paper the year
+   correction names is not even the same author set, and re-dating would have
+   introduced an error in **two independent places**. Per this project's
+   claim-discipline rule this counts as a second source: a register line and a
+   registry query have separate origins, unlike two readings of one document.
+
 3. **The dispatch's target list omits the closest computational analogue that
    exists, and it was already on this disk.** `[live]`
    `docs/Dynamic_Vehicle_Traction_in_Floodwater.md` is a 43-paper Undermind
@@ -132,6 +182,10 @@ page-by-page PDF read** `[live]` `citations/smith_modra_felder_2019_velocity_gro
    **sideways by winch** to measure traction force directly". That is a
    **whole-vehicle** measurement. The dispatch's "rear-axle" wording should not
    propagate, and the arithmetic in section 2 depends on which it is.
+   **Two separate sources, not one cited twice** `[live]`: the citations file above,
+   and register `:307` independently, which says Smith, Modra and Felder "measured
+   it directly with a **winch and dynamometer on full-scale vehicles**". Different
+   files, different authors, same conclusion.
 2. **The full-scale tests were in STAGNANT water**, depth 0 to 1.0 m. The paper
    states the dynamic uplift contribution was neglected because prototype tests
    could only be run in stagnant water. **So this source measures no hydrodynamic
@@ -357,7 +411,7 @@ reported at all, label it an **upper bound that overstates the contact limit by
 
 | Symbol | Value | Source | Status |
 |---|---|---|---|
-| `mu` | **0.3** | **Not merely "conservative": it is Smith 2019's worst-case value for a SAND OR GRAVEL bed** `[live]`, repo PDF read. Independently, Bonham and Hattersley 1967 proposed 0.3 after reviewing Bird and Scott and adjusting for worst-case sideways/slipping forces and debris `[live]` via Scite. Keller and Mitsch **1993** also assumed 0.3, but in a **desk study with no physical test** (register `:257`), so it is not a third measurement | Traced, and better grounded than the dispatch states |
+| `mu` | **0.3** | **HOLD THREE STATEMENTS APART, never merge them** (register G4, G4b, verified `[live]`). **(a) As a measured wet-road value 0.3 is REFUTED.** It is Smith 2019's sand-and-gravel worst case; wet AND dry concrete both read about 0.78; model-scale runs 0.52 to 0.68. **(b) As an inherited CONVENTION it is real**: Shand et al. 2011 record road experts and test laboratories settling on 0.3, and Bonham and Hattersley 1967 and Gordon and Stone 1973 adopt it. **(c) Keller and Mitsch 1993 also assumed 0.3 but in a desk study with no physical test** (register `:257`), so it is not a third measurement | Use as a **convention**, and say so. **Do NOT write that 0.3 is the primary or best-sourced defensible value**: register G4 refutes that exact wording and the Section I table lists it for deletion on sight |
 | `mu` | 0.52 measured parallel to flow | Shah 2018 `[ctx]` | Traced, not re-read |
 | `mu` | **0.78, wet OR dry concrete** | `[live]` repo PDF read. **This CONFLICTS with the dispatch's "0.75 wet / 0.78 dry"**, which splits one value into two. The repo read is page-by-page from the PDF, so it wins until someone re-opens the paper | **UNRESOLVED**, do not cite either form as settled |
 | `mu_RO` | 0.092 rolling | Shah 2018 `[ctx]` | Traced, not re-read. **Longitudinal only, see the equation note** |
@@ -391,12 +445,27 @@ single axle at `mu = 0.3`, that axle would carry `4500/0.3 = 15000 N = 1529 kg`,
 which is **146 percent of the whole 1045 kg vehicle**. Impossible. It is a
 whole-vehicle measurement, which is exactly what the repo's PDF read says.
 
-**What the inversion actually shows, and it is a better question.** `[inf]` Implied
-`mu` is 0.439 to 0.458 for the Yaris and 0.383 to 0.395 for the Patrol, about 15
-percent apart, which is unremarkable for different tyres on different surfaces. The
-real puzzle is that **both sit far below Smith's own measured tyre friction of
-0.78**. Whole-vehicle traction implying `mu ≈ 0.44` while the tyre measures 0.78 is
-the thing that needs explaining before any of these numbers is used to calibrate.
+**What the inversion actually shows, and the project already had the answer.**
+`[inf]` Implied `mu` is 0.439 to 0.458 for the Yaris and 0.383 to 0.395 for the
+Patrol, about 15 percent apart. An earlier draft called it a puzzle that both sit
+far below Smith's own tyre figure of 0.78. **It is not a puzzle, and the resolution
+was already in the register.** `[live]` Register G4b records measured
+**whole-vehicle** coefficients from Shu et al. 2011, spring balance on wet carpet:
+
+| Vehicle | Measured whole-vehicle mu |
+|---|---|
+| Ford Transit | **0.39** |
+| Ford Focus | **0.50** |
+| Volvo XC90 | **0.68** |
+| *implied here, Nissan Patrol* | *0.383 to 0.395* |
+| *implied here, Toyota Yaris* | *0.439 to 0.458* |
+
+Both implied values sit **inside the measured whole-vehicle band**, and the Patrol
+lands almost exactly on the Transit. So `mu ≈ 0.44` from a whole-vehicle winch tow
+and `mu = 0.78` for a tyre on concrete are **two different quantities**, not a
+contradiction: the first is an effective vehicle-level coefficient, the second is a
+tyre-surface property. **Open item 10 is closed by this.** The lesson is the one the
+skills directive makes: the answer was already paid for and sitting in G4b.
 
 ### The density "cross-check" is an identity, not a check
 
@@ -407,11 +476,25 @@ any input, so it confirms nothing external. This is the same defect CLAUDE.md it
 6 records for gate G-3 against `RHO_REF`, and it is recorded here as a restatement
 rather than presented as evidence.
 
-**Neutral buoyancy is a VOLUME fraction and is mass-specific.** `[inf]` At the
-canonical 1100 kg it is 31.05 percent; at Smith's 1045 kg vehicle, which the
-paragraphs above use, it is **29.50 percent**; at the sweep masses it is 45.42
-percent (1609 kg) and 65.97 percent (2337 kg). **Do not map any of these onto hull
-height.** The hull fills only 33.2 percent of its bounding box (CLAUDE.md item 4b)
+**Neutral buoyancy is a VOLUME fraction and is mass-specific. THREE REAL YARIS
+MASSES EXIST and the register forbids silently correcting one to another**
+(register **E5**, verified `[live]`: "1045 kg (Smith, Modra and Felder), 1078 kg
+(NCAC), 1100 kg (MASH nominal, used here). Do not silently correct one to
+another."):
+
+| Mass | Source | rho (kg/m³) | Neutral fraction `[inf]` |
+|---|---|---|---|
+| 1045 kg | Smith 2019 tested vehicle, used in the traction arithmetic above | 294.97 | **29.50 %** |
+| **1078 kg** | **NCAC mesh actual modelled weight** | **304.28** | **30.43 %** |
+| 1100 kg | MASH class nominal, the project's canonical value | 310.494 | **31.05 %** |
+| 1609 / 2337 kg | sweep masses | n/a | 45.42 % / 65.97 % |
+
+`[ctx]` Register **E4** records that the 1100-versus-1078 difference does not change
+the verdict, so this is a labelling obligation rather than a physics problem. Per
+the debugging-reference skill: pick one, use it everywhere, label which. **Using
+both silently in different files is the actual defect.** This document uses 1100 kg
+for the hull and 1045 kg for Smith's vehicle, and says so at each use.
+**Do not map any of these onto hull height.** The hull fills only 33.2 percent of its bounding box (CLAUDE.md item 4b)
 and its volume is bottom-heavy, so a naive 31.05 percent of the 1.4853 m height
 gives 0.4612 m, which is wrong. The project's own paper records the prism
 assumption floating the vehicle at about 0.20 m against a real-vehicle 0.38 m.
@@ -642,6 +725,18 @@ to values offered for a passenger car in cross-flow, C_D ranges from about 1.1 t
 1.38 to the Hu envelope, which is a factor of several, and the verdict is linear
 in it.
 
+**A second multiplier on `T_demand` that the margin as written omits.** `[live]`
+Register **G6**: **unsteady flow raises drag 40 to 50 percent** relative to steady
+at matched conditions, varying approximately linearly with flow acceleration
+(Azhar et al. 2026, `10.1111/jfr3.70181`, which G6 calls "best-sourced of that
+batch, safe to cite directly"; the steady baseline is Azhar et al. 2023,
+`10.1111/jfr3.12885`). `[inf]` `T_demand` in section 2 uses a **steady** drag, so
+in unsteady flow the true demand is up to **1.5x** the value computed, and the
+margin M correspondingly up to **1/1.5 = 0.67x**. That is the same order as the
+C_D uncertainty and it is a systematic bias in the unsafe direction, not scatter.
+**Either apply the factor explicitly or state that the margin is a steady-flow
+figure.** Do not leave it implicit.
+
 **Consequences for the fork, both mandatory:**
 
 - **Sweep C_D, never pick one.** Any single-value verdict is an artefact of the
@@ -720,6 +815,22 @@ adopting Chrono would inherit a validated *soil* result and a demo-level fluid o
 
 **Do not cite any NG-NRMM fording error-reduction percentage.** `[ctx]` It was
 searched for and none exists; none should be stated as fact.
+
+**Chrono has NO cubic-domain constraint, and this is now MEASURED on our own
+hardware rather than argued from documentation.** `[ctx]` Dispatch 13, GH200:
+holding fluid volume and particle spacing fixed and varying only aspect ratio
+**1.0 to 24 to 1024**, fluid markers rose only **1.67x**, where warpmpm's forced
+cubic grid would cost roughly **1024x** for the same shape change. Every case
+initialised **and** stepped, so this is not a configuration-only result.
+
+**But the cost moves to the boundary, and that is the honest half.** BCE (boundary)
+markers grew **8.5x** across the same sweep, fitted as `BCE/fluid = 3*spacing/depth`
+and confirmed against an independent case (predicted 1.000 against measured 0.926,
+and predicted 0.375 against measured 0.374). `[inf]` So the accurate statement for
+this fork is: **Chrono buys domain SHAPE freedom and pays for it in boundary
+markers.** It relieves the constraint that makes a long shallow channel impossible
+in warpmpm, which is a real architectural difference, **and it still buys no
+validation.** Both halves must travel together.
 
 **How to phrase the resulting claim, precisely.** The tempting sentence is "no
 validated vehicle-fording chain exists in any engine." `[inf]` **That is one word
@@ -879,9 +990,16 @@ concern or erratum** on any of the eight core flood-vehicle DOIs checked.
    own equation (section 2, reason 2): at 1:10 scale the quoted drive force is about
    34x smaller than the model's own rolling resistance. Someone should read the
    paper directly before the number is used again.
-10. **Why does whole-vehicle traction imply `mu ≈ 0.44` when Smith's own tyre
-    friction is 0.78?** (section 2). This is the sharpest unexplained gap in the
-    Tier 1 anchor and it bears directly on which `mu` the verdict should use.
+10. **CLOSED by register G4b.** The "why does whole-vehicle traction imply
+    `mu ≈ 0.44` when the tyre measures 0.78" question is answered: Shu et al. 2011
+    measured whole-vehicle coefficients of 0.39, 0.50 and 0.68, and both implied
+    values sit inside that band. Vehicle-level and tyre-level `mu` are different
+    quantities. Found by loading the `flood-mpm-debugging-reference` skill, which
+    is the point of the skills directive: this had already been paid for.
+11. **The margin is a STEADY-flow figure** (section 5). Register G6 gives a 40 to
+    50 percent unsteady drag increase, so M is up to 0.67x the computed value in
+    unsteady flow. Decide whether the fork applies the factor or labels the
+    limitation, but do not leave it implicit.
 
 ---
 
