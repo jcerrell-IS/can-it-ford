@@ -824,13 +824,68 @@ cubic grid would cost roughly **1024x** for the same shape change. Every case
 initialised **and** stepped, so this is not a configuration-only result.
 
 **But the cost moves to the boundary, and that is the honest half.** BCE (boundary)
-markers grew **8.5x** across the same sweep, fitted as `BCE/fluid = 3*spacing/depth`
-and confirmed against an independent case (predicted 1.000 against measured 0.926,
-and predicted 0.375 against measured 0.374). `[inf]` So the accurate statement for
-this fork is: **Chrono buys domain SHAPE freedom and pays for it in boundary
-markers.** It relieves the constraint that makes a long shallow channel impossible
-in warpmpm, which is a real architectural difference, **and it still buys no
-validation.** Both halves must travel together.
+markers grew **8.5x** across the same sweep.
+
+> ### RETRACTED, 2026-08-14, same day it was written
+>
+> An earlier version of this section stated the boundary cost as
+> **`BCE/fluid = 3*spacing/depth`**, described as fitted and confirmed against an
+> independent case (predicted 1.000 against measured 0.926, and 0.375 against
+> 0.374). **That formula is WITHDRAWN.**
+>
+> **Where it entered, since a future reader should be able to see the path:** it
+> reached this document through a **coordinator relay of a Dispatch 13 result**,
+> already labelled confirmed. Dispatch 13 subsequently caught its own error and the
+> coordinator relayed the retraction. I did not derive it and did not test it before
+> writing it down, which is the failure worth recording: **a relayed number arrived
+> carrying the word "confirmed" and I passed it through on that word.**
+>
+> **Why it was wrong:** both agreeing cases were **shallow**, so they exercised only
+> the limit where the formula happens to hold. Across the full aspect sweep it fails
+> badly, worst by **6.32x**.
+
+**The general law is surface-area-to-volume**, and unlike the withdrawn form it is
+**derivable rather than fitted**, which is why it should be trusted further:
+
+```
+  BCE markers    ~  3 layers * A / s^2        three layers over the WETTED AREA
+  fluid markers  ~  V / s^3                   fluid filling the VOLUME
+
+  BCE / fluid    ~  3 * s * A / V             dimensionless. OK
+```
+
+`[inf]` I checked this against Dispatch 13's own sweep rather than accepting it:
+
+| case | depth | measured | `3sA/V` | err | `3s/depth` | err |
+|---|---|---|---|---|---|---|
+| cube-like | 2.289 | 0.828 | 0.655 | -20.9% | 0.131 | **-84.2%** |
+| wide | 1.145 | 0.864 | 0.655 | -24.2% | 0.262 | -69.7% |
+| channel | 0.500 | 1.199 | 0.950 | -20.8% | 0.600 | -50.0% |
+| long channel | 0.250 | 1.752 | 1.619 | -7.6% | 1.200 | -31.5% |
+| extreme | 0.125 | 4.198 | 3.205 | -23.7% | 2.400 | -42.8% |
+| road | 0.300 | 0.926 | 1.070 | +15.6% | 1.000 | +8.0% |
+
+`[inf]` **A/V: max error 24.2 percent, mean 18.8 percent. `3s/depth`: max 84.2
+percent, mean 47.7 percent.** Two further checks that raise my confidence in the
+replacement beyond "someone told me":
+
+- **The shallow limit falls out of the derivation.** When the wetted area is
+  floor-dominated, `A/V -> 1/depth`, and `3sA/V -> 3s/depth` exactly. So the
+  withdrawn formula is a **special case** of the general one, not a rival to it.
+  That explains precisely why the two shallow cases agreed.
+- **The A/V residual has a coherent sign.** It reads low in 5 of 6 cases, which is
+  what domain pad and double-counted edges would do: they add markers the idealised
+  count omits. A fit that was merely lucky would not show a consistent sign.
+
+**If `3s/depth` is quoted at all, it must carry its shallow-limit condition.**
+
+**What does NOT change.** The domain-shape result stands and was **measured
+directly, not fitted**: 1.67x fluid-marker growth across a 1024x aspect change,
+every case initialised and stepped. `[inf]` So the statement for this fork is
+unchanged in direction: **Chrono buys domain SHAPE freedom and pays for it at the
+boundary**, scaling with **wetted area over volume** rather than inversely with
+depth. It relieves the constraint that makes a long shallow channel impossible in
+warpmpm, and **it still buys no validation.** Both halves must travel together.
 
 **How to phrase the resulting claim, precisely.** The tempting sentence is "no
 validated vehicle-fording chain exists in any engine." `[inf]` **That is one word
@@ -1000,6 +1055,17 @@ concern or erratum** on any of the eight core flood-vehicle DOIs checked.
     50 percent unsteady drag increase, so M is up to 0.67x the computed value in
     unsteady flow. Decide whether the fork applies the factor or labels the
     limitation, but do not leave it implicit.
+12. **A process note, not a citation item: two relayed results reached this document
+    labelled "confirmed" and neither survived checking.** The Shah 2019-to-2021 year
+    correction (headline 2, refused twice) and the `3s/depth` boundary-cost formula
+    (section 7, retracted the same day). Both arrived through a coordinator relay
+    rather than from the originating dispatch, and in the second case I wrote it
+    down **without deriving or testing it**, on the strength of that label. The
+    generalisable rule, which this project already states for documents and should
+    state for relays too: **a relayed number is a claim, not a verification**, and
+    "confirmed" in a relay records someone else's confidence, not a check I have
+    done. Re-derive or test before writing it down. Both corrections are recorded
+    in place rather than silently patched so the entry path stays visible.
 
 ---
 
