@@ -223,16 +223,123 @@ READ ONLY, NOT BUILT, NOT RUN.** `Chrono::Vehicle` was **OFF** in this build; th
 configure log's "Warning: the Robosimian projects require Chrono::Vehicle!" is the
 live confirmation `[live]`. So the actuated-vehicle claim is **not** established by
 this dispatch. What is established is that the terrain API exists as described
-(C-3 above), which matters because it removes warpmpm's cubic-domain problem:
-Dispatch 10 records that warpmpm's `GridConfig(n_grid, grid_lim)` takes a single
-scalar, forcing a cubic domain and a 279x cell-count penalty for a road-scale scene.
-Chrono ingesting an OBJ or heightfield as `RigidTerrain` sidesteps that entirely.
+(C-3 above), which matters because it removes warpmpm's cubic-domain problem. The
+size of that problem is quantified in the next section, which also corrects the
+figure the dispatch used for it.
 
 **The obvious next step, and it is cheap:** rebuild with
 `-DCH_ENABLE_MODULE_VEHICLE=ON` and run a wheeled-vehicle demo. The core build took
 94 seconds; this is a small increment, and it converts item 2 from a source read into
 a result. I did not do it because it is outside the milestone this dispatch fixed in
 advance.
+
+---
+
+## Constraints that bear on scene construction, written for Dispatch 10
+
+Added after D10 relayed a correction and asked what in this build constrains a
+scene. D10 is designing against this now, so it is stated as specifically as the
+evidence allows and the weak parts are labelled weak.
+
+### First, a correction to the dispatch's own arithmetic, which I re-derived
+
+D10 flagged that the dispatch's `279x` was quoted without saying what resolution
+it assumed. That is right, and it is worse than a missing footnote: **the 279x
+figure does not contain the cubic penalty at all.** Re-derived here independently
+rather than taken on D10's word, from canonical depth 0.2944294473 m and
+`depth/dx = 2.000` at g64 (CLAUDE.md L-3):
+
+| Quantity | Value |
+|---|---|
+| Aspect-ratio waste for 30x12x3, resolution-INDEPENDENT | **25.00x** |
+| Forced cube / g96 tank, at **g64** resolution (2.0 cells per depth) | **10x** |
+| Forced cube / g96 tank, at **18** cells per depth | **6,973x** |
+| The dispatch's **279x** | the **actual 30x12x3 box** at 18 cells per depth, **cubic penalty excluded** |
+
+`246.8e6 / 884736 = 279`, so the dispatch's number is internally consistent, but it
+measures the honest road box rather than the cube warpmpm would actually force. The
+real forced-cube figure at that resolution is about 25x larger. My own report
+inherited this error and it is corrected above.
+
+D10 gets 6,984x where I get 6,973x, a 0.16 percent gap that is just whether cells
+per side is rounded to an integer (1834 against 1834.19). Immaterial, recorded so
+nobody re-opens it.
+
+**Adopt D10's framing.** The defensible claim is *"road scale is reachable only at
+a resolution we have already called a limitation"*, not *"road scale is
+impossible"*. At g64 the forced cube is only 10x the g96 tank, which is plainly
+reachable; and CLAUDE.md L-3 already calls 2.0 cells per depth a limitation rather
+than a converged resolution. Any figure quoted from this family must carry the
+resolution it assumes.
+
+### What Chrono changes, and it is larger than removing the cube
+
+**1. The domain is NOT cubic, and not even forced to one aspect ratio.**
+`[source]` `ChFsiFluidSystemSPH.h:171` declares
+`SetComputationalDomain(const ChAABB& computational_AABB, BoundaryConditions bc_type)`.
+An axis-aligned bounding box, not warpmpm's single scalar. `[live]` Confirmed by
+this build's own DamBreak run, which reported `boxDims: 14 1.1 32` and
+`gridSize: 70 5 160`, a 32:1 ratio between axes. **The 25.00x aspect-ratio waste
+factor simply does not exist in Chrono.**
+
+**2. But resolution is still isotropic. Do not over-read item 1.** `[source]`
+`initial_spacing` is a single scalar (`ChFsiFluidSystemSPH.h:97`, default 0.01 m,
+set via `SetInitialSpacing`). Chrono removes the anisotropic-**extent** penalty and
+does **not** grant anisotropic **resolution**. The graded `dxy` / `dz` scheme
+Dispatch 10 costed out is still inexpressible, and the timestep still follows the
+one spacing. This is the same wall, moved, not demolished.
+
+**3. The real win is that SPH is Lagrangian, so empty domain is free.** A 30x12x3 m
+box is 1080 m3, but at canonical depth only 106.0 m3 of it is water. warpmpm pays
+for the whole cube; Chrono pays only for markers. Computed, **not measured**, from
+`num_bce_layers` default 3 (`:96`):
+
+At spacing 0.036804 m, i.e. **8 markers per depth, four times canonical g64**:
+
+| Component | Markers |
+|---|---|
+| Fluid | 2.13e6 |
+| BCE floor, 3 layers over 30x12 | 7.97e5 |
+| BCE side walls, 3 layers | 3.91e4 |
+| **Total** | **~2.96e6** |
+
+That is **2.0x the published Chrono fording demo** (~1.5e6 markers), against
+**5.42e8 cells** for warpmpm's forced cube at the same spacing, i.e. **183x more**.
+A full road-scale scene at 4x the canonical resolution is an ordinary Chrono
+problem, not a heroic one.
+
+Caveats, so this is not over-quoted: these are marker counts derived from geometry,
+not a run, and marker count is not runtime. Timestep still scales with spacing, so
+finer spacing costs steps as well as markers. The neighbour-search binning does span
+the AABB (~2.7e6 bins here at ~2x spacing) but that is a cell list where empty bins
+are cheap, not a per-cell field solve. **Nothing here has been executed at road
+scale and no timing is claimed.**
+
+**4. A trap that looks exactly like the thing D10 wants.** `[source]`
+`SetActiveDomain(const ChVector3d& box_dim)` at `:187` is a moving active-region box
+and reads like the refinement window that follows a vehicle. Its own doc comment at
+`:185-186` says it "should *not* be used for CFD simulations, but rather only when
+solving problems using the CRM (continuum representation of granular dynamics) for
+terramechanics simulations." **It is not available for the water case.** This is
+worth knowing before designing around it, given the Undermind result that no MPM
+study follows a vehicle with a refinement window through a large domain.
+
+**5. Terrain ingest, concrete formats.** `[source]` `RigidTerrain::AddPatch` has a
+Wavefront-mesh overload (`RigidTerrain.h:121`, doc at `:120`: "The mesh is specified
+through a Wavefront file and is used for both contact and visualization") and a
+heightmap-image overload (`:133`). The deformable class is **`SCMTerrain`**, not
+`SCMDeformableTerrain`. Two things D10 should carry: `ChBodyGeometry::TrimeshShape`
+takes an OBJ with a scale and a contact thickness
+`[source: demo_FSI-SPH_ObjectDrop.cpp:270]`, which is the ingest path a hull would
+use; and the tyre caveat in C-4 applies if a semi-empirical tyre is ever driven over
+an arbitrary rigid mesh.
+
+**6. Untested here.** BCE marker spacing against a *rigid mesh's* feature size is
+the one thing I cannot answer from this build. `num_bce_layers` is 3 and
+`d0_multiplier` is 1.2, so kernel support is 1.2 x spacing; whether a thin feature
+such as a wheel arch is resolved or inflated is the Chrono analogue of the warpmpm
+SDF band question, and it was not measured. Do not assume it is better behaved just
+because the domain is more flexible.
 
 ---
 
