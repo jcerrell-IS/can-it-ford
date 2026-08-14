@@ -225,12 +225,22 @@ print(" (D3 is DO-NOT-PUSH by design, its NOREM is correct.)")
 print()
 rule("─")
 print(" OVERWRITE CHECK")
+# Alerts append to a log as well as printing, so a collision that scrolls past
+# at 3am is still recoverable. Display is transient; the log is the record.
+alog=os.path.join(state,"alerts.log")
+def alert(msg):
+    with open(alog,"a") as f:
+        f.write(f"{datetime.datetime.now():%Y-%m-%d %H:%M:%S}  {msg}\n")
 clash=[(p,v) for p,v in dirty_map.items() if len(set(v))>1]
 if clash:
     for p,v in sorted(clash):
-        print(f" !! {p}  edited by D{' D'.join(sorted(set(v)))}")
+        line=f"COLLISION {p} edited by D{' D'.join(sorted(set(v)))}"
+        print(f" !! {line}"); alert(line)
 else:
     print(" ok  no file is dirty in two worktrees at once")
+for i,lbl,st,ctx,dty,nr,flag in rows:
+    if "DRIFT" in flag: alert(f"BRANCH-DRIFT D{i} {lbl}")
+    if st.startswith("STALL"): alert(f"{st} D{i} {lbl} dirty={dty} norem={nr}")
 
 # main checkout: any NEW dirty entry means a session wrote outside its worktree
 base=os.path.join(state,"main_baseline.txt")
