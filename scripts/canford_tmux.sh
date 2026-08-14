@@ -13,7 +13,7 @@ set -uo pipefail
 REPO=/Users/josie/can-it-ford
 WT=$REPO/.claude/worktrees
 SESSION=canford
-DOC=docs/RECONCILIATION_AND_DISPATCH_2026-08-14.md
+DOC=$WT/concurrent-session-safety-570b39/docs/RECONCILIATION_AND_DISPATCH_2026-08-14.md
 PROMPTS=$REPO/.claude/dispatch_prompts
 CORPUS="/Users/josie/Desktop/CAN_IT_FORD_RESEARCH_CORPUS_2026-08-13"
 
@@ -21,7 +21,7 @@ CORPUS="/Users/josie/Desktop/CAN_IT_FORD_RESEARCH_CORPUS_2026-08-13"
 DISPATCHES=(
   "1|208|D1 PUSH-ORPHANED-g128|$WT/rtfd-test-phase-1-4-569130||"
   "2|045|D2 VISTA-REALISM-TRIAGE|$WT/fork-vista-triage|claude/fork-vista-triage|main"
-  "3|196|D3 CREDENTIALS-HARD-STOP|$WT/orphan-rescue-token-rotate-d72f90||"
+  "3|196|D3 CREDENTIALS-HARD-STOP|$WT/fork-credentials-DO-NOT-PUSH|claude/credential-exposure-2026-08-13-DO-NOT-PUSH|"
   "4|129|D4 REGISTER-RECONCILE|$WT/fork-register-reconcile|claude/fork-register-reconcile|main"
   "5|046|D5 THREE-CLASS-MATCHED|$WT/fork-three-class|claude/fork-three-class|main"
   "6|051|D6 POSTER-GRADE-VISUALS|$WT/fork-render-3class|claude/fork-render-3class|claude/render-realism-vehicle-water-ad1490"
@@ -47,7 +47,7 @@ setup() {
         || echo "  FAILED $br"
     fi
     cat > "$PROMPTS/d${id}.md" <<EOF
-Read $REPO/$DOC in full, then execute DISPATCH $id exactly as written there.
+Read $DOC in full, then execute DISPATCH $id exactly as written there.
 
 That document is the single source of truth for this session. Do not work from this
 message beyond the following three points:
@@ -63,7 +63,9 @@ message beyond the following three points:
    asking. The GitHub repo is PUBLIC.
 
 Working directory: $dir
-$( [ -n "$br" ] && echo "Branch: $br" )
+$( [ -n "$br" ] && echo "Branch: $br  <-- YOU ARE ALREADY ON YOUR DEDICATED BRANCH." )
+$( [ -n "$br" ] && echo "Where the dispatch says 'create a new branch off main', that is ALREADY DONE." )
+$( [ -n "$br" ] && echo "Use this branch. Do NOT create another and do NOT switch branches." )
 EOF
   done
   echo "prompts -> $PROMPTS"
@@ -115,7 +117,9 @@ go() {
     local pane
     pane=$(tmux list-panes -a -F '#{pane_id} #{pane_title}' | /usr/bin/grep -F "$lbl" | cut -d' ' -f1 | head -1)
     [ -z "$pane" ] && { echo "no pane for D$id"; continue; }
-    tmux send-keys -t "$pane" "Read and execute $PROMPTS/d${id}.md" C-m
+    tmux send-keys -t "$pane" "Read and execute $PROMPTS/d${id}.md"
+    sleep 1
+    tmux send-keys -t "$pane" Enter
     echo "submitted D$id -> $pane"
   done
 }
