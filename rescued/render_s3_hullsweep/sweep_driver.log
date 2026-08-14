@@ -1,0 +1,101 @@
+node    : c642-011.vista.tacc.utexas.edu
+started : 2026-08-07T23:42:11-05:00
+driver  : a4b46c4f6952fcfce14a47915cc50983f7d90b03db6bb3bb12c5ee2e45870c7e  /work/11603/jcerrell0629/vista/render_s3_hullsweep/sim_enhanced.py
+hulls   :
+b379fa4472c6806515d2145fb721de0f2ab9e0b8b042c01b93f4be34e9949a95  /work/11603/jcerrell0629/vista/can-it-ford/vehicle_geometry_research/yaris_coarse_v1l_watertight.ply
+c0b778e2c443263105c079ec5fed7b68a9aca902e51d21fac5153b2f06c310b2  /work/11603/jcerrell0629/vista/hulls/rogue_g96_pd8_coarse_watertight.ply
+46fba11e77cd92dda7464232bad2b03f14a2afbc91f87490bcf2f1f7d466d7f9  /work/11603/jcerrell0629/vista/hulls/silverado_g96_pd8_coarse_watertight.ply
+NVIDIA GH200 120GB, 97871 MiB
+warp 1.15.0 numpy 2.5.1
+
+########## hull_yaris_dxm  grid=96  mesh=yaris_coarse_v1l_watertight.ply ##########
+2026-08-07T23:42:11-05:00
+
+real	0m26.854s
+user	0m59.883s
+sys	0m1.643s
+rc=0
+ANCHOR grid_lim=9.421742314 expected_from_mesh=9.421742314 drift=0.000e+00
+ANCHOR canonical_yaris grid_lim=9.421742314 recorded=9.421742314 drift=0.000e+00
+INSTRUMENT hull_source=/work/11603/jcerrell0629/vista/can-it-ford/vehicle_geometry_research/yaris_coarse_v1l_watertight.ply hull_m3=3.542739 watertight=True yaris_ref_delta_pct=-0.000
+frame  89  |d|=  27.09cm  yaw= -1.33  roll= +0.00  ld_bow=0.3253 ld_foot=0.3613 oob=0 inflow=469  [13.2s]
+SUMMARY {"scenario": "enhanced_standing_water_sustained_inflow", "NOT_CANONICAL": "Enhanced-physics run, not one of the 17 gated runs", "derived_from": "renders/yaris_render_s1/sim_standing.py sha256 5215c38bed607ef6", "label": "hull_yaris_dxm", "mass_kg": 1100.0, "depth_m": 0.3, "velocity_ms": 1.5, "n_grid": 96, "frames": 90, "grid_lim": 9.421742313727737, "dx": 0.0981431491013306, "h": 0.0490715745506653, "water_layers": 6, "cells_per_depth": 3.056759465607291, "clearance_cells_median": 1.8397004951775293, "clearance_cells_min": 1.4973230566330755, "n_water": 180067, "n_vehicle": 29804, "n_carved": 3683, "water_eta": 0.001, "floor_friction": 0.55, "bulk_modulus": 150000.0, "tau_y_pa": 0.0, "hb_K": 0.0, "hb_n": 1.0, "eta_cap_pas": 0.001, "cfl_limiter": "acoustic", "substeps": 16, "dt": 0.0020833333333333333, "sound_speed_ms": 12.84523257866513, "sound_speed_error_factor": 115.29569363032155, "term_acoustic": 467.4379318185927, "term_viscous": 0.0006229185620386514, "term_advective": 30.56759465607291, "solid_volume_m3": 3.5217987479492066, "hull_m3": 3.542738790016075, "fill_ratio": 0.9940893068024432, "hull_source": "/work/11603/jcerrell0629/vista/can-it-ford/vehicle_geometry_research/yaris_coarse_v1l_watertight.ply", "hull_watertight": true, "hull_yaris_ref_m3": 3.542739, "hull_ref_delta_pct": -5.927163274369932e-06, "realized_rho": 312.3403915798839, "determinism_identical": true, "final_disp_m": [0.27066707611083984, 0.006275653839111328, -0.007933974266052246], "final_disp_mag_m": 0.2708560526371002, "final_yaw_deg": -1.3306546793375338, "final_roll_deg": 0.0005483865669863344, "final_pitch_deg": 0.0005945474045615722, "C3_oob_particle_frames": 0, "local_depth_bow_peak": 0.4593966940534301, "local_depth_bow_peak_frame": 55, "local_depth_bow_final": 0.32531610523583365, "local_depth_footprint_peak": 0.4089666346204467, "local_depth_footprint_final": 0.36129174028756095, "C2_veh_zmin_start": 0.2944294214248657, "C2_veh_zmin_final": 0.2944294214248657, "C2_veh_zmin_rise": 0.0, "passthrough_max_frac": 0.09680285671444518, "leaked_particle_frames": 153195, "wall_seconds": 13.181580781936646, "grid_lim_line_verbatim": "grid 96^3 lim=9.42m  water 180067 + vehicle 29804 particles (1100.0 kg)  dt=2.08e-03 (16 substeps/frame)"}
+DONE hull_yaris_dxm in 13.2 s
+
+########## hull_rogue_dxm  grid=106  mesh=rogue_g96_pd8_coarse_watertight.ply ##########
+2026-08-07T23:42:38-05:00
+
+real	0m19.395s
+user	1m10.566s
+sys	0m0.935s
+rc=0
+ANCHOR grid_lim=10.442536068 expected_from_mesh=10.442536068 drift=0.000e+00
+INSTRUMENT hull_source=/work/11603/jcerrell0629/vista/hulls/rogue_g96_pd8_coarse_watertight.ply hull_m3=4.950341 watertight=True yaris_ref_delta_pct=+39.732
+frame  89  |d|=  69.20cm  yaw= -4.61  roll= -0.11  ld_bow=0.2889 ld_foot=0.4159 oob=0 inflow=228  [6.9s]
+SUMMARY {"scenario": "enhanced_standing_water_sustained_inflow", "NOT_CANONICAL": "Enhanced-physics run, not one of the 17 gated runs", "derived_from": "renders/yaris_render_s1/sim_standing.py sha256 5215c38bed607ef6", "label": "hull_rogue_dxm", "mass_kg": 1100.0, "depth_m": 0.3, "velocity_ms": 1.5, "n_grid": 106, "frames": 90, "grid_lim": 10.442536067962648, "dx": 0.09851449120719478, "h": 0.04925724560359739, "water_layers": 6, "cells_per_depth": 3.045237267368541, "clearance_cells_median": 1.8327658985748652, "clearance_cells_min": 1.491679023047806, "n_water": 226013, "n_vehicle": 41232, "n_carved": 2137, "water_eta": 0.001, "floor_friction": 0.55, "bulk_modulus": 150000.0, "tau_y_pa": 0.0, "hb_K": 0.0, "hb_n": 1.0, "eta_cap_pas": 0.001, "cfl_limiter": "acoustic", "substeps": 16, "dt": 0.0020833333333333333, "sound_speed_ms": 12.84523257866513, "sound_speed_error_factor": 115.29569363032155, "term_acoustic": 465.67596376866135, "term_viscous": 0.0006182313343046812, "term_advective": 30.45237267368541, "solid_volume_m3": 4.9277057907742865, "hull_m3": 4.950340735545737, "fill_ratio": 0.9954275986279245, "hull_source": "/work/11603/jcerrell0629/vista/hulls/rogue_g96_pd8_coarse_watertight.ply", "hull_watertight": true, "hull_yaris_ref_m3": 3.542739, "hull_ref_delta_pct": 39.732019083137, "realized_rho": 223.2276127481949, "determinism_identical": true, "final_disp_m": [0.691899299621582, 0.004224300384521484, -0.010130703449249268], "final_disp_mag_m": 0.6919863820075989, "final_yaw_deg": -4.609695524615252, "final_roll_deg": -0.10698568859080626, "final_pitch_deg": 1.051884670509989, "C3_oob_particle_frames": 0, "local_depth_bow_peak": 0.42865611944558485, "local_depth_bow_peak_frame": 61, "local_depth_bow_final": 0.28893401060464247, "local_depth_footprint_peak": 0.5451440397298561, "local_depth_footprint_final": 0.41590096388223036, "C2_veh_zmin_start": 0.30040574073791504, "C2_veh_zmin_final": 0.29554349184036255, "C2_veh_zmin_rise": -0.00486224889755249, "passthrough_max_frac": 0.12303274590399667, "leaked_particle_frames": 312964, "wall_seconds": 6.872226715087891, "grid_lim_line_verbatim": "grid 106^3 lim=10.44m  water 226013 + vehicle 41232 particles (1100.0 kg)  dt=2.08e-03 (16 substeps/frame)"}
+DONE hull_rogue_dxm in 6.9 s
+
+########## hull_silverado_dxm  grid=133  mesh=silverado_g96_pd8_coarse_watertight.ply ##########
+2026-08-07T23:42:58-05:00
+
+real	0m29.023s
+user	2m56.789s
+sys	0m0.859s
+rc=0
+ANCHOR grid_lim=13.067932987 expected_from_mesh=13.067932987 drift=0.000e+00
+INSTRUMENT hull_source=/work/11603/jcerrell0629/vista/hulls/silverado_g96_pd8_coarse_watertight.ply hull_m3=7.962083 watertight=True yaris_ref_delta_pct=+124.744
+frame  89  |d|=  33.54cm  yaw= -1.83  roll= -0.00  ld_bow=0.3655 ld_foot=0.4293 oob=0 inflow=264  [10.1s]
+SUMMARY {"scenario": "enhanced_standing_water_sustained_inflow", "NOT_CANONICAL": "Enhanced-physics run, not one of the 17 gated runs", "derived_from": "renders/yaris_render_s1/sim_standing.py sha256 5215c38bed607ef6", "label": "hull_silverado_dxm", "mass_kg": 1100.0, "depth_m": 0.3, "velocity_ms": 1.5, "n_grid": 133, "frames": 90, "grid_lim": 13.067932987213135, "dx": 0.09825513524220403, "h": 0.049127567621102014, "water_layers": 6, "cells_per_depth": 3.053275528657961, "clearance_cells_median": 1.8376036993376985, "clearance_cells_min": 1.4956164849578157, "n_water": 370922, "n_vehicle": 67109, "n_carved": 1084, "water_eta": 0.001, "floor_friction": 0.55, "bulk_modulus": 150000.0, "tau_y_pa": 0.0, "hb_K": 0.0, "hb_n": 1.0, "eta_cap_pas": 0.001, "cfl_limiter": "acoustic", "substeps": 16, "dt": 0.0020833333333333333, "sound_speed_ms": 12.84523257866513, "sound_speed_error_factor": 115.29569363032155, "term_acoustic": 466.9051701471219, "term_viscous": 0.0006214994302601036, "term_advective": 30.532755286579615, "solid_volume_m3": 7.957131837043075, "hull_m3": 7.962083114517729, "fill_ratio": 0.9993781429553749, "hull_source": "/work/11603/jcerrell0629/vista/hulls/silverado_g96_pd8_coarse_watertight.ply", "hull_watertight": true, "hull_yaris_ref_m3": 3.542739, "hull_ref_delta_pct": 124.74371141982881, "realized_rho": 138.24076596030957, "determinism_identical": true, "final_disp_m": [0.3352956771850586, 0.0073566436767578125, -0.00011479854583740234], "final_disp_mag_m": 0.3353763818740845, "final_yaw_deg": -1.8257091382575852, "final_roll_deg": -0.002030382745341219, "final_pitch_deg": -0.00016757729629599734, "C3_oob_particle_frames": 0, "local_depth_bow_peak": 0.46630055420380784, "local_depth_bow_peak_frame": 48, "local_depth_bow_final": 0.3655410479782219, "local_depth_footprint_peak": 0.5003705691574212, "local_depth_footprint_final": 0.4293053817031975, "C2_veh_zmin_start": 0.2947653532028198, "C2_veh_zmin_final": 0.2947654128074646, "C2_veh_zmin_rise": 5.960464477539063e-08, "passthrough_max_frac": 0.10581200360183543, "leaked_particle_frames": 393149, "wall_seconds": 10.12063193321228, "grid_lim_line_verbatim": "grid 133^3 lim=13.07m  water 370922 + vehicle 67109 particles (1100.0 kg)  dt=2.08e-03 (16 substeps/frame)"}
+DONE hull_silverado_dxm in 10.1 s
+
+########## hull_rogue_g96  grid=96  mesh=rogue_g96_pd8_coarse_watertight.ply ##########
+2026-08-07T23:43:27-05:00
+
+real	0m15.984s
+user	0m58.272s
+sys	0m0.844s
+rc=0
+ANCHOR grid_lim=10.442536068 expected_from_mesh=10.442536068 drift=0.000e+00
+INSTRUMENT hull_source=/work/11603/jcerrell0629/vista/hulls/rogue_g96_pd8_coarse_watertight.ply hull_m3=4.950341 watertight=True yaris_ref_delta_pct=+39.732
+frame  89  |d|=  93.64cm  yaw= -2.88  roll= -0.27  ld_bow=0.3215 ld_foot=0.4653 oob=0 inflow=221  [5.5s]
+SUMMARY {"scenario": "enhanced_standing_water_sustained_inflow", "NOT_CANONICAL": "Enhanced-physics run, not one of the 17 gated runs", "derived_from": "renders/yaris_render_s1/sim_standing.py sha256 5215c38bed607ef6", "label": "hull_rogue_g96", "mass_kg": 1100.0, "depth_m": 0.3, "velocity_ms": 1.5, "n_grid": 96, "frames": 90, "grid_lim": 10.442536067962648, "dx": 0.10877641737461091, "h": 0.054388208687305456, "water_layers": 6, "cells_per_depth": 2.757950732711131, "clearance_cells_median": 1.6598634553130853, "clearance_cells_min": 1.3509545869112205, "n_water": 180992, "n_vehicle": 30766, "n_carved": 2758, "water_eta": 0.001, "floor_friction": 0.55, "bulk_modulus": 150000.0, "tau_y_pa": 0.0, "hb_K": 0.0, "hb_n": 1.0, "eta_cap_pas": 0.001, "cfl_limiter": "acoustic", "substeps": 15, "dt": 0.0022222222222222222, "sound_speed_ms": 12.84523257866513, "sound_speed_error_factor": 115.29569363032155, "term_acoustic": 421.74426907350454, "term_viscous": 0.0005070861496041244, "term_advective": 27.579507327111312, "solid_volume_m3": 4.9497732183573815, "hull_m3": 4.950340735545736, "fill_ratio": 0.999885357954397, "hull_source": "/work/11603/jcerrell0629/vista/hulls/rogue_g96_pd8_coarse_watertight.ply", "hull_watertight": true, "hull_yaris_ref_m3": 3.542739, "hull_ref_delta_pct": 39.732019083136976, "realized_rho": 222.2324036827374, "determinism_identical": true, "final_disp_m": [0.9359536170959473, -0.011442184448242188, -0.026387572288513184], "final_disp_mag_m": 0.9363954663276672, "final_yaw_deg": -2.8801573708621504, "final_roll_deg": -0.27152189745769206, "final_pitch_deg": 1.0641596943872653, "C3_oob_particle_frames": 0, "local_depth_bow_peak": 0.48526761829853055, "local_depth_bow_peak_frame": 58, "local_depth_bow_final": 0.3215064793825149, "local_depth_footprint_peak": 0.5861708313226699, "local_depth_footprint_final": 0.46534470617771145, "C2_veh_zmin_start": 0.35081976652145386, "C2_veh_zmin_final": 0.32632923126220703, "C2_veh_zmin_rise": -0.024490535259246826, "passthrough_max_frac": 0.1209279968175389, "leaked_particle_frames": 92363, "wall_seconds": 5.498989820480347, "grid_lim_line_verbatim": "grid 96^3 lim=10.44m  water 180992 + vehicle 30766 particles (1100.0 kg)  dt=2.22e-03 (15 substeps/frame)"}
+DONE hull_rogue_g96 in 5.5 s
+
+########## hull_silverado_g96  grid=96  mesh=silverado_g96_pd8_coarse_watertight.ply ##########
+2026-08-07T23:43:43-05:00
+
+real	0m11.466s
+user	0m42.985s
+sys	0m0.744s
+rc=0
+ANCHOR grid_lim=13.067932987 expected_from_mesh=13.067932987 drift=0.000e+00
+INSTRUMENT hull_source=/work/11603/jcerrell0629/vista/hulls/silverado_g96_pd8_coarse_watertight.ply hull_m3=7.962083 watertight=True yaris_ref_delta_pct=+124.744
+frame  89  |d|=  23.50cm  yaw= -0.67  roll= +0.00  ld_bow=0.3523 ld_foot=0.3359 oob=0 inflow=164  [3.9s]
+SUMMARY {"scenario": "enhanced_standing_water_sustained_inflow", "NOT_CANONICAL": "Enhanced-physics run, not one of the 17 gated runs", "derived_from": "renders/yaris_render_s1/sim_standing.py sha256 5215c38bed607ef6", "label": "hull_silverado_g96", "mass_kg": 1100.0, "depth_m": 0.3, "velocity_ms": 1.5, "n_grid": 96, "frames": 90, "grid_lim": 13.067932987213135, "dx": 0.13612430195013683, "h": 0.06806215097506842, "water_layers": 4, "cells_per_depth": 2.203868050760634, "clearance_cells_median": 1.3263906401234515, "clearance_cells_min": 1.079542725984589, "n_water": 121860, "n_vehicle": 25376, "n_carved": 640, "water_eta": 0.001, "floor_friction": 0.55, "bulk_modulus": 150000.0, "tau_y_pa": 0.0, "hb_K": 0.0, "hb_n": 1.0, "eta_cap_pas": 0.001, "cfl_limiter": "acoustic", "substeps": 12, "dt": 0.002777777777777778, "sound_speed_ms": 12.84523257866513, "sound_speed_error_factor": 115.29569363032155, "term_acoustic": 337.014258151306, "term_viscous": 0.0003238022923442317, "term_advective": 22.038680507606337, "solid_volume_m3": 8.00092456405723, "hull_m3": 7.962083114517729, "fill_ratio": 1.0048783024468408, "hull_source": "/work/11603/jcerrell0629/vista/hulls/silverado_g96_pd8_coarse_watertight.ply", "hull_watertight": true, "hull_yaris_ref_m3": 3.542739, "hull_ref_delta_pct": 124.74371141982881, "realized_rho": 137.48411089157867, "determinism_identical": true, "final_disp_m": [0.23502302169799805, 0.0021424293518066406, -6.139278411865234e-05], "final_disp_mag_m": 0.2350327968597412, "final_yaw_deg": -0.6685292042856219, "final_roll_deg": 0.0015410456942013407, "final_pitch_deg": -0.001482233175580419, "C3_oob_particle_frames": 0, "local_depth_bow_peak": 0.3703348368406295, "local_depth_bow_peak_frame": 30, "local_depth_bow_final": 0.3523379296064376, "local_depth_footprint_peak": 0.367504271864891, "local_depth_footprint_final": 0.33592686355113976, "C2_veh_zmin_start": 0.4083729386329651, "C2_veh_zmin_final": 0.4083728790283203, "C2_veh_zmin_rise": -5.960464477539063e-08, "passthrough_max_frac": 0.09292630887904152, "leaked_particle_frames": 74675, "wall_seconds": 3.860630750656128, "grid_lim_line_verbatim": "grid 96^3 lim=13.07m  water 121860 + vehicle 25376 particles (1100.0 kg)  dt=2.78e-03 (12 substeps/frame)"}
+DONE hull_silverado_g96 in 3.9 s
+
+########## SUMMARY TABLE ##########
+2026-08-07T23:43:54-05:00
+
+  == ARM A  matched dx, compare across these ==
+  label                  hull_m3   d_ref_% fill_ratio        dx   disp_m  passthru    z_rise     roll
+  hull_yaris_dxm        3.542739    -0.000     0.9941  0.098143  0.27086   0.09680   0.00000    0.001
+  hull_rogue_dxm        4.950341   +39.732     0.9954  0.098514  0.69199   0.12303  -0.00486   -0.107
+  hull_silverado_dxm    7.962083  +124.744     0.9994  0.098255  0.33538   0.10581   0.00000   -0.002
+
+  == ARM B  fixed n_grid 96, confound control ONLY ==
+  label                  hull_m3   d_ref_% fill_ratio        dx   disp_m  passthru    z_rise     roll
+  hull_rogue_g96        4.950341   +39.732     0.9999  0.108776  0.93640   0.12093  -0.02449   -0.272
+  hull_silverado_g96    7.962083  +124.744     1.0049  0.136124  0.23503   0.09293  -0.00000    0.002
+
+  TRIPWIRES, check these before reading any physics:
+    hull_ref_delta_pct  must be  ~0.000 yaris | +39.732 rogue | +124.744 silverado
+                        If all three read ~0, --vehicle did NOT take effect.
+    fill_ratio          must be ~1.00 for ALL hulls now that hull_m3 is derived.
+                        A rogue reading ~1.3973 or silverado ~2.2474 means the
+                        old hardcoded-HULL denominator is still in the driver.
+    dx (ARM A)          must be ~0.098143 for all three. That is the point of the arm.
+  gate limits: P-2 passthrough < 0.10 (gates.py:148)
+               P-3 abs(z_rise) <= 0.01 m (gates.py:150-151)
+
+2026-08-07T23:43:54-05:00
