@@ -1,0 +1,50 @@
+BIND skipped: installed warpmpm.vehicle already has solidify_watertight (/work/11603/jcerrell0629/vista/mpm-engine/src/warpmpm/vehicle.py)
+DETERMINISM load1 n=41232 lim=10.442536068
+DETERMINISM load2 n=41232 lim=10.442536068
+DETERMINISM identical=True
+ANCHOR grid_lim=10.442536068 expected_from_mesh=10.442536068 drift=0.000e+00
+==========================================================================
+ESTIMATE  grid=106  depth=0.300  vel=1.50  frames=90
+  dx                 = 0.098514491 m   (grid_lim 10.442536068 / 106)
+  bulk_modulus       = 1.5e+05 Pa
+  sound speed c      = 12.8452 m/s   (real water 1481.0, ratio 115.3)
+  tau_y=0  K=0  n=1  ->  eta_cap = 0.001 Pa.s
+  CFL terms          : acoustic=465.6760  viscous=0.000618  advective=30.4524
+  limiting term      = acoustic
+  substeps/frame     = 16      (as-run g64 baseline = 11)
+  dt                 = 2.0833e-03 s
+  cells vs g64       = 4.543x
+  substeps vs g64    = 1.455x
+  TOTAL WORK vs the g64/90-frame baseline = 6.61x
+  resolution         : 3.045 grid cells per flow depth   (rule of thumb ~10 particles)
+                       1.833 cells across median ground clearance 0.180554 m
+                       1.492 cells across MINIMUM clearance 0.146952 m
+  est. wall (GH200)  = 7 s  (~0.1 min)  [calibrated on job 895330]
+==========================================================================
+warpmpm: device auto -> cuda:0
+Particles initialized from torch data.
+Total particles:  267245
+SETUP 1.0 s
+SCENARIO=ENHANCED_STANDING_WATER_SUSTAINED_INFLOW
+grid 106^3 lim=10.44m  water 226013 + vehicle 41232 particles (1100.0 kg)  dt=2.08e-03 (16 substeps/frame)
+INSTRUMENT dx=0.098514 h=0.049257 floor=0.295543 lim=10.442536
+INSTRUMENT water_layers=6 cells_per_depth=3.0452
+INSTRUMENT clearance_cells_median=1.8328 clearance_cells_min=1.4917
+INSTRUMENT solid_volume=4.92771 m3 hull=4.95034 fill_ratio=0.9954 realized_rho=223.23
+INSTRUMENT hull_source=/work/11603/jcerrell0629/vista/hulls/rogue_g96_pd8_coarse_watertight.ply hull_m3=4.950341 watertight=True yaris_ref_delta_pct=+39.732
+INSTRUMENT carved 2137 of 228150 water particles from vehicle cells (0.94 percent)
+SUBSTEP_TERMS eta=1.000e-03 eta_cap=0.001 acoustic=465.6760 viscous=0.000618 advective=30.4524 limiter=acoustic substeps=16
+ACOUSTIC c=12.8452 m/s (real water 1481.0, off by 115.3x)
+RHEOLOGY tau_y=0 K=0 n=1 bulk_modulus=150000
+frame   0  |d|=   1.64cm  yaw= -0.19  roll= -0.66  ld_bow=0.2950 ld_foot=0.2896 oob=0 inflow=35552  [1.0s]
+frame  10  |d|=  24.72cm  yaw= -1.11  roll= -0.09  ld_bow=0.3704 ld_foot=0.3366 oob=0 inflow=24383  [1.7s]
+frame  20  |d|=  41.69cm  yaw= -1.98  roll= -0.09  ld_bow=0.3950 ld_foot=0.3797 oob=0 inflow=13329  [2.3s]
+frame  30  |d|=  53.87cm  yaw= -2.93  roll= -0.09  ld_bow=0.4117 ld_foot=0.3782 oob=0 inflow=4207  [3.0s]
+frame  40  |d|=  63.11cm  yaw= -3.81  roll= -0.09  ld_bow=0.4154 ld_foot=0.3762 oob=0 inflow=369  [3.6s]
+frame  50  |d|=  69.37cm  yaw= -4.38  roll= -0.10  ld_bow=0.4167 ld_foot=0.4590 oob=0 inflow=186  [4.3s]
+frame  60  |d|=  69.74cm  yaw= -4.51  roll= -0.16  ld_bow=0.4283 ld_foot=0.5196 oob=0 inflow=219  [5.0s]
+frame  70  |d|=  69.77cm  yaw= -4.55  roll= -0.10  ld_bow=0.4011 ld_foot=0.4337 oob=0 inflow=212  [5.6s]
+frame  80  |d|=  69.58cm  yaw= -4.58  roll= -0.10  ld_bow=0.3417 ld_foot=0.4170 oob=0 inflow=207  [6.3s]
+frame  89  |d|=  69.20cm  yaw= -4.61  roll= -0.11  ld_bow=0.2889 ld_foot=0.4159 oob=0 inflow=228  [6.9s]
+SUMMARY {"scenario": "enhanced_standing_water_sustained_inflow", "NOT_CANONICAL": "Enhanced-physics run, not one of the 17 gated runs", "derived_from": "renders/yaris_render_s1/sim_standing.py sha256 5215c38bed607ef6", "label": "hull_rogue_dxm", "mass_kg": 1100.0, "depth_m": 0.3, "velocity_ms": 1.5, "n_grid": 106, "frames": 90, "grid_lim": 10.442536067962648, "dx": 0.09851449120719478, "h": 0.04925724560359739, "water_layers": 6, "cells_per_depth": 3.045237267368541, "clearance_cells_median": 1.8327658985748652, "clearance_cells_min": 1.491679023047806, "n_water": 226013, "n_vehicle": 41232, "n_carved": 2137, "water_eta": 0.001, "floor_friction": 0.55, "bulk_modulus": 150000.0, "tau_y_pa": 0.0, "hb_K": 0.0, "hb_n": 1.0, "eta_cap_pas": 0.001, "cfl_limiter": "acoustic", "substeps": 16, "dt": 0.0020833333333333333, "sound_speed_ms": 12.84523257866513, "sound_speed_error_factor": 115.29569363032155, "term_acoustic": 465.67596376866135, "term_viscous": 0.0006182313343046812, "term_advective": 30.45237267368541, "solid_volume_m3": 4.9277057907742865, "hull_m3": 4.950340735545737, "fill_ratio": 0.9954275986279245, "hull_source": "/work/11603/jcerrell0629/vista/hulls/rogue_g96_pd8_coarse_watertight.ply", "hull_watertight": true, "hull_yaris_ref_m3": 3.542739, "hull_ref_delta_pct": 39.732019083137, "realized_rho": 223.2276127481949, "determinism_identical": true, "final_disp_m": [0.691899299621582, 0.004224300384521484, -0.010130703449249268], "final_disp_mag_m": 0.6919863820075989, "final_yaw_deg": -4.609695524615252, "final_roll_deg": -0.10698568859080626, "final_pitch_deg": 1.051884670509989, "C3_oob_particle_frames": 0, "local_depth_bow_peak": 0.42865611944558485, "local_depth_bow_peak_frame": 61, "local_depth_bow_final": 0.28893401060464247, "local_depth_footprint_peak": 0.5451440397298561, "local_depth_footprint_final": 0.41590096388223036, "C2_veh_zmin_start": 0.30040574073791504, "C2_veh_zmin_final": 0.29554349184036255, "C2_veh_zmin_rise": -0.00486224889755249, "passthrough_max_frac": 0.12303274590399667, "leaked_particle_frames": 312964, "wall_seconds": 6.872226715087891, "grid_lim_line_verbatim": "grid 106^3 lim=10.44m  water 226013 + vehicle 41232 particles (1100.0 kg)  dt=2.08e-03 (16 substeps/frame)"}
+DONE hull_rogue_dxm in 6.9 s
