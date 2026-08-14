@@ -1,0 +1,28 @@
+# EVERY FILE IN THIS DIRECTORY IS WITHHELD FROM THE REPOSITORY ON PURPOSE.
+#
+# The images here contain DERIVED NCAC/CCSA VEHICLE HULL GEOMETRY. Register E8
+# (docs/CANONICAL_CORRECTIONS_REGISTER_2026-08-06.md) states the operative rule:
+# "do not commit any derived NCAC/CCSA geometry to the public repo, and do not
+# include it in a DesignSafe DOI, without written permission or a confirmed
+# licence."
+#
+# E8 IS OPEN, NOT RESOLVED. Re-checked from the source zips on 2026-08-13
+# (commit 1d78d06): the zips carry an embedded README, a CCSA GMU banner, a
+# warranty disclaimer and an attribution request, and NO redistribution grant.
+# The prior step (a), read the zips, is done; step (b), obtain written
+# permission, is not. That session's verdict, quoted: a real-mesh render may NOT
+# go in a public deliverable.
+#
+# AND THIS REPOSITORY IS PUBLIC. Per .claude/memory/can-it-ford-github-repo-is-
+# public.md, GitHub served a removed W&B key by SHA even after a filter-repo
+# rewrite, so a push here is effectively permanent. An accidental `git add` of
+# this directory would be difficult to undo.
+#
+# This .gitignore is the mechanical half of that rule. The documentary half is
+# docs/THREE_CLASS_RENDER_FINDINGS_2026-08-14.md. If E8 closes with a confirmed
+# licence, delete this file rather than force-adding around it, so the change is
+# visible in history.
+#
+# Ignore everything here except this file itself.
+*
+!.gitignore

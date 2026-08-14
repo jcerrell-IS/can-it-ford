@@ -224,6 +224,27 @@ REFERENCES = {
         "bottom did NOT influence the spectral response once the water was "
         "DEEPER than 30 cm, and that holds for the 99 mg/L turbid river, not "
         "for water generally.",
+    "geometric_optics_route":
+        "Guillen, J., Palanques, A., Puig, P., Durrieu de Madron, X., & "
+        "Nyffeler, F. (2000). Field calibration of optical sensors for "
+        "measuring suspended sediment concentration in the western "
+        "Mediterranean. Scientia Marina, 64(4), 427-435. "
+        "doi:10.3989/scimar.2000.64n4427. Diamond open access, CC-BY; the PDF "
+        "was retrieved and read directly on 2026-08-14 (sha256 98f0f082cd64...). "
+        "ADDED 2026-08-14 as the PRIMARY SOURCE for this module's ROUTE B, "
+        "which the docstring previously stated with no citation. Their eq. 4 is "
+        "SSC = (2 rho_s D / 3Q) alpha_p = B alpha_p, after Spinrad et al. 1983, "
+        "i.e. the same relation inverted, with B the calibration slope in g/m2 "
+        "and c* = 1/B. Their eq. 5 gives B = k D with k = 1.12 to 3.4 from "
+        "laboratory calibrations across grain-size fractions (Moody et al. "
+        "1987; Wiberg et al. 1994), so c* falls as grain size rises, which is "
+        "the mechanism this module already invokes for field sublinearity. "
+        "MEASURED VALUES: BAC 0.4 to 14 1/m across six western-Mediterranean "
+        "campaigns; the per-campaign slope B runs 1.32 to 1.71 g/m2 and the "
+        "pooled fit is SSC = 1.43 alpha_(p+w) - 0.26, r2 = 0.85, stated as "
+        "representative of shelf and slope areas that 'usually have suspended "
+        "sediment concentrations lower than 5 mg/l'. Their separate FTU "
+        "calibration spans 0.1 to 700 mg/L with slopes 0.24 to 1.71.",
     "colour_gap":
         "NO PRIMARY SOURCE IN THIS SET MEASURES THE COLOUR OF A SEDIMENT "
         "SUSPENSION IN A WATER COLUMN, which is what a fluid shader needs. Two "
@@ -281,6 +302,40 @@ CLEAR_WATER_SIGMA_RGB = np.array([0.45, 0.07, 0.03])
 
 # Mass-specific beam attenuation of suspended sediment, m2/g, bounded by the two
 # routes in the module docstring. Near-grey across the visible.
+#
+# STILL A CHOSEN VALUE, NOT A PUBLISHED REGRESSION, and a 2026-08-14 retrieval
+# attempt is the reason that sentence has not changed. The primary source for
+# ROUTE B was found and read in full (Guillen et al. 2000, see
+# REFERENCES["geometric_optics_route"]), which is a real gain: the equation now
+# has a citation it did not have. It did NOT settle the coefficient, because the
+# retrieved numbers bracket this default from BOTH sides rather than confirming
+# it, and the spread is a factor of about 60:
+#
+#   their pooled field fit, B = 1.43 g/m2                 -> c* = 0.699 m2/g
+#   their per-campaign range, B = 1.32 to 1.71 g/m2       -> c* = 0.585 to 0.758
+#   their eq. 5 at 25 um, the median grain size Brown and
+#     Chanson 2012 measured on the flooded Brisbane road,
+#     with k = 1.12 to 3.4                                -> c* = 0.012 to 0.036
+#   their eq. 4 direct, rho_s 2650 kg/m3, Q = 2, 25 um    -> c* = 0.045
+#
+# The field fit is 7.0x ABOVE this default and the grain-size relation at the
+# scenario's own grain size is 2.2 to 8.5x BELOW it, so quoting either as "the"
+# published value would be worse than quoting a chosen central one. The
+# divergence is not a contradiction: their fit is for marine shelf water usually
+# under 5 mg/L carrying fine river sediment, and c* ~ 1/D means coarser flood
+# load attenuates less per gram. 0.10 stays, still labelled chosen.
+#
+# Stewart and Fox 2017, the paper that would answer this directly for streams,
+# is CLOSED ACCESS: Scite returns contentDenied with no full-text excerpts, and
+# the only access route offered is purchase. Marked unretrieved rather than
+# guessed. Undermind was also tried and its token had expired.
+#
+# RENDER CONSEQUENCE, so the open question is scoped rather than alarming: over
+# this scene's 0.30 m column at the default camera the image is optically
+# SATURATED at about 140 mg/L, so at the severe_flood and urban_road_flood
+# presets every c* in the range above renders the identical picture. The choice
+# only moves pixels at clear_baseline, and at moderate_flood it moves them for
+# this default but not for the higher field value.
 SEDIMENT_CSTAR_M2_PER_G = 0.10
 SEDIMENT_CSTAR_BAND_M2_PER_G = (0.023, 0.24)
 SEDIMENT_SPECTRAL_SHAPE = np.array([1.0, 1.0, 1.0])

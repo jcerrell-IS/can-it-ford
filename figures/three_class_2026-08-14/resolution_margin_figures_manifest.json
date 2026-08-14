@@ -1,0 +1,120 @@
+{
+  "generated_by": "analysis/make_resolution_margin_figures.py",
+  "figure_a": {
+    "figure": "/private/tmp/claude-501/-Users-josie-can-it-ford--claude-worktrees-fork-render-3class/8d47daaa-61c4-4559-b078-5861917d77a2/scratchpad/figs/fig_margin_collapse_m2337.png",
+    "family": "canonical Yaris hull at AR&R large_4wd class mass 2337 kg",
+    "hull_sha256": "b379fa4472c6806515d2145fb721de0f2ab9e0b8b042c01b93f4be34e9949a95",
+    "engine": "warpmpm",
+    "criterion": {
+      "slide_m": 0.05,
+      "slide_speed_ms": 0.05,
+      "sustain_frames": 3,
+      "source": "simulation/failure_modes.py:181-183"
+    },
+    "series": [
+      {
+        "n_grid": 48,
+        "label": "g48",
+        "longest": 11,
+        "margin": 8,
+        "k_crit": 0.3772222482039623,
+        "ratio": 3.6387062072753906,
+        "mode": "SLIDE",
+        "repro": false,
+        "source": "data/slide_verdict_fragility_2026-08-13.csv (Vista metrics)"
+      },
+      {
+        "n_grid": 64,
+        "label": "g64",
+        "longest": 10,
+        "margin": 7,
+        "k_crit": 0.5234190017807155,
+        "ratio": 2.8392887115478516,
+        "mode": "SLIDE",
+        "repro": true,
+        "source": "data/slide_verdict_fragility_2026-08-13.csv (Vista metrics)"
+      },
+      {
+        "n_grid": 96,
+        "label": "g96",
+        "longest": 4,
+        "margin": 1,
+        "k_crit": 0.8720691949434465,
+        "ratio": 1.74224853515625,
+        "mode": "SLIDE",
+        "repro": false,
+        "source": "data/slide_verdict_fragility_2026-08-13.csv (Vista metrics)"
+      },
+      {
+        "n_grid": 128,
+        "label": "g128",
+        "longest": 3,
+        "margin": 0,
+        "k_crit": 0.9758825117032267,
+        "ratio": 1.4733600616455078,
+        "mode": "SLIDE",
+        "repro": null,
+        "source": "claude/rtfd-test-phase-1-4-569130:data/g128_canonical_2026-08-13/canon_g128_m2337/metrics.csv, measured here"
+      }
+    ],
+    "g96_ls6_control": {
+      "n_frames": 91,
+      "longest_joint_frames": 4,
+      "margin_frames": 1,
+      "k_crit": 0.8720546897090867,
+      "headroom_x": 1.1467170715332031,
+      "ratio_slide": 1.7142677307128906,
+      "peak_drift_m": 0.08571338653564453,
+      "peak_drift_frame": 71,
+      "peak_speed_ms": 0.4143659770488739,
+      "peak_speed_frame": 2,
+      "k_crit_window": [
+        5,
+        7
+      ],
+      "k_crit_window_drift_m": [
+        0.057335853576660156,
+        0.06371355056762695,
+        0.06812763214111328
+      ]
+    },
+    "g128": {
+      "n_frames": 91,
+      "longest_joint_frames": 3,
+      "margin_frames": 0,
+      "k_crit": 0.9758825117032267,
+      "headroom_x": 1.0247135162353516,
+      "ratio_slide": 1.4733600616455078,
+      "peak_drift_m": 0.07366800308227539,
+      "peak_drift_frame": 48,
+      "peak_speed_ms": 0.2943798005580902,
+      "peak_speed_frame": 1,
+      "k_crit_window": [
+        6,
+        8
+      ],
+      "k_crit_window_drift_m": [
+        0.05123567581176758,
+        0.055483341217041016,
+        0.058310508728027344
+      ]
+    }
+  },
+  "figure_b": {
+    "figure": "/private/tmp/claude-501/-Users-josie-can-it-ford--claude-worktrees-fork-render-3class/8d47daaa-61c4-4559-b078-5861917d77a2/scratchpad/figs/fig_silverado_verdict_flip.png",
+    "family": "real Silverado and Rogue hulls, non-canonical grid sweep",
+    "engine": "warpmpm",
+    "source_csv": "data/rogue_silverado_slide_classification_2026-08-13.csv",
+    "silverado_g128": {
+      "run": "rs_silverado_g128",
+      "n_grid": "128",
+      "mass_kg": "2270.0",
+      "mode": "STUCK",
+      "triggered_slide": "False",
+      "ratio_slide": "1.5557289123535156",
+      "max_speed_ms": "0.20436212868482462",
+      "onset_frame_slide": "-1"
+    },
+    "speed_ratio_g128": 4.087242573696492
+  }
+}
