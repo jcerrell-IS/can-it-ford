@@ -208,6 +208,120 @@ def q2q3_load_experiment(veh, msdf, trimesh, hull: Path) -> dict:
     }
 
 
+def seed_mesh_sampling(mesh, count, seed):
+    """Draw `count` surface samples reproducibly, whichever trimesh is installed.
+
+    THIS IS THE DURABLE FORM OF THE FIX, and the reason it is not a one-liner:
+    trimesh changed its RNG source between the version on LS6 and the version on
+    this Mac, and the change is SILENT.
+
+      trimesh 4.12.2 (LS6, measured live 2026-08-14): Trimesh.sample has NO seed
+        kwarg and draws from the legacy global np.random state, so
+        `np.random.seed(k)` before the call DOES make it reproducible.
+      trimesh 5.0.0 (this Mac, measured live 2026-08-14): Trimesh.sample HAS a seed
+        kwarg and uses np.random.default_rng internally, which ignores the legacy
+        global state entirely, so `np.random.seed(k)` has NO effect.
+
+    So `np.random.seed(k)` before load is correct today on LS6 and becomes a no-op
+    the moment trimesh is upgraded, with no error and no warning: the runs simply
+    stop being reproducible. Prefer the kwarg when it exists and fall back
+    otherwise, so the seeding survives either version.
+    """
+    try:
+        return np.asarray(mesh.sample(count, seed=seed))
+    except TypeError:
+        np.random.seed(seed)
+        return np.asarray(mesh.sample(count))
+
+
+def q3_direct_seed_control(trimesh, hull: Path, count: int = 2000,
+                           repeats: int = 5) -> dict:
+    """Test seed control DIRECTLY on mesh.sample(), with repeats.
+
+    WHY NOT INFER IT FROM THE LOAD EXPERIMENT. Because that inference is unsound and
+    was measured to be unsound. canonicalize() cancels the sample-dependent shift to
+    within half an ULP, so the post-canonicalize vertex array collapses onto a small
+    set of nearby float64 values; two INDEPENDENT unseeded loads therefore land on
+    the same value a fair fraction of the time. A single same-seed pair coming out
+    identical is then a coin flip, not evidence of seeding, and back-to-back runs of
+    this very audit reported `bitwise_identical` True and False for the same trimesh.
+    The direct test has no such degeneracy: two 2000-point surface samples that were
+    not drawn from the same RNG state differ by metres, not by ULPs.
+
+    Repeats are used because one trial cannot establish a deterministic property.
+    """
+    m = trimesh.load(hull, force="mesh")
+    same_seed_identical = []
+    for r in range(repeats):
+        np.random.seed(1000 + r)
+        a = np.asarray(m.sample(count))
+        np.random.seed(1000 + r)
+        b = np.asarray(m.sample(count))
+        same_seed_identical.append(bool(np.array_equal(a, b)))
+
+    unseeded_identical = []
+    for _ in range(repeats):
+        c = np.asarray(m.sample(count))
+        d = np.asarray(m.sample(count))
+        unseeded_identical.append(bool(np.array_equal(c, d)))
+
+    kwarg_works = None
+    try:
+        e = np.asarray(m.sample(count, seed=42))
+        f = np.asarray(m.sample(count, seed=42))
+        g = np.asarray(m.sample(count, seed=43))
+        kwarg_works = bool(np.array_equal(e, f) and not np.array_equal(e, g))
+    except TypeError:
+        kwarg_works = False                      # no seed kwarg in this version
+
+    return {
+        "trimesh_version": getattr(trimesh, "__version__", "unknown"),
+        "repeats": repeats,
+        "sample_count": count,
+        "np_random_seed_reproduces": all(same_seed_identical),
+        "np_random_seed_detail": same_seed_identical,
+        "unseeded_ever_identical": any(unseeded_identical),
+        "seed_kwarg_supported_and_works": kwarg_works,
+    }
+
+
+def q4_demonstrate_cache_hit(veh, msdf, trimesh, hull: Path, seed: int = 20260814) -> dict:
+    """Demonstrate an actual SDF cache HIT once the sampling is genuinely seeded.
+
+    load_vehicle's sampling call is monkeypatched for the duration, which emulates
+    the corrected upstream line without editing upstream. Two loads are then made and
+    their cache keys compared. A HIT here is the demonstration the dispatch asks for;
+    a MISS would mean the seeding did not take and the fix is not real.
+    """
+    orig = trimesh.Trimesh.sample
+
+    def seeded(mesh, count, *_a, **_kw):
+        """Same two-branch logic as seed_mesh_sampling, against the unpatched call."""
+        try:
+            return np.asarray(orig(mesh, count, seed=seed))
+        except TypeError:
+            np.random.seed(seed)
+            return np.asarray(orig(mesh, count))
+
+    trimesh.Trimesh.sample = seeded
+    try:
+        keys = []
+        for _ in range(3):
+            v = canonicalize(veh.load_vehicle(hull, up="z"), trimesh)
+            pv = np.ascontiguousarray(v.mesh.vertices, dtype=np.float64)
+            keys.append(msdf._hashkey(pv, np.ascontiguousarray(v.mesh.faces, dtype=np.int64),
+                                      64, 4.0))
+    finally:
+        trimesh.Trimesh.sample = orig
+    return {
+        "seed": seed,
+        "keys": keys,
+        "n_distinct": len(set(keys)),
+        "cache_hits_after_first": bool(len(set(keys)) == 1),
+        "trimesh_version": getattr(trimesh, "__version__", "unknown"),
+    }
+
+
 def main():
     p = argparse.ArgumentParser()
     p.add_argument("--src", default="/Users/josie/Downloads/mpm-engine-main/src",
@@ -275,9 +389,32 @@ def main():
     print("  SEEDED with different seeds (control, keys MUST differ):", flush=True)
     print("    keys differ                     : %s" % d["keys_differ_as_they_must"], flush=True)
 
+    print("\n=== Q3  DIRECT seed-control test on mesh.sample(), with repeats ===", flush=True)
+    q3 = q3_direct_seed_control(trimesh, hull)
+    report["q3_direct_seed_control"] = q3
+    print("  trimesh version                   : %s" % q3["trimesh_version"], flush=True)
+    print("  np.random.seed reproduces sampling: %s  %s"
+          % (q3["np_random_seed_reproduces"], q3["np_random_seed_detail"]), flush=True)
+    print("  unseeded pair ever identical      : %s (must be False)"
+          % q3["unseeded_ever_identical"], flush=True)
+    print("  seed= kwarg supported and works   : %s" % q3["seed_kwarg_supported_and_works"],
+          flush=True)
+
+    print("\n=== Q4  demonstrated cache HIT once the sampling is genuinely seeded ===",
+          flush=True)
+    q4 = q4_demonstrate_cache_hit(veh, msdf, trimesh, hull)
+    report["q4_demonstrated_cache_hit"] = q4
+    print("  trimesh version                   : %s" % q4["trimesh_version"], flush=True)
+    print("  3 seeded loads, distinct keys     : %d" % q4["n_distinct"], flush=True)
+    print("  keys                              : %s" % q4["keys"], flush=True)
+    print("  CACHE HIT DEMONSTRATED            : %s" % q4["cache_hits_after_first"], flush=True)
+
     verdict = {
-        "np_random_seed_controls_trimesh_sampling": bool(
-            s["bitwise_identical"] and d["keys_differ_as_they_must"]),
+        # Taken from the DIRECT repeated test, never from the single-pair load
+        # comparison, which is degenerate: see q3_direct_seed_control's docstring.
+        "np_random_seed_controls_trimesh_sampling": bool(q3["np_random_seed_reproduces"]),
+        "seed_kwarg_available_and_works": bool(q3["seed_kwarg_supported_and_works"]),
+        "seeded_sampling_gives_a_cache_hit": bool(q4["cache_hits_after_first"]),
         "canonical_driver_seeds_before_load": bool(q1.get("seeded_before_first_load")),
         "canonical_driver_builds_an_sdf": bool(q1.get("builds_an_sdf")),
     }
