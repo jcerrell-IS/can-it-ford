@@ -550,8 +550,30 @@ understatements, the 8.333 percent d×v spread, and `W/(rho·V) = 0.310494`.
   `10.1016/j.trd.2017.06.020` `[live]`, `v(w) = 0.0009w² - 0.5529w + 86.9448`,
   w in mm, v in km/h, R² 0.95, **flow velocity explicitly excluded**. This is
   **driver control and serviceability, not stability**, and it is the depth-only
-  baseline to contrast against. A graded surface `v_max(depth, flow velocity)` does
-  not exist in the literature and is claimable as original `[ctx]`.
+  baseline to contrast against.
+
+  > **ORIGINALITY CLAIM SUSPENDED PENDING A DIRECT TEST, 2026-08-14.** This document
+  > previously carried, from the dispatch `[ctx]`, that a graded surface
+  > `v_max(depth, flow velocity)` "does not exist in the literature and is claimable
+  > as original". **Do not state that as settled and do not put it in the paper
+  > yet.** A Claude research artifact on this machine,
+  > `~/Downloads/compass_artifact_wf-045982be*`, is titled *"Safe Maximum Crossing
+  > Speed as a Function of Flood Depth and Flow Velocity: A Literature Assessment"*
+  > and assessed **exactly this question**. It is not in the corpus index and has
+  > not been read by anyone in this track.
+  >
+  > Two outcomes, and they point opposite ways, which is why the claim cannot stand
+  > in the meantime: if it found such a surface, **the originality claim is dead**
+  > and must be revised before it lands. If it confirms none exists, it is
+  > supporting evidence, **but only if its sources do not overlap mine**; shared
+  > sources make it the same source cited twice, not independent corroboration.
+  >
+  > **Blocked, not skipped.** `~/Downloads` is TCC-denied to this process as of
+  > 18:24 today: `ls` returns "Operation not permitted" and reads fail, while
+  > `stat` gives `nlink=429` and `test -e` succeeds on known files, so **the files
+  > are present and unreadable, not missing**. A glob there currently returns "no
+  > matches" as a **false negative**. Access worked earlier in this same session, so
+  > this is a mid-session state change. Unblock recipe is in section 9, item 13.
 
   **The quadratic has NO REAL ROOT, and this matters if anyone extrapolates it.**
   `[inf]` Discriminant `0.5529² - 4(0.0009)(86.9448) = -0.00730`. The vertex is at
@@ -1066,6 +1088,38 @@ concern or erratum** on any of the eight core flood-vehicle DOIs checked.
     "confirmed" in a relay records someone else's confidence, not a check I have
     done. Re-derive or test before writing it down. Both corrections are recorded
     in place rather than silently patched so the entry path stays visible.
+
+13. **THREE UNREAD ARTIFACTS BEAR DIRECTLY ON THIS TABLE, and one of them tests a
+    claim this document makes.** All three are in `~/Downloads`, none is in the
+    corpus index, and **`~/Downloads` is TCC-denied to this process** (see the
+    suspended-claim box in section 2). Desktop reads fine, so the block is
+    Downloads-specific, and no readable copy of any of the three exists elsewhere
+    (`find` over `~/Desktop` and the repo: none).
+
+    | Artifact | Bears on | Priority |
+    |---|---|---|
+    | `compass_artifact_wf-045982be*` *Safe Maximum Crossing Speed as a Function of Flood Depth and Flow Velocity* | **Directly tests the suspended originality claim.** Also check source overlap: shared sources are not independent support | **FIRST** |
+    | `compass_artifact_wf-baa355db*` *Experimental Configuration of the Flood-Vehicle Stability Literature: What Was Physically Done* | The model-versus-full-scale tagging in section 1, which the dispatch calls the latent variable. This is the primary evidence for those tags | second |
+    | `compass_artifact_wf-266e9a8a*` *Incipient-Velocity Equations: Xia et al. (2011) vs Shu et al. (2011)* | Tier 1 currently has Xia 2014 but not the 2011 pair. Read alongside memory `xia-2014-not-2013-citation-trap.md`, since this author group carries a live year trap | third |
+
+    **Cheapest unblock, and it also closes the corpus-indexing gap:**
+    ```
+    cp ~/Downloads/compass_artifact_wf-045982be* \
+       ~/Downloads/compass_artifact_wf-baa355db* \
+       ~/Downloads/compass_artifact_wf-266e9a8a* \
+       ~/Desktop/CAN_IT_FORD_RESEARCH_CORPUS_2026-08-13/
+    ```
+    Alternatively grant the terminal Files-and-Folders or Full Disk Access for
+    Downloads in System Settings > Privacy & Security, then relaunch. Note a `!`
+    prefixed command in this session runs in the same process tree and will likely
+    inherit the same denial, so the copy is the more reliable route.
+
+14. **Smith, Modra, Felder 2019 full text may be on disk** at
+    `~/Downloads/can-it-ford/citations/Smith-Modra-Felder/`. Tier 1 row 1.1 is
+    currently ranked from the DOI plus the repo's page-by-page notes. **Dispatch 8
+    is establishing that directory's contents**; do not duplicate that work, but
+    read the full text the moment D8 reports. Same TCC block applies.
+
 
 ---
 
