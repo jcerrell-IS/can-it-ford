@@ -16,8 +16,26 @@ Driver is `renders/yaris_render_s1/sim_standing.py`, which imports warpmpm. Gene
 Wording: "the 17 gated runs, warpmpm via sim_standing.py". Never "Genesis MPM" for that result.
 
 **A2. Gravity is -9.81 and was never unknown. Citation corrected 2026-08-07.**
-`core/solver.py:167-169`, inside `Solver.set_material()`: `self._sim.set_parameters_dict({"material": name, "g": [0.0, 0.0, -9.81], **params}, ...)`. Hardcoded on every call, not a library default. `sim_standing.py:127` calls `set_material(newtonian(...))`; `newtonian()` at `materials/__init__.py:78-83` carries no `g` key to override it. Prior citation to `mpm_solver_warp.py:742-743, :811-812` was never re-checked against the actual vendored file and is superseded by this one; that file lives at `kernels/mpm_solver_warp.py`, not `core/`.
+`core/solver.py:167-169`, inside `Solver.set_material()`: `self._sim.set_parameters_dict({"material": name, "g": [0.0, 0.0, -9.81], **params}, ...)`. ~~Hardcoded on every call, not a library default.~~ **That clause is WRONG about the mechanism and is corrected in A2a; the -9.81 result is UNCHANGED.** `sim_standing.py:127` calls `set_material(newtonian(...))`; nothing on the gated path supplies a `g` key to override it. Prior citation to `mpm_solver_warp.py:742-743, :811-812` was never re-checked against the actual vendored file and is superseded by this one; that file lives at `kernels/mpm_solver_warp.py`, not `core/`.
 DELETE every claim that gravity is unknown or unset.
+
+**A2a. `g` IS A DEFAULT WITH AN OVERRIDE PATH, NOT AN UNCONDITIONAL ASSIGNMENT. THE 9.81 RESULT DOES NOT MOVE. Relayed by the scene/domain thread 2026-08-14 and re-derived here from primary source before acceptance, not taken on report.** A2 above said "Hardcoded on every call, not a library default", and CLAUDE.md item 3 says "unconditionally, not a library default". Both are wrong about the mechanism, and each **contradicts the very next sentence of its own item**, which explains that `newtonian()` "carries no `g` key **to override it**" — a sentence that only makes sense if an override path exists.
+
+**The mechanism, read live 2026-08-14 from `third_party/mpm-engine-544c93dd-solver-core/core/solver.py`:**
+
+```python
+:166        params = {**params, **overrides}
+:167-169    self._sim.set_parameters_dict(
+                {"material": name, "g": [0.0, 0.0, -9.81], **params}, device=self.device)
+```
+
+`**params` expands **after** the `g` key, and in a Python dict literal the later key wins. So **any material whose `resolve()` returns a `g` key, or any caller passing `g=` as a `**overrides` kwarg, silently replaces the -9.81 vector.** It is this wrapper's own hardcoded **default**, with a live override path.
+
+**WHY THE CONCLUSION IS UNAFFECTED, verified live on four independent points rather than asserted.** (1) `newtonian()` at `materials/__init__.py:125-130` takes `(eta, density, bulk_modulus, E, nu)` and has no `g` parameter. (2) The materials module contains **no `g` key at all**, at any line. (3) The gated driver `renders/yaris_render_s1/_incoming/sim_standing.py` (sha256 `5215c38b`, the driver that ran the 17, per D8c) calls `set_material(newtonian(...))` at `:127-128` with **no `g=` override**, and a grep of the whole file for `g=`, `"g"` or `gravity` returns **nothing**. (4) The only other material call, `set_material_range(...)` at `:129-130`, routes through `solver.py:189-190` to `set_parameters_for_particles`, a per-particle-range path that never touches the global parameter dict, so it cannot set `g` either. **All 17 gated runs ran at exactly 9.81 m/s^2. Do not weaken that.**
+
+**CITATION CORRECTED IN THE SAME PASS, and the original pointed at better evidence than it claimed.** A2 cited "`newtonian()` at `materials/__init__.py:78-83`". `newtonian()` is at **`:125-130`**; `:78-83` is a different thing, the `base == "newtonian"` branch of `Material.resolve()`. **`:78-83` is in fact the STRONGER citation for this claim**, because it is the actual `params` dict that reaches `set_parameters_dict`, and it returns exactly eight keys, `E`, `nu`, `density`, `bulk_modulus`, `plastic_viscosity`, `yield_stress`, `hardening`, `softening`, **none of them `g`**. Cite both, and do not call `:78-83` the factory: `:125-130` is the factory, `:78-83` is the resolver.
+
+**SCOPE FENCE, stated because this correction is easy to over-apply.** This touches the **solver** gravity constant only. It does **not** reopen **A6**, which is the separate `9.80665` vs `9.81` **post-processing** fork in `failure_modes.py`; that question is closed by regeneration and is untouched here. A relay describing "A2 and A6" as jointly about the post-processing fork is mistaken about A2: A2 has always been the solver-gravity item, which is exactly why the defect lives here. **Engine tag: warpmpm.** Genesis has its own gravity path and nothing above applies to it.
 
 **A3. No force accessor exists on the 17-run path.**
 `rigid_state()` at `solver.py:194-205` returns exactly `com` (3,), `v` (3,), `omega` (3,), `R` (3,3). `MPM_Simulator_WARP` allocates only `rigid_x_cm`, `rigid_v_cm`, `rigid_omega`, `rigid_orientation`, `rigid_mass`, `rigid_inv_inertia_body` at `mpm_solver_warp.py:497-502, 822-830`. No force, impulse or torque accumulator exists anywhere. Momentum exchange happens on the grid and is never materialized. Verified byte-identical at `fd390d6` and `544c93dd`.

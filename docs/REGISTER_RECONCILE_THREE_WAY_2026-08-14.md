@@ -262,6 +262,58 @@ this dispatch's write scope.
 
 ---
 
+## 9a. Relay handled: solver gravity is a default, not an unconditional assignment
+
+Received 2026-08-14 from the coordinating session on behalf of the scene/domain thread (D10),
+routed here because the register is D4-owned.
+
+**Re-derived from primary source before acceptance**, not taken on the relay's word, per the
+standing rule that another session's confidence is not a second source.
+
+`[live]` `third_party/mpm-engine-544c93dd-solver-core/core/solver.py`:
+
+```python
+:166        params = {**params, **overrides}
+:167-169    self._sim.set_parameters_dict(
+                {"material": name, "g": [0.0, 0.0, -9.81], **params}, device=self.device)
+```
+
+`**params` expands **after** the `g` key, so a later `g` wins. The relay is correct: this is a
+default with an override path, not an unconditional assignment.
+
+**The conclusion is untouched, checked on four independent points `[live]`:** `newtonian()` at
+`materials/__init__.py:125-130` has no `g` parameter; the materials module has **no `g` key at
+any line**; the gated driver (sha256 `5215c38b`) calls `set_material(newtonian(...))` at
+`:127-128` and greps clean for `g=`, `"g"` and `gravity`; and `set_material_range` routes via
+`solver.py:189-190` to `set_parameters_for_particles`, a per-range path that cannot set global
+`g`. **9.81 m/s^2 was in force for all 17 gated runs.**
+
+**Fixed in the register as A2a**, which is mine. Two things the relay did not have:
+
+- **A2's `newtonian()` citation was also wrong, and its wrong target is the better evidence.**
+  A2 cited `materials/__init__.py:78-83` as `newtonian()`. The factory is at `:125-130`;
+  `:78-83` is the `base == "newtonian"` branch of `Material.resolve()` — which is the actual
+  `params` dict reaching `set_parameters_dict`, returning eight keys (`E`, `nu`, `density`,
+  `bulk_modulus`, `plastic_viscosity`, `yield_stress`, `hardening`, `softening`) and **no `g`**.
+  Both are now cited, correctly labelled.
+- **One correction to the relay itself.** It asked that this "not reopen register A2 or A6",
+  describing both as "about the 9.80665 post-processing fork". That is true of **A6** and not of
+  **A2**: A2 has always been the *solver* gravity item, which is precisely why the defect lives
+  there and why A2 is the item that had to change. **A6 was not touched**, and the `9.80665`
+  question remains closed by regeneration.
+
+**REQUEST TO THE OWNER OF `CLAUDE.md`, not actioned here.** `CLAUDE.md` item 3 carries the same
+defect in stronger form — "hardcodes g=[0,0,-9.81] inside `Solver.set_material()`
+**unconditionally**, not a library default" — one sentence before it explains that `newtonian()`
+"carries no `g` key **to override it**". `CLAUDE.md` is not in this dispatch's write scope and
+does not appear in the ops ownership table, so it is **not edited here**. Suggested replacement,
+which preserves the result: *`g` is this wrapper's own hardcoded DEFAULT, overridable by any
+material carrying a `g` key or by a `g=` override; the gated path carries neither, so 9.81 was
+in force for all 17 runs.* Item 3's final sentence, "All 17 gated runs ran at exactly
+9.81 m/s^2", is correct and should stay verbatim.
+
+---
+
 ## 10. Scope honoured, and what was deliberately not done
 
 - Wrote **only** `docs/CANONICAL_CORRECTIONS_REGISTER_2026-08-06.md` and this file, on
