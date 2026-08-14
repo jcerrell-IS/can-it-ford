@@ -330,12 +330,193 @@ The free result worth reporting instead: the measured cloud CG sits **0.6312 m**
 floor, below bbox mid-height 0.7427 m, and a too-high CG biases toward topple. The 17 runs
 show zero topples, so the no-topple result is **conservative**. `[inherited]`
 
-## 10. Results
+## 10. Results `[live]`
 
-*Pending: LS6 job 3364497, partition `gpu-a100-dev`, submitted 2026-08-14. This section is
-filled in from `data/three_class_matched_2026-08-14.csv` once the job lands. It will state
-plainly whether the class ordering follows mass or follows displaced volume, in whichever
-direction it comes out.*
+LS6 job **3364497**, node **c301-004**, partition `gpu-a100-dev`, 9 runs, all rc=0,
+**00:06:57** wall. Driver sha256 `4696c3b2…d10d9`, byte-identical to the Mac copy. Full
+per-run CSV: `data/three_class_matched_2026-08-14.csv`.
+
+### 10.1 The headline: the Silverado verdict is resolution-dependent
+
+| arm | yaris | rogue | silverado |
+|---|---|---|---|
+| **S** shared n_grid 96 | SLIDE, margin 15 | SLIDE, margin 41 | **SLIDE, margin 0** |
+| **M** matched dx | SLIDE, margin 40 | SLIDE, margin 21 | **STUCK, margin -3** |
+| **D** matched dx, equal rho | SLIDE, margin 40 | SLIDE, margin 24 | **STUCK, margin -3** |
+
+**Removing the resolution confound flips the large_4wd verdict from SLIDE to STUCK**, and it
+does so in both matched arms independently.
+
+The flip is not a threshold wobble. In arm S the Silverado held the joint SLIDE condition for
+exactly **3** frames against the 3 required, a margin of 0, already one frame from STUCK. In
+arms M and D its longest joint run is **0 frames**: it never satisfies the condition in any
+single frame. `ratio_slide` falls below 1.0 (**0.9365** in M, **0.8397** in D), meaning peak
+surge drift never even reaches the 0.05 m threshold. Peak surge acceleration drops from
+**0.9814 g** to **0.4339 g**, a 55.8 percent reduction.
+
+### 10.2 How big is the noise floor, measured three ways
+
+This matters more than the flip itself, because register item 17 records this stack as
+non-deterministic and a verdict change is only a result if it exceeds the draw.
+
+| comparison | kind | `ratio_slide` difference |
+|---|---|---|
+| `M_yaris` vs `D_yaris`, identical config, same job and node | within-job | **0.112 %**, margin delta 0 |
+| `S_rogue` vs published `rs_rogue_g96` (job 3362208) | cross-job | **0.068 %** |
+| `S_yaris` vs `g96_m1100` live re-measurement | cross-job | **0.234 %** |
+| `S_silverado` vs published `rs_silverado_g96` (job 3362208) | cross-job | **1.20 %** |
+
+So the reproducibility floor is **at worst about 1.2 percent**. The Silverado's `ratio_slide`
+moves **-48.9 percent** between arm S and arm M, roughly **40 times** the floor. The flip is
+far outside the noise.
+
+`determinism_identical` reported **True** on every run, including pairs that differ. It is
+recorded in the CSV under the column name
+`determinism_identical_FLAG_DO_NOT_TRUST` and was not used for anything.
+
+### 10.3 Density is ruled out as the driver `[live]`
+
+Arm D equalises bulk density; arm M does not:
+
+| arm | yaris | rogue | silverado | spread |
+|---|---|---|---|---|
+| M realized rho | 310.76 | 317.99 | 285.46 | **11.4 %** |
+| D realized rho | 310.76 | 311.05 | 310.88 | **0.09 %** |
+
+Collapsing an 11.4 percent density spread to 0.09 percent **changed no verdict and did not
+reorder the three**. The equal-density control also landed far better than the ±1.6 percent
+the section 7 assumption allowed for: achieved spread 0.09 percent. The assumption held.
+
+### 10.4 What this set can and cannot say about mass versus geometry
+
+The dispatch asks for a plain statement of whether the ordering follows mass or displaced
+volume. **The honest answer is that this design cannot separate them, and saying otherwise
+would be an overclaim.**
+
+In arm M the three vehicles run 1100 / 1571.3 / 2270 kg against 3.543 / 4.950 / 7.962 m3, and
+in arm D they run 1100 / 1537.1 / 2472.2 kg against the same volumes. **Mass and displaced
+volume are rank-correlated in every arm that was run**, and in arm D they are proportional by
+construction, because holding density fixed forces mass to scale with volume. The observed
+ordering, slide propensity falling monotonically as the vehicle gets bigger, is equally
+consistent with a mass-only account and a geometry-aware one.
+
+What the set does establish:
+
+1. The ordering is **monotone and large**: margin 40 / 21 / -3 in M and 40 / 24 / -3 in D.
+2. The ordering is **not a density artifact** (10.3).
+3. Within a fixed hull, more mass means less slide, in the expected direction, since Coulomb
+   friction scales with weight while the hydrodynamic driving force does not:
+   - rogue, mass -2.18 % (1571.3 to 1537.1), `ratio_slide` **+6.17 %**
+   - silverado, mass +8.91 % (2270 to 2472.2), `ratio_slide` **-10.34 %**
+
+**The arm that would settle it was not run**, and should be: a *mass swap* that breaks the
+rank correlation, for example the Yaris hull at the Silverado's mass and the Silverado hull at
+the Yaris's mass. Under a mass-only account the ordering follows the swapped masses; under a
+geometry-aware account it does not. That is one additional three-run arm on the existing
+matched grid and needs no new machinery. Until it exists, the A-3 geometry claim is
+**untested here**, not supported here.
+
+### 10.5 Arm S's ordering was substantially a depth artifact `[live]`
+
+Worth stating because it is the cleanest illustration of why the confound matters. The arm S
+realized depths were **yaris 0.294429, rogue 0.326329, silverado 0.272249**. The Rogue sat in
+**9.0 percent deeper** water than the Yaris and the Silverado in **9.1 percent shallower**,
+purely as a side effect of `n_grid` being shared. Deeper water means more submerged area and
+more drag.
+
+That is exactly the direction of arm S's ordering, in which the Rogue slid hardest of the
+three (margin 41) and the Silverado barely slid (margin 0). At matched depth the Rogue's
+margin falls to 21 and the ordering becomes monotone in size. **An analysis run only on arm S
+would have concluded that the midsize SUV is the least stable of the three classes, and that
+conclusion would have been an artifact of cell size.**
+
+### 10.6 Refinement does not move the three the same way
+
+| vehicle | dx change S to M | `ratio_slide` change |
+|---|---|---|
+| yaris | -13.5 % | **+108.4 %** |
+| rogue | -21.9 % | **-47.6 %** |
+| silverado | -37.7 % | **-48.9 %** |
+
+The Yaris slides **more** under refinement while the other two slide **less**. This is a sign
+reversal, not a spread. It is consistent with CLAUDE.md L-5 and Steffen, Kirby and Berzins
+2008, the citable mechanism for MPM losing convergence under grid refinement at fixed
+particles-per-cell, and PPC is constant at 8 throughout this stack, exactly that paper's case.
+Note the arm S to arm M step changes realized depth as well as dx for every vehicle, so this
+column is **not** a clean refinement study and must not be quoted as one; it is a statement
+that the two arms disagree, not a measurement of a convergence rate.
+
+### 10.7 A containment failure that qualifies the headline `[live]`
+
+**Seven of the nine runs fail gate P-2**, maximum water fraction inside the vehicle bounding
+box, limit 0.10:
+
+| run | passthrough | P-2 |
+|---|---|---|
+| `S_yaris_n96_m1100` | 0.09695 | pass |
+| `S_rogue_n96_m1571p3` | 0.10720 | **fail** |
+| `S_silverado_n96_m2270` | 0.09041 | pass |
+| `M_yaris_n111_m1100` | 0.10892 | **fail** |
+| `M_rogue_n123_m1571p3` | 0.10043 | **fail** |
+| `M_silverado_n154_m2270` | 0.10318 | **fail** |
+| `D_yaris_n111_m1100` | 0.10890 | **fail** |
+| `D_rogue_n123_m1537p1` | 0.10073 | **fail** |
+| `D_silverado_n154_m2472p2` | 0.10145 | **fail** |
+
+**All six matched-dx runs fail.** This must be stated with the headline, not buried: **the
+Silverado flip runs from a P-2-passing coarse run to a P-2-failing fine run.** That is a real
+qualification on the flip and it is not resolved here.
+
+Three things bound how much it undermines the result, none of which dismiss it:
+
+- The failures are **marginal**, 0.4 to 8.9 percent over a 0.10 limit, against the 21 to 31
+  percent passthrough already recorded on gated g64 runs `[inherited]`.
+- Passthrough **rises with refinement** across this set, which reproduces the same behaviour
+  independently reported for `canon_g128_m1100` at 0.11159 `[inherited]`. It is a property of
+  the finer grids, not of the Silverado specifically.
+- P-2 is a containment tripwire, not physics. See the gate limitation in section 11.
+
+`C3_oob_particle_frames` is **0** on all nine runs and `C2_veh_zmin_rise` is 0.000 on all
+matched-dx runs, so no hull sank into or escaped the domain. The failure mode is water
+entering the bounding box, not the vehicle leaving it.
+
+### 10.8 A by-product: register J16's `g96_m1100` margin is now corroborated `[live]`
+
+`S_yaris_n96_m1100` is a fresh, independent reproduction of canonical `g96_m1100`, whose
+frozen margin J16 records as permanently unverifiable after job 866887 overwrote the g48/g96
+run directories on 2026-07-26.
+
+| quantity | frozen store | live re-measurement | **this run** |
+|---|---|---|---|
+| mode | SLIDE | SLIDE | **SLIDE** |
+| `longest_joint_frames` | - | 18 | **18** |
+| `margin_frames` | - | 15 | **15** |
+| `k_crit` | - | 0.25639185 | **0.25670946** |
+| `ratio_slide` | 5.385389 | 5.405998 | **5.418644** |
+
+Margin and longest-joint-run reproduce **exactly**; `k_crit` agrees to 0.12 percent and
+`ratio_slide` sits 0.62 percent above the frozen value and 0.23 percent above the live
+re-measurement. Both gaps are **inside the 1.2 percent cross-job reproducibility floor
+measured in 10.2**, so the frozen 15-frame margin is consistent with an ordinary run-to-run
+draw rather than with a corrupted or mis-attributed run.
+
+Stated with its limits: this **cannot** restore the overwritten outputs and **cannot** prove
+what the original run did. It establishes that the configuration reproduces its published
+margin today, on a different machine and date, at the same driver sha256. That is strictly
+more than the register currently has for `g96_m1100`, and it is one of the six, not all six.
+
+### 10.9 Achieved control, versus intended
+
+| arm | dx spread | realized-depth spread |
+|---|---|---|
+| S | 38.6997 % | 19.8644 % |
+| M | **0.0494 %** | **0.0494 %** |
+| D | **0.0494 %** | **0.0494 %** |
+
+The matched arms achieved exactly what section 3 predicted, and the predicted `grid_lim`,
+`dx`, layer count and pre-carve water count all reproduced in the run logs, for example the
+Silverado at `lim=13.067933` against a predicted 13.06793299 and `dx=0.084857` against a
+predicted 0.0848567.
 
 ## 11. Standing limitations
 
