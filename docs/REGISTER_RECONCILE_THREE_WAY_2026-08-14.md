@@ -216,6 +216,29 @@ The 9 new warnings were triaged rather than waved through, and **none is a real 
   neither, correctly: they are **sha256 prefixes of file content**, not git objects. This is a
   false-positive class of the checker, not a fabricated SHA.
 
+**CAUTION: THIS CHECKER'S WARNING COUNTS ARE ENVIRONMENT-SENSITIVE AND ARE NOT A REGISTER
+PROPERTY. Learned the hard way in this session, 2026-08-14.** Between two runs an hour apart, with
+**no change to the register's hex citations**, the summary line moved from
+`10 research-artifact, 5 unresolved` to `0 research-artifact, 15 unresolved`. The register did not
+change. My **process lost read permission to `~/Downloads`**, where the checker looks for
+`compass_artifact_wf-<hex>-*`, so ten previously-resolving tokens silently became warnings.
+
+`[live]` The discriminating test, worth repeating before anyone raises a data-loss alarm:
+
+```
+stat -f '%N mode=%Sp nlink=%l' ~/Downloads   ->  mode=drwx------ nlink=429   (populated)
+ls -la ~/Downloads                           ->  Operation not permitted
+readlink <corpus symlink>; test -e <target>  ->  target exists? YES
+head <corpus file>                           ->  Operation not permitted
+```
+
+**A first pass on this read as deletion and it was not**; `nlink=429` and `test -e` returning YES
+prove the content is present and the listing is what is blocked. This is the CLAUDE.md rule
+"absence of evidence from a partial view is not evidence of absence", and it very nearly produced
+a false alarm against D7's corpus. **Say which view you searched.** It is the same class as memory
+`count-check-false-blocks-in-worktree.md`: a checker's count reflects what the process can see,
+not what exists. Compare against a baseline run in the same environment, never across two.
+
 **Structural consequence worth stating plainly.** Merging the register alone imports 6 citations
 whose evidence lives on branches this one does not carry. The reconciled register is correct as
 text, but its evidence base is complete only once those two branches are themselves merged.
@@ -311,6 +334,67 @@ which preserves the result: *`g` is this wrapper's own hardcoded DEFAULT, overri
 material carrying a `g` key or by a `g=` override; the gated path carries neither, so 9.81 was
 in force for all 17 runs.* Item 3's final sentence, "All 17 gated runs ran at exactly
 9.81 m/s^2", is correct and should stay verbatim.
+
+---
+
+## 9b. Adversarial review, and the race it caught
+
+`physics-skeptic` was run against the seven claims I authored. **All seven verified** against live
+primary sources, including the four write-ups, the `1a868f3` chronology, the 50-minute
+within-branch staleness, both driver sha256/line-count pairs, the two branches' mutual silence,
+and `mu = 0.55` held fixed (confirmed from `data/g128_canonical_2026-08-13/00_provenance.txt`,
+`--floor-friction 0.55`, rather than inferred as I had flagged). It independently reached my own
+self-correction on the 19a "third confound" framing.
+
+**It also found something I had missed, and it is the more important result: the branch I merged
+from moved twice while I was working.**
+
+`[live]` `claude/rtfd-test-phase-1-4-569130` is now at `fe95f13`, 689 lines, not the `658ecfa`
+681 my merge used:
+
+| commit | time | what |
+|---|---|---|
+| `658ecfa` | 2026-08-13 19:13:54 +0200 | my baseline, 681 lines |
+| `54aa806` | 2026-08-14 17:15:40 +0200 | **an independent correction of item 18**, reaching **three** write-ups |
+| `fe95f13` | 2026-08-14 17:31:54 +0200 | declares the D4 ownership overlap, sanctions `658ecfa` as a valid baseline |
+
+So two sessions corrected item 18 in parallel, neither aware of the other, both writing into the
+file CLAUDE.md calls the sole authority. They agree on everything factual — both refuted the same
+false `b62d554` premise by the same method and both landed on `1a868f3`, 19 minutes after — and
+differ on **one binary scope choice**: whether the register's own entry counts as a write-up.
+Exclude it and the answer is 3; include it and the answer is 4.
+
+`[live]` **The inclusion is an identity, not a preference.** `rs_silverado_g128` carries
+`max_surge_drift_m` `0.07778644561767578` and `ratio_slide` `1.5557289123535156`, and
+`0.07778644561767578 / 0.05` **is** `1.5557289123535156` exactly, so item 15's "0.0778 m, 1.56x"
+is that measurement in another column. Four is the more complete count. But per the
+DRIFT_THRESHOLD discipline the dispatch told me to apply, **the defect is the bare number, not
+either value**, so the register now carries both counts with the scope choice that separates
+them, as **18a(iv)**.
+
+**This is item 18's failure mode recurring for the third time**, inside item 18's own fix: first
+the miscited evidence (18a(ii)), then `54aa806`'s note that "item 18's own failure mode recurred
+inside the fix for item 18", now two parallel counts of that fix.
+
+Three further changes made in response:
+
+- **Imported the Al-Qadami 2023 block** from `54aa806`, which my snapshot predates, so the
+  reconciled register is not missing verified content that exists on a source branch. Checked
+  rather than accepted: the BibTeX is in-repo at `docs/LIT_QUEUE_2026-07-30.md:276` and matches
+  field for field, and it does not disturb **G5** (Perodua Viva, not a Yaris — a fact about the
+  vehicle, where the import is about the method). Cross-referenced so it cannot license a Yaris
+  claim.
+- **Fixed an arithmetic ambiguity shared by three texts.** "3 tested, 8 untested" does not sum to
+  17. `[live]` the 17 are 9 mass/grid + 3 `sweepD` + 5 `sweepV`, and item 19 gave g128 companions
+  to the three g96 arms only, leaving the 6 g48/g64 arms unaccounted: 3 + 8 + 6 = 17. The loose
+  phrasing is in item 19, in `54aa806` and in my own D9 note; all three now carry the correction.
+- **Added 19b**, an inline pointer that item 19's cited evidence is unreachable from this branch.
+  The review was right that disclosing this only in these side notes is insufficient, since a
+  reader consults the register.
+
+**Standing consequence for the coordinator.** A dispatch that says "reconcile three branches"
+implicitly assumes those branches are frozen. They were not, and nothing in the tooling would
+have told me. This is the same gap section 9 names: no cross-branch divergence check exists.
 
 ---
 
