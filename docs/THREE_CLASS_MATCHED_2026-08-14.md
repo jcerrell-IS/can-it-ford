@@ -264,6 +264,29 @@ realized densities should agree to roughly ±1.6 percent rather than exactly. Th
 achieved spread turns out larger than the ±1.6 percent expectation, the control is weaker
 than intended and that will be stated rather than glossed.
 
+### Arm S turns out to be three repeats of published runs `[live]`
+
+This was not designed in; it fell out of the configurations and is worth stating because
+it gives a **cross-job** reproducibility measurement to sit beside the within-job one.
+Each arm S run reproduces the exact configuration of an already-published run:
+
+| arm S run | repeats | published values to compare against |
+|---|---|---|
+| `S_yaris_n96_m1100` | canonical **`g96_m1100`** | `data/all_runs_inventory.csv`: n_grid 96, 6 layers, h 0.0490715745506653, realized depth 0.2944294473039918, depth 0.3, velocity 1.5 |
+| `S_rogue_n96_m1571p3` | `rs_rogue_g96`, job 3362208 | SLIDE, ratio_slide 11.557340621948242, peak surge 1.7913575611712371 g, passthrough 0.10716 |
+| `S_silverado_n96_m2270` | `rs_silverado_g96`, job 3362208 | SLIDE, ratio_slide 1.810455322265625, onset frame 5, peak surge 0.9814014242512006 g |
+
+The planner's independently predicted Yaris values at `n_grid 96` match the canonical
+inventory row exactly, which is a sixth verification anchor on top of the five in section 3.
+
+**This matters for register J16.** `g96_m1100` is one of the six canonical runs whose
+frozen margins J16 records as permanently unverifiable, because job 866887 overwrote the
+g48/g96 run directories on 2026-07-26. `S_yaris_n96_m1100` is a fresh, independently
+produced measurement of that exact configuration, same driver sha256, on LS6. It cannot
+restore the lost outputs, and it cannot prove what the original run did, but it does
+establish what that configuration produces today, which is strictly more than the register
+currently has for it.
+
 **Arm D also carries the no-forcing control.** `D_yaris` is bit-for-bit the same
 configuration as `M_yaris` (n_grid 111, 1100 kg), run in the same job, on the same node,
 with the same driver. Register item 17 records this stack as **non-deterministic at fixed
