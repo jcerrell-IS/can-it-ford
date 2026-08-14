@@ -55,7 +55,12 @@ DOIS = [
 def fetch(doi):
     url = "https://api.crossref.org/works/" + urllib.parse.quote(doi, safe="")
     req = urllib.request.Request(url, headers={
-        "User-Agent": "can-it-ford-citation-audit/1.0 (mailto:josiecerrell69@gmail.com)"})
+        # Crossref's "polite pool" asks for a contact address. This is the same
+        # institutional address already recorded as the author of every commit in
+        # this public repo, so it adds no new exposure. Do not put a personal
+        # address here.
+        "User-Agent": "can-it-ford-citation-audit/1.0 "
+                      "(mailto:jcerrell29@students.claremontmckenna.edu)"})
     with urllib.request.urlopen(req, timeout=25) as r:
         return json.load(r)["message"]
 
