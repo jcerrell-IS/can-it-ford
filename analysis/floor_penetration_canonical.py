@@ -40,6 +40,15 @@ CANNOT: prove a stress error. Schulz and Sutmann 2019 report grid-based boundary
       No paper reports an accepted correction for a smeared near-wall layer, so
       nothing here is calibrated out.
 
+THE DENOMINATOR TRAP for any under-hull comparison. Water is CARVED out of
+vehicle-occupied cells at scene construction (:186-196), so the region under the hull
+does not start with its share of the water. Comparing the under-hull share of
+PENETRATING particles against the under-hull share of FLOOR AREA is therefore biased,
+and the correct denominator is the share of water actually present under the hull
+footprint at that frame. Measured on g64_m1100 the bias turns out mild here (under-hull
+water runs 8.8 to 11.2 percent against an 11.09 percent area share), but that is a
+property of this scene, not a general licence to use the area share.
+
 A STRUCTURAL CONFOUND FOUND BY DIRECT SOURCE READ, and it is load-bearing.
 renders/yaris_render_s1/sim_standing.py:248-267 (_project_water) hard-clamps every
 water particle to z >= floor - 0.25*dx at the START of each frame, and zeroes its

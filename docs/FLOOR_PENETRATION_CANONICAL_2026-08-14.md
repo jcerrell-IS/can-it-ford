@@ -80,22 +80,39 @@ inference that a 2.000-cell column implies ~50 percent corruption **fails its ow
 test**: the 3.000-cell g64 run penetrates *more* than the 1.500-cell g48 run, which
 penetrates not at all.
 
-## Result 3: it is floor-wide, not a vehicle artifact
+## Result 3: it is floor-wide, not concentrated under the hull
 
-Where penetration occurs it is spatially uniform over the tank floor, so it is a
-property of the boundary rather than of the coupling **[measured, g64_m1100]**:
+Where penetration occurs it is spread over the tank floor rather than localised beneath
+the vehicle, so it looks like a property of the boundary rather than of the coupling
+**[measured, g64_m1100]**.
 
-| frame | % below | under-vehicle share | inflow-band share | open-floor share |
-|---|---|---|---|---|
-| 0 | 4.83 | 6.00 | 21.08 | 72.92 |
-| 3 | 17.49 | 9.55 | 18.50 | 71.95 |
-| 20 | 10.80 | 12.69 | 14.22 | 73.09 |
-| 89 | 12.72 | 5.80 | 0.76 | 93.44 |
+**The denominator matters here, and the obvious one is wrong.** Water is *carved* out of
+vehicle-occupied cells at scene construction (`sim_standing.py:186-196`) **[read]**, so
+the under-vehicle region does not start with its area share of water. Comparing the
+under-vehicle share of *penetrating* particles against the under-vehicle share of
+*floor area* would therefore be biased. The correct denominator is the share of water
+**actually present** under the hull footprint at that frame:
 
-against area shares of **11.09 percent** under the vehicle and 18.19 percent in the
-inflow band. The under-vehicle share of penetrating particles tracks the under-vehicle
-*area* share, and the open-floor share tracks the open-floor area share. Penetration is
-not concentrated beneath the hull.
+| frame | % of all water under hull | % of penetrating water under hull | enrichment |
+|---|---|---|---|
+| 0 | 10.08 | 6.00 | 0.60x |
+| 3 | 9.62 | 9.55 | 0.99x |
+| 10 | 9.00 | 11.19 | 1.24x |
+| 20 | 8.82 | 12.69 | 1.44x |
+| 45 | 10.11 | 15.45 | 1.53x |
+| 89 | 11.23 | 5.80 | 0.52x |
+
+Two things follow. First, the carve turns out to deplete the under-hull water only
+mildly: its share runs 8.8 to 11.2 percent against an area share of 11.09 percent, so
+in this scene the area-share comparison happens not to be badly wrong. Second, and this
+is the actual claim, **enrichment stays of order one, ranging 0.52x to 1.53x over the
+record**. Penetration is neither confined to the hull footprint nor excluded from it.
+
+That is weaker than "spatially uniform", which is what an earlier draft of this document
+said on the strength of the area-share comparison alone. A 1.5x enrichment at mid-record
+is a real modulation and is not claimed to be noise; what the data rule out is
+penetration being a *hull* phenomenon, since that would show enrichment of order
+`1/0.09 = 11x`, not 1.5x.
 
 ## Result 4: the mechanism hypothesis is not supported here
 
