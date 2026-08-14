@@ -356,7 +356,10 @@ WITHOUT ATTACHING
 WHAT THE STATES MEAN
   MOVING   output changed in the last 60s
   quiet    no output 1-5 min. Normal during a long tool call or subagent.
-  STALLnm  no output for n minutes. Check it; it may be waiting or wedged.
+  STALLnm  no output for n minutes. AMBIGUOUS BY CONSTRUCTION: a session that
+           has FINISHED its dispatch sits at an empty prompt and looks exactly
+           like one that is wedged. Check DIRTY and NOREM first; a finished
+           session is usually 0 dirty with its deliverable committed.
   NEEDS-YOU a prompt is on screen. Nothing progresses until answered.
   DRIFT    the pane left its assigned branch. Investigate BEFORE it commits.
 EOF
