@@ -125,9 +125,12 @@ from Josie.**
   never been published anywhere;
 - `docs/FLAG_CREDENTIAL_EXPOSURE_2026-08-13.md`, which names three machines,
   a world-readable file and three OAuth tokens (section 5);
-- **83.5 MB of NCAC/CCSA LS-DYNA material** on `main` alone, including
-  `yaris-coarse-v1l.key` at 42.8 MB and `silverado-coarse-v3a.key` at 28.6 MB
-  (section 9), whose licence question is unresolved.
+- **160,308,908 B (160.31 MB, 152.88 MiB) of NCAC/CCSA material** on `main`
+  alone: 4 upstream `.zip` distribution archives plus 14 LS-DYNA `.key` decks,
+  including `yaris-coarse-v1l.key` at 42,846,753 B and
+  `2010-toyota-yaris-detailed-v2j.zip` at 42,113,905 B (section 9), whose licence
+  question is unresolved. An earlier draft said "83.5 MB across 18 files"; that
+  was wrong in both set and unit, see section 9.
 
 So the destination must be **private and encrypted**. A plain cloud sync is
 disqualified: this project has already had a 0644 iCloud-synced token as part of
@@ -431,6 +434,21 @@ Three consequences:
 
 ## 6. Register sequencing plan, with the merge measured rather than assumed
 
+> **READ THIS FIRST. Side A of this collision is ORPHANED, and that changes what
+> the plan is for.** 104 lines of register and 73 of CLAUDE.md exist only as
+> uncommitted text in the main checkout. **No process owns them**: measured at
+> 21:03, no `claude` session anywhere holds the main tree as its working
+> directory, and the file has not changed since 15:07. Side B, by contrast, has a
+> live owner still running.
+>
+> **An orphaned side cannot be defended by "its owner will commit it."** There is
+> no owner to do so. Nobody is watching that file, nobody will notice if it
+> reverts, and there is no reflog entry to recover it from if it does, because it
+> was never committed. **The abort condition in step 1 and the survival test in
+> step 3 below are therefore the only protection those 177 lines have.** They are
+> not belt-and-braces on top of an owner's vigilance. They are the whole of it.
+> If they are skipped, the loss is silent and permanent.
+
 ### The live state
 
 **read.** Main checkout is on `claude/add-ci-checks` at 777567a with exactly four
@@ -669,25 +687,65 @@ inferred from a stale cache.
 | material | public branches carrying it |
 |---|---|
 | `docs/FLAG_CREDENTIAL_EXPOSURE_2026-08-13.md` | **1 of 30**, `claude/rtfd-test-phase-1-4-569130` only |
+| **upstream NCAC/CCSA `.zip` distribution archives** | **30 of 30**, 4 files each |
 | NCAC/CCSA LS-DYNA `.key` decks | **30 of 30**, 14 files each |
 | `.ply` geometry | **30 of 30**, 4 files each (3 branches carry 2) |
 
-**This is materially larger than the standing record.** The project's note says
-"4 `.ply` including the canonical 12.4 MB Yaris hull, plus 15 renders, are
-already on `origin/main`". True, and incomplete: **the LS-DYNA source decks are
-public too, on every branch**, and they are the actual NCAC/CCSA models rather
-than anything derived from them. On `main` alone:
+### CORRECTED. My "83.5 MB across 18 files" was wrong twice over
 
-    42,846,753  vehicle_geometry_research/2010-toyota-yaris-coarse-v1l/.../yaris-coarse-v1l.key
-    28,611,724  vehicle_geometry_research/2007-chevrolet-silverado-coarse-v3a/.../silverado-coarse-v3a.key
-       + 12 further .key files (combine/set/wall decks) for 4 vehicle models
-       +  4 .ply, of which yaris_coarse_v1l_watertight.ply is 12,445,769 bytes
-    -------------------------------------------------------------------------
-    83.5 MB across 18 files, public
+**RETRACTED.** An earlier version of this section, and the body of commit
+fe04620, said "83.5 MB across 18 files, public". Two independent errors, both
+mine, found when the coordinator could not reproduce the figure:
 
-Every one of the 30 public branches carries all 14 `.key` files, `main`
-included. Per-branch detail:
-`can-it-ford-bundles/2026-08-16/public_branch_audit.tsv`.
+1. **Wrong set.** I globbed for `.key` and `.ply` only. I never scanned for
+   `.zip`, so I missed the **4 upstream distribution archives**, 88,592,238 B,
+   which are the strongest form of this exposure: not derived geometry, not even
+   the extracted decks, but the **original NCAC/CCSA download archives
+   redistributed intact**, named
+   `2010-toyota-yaris-detailed-v2j.zip` (42,113,905 B),
+   `2007-chevrolet-silverado-detailed-v3e.zip` (27,865,164 B),
+   `2010-toyota-yaris-coarse-v1l.zip` (11,228,299 B),
+   `2007-chevrolet-silverado-coarse-v3a.zip` (7,384,870 B).
+2. **Wrong unit label.** I divided bytes by 1048576 and wrote "MB". That is
+   **MiB**. My own sum re-derived: 18 files, **87,540,358 B = 87.54 MB = 83.48
+   MiB**. So 83.5 was MiB printed as MB, which is the identical mistake I am
+   about to flag in a sibling's numbers, made first by me.
+
+Coincidence worth naming so nobody re-derives the wrong pairing: my set and the
+coordinator's are **both 18 files**, which is why a partial sum looked like the
+explanation. They are different 18s. Mine was 14 `.key` + 4 `.ply`. The CCSA set
+is 4 `.zip` + 14 `.key`.
+
+### The corrected figures, on `origin/main` (= `main`, both at 1a868f3)
+
+Byte counts from `git ls-tree -r -l origin/main -- vehicle_geometry_research/`.
+**MB = 10^6 bytes, MiB = 2^20 bytes. Both are given, always.**
+
+| extension | files | bytes | MB | MiB |
+|---|---|---|---|---|
+| `.zip` upstream archives | 4 | 88,592,238 | 88.59 | 84.49 |
+| `.key` LS-DYNA decks | 14 | 71,716,670 | 71.72 | 68.39 |
+| `.ply` derived geometry | 4 | 15,823,688 | 15.82 | 15.09 |
+| `.md` | 8 | 120,213 | 0.12 | 0.11 |
+| **directory total** | **30** | **176,252,809** | **176.25** | **168.09** |
+| **CCSA material only** (`.zip` + `.key`) | **18** | **160,308,908** | **160.31** | **152.88** |
+
+Every one of these reproduces the coordinator's independent measurement to the
+byte. **All 30 public branches carry all 4 `.zip` and all 14 `.key`**; 24 of the
+30 have a `vehicle_geometry_research/` totalling exactly 176,252,809 B, the
+other 6 differing only in `.ply` and `.md`.
+
+### D2 is not in conflict with this. D2 has a unit label to fix
+
+D2's `6e771b6` reports **168.09 total** and **152.90 CCSA**. Those are my
+**MiB** columns, to the second decimal, and D2's 91.0 percent proportion matches
+160,308,908 / 176,252,809 = 90.96 percent. **D2's arithmetic is correct and its
+unit label is wrong**, exactly as mine was. In MB the same quantities are 176.25
+and 160.31. The gap between the two labels is 4.6 percent, which is small enough
+to look like sloppiness rather than a unit convention in a licence document, and
+that is the audience that will read it.
+
+Per-branch detail: `can-it-ford-bundles/2026-08-16/public_branch_audit.tsv`.
 
 **Consequence for E8, stated plainly:** the licence question is not about a
 derived hull on one branch. It is about the upstream crash-model decks
