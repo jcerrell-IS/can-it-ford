@@ -1,10 +1,14 @@
 # PUSH LEDGER, 2026-08-16
 
-D3 SAFE-THE-WORK. Every number below was measured live on 2026-08-16 between
-15:01 and 15:35 local, against `/Users/josie/can-it-ford`, git 2.50.1
-(Apple Git-155). Each section names the command that produced it, so it can be
-re-derived rather than trusted. Claims are tagged **read** (direct measurement),
-**inferred**, or **UNREVIEWED** (no independent check run).
+D3 SAFE-THE-WORK. Every number below was measured live on 2026-08-16 against
+`/Users/josie/can-it-ford`, git 2.50.1 (Apple Git-155), in two passes: sections
+1 to 7 between **15:01 and 16:02**, sections 6 (owners), 9 and the off-machine
+plan between **21:00 and 21:15**. Each section names the command that produced
+it, so it can be re-derived rather than trusted. Claims are tagged **read**
+(direct measurement), **inferred**, or **UNREVIEWED** (no independent check run).
+
+Counts in a repo three sessions are actively committing to are timestamps, not
+constants. Where a number moved during the session, both readings are given.
 
 ### Corrections to commit 7d1ec34, made the same day
 
@@ -22,17 +26,18 @@ origins) and the register merge result (section 6).
 
 ---
 
-## 1. The work is bundled. 34 bundles, all verified, restore tested
+## 1. The work is bundled. 36 bundles, all verified, restore tested
 
 **read.** Output directory, outside the repo:
 
-    /Users/josie/can-it-ford-bundles/2026-08-16/     512 MB, 34 .bundle files
+    /Users/josie/can-it-ford-bundles/2026-08-16/     1.0 GB, 36 .bundle files
 
 | artifact | contents | bytes | verify |
 |---|---|---|---|
 | `ALL-refs.bundle` | 147 refs, self-contained, snapshot **15:02** | 507,116,489 | OK |
 | `branch~*.bundle` x 33 | one per at-risk branch, thin, snapshot **15:02** | 1,142 to 7,082,463 | OK, all 33 |
 | `INCREMENTAL-all-branches-1540.bundle` | all 33 branches' unpushed commits in one thin bundle, snapshot **15:40** | 7,609,387 | OK |
+| `ALL-refs-MINUS-credentials.bundle` | 118 refs, self-contained, credential branch excluded, snapshot **21:10** | 507,228,906 | OK |
 
 **Scope, because these are snapshots of a moving repo.** The 34 bundles at 15:02
 cover the **241** commits at-risk at 15:02. The single incremental bundle at 15:40
@@ -106,13 +111,71 @@ risk. `ALL-refs.bundle` carries **all 77** local branches (verified by `comm`
 against `git for-each-ref refs/heads`: zero live branches missing from it), plus
 34 remote-tracking refs, 8 tags, HEAD and 27 worktree HEADs.
 
-### Remaining exposure, not fixed by me
+### Remaining exposure: everything is on one disk. OFF-MACHINE PLAN, NOT EXECUTED
 
-The bundles are on the **same physical disk** as the repo (`/dev/disk3s5`,
-408 GB used of 926 GB). Disk loss still loses everything. Copying
-`ALL-refs.bundle` off-machine is the obvious next step, but it is an outward
-move of 507 MB that includes the credential-exposure documents, so it needs an
-explicit destination decision. Not done, deliberately.
+The bundles sit on the **same physical disk** as the repo (`/dev/disk3s5`,
+1.0 GB of bundles, 546 GB free). Disk loss still loses everything. **I have not
+copied anything off this machine and will not without an explicit destination
+from Josie.**
+
+**This is not a neutral backup, and that is the whole reason it needs a decision.**
+`ALL-refs.bundle` carries, in one file:
+
+- `docs/CREDENTIAL_EXPOSURE_2026-08-13.md`, on the DO-NOT-PUSH branch, which has
+  never been published anywhere;
+- `docs/FLAG_CREDENTIAL_EXPOSURE_2026-08-13.md`, which names three machines,
+  a world-readable file and three OAuth tokens (section 5);
+- **83.5 MB of NCAC/CCSA LS-DYNA material** on `main` alone, including
+  `yaris-coarse-v1l.key` at 42.8 MB and `silverado-coarse-v3a.key` at 28.6 MB
+  (section 9), whose licence question is unresolved.
+
+So the destination must be **private and encrypted**. A plain cloud sync is
+disqualified: this project has already had a 0644 iCloud-synced token as part of
+its credential exposure.
+
+#### To make the choice cheap, a credential-free variant already exists
+
+**read.** `ALL-refs-MINUS-credentials.bundle`, 507,228,906 bytes, verify exit 0,
+sha256 `9144eca1ea3ce789e532498222e98fbef584d828763cd0ea8a1c0697650e6698`.
+Built by passing 118 refs explicitly rather than with `--not`, which would have
+dropped shared ancestors. **Controlled:** a mirror clone of it contains 76
+branches, and `git log --all -- docs/CREDENTIAL_EXPOSURE_2026-08-13.md` returns
+**nothing**. The FLAG file is still reachable in it, which is correct and
+deliberate: it is already public, and excluding it would mean dropping
+`claude/rtfd-test-phase-1-4-569130` and its 13 commits of real work.
+
+#### Options, with consequences
+
+| # | destination | covers | consequence |
+|---|---|---|---|
+| **1 (recommended)** | encrypted external volume, physically attached | `ALL-refs.bundle`, everything | offline, no third party, no network. Needs the disk plugged in. |
+| 2 | private GitHub repo on the same account | `ALL-refs-MINUS-credentials.bundle` | off-machine and quick, but hands 507 MB including the unresolved CCSA material to a third party, on the same account whose public repo is the existing problem. |
+| 3 | TACC `$WORK` on Vista or LS6 | either | **not available**: both sockets are cold pending Josie's token. Also inadvisable on its own merits: those machines already hold the unrotated OAuth tokens this bundle documents, `$WORK` is not encrypted at rest, and it is a shared academic filesystem. |
+| 4 | any plain cloud sync (iCloud, Dropbox) | none | **disqualified**, see above. |
+
+#### Exact commands, option 1
+
+    # 1. copy, with the destination named explicitly
+    cp /Users/josie/can-it-ford-bundles/2026-08-16/ALL-refs.bundle \
+       /Volumes/<NAME>/canford-2026-08-16/ALL-refs.bundle
+
+    # 2. verify the bytes survived the copy. Must print exactly:
+    #    7356713c619fcacf827740cbbecb3e5e5f6b359da4abffb28478c1de5ca0f897
+    shasum -a 256 /Volumes/<NAME>/canford-2026-08-16/ALL-refs.bundle
+
+    # 3. restore test AT THE DESTINATION, not here. Must print 77.
+    git clone --mirror /Volumes/<NAME>/canford-2026-08-16/ALL-refs.bundle /tmp/restore-check
+    git -C /tmp/restore-check for-each-ref refs/heads | wc -l
+
+    # 4. spot-check a tip. Must print 9778aa1... (or later, if D3 committed again)
+    git -C /tmp/restore-check rev-parse claude/r5-safekeeping
+
+For option 2, substitute `ALL-refs-MINUS-credentials.bundle` and sha256
+`9144eca1ea3ce789e532498222e98fbef584d828763cd0ea8a1c0697650e6698`; step 3 must
+print **76**, not 77, and that difference is the check that the sanitisation held.
+
+**Abort condition:** if step 2's sha256 differs, delete the copy and redo it. A
+`cp` exit code of 0 is not evidence the bytes landed intact.
 
 ---
 
@@ -406,40 +469,76 @@ The reason is measurable, not a guess. A's entire change is one hunk,
 `@@ -656,0 +657,104 @@`: a pure append past the end of the base file. B's 17
 hunks all fall inside lines 19 to ~650 of the base. They cannot overlap.
 
-### The sequence
+### Who owns each side. Measured, not assumed
 
-The danger is not the merge. It is that 177 lines exist only as uncommitted text
-in a working tree that four live sessions share. A `git checkout -- <path>`, a
-`git stash`, or a branch switch by any of them destroys it with no conflict
+**read, 21:03.** I resolved each side to a live process rather than guessing:
+
+| side | tree | owner | evidence |
+|---|---|---|---|
+| **B**, the 1455-line register | `.claude/worktrees/fork-register-reconcile` | **`D4 REGISTER-RECONCILE`, live** | pid 10363, `claude --model opus --effort max --name "D4 REGISTER-RECONCILE"`, cwd is that worktree, pane `canford:4` |
+| **A**, the +104 uncommitted | main checkout `/Users/josie/can-it-ford` | **NOBODY** | no `claude` process anywhere has the main tree as cwd. The only process there is pid 98633, `bash .../canford_monitor.sh`, the round-3/4 monitor |
+
+**This is the finding that makes the plan necessary. Side A is orphaned.** The
+session that wrote those 177 lines is gone. Nobody is going to commit them on
+their own initiative, and the register has sat at 760 lines unchanged since
+15:07. It will sit there until a human acts.
+
+A second-order note: that monitor is running **from the worktree holding the
+uncommitted +17/-3 edit to `canford_monitor.sh`** (section 1b). The live monitor
+is executing modified, uncommitted code.
+
+### The sequence, with an owner per step
+
+The danger is not the merge, which is measured clean. It is that 177 lines exist
+only as uncommitted text with no owner. A `git checkout -- <path>`, a
+`git stash`, or a branch switch in the main tree destroys them with no conflict
 marker and no reflog entry.
 
-1. **Already done, needs no permission:** the uncommitted state is snapshotted
-   outside the repo at
-   `can-it-ford-bundles/2026-08-16/uncommitted-maintree-snapshot/` (mode 0700):
-   the four-file patch, raw copies, all 94 untracked files as a tarball, and a
-   sha256 MANIFEST. **Verified:** the patch re-applies cleanly onto 777567a in a
-   throwaway clone. This is insurance only; it does not replace step 2.
-2. **Whoever owns the main tree commits first**, path-limited, on its own branch:
+**Step 0. Done, needed no permission.** The uncommitted state is snapshotted at
+`can-it-ford-bundles/2026-08-16/uncommitted-maintree-snapshot/` (0700): the
+four-file patch, raw copies, 94 untracked files, sha256 MANIFEST. The patch
+re-applies cleanly onto 777567a in a throwaway clone. **Insurance only. It does
+not replace step 1**, and a snapshot outside git is not something anyone will
+find in a year.
 
-       cd /Users/josie/can-it-ford && \
-       git commit -m "<msg>" -- CLAUDE.md docs/CANONICAL_CORRECTIONS_REGISTER_2026-08-06.md
+**Step 1. Owner: Josie, or the coordinator on her say-so. Side A goes first,
+because it has no owner and side B does.**
 
-   Separately for `.claude/settings.json` and `.mcp.json`, which are a different
-   unit of work. Four files is under the pre-commit hook's 8-file ceiling.
-3. **Then, and only then**, merge that commit into `claude/fork-register-reconcile`.
-   Merge the **SHA**, not the branch name: `git merge <branch>` picked up an
-   unrelated live session's commit in this repo on 2026-08-13.
-4. **Confirm survival by content, not by exit code.** After the merge the
-   register must be **1559 lines**, and must contain both:
-   - a line from A's appended block (the last 104 lines, which begin after the
-     existing `K4.` entry), and
-   - a line from B's early hunks (its edits at base lines 19-64, the gravity and
-     9.80665 corrections).
+    cd /Users/josie/can-it-ford
+    git status --porcelain                       # expect exactly the 4 M lines
+    wc -l docs/CANONICAL_CORRECTIONS_REGISTER_2026-08-06.md   # expect 760
+    git commit -m "<msg>" -- CLAUDE.md docs/CANONICAL_CORRECTIONS_REGISTER_2026-08-06.md
 
-   If it is 1455 lines, A vanished. If it is 760, B vanished. Neither loss
-   produces a conflict marker.
-5. **Nobody `git checkout`s, copies, or `git restore`s either file across trees**
-   until step 3 lands.
+  `.claude/settings.json` and `.mcp.json` are a different unit of work; commit
+  them separately. Two files is well under the pre-commit hook's 8-file ceiling.
+  **Abort if** `wc -l` is not 760: someone edited it since 15:07 and the merge
+  arithmetic below no longer holds, so re-measure before proceeding.
+
+**Step 2. Owner: `D4 REGISTER-RECONCILE`, and only after step 1 lands.** Merge
+the **commit SHA from step 1, never the branch name**: `git merge <branch>`
+silently picked up an unrelated live session's commit in this repo on
+2026-08-13.
+
+**Step 3. Owner: `D4 REGISTER-RECONCILE`. Confirm by content, not by exit code.**
+
+    wc -l docs/CANONICAL_CORRECTIONS_REGISTER_2026-08-06.md   # MUST be 1559
+    grep -c "^K4\." docs/CANONICAL_CORRECTIONS_REGISTER_2026-08-06.md   # A's block follows K4
+    grep -n "9.80665" docs/CANONICAL_CORRECTIONS_REGISTER_2026-08-06.md | head   # B's early hunks
+
+  **1559 = 1455 + 104.** If it reads **1455, side A vanished**. If it reads
+  **760, side B vanished**. Neither loss produces a conflict marker, which is
+  precisely why the line count is the test and `git merge` exiting 0 is not.
+
+**Step 4. Standing, everyone, until step 2 lands.** Nobody runs `git checkout`,
+`git restore`, or a file copy on `CLAUDE.md` or the register across trees.
+CLAUDE.md needs no merge at all: blob `37983d2` at base, main HEAD and the fork
+tip alike, so the only thing that can happen to it is loss.
+
+**What I did not do, so the next reader does not assume it is handled:** I did
+not commit side A. Committing another session's uncommitted work under my own
+message is the 2026-08-07 failure, and the orphan status does not change that.
+It needs a human decision about the commit message and about whether those 104
+lines are finished.
 
 ---
 
@@ -513,7 +612,92 @@ be restarted in the corrected pane for it to take effect.
 
 ---
 
-## 8. What I did not do
+## 9. Branch taxonomy: reconciling three counts that measure three different sets
+
+Three branch counts are live in round 5 and none had been reconciled: my **33
+at-risk branches / 241 commits**, my **77 local branches** covered by
+`ALL-refs.bundle`, and D2's independently verified **30 public branches**. They
+disagree because they are answers to three different questions. All measured
+live at 21:01.
+
+### Set definitions and sizes
+
+| set | definition | count |
+|---|---|---|
+| LOCAL | `git for-each-ref refs/heads` | **77** |
+| PUBLIC | `git ls-remote --heads origin`, live network | **30** |
+| LOCAL-ONLY | in LOCAL, no branch of that name on origin | **49** |
+| LOCAL+PUBLIC | same branch name in both | **28** |
+| PUBLIC-ONLY | on origin, no local branch of that name | **2** |
+| AT-RISK | LOCAL branches with commits reachable from no remote ref | **33** |
+
+49 + 28 = 77. 28 + 2 = 30. **D2's 30 reproduces exactly.**
+
+The two PUBLIC-ONLY branches are `track2/coupled-realism-explore` and
+`vista-realism-track-2026-08-13`. They are published, have no local counterpart,
+and therefore cannot appear in any at-risk count. Being public, they are safe
+from loss and are *not* a gap.
+
+### Why AT-RISK is not a subset of LOCAL-ONLY
+
+This is the crossing that makes the three counts look contradictory:
+
+| at-risk branches | branches | commits |
+|---|---|---|
+| also published on origin, local tip ahead | **12** | 190 |
+| local-only | **21** | 71 |
+
+A branch can be public **and** carry unpushed work: 12 of them do, `local_ahead`
+by 1 to 30 commits, and they hold the large majority of the unpushed work. Of
+the 30 public branches, **16 are byte-identical to their local counterpart, 12
+are behind their local branch, and 2 have no local branch.**
+
+The 28 LOCAL-ONLY branches that are *not* at risk point at commits already
+reachable from some remote ref under a different name, so they are unpushed
+labels on published history, not unpublished work.
+
+Commit sums exceed the deduplicated 248 in every split, because branches share
+commits. Only `git rev-list --count --branches --not --remotes` gives the
+deduplicated figure.
+
+### The column D2 needs: what the 30 public branches actually carry
+
+Measured with `git ls-tree -r` against each live remote tip. All 30 tips were
+present in the local object store, so no fetch was required and nothing was
+inferred from a stale cache.
+
+| material | public branches carrying it |
+|---|---|
+| `docs/FLAG_CREDENTIAL_EXPOSURE_2026-08-13.md` | **1 of 30**, `claude/rtfd-test-phase-1-4-569130` only |
+| NCAC/CCSA LS-DYNA `.key` decks | **30 of 30**, 14 files each |
+| `.ply` geometry | **30 of 30**, 4 files each (3 branches carry 2) |
+
+**This is materially larger than the standing record.** The project's note says
+"4 `.ply` including the canonical 12.4 MB Yaris hull, plus 15 renders, are
+already on `origin/main`". True, and incomplete: **the LS-DYNA source decks are
+public too, on every branch**, and they are the actual NCAC/CCSA models rather
+than anything derived from them. On `main` alone:
+
+    42,846,753  vehicle_geometry_research/2010-toyota-yaris-coarse-v1l/.../yaris-coarse-v1l.key
+    28,611,724  vehicle_geometry_research/2007-chevrolet-silverado-coarse-v3a/.../silverado-coarse-v3a.key
+       + 12 further .key files (combine/set/wall decks) for 4 vehicle models
+       +  4 .ply, of which yaris_coarse_v1l_watertight.ply is 12,445,769 bytes
+    -------------------------------------------------------------------------
+    83.5 MB across 18 files, public
+
+Every one of the 30 public branches carries all 14 `.key` files, `main`
+included. Per-branch detail:
+`can-it-ford-bundles/2026-08-16/public_branch_audit.tsv`.
+
+**Consequence for E8, stated plainly:** the licence question is not about a
+derived hull on one branch. It is about the upstream crash-model decks
+themselves, published 30 times over. Deleting them from `main` would leave 29
+other public branches serving the same bytes, and would still not unpublish
+them. This is D2's call to act on, not mine; I have not touched any of it.
+
+---
+
+## 10. What I did not do
 
 - **Pushed nothing.** No `git push` was run, with or without `PUSH_OK=1`.
 - **Merged nothing.** The register merge was run on scratch copies in
