@@ -92,6 +92,39 @@ because there is no flow across the boundary at all, in either direction.
 instead of particles would not have fixed it, which is why that diagnosis, followed
 faithfully, would have cost a solver rewrite and still failed.
 
+### 4a. I tried to falsify this against the data, and it corrected the claim's status
+
+The prediction I set out to break: if the level is fixed by conserved mass, a level proxy
+should be near-invariant while the flow decays by tens of percent. Measured across all 17,
+**settle 8, 90 frames** **[measured]**:
+
+| | median | range |
+|---|---|---|
+| mass-weighted mean z | **+5.19%** | +1.10% to +6.37% |
+| water bulk mean speed | **-73.0%** | -92.9% to -51.5% |
+| ratio of the two | **0.058** | 0.021 to 0.082 |
+
+**The level proxy is about 17x more stable than the flow**, which is the direction the
+claim predicts. But **+5.19% exceeds the EOS compressibility bound of 1.80%** at 0.3 m
+depth, so mean z is NOT invariant and my chosen proxy was wrong.
+
+The resolution matters more than the numbers. For a fixed volume over a fixed footprint,
+the mass centroid is **minimised** when the surface is flat, so any wave or splash raises
+mean z at constant mass. A +5% centroid rise with 0% mass change is therefore evidence of
+**sustained redistribution**, i.e. the surface never flattens, and is fully consistent with
+conserved mass rather than evidence against it.
+
+**So section 4's claim is not an empirical finding and I should not have implied it was.**
+Total water volume is fixed **by construction**: particle count is set once at
+`load_particles` and per-particle volume is assigned once at load, so the product cannot
+change. It is an identity in the code, not a measurement. The measurement above adds
+something different and still useful: the surface is still being actively redistributed at
+frame 90, and the level-like quantity is an order of magnitude stiffer than the flow.
+
+The status change is the point. A claim that is true by construction is stronger than one
+supported by a correlation, but only if it is labelled correctly, and it cannot be
+"confirmed" by a proxy that measures something else.
+
 ## 5. What Option A actually requires, in cost order
 
 1. **Expose the existing grid-node velocity BC.** A public `Solver.add_cuboid_velocity`
