@@ -46,11 +46,27 @@ publisher deposit says "Yu" in both DOIs), the Azhar subtitle that
 two wrong publication years. The years split cleanly by registering agency:
 **0 wrong in 25 Crossref-registered DOIs, 2 wrong in 3 DataCite-registered
 ones.** N is only 3 on the DataCite side, so treat that as a signal to check
-repository deposits against DataCite directly, not as a rate. General rule:
-**for any citation that will reach the paper, take author names, titles and years
-from the registering agency (Crossref or DataCite), never from OpenAlex, scite or
-Semantic Scholar.** Those are excellent for discovery and unreliable for
-transcription.
+repository deposits against DataCite directly, not as a rate.
+
+**REFINED, and my first version of this rule was too broad.** I wrote "never take
+author names, titles and years from aggregators", then tested it against my own
+data. All 28 titles in `data/r5_citation_noncatalog_union.tsv`, which came from
+OpenAlex, were re-checked against Crossref or DataCite: **28 of 28 match** at
+0.995 similarity or better. OpenAlex transcribes titles faithfully. The defect is
+**field-specific**, not blanket:
+
+| field, from an aggregator | evidence in this dispatch | verdict |
+|---|---|---|
+| title | 28 / 28 exact against the registering agency | **reliable** |
+| year | 0 wrong of 25 Crossref-registered; 2 wrong of 3 DataCite-registered | **check DataCite deposits** |
+| author given name | `display_name` "Yoshinori BANDO" against deposit "Yu Bando"; OpenAlex's own `raw_author_name` holds the correct string | **unreliable: `display_name` is a disambiguation product, not a transcription** |
+
+So the usable rule is narrower and more actionable than what I first wrote:
+**take author names from `raw_author_name` or the registering agency, and
+re-check years for any DataCite-registered repository deposit. Titles from
+OpenAlex are fine.** Separately, `auditBibliography` returned `matched` with
+`high` confidence on a title whose trailing phrase was materially wrong, so it
+confirms identity, not wording.
 
 ## 2. Current best value of every headline number
 
