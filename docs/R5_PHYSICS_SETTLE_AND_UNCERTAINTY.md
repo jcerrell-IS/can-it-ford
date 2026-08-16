@@ -174,8 +174,11 @@ Steffen / steffen           0 files
 `CLAUDE.md` and `scripts/check_claims.py`. **The mechanism behind the project's headline
 result is cited in no bibliography.**
 
-**Which paper, resolved rather than guessed.** These are two different 2008 papers and
-merging them is a known trap:
+**Which paper, resolved rather than guessed. THE TWO-STEFFEN TRAP.** CLAUDE.md L-5 and the
+register both name "Steffen" with **no identifier**, so this distinction is restated in
+`R5_PHYSICS_BRAKE_STATE.md` section 7 as well, on the assumption that a future reader hits
+the bare name before either document. These are two different 2008 papers by overlapping
+author groups and merging them is a known trap:
 
 - `10.1002/nme.2360` resolves to "**Analysis and reduction of quadrature errors in the
   material point method (MPM)**" **[read, via Unpaywall title lookup]**. Three authors,
