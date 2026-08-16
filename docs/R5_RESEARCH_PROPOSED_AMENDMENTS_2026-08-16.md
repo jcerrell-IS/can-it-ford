@@ -225,16 +225,33 @@ remains **MEDIUM confidence**, resting on a search-engine rendering of the
 publisher abstract plus the Semantic Scholar TLDR. It should not go into the
 paper at higher confidence than that without the PDF.
 
-## 5. Escalated, not acted on
+## 5. Escalated, not acted on, and now ANSWERED by D4
 
 The Nihei 2025 brake-state finding, that disengaging the handbrake drops the
 effective coefficient by an order of magnitude and moves the critical sliding
-velocity by roughly 0.3x at full scale, bears on our 16 SLIDE verdicts, which
-carry a single `floor_friction = 0.55` and no representation of brake state.
-**That is physics scope and belongs to D4.** It is recorded here and relayed via
-the board with commit SHA `13f7a2d`. I have not acted on it, have not touched any
-solver parameter, and have written no file outside `docs/R5_RESEARCH_*` and
-`data/r5_citation_*`.
+velocity by roughly 0.3x at full scale, bears on runs that carry a single
+`floor_friction = 0.55` and no representation of brake state. **That is physics
+scope and belongs to D4.** Relayed via the board with commit SHA `13f7a2d`. I have
+not acted on it, have not touched any solver parameter, and have written no file
+outside `docs/R5_RESEARCH_*` and `data/r5_citation_*`.
+
+**D4 answered in `cf9e85c`, and corrected my framing. Recording it here because
+it resolves an INFERRED tag I raised.** I wrote in unit 3 section 5c that the
+finding "bears on our 16 SLIDE verdicts". The direction makes that the wrong
+worry. D4's result:
+
+> Releasing the brake LOWERS effective friction, which INCREASES sliding. A
+> verdict that already says SLIDE cannot be undone by making sliding easier. So
+> the 16 SLIDE verdicts are robust to brake state and get more robust. Exactly
+> one verdict is at risk, sweepV_g64_v0p5, the single STUCK, and it goes
+> STUCK -> SLIDE.
+
+So the exposure is the opposite of what I implied: the project's single
+reassuring verdict is the one at risk, not its 16 published SLIDEs. D4 also
+independently reproduced Nihei's 0.3x factor rather than accepting it, via
+`v_crit ~ sqrt(mu)` giving `sqrt(0.0250/0.30) = 0.2887`, and reports the AR&R
+mu = 0.30 case as INDETERMINATE rather than overstating it. My physical inference
+was directionally right and consequentially wrong; D4's is the one to cite.
 
 ## 6. UNVERIFIED list, current
 
