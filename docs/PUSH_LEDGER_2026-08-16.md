@@ -111,6 +111,67 @@ risk. `ALL-refs.bundle` carries **all 77** local branches (verified by `comm`
 against `git for-each-ref refs/heads`: zero live branches missing from it), plus
 34 remote-tracking refs, 8 tags, HEAD and 27 worktree HEADs.
 
+### Insurance ages out. `refresh_bundle.sh`, and how to re-take it without me
+
+**read.** The 15:40 snapshot was **12 commits stale within six hours**, because
+four dispatch sessions were committing throughout:
+
+    claude/r5-safekeeping  +4   7d1ec34 -> 5c1e99f
+    claude/r5-exposure     +3   30dee69 -> ac9fb54
+    claude/r5-physics      +3   cd46a42 -> cf9e85c
+    claude/r5-research     +2   cf9edab -> 1b32f67
+
+At-risk total moved **241 (15:02) -> 260 (21:21)**. A snapshot nobody re-takes is
+insurance that silently ages out, so the fix is not another manual pass:
+
+    bash /Users/josie/can-it-ford-bundles/refresh_bundle.sh          # ~8 MB, seconds
+    bash /Users/josie/can-it-ford-bundles/refresh_bundle.sh --full   # also the ~507 MB standalone
+
+It is read-only against the repo, takes no locks, touches no ref, writes only
+under `can-it-ford-bundles/`, re-snapshots every dirty worktree as well, and
+appends a row per artifact to `can-it-ford-bundles/refresh_log.tsv` with bytes,
+sha256, ref count, at-risk count and verify verdict. **Run it at the end of any
+working session.**
+
+Current rows, both verify OK, 33 refs each:
+
+    2026-08-16 2121  INCREMENTAL-all-branches-2121.bundle  7,617,689 B
+    2026-08-16 2122  INCREMENTAL-all-branches-2122.bundle  7,610,725 B
+
+### Two traps found while testing that, both of them mine
+
+**1. Git bundles are not byte-reproducible. Never compare two by sha256.** The
+two rows above were taken 61 seconds apart with **no commits in between**, and
+differ by 6,964 bytes. Their **ref sets are identical**: all 33 tips match, and
+the sorted tip-list hashes to `985fca2b...` for both. The difference is pack
+encoding, nothing else. Comparing bundle checksums to decide whether content
+changed would report a change that did not happen. **Compare
+`git bundle list-heads`, not the file hash.** A sha256 on a bundle is for
+verifying a *transfer*, which is what section 1's off-machine plan uses it for.
+
+**2. RETRACTED, a test of mine that passed by comparing nothing.** I first tried
+to compare the two bundles by mirror-cloning each and hashing `git rev-list
+--all`. Both returned
+`e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`, which is the
+sha256 of **empty input**. Both clones were empty, because a thin bundle cannot
+be cloned standalone (that is the same property section 1 documents). Two empty
+sets compare equal, so the test "passed" while measuring nothing. If a hash you
+are comparing is `e3b0c44...`, you hashed nothing.
+
+### The layered restore, proved end to end
+
+**read.** The real recovery procedure is two artifacts, and it works:
+
+    git init --bare <dst>
+    git -C <dst> fetch <ALL-refs.bundle>                'refs/heads/*:refs/heads/*'
+    git -C <dst> fetch <INCREMENTAL-...-2122.bundle>    'refs/heads/*:refs/heads/*'
+
+Result in a virgin bare repo: **77 branches**, and
+`claude/r5-safekeeping` resolves to **5c1e99f**, matching the live repo exactly.
+So the 15:02 standalone plus the latest incremental reconstructs current state,
+which is why the cheap refresh is sufficient day to day and `--full` is only
+needed before something that risks the disk.
+
 ### Remaining exposure: everything is on one disk. OFF-MACHINE PLAN, NOT EXECUTED
 
 The bundles sit on the **same physical disk** as the repo (`/dev/disk3s5`,
