@@ -1,0 +1,63 @@
+doi	year	title	discovery_route	in_489_corpus	simulation_title
+10.1080/00221686.2026.2613292	2026	Bridge backwater due to vehicles blockage driven by flash floods	cited_by	NO	NO
+10.1080/19942060.2026.2649668	2026	A coupled lattice Boltzmann-cellular automata model for dynamic optimization of vehicle evacuation route during urban flooding	cited_by	NO	YES
+10.1016/j.jhydrol.2026.135478	2026	Generalization of an innovative flood risk assessment model integrating hydraulic instability of pedestrians and vehicles with siltation in urban drainage pipelines	cited_by	NO	YES
+10.1115/1.4071177	2026	Predicting Vehicle–Water Interaction in Shallow Water: Simulations and Experimental Validation	cited_by	YES	YES
+10.3390/w18010080	2025	A New Semi-Empirical Model to Predict Vehicle Instability in Urban Flooding	cited_by	NO	YES
+10.1111/jfr3.70174	2025	Dynamic Human‐Vehicle Risk Assessment for Urban Flood Evacuations in Island Cities: The <scp>MUFE</scp> Framework Applied to Haidian Island, Haikou	cited_by	NO	NO
+10.1016/j.oceaneng.2025.123181	2025	Numerical investigation and analysis of environmental effects on water–ground transition of amphibious unmanned vehicles	cited_by	NO	YES
+10.1080/17445302.2025.2524038	2025	Experimental investigation on hydrodynamic performance of amphibious vehicles with hydrofoil in calm water and regular waves	cited_by	NO	NO
+10.1109/scored68498.2025.11398866	2025	Development of an Automated Vehicle Protection System Against Flood Damage	cited_by	NO	NO
+10.1016/j.oceaneng.2025.123054	2025	Analysis and rapid prediction of underwater vehicle hydrodynamic loads during water-exit integrating CFD with GA-LSTM	cited_by	NO	YES
+10.1111/jfr3.12979	2024	Flood risk investigation of pedestrians and vehicles in a mountainous city using a coupled coastal ocean and stormwater management model	cited_by	NO	YES
+10.1016/j.rineng.2024.102540	2024	Floodwaters and vehicle hydrodynamics: A deep dive into risk mitigation unraveling vehicle stability in floods	cited_by	YES	NO
+10.1115/1.4064971	2024	Modeling of Vehicle Mobility in Shallow Water With Data-Driven Hydrodynamics Model	cited_by;reference	YES	YES
+10.1007/978-3-031-77489-8_32	2024	Numerical Studies of 3D Vehicle Wading Phenomenon with an Improved Single-Layer Particle Boundary Technique Within the SPH Framework	cited_by	NO	YES
+10.1016/j.jhydrol.2023.129525	2023	Experimental testing to determine stability thresholds for partially submerged vehicles at different flow orientations	cited_by	YES	NO
+10.3390/su151713262	2023	Understanding the Stability of Passenger Vehicles Exposed to Water Flows through 3D CFD Modelling	cited_by	YES	YES
+10.1063/5.0174148	2023	Research on launching, water exiting, and river crossing of an amphibious vehicle	cited_by	YES	NO
+10.4271/2023-01-0609	2023	Vehicle Underbody Structural Performance Prediction During Waterfording Events Using A One Way Coupled CFD-CAE Approach	cited_by	NO	YES
+10.1007/s11433-023-2137-5	2023	3D large-scale SPH modeling of vehicle wading with GPU acceleration	cited_by	YES	YES
+10.1016/j.oceaneng.2023.116165	2023	Novel experiments on the dynamics of amphibious craft during surf zone transit	reference	NO	NO
+10.1016/j.ijdrr.2022.103205	2022	Risk assessment for people and vehicles in an extreme urban flood: Case study of the “7.20” flood event in Zhengzhou, China	cited_by	NO	NO
+10.1016/j.scitotenv.2022.154098	2022	Integrated modeling of 2D urban surface and 1D sewer hydrodynamic processes and flood risk assessment of people and vehicles	cited_by	NO	YES
+10.1111/jfr3.12828	2022	A numerical approach to understand the responses of passenger vehicles moving through floodwaters	cited_by;reference	YES	YES
+10.1016/j.oceaneng.2022.111607	2022	Coupled multibody dynamics and computational fluid dynamics approach for amphibious vehicles in the surf zone	cited_by;reference	YES	YES
+10.4271/2022-01-0768	2022	Transient, 3D CFD, Moving Mesh Simulation of Vehicle Water Wading in a Water Tunnel with Inclined Entry-Exit	cited_by;reference	YES	YES
+10.1016/j.scitotenv.2021.149036	2021	A dynamic, convenient and accurate method for assessing the flood risk of people and vehicle	cited_by;reference	NO	NO
+10.1007/s11069-021-04949-6	2021	Full-scale experimental investigations on the response of a flooded passenger vehicle under subcritical conditions	reference	YES	NO
+10.1016/j.uclim.2021.101069	2021	Estimating the instability criterion of vehicles in urban flooding by an entropic method	reference	YES	NO
+10.31436/iiumej.v22i1.1502	2021	FROUDE NUMBER VARIANCE WITH RESPECT TO THE HYDRODYNAMIC RESPONSE OF A NON-STATIC VEHICLE AT A LOW-LYING FLOODED ROADWAY	reference	YES	NO
+10.4271/2021-01-0205	2021	CFD Method Development for Simulating Water Fording for a Passenger Car	reference	YES	YES
+10.1088/1742-6596/2083/4/042091	2021	Research on numerical simulation and intelligent computing of vehicle wading driving by smooth particle hydrodynamics method	reference	NO	YES
+10.1111/jfr3.12616	2020	Vehicle‐related flood fatalities in Australia, 2001–2017	reference	NO	NO
+10.1111/jfr3.12645	2020	Victims crossing overflowing watercourses with vehicles in Spain	reference	YES	NO
+10.5772/intechopen.92731	2020	Impact and Mitigation Strategies for Flash Floods Occurrence towards Vehicle Instabilities	reference	NO	NO
+10.1016/j.oceaneng.2020.107460	2020	Experimental and computational study of operation of an amphibious craft in calm water	reference	NO	YES
+10.1177/0954407020942005	2020	Analysis and research on vehicle wading performance	reference	YES	NO
+10.1115/detc2019-97307	2019	Water-Egressing Mobility of an Amphibious Vehicle With a Controllable H-Driveline	reference	NO	NO
+10.1111/jfr3.12527	2019	Full‐scale testing of stability curves for vehicles in flood waters	reference	YES	NO
+10.1080/15715124.2019.1566240	2019	Criterion of vehicle instability in floodwaters: past, present and future	reference	YES	NO
+10.1080/00221686.2019.1647887	2019	A conceptual model of vehicles stability in flood flows	reference	YES	YES
+10.1080/15715124.2019.1687487	2019	A review of safety guidelines for vehicles in floodwaters	reference	YES	NO
+10.1016/j.rineng.2019.100032	2019	Hazard risks pertaining to partially submerged non-stationary vehicle on low-lying roadways under subcritical flows	reference	YES	NO
+10.1111/jfr3.12551	2019	Review and analysis of vehicle stability models during floods and proposal for future improvements	reference	YES	YES
+10.11113/jt.v80.11198	2018	EXPERIMENTAL STUDIES ON THE THRESHOLD OF VEHICLE INSTABILITY IN FLOODWATERS	reference	YES	NO
+10.1016/j.asej.2018.01.001	2018	Influence of forces on vehicle’s instability in floodwaters	reference	YES	NO
+10.1080/1573062x.2017.1301501	2017	A new experiments-based methodology to define the stability threshold for any vehicle exposed to flooding	reference	YES	NO
+10.4271/2017-01-1327	2017	Water Ingress Analysis and Splash Protection Evaluation for Vehicle Wading using Non-Classical CFD Simulation	reference	NO	YES
+10.1111/jfr3.12262	2016	Stability criteria for flooded vehicles: a state‐of‐the‐art review	reference	YES	NO
+10.4271/2016-28-0072	2016	Passenger Car Water Wading Evaluation Using CFD Simulation	reference	NO	YES
+10.1016/j.jfluidstructs.2015.06.010	2015	Drag and lift contribution to the incipient motion of partly submerged flooded vehicles	reference	YES	NO
+10.1115/detc2015-47142	2015	Coupled Multibody Dynamics and Smoothed Particle Hydrodynamics for Modeling Vehicle Water Fording	reference	YES	YES
+10.1365/s40112-015-0985-7	2015	JLR’s revolutionary approach to vehicle wade testing	reference	NO	NO
+10.4271/2014-36-0251	2014	Water Ingestion and Pressure Analysis of Automotive Vehicles using Multiphase CFD	reference	NO	YES
+10.1007/s11069-013-0889-2	2013	Criterion of vehicle stability in floodwaters based on theoretical and experimental studies	reference	YES	NO
+10.1080/17477891.2013.832651	2013	Vehicle-related flood fatalities in Greece	reference	YES	NO
+10.1080/15715124.2012.674040	2012	Experimental studies on the interaction between vehicles and floodplain flows	reference	YES	NO
+10.1007/978-3-642-33835-9_15	2012	Vehicle Wading Simulation with STRA-CCM+	reference	NO	YES
+10.1016/j.envsoft.2011.02.017	2011	Numerical assessment of flood hazard risk to people and vehicles in flash floods	reference	YES	YES
+10.1080/00221686.2011.616318	2011	Incipient velocity for partially submerged vehicles in floodwaters	reference	YES	NO
+10.1007/s11069-010-9639-x	2010	Formula of incipient velocity for flooded vehicles	reference	YES	NO
+10.1680/wama.2010.163.6.273	2010	Modelling the hydraulics of the Carlisle 2005 flood event	reference	NO	YES
+10.1016/j.apgeog.2008.09.004	2008	Landscape, development, technology and drivers: The geography of drownings associated with automobiles in Texas floods, 1950–2004	reference	NO	NO
