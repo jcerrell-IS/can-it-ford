@@ -3,6 +3,28 @@
 Dispatch R5-D2, 2026-08-16. Branch `claude/r5-exposure`.
 **No credential value appears in this file. Fingerprints only.**
 
+> ### Three things to carry into every row below
+>
+> **1. The public surface is 30 BRANCHES, not one tree.** `origin` has 30 public
+> branches. Any statement of the form "the repo is clean" that was established by
+> scanning one tree does not cover it. Verified live 2026-08-16; this is what the
+> correction in `5f01dd2` turned on, and it is the reason the "nothing is public"
+> claim failed the first time.
+>
+> **2. This list is NOT declared complete.** The source document states **12**
+> credentials from the completed 89-root sweep. I can name **11**. One is
+> unaccounted for **in my reading**, not in the source. Reconcile against §2.36's
+> own enumeration before treating this as finished.
+>
+> **3. Coverage has a floor, and it is not zero.** **19 of 89 Mac roots are
+> `partial`**, meaning unchecked below the per-root time cap rather than clean,
+> including `~/Downloads`, `~/Library`, `~/Documents`, `~/Desktop` and `~/.claude`.
+> Files over 8 MB (238 of them) were excluded by design. A credential in any of
+> those would not appear in any count here.
+>
+> None of the three is a reason to delay Step 1. All three are reasons not to
+> declare the job done after it.
+
 ## What this is, and what it is not
 
 This is the **execution** half of `docs/CREDENTIAL_EXPOSURE_2026-08-13.md`, which is
