@@ -1,0 +1,112 @@
+# R5-D1 unit 9: the Elicit quote columns, and the model-scale trap quantified
+
+Date 2026-08-16. Branch `claude/r5-research`. Closes a gap in my own
+definition-of-done and generalises the row-7 scale problem from units 3 and 4.
+
+---
+
+## 1. A gap in my own work, now closed
+
+My dispatch's definition of done (c) asked for "a table of every depth-velocity
+threshold and friction coefficient the literature actually reports ... mined from
+all 42 rows". Unit 1 mined columns `[08]` and `[09]`, the summary columns. It did
+**not** mine columns `[15]` to `[20]`, which hold the supporting quotes and
+reasoning behind each summary. Those are the evidence, and a summary can
+under-report its own evidence.
+
+Tested directly: of the 33 rows whose threshold summary reads "Not mentioned",
+how many carry a unitted number in their supporting quotes?
+
+```
+rows with 'not mentioned' threshold summary but a unitted number in quotes : 3 / 33
+rows with 'not mentioned' friction summary but a friction value in quotes  : 0 / 33
+```
+
+Hand-checking all three, because a regex hit is not a threshold:
+
+- **Row 9** (`10.5194/PIAHS-373-143-2016`): FALSE POSITIVE of mine. The quotes
+  give a dimensionless mobility parameter and a Froude-number curve, not a
+  numeric depth-velocity threshold. The summary's "Not mentioned" is correct.
+- **Row 13** (`10.1111/jfr3.12737`): FALSE POSITIVE of mine. The quotes describe
+  the floating, sliding and toppling mechanisms qualitatively. No threshold.
+- **Row 23** (`10.1016/j.rineng.2019.100032`): **GENUINE, the summary
+  under-reports.** Verbatim from the quotes: "The buoyancy depth was noticed at
+  depths greater than and equal to **0.055 m**" and "the range of water depths
+  between 0.047 and 0.089 m, whereas for velocities, it was controlled to be in
+  between 0.20 and 0.39 m/s".
+
+So the corrected yield for the CSV is **10 of 42 rows carrying a threshold**, not
+9, once the quote columns are mined. Friction is unchanged at 9 of 42: no
+friction value hides in a quote column anywhere in the file.
+
+**And row 23's recovered value passes a consistency check.** That paper is
+Muzzamil Shah's 1:10 Perodua Viva. Scaling the buoyancy depth linearly,
+`0.055 m x 10 = 0.55 m` full scale, which sits inside the 0.5 m (4WD) to 0.60 m
+(row 5, float depth) band the full-scale literature reports. An independent
+route, arriving in the right place.
+
+## 2. The scale trap, quantified
+
+Unit 3 caught row 7 being 1:24 rather than the remembered 1:10. Row 9's quotes
+show the problem is far wider than two papers. Verbatim from row 9:
+
+> The mobility parameter has been calculated for three experimental datasets
+> (Shu et al., 2011, Xia et al., 2011, 2014) including seven different car models
+> and densities and **three model scales (1 : 14, 1 : 18, 1 : 43)**.
+
+Combined with what units 3 and 4 established, the flood-vehicle experimental
+literature this project draws on spans **at least six scales**:
+
+| model scale | source in this corpus | depth factor | velocity factor | **D x V factor** |
+|---|---|---:|---:|---:|
+| 1:1 | AR&R, Smith 2019, Nihei 2025 | 1 | 1.000 | **1.00** |
+| 1:10 | Muzzamil Shah, Perodua Viva | 10 | 3.162 | **31.62** |
+| 1:14 | Shu 2011 / Xia | 14 | 3.742 | **52.38** |
+| 1:18 | Shu 2011 / Xia | 18 | 4.243 | **76.37** |
+| 1:24 | Hamid Shah, die-cast | 24 | 4.899 | **117.58** |
+| 1:43 | Shu 2011 / Xia | 43 | 6.557 | **281.97** |
+
+Under Froude similitude, depth scales as the length ratio and velocity as its
+square root, so the depth-velocity product scales as `lambda^1.5`. Factors
+computed by me.
+
+**The consequence, stated plainly.** A `D x V` threshold quoted from a 1:43 model
+and one quoted from a 1:10 model differ by **8.9x** on scale alone, before any
+physics. A 1:24 value differs from full scale by **117.6x**. The project's own
+threshold table in unit 1 lists row 7's `0.0168 m2/s` beside AR&R's
+`0.30 m2/s` and they are not on the same axis at all.
+
+**Therefore: no depth-velocity threshold from this literature may be quoted
+without its model scale.** That is a stronger rule than the one unit 3 gave for
+row 7 alone, and it is the rule I would want in the paper's own threshold table.
+
+## 3. What I am not claiming
+
+I am **not** offering scaled-up values as corrected thresholds. Froude similitude
+governs the free-surface flow, but these are floating and sliding problems in
+which mass and friction also matter, and:
+
+- a die-cast model does not satisfy mass similitude, as unit 3 noted;
+- Shah's 1:10 Perodua Viva is described as "ensuring similarity laws", which is a
+  claim I have not checked against its methods section;
+- row 9's own framing is that the mobility parameter exists precisely because raw
+  thresholds do not transfer across scales and vehicle densities.
+
+The defensible output is the negative one: **the scale must be stated, and values
+at different scales must never be tabulated together.** The `lambda^1.5` column
+above is there to show the size of the error, not to license a conversion.
+
+## 4. Status and UNVERIFIED
+
+1. The 1:14, 1:18 and 1:43 scales are READ DIRECTLY from row 9's quote column,
+   which is itself quoting Shu 2011 and Xia 2011/2014. I have **not** opened
+   those three papers to confirm the scales at source. Second-hand.
+2. Whether Muzzamil Shah's 1:10 work satisfies mass similitude is unchecked.
+3. The 0.55 m consistency check in section 1 assumes linear depth scaling and is
+   a plausibility check, not a validation.
+4. Rows 9 and 13 were my own regex false positives, hand-corrected. The quote
+   columns of the other 30 "not mentioned" rows were scanned by the same regex,
+   so a threshold phrased without a unit token would still be missed.
+
+No project simulation number is asserted here. The scale factors are arithmetic
+on stated model ratios.
