@@ -16,14 +16,48 @@ something from the sections I read, I say so rather than fill it in.
 
 **Status as of this writing: ZERO of these have been revoked.** [read]
 
-### One fact that should set your urgency, in both directions
+### The public status is TWO-PART. State both halves or the conclusion inverts.
 
-**The public GitHub repo is clean.** All 848 tracked files were scanned: 0 credential
-hits, `.env` is gitignored and has 0 commits adding it. [read]
+**CORRECTED 2026-08-16, same day.** An earlier revision of this file, and commit
+`30dee69`'s message, said "unlike the E8 geometry exposure, NOTHING here is public."
+**That was a real error and it is withdrawn.** It was true of credential *values* and
+false of the *exposure record*, and it stated only the reassuring half.
 
-So unlike the E8 geometry exposure, **nothing here is public**. This is a local and
-HPC-filesystem exposure. That lowers the urgency relative to a public leak, and it
-does **not** lower it to zero, because:
+**Part 1, no credential VALUE is public.** All 848 tracked files scanned, 0 credential
+hits; `.env` is gitignored with 0 commits adding it. [read, source doc §2.36]
+
+Re-verified independently this session, and extended: **the repo has 30 public
+branches**, so a scan of one tree is not a scan of the public surface. The two
+credential-named files that appear on effectively every branch were value-scanned
+directly off `origin/main` blob `1a868f3`: `token_setup_template.md` (969 B, on all 30
+branches) and `HANDOFF_AUDIT_2026-07-24/topics/security/secrets-and-env.md` (1,936 B,
+on 28). **Both contain zero token-shaped strings.** Part 1 survives. [read]
+
+**Part 2, a document enumerating the HOLDERS is public.**
+`docs/FLAG_CREDENTIAL_EXPOSURE_2026-08-13.md`, blob `a7ad33e5`, 5,517 bytes, is on the
+public branch `claude/rtfd-test-phase-1-4-569130` at
+`aacd21f2ff2aa78856945d1830dd7809269794f4`. Found by D3, and verified here
+independently: `git ls-remote` returns that exact SHA, and `git ls-tree` on the
+fetched tree lists the blob. A six-pattern value scan of it returns **0 matches**, so
+it leaks no value. [read]
+
+What it does publish is the **targeting map**: host names (Vista, LS6, Mac), the
+holding file (`~/.bashrc`), its mode, **the exact line numbers of the export
+statements** (`:112`, `:122`, `:123`, `:124`), token fingerprints, and which of the
+duplicate exports actually wins. It is on exactly one of the 30 branches. [read]
+
+**Therefore the correct conclusion is the opposite of the one the old sentence
+supported.** An attacker reading that file knows precisely which machines to aim at,
+which file to read, and which token is live, and **every credential it describes is
+still unrotated**. Public targeting plus live credentials raises urgency; it does not
+lower it.
+
+It also changes what Step 2 is worth. Deleting the local copies is not merely tidying,
+it is now **incapable of undoing the public half**: removing the file from HEAD does
+not unpublish it, and GitHub has served removed blobs by SHA after a `filter-repo`
+rewrite **in this very account**. [recalled: project memory, the W&B key precedent]
+
+The other reasons deletion cannot win, unchanged:
 
 - Anthropic tokens A, B and C are in **TACC's backup system** (TACC backs up `$HOME`),
   which no file deletion you perform now can reach.
@@ -31,9 +65,9 @@ does **not** lower it to zero, because:
 - Credential H is in **89 `~/.zsh_sessions/*.history` files**, self-cloning on every
   new shell.
 
-Backups and cloud sync are why **revocation at the issuer is the only real remedy**
-and deleting files is merely tidying afterwards. Do these in order: revoke, then
-delete.
+**Revocation at the issuer is the only remedy that reaches any of this.** Do Step 1
+before Step 2, and do not let the deletions in Step 2 create the impression that the
+public half has been handled. It has not, and it cannot be.
 
 ---
 
@@ -131,6 +165,23 @@ older than that one. Two things worth carrying forward:
 - `~/.secrets_tmp/` has the same shape: three `0644` files protected only by a `0700`
   directory.
 
+### Step 2b. The public branch. Decide, do not drift.
+
+`claude/rtfd-test-phase-1-4-569130` carries the targeting document described above.
+**Nothing here has been executed; deleting a remote branch is a destructive remote
+action and needs your explicit go-ahead.** The options, with what each actually buys:
+
+| Option | Effect | Honest limit |
+|---|---|---|
+| Leave it | no action | targeting stays public and indexable while the credentials are live |
+| Delete the remote branch | removes it from the branch list and from search | **does not unpublish.** The commit SHA still resolves, and GitHub has served removed blobs by SHA in this account before |
+| Delete the branch **and** ask GitHub Support to purge unreferenced objects | the only path that actually removes it | needs a support ticket; still no guarantee against anything already crawled |
+| Revoke everything in Step 1 first | makes the map worthless | **this is the one that works.** A targeting document that points at dead credentials is a liability of a much lower order |
+
+**Recommendation: do Step 1, then treat the branch as a cleanup item rather than an
+emergency.** Revocation defuses the public half far more completely than any deletion
+can, and it is the only action here whose effect is not partly outside your control.
+
 ## Step 3. Decide the replacement path BEFORE deleting anything
 
 Source doc §5 Step 3. If you delete first and decide after, you lock yourself out of
@@ -145,9 +196,20 @@ value can be absent from every file you know about and still be live in a backup
 
 ## What I did not do
 
-- **I did not re-run the sweep.** Every count here is as of 2026-08-14, read from the
-  source document. If files have moved since, this list is stale in the direction of
-  undercounting.
+- **I did not re-run the filesystem sweep.** Every file count and mode here is as of
+  2026-08-14, read from the source document. If files have moved since, this list is
+  stale in the direction of undercounting.
+- **I DID re-verify the public-surface claim live**, this session, and that is the one
+  claim in this file not inherited: `git ls-remote` for the branch and SHA,
+  `git ls-tree` on the fetched tree for the blob, and six-pattern value scans of the
+  three credential-named files that are public. This is also the claim I got wrong in
+  the first revision, which is why it is the one I re-derived rather than carried.
+- **The branch sweep inspected trees already present locally.** All 30 resolved, but a
+  branch whose tree was absent would have been reported as not inspected rather than
+  silently passed. None was. The sweep matched on **filename**, so a credential sitting
+  in a file with an unrelated name on a non-main branch would not appear; the
+  value-based negative comes from the source doc's scan of tracked files, not from
+  this one.
 - **I did not print, read or resolve any credential value.** Reads of the source
   document were passed through a redaction filter for token-shaped strings, because
   the source itself records that a prior session leaked a token into its own
