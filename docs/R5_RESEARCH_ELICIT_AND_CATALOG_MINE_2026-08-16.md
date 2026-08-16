@@ -104,6 +104,16 @@ quoting this CSV must give the denominator 42 and the yield 11.
 
 Full text in `data/r5_citation_thresholds.tsv`. Units as printed in the source.
 
+> **WARNING, added by unit 9. THIS TABLE MIXES MODEL SCALES AND MUST NOT BE USED
+> AS-IS.** Row 7 is a 1:24 model reporting raw model values and row 23 is a 1:10
+> model doing the same, while the rest are full-scale or full-scale-equivalent.
+> Under Froude similitude the depth-velocity product scales as `lambda^1.5`, so
+> these numbers are separated by factors up to 118 before any physics. The
+> corrected table, with a `model_scale` and a `value_basis` column for all 12
+> rows and zero UNKNOWN, is in
+> `docs/R5_RESEARCH_SCALE_TRAP_2026-08-16.md` section 2c and in the rebuilt
+> `data/r5_citation_thresholds.tsv`. Use those, not the table below.
+
 | row | year | DOI | reported threshold |
 |---:|---|---|---|
 | 16 | 2018 | `10.1111/jfr3.12262` | small car `v*y <= 0.30`, large car `0.45`, large 4WD `0.60` m2/s |

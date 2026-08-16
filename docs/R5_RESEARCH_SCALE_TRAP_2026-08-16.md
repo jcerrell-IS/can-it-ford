@@ -80,6 +80,66 @@ threshold table in unit 1 lists row 7's `0.0168 m2/s` beside AR&R's
 without its model scale.** That is a stronger rule than the one unit 3 gave for
 row 7 alone, and it is the rule I would want in the paper's own threshold table.
 
+## 2b. The rule needs one more distinction, or it misfires
+
+Stating the scale is not sufficient, and applying `lambda^1.5` to any value
+carrying a scale label would be wrong. Row 38, Azhar et al. 2026
+(`10.1111/jfr3.70181`), shows why. Its abstract, READ DIRECTLY:
+
+> The numerical model built with smoothed particle hydrodynamics (SPH) is first
+> validated for its use in studying unsteady flows by comparing it with **1:14
+> scale physical model results**.
+
+The 1:14 is the scale of the **validation experiment**, not of the reported
+threshold. Its reported `0.45 m2/s` is a full-scale-equivalent number: scaled up
+as a raw model value it would be `0.45 x 14^1.5 = 23.6 m2/s`, which is absurd
+against AR&R's 0.30 to 0.60 band. Contrast row 7, whose `0.0168 m2/s` is roughly
+twenty times *below* AR&R and is therefore plainly a raw model reading.
+
+So a threshold from this literature needs **two** labels, not one:
+
+1. **the model scale** of the physical work, and
+2. **the value basis**: is the printed number a raw model reading, a full-scale
+   equivalent the authors already converted, or a criterion quoted from elsewhere?
+
+Four distinct cases actually occur in these 42 rows: raw model values (rows 7 and
+23), full-scale-equivalent values validated at model scale (rows 38, 39), full-
+scale numerical work (rows 2, 37), and criteria quoted from AR&R by reviews (rows
+5, 16, 35).
+
+**Incidental verification.** The same abstract confirms a standing CLAUDE.md
+claim at its source: "the hydrodynamic drag can increase by **40%-50%** in
+unsteady flows". CLAUDE.md's "Unsteady flow raises drag 40 to 50 percent, Azhar
+2026" is correct as written. Azhar 2026 is also SPH, which adds a fourth
+particle-method paper to unit 7's list.
+
+## 2c. The deliverable is rebuilt, not just flagged
+
+`data/r5_citation_thresholds.tsv` now carries three new columns, `model_scale`,
+`value_basis` and `basis_provenance`, with every entry tagged `R` for read at
+source or `I` for inferred. **All 12 rows are mapped; zero UNKNOWN remain.**
+
+| row | DOI | model scale | value basis |
+|---|---|---|---|
+| 2 | `10.1111/jfr3.12828` | full scale | full-scale numerical (I) |
+| 5 | `10.1111/jfr3.12645` | n/a, secondary | full-scale criteria |
+| **7** | `10.11113/JT.V80.11198` | **1:24** | **RAW MODEL VALUES** |
+| 16 | `10.1111/jfr3.12262` | n/a, review | full-scale criteria |
+| **23** | `10.1016/j.rineng.2019.100032` | **1:10** | **RAW MODEL VALUES** |
+| 25 | `10.1016/j.rineng.2025.107189` | full scale | full-scale measured |
+| 26 | `10.1007/s11069-013-0889-2` | unknown | full-scale equivalent (I) |
+| 35 | `10.1111/jfr3.12551` | n/a, review | full-scale criteria |
+| 37 | `10.3390/su151713262` | full scale | full-scale numerical |
+| 38 | `10.1111/jfr3.70181` | 1:14 (validation only) | full-scale equivalent |
+| 39 | `10.1111/jfr3.12885` | laboratory, ratio unstated | full-scale equivalent |
+| 40 | `10.4271/961000` | n/a, ATV tyres | **not a vehicle-stability threshold** |
+
+**Exactly 2 of 12 rows carry raw model-scale values**, rows 7 and 23. Those two
+are the ones that must never be tabulated beside a full-scale number, and unit 1
+did exactly that with row 7. Row 40 gets its own warning: it is ATV tyre friction
+against surface anomalies, so its 1.89 is not a flooded-car coefficient and must
+not sit in the same column as 0.30 or 0.55.
+
 ## 3. What I am not claiming
 
 I am **not** offering scaled-up values as corrected thresholds. Froude similitude
