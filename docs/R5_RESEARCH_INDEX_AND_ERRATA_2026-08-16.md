@@ -29,6 +29,8 @@ with a number in an earlier unit, the number below wins.**
 | 12 | draft resolution claim, "3.8x better resolved", 7.6 vs 2.000 cells per depth | unit 8, never published | **NOT CLEAN, 6 blocking issues.** Rewritten to cell size only | unit 8 §1 |
 | 13 | Al-Qadami Table 1 series, carried from the review | unit 8 §4 | **independently verified**, review reproduces exactly | `4140127` |
 | 14 | "state the model scale" is the rule | unit 9 §2 | **insufficient.** Needs a second label, `value_basis`, or Azhar 2026 gets inflated 52x | `66f7427`, unit 9 §2b |
+| 15 | the CSV holds 42 unique papers; yields are 10/42 and 9/42 | units 1, 9 | **41 unique papers.** Rows 6 and 16 are the same paper (`10.1111/jfr3.12262`, online 2016 vs print 2018). Yields are **10/41** and **9/41**; numerators unchanged | unit 12 §2 |
+| 16 | `10.26190/unsworks/27433` is dated 2024 | unit 6, and `data/r5_citation_noncatalog_union.tsv` | **2017.** OpenAlex was wrong; DataCite is the registering agency and says 2017, consistent with Elicit row 28. **The TSV still carries the wrong year** | unit 12 §3 |
 
 **Three of these matter most.** #3, because I proposed the L-2 amendment and my
 own test killed it. #8, because it means the paper does not cite its closest
@@ -43,12 +45,16 @@ All read live this session. Denominators stated, as required.
 ```
 .bib entries                                            8
 CSV: data rows 42, columns 27, every row well formed at 27 fields
-CSV rows carrying a real threshold value      10 / 42   (9 in the summary column, +1 recovered from quotes)
-CSV rows carrying a real friction value        9 / 42   (0 hidden in quote columns)
-CSV rows carrying RAW MODEL-SCALE values       2 / 12   (rows 7 at 1:24, 23 at 1:10)
+CSV UNIQUE PAPERS                                      41   (rows 6 and 16 are one paper)
+rows carrying a real threshold value          10 / 41   (9 in the summary column, +1 recovered from quotes)
+rows carrying a real friction value            9 / 41   (0 hidden in quote columns)
+rows carrying RAW MODEL-SCALE values           2 / 12   (rows 7 at 1:24, 23 at 1:10)
 motion state                          18 stationary / 14 self-propelled / 10 unstated / 0 towed
 copies of each Elicit file on this machine    >=7 and >=6, including inside the repo at citations/
 ```
+Both yields are **lower bounds**, not point values: the duplicated paper was
+extracted twice and returned a full threshold set in one row and "Not mentioned"
+in the other, so the extraction demonstrably misses values it elsewhere finds.
 The "1,345 rows" figure is a `wc -l` artifact of newlines inside quoted fields.
 Never use it.
 
