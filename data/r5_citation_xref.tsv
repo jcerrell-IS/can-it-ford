@@ -1,0 +1,490 @@
+doi	cited_anywhere_in_repo	cited_in_paper_bib	n_files	sample_file	source_catalogs
+10.1002/aic.15868	NO	NO	0	-	Physics Simulation Validation Protocol; Settling and Force Reporting in Free Surface Flow
+10.1002/cav.70024	NO	NO	0	-	Multi-resolution MPM for Large-domain Flooding
+10.1002/cpe.8269	NO	NO	0	-	Reliable AI Scientific Software
+10.1002/fld.5233	NO	NO	0	-	Multi-resolution MPM for Large-domain Flooding
+10.1002/hyp.11082	NO	NO	0	-	Elicit (bib+CSV)
+10.1002/hyp.1198	NO	NO	0	-	Physics Simulation Validation Protocol
+10.1002/hyp.14703	NO	NO	0	-	Physics Simulation Validation Protocol
+10.1002/nag.2321	NO	NO	0	-	Physics Simulation Validation Protocol
+10.1002/nag.3731	NO	NO	0	-	Multi-resolution MPM for Large-domain Flooding
+10.1002/nag.70048	NO	NO	0	-	Multi-resolution MPM for Large-domain Flooding
+10.1002/nme.2787	NO	NO	0	-	Multi-resolution MPM for Large-domain Flooding
+10.1002/nme.5956	NO	NO	0	-	Multi-resolution MPM for Large-domain Flooding
+10.1002/nme.6312	NO	NO	0	-	Multi-resolution MPM for Large-domain Flooding
+10.1002/nme.6506	YES	NO	1	docs/LITERATURE_CI_GATES_2026-08-08.md	MPM Simulation Verification Provenance; Multi-resolution MPM for Large-domain Flooding
+10.1002/nme.6588	NO	NO	0	-	Multi-resolution MPM for Large-domain Flooding
+10.1002/nme.70206	NO	NO	0	-	Multi-resolution MPM for Large-domain Flooding
+10.1002/nme.70210	NO	NO	0	-	MPM Simulation Verification Provenance; Physics Simulation Validation Protocol; Validated MPM Vehicle Water Coupling
+10.1002/nme.7217	NO	NO	0	-	MPM Simulation Verification Provenance; Multi-resolution MPM for Large-domain Flooding; Physics Simulation Validation Protocol; Quantitative MPM Wall Penetration
+10.1002/nme.7347	NO	NO	0	-	MPM Simulation Verification Provenance
+10.1002/spe.2926	NO	NO	0	-	Reliable AI Scientific Software
+10.1002/stvr.1912	NO	NO	0	-	Reliable AI Scientific Software
+10.1002/wat2.1338	NO	NO	0	-	Physics Simulation Validation Protocol
+10.1006/jcph.2002.7103	YES	NO	1	docs/LITERATURE_CI_GATES_2026-08-08.md	MPM Simulation Verification Provenance
+10.1007/978-3-030-37425-9_1	NO	NO	0	-	Elicit (bib+CSV)
+10.1007/978-3-319-22997-3_11	NO	NO	0	-	Multi-resolution MPM for Large-domain Flooding
+10.1007/978-981-10-7218-5_42	NO	NO	0	-	Elicit (bib+CSV)
+10.1007/s00348-016-2211-z	NO	NO	0	-	Settling and Force Reporting in Free Surface Flow
+10.1007/s00348-021-03151-5	NO	NO	0	-	Settling and Force Reporting in Free Surface Flow
+10.1007/s00366-013-0342-x	YES	NO	1	docs/LITERATURE_CI_GATES_2026-08-08.md	MPM Simulation Verification Provenance
+10.1007/s00466-019-01783-3	NO	NO	0	-	MPM Simulation Verification Provenance; Multi-resolution MPM for Large-domain Flooding; Physics Simulation Validation Protocol; Validated MPM Vehicle Water Coupling
+10.1007/s00466-021-02024-2	NO	NO	0	-	MPM Simulation Verification Provenance
+10.1007/s00466-024-02510-3	NO	NO	0	-	Quantitative MPM Wall Penetration
+10.1007/s10664-026-10840-4	NO	NO	0	-	Reliable AI Scientific Software
+10.1007/s11069-010-9639-x	YES	YES	14	paper/can_it_ford_references_IEEE.bib	Dynamic Vehicle Traction in Floodwater; Validated MPM Vehicle Water Coupling
+10.1007/s11069-013-0889-2	YES	YES	41	paper/can_it_ford_references_IEEE.bib	Elicit (bib+CSV); MPM Simulation Verification Provenance; Moving Rigid Body Free Surface Validation; Validated MPM Vehicle Water Coupling
+10.1007/s11069-021-04949-6	YES	NO	1	docs/SUBMISSION_MANIFEST_2026-07-31.md	Dynamic Vehicle Traction in Floodwater; MPM Simulation Verification Provenance; Moving Rigid Body Free Surface Validation; Simulation Ready Vehicle Mesh Assets; Validated MPM Vehicle Water Coupling
+10.1007/s11069-022-05251-9	NO	NO	0	-	Quantitative Flood Traversability Connections
+10.1007/s11340-012-9619-z	NO	NO	0	-	Settling and Force Reporting in Free Surface Flow
+10.1007/s11433-023-2137-5	NO	NO	0	-	Validated MPM Vehicle Water Coupling
+10.1007/s11831-020-09473-7	NO	NO	0	-	MPM Simulation Verification Provenance; Physics Simulation Validation Protocol
+10.1007/s11831-020-09474-6	NO	NO	0	-	Small Data Physics Surrogates at 36 Conditions
+10.1007/s12665-025-12501-z	NO	NO	0	-	MPM Simulation Verification Provenance; Reliable AI Scientific Software
+10.1007/s13344-020-0032-6	NO	NO	0	-	Settling and Force Reporting in Free Surface Flow
+10.1007/s40571-014-0016-5	NO	NO	0	-	Multi-resolution MPM for Large-domain Flooding
+10.1007/s40571-022-00530-5	NO	NO	0	-	MPM Simulation Verification Provenance
+10.1007/s42241-024-0042-6	NO	NO	0	-	Reliable AI Scientific Software
+10.1007/s44212-024-00040-0	NO	NO	0	-	Quantitative Flood Traversability Connections
+10.1016/bs.aams.2019.11.001	NO	NO	0	-	Multi-resolution MPM for Large-domain Flooding; Physics Simulation Validation Protocol; Quantitative MPM Wall Penetration; Validated MPM Vehicle Water Coupling
+10.1016/j.aap.2025.108366	NO	NO	0	-	Quantitative Flood Traversability Connections
+10.1016/j.aei.2026.104432	NO	NO	0	-	Quantitative Flood Traversability Connections
+10.1016/j.apor.2018.04.015	NO	NO	0	-	Validated MPM Vehicle Water Coupling
+10.1016/j.apor.2018.10.020	NO	NO	0	-	Multi-resolution MPM for Large-domain Flooding
+10.1016/j.asej.2018.01.001	NO	NO	0	-	Dynamic Vehicle Traction in Floodwater
+10.1016/j.cag.2018.10.007	NO	NO	0	-	Multi-resolution MPM for Large-domain Flooding
+10.1016/j.chemolab.2021.104439	NO	NO	0	-	Small Data Physics Surrogates at 36 Conditions
+10.1016/j.cma.2011.03.016	NO	NO	0	-	MPM Simulation Verification Provenance; Physics Simulation Validation Protocol; Reliable AI Scientific Software; Validated MPM Vehicle Water Coupling
+10.1016/j.cma.2012.06.015	NO	NO	0	-	Multi-resolution MPM for Large-domain Flooding
+10.1016/j.cma.2015.02.020	NO	NO	0	-	Multi-resolution MPM for Large-domain Flooding
+10.1016/j.cma.2017.06.010	NO	NO	0	-	Multi-resolution MPM for Large-domain Flooding
+10.1016/j.cma.2018.01.010	NO	NO	0	-	Physics Simulation Validation Protocol; Validated MPM Vehicle Water Coupling
+10.1016/j.cma.2018.04.041	NO	NO	0	-	Physics Simulation Validation Protocol
+10.1016/j.cma.2018.06.029	NO	NO	0	-	Multi-resolution MPM for Large-domain Flooding
+10.1016/j.cma.2018.10.049	NO	NO	0	-	Multi-resolution MPM for Large-domain Flooding
+10.1016/j.cma.2020.112947	NO	NO	0	-	Small Data Physics Surrogates at 36 Conditions
+10.1016/j.cma.2021.114184	NO	NO	0	-	Multi-resolution MPM for Large-domain Flooding
+10.1016/j.cma.2022.114809	NO	NO	0	-	MPM Simulation Verification Provenance; Moving Rigid Body Free Surface Validation; Multi-resolution MPM for Large-domain Flooding; Quantitative MPM Wall Penetration; Validated MPM Vehicle Water Coupling
+10.1016/j.cma.2022.115013	NO	NO	0	-	Multi-resolution MPM for Large-domain Flooding
+10.1016/j.cma.2022.115019	NO	NO	0	-	Multi-resolution MPM for Large-domain Flooding
+10.1016/j.cma.2022.115356	NO	NO	0	-	Multi-resolution MPM for Large-domain Flooding
+10.1016/j.cma.2023.116644	NO	NO	0	-	Validated MPM Vehicle Water Coupling
+10.1016/j.cma.2024.117199	NO	NO	0	-	Multi-resolution MPM for Large-domain Flooding
+10.1016/j.cma.2025.118264	NO	NO	0	-	Quantitative MPM Wall Penetration
+10.1016/j.cnsns.2024.108202	NO	NO	0	-	Multi-resolution MPM for Large-domain Flooding
+10.1016/j.commatsci.2026.114839	NO	NO	0	-	Reliable AI Scientific Software; Trustworthy AI Assisted Scientific Simulation
+10.1016/j.compfluid.2014.07.025	NO	NO	0	-	MPM Simulation Verification Provenance; Physics Simulation Validation Protocol; Validated MPM Vehicle Water Coupling
+10.1016/j.compfluid.2015.10.004	NO	NO	0	-	Small Data Physics Surrogates at 36 Conditions
+10.1016/j.compfluid.2018.07.021	NO	NO	0	-	Small Data Physics Surrogates at 36 Conditions
+10.1016/j.compfluid.2018.09.005	NO	NO	0	-	MPM Simulation Verification Provenance; Multi-resolution MPM for Large-domain Flooding
+10.1016/j.compfluid.2018.10.007	YES	NO	9	CLAUDE.md	MPM Simulation Verification Provenance; Multi-resolution MPM for Large-domain Flooding; Quantitative MPM Wall Penetration
+10.1016/j.compgeo.2018.04.001	NO	NO	0	-	Multi-resolution MPM for Large-domain Flooding
+10.1016/j.compgeo.2020.103716	NO	NO	0	-	Multi-resolution MPM for Large-domain Flooding
+10.1016/j.compgeo.2020.103859	NO	NO	0	-	Physics Simulation Validation Protocol; Validated MPM Vehicle Water Coupling
+10.1016/j.compgeo.2021.104097	NO	NO	0	-	Multi-resolution MPM for Large-domain Flooding
+10.1016/j.compgeo.2021.104112	NO	NO	0	-	Physics Simulation Validation Protocol
+10.1016/j.compgeo.2023.105673	NO	NO	0	-	Multi-resolution MPM for Large-domain Flooding
+10.1016/j.cpc.2019.01.002	NO	NO	0	-	Multi-resolution MPM for Large-domain Flooding
+10.1016/j.cpc.2022.108377	NO	NO	0	-	Multi-resolution MPM for Large-domain Flooding
+10.1016/j.enganabound.2020.02.003	NO	NO	0	-	Multi-resolution MPM for Large-domain Flooding
+10.1016/j.enggeo.2024.107614	NO	NO	0	-	Physics Simulation Validation Protocol
+10.1016/j.envsoft.2011.02.017	NO	NO	0	-	Quantitative Flood Traversability Connections
+10.1016/j.hydroa.2020.100067	NO	NO	0	-	Quantitative Flood Traversability Connections
+10.1016/j.ijdrr.2016.04.003	YES	YES	16	paper/can_it_ford_references_IEEE.bib	MPM Simulation Verification Provenance; Moving Rigid Body Free Surface Validation; Quantitative Flood Traversability Connections; Validated MPM Vehicle Water Coupling
+10.1016/j.ijdrr.2018.07.007	NO	NO	0	-	Quantitative Flood Traversability Connections
+10.1016/j.ijdrr.2018.10.022	NO	NO	0	-	Physics Simulation Validation Protocol
+10.1016/j.infsof.2014.05.006	NO	NO	0	-	Reliable AI Scientific Software
+10.1016/j.jcp.2016.10.064	NO	NO	0	-	MPM Simulation Verification Provenance; Moving Rigid Body Free Surface Validation; Multi-resolution MPM for Large-domain Flooding; Quantitative MPM Wall Penetration; Validated MPM Vehicle Water Coupling
+10.1016/j.jcp.2017.12.042	NO	NO	0	-	Multi-resolution MPM for Large-domain Flooding
+10.1016/j.jcp.2018.05.013	NO	NO	0	-	Multi-resolution MPM for Large-domain Flooding
+10.1016/j.jcp.2018.09.043	NO	NO	0	-	Multi-resolution MPM for Large-domain Flooding
+10.1016/j.jcp.2019.07.053	NO	NO	0	-	Small Data Physics Surrogates at 36 Conditions
+10.1016/j.jcp.2022.111762	NO	NO	0	-	Multi-resolution MPM for Large-domain Flooding
+10.1016/j.jcp.2024.113457	NO	NO	0	-	Physics Simulation Validation Protocol; Quantitative MPM Wall Penetration
+10.1016/j.jcp.2025.113726	NO	NO	0	-	Reliable AI Scientific Software; Small Data Physics Surrogates at 36 Conditions
+10.1016/j.jenvman.2024.121209	NO	NO	0	-	Quantitative Flood Traversability Connections
+10.1016/j.jfluidstructs.2015.06.010	NO	NO	0	-	Dynamic Vehicle Traction in Floodwater; MPM Simulation Verification Provenance; Moving Rigid Body Free Surface Validation; Validated MPM Vehicle Water Coupling
+10.1016/j.jfluidstructs.2018.06.012	NO	NO	0	-	Moving Rigid Body Free Surface Validation
+10.1016/j.jfluidstructs.2019.01.015	NO	NO	0	-	Moving Rigid Body Free Surface Validation
+10.1016/j.jfluidstructs.2021.103342	NO	NO	0	-	Multi-resolution MPM for Large-domain Flooding
+10.1016/j.jhydrol.2016.03.037	NO	NO	0	-	Quantitative Flood Traversability Connections
+10.1016/j.jhydrol.2018.05.002	NO	NO	0	-	Physics Simulation Validation Protocol
+10.1016/j.jhydrol.2019.124231	NO	NO	0	-	Physics Simulation Validation Protocol
+10.1016/j.jhydrol.2022.127502	NO	NO	0	-	Physics Simulation Validation Protocol
+10.1016/j.jhydrol.2023.129525	YES	NO	1	_inbox/session_archive/LIVE_SESSION_LOG_2026-07-23.md	Dynamic Vehicle Traction in Floodwater; Elicit (bib+CSV); Moving Rigid Body Free Surface Validation; Validated MPM Vehicle Water Coupling
+10.1016/j.jnnfm.2021.104678	NO	NO	0	-	Quantitative MPM Wall Penetration
+10.1016/j.jocs.2021.101347	NO	NO	0	-	Reliable AI Scientific Software
+10.1016/j.joes.2018.05.002	NO	NO	0	-	Moving Rigid Body Free Surface Validation
+10.1016/j.jterra.2021.07.001	NO	NO	0	-	Dynamic Vehicle Traction in Floodwater
+10.1016/j.jweia.2019.02.024	NO	NO	0	-	Simulation Ready Vehicle Mesh Assets
+10.1016/j.nucengdes.2021.111423	NO	NO	0	-	Physics Simulation Validation Protocol
+10.1016/j.oceaneng.2011.09.008	NO	NO	0	-	Moving Rigid Body Free Surface Validation
+10.1016/j.oceaneng.2016.03.059	NO	NO	0	-	Settling and Force Reporting in Free Surface Flow
+10.1016/j.oceaneng.2019.03.006	NO	NO	0	-	Settling and Force Reporting in Free Surface Flow
+10.1016/j.oceaneng.2019.04.068	NO	NO	0	-	Settling and Force Reporting in Free Surface Flow
+10.1016/j.oceaneng.2019.106685	NO	NO	0	-	Settling and Force Reporting in Free Surface Flow
+10.1016/j.oceaneng.2020.107823	NO	NO	0	-	Settling and Force Reporting in Free Surface Flow
+10.1016/j.oceaneng.2021.108983	NO	NO	0	-	Settling and Force Reporting in Free Surface Flow
+10.1016/j.oceaneng.2022.111607	NO	NO	0	-	Dynamic Vehicle Traction in Floodwater; Validated MPM Vehicle Water Coupling
+10.1016/j.parco.2019.04.002	NO	NO	0	-	Settling and Force Reporting in Free Surface Flow
+10.1016/j.piutam.2015.11.005	NO	NO	0	-	Multi-resolution MPM for Large-domain Flooding
+10.1016/j.proeng.2017.01.041	NO	NO	0	-	MPM Simulation Verification Provenance; Physics Simulation Validation Protocol; Quantitative MPM Wall Penetration; Validated MPM Vehicle Water Coupling
+10.1016/j.ress.2018.01.015	NO	NO	0	-	Quantitative Flood Traversability Connections
+10.1016/j.ress.2019.106567	NO	NO	0	-	Quantitative Flood Traversability Connections
+10.1016/j.ress.2020.107105	NO	NO	0	-	Quantitative Flood Traversability Connections
+10.1016/j.ress.2021.107564	NO	NO	0	-	Quantitative Flood Traversability Connections
+10.1016/j.ress.2021.107624	NO	NO	0	-	Small Data Physics Surrogates at 36 Conditions
+10.1016/j.ress.2021.108202	NO	NO	0	-	Quantitative Flood Traversability Connections
+10.1016/j.ress.2024.110368	NO	NO	0	-	Quantitative Flood Traversability Connections
+10.1016/j.ress.2024.110452	NO	NO	0	-	Quantitative Flood Traversability Connections
+10.1016/j.rineng.2019.100032	NO	NO	0	-	Dynamic Vehicle Traction in Floodwater; Elicit (bib+CSV); Moving Rigid Body Free Surface Validation
+10.1016/j.rineng.2024.102540	NO	NO	0	-	Elicit (bib+CSV)
+10.1016/j.rineng.2025.107189	NO	NO	0	-	Elicit (bib+CSV)
+10.1016/j.sandf.2020.06.004	NO	NO	0	-	MPM Simulation Verification Provenance
+10.1016/j.sandf.2020.09.006	NO	NO	0	-	Multi-resolution MPM for Large-domain Flooding
+10.1016/j.scitotenv.2018.11.191	NO	NO	0	-	Quantitative Flood Traversability Connections
+10.1016/j.scitotenv.2023.168237	NO	NO	0	-	Quantitative Flood Traversability Connections
+10.1016/j.ssci.2016.07.004	NO	NO	0	-	Elicit (bib+CSV)
+10.1016/j.strusafe.2017.10.008	NO	NO	0	-	Quantitative Flood Traversability Connections
+10.1016/j.trd.2017.06.020	NO	NO	0	-	Quantitative Flood Traversability Connections; Small Data Physics Surrogates at 36 Conditions
+10.1016/j.trd.2019.09.024	NO	NO	0	-	Quantitative Flood Traversability Connections
+10.1016/j.trd.2024.104354	NO	NO	0	-	Quantitative Flood Traversability Connections
+10.1016/j.trgeo.2020.100431	NO	NO	0	-	Quantitative Flood Traversability Connections
+10.1016/j.tws.2018.05.014	NO	NO	0	-	Physics Simulation Validation Protocol
+10.1016/j.uclim.2021.101069	NO	NO	0	-	Elicit (bib+CSV)
+10.1016/s0045-7825(01%2900377-2	NO	NO	0	-	Multi-resolution MPM for Large-domain Flooding
+10.1017/dmp.2024.116	NO	NO	0	-	Elicit (bib+CSV)
+10.1017/jfm.2019.102	NO	NO	0	-	Moving Rigid Body Free Surface Validation
+10.1017/jfm.2021.846	NO	NO	0	-	Settling and Force Reporting in Free Surface Flow
+10.1017/jfm.2023.327	NO	NO	0	-	Small Data Physics Surrogates at 36 Conditions
+10.1017/s089006041900026x	NO	NO	0	-	Small Data Physics Surrogates at 36 Conditions
+10.1017/s1049023x19001468	NO	NO	0	-	Elicit (bib+CSV)
+10.1021/acs.jctc.4c00417	NO	NO	0	-	Settling and Force Reporting in Free Surface Flow
+10.1021/acs.jctc.4c01359	NO	NO	0	-	Settling and Force Reporting in Free Surface Flow
+10.1029/2020ms002277	NO	NO	0	-	Multi-resolution MPM for Large-domain Flooding
+10.1029/2023wr034545	NO	NO	0	-	Physics Simulation Validation Protocol; Quantitative Flood Traversability Connections
+10.1029/2023wr036739	YES	YES	27	paper/can_it_ford_references_IEEE.bib	Validated MPM Vehicle Water Coupling
+10.1038/s41524-021-00594-6	NO	NO	0	-	Reliable AI Scientific Software
+10.1038/s41597-020-00638-4	YES	NO	1	docs/LITERATURE_CI_GATES_2026-08-08.md	MPM Simulation Verification Provenance; Reliable AI Scientific Software
+10.1038/s41597-022-01720-9	NO	NO	0	-	Reliable AI Scientific Software
+10.1038/s41598-025-25267-y	NO	NO	0	-	Quantitative Flood Traversability Connections
+10.1038/s41598-025-92337-6	NO	NO	0	-	Reliable AI Scientific Software
+10.1051/matecconf/201820307003	YES	YES	35	paper/can_it_ford_references_IEEE.bib	Dynamic Vehicle Traction in Floodwater
+10.1061/(asce%290733-9429(1987%29113:3(370%29	NO	NO	0	-	Settling and Force Reporting in Free Surface Flow
+10.1061/(asce%290733-9429(2002%29128:12(1069%29	NO	NO	0	-	Settling and Force Reporting in Free Surface Flow
+10.1061/(asce%290733-9429(2002%29128:4(369%29	NO	NO	0	-	Settling and Force Reporting in Free Surface Flow
+10.1061/(asce%29as.1943-5525.0001050	NO	NO	0	-	Quantitative Flood Traversability Connections
+10.1061/(asce%29cf.1943-5509.0001538	NO	NO	0	-	Quantitative Flood Traversability Connections
+10.1061/(asce%29em.1943-7889.0000981	NO	NO	0	-	MPM Simulation Verification Provenance; Multi-resolution MPM for Large-domain Flooding; Quantitative MPM Wall Penetration
+10.1061/(asce%29gt.1943-5606.0001011	NO	NO	0	-	Physics Simulation Validation Protocol
+10.1061/(asce%29hy.1943-7900.0001097	NO	NO	0	-	Physics Simulation Validation Protocol
+10.1061/(asce%29ir.1943-4774.0000252	NO	NO	0	-	Settling and Force Reporting in Free Surface Flow
+10.1061/(asce%29is.1943-555x.0000212	NO	NO	0	-	Quantitative Flood Traversability Connections
+10.1061/(asce%29is.1943-555x.0000372	NO	NO	0	-	Quantitative Flood Traversability Connections
+10.1061/9780784412312.122	NO	NO	0	-	Physics Simulation Validation Protocol
+10.1061/9780784413005.045	NO	NO	0	-	Dynamic Vehicle Traction in Floodwater
+10.1061/ajrua6.0001088	NO	NO	0	-	Quantitative Flood Traversability Connections
+10.1063/1.1638996	NO	NO	0	-	Settling and Force Reporting in Free Surface Flow
+10.1063/1.449733	NO	NO	0	-	Settling and Force Reporting in Free Surface Flow
+10.1063/1.457480	NO	NO	0	-	Settling and Force Reporting in Free Surface Flow
+10.1063/1.4902608	NO	NO	0	-	Settling and Force Reporting in Free Surface Flow
+10.1063/1.4919276	NO	NO	0	-	Reliable AI Scientific Software
+10.1063/5.0174148	NO	NO	0	-	Dynamic Vehicle Traction in Floodwater
+10.1063/5.0178642	NO	NO	0	-	Settling and Force Reporting in Free Surface Flow
+10.1063/5.0230381	NO	NO	0	-	Settling and Force Reporting in Free Surface Flow
+10.1063/5.0276643	NO	NO	0	-	Multi-resolution MPM for Large-domain Flooding
+10.1063/5.0302483	NO	NO	0	-	Multi-resolution MPM for Large-domain Flooding
+10.1080/00221686.2011.616318	YES	NO	8	_inbox/LIVE_SESSION_LOG.md	Dynamic Vehicle Traction in Floodwater; MPM Simulation Verification Provenance; Moving Rigid Body Free Surface Validation; Validated MPM Vehicle Water Coupling
+10.1080/00221686.2019.1647887	NO	NO	0	-	Quantitative Flood Traversability Connections; Small Data Physics Surrogates at 36 Conditions
+10.1080/00224065.2019.1611351	NO	NO	0	-	Small Data Physics Surrogates at 36 Conditions
+10.1080/00268978600100071	NO	NO	0	-	Settling and Force Reporting in Free Surface Flow
+10.1080/00423114.2019.1693047	NO	NO	0	-	Dynamic Vehicle Traction in Floodwater
+10.1080/00423114.2020.1854317	NO	NO	0	-	Physics Simulation Validation Protocol
+10.1080/00949655.2024.2439488	NO	NO	0	-	Small Data Physics Surrogates at 36 Conditions
+10.1080/01621459.1991.10475138	NO	NO	0	-	Small Data Physics Surrogates at 36 Conditions
+10.1080/02626667.2023.2174026	NO	NO	0	-	Physics Simulation Validation Protocol
+10.1080/09377255.2023.2252232	NO	NO	0	-	Settling and Force Reporting in Free Surface Flow
+10.1080/13588265.2024.2301816	NO	NO	0	-	Physics Simulation Validation Protocol
+10.1080/14484846.2007.11464528	NO	NO	0	-	Settling and Force Reporting in Free Surface Flow
+10.1080/15715124.2012.674040	YES	NO	1	_inbox/session_archive/LIVE_SESSION_LOG_2026-07-23.md	Dynamic Vehicle Traction in Floodwater; Elicit (bib+CSV); Moving Rigid Body Free Surface Validation; Validated MPM Vehicle Water Coupling
+10.1080/15715124.2019.1566240	YES	NO	3	archive/superseded_docs/vehicle_class_comparison_2026-07-21.SUPERSEDED.json	Elicit (bib+CSV); Quantitative Flood Traversability Connections; Validated MPM Vehicle Water Coupling
+10.1080/15715124.2019.1687487	YES	NO	3	archive/superseded_docs/vehicle_class_comparison_2026-07-21.SUPERSEDED.json	Elicit (bib+CSV); Moving Rigid Body Free Surface Validation
+10.1080/1573062x.2017.1301501	YES	NO	3	_inbox/session_archive/LIVE_SESSION_LOG_2026-07-23.md	Dynamic Vehicle Traction in Floodwater; Elicit (bib+CSV); MPM Simulation Verification Provenance; Moving Rigid Body Free Surface Validation; Validated MPM Vehicle Water Coupling
+10.1080/15732479.2020.1815226	NO	NO	0	-	Quantitative Flood Traversability Connections
+10.1080/17445302.2010.522372	NO	NO	0	-	Moving Rigid Body Free Surface Validation
+10.1080/17445302.2019.1615705	NO	NO	0	-	Moving Rigid Body Free Surface Validation
+10.1080/17477891.2013.832651	NO	NO	0	-	Elicit (bib+CSV)
+10.1080/19439962.2010.506596	NO	NO	0	-	Elicit (bib+CSV)
+10.1080/23789689.2022.2149184	NO	NO	0	-	Quantitative Flood Traversability Connections
+10.1080/23863781.2019.1685921	NO	NO	0	-	MPM Simulation Verification Provenance; Validated MPM Vehicle Water Coupling
+10.1093/bioinformatics/btag044	NO	NO	0	-	Settling and Force Reporting in Free Surface Flow
+10.1093/biomet/87.1.1	NO	NO	0	-	Small Data Physics Surrogates at 36 Conditions
+10.1098/rsos.160023	NO	NO	0	-	Quantitative Flood Traversability Connections
+10.1101/021659	NO	NO	0	-	Settling and Force Reporting in Free Surface Flow
+10.1103/physrev.182.280	NO	NO	0	-	Settling and Force Reporting in Free Surface Flow
+10.1103/physreve.98.043304	NO	NO	0	-	Settling and Force Reporting in Free Surface Flow
+10.1109/access.2021.3136585	NO	NO	0	-	Quantitative Flood Traversability Connections
+10.1109/access.2022.3157904	NO	NO	0	-	MPM Simulation Verification Provenance; Physics Simulation Validation Protocol; Validated MPM Vehicle Water Coupling
+10.1109/access.2023.3242127	NO	NO	0	-	Physics Simulation Validation Protocol; Quantitative Flood Traversability Connections
+10.1109/access.2025.3567868	NO	NO	0	-	Optical Vehicle Collision Geometry
+10.1109/aixvr67263.2026.00075	NO	NO	0	-	Optical Vehicle Collision Geometry
+10.1109/ase63991.2025.00323	NO	NO	0	-	Reliable AI Scientific Software
+10.1109/case56687.2023.10260554	NO	NO	0	-	Optical Vehicle Collision Geometry
+10.1109/correctness51934.2020.00011	NO	NO	0	-	Settling and Force Reporting in Free Surface Flow
+10.1109/csce60160.2023.00411	NO	NO	0	-	Reliable AI Scientific Software
+10.1109/csci62032.2023.00251	NO	NO	0	-	Quantitative Flood Traversability Connections
+10.1109/csecs69124.2026.11541955	NO	NO	0	-	Optical Vehicle Collision Geometry
+10.1109/cvpr52733.2024.00512	NO	NO	0	-	Optical Vehicle Collision Geometry
+10.1109/dsn-w50199.2020.00026	NO	NO	0	-	Quantitative Flood Traversability Connections
+10.1109/iccv51701.2025.02458	YES	NO	1	_inbox/session_archive/LIVE_SESSION_LOG_2026-07-23.md	Simulation Ready Vehicle Mesh Assets
+10.1109/icmla66185.2025.00052	NO	NO	0	-	Optical Vehicle Collision Geometry
+10.1109/icse55347.2025.00245	NO	NO	0	-	Reliable AI Scientific Software
+10.1109/icstw60967.2024.00056	NO	NO	0	-	Reliable AI Scientific Software
+10.1109/ipdps.2010.5470481	NO	NO	0	-	Settling and Force Reporting in Free Surface Flow
+10.1109/iros60139.2025.11246653	NO	NO	0	-	Optical Vehicle Collision Geometry
+10.1109/issrew63542.2024.00040	NO	NO	0	-	Quantitative Flood Traversability Connections
+10.1109/itsc48978.2021.9564879	NO	NO	0	-	Quantitative Flood Traversability Connections
+10.1109/itsc58415.2024.10919733	NO	NO	0	-	Quantitative Flood Traversability Connections
+10.1109/iv47402.2020.9304552	NO	NO	0	-	Quantitative Flood Traversability Connections
+10.1109/iv47402.2020.9304823	NO	NO	0	-	Physics Simulation Validation Protocol
+10.1109/iv51971.2022.9827061	NO	NO	0	-	Quantitative Flood Traversability Connections
+10.1109/iv55152.2023.10186765	NO	NO	0	-	Quantitative Flood Traversability Connections
+10.1109/iv55152.2023.10186795	NO	NO	0	-	Physics Simulation Validation Protocol
+10.1109/ivs.2018.8500530	NO	NO	0	-	Quantitative Flood Traversability Connections
+10.1109/lra.2025.3546126	NO	NO	0	-	Physics Simulation Validation Protocol
+10.1109/mc.2023.3236171	NO	NO	0	-	Physics Simulation Validation Protocol
+10.1109/mcse.2018.2880577	NO	NO	0	-	Reliable AI Scientific Software
+10.1109/mcse.2021.3072860	NO	NO	0	-	Reliable AI Scientific Software
+10.1109/mcse.2023.3314288	YES	NO	1	docs/LITERATURE_CI_GATES_2026-08-08.md	MPM Simulation Verification Provenance; Reliable AI Scientific Software
+10.1109/qrs-c63300.2024.00131	NO	NO	0	-	Quantitative Flood Traversability Connections
+10.1109/sdf67080.2025.11331266	YES	NO	1	_inbox/session_archive/LIVE_SESSION_LOG_2026-07-22.md	Simulation Ready Vehicle Mesh Assets
+10.1109/smc52423.2021.9658751	NO	NO	0	-	Quantitative Flood Traversability Connections
+10.1109/smc52423.2021.9658812	NO	NO	0	-	Quantitative Flood Traversability Connections
+10.1109/tits.2024.3416368	NO	NO	0	-	Quantitative Flood Traversability Connections
+10.1109/tits.2025.3532684	NO	NO	0	-	Physics Simulation Validation Protocol; Quantitative Flood Traversability Connections
+10.1109/tiv.2024.3370836	NO	NO	0	-	Quantitative Flood Traversability Connections
+10.1109/tpds.2024.3374555	NO	NO	0	-	MPM Simulation Verification Provenance; Reliable AI Scientific Software
+10.1109/tvcg.2014.2307873	NO	NO	0	-	Multi-resolution MPM for Large-domain Flooding
+10.1109/vtc2021-spring51267.2021.9448759	NO	NO	0	-	Quantitative Flood Traversability Connections
+10.1111/cgf.13523	NO	NO	0	-	Validated MPM Vehicle Water Coupling
+10.1111/cgf.14101	YES	NO	1	docs/LITERATURE_CI_GATES_2026-08-08.md	MPM Simulation Verification Provenance; Multi-resolution MPM for Large-domain Flooding
+10.1111/cgf.14620	YES	NO	1	docs/LITERATURE_CI_GATES_2026-08-08.md	MPM Simulation Verification Provenance; Multi-resolution MPM for Large-domain Flooding
+10.1111/j.1753-318x.2012.01136.x	NO	NO	0	-	Elicit (bib+CSV)
+10.1111/jfr3.12262	YES	NO	2	_inbox/LIVE_SESSION_LOG.md	Elicit (bib+CSV); Validated MPM Vehicle Water Coupling
+10.1111/jfr3.12527	YES	YES	34	paper/can_it_ford_references_IEEE.bib	Dynamic Vehicle Traction in Floodwater; Elicit (bib+CSV); MPM Simulation Verification Provenance; Moving Rigid Body Free Surface Validation; Quantitative Flood Traversability Connections; Simulation Ready Vehicle Mesh Assets; Small Data Physics Surrogates at 36 Conditions; Validated MPM Vehicle Water Coupling
+10.1111/jfr3.12551	NO	NO	0	-	Elicit (bib+CSV); MPM Simulation Verification Provenance; Moving Rigid Body Free Surface Validation; Quantitative Flood Traversability Connections; Validated MPM Vehicle Water Coupling
+10.1111/jfr3.12645	NO	NO	0	-	Elicit (bib+CSV)
+10.1111/jfr3.12657	YES	NO	1	reference_docs/can-it-ford-rebuild-research.md	Dynamic Vehicle Traction in Floodwater; Elicit (bib+CSV); MPM Simulation Verification Provenance; Moving Rigid Body Free Surface Validation; Validated MPM Vehicle Water Coupling
+10.1111/jfr3.12737	NO	NO	0	-	Elicit (bib+CSV); Quantitative Flood Traversability Connections; Small Data Physics Surrogates at 36 Conditions
+10.1111/jfr3.12828	YES	NO	1	docs/LIT_QUEUE_2026-07-30.md	Dynamic Vehicle Traction in Floodwater; Elicit (bib+CSV); MPM Simulation Verification Provenance; Moving Rigid Body Free Surface Validation; Simulation Ready Vehicle Mesh Assets; Validated MPM Vehicle Water Coupling
+10.1111/jfr3.12855	NO	NO	0	-	Quantitative Flood Traversability Connections
+10.1111/jfr3.12885	YES	YES	25	paper/can_it_ford_references_IEEE.bib	Dynamic Vehicle Traction in Floodwater; Elicit (bib+CSV); MPM Simulation Verification Provenance; Moving Rigid Body Free Surface Validation; Validated MPM Vehicle Water Coupling
+10.1111/jfr3.70154	NO	NO	0	-	Quantitative Flood Traversability Connections
+10.1111/jfr3.70181	YES	NO	8	CLAUDE.md	Elicit (bib+CSV); MPM Simulation Verification Provenance; Quantitative Flood Traversability Connections; Validated MPM Vehicle Water Coupling
+10.1111/risa.13370	NO	NO	0	-	Quantitative Flood Traversability Connections
+10.1111/risa.14317	NO	NO	0	-	Quantitative Flood Traversability Connections
+10.11113/jt.v80.11198	NO	NO	0	-	Elicit (bib+CSV)
+10.1115/1.1412235	NO	NO	0	-	MPM Simulation Verification Provenance; Physics Simulation Validation Protocol; Validated MPM Vehicle Water Coupling
+10.1115/1.1767847	NO	NO	0	-	MPM Simulation Verification Provenance; Physics Simulation Validation Protocol; Reliable AI Scientific Software; Validated MPM Vehicle Water Coupling
+10.1115/1.1906269	NO	NO	0	-	Settling and Force Reporting in Free Surface Flow
+10.1115/1.2819500	NO	NO	0	-	Physics Simulation Validation Protocol
+10.1115/1.2910291	YES	NO	1	docs/LITERATURE_CI_GATES_2026-08-08.md	MPM Simulation Verification Provenance; Physics Simulation Validation Protocol; Validated MPM Vehicle Water Coupling
+10.1115/1.2960953	YES	NO	1	docs/LITERATURE_CI_GATES_2026-08-08.md	MPM Simulation Verification Provenance; Physics Simulation Validation Protocol; Validated MPM Vehicle Water Coupling
+10.1115/1.2988476	NO	NO	0	-	Small Data Physics Surrogates at 36 Conditions
+10.1115/1.3241818	NO	NO	0	-	Settling and Force Reporting in Free Surface Flow
+10.1115/1.4001771	NO	NO	0	-	Physics Simulation Validation Protocol
+10.1115/1.4001873	NO	NO	0	-	Small Data Physics Surrogates at 36 Conditions
+10.1115/1.4004223	NO	NO	0	-	Physics Simulation Validation Protocol
+10.1115/1.4032369	NO	NO	0	-	Physics Simulation Validation Protocol
+10.1115/1.4032371	NO	NO	0	-	Physics Simulation Validation Protocol
+10.1115/1.4044632	NO	NO	0	-	Moving Rigid Body Free Surface Validation; Settling and Force Reporting in Free Surface Flow
+10.1115/1.4046787	NO	NO	0	-	Physics Simulation Validation Protocol
+10.1115/1.4047393	NO	NO	0	-	Dynamic Vehicle Traction in Floodwater
+10.1115/1.4051069	NO	NO	0	-	Physics Simulation Validation Protocol
+10.1115/1.4052402	NO	NO	0	-	Settling and Force Reporting in Free Surface Flow
+10.1115/1.4056285	NO	NO	0	-	MPM Simulation Verification Provenance; Physics Simulation Validation Protocol
+10.1115/1.4063010	NO	NO	0	-	Settling and Force Reporting in Free Surface Flow
+10.1115/1.4064971	YES	NO	2	_inbox/session_archive/LIVE_SESSION_LOG_2026-07-22.md	Dynamic Vehicle Traction in Floodwater; Validated MPM Vehicle Water Coupling
+10.1115/1.4071177	NO	NO	0	-	Dynamic Vehicle Traction in Floodwater; MPM Simulation Verification Provenance; Moving Rigid Body Free Surface Validation; Physics Simulation Validation Protocol; Validated MPM Vehicle Water Coupling
+10.1115/detc2014-34300	NO	NO	0	-	Optical Vehicle Collision Geometry; Simulation Ready Vehicle Mesh Assets
+10.1115/detc2015-47142	NO	NO	0	-	Dynamic Vehicle Traction in Floodwater; Elicit (bib+CSV); MPM Simulation Verification Provenance; Moving Rigid Body Free Surface Validation; Multi-resolution MPM for Large-domain Flooding; Simulation Ready Vehicle Mesh Assets; Validated MPM Vehicle Water Coupling
+10.1115/detc2018-85006	NO	NO	0	-	Dynamic Vehicle Traction in Floodwater; Validated MPM Vehicle Water Coupling
+10.1115/detc2022-89632	NO	NO	0	-	Multi-resolution MPM for Large-domain Flooding
+10.1115/detc2023-115254	NO	NO	0	-	Dynamic Vehicle Traction in Floodwater
+10.1115/detc2024-143593	NO	NO	0	-	Simulation Ready Vehicle Mesh Assets
+10.1115/imece2013-64652	NO	NO	0	-	Multi-resolution MPM for Large-domain Flooding
+10.1115/omae2009-79398	NO	NO	0	-	Physics Simulation Validation Protocol
+10.1115/omae2015-41250	NO	NO	0	-	Settling and Force Reporting in Free Surface Flow
+10.1115/omae2015-41850	NO	NO	0	-	Settling and Force Reporting in Free Surface Flow
+10.1115/omae2018-78598	NO	NO	0	-	Physics Simulation Validation Protocol
+10.1115/omae2019-96262	NO	NO	0	-	Settling and Force Reporting in Free Surface Flow
+10.1115/vvs2020-8826	NO	NO	0	-	MPM Simulation Verification Provenance; Physics Simulation Validation Protocol; Validated MPM Vehicle Water Coupling
+10.1126/sciadv.aba2423	NO	NO	0	-	Quantitative Flood Traversability Connections
+10.1137/17m1131210	NO	NO	0	-	Small Data Physics Surrogates at 36 Conditions
+10.1142/s0219876218500615	NO	NO	0	-	MPM Simulation Verification Provenance; Validated MPM Vehicle Water Coupling
+10.1145/1134285.1134323	NO	NO	0	-	Reliable AI Scientific Software
+10.1145/3092703.3092722	NO	NO	0	-	Reliable AI Scientific Software
+10.1145/3130800.3130879	NO	NO	0	-	Multi-resolution MPM for Large-domain Flooding
+10.1145/3197517.3201293	YES	NO	6	CLAUDE.md	Multi-resolution MPM for Large-domain Flooding; Validated MPM Vehicle Water Coupling
+10.1145/3214239.3214242	NO	NO	0	-	Reliable AI Scientific Software
+10.1145/3322790.3330595	NO	NO	0	-	Reliable AI Scientific Software
+10.1145/3386569.3392460	NO	NO	0	-	Multi-resolution MPM for Large-domain Flooding
+10.1145/3414685.3417794	NO	NO	0	-	Multi-resolution MPM for Large-domain Flooding
+10.1145/3428210	NO	NO	0	-	Reliable AI Scientific Software
+10.1145/3478513.3480495	NO	NO	0	-	Multi-resolution MPM for Large-domain Flooding
+10.1145/3480146	NO	NO	0	-	Optical Vehicle Collision Geometry
+10.1145/3528223.3530093	NO	NO	0	-	Optical Vehicle Collision Geometry
+10.1145/3528223.3530103	NO	NO	0	-	Optical Vehicle Collision Geometry
+10.1145/3570160	NO	NO	0	-	Multi-resolution MPM for Large-domain Flooding
+10.1145/3728894	NO	NO	0	-	Reliable AI Scientific Software
+10.1145/3732775.3733572	NO	NO	0	-	Reliable AI Scientific Software
+10.1145/3754598.3754669	NO	NO	0	-	Reliable AI Scientific Software
+10.1145/3774905.3795485	NO	NO	0	-	Reliable AI Scientific Software
+10.1145/3798166	NO	NO	0	-	Reliable AI Scientific Software
+10.1146/annurev-fluid-010816-060121	NO	NO	0	-	Settling and Force Reporting in Free Surface Flow
+10.1146/annurev-fluid-011212-140753	NO	NO	0	-	Settling and Force Reporting in Free Surface Flow
+10.1155/2016/8092824	NO	NO	0	-	Small Data Physics Surrogates at 36 Conditions
+10.1155/2018/2850546	NO	NO	0	-	Quantitative Flood Traversability Connections; Small Data Physics Surrogates at 36 Conditions
+10.1155/2020/4392581	NO	NO	0	-	Physics Simulation Validation Protocol
+10.11588/ans.2017.1.27447	NO	NO	0	-	Reliable AI Scientific Software
+10.1175/jtech-d-17-0038.1	NO	NO	0	-	Settling and Force Reporting in Free Surface Flow
+10.1177/0361198119855975	NO	NO	0	-	Quantitative Flood Traversability Connections
+10.1177/0954407020942005	NO	NO	0	-	Moving Rigid Body Free Surface Validation; Validated MPM Vehicle Water Coupling
+10.1177/09544070211053528	NO	NO	0	-	Simulation Ready Vehicle Mesh Assets
+10.1177/1687814017696415	NO	NO	0	-	Quantitative Flood Traversability Connections
+10.1177/2399808320971304	NO	NO	0	-	Quantitative Flood Traversability Connections
+10.1198/tech.2009.08040	NO	NO	0	-	Small Data Physics Surrogates at 36 Conditions
+10.12688/f1000research.51738.2	NO	NO	0	-	Reliable AI Scientific Software
+10.12688/openreseurope.16036.1	NO	NO	0	-	Quantitative Flood Traversability Connections
+10.1287/ijoc.2021.1072	NO	NO	0	-	Small Data Physics Surrogates at 36 Conditions
+10.12989/sss.2016.17.1.149	NO	NO	0	-	Quantitative Flood Traversability Connections
+10.1371/journal.pbio.1001745	NO	NO	0	-	Reliable AI Scientific Software
+10.1504/pcfd.2016.10001222	NO	NO	0	-	MPM Simulation Verification Provenance; Physics Simulation Validation Protocol; Quantitative MPM Wall Penetration
+10.1504/pcfd.2019.10018820	NO	NO	0	-	MPM Simulation Verification Provenance; Moving Rigid Body Free Surface Validation; Physics Simulation Validation Protocol; Quantitative MPM Wall Penetration; Validated MPM Vehicle Water Coupling
+10.1615/int.j.uncertaintyquantification.2014006914	NO	NO	0	-	Small Data Physics Surrogates at 36 Conditions
+10.17077/etd.jgq7s29l	NO	NO	0	-	Settling and Force Reporting in Free Surface Flow
+10.17265/1934-7359/2012.05.001	NO	NO	0	-	Quantitative Flood Traversability Connections
+10.17736/ijope.2020.jc774	NO	NO	0	-	Moving Rigid Body Free Surface Validation
+10.21236/ad0697160	NO	NO	0	-	Dynamic Vehicle Traction in Floodwater
+10.2172/1096465	NO	NO	0	-	Physics Simulation Validation Protocol
+10.2172/1214246	NO	NO	0	-	Physics Simulation Validation Protocol
+10.2172/780290	NO	NO	0	-	Physics Simulation Validation Protocol
+10.2312/localchapterevents/tpcg/tpcg09/069-076	NO	NO	0	-	Multi-resolution MPM for Large-domain Flooding
+10.23967/eccomas.2022.228	NO	NO	0	-	Settling and Force Reporting in Free Surface Flow
+10.2514/1.34321	NO	NO	0	-	Small Data Physics Surrogates at 36 Conditions
+10.2514/1.46358	NO	NO	0	-	Physics Simulation Validation Protocol
+10.2514/1.8650	NO	NO	0	-	Small Data Physics Surrogates at 36 Conditions
+10.2514/1.j050327	NO	NO	0	-	Small Data Physics Surrogates at 36 Conditions
+10.2514/1.j050384	NO	NO	0	-	Small Data Physics Surrogates at 36 Conditions
+10.2514/1.j051243	NO	NO	0	-	Small Data Physics Surrogates at 36 Conditions
+10.2514/1.j052008	NO	NO	0	-	Small Data Physics Surrogates at 36 Conditions
+10.2514/1.j056640	NO	NO	0	-	Small Data Physics Surrogates at 36 Conditions
+10.2514/2.1185	NO	NO	0	-	Small Data Physics Surrogates at 36 Conditions
+10.2514/2.1538	NO	NO	0	-	Small Data Physics Surrogates at 36 Conditions
+10.2514/2.457	NO	NO	0	-	Physics Simulation Validation Protocol
+10.2514/3.62822	NO	NO	0	-	Moving Rigid Body Free Surface Validation
+10.2514/3.63081	NO	NO	0	-	Moving Rigid Body Free Surface Validation
+10.2514/6.2007-1928	NO	NO	0	-	Small Data Physics Surrogates at 36 Conditions
+10.2514/6.2008-1716	NO	NO	0	-	Small Data Physics Surrogates at 36 Conditions
+10.2514/6.2009-6148	NO	NO	0	-	Multi-resolution MPM for Large-domain Flooding
+10.2514/6.2010-1464	NO	NO	0	-	Multi-resolution MPM for Large-domain Flooding
+10.2514/6.2011-1171	NO	NO	0	-	Small Data Physics Surrogates at 36 Conditions
+10.2514/6.2014-0205	NO	NO	0	-	Physics Simulation Validation Protocol
+10.2514/6.2014-0415	NO	NO	0	-	MPM Simulation Verification Provenance
+10.2514/6.2015-0502	NO	NO	0	-	Physics Simulation Validation Protocol
+10.2514/6.2026-0686	NO	NO	0	-	Small Data Physics Surrogates at 36 Conditions
+10.26190/unsworks/27416	NO	NO	0	-	Elicit (bib+CSV)
+10.31436/iiumej.v22i1.1502	NO	NO	0	-	Dynamic Vehicle Traction in Floodwater; MPM Simulation Verification Provenance
+10.32508/stdjet.v4i1.782	NO	NO	0	-	Simulation Ready Vehicle Mesh Assets
+10.33011/livecoms.1.1.5067	NO	NO	0	-	Settling and Force Reporting in Free Surface Flow
+10.3389/frwa.2023.1278205	NO	NO	0	-	Quantitative Flood Traversability Connections
+10.3390/app11051983	NO	NO	0	-	MPM Simulation Verification Provenance; Physics Simulation Validation Protocol; Validated MPM Vehicle Water Coupling
+10.3390/app12063076	NO	NO	0	-	Quantitative Flood Traversability Connections
+10.3390/app14020639	NO	NO	0	-	Settling and Force Reporting in Free Surface Flow
+10.3390/app16073433	NO	NO	0	-	Dynamic Vehicle Traction in Floodwater
+10.3390/computation12100207	NO	NO	0	-	Small Data Physics Surrogates at 36 Conditions
+10.3390/en14020269	NO	NO	0	-	Moving Rigid Body Free Surface Validation
+10.3390/su12062330	NO	NO	0	-	Quantitative Flood Traversability Connections
+10.3390/su151713262	YES	YES	8	paper/can_it_ford_references_IEEE.bib	Dynamic Vehicle Traction in Floodwater; Elicit (bib+CSV); MPM Simulation Verification Provenance; Simulation Ready Vehicle Mesh Assets; Validated MPM Vehicle Water Coupling
+10.3390/w13141968	NO	NO	0	-	Physics Simulation Validation Protocol
+10.3390/w15061229	NO	NO	0	-	Physics Simulation Validation Protocol
+10.3390/wevj15060266	NO	NO	0	-	Optical Vehicle Collision Geometry; Simulation Ready Vehicle Mesh Assets
+10.36190/2025.49	NO	NO	0	-	Reliable AI Scientific Software
+10.3744/snak.2014.51.5.396	NO	NO	0	-	Settling and Force Reporting in Free Surface Flow
+10.3850/38wc092019-1786	NO	NO	0	-	Quantitative Flood Traversability Connections
+10.3970/cmes.2004.005.477	NO	NO	0	-	Multi-resolution MPM for Large-domain Flooding
+10.3970/cmes.2005.008.135	NO	NO	0	-	Multi-resolution MPM for Large-domain Flooding
+10.3970/cmes.2006.012.213	NO	NO	0	-	Multi-resolution MPM for Large-domain Flooding
+10.3970/cmes.2007.019.223	NO	NO	0	-	Multi-resolution MPM for Large-domain Flooding
+10.3970/cmes.2008.031.107	NO	NO	0	-	MPM Simulation Verification Provenance; Multi-resolution MPM for Large-domain Flooding; Physics Simulation Validation Protocol; Quantitative MPM Wall Penetration
+10.4028/www.scientific.net/amm.592-594.1210	YES	NO	1	_inbox/session_archive/LIVE_SESSION_LOG_2026-07-22.md	Dynamic Vehicle Traction in Floodwater; Moving Rigid Body Free Surface Validation; Validated MPM Vehicle Water Coupling
+10.4208/cicp.080815.240316a	NO	NO	0	-	Settling and Force Reporting in Free Surface Flow
+10.4271/1999-01-0083	NO	NO	0	-	Simulation Ready Vehicle Mesh Assets
+10.4271/2000-01-0627	NO	NO	0	-	Simulation Ready Vehicle Mesh Assets
+10.4271/2003-01-0966	NO	NO	0	-	MPM Simulation Verification Provenance; Optical Vehicle Collision Geometry; Simulation Ready Vehicle Mesh Assets; Validated MPM Vehicle Water Coupling
+10.4271/2004-01-1174	NO	NO	0	-	Simulation Ready Vehicle Mesh Assets
+10.4271/2010-01-0770	NO	NO	0	-	Dynamic Vehicle Traction in Floodwater; Validated MPM Vehicle Water Coupling
+10.4271/2013-01-0784	NO	NO	0	-	Optical Vehicle Collision Geometry; Simulation Ready Vehicle Mesh Assets
+10.4271/2014-01-0936	NO	NO	0	-	Moving Rigid Body Free Surface Validation; Validated MPM Vehicle Water Coupling
+10.4271/2019-01-0140	NO	NO	0	-	Physics Simulation Validation Protocol
+10.4271/2021-01-0205	NO	NO	0	-	Dynamic Vehicle Traction in Floodwater; Elicit (bib+CSV)
+10.4271/2021-01-0252	NO	NO	0	-	Dynamic Vehicle Traction in Floodwater; Validated MPM Vehicle Water Coupling
+10.4271/2022-01-0768	NO	NO	0	-	Dynamic Vehicle Traction in Floodwater; Validated MPM Vehicle Water Coupling
+10.4271/2024-01-3375	NO	NO	0	-	Physics Simulation Validation Protocol
+10.4271/961000	NO	NO	0	-	Elicit (bib+CSV)
+10.4271/970951	NO	NO	0	-	Optical Vehicle Collision Geometry; Simulation Ready Vehicle Mesh Assets
+10.48550/arxiv.2211.06429	NO	NO	0	-	Reliable AI Scientific Software
+10.48550/arxiv.2406.02174	NO	NO	0	-	Reliable AI Scientific Software
+10.48550/arxiv.2406.09624	NO	NO	0	-	Simulation Ready Vehicle Mesh Assets
+10.48550/arxiv.2407.13168	NO	NO	0	-	Reliable AI Scientific Software
+10.48550/arxiv.2408.11969	NO	NO	0	-	Simulation Ready Vehicle Mesh Assets
+10.48550/arxiv.2409.05819	YES	NO	1	reference_docs/can-it-ford-rebuild-research.md	Optical Vehicle Collision Geometry
+10.48550/arxiv.2409.07440	NO	NO	0	-	Reliable AI Scientific Software
+10.48550/arxiv.2410.05080	NO	NO	0	-	Reliable AI Scientific Software
+10.48550/arxiv.2504.00255	NO	NO	0	-	Reliable AI Scientific Software
+10.48550/arxiv.2506.04120	NO	NO	0	-	Optical Vehicle Collision Geometry
+10.48550/arxiv.2509.06154	NO	NO	0	-	Small Data Physics Surrogates at 36 Conditions
+10.48550/arxiv.2509.09936	NO	NO	0	-	Reliable AI Scientific Software
+10.48550/arxiv.2509.12443	NO	NO	0	-	Reliable AI Scientific Software
+10.48550/arxiv.2509.20374	NO	NO	0	-	Reliable AI Scientific Software
+10.48550/arxiv.2512.01010	NO	NO	0	-	Reliable AI Scientific Software; Trustworthy AI Assisted Scientific Simulation
+10.48550/arxiv.2512.21373	NO	NO	0	-	Reliable AI Scientific Software; Trustworthy AI Assisted Scientific Simulation
+10.48550/arxiv.2512.22387	NO	NO	0	-	Reliable AI Scientific Software
+10.48550/arxiv.2601.15195	NO	NO	0	-	Reliable AI Scientific Software
+10.48550/arxiv.2602.07369	NO	NO	0	-	Optical Vehicle Collision Geometry
+10.48550/arxiv.2602.11666	NO	NO	0	-	Trustworthy AI Assisted Scientific Simulation
+10.48550/arxiv.2603.00214	NO	NO	0	-	Trustworthy AI Assisted Scientific Simulation
+10.48550/arxiv.2603.06394	NO	NO	0	-	Reliable AI Scientific Software
+10.48550/arxiv.2603.06739	NO	NO	0	-	Reliable AI Scientific Software
+10.48550/arxiv.2603.07287	NO	NO	0	-	Reliable AI Scientific Software
+10.48550/arxiv.2603.15976	NO	NO	0	-	Reliable AI Scientific Software; Trustworthy AI Assisted Scientific Simulation
+10.48550/arxiv.2603.23448	NO	NO	0	-	Reliable AI Scientific Software
+10.48550/arxiv.2603.25780	NO	NO	0	-	Reliable AI Scientific Software
+10.48550/arxiv.2603.26638	NO	NO	0	-	Optical Vehicle Collision Geometry
+10.48550/arxiv.2603.27646	NO	NO	0	-	Reliable AI Scientific Software
+10.48550/arxiv.2604.07337	NO	NO	0	-	Optical Vehicle Collision Geometry
+10.48550/arxiv.2604.11270	NO	NO	0	-	Reliable AI Scientific Software
+10.48550/arxiv.2604.18805	NO	NO	0	-	Reliable AI Scientific Software
+10.48550/arxiv.2605.00803	NO	NO	0	-	Reliable AI Scientific Software; Trustworthy AI Assisted Scientific Simulation
+10.48550/arxiv.2605.08941	NO	NO	0	-	Reliable AI Scientific Software; Trustworthy AI Assisted Scientific Simulation
+10.48550/arxiv.2605.09097	NO	NO	0	-	Multi-resolution MPM for Large-domain Flooding
+10.48550/arxiv.2605.09360	YES	NO	1	docs/LITERATURE_CI_GATES_2026-08-08.md	Reliable AI Scientific Software; Trustworthy AI Assisted Scientific Simulation
+10.48550/arxiv.2605.09636	NO	NO	0	-	Reliable AI Scientific Software
+10.48550/arxiv.2605.13245	NO	NO	0	-	Reliable AI Scientific Software; Trustworthy AI Assisted Scientific Simulation
+10.48550/arxiv.2605.17675	NO	NO	0	-	Reliable AI Scientific Software; Trustworthy AI Assisted Scientific Simulation
+10.48550/arxiv.2605.26186	NO	NO	0	-	Reliable AI Scientific Software
+10.48550/arxiv.2605.28525	NO	NO	0	-	Multi-resolution MPM for Large-domain Flooding
+10.48550/arxiv.2605.30353	NO	NO	0	-	Reliable AI Scientific Software
+10.51560/ofj.v5.134	NO	NO	0	-	Reliable AI Scientific Software
+10.5194/egusphere-egu2020-12405	NO	NO	0	-	Elicit (bib+CSV)
+10.5194/nhess-16-2455-2016	NO	NO	0	-	Quantitative Flood Traversability Connections
+10.5194/nhess-2020-375	NO	NO	0	-	Quantitative Flood Traversability Connections
+10.5194/nhess-2020-40	NO	NO	0	-	Physics Simulation Validation Protocol
+10.5194/nhess-21-1011-2021	NO	NO	0	-	Quantitative Flood Traversability Connections
+10.5194/nhess-24-4015-2024	NO	NO	0	-	Physics Simulation Validation Protocol
+10.5194/piahs-373-143-2016	YES	NO	1	reference_docs/can-it-ford-rebuild-research.md	Elicit (bib+CSV)
+10.5614/j.eng.technol.sci.2021.53.2.1	NO	NO	0	-	Settling and Force Reporting in Free Surface Flow
+10.5957/attc-1992-008	NO	NO	0	-	Settling and Force Reporting in Free Surface Flow
+10.59972/grz5jq8h	NO	NO	0	-	Physics Simulation Validation Protocol
+10.64898/2026.01.09.26343542	NO	NO	0	-	Reliable AI Scientific Software
+10.7712/120215.4301.806	NO	NO	0	-	Small Data Physics Surrogates at 36 Conditions
