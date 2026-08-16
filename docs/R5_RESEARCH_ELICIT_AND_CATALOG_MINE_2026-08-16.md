@@ -116,17 +116,28 @@ Full text in `data/r5_citation_thresholds.tsv`. Units as printed in the source.
 | 26 | 2013 | `10.1007/s11069-013-0889-2` | incipient velocity `2.0` m/s (Honda Accord) and `4.3` m/s (Audi Q7) at `0.35` m; slope series `3.9/3.3/2.9` and `4.4/3.9/3.6` m/s |
 | 7 | 2018 | `10.11113/JT.V80.11198` | `0.0168` m2/s at 0/360 deg, `0.0144` m2/s at 90/270 deg |
 
-**Trap, row 7.** Those two values are roughly twenty times below every other
-threshold in the table. They are almost certainly **model scale**, consistent
-with the 1:10 scale already recorded in project memory for the Shah work. Do not
-place `0.0168 m2/s` on the same axis as `0.30 m2/s` without resolving the scale
-factor. This is UNVERIFIED here: I did not open the paper.
+**Trap, row 7. RESOLVED in unit 3, and this paragraph was wrong twice.** Those two
+values are far below every other threshold in the table, and they are model
+scale. But the scale is **1:24**, not the 1:10 that project memory records for
+"the Shah work": row 7 is by Syed **Hamid** Hussain Shah, whereas the 1:10
+Perodua Viva experiments are by Syed **Muzzamil** Hussain Shah. Applying the
+remembered 1:10 factor here would have produced a wrong number. The magnitude of
+the gap was also wrong above: under Froude similitude it is about 118x, not
+twenty. See `docs/R5_RESEARCH_PRIMARY_SOURCE_VERDICTS_2026-08-16.md` section 6
+for the primary-source quotation and the full disambiguation. The operative rule
+is unchanged: never place `0.0168 m2/s` on the same axis as `0.30 m2/s`.
 
-**Relevance to the project's own numbers.** The project's administrative cap is
-3.0 m/s (CLAUDE.md L-2). Row 35 shows `V <= 3.0 m/s` appearing in the literature
-as a **stated component of the stability criterion itself** for all three vehicle
-classes. That is a much better provenance than "administrative", and it is worth
-following into the primary source before the paper repeats the weaker claim.
+**Relevance to the project's own numbers. THIS READING WAS TESTED AND REFUTED.**
+I suggested here that row 35's `V <= 3.0 m/s`, appearing as a component of the
+stability criterion for all three vehicle classes, gave the cap a better
+provenance than "administrative" and might amend CLAUDE.md L-2. The AR&R primary
+source, which is already in this repo at
+`citations/ARR_Project_10_Stage2_Report_Final.pdf`, says the opposite in as many
+words: the 3.0 m/s limit "was incorporated to provide agreement with human
+stability criteria ... and to ensure that, in the event of vehicle failure,
+safety was not compromised once people abandoned their cars". It is
+human-derived. **L-2 is correct as written and needs no amendment.** Working in
+`docs/R5_RESEARCH_PRIMARY_SOURCE_VERDICTS_2026-08-16.md` section 4.
 
 ## 4. Friction: the project's 0.55 has a measured source, and 0.3 does not
 
