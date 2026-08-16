@@ -24,6 +24,25 @@ Two claims in that commit body **stand**, both re-checked: the public
 `FLAG_CREDENTIAL_EXPOSURE` file (section 5, now confirmed on two separate
 origins) and the register merge result (section 6).
 
+### Where to look
+
+Sections were added as work landed, so they are not in numeric order in the
+file. **If you read only one, read 12.**
+
+| | |
+|---|---|
+| **12** | **RECOVERY RUNBOOK.** What to actually do when something is lost. Drilled end to end. |
+| 1 | The bundles, the restore test, `refresh_bundle.sh`, and the off-machine plan awaiting Josie |
+| 2 | Why "188 across 11" and "241 across 33" are both right |
+| 3 | What `pushcheck` really is, and the two things it cannot check |
+| 4 | Per-branch push verdicts, 33 branches |
+| 5 | **The credential flag file is already public.** Confirmed on two origins |
+| 6 | **Register collision: side A is orphaned.** The sequenced plan, with owners |
+| 7 | Shared pane cwd, and the shared-index claim I retracted |
+| 9 | Branch taxonomy, and the NCAC/CCSA material on all 30 public branches |
+| 11 | Coverage boundary: one machine only, and the open TACC gap |
+| 10 | What I did not do, and what is therefore still unhandled |
+
 ---
 
 ## 1. The work is bundled. 36 bundles, all verified, restore tested
@@ -919,6 +938,69 @@ is small and needs no authorisation:
 
 Then re-run `refresh_bundle.sh --full`, which will sweep the new
 `refs/remotes/vista/*` into the standalone bundle automatically.
+
+---
+
+## 12. RECOVERY RUNBOOK, drilled end to end on 2026-08-17
+
+Everything above proves the bundles *verify* and that *refs* restore. Neither is
+what anyone needs at the moment something is actually lost. **This is the
+procedure, and it has been run.**
+
+### If a worktree, a branch, or the whole repo is lost
+
+    # 1. rebuild the repository from the two bundles, newest incremental last
+    git init --bare /path/to/recovered.git
+    git -C /path/to/recovered.git fetch \
+        /Users/josie/can-it-ford-bundles/2026-08-16/ALL-refs.bundle 'refs/heads/*:refs/heads/*'
+    git -C /path/to/recovered.git fetch \
+        "$(ls -1t /Users/josie/can-it-ford-bundles/*/INCREMENTAL-all-branches-*.bundle | head -1)" \
+        'refs/heads/*:refs/heads/*'
+
+    # 2. get a WORKING checkout of the branch you lost
+    git clone /path/to/recovered.git /path/to/work -b <branch>
+
+    # 3. confirm it, by tree object rather than by eye
+    git -C /path/to/work rev-parse 'HEAD^{tree}'
+
+### If uncommitted work is lost
+
+Snapshots live in `can-it-ford-bundles/<date>/uncommitted-<HHMM>/<worktree>/`,
+mode 0700, one directory per dirty worktree, each with `HEAD.txt`, a
+`tracked.patch` for modified files, `untracked.tar.gz` plus `untracked.list`,
+and a sha256 `MANIFEST.sha256`.
+
+    git -C <worktree> apply <snap>/<worktree>/tracked.patch    # modified files
+    tar -xzf <snap>/<worktree>/untracked.tar.gz -C <worktree>  # untracked files
+
+### The drill, and what it actually established
+
+**read, 2026-08-17 00:28.** Run from bundles only, target
+`claude/fork-moving-driver`:
+
+| check | result |
+|---|---|
+| branches rebuilt from the two bundles | **77** |
+| working checkout tip vs live | `c96e745` = `c96e745` |
+| files in the recovered worktree | **859** |
+| **tree object**, recovered vs live | `cbe0c7df875c4513f9c4eb99f831174ea135b7bd`, **identical** |
+| `renders/yaris_render_s1/sim_standing.py` on disk vs live | sha256 `4696c3b2d39f...`, **identical** |
+| uncommitted snapshot, `ctx-census` untracked | **3 of 3 files match live byte for byte** |
+
+That `sim_standing.py` hash is a useful independent cross-check: `4696c3b2...`
+is the driver sha256 that stamps all 40 three-class runs, so the recovered file
+is provably the same driver those runs were produced with.
+
+**The control that makes the drill mean anything.** A git clone can silently
+borrow objects from a nearby repo through `objects/info/alternates`, which would
+make a bundle look sufficient when it was not. Checked explicitly: **neither the
+recovered bare repo nor the working clone has an `alternates` file.** The 498 MB
+bare repo and 565 MB checkout were reconstructed from the bundles alone, with no
+access to `/Users/josie/can-it-ford`.
+
+**Limit, stated:** the drill restored one branch of 77. The tree-object identity
+is a strong check for that branch, and step 1 recovered all 77 refs, but I have
+not checked out and byte-compared every branch.
 
 ---
 
