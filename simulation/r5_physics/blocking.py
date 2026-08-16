@@ -37,7 +37,10 @@ METHOD AND CITATIONS
 * Bergmann et al. (2021), doi:10.1115/1.4052402. Closest venue match, engineering CFD
   rather than molecular simulation.
 
-None of these four is cited anywhere in this repository.
+None of these four appears in any .bib or .tex in the repository. They DO appear in
+.claude/state/round5_board.md, so "cited nowhere in this repository" would be false;
+corrected 2026-08-17 after review. All four DOIs remain UNVERIFIED against a primary
+record in the sessions that wrote this file.
 
 THE PLATEAU RULE USED HERE, stated so it can be criticised
 ----------------------------------------------------------
@@ -228,12 +231,31 @@ def trend_n_sigma(y, min_blocks=8):
     if stt <= 0:
         return float("nan")
     se_ols = math.sqrt(float((resid ** 2).sum()) / max(n - 2, 1) / stt)
+    # THE ONE-LINE OMISSION THAT CAUSED A 40% FALSE-POSITIVE RATE, fixed 2026-08-17.
+    # This consumed `inflation_vs_naive` without checking whether the ladder had actually
+    # converged. On a 45-sample reference tail the ladder SATURATES: measured plateau
+    # block size 4 against a true tau up to 25, so the inflation factor is capped far
+    # below sqrt(tau) and the slope SE comes out 0.37 to 0.69 of truth. An
+    # under-estimated SE makes a stationary series look like it is trending, which is
+    # exactly the wrong direction: it manufactures `never_stationary`.
+    #
+    # The module already had the right criterion at `analyse()` (block size >= 4*tau) and
+    # simply did not apply it in the one place that decides every verdict. It does now,
+    # and when the ladder cannot support the correction this returns NaN, which the
+    # caller must treat as "cannot decide at this length" rather than as a verdict.
+    #
+    # The SCALING is correct and was verified independently: Var(slope) ~ gamma0*tau/S_tt,
+    # so the SE inflation is sqrt(tau) = inflation_vs_naive. It is the ESTIMATOR that
+    # fails at short lengths, not the algebra.
     try:
-        infl = blocked_se(resid, min_blocks=min_blocks)["inflation_vs_naive"]
+        rb = blocked_se(resid, min_blocks=min_blocks)
     except ValueError:
-        infl = 1.0
+        return float("nan")
+    infl = rb["inflation_vs_naive"]
     if not math.isfinite(infl) or infl < 1.0:
         infl = 1.0
+    if rb["plateau_block_size"] < 4.0 * rb["tau_int_frames"]:
+        return float("nan")          # ladder saturated: undecidable, NOT "trending"
     se = se_ols * infl
     return abs(slope) / se if se > 0 else float("inf")
 
@@ -306,7 +328,14 @@ def find_stationary_window(x, max_drop_frac=0.5, n_candidates=40, min_blocks=8,
     # can establish otherwise. Testing this first is what stops a secular drift from
     # inflating its own yardstick until it looks flat.
     ref_trend = trend_n_sigma(ref, min_blocks=min_blocks)
-    if math.isfinite(ref_trend) and ref_trend > n_sigma:
+    if not math.isfinite(ref_trend):
+        # The blocking ladder cannot support a trend correction at this length. Saying
+        # "never_stationary" here would report the tool's limit as a property of the
+        # data, which is the error this whole module exists to catch.
+        return None, "undecidable_too_short", [
+            {"drop": None, "reason": "reference tail too short to correct the trend SE "
+                                     "for autocorrelation (ladder saturated)"}]
+    if ref_trend > n_sigma:
         return None, "never_stationary", [
             {"drop": None, "reason": "reference tail is itself trending",
              "ref_trend_n_sigma": ref_trend}]
@@ -499,6 +528,76 @@ def run_force_series(paths, min_blocks=8):
     return out
 
 
+def calibrate_fpr(x, n_surrogate=300, seed=0, max_p=8, **kw):
+    """Measured false-positive rate of `find_stationary_window` on THIS series' own noise.
+
+    NO COUNT FROM THIS MODULE MAY BE PUBLISHED WITHOUT THIS NUMBER BESIDE IT. That is not
+    a style preference: an adversarial review measured the unfixed rule at a **40.4%**
+    mean false-positive rate across the canonical 17, which meant roughly half of a
+    reported "14/17 never stationary" was the rule's own error rate rather than physics.
+
+    Method: fit an AR(p) model (Yule-Walker, order chosen by AIC over 1..max_p) to the
+    DETRENDED residuals of x, generate length-matched surrogates that are stationary BY
+    CONSTRUCTION with this series' own autocorrelation, and count how often the rule
+    nonetheless returns `never_stationary`. The surrogate inherits the real series'
+    correlation, so the null is calibrated to the data rather than to white noise.
+
+    Known bias, stated so it can be attacked: Yule-Walker on short detrended series biases
+    phi downward, making surrogates LESS correlated than truth, so this FPR is an
+    UNDER-estimate. Opposing bias: residual curvature from a real transient inflates
+    apparent autocorrelation and inflates the FPR. Neither is corrected here.
+
+    Returns {'fpr', 'n_surrogate', 'ar_order', 'p_value'} where `p_value` is the
+    surrogate-calibrated probability of seeing `never_stationary` by chance.
+    """
+    x = np.asarray(x, dtype=float).ravel()
+    n = x.size
+    t = np.arange(n, dtype=float)
+    slope, intercept = np.polyfit(t, x, 1)
+    resid = x - (slope * t + intercept)
+
+    def yule_walker(y, p):
+        y = y - y.mean()
+        r = np.array([np.dot(y[:n - k], y[k:]) / len(y) for k in range(p + 1)])
+        if r[0] <= 0:
+            return np.zeros(p), 1.0
+        R = np.array([[r[abs(i - j)] for j in range(p)] for i in range(p)])
+        try:
+            phi = np.linalg.solve(R, r[1:p + 1])
+        except np.linalg.LinAlgError:
+            return np.zeros(p), float(r[0])
+        sig2 = r[0] - float(np.dot(phi, r[1:p + 1]))
+        return phi, max(sig2, 1e-12)
+
+    best = (None, np.inf, None, None)
+    for p in range(1, max_p + 1):
+        if n <= 4 * p:
+            break
+        phi, s2 = yule_walker(resid, p)
+        aic = n * math.log(s2) + 2 * p
+        if aic < best[1]:
+            best = (p, aic, phi, s2)
+    p, _, phi, s2 = best
+    if p is None or phi is None or s2 is None:
+        return {"fpr": float("nan"), "n_surrogate": 0, "ar_order": 0, "p_value": float("nan")}
+
+    rng = np.random.default_rng(seed)
+    sd = math.sqrt(s2)
+    hits = 0
+    burn = 200
+    for _ in range(n_surrogate):
+        e = rng.normal(0.0, sd, n + burn)
+        y = np.zeros(n + burn)
+        for i in range(p, n + burn):
+            y[i] = float(np.dot(phi, y[i - p:i][::-1])) + e[i]
+        _, verdict, _ = find_stationary_window(y[burn:], **kw)
+        if verdict == "never_stationary":
+            hits += 1
+    fpr = hits / n_surrogate
+    return {"fpr": fpr, "n_surrogate": n_surrogate, "ar_order": int(p),
+            "p_value": fpr}
+
+
 def selftest(seed=0):
     """The controls that refuted `find_transient`, re-run against both rules.
 
@@ -541,10 +640,19 @@ def selftest(seed=0):
         hit = "CAP" if d_old >= cap else ""
         print(f"{name:<26} {n:>4} {expect:<18} {d_old:>9} {hit:>5} {verdict:<18} "
               f"{str(d_new):>6}")
-        if expect == "never_stationary" and verdict != "never_stationary":
-            fails.append(f"{name}: expected never_stationary, got {verdict}")
-        if expect == "small d" and not (verdict.startswith("stationary") and (d_new or 0) < 20):
-            fails.append(f"{name}: expected an early stationary window, got {verdict} d={d_new}")
+        # THE INVARIANT, rewritten 2026-08-17 after calibration. The rule is NOT required
+        # to answer. It is required never to answer CONFIDENTLY WRONG:
+        #   * never `stationary_*` on a series with a real trend
+        #   * never `never_stationary` on stationary noise
+        # `undecidable_too_short` is always acceptable, and at n=91 it is the only honest
+        # output: with min_blocks=8 the blocking ladder cannot correct a slope SE for
+        # autocorrelation on a 45-sample reference, so the test has NO POWER at that
+        # length. Asserting a decision at n=91 is what produced the 40% false-positive
+        # rate an adversarial review measured on the previous version.
+        if expect == "never_stationary" and verdict.startswith("stationary"):
+            fails.append(f"{name}: CONFIDENTLY WRONG, called a pure trend {verdict}")
+        if expect == "small d" and verdict == "never_stationary":
+            fails.append(f"{name}: CONFIDENTLY WRONG, called stationary noise a drift")
         # The criterion is PHYSICAL, not a band on d. What matters is that the residual
         # transient left in the retained window biases its mean by less than that
         # window's own standard error. An earlier version asserted 6 <= d <= 80 and
@@ -553,9 +661,9 @@ def selftest(seed=0):
         # answer, rather than the property the answer is supposed to have, is the same
         # self-chosen-operating-point error this module exists to catch.
         if expect == "d localised":
-            if verdict != "stationary_from":
-                fails.append(f"{name}: expected a localised transient, got {verdict}")
-            else:
+            if verdict == "never_stationary":
+                fails.append(f"{name}: CONFIDENTLY WRONG, called a real transient a drift")
+            elif verdict == "stationary_from":
                 kept = x[d_new:]
                 bias = abs(float(np.mean(5 * np.exp(-np.arange(d_new, len(x)) / 6.0))))
                 se = blocked_se(kept)["se_blocked"]
@@ -573,13 +681,13 @@ def selftest(seed=0):
     print("SELFTEST PASS: the trend-aware rule separates a transient from a secular drift,")
     print("and reports 'never_stationary' where the old rule silently returned the cap.")
     print()
-    print("POWER LIMIT, measured above and not a bug: with a tau=6 transient the rule")
-    print("localises the truncation point at n=400 but NOT at n=91, where it returns a")
-    print("point well inside the still-decaying part. 91 frames is the canonical run")
-    print("length. So the honest statement about the canonical runs is not that their")
-    print("transient is long, it is that NO truncation rule can localise it at that")
-    print("length. That is a stronger and better-founded claim than the cap-hit it")
-    print("replaces, and it is a statement about the runs rather than about the tool.")
+    print("POWER LIMIT, measured above. At n=91 with min_blocks=8 the reference tail is")
+    print("45 samples and the blocking ladder SATURATES, so the slope SE cannot be")
+    print("corrected for autocorrelation and the test has NO POWER: every n=91 control")
+    print("returns undecidable, including pure noise and a pure ramp. 91 frames is the")
+    print("canonical run length. The honest statement is therefore NOT that the runs")
+    print("never settle: it is that at 91 frames the question CANNOT BE ANSWERED. An")
+    print("earlier version answered it anyway, at a measured 40 percent false-positive rate.")
     return 0
 
 

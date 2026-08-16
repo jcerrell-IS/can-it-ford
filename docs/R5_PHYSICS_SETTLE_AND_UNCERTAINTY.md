@@ -116,37 +116,76 @@ Validated on the same controls that refuted the old rule, `blocking.py --selftes
 | **pure ramp, no transient, n = 400** | **drop 200, the cap** | **`never_stationary` (3/3)** |
 | monotone cumulative | drop 44, 45 (cap) | **`never_stationary` (2/2)** |
 
-**Result on the real data [measured]:**
+### RETRACTED AGAIN, 2026-08-17, and this time the honest answer is "undecidable"
 
-| set | never reaches a stationary window |
-|---|---|
-| canonical 17, `vmag` | **14 / 17** |
-| water field, independent of the vehicle | **8 / 8** |
-| C1-SDF force series, n = 160 | **4 / 4** |
+> The version above reported **14/17, 8/8, 4/4 "never reach a stationary window"**. A second
+> adversarial review measured the rule's **false-positive rate at 40.4%** on
+> autocorrelation-matched stationary surrogates: **roughly 7 of the 14 were the rule's own
+> error rate**, only 3 of 17 survived a calibrated test, and **none survived
+> multiplicity correction**. Those counts are withdrawn.
+>
+> **Cause, and it was a one-line omission.** `trend_n_sigma` consumed the blocking
+> inflation factor without checking whether the ladder had converged. On a 45-sample
+> reference tail the ladder **saturates** at block size 4 against a true tau up to 25, so
+> the slope standard error came out **0.37 to 0.69 of truth**. An under-estimated SE makes
+> stationary data look like it is trending, which manufactures `never_stationary`. The
+> module already had the right criterion (`plateau_block_size >= 4*tau`) and simply did not
+> apply it in the one place that decided every verdict. It does now, and returns
+> `undecidable_too_short` rather than a verdict when the ladder cannot support the
+> correction.
+>
+> **Corrected result, and it is cleaner than either retracted version [measured]:**
+>
+> | set | verdict after the convergence gate |
+> |---|---|
+> | canonical 17, `vmag` | **17 / 17 `undecidable_too_short`** |
+> | the four coupling force series | **4 / 4 `undecidable_too_short`** |
+>
+> At n = 91 with `min_blocks = 8` the test has **no power at all**: every synthetic control
+> returns undecidable too, including pure white noise and a pure ramp. The rule still
+> decides at n = 400. So the defensible statement is **not** that the canonical runs never
+> settle. It is that **at 91 frames the question cannot be answered**, and the previous two
+> versions of this section answered it anyway.
+>
+> The selftest now asserts only the invariant that matters: **never confidently wrong.**
+> Never `stationary_*` on a real trend, never `never_stationary` on stationary noise;
+> `undecidable` is always an acceptable output.
+>
+> Three further corrections. **(a)** The `8/8` water-field count was unreproducible: no
+> script computes it, the denominator was ambiguous between runs and observables, and a
+> recount over all 17 runs gives a different number. Withdrawn. **(b)** Two of the four
+> "C1-SDF force series" are **box-collider, not SDF**. **(c)** "Independent corroboration"
+> was too strong: the vehicle is *driven by* the water, both come from one rollout, so the
+> water field rules out a metric-extraction bug in the vehicle path and no more.
+>
+> What survives untouched, because no rule can bias it: the raw second-half fractional
+> change, **-15.4%** for `sweepV_g64_v0p5` and **-35.8%** for `g64_m1100`, the latter
+> strictly monotone across all 90 frames **[measured, reproduced by review at -15.45% and
+> -35.75%]**.
 
-Only three runs reach one: `g96_m2337` at d = 11, `g48_m2337` at d = 25, `g48_m1609` at
-d = 31.
+### The finding that outranks all of this: the scene cannot reach a steady state
 
-**Two things this does and does not say.** It says that within their recorded length these
-series never reach a window whose tail passes a detrended trend test, so **no steady-state
-mean is established for any reported quantity**. It does **not** distinguish "the transient
-outlasts the run" from "there is a genuine secular drift"; both are consistent, and I have
-no way to separate them without longer runs. Either way the consequence for the reported
-numbers is identical.
+The review found the thing I should have checked before building any of it.
+`sim_standing.py:269-277` clamps only an upstream band each frame, and `:210-214` closes
+the domain with a friction floor plus four slip walls plus `add_domain_walls`. **There is
+no outflow boundary condition.** A closed tank with partial upstream forcing **must spin
+down**, and water mean speed does fall 15% to 62% over the second half in all 17 runs.
 
-**The independent corroboration matters more than the count.** Every settle number in this
-project so far derives from vehicle kinematics, which all trace to the same `t` series. The
-water field in `rollout.npz` is a physically separate observable, and it agrees 8/8. As a
-statistic no truncation rule can bias, the raw fractional change over the second half alone
-is **-15.4%** for `sweepV_g64_v0p5` and **-35.8%** for `g64_m1100`, the latter strictly
-monotone across all 90 frames **[measured]**.
+So the premise of this entire document is wrong in an important way. **There is no
+steady state to detect**, by construction. That has three consequences:
 
-**And the power limit is itself the finding.** The selftest shows the rule localises a
-tau = 6 transient at n = 400 but **not** at n = 91, the canonical run length, where it
-returns a point still inside the decay. So the defensible statement about the canonical runs
-is not that their transient is long. It is that **91 frames is too short for any truncation
-rule to localise a transient at all**, which is a claim about the runs rather than about the
-tool, and is what the retracted cap-hit was reaching for without support.
+1. My earlier line "either way the consequence for the reported numbers is identical" is
+   **false**. If no steady state exists, **longer runs never help**, and the whole
+   settle-length programme is aimed at the wrong target.
+2. The remedy is not more frames. It is an **outflow boundary condition**, which is
+   precisely **Option A** of my dispatch: Zhao, Bolognin, Liang, Rohe and Vardon 2019.
+   I deferred Option A as the larger and less certain item; this is an argument that it is
+   the *necessary* one, and that the settle question is downstream of it.
+3. Time-resolved or peak quantities, not window means, are the defensible reporting form
+   for the current scene. That agrees with what the slamming literature already said about
+   `failure_modes.py`, which takes peaks and no means.
+
+**[unreviewed]**: this reasoning has not itself been through a skeptic pass.
 
 ---
 
