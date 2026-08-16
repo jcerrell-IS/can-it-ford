@@ -67,6 +67,23 @@ For proportion, the `.ply` files that the original dispatch scoped this task aro
 are **15,823,688 B (15.82 MB), 9.0% of the tree**, all four of them together. The
 `.key` decks and archives are the other 91.0%.
 
+### Reconciling three independent counts of the same tree
+
+D3, the coordinator and I each measured this separately and got **160,308,908 B**
+(D3, coordinator) against **160,322,098 B** (me). Verified here: the difference is
+**exactly 13,190 B, which is the 4 upstream `README.md` files** (3,465 + 3,324 +
+3,281 + 3,120). I counted them as CCSA material, because CCSA authored them; the
+others counted only `.zip` + `.key`. **Neither is wrong; the scopes differ, and both
+give 91.0%.**
+
+Recorded because `CLAUDE.md`'s `DRIFT_THRESHOLD` item warns that a bare total without
+its scope is what goes stale, and because this is the mirror case: two totals that
+*differ* while measuring the same thing correctly. State the scope with the number.
+
+The coordinator's finer split reproduces exactly against my own measurement:
+**4 original distribution archives = 88,592,238 B**, **14 extracted decks =
+71,716,670 B**. [read, recomputed this session]
+
 **Severity therefore follows bytes and rights-holder clarity, not file type:**
 
 | Rank | What | Bytes | Rights holder | Why it ranks here |
