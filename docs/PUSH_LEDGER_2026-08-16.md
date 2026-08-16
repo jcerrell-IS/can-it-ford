@@ -998,9 +998,50 @@ recovered bare repo nor the working clone has an `alternates` file.** The 498 MB
 bare repo and 565 MB checkout were reconstructed from the bundles alone, with no
 access to `/Users/josie/can-it-ford`.
 
-**Limit, stated:** the drill restored one branch of 77. The tree-object identity
-is a strong check for that branch, and step 1 recovered all 77 refs, but I have
-not checked out and byte-compared every branch.
+### LIMIT NOW CLOSED: all 77 branches and all 33 thin bundles, 00:36
+
+The first drill checked one branch of 77. Re-run across everything:
+
+| check | result |
+|---|---|
+| branch tips, recovered vs the tip the bundle records | **77 match, 0 mismatch, 0 missing** |
+| tree objects | **77 match, 0 mismatch** |
+| `git fsck --strict --no-dangling` on the recovered repo | **exit 0, zero output lines** |
+| branches whose complete file list resolves from the recovered store | **77 of 77** |
+| the 33 thin per-branch bundles, each fetched and tip-compared | **33 restored, 0 failed** |
+
+**Race-free by construction, and this matters.** Sibling sessions commit
+continuously, so comparing a recovered repo against a *live* tip reports false
+mismatches for any branch that moved after the bundle. Every comparison above is
+against the tip **the bundle itself records**, which is immutable.
+
+### Object-set equivalence, with the residual fully explained
+
+The strongest form of "nothing is missing" is to compare the object sets, not
+the refs:
+
+    objects reachable from refs/heads, recovered : 5,066
+    objects reachable from refs/heads, live      : 5,079
+    in live but absent from recovered            :    13
+    in recovered but absent from live            :     0
+
+**All 13 are accounted for, not waved away.** Exactly two branches advanced
+after the 00:27 bundle: `claude/r5-research` (+2 commits, 3e51dc8 to 907f5d8)
+and `claude/r5-safekeeping` (+1, 82896ca to de97a4c). The set of objects
+introduced after the bundled tips is **13**, and the intersection with the 13
+live-only objects is **13**. **Unexplained: 0.**
+
+### A defect in my own first drill, corrected
+
+The first run printed `fsck exit=0`, and that number was meaningless: I had
+piped fsck through `head`, so `$?` was **head's** exit status, not fsck's. Re-run
+without the pipe, fsck genuinely exits 0 with zero output lines. **Any
+`cmd | head` followed by `$?` reports the pager, not the command.**
+
+**Remaining limit, honestly:** these checks are object-level and structural. I
+byte-compared on-disk file content for one branch (section 12 above) rather than
+all 77; for the other 76 the guarantee rests on git's content addressing plus a
+clean `fsck`, which is strong but is not the same measurement.
 
 ---
 
