@@ -1,0 +1,16 @@
+doi	year	title	discovery_route	in_489_corpus
+10.1007/978-3-031-77489-8_32	2024	Numerical Studies of 3D Vehicle Wading Phenomenon with an Improved Single-Layer Particle Boundary Technique Within the SPH Framework	cited_by;seed	NO
+10.1007/s11433-023-2137-5	2023	3D large-scale SPH modeling of vehicle wading with GPU acceleration	cited_by;seed	YES
+10.1016/j.compfluid.2023.106144	2023	Numerical investigation of vehicle wading based on an entirely particle-based three-dimensional SPH model	cited_by;reference;seed	YES
+10.1007/s11431-022-2393-2	2023	Exploring impact of street layout on urban flood risk of people and vehicles under extreme rainfall based on numerical experiments	cited_by	NO
+10.1111/jfr3.12828	2022	A numerical approach to understand the responses of passenger vehicles moving through floodwaters	cited_by;reference;seed	YES
+10.4271/2022-01-0768	2022	Transient, 3D CFD, Moving Mesh Simulation of Vehicle Water Wading in a Water Tunnel with Inclined Entry-Exit	cited_by;reference;seed	YES
+10.1007/978-981-19-3379-0_28	2022	Comparative Analysis of Drag Force in a Deep-Water Wading Simulation of Ahmed Body with Different Commercial Automobile Models	cited_by	NO
+10.4271/2021-01-0205	2021	CFD Method Development for Simulating Water Fording for a Passenger Car	cited_by;reference;seed	YES
+10.1088/1742-6596/2083/4/042091	2021	Research on numerical simulation and intelligent computing of vehicle wading driving by smooth particle hydrodynamics method	reference;seed	NO
+10.2208/jscejhe.77.2_i_1441	2021	STUDY ON FLOODING AND VEHICLE STABILITY AT CAR ACCIDENT DUE TO HORIZONALLY 2-D FLOOD SIMULATION	cited_by	NO
+10.4271/2017-01-1327	2017	Water Ingress Analysis and Splash Protection Evaluation for Vehicle Wading using Non-Classical CFD Simulation	cited_by;reference;seed	NO
+10.4271/2016-28-0072	2016	Passenger Car Water Wading Evaluation Using CFD Simulation	cited_by;reference;seed	NO
+10.1115/detc2015-47142	2015	Coupled Multibody Dynamics and Smoothed Particle Hydrodynamics for Modeling Vehicle Water Fording	reference;seed	YES
+10.1007/978-3-642-33835-9_15	2012	Vehicle Wading Simulation with STRA-CCM+	reference;seed	NO
+10.1016/j.envsoft.2011.02.017	2011	Numerical assessment of flood hazard risk to people and vehicles in flash floods	cited_by;reference;seed	YES
