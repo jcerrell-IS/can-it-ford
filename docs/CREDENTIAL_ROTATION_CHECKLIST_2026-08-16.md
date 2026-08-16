@@ -11,10 +11,14 @@ Dispatch R5-D2, 2026-08-16. Branch `claude/r5-exposure`.
 > correction in `5f01dd2` turned on, and it is the reason the "nothing is public"
 > claim failed the first time.
 >
-> **2. This list is NOT declared complete.** The source document states **12**
-> credentials from the completed 89-root sweep. I can name **11**. One is
-> unaccounted for **in my reading**, not in the source. Reconcile against §2.36's
-> own enumeration before treating this as finished.
+> **2. The 11-of-12 gap is CLOSED, and it was my reading error, not a gap in the
+> source.** The twelfth is **row 12: an unidentified 35-character secret**, mode
+> `0644`, in a pane-capture export-state file. See section 0.2(a). The source had all
+> twelve enumerated at its line 123 the whole time; I had skipped that section.
+> **All twelve are named. None is rotated.**
+>
+> This does **not** make the list provably complete: see point 3, and note that the
+> source itself calls 15 a **lower bound in two independent senses**.
 >
 > **3. Coverage has a floor, and it is not zero.** **19 of 89 Mac roots are
 > `partial`**, meaning unchecked below the per-root time cap rather than clean,
@@ -27,9 +31,31 @@ Dispatch R5-D2, 2026-08-16. Branch `claude/r5-exposure`.
 
 ## What this is, and what it is not
 
-This is the **execution** half of `docs/CREDENTIAL_EXPOSURE_2026-08-13.md`, which is
-1,196 lines of diagnosis on an unpushed DO-NOT-PUSH branch. That document is complete
-and correct; it is not runnable. This is.
+> ### CORRECTION 2026-08-16: this file substantially DUPLICATES work that already existed
+>
+> The first revision said of `CREDENTIAL_EXPOSURE_2026-08-13.md`: *"That document is
+> complete and correct; it is not runnable. This is."* **That was wrong.** It is
+> runnable, and had been all along.
+>
+> At **line 123** it carries a section headed **`# ROTATION LIST, START HERE`** with
+> **12 numbered rows ordered by blast radius**, each giving Cred, Service, Where it
+> lives, Mode, Cloud-synced, In git history, and Rotate at. That is precisely the
+> deliverable I was asked to produce, column for column.
+>
+> **I listed that heading in my own first read of the file and then never opened it.**
+> I read the headings, jumped to sections 1 and 5, built a checklist from those, and
+> reported a gap ("I can name 11 of a stated 12") that the section I had skipped
+> answers directly in its row 12.
+>
+> **What this file still adds, and it is narrower than first claimed:** the public-surface
+> findings (30 branches; the FLAG document public on one of them), the two-part public
+> status, the divergent-copies hazard in section 0.1 below, and the three defects in
+> section 0.2. **For the rotation itself, use the source document's own list**, with the
+> corrections below applied to it.
+
+This is a **companion** to `docs/CREDENTIAL_EXPOSURE_2026-08-13.md`, not a replacement.
+Row numbers below refer to **that document's** rotation list, so the two cannot drift
+apart.
 
 Every row below is **derived by direct read** of that document's sections 1, 2.36, 3
 and 5 in this session. **Nothing here was re-measured against the live filesystem**,
@@ -90,6 +116,91 @@ The other reasons deletion cannot win, unchanged:
 **Revocation at the issuer is the only remedy that reaches any of this.** Do Step 1
 before Step 2, and do not let the deletions in Step 2 create the impression that the
 public half has been handled. It has not, and it cannot be.
+
+---
+
+## 0.1 HAZARD: the credential document exists in two divergent copies, and the one at the obvious path is the STALE one
+
+Verified live 2026-08-16 by reading both. [read]
+
+| Copy | Lines | sha256 (16) | Title | Scope |
+|---|---|---|---|---|
+| `docs/CREDENTIAL_EXPOSURE_2026-08-13.md` **in the main checkout, UNTRACKED** | **118** | `73151d952bb572c8` | "plaintext CLAUDE_CODE_OAUTH_TOKEN in cluster shell startup" | **Vista + LS6 only.** Says "MacBook: no `~/.bashrc` exists, **0**" |
+| Same path on branch `claude/credential-exposure-2026-08-13-DO-NOT-PUSH` | **1,196** | `a5740746a85fbbb6` | "plaintext tokens on Vista, LS6 and the MacBook" | All three machines, 12 credentials, 15 files |
+
+**The 118-line copy is the superseded first revision.** It predates the entire Mac
+sweep. It states the Mac is clean, when the Mac in fact holds credentials D, E, F, G,
+both HF tokens, W&B and the unidentified row 12. **Anyone who opens the obvious path
+and follows it will perform a two-machine rotation and believe they are finished.**
+
+It is also **untracked**, so it has no history, no owner, and will never be updated.
+
+**The authoritative copy is the 1,196-line one on the DO-NOT-PUSH branch.** Retrieve
+it with:
+
+```bash
+cd /Users/josie/can-it-ford && git show \
+  claude/credential-exposure-2026-08-13-DO-NOT-PUSH:docs/CREDENTIAL_EXPOSURE_2026-08-13.md | less
+```
+
+**Recommended:** replace the stale main-checkout copy with a one-line pointer to the
+branch, or delete it. **Not executed:** it is an untracked file in the main checkout,
+which is another session's tree, and deleting it needs Josie's go-ahead. Note that the
+`fork-credentials-DO-NOT-PUSH` **worktree** has already been removed; the branch and
+the blob both survive, so nothing was lost, but the convenient way to read it is gone.
+
+---
+
+## 0.2 Three defects in the source's own rotation list
+
+Found by reading it against the rest of its own document. All three affect execution.
+
+**(a) Row 12 is the credential I could not previously name.** It closes the 11-of-12
+gap: **unidentified, 35 characters**, in
+`~/<redacted path>/_inbox/.export_state/panes/today-work__0.1.txt`, mode **`0644`**,
+echoed into a pane capture. Not cloud-synced, not in git history. The source's own
+instruction is **"identify before acting. Shorter than a full token, may be
+truncated."** Treat it as a credential until shown otherwise: 35 characters is short
+for a modern token but ample for an API key.
+
+**(b) Row 1 contradicts three other places in the same document about what H IS, and
+the disagreement points at the wrong revocation page.** [read]
+
+| Where | What it says H is | Files |
+|---|---|---|
+| Rotation list **row 1** (line 139) | **GitHub, fine-grained PAT**, revoke at *github.com, Developer settings, Fine-grained tokens* | 92 |
+| Line 432 | **Copilot MCP bearer**, fingerprint `5b99f970b467624d`, 93 chars | 7 |
+| Line 444 | "H is a **`Bearer` token for a `copilot.com` MCP endpoint**" | 7 |
+| Line 938 | "**H**, Copilot MCP `Bearer` token", revoke at *github.com Copilot / the MCP endpoint that issued it* | 7 |
+
+**Three sites say Copilot MCP bearer; one, the rotation list, says GitHub
+fine-grained PAT.** The three include an explicit fingerprint and character count.
+
+**Why this matters operationally, and it is the worst single defect here:** row 1 is
+**first** in the blast-radius order, so it is the first thing anyone does. If H is a
+`copilot.com` MCP bearer and you revoke a GitHub fine-grained token instead, **H stays
+live and the list still reads as complete.** That is a rotation-completeness failure of
+exactly the kind this whole exercise exists to prevent.
+
+There is a second, separable discrepancy in the same row: **92 files versus 7**. Section
+2.36 records "H is far larger than recorded: 92 files, of which 89 are
+`~/.zsh_sessions/*.history`", so 92 is the later count. But row 1 also lists
+`~/.secrets_tmp/gh_token.txt` among H's locations, and a file named for a *GitHub*
+token is weak evidence for a *Copilot* credential. **A plausible reading is that row 1
+merged two different credentials.** Not resolved here.
+
+**Do this before revoking row 1:** open one of the 7 `.claude.json` backups, find the
+`Bearer` entry and read which host its MCP endpoint points at. That is a local file
+read, needs no network, and settles it in one step. **I did not do it myself, because
+it means opening a file whose purpose is to hold a credential value, and this dispatch
+forbids reading values.** Josie can do it in a second, or grant a narrowly scoped
+exception.
+
+**(c) The source's rotation list repeats the "nothing is public" overstatement.** Line
+131 reads: *"**Nothing here is public.** Every item below is local or on TACC."* The
+correction in `5f01dd2` applies to the source document too, not only to this file: no
+credential **value** is public, **and** a document enumerating the holders is public on
+one of 30 branches. Whoever owns the source should carry that correction across.
 
 ---
 
