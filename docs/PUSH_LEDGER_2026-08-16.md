@@ -867,12 +867,39 @@ unrepresented in this repo and therefore in no bundle.**
    (3,627 B, executable) and `~/.ssh/config` has `vista`, `vista1`, `vista2`,
    `ls6`, `ls6a-c` defined. No SSH ControlMaster socket is present.
 
-**Both were refused by the same thing: the local tool-safety classifier was
-unavailable, so no command could be issued at all.** State this precisely and do
-not let it become "the clusters were down": **I did not reach TACC, therefore I
-learned nothing about TACC's state.** An unreachable probe is not a measurement,
-which is this project's own standing rule about `~/Downloads` and about a zero
-result from one root.
+On the first attempt, **both were refused by the same thing: the local
+tool-safety classifier was unavailable, so no command could be issued at all.**
+That is worth separating from a cluster outage: at that point **I had not
+reached TACC, therefore I had learned nothing about TACC's state.** An
+unreachable probe is not a measurement, which is this project's own standing
+rule about a zero result from one root.
+
+**UPDATED 00:24, retried once the classifier recovered, and this time it is a
+real measurement.** Both hosts were reached and both refused at authentication:
+
+    jcerrell0629@vista.tacc.utexas.edu: Permission denied (keyboard-interactive).
+    [tacc.sh] SSH failed to vista. The ControlMaster socket may have expired.
+    jcerrell0629@ls6.tacc.utexas.edu: Permission denied (keyboard-interactive).
+    [tacc.sh] SSH failed to ls6. The ControlMaster socket may have expired.
+
+So the state is now known rather than assumed: **the clusters are reachable, the
+ControlMaster sockets have expired, and TACC's MFA needs a human.** Nothing here
+can be automated around it. **Josie runs this once per host, and the 6-digit
+token prompt is the whole point:**
+
+    ssh vista        # enter password, then the 6-digit TACC token
+    ssh ls6
+
+After that the socket is live for roughly 8 hours and the read-only queries
+below will work unattended.
+
+**TRAP, found live and it nearly cost the measurement.** `scripts/tacc.sh`
+**returned exit code 0 for both failures.** The SSH rejection appears only in
+stdout text. A caller that checks `$?` concludes the query succeeded and that
+the cluster has no unpushed work, which is the strongest possible false
+negative for a safety audit. **Parse the output for `Permission denied` or
+`SSH failed`; do not trust `tacc.sh`'s exit status.** This is the project's own
+"a command exiting 0 is not evidence the remote updated" rule, in a new place.
 
 **To close it, when a shell is available again** (read-only, no GPU, seconds):
 
