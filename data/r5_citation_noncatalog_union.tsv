@@ -1,0 +1,29 @@
+doi	year	title	discovery_routes
+10.1080/19942060.2026.2649668	2026	A coupled lattice Boltzmann-cellular automata model for dynamic optimization of vehicle evacuation route during urban flooding	graph-1hop
+10.1016/j.jhydrol.2026.135478	2026	Generalization of an innovative flood risk assessment model integrating hydraulic instability of pedestrians and vehicles with siltation in urban drainage pipelines	graph-1hop
+10.1109/joe.2026.3651186	2026	System Identification of a Novel Amphibious Cycloidal Propeller Unmanned Underwater Vehicle	author-cluster-v2
+10.3390/w18010080	2025	A New Semi-Empirical Model to Predict Vehicle Instability in Urban Flooding	graph-1hop
+10.1016/j.oceaneng.2025.123181	2025	Numerical investigation and analysis of environmental effects on water–ground transition of amphibious unmanned vehicles	graph-1hop
+10.1016/j.oceaneng.2025.123054	2025	Analysis and rapid prediction of underwater vehicle hydrodynamic loads during water-exit integrating CFD with GA-LSTM	graph-1hop
+10.1016/j.ijdrr.2025.105373	2025	Relationship between vehicle probe data and flooding conditions for developing flood inundation monitoring method	author-cluster
+10.2208/jscejj.24-16070	2025	PROPOSAL OF A METHOD FOR REAL-TIME MONITORING OF FLOOD INUNDATION BASED ON VEHICLE TRAFFIC INFORMATION	author-cluster
+10.2208/jscejj.24-16110	2025	FLOOD-INDUCED SMALL CAR DRIFTING CONDITIONS BASED ON ACTUAL VEHICLE EXPERIMENTS	author-cluster
+10.1111/jfr3.12979	2024	Flood risk investigation of pedestrians and vehicles in a mountainous city using a coupled coastal ocean and stormwater management model	graph-1hop
+10.1007/978-3-031-77489-8_32	2024	Numerical Studies of 3D Vehicle Wading Phenomenon with an Improved Single-Layer Particle Boundary Technique Within the SPH Framework	graph-1hop;graph-2hop-strict
+10.26190/unsworks/27433	2024	Experimental Testing of Flood Hazard Curves for a Partially Submerged Vehicle	author-cluster
+10.4271/2023-01-0609	2023	Vehicle Underbody Structural Performance Prediction During Waterfording Events Using A One Way Coupled CFD-CAE Approach	graph-1hop
+10.1093/acrefore/9780199389407.013.438	2023	Vehicle-Related Causes of Flood Fatalities	author-cluster
+10.1016/j.scitotenv.2022.154098	2022	Integrated modeling of 2D urban surface and 1D sewer hydrodynamic processes and flood risk assessment of people and vehicles	graph-1hop
+10.1007/978-981-19-3379-0_28	2022	Comparative Analysis of Drag Force in a Deep-Water Wading Simulation of Ahmed Body with Different Commercial Automobile Models	graph-2hop-strict
+10.1051/e3sconf/202234704005	2022	Prediction of floodwater impacts on vehicle blockages at bridges using artificial neural network	author-cluster
+10.1088/1742-6596/2083/4/042091	2021	Research on numerical simulation and intelligent computing of vehicle wading driving by smooth particle hydrodynamics method	graph-1hop;graph-2hop-strict
+10.2208/jscejhe.77.2_i_1441	2021	STUDY ON FLOODING AND VEHICLE STABILITY AT CAR ACCIDENT DUE TO HORIZONALLY 2-D FLOOD SIMULATION	graph-2hop-strict
+10.1016/j.oceaneng.2020.107460	2020	Experimental and computational study of operation of an amphibious craft in calm water	graph-1hop
+10.4271/2024-01-3805	2019	Amphibious Vehicle Water Egress Modeling and Simulation Using CFD and Wong’s Methodology	author-cluster-v2
+10.4271/2017-01-1327	2017	Water Ingress Analysis and Splash Protection Evaluation for Vehicle Wading using Non-Classical CFD Simulation	graph-1hop;graph-2hop-strict
+10.4225/53/58e1dfd63f1f4	2017	Expert opinion: stability of people, vehicles and buildings in flood water	author-cluster
+10.4271/2016-28-0072	2016	Passenger Car Water Wading Evaluation Using CFD Simulation	graph-1hop;graph-2hop-strict
+10.24355/dbbs.084-201611141038-0	2016	Vehicles, pedestrians and flood risk: a focus on the incipient motion due to the mean flow	author-cluster
+10.4271/2014-36-0251	2014	Water Ingestion and Pressure Analysis of Automotive Vehicles using Multiphase CFD	graph-1hop
+10.1007/978-3-642-33835-9_15	2012	Vehicle Wading Simulation with STRA-CCM+	graph-1hop;graph-2hop-strict
+10.1680/wama.2010.163.6.273	2010	Modelling the hydraulics of the Carlisle 2005 flood event	graph-1hop
