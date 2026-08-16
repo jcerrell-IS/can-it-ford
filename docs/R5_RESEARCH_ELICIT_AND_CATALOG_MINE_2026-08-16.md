@@ -147,7 +147,8 @@ Three findings.
 **4a. `floor_friction = 0.55` now has a same-valued measured citation.** Row 39,
 `10.1111/jfr3.12885`, reports a rolling friction coefficient of exactly 0.55,
 tagged measured, and that DOI is **already cited in the repo, including the paper
-bibliography** (27 files). The project has been carrying 0.55 while a paper
+bibliography** (25 files by the section 6 method, which excludes the catalog
+files themselves; 26 if they are counted). The project has been carrying 0.55 while a paper
 reporting 0.55 as measured was already in its own reference list. This
 corroborates, and does not merely fail to contradict, the round-4 finding that
 0.55 is not an outlier.
