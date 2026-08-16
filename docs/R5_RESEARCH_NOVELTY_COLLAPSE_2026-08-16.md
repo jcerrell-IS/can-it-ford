@@ -23,7 +23,7 @@ publisher front end was not needed. 1,941 lines of extracted text, READ DIRECTLY
 | geometry source | **3D model built in SolidWorks 2016**, exported to STL |
 | body dynamics | **"All numerical runs in this study were conducted under coupled motion and six degrees of freedom conditions"** |
 | scenario | static (stationary) flooded vehicle, subcritical and supercritical, Froude 0.09 to 2.46 |
-| mesh study | four-level mesh-independence study at cell sizes 0.1, 0.075, 0.05 and 0.025 m; **0.05 m selected** |
+| mesh study | four-level mesh-independence study at cell sizes 0.1, 0.075, 0.05 and 0.025 m. **CORRECTED, see below:** they use TWO nested blocks, 0.05 m containing and **0.025 m around the vehicle**, and the 0.05 m choice was made "by considering the computational time and system capabilities", not on convergence alone |
 | results | floating at 0.38 m depth; sliding once depth x velocity exceeds 0.36 m2/s |
 
 Their stated purpose of the 6DOF setup, verbatim:
