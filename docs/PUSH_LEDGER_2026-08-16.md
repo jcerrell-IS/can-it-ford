@@ -816,6 +816,85 @@ them. This is D2's call to act on, not mine; I have not touched any of it.
 
 ---
 
+## 11. Coverage boundary: this insurance protects one machine only
+
+Everything in sections 1 to 9 covers **the Mac**. A `git bundle` taken here
+cannot contain a commit that has never reached here. Three checks, all negative,
+which is the useful kind of result:
+
+**read.** Non-`origin` remote-tracking refs, and whether they hold anything
+unprotected:
+
+| ref | tip | status |
+|---|---|---|
+| `overleaf/main` | 6466dfa | in `ALL-refs.bundle`. Shares **no ancestor** with `origin/main`, as the standing record says, but 0 of its commits are unreachable from local branches, so it is covered. |
+| `tacc/main` | cdcdf9d | in `ALL-refs.bundle`. **Orphaned tracking state**: no `tacc` remote exists in `git config`. Its reflog shows it was fetched on 2026-08-13 from `/private/tmp/.../scratchpad/rt.bundle`, **which no longer exists**. |
+
+`tacc/main` is 2 commits ahead of `origin/main` ("realism_track: submit-ready
+GH200 rung-b job" and "validate SDF-collider coupling path against analytic
+buoyancy", both 2026-08-12). **Those 2 are already public**, contained in
+`refs/remotes/origin/vista-realism-track-2026-08-13`, one of the two PUBLIC-ONLY
+branches from section 9. So nothing is at risk here.
+
+**A reading trap I fell into and corrected.** `git rev-list --count cdcdf9d
+--not --branches --remotes=origin` returns **0**, and I first read that as "a
+local branch has it". It does not: `git branch --contains cdcdf9d` is **empty**.
+The 0 came from an `origin/*` ref, not a local branch. `git branch --contains`
+lists **local** branches only; `git branch -a --contains` or
+`git for-each-ref --contains` is the question you actually mean. The count was
+right and my reading of it was wrong.
+
+**read.** Three further `.bundle` files were sitting in ephemeral `/private/tmp`
+scratchpads from earlier sessions (`track1_6dof_rescue_2026-08-14`,
+`fork_s3_rescue_delta`, `moving_vehicle_delta`). Every tip in all three is
+covered by both a local branch and an `origin` ref. Nothing unique. They can be
+lost without consequence, which is not true of `can-it-ford-bundles/`.
+
+### THE GAP THAT REMAINS OPEN, and I could not close it tonight
+
+**Work committed on Vista or LS6 and never fetched to this Mac is invisible to
+every bundle here.** The standing record says Vista's `$WORK` held a
+`realism_track` series existing only there. `tacc/main` is a partial capture of
+that, frozen at 2026-08-13 and arriving via a scratchpad bundle that has since
+been deleted. **Anything committed on either cluster after 2026-08-13 is
+unrepresented in this repo and therefore in no bundle.**
+
+**Attempted, in order, and what actually blocked each:**
+
+1. `canford-tacc` MCP, `tacc_alloc_status(vista)`.
+2. The direct path the session banner advertises,
+   `scripts/tacc.sh vista '<git status and log>'`. The script exists
+   (3,627 B, executable) and `~/.ssh/config` has `vista`, `vista1`, `vista2`,
+   `ls6`, `ls6a-c` defined. No SSH ControlMaster socket is present.
+
+**Both were refused by the same thing: the local tool-safety classifier was
+unavailable, so no command could be issued at all.** State this precisely and do
+not let it become "the clusters were down": **I did not reach TACC, therefore I
+learned nothing about TACC's state.** An unreachable probe is not a measurement,
+which is this project's own standing rule about `~/Downloads` and about a zero
+result from one root.
+
+**To close it, when a shell is available again** (read-only, no GPU, seconds):
+
+    /Users/josie/can-it-ford/scripts/tacc.sh vista \
+      'cd $WORK/can-it-ford && git status --porcelain -uno && git rev-list --count --branches --not --remotes'
+    /Users/josie/can-it-ford/scripts/tacc.sh ls6 \
+      'cd $WORK/can-it-ford && git status --porcelain -uno && git rev-list --count --branches --not --remotes'
+
+If either count is non-zero, bundle it **there** and copy the bundle back, which
+is small and needs no authorisation:
+
+    /Users/josie/can-it-ford/scripts/tacc.sh vista \
+      'cd $WORK/can-it-ford && git bundle create /tmp/vista-$(date +%Y%m%d).bundle --branches --not --remotes'
+    scp vista:/tmp/vista-*.bundle /Users/josie/can-it-ford-bundles/incoming/
+    git -C /Users/josie/can-it-ford fetch /Users/josie/can-it-ford-bundles/incoming/vista-*.bundle \
+      'refs/heads/*:refs/remotes/vista/*'
+
+Then re-run `refresh_bundle.sh --full`, which will sweep the new
+`refs/remotes/vista/*` into the standalone bundle automatically.
+
+---
+
 ## 10. What I did not do
 
 - **Pushed nothing.** No `git push` was run, with or without `PUSH_OK=1`.
