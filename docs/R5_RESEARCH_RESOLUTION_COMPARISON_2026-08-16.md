@@ -40,10 +40,19 @@ percent of the headline was the fact that they floated at a deeper depth than we
 ran, which is not resolution at all.
 
 **(c) The "whereas ours is non-monotone" contrast is false.** Their own Table 1
-mesh-independence series in flow velocity is 1.84, 1.74, 1.61, **1.63** m/s, and
-in Froude number 1.17, 1.04, 0.98, **0.99**. The final refinement **reverses
-sign** in both. Theirs is non-monotone too. Publishing that contrast would have
-been a falsifiable error any reviewer holding the PDF catches immediately.
+mesh-independence series, now **independently extracted by me from page 6 of the
+PDF** (see section 4, this is no longer carried from the review):
+
+| cell size (m) | 0.100 | 0.075 | 0.05 | 0.025 |
+|---|---|---|---|---|
+| flow velocity (m/s) | 1.84 | 1.74 | 1.61 | **1.63** |
+| step change | | -5.43% | -7.47% | **+1.24%** |
+| Froude number (-) | 1.17 | 1.04 | 0.98 | **0.99** |
+| step change | | -11.11% | -5.77% | **+1.02%** |
+
+The final refinement **reverses sign in both series**. Theirs is non-monotone
+too. Publishing that contrast would have been a falsifiable error any reviewer
+holding the PDF catches immediately.
 
 **(d) "selected 0.05 m on that basis" is not what they say.** Verbatim: "by
 considering the **computational time and system capabilities**, a mesh block with
@@ -145,20 +154,26 @@ agreement, not a validation.
 The six blocking issues are resolved by deletion or rewrite, not by argument. I
 re-verified independently, and confirmed against the primary source or the repo:
 the nested 0.025 m block, the compute-cost selection wording, the 3.8x
-decomposition, our SLIDE verdict and velocity, and both cell-size ratios. I did
-not verify their Table 1 series myself beyond the review's quotation, because the
-`pdftotext` layout for that table is interleaved and unreliable; **that one item
-is carried from the review, not independently read, and is tagged accordingly.**
+decomposition, our SLIDE verdict and velocity, and both cell-size ratios.
+
+**Table 1 is now closed too.** It was tagged as carried from the review because
+`pdftotext -layout` interleaves that table. Re-extracted page 6 on its own with
+both `-layout` and raw mode and recovered the full series independently: velocity
+1.84, 1.74, 1.61, 1.63 m/s and Froude 1.17, 1.04, 0.98, 0.99 across cell sizes
+0.100, 0.075, 0.05, 0.025 m. Step changes computed by me: -5.43%, -7.47%,
+**+1.24%** and -11.11%, -5.77%, **+1.02%**. The reversal at the final refinement
+is real and is now READ DIRECTLY, not carried. The review's figures reproduce
+exactly.
 
 UNVERIFIED:
-1. Their Table 1 velocity and Froude series, and therefore the specific claim
-   that their final refinement reverses sign. Carried from the review. The
-   qualitative point that their study is not a clean monotone convergence is
-   supported independently by their own "1% average difference" wording and by
-   register G8.
-2. Their vehicle mass, unpublished.
-3. Whether MPM versus SPH or FVM is a defensible novelty axis remains a physics
+1. Their vehicle mass, unpublished. No mass normalisation against our 1100 kg is
+   possible, and their 2021 companion's 9.2 kN buoyancy figure must not be used
+   to infer one.
+2. Whether MPM versus SPH or FVM is a defensible novelty axis remains a physics
    judgement for D4, not a bibliographic one.
+3. Their reported 25% gap against Martinez-Gomariz Eq 12 does not reproduce
+   cleanly (23.40, 26.51 or 30.56% depending on denominator). Do not repeat their
+   25%. I have not resolved which denominator they intended.
 
 Every number in section 2 and section 3 was read live this session from a named
 file or the PDF. The comparison in section 3 states N on both sides, as required.
