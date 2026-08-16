@@ -74,6 +74,38 @@ prerequisites are recoverable in practice, but do not describe these 33 files as
 34 independent backups. **`ALL-refs.bundle` is the one artifact that stands
 alone.**
 
+### A bundle carries only committed work. What was uncovered, and now is
+
+**read.** A `git bundle` snapshots refs. Anything uncommitted is invisible to it.
+So I audited every one of the **28 worktrees** for dirty state
+(`git status --porcelain` per worktree, plus `git ls-files --others
+--exclude-standard`). Result: **24 clean, 2 with modified tracked files, 3 with
+untracked files** (one worktree appears in both counts).
+
+The one that mattered:
+
+    concurrent-session-safety-570b39   claude/meta-prompt-reconcile-dispatch-14a3c8
+    M scripts/canford_monitor.sh   +17 -3, uncommitted
+
+That is a live in-progress edit to **the only copy of the safety tool in the
+project** (section 3), and no bundle covered it. Snapshotted to
+`can-it-ford-bundles/2026-08-16/uncommitted-worktrees-snapshot/` (mode 0700),
+together with the untracked files in `ctx-census` (3), `orphan-rescue-token-
+rotate-d72f90` (1) and `warpmpm-flood-vehicle-investigation-1b62fa` (2). Total
+76 KB, with a sha256 MANIFEST.
+
+**Proved, not asserted.** Applying the saved patch to the committed base
+reconstructs the file at 432 lines from 418, and the reconstruction is
+**byte-identical to the live dirty file**, sha256
+`8f46d510274633113f5ec058ed432bb7f4fbe578f80ff3c7c7e636ccb904c9a4` on both sides.
+My first round-trip attempt "failed", because I applied the patch to the tree
+that already contained it; that was a bad test, not a bad patch.
+
+**read.** `git stash list` is empty in the shared repo, so no stashed work is at
+risk. `ALL-refs.bundle` carries **all 77** local branches (verified by `comm`
+against `git for-each-ref refs/heads`: zero live branches missing from it), plus
+34 remote-tracking refs, 8 tags, HEAD and 27 worktree HEADs.
+
 ### Remaining exposure, not fixed by me
 
 The bundles are on the **same physical disk** as the repo (`/dev/disk3s5`,
