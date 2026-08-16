@@ -158,10 +158,33 @@ def find_transient(x, max_drop_frac=0.5, n_candidates=40, min_blocks=8):
 
     A transient inflates the variance of the retained window, so the blocked SE is a
     natural objective. Restricting the search to `max_drop_frac` of the series stops it
-    from "converging" by throwing everything away, which is the standard failure mode of
-    an unconstrained truncation rule.
+    from "converging" by throwing everything away.
 
-    Returns (index, table). index 0 means no transient was detected.
+    KNOWN FAILURE MODE, found by adversarial review 2026-08-16 and NOT fixed. READ THIS
+    BEFORE INTERPRETING A CAP HIT.
+
+    On any series with a PERSISTENT TREND, this objective returns the cap regardless of
+    run length, because on a trending series discarding more always lowers the retained
+    variance. Synthetic controls, cap = 50%:
+
+        stationary white noise, n=91          -> drop 7, 3, 0, 0, 2      (correct)
+        true 20-frame decaying transient      -> drop 14, 15, 16, 18, 12 (correct)
+        pure linear ramp + noise, n=91        -> drop 44, 45, 45, 45, 44 (CAP)
+        pure linear ramp + noise, n=400       -> drop 195, 200, 200      (CAP AGAIN)
+        monotone cumulative, dmag-like        -> drop 45, 45, 45         (CAP)
+
+    The n=400 control is decisive: a 4.4x longer run with NO transient at all still hits
+    the cap. **A cap hit therefore does NOT show that a run is too short to resolve its
+    own transient.** It shows a trend is present, which may be a transient, a genuine
+    secular drift, or an observable whose mean is not a meaningful target at all.
+
+    Corollary: do not apply this to a CUMULATIVE quantity. A displacement magnitude is
+    not a stationary observable and the standard error of its windowed mean estimates
+    nothing physical. Blocking targets the mean of a stationary process; feed it velocity,
+    force or depth, not accumulated distance.
+
+    Returns (index, table). index 0 means no transient was detected. `hit_cap` in the
+    returned rows flags the boundary case so it is never read as a measurement.
     """
     x = np.asarray(x, dtype=float).ravel()
     n = x.size
@@ -181,6 +204,8 @@ def find_transient(x, max_drop_frac=0.5, n_candidates=40, min_blocks=8):
     if not table:
         return 0, []
     best = min(table, key=lambda r: r["se_blocked"])
+    for r in table:
+        r["hit_cap"] = bool(r["drop"] >= hi)
     return int(best["drop"]), table
 
 
@@ -251,6 +276,14 @@ def analyse(x, dt=None, label="", min_blocks=8):
         "plateau_block_size": res["plateau_block_size"],
         "plateau_n_blocks": res["plateau_n_blocks"],
         "blocking_converged": res["converged"],
+        # `converged` alone is near-vacuous on short series and must never be quoted
+        # without the block size. FP requires block size >> tau_int; on the canonical
+        # 91-frame runs the plateau lands at block size 1 or 4 against tau up to 4.5, so
+        # blocks are still correlated at the level declared converged and se_blocked is a
+        # LOWER BOUND even where converged is True. Found by adversarial review.
+        "converged_is_trustworthy": bool(
+            res["converged"] and res["plateau_block_size"] >= 4.0 * res["tau_int_frames"]),
+        "transient_hit_cap": bool(drop >= int(x.size * 0.5)),
         "stationary": st["stationary"],
         "stationarity": st,
         "transient_scan": table,

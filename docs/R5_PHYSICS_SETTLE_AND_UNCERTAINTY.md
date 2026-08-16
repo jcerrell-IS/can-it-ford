@@ -51,11 +51,30 @@ the closest venue match. **None of the four is cited anywhere in this repository
 | integrated autocorrelation time | 1.0 to 4.5 frames, median 3.1 |
 | not stationary after exclusion | 18 / 34 |
 
-**The 41% cap-hit is the finding.** The truncation rule is capped at discarding half the
-series, precisely so it cannot "converge" by throwing everything away. Fourteen series
-pushed against that cap, which means **the rule wanted to discard more than the run
-contains**. Those runs are not long enough to demonstrate that their own transient has
-ended. `drop = 45` is a boundary, not a measurement, and is flagged as such.
+> **RETRACTED 2026-08-16 by adversarial review. See `R5_PHYSICS_SKEPTIC_CORRECTIONS.md`
+> B1.** This section originally read "**The 41% cap-hit is the finding** ... those runs are
+> not long enough to demonstrate that their own transient has ended." **That does not
+> follow.** On a synthetic pure linear ramp with no transient at all, `find_transient`
+> returns the cap at n = 91 **and again at n = 400**: a 4.4x longer run hits the same cap,
+> because the objective minimises retained variance and any trend rewards discarding more.
+> A cap hit shows a trend, not a short run.
+>
+> Worse, the table above **pools two observables of different character**. Ten of the
+> fourteen cap hits are `dmag`, a cumulative displacement magnitude, whose windowed mean is
+> not a stationary target at all. It should never have been blocked.
+>
+> **Corrected, `vmag` only:** cap hits **4/17 (24%)**, not 41%; not stationary **6/17**,
+> not 18/34. The failure mode is now documented in `blocking.py:find_transient` with its
+> control table, and `analyse()` returns `transient_hit_cap`.
+>
+> **Also corrected:** "converged 34/34" is near-vacuous. Plateau block size is only 1 or 4
+> against `tau_int` up to 4.5, so blocks remain correlated where convergence is declared.
+> Requiring block size >= 4*tau, **0 of 17 qualify**. Every blocked standard error in this
+> document is a **lower bound**.
+
+The retained text below is kept for the record. The truncation rule is capped at discarding
+half the series so it cannot "converge" by throwing everything away, and `drop = 45` is a
+boundary rather than a measurement in every case where it appears.
 
 **A precision that matters and that I nearly got wrong.** The 8 settle frames happen in
 `StandingFloodScene.__init__` before recording starts, and the one-shot velocity kick is
@@ -67,9 +86,10 @@ question only indirectly, and I am not going to claim otherwise.
 
 Per-run `vmag`, the SLIDE-relevant observable, now carries a real error bar
 **[measured]**. Relative blocked SE ranges from **1.48%** (`g48_m1609`) to **22.59%**
-(`sweepV_g64_v2p0`). Four runs exceed 14%: `sweepD_g64_d0p35` 18.73%,
-`sweepD_g64_d0p45` 20.61%, `sweepV_g64_v2p0` 22.59%, `sweepV_g64_v2p5` 14.99%. Any
-ordering argument across those runs has to clear those bars first.
+(`sweepV_g64_v2p0`). **FIVE** runs exceed 14%, not four as first written: `sweepV_g64_v2p0`
+22.591%, `sweepD_g64_d0p45` 20.609%, `sweepD_g64_d0p35` 18.732%, `sweepV_g64_v2p5` 14.993%,
+and **`sweepV_g64_v3p0` 14.573%**, which was omitted. Any ordering argument across those
+runs has to clear those bars first, and per the retraction above each bar is a lower bound.
 
 ---
 

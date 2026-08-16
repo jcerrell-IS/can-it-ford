@@ -264,29 +264,56 @@ def test_domain_sizing():
     lam = ref["radiated_wavelength_m"]
     cg = ref["group_velocity_m_s"]
 
-    check("group velocity is well below sqrt(g*h)", cg < math.sqrt(9.81 * 0.5),
-          f"(c_g={cg:.4f} vs sqrt(gh)={math.sqrt(9.81 * 0.5):.4f} m/s)")
+    cp = ref["phase_velocity_m_s"]
+    csh = math.sqrt(9.81 * 0.5)
+    check("group < phase < sqrt(g*h), so the convention choice is not cosmetic",
+          cg < cp < csh,
+          f"(c_g={cg:.4f} < c_phase={cp:.4f} < sqrt(gh)={csh:.4f} m/s)")
     err = sh.deep_water_error(0.5, lam)
     check("0.5 m depth is deep water to better than 0.5%", err < 5e-3,
           f"(1-tanh(kh) = {err:.5f})")
 
+    # CORRECTED 2026-08-16. The previous version of this check asserted that the smallest
+    # planned domain "buys two clean natural periods" using the GROUP velocity, and it
+    # passed. Kramer 2021 section 3.5 p.16 does this calculation with the PHASE celerity
+    # and calls that the conservative estimate. On the benchmark's own convention the old
+    # assertion is false at lim=1.2 (1.06 T_n, not 2.12). This is the failure mode the
+    # docs claim to have eliminated: a check that picks its own operating point passes.
+    print(f"      {'lim':>5} {'wall':>7} {'group':>12} {'KRAMER phase':>14} {'sqrt(gh)':>12}")
     for lim in sorted({c[0] for c in sh.PLANNED_CONFIGS}):
-        d_wall = 0.5 * lim - sh.SphereTank.WALL
-        rt = 2.0 * d_wall / cg
-        print(f"      lim={lim} m: wall at {d_wall:.3f} m, reflection returns at "
-              f"{rt:.3f} s = {rt / t_n:.2f} T_n")
+        d = 0.5 * lim - sh.SphereTank.WALL
+        vals = [2.0 * d / c / t_n for c in (cg, cp, csh)]
+        print(f"      {lim:>5} {d:>7.3f} {vals[0]:>11.2f}T {vals[1]:>13.2f}T {vals[2]:>11.2f}T")
+    largest = max(c[0] for c in sh.PLANNED_CONFIGS)
+    got = 2.0 * (0.5 * largest - sh.SphereTank.WALL) / cp / t_n
+    check("SOME planned domain buys two clean periods on KRAMER'S convention",
+          got >= 2.0, f"(lim={largest} m gives {got:.2f} T_n on phase celerity)")
     smallest = min(c[0] for c in sh.PLANNED_CONFIGS)
-    check("the SMALLEST planned domain still buys two clean natural periods",
-          2.0 * (0.5 * smallest - sh.SphereTank.WALL) / cg / t_n >= 2.0,
-          f"(lim={smallest} m gives "
-          f"{2.0 * (0.5 * smallest - sh.SphereTank.WALL) / cg / t_n:.2f} T_n)")
+    small_got = 2.0 * (0.5 * smallest - sh.SphereTank.WALL) / cp / t_n
+    check("and the smallest is HONESTLY LABELLED as sub-two-period, not asserted past it",
+          small_got < 2.0,
+          f"(lim={smallest} m gives {small_got:.2f} T_n; it is kept as a cheap pilot, "
+          f"not as a comparison domain)")
 
     for h0 in sh.H0_M:
         ma = h0 * 2 * math.pi / t_n / ref["sound_speed_m_s"]
         print(f"      H0={h0 * 1000:5.1f} mm: peak Mach ~ {ma:.4f}"
               f"{'   <-- at the weak-compressibility limit' if ma > 0.09 else ''}")
-    ma_max = sh.H0_M[-1] * 2 * math.pi / t_n / ref["sound_speed_m_s"]
-    check("largest drop stays below Ma 0.1", ma_max < 0.1, f"(Ma={ma_max:.4f})")
+    # CORRECTED 2026-08-16. The previous assertion was "largest drop stays below Ma 0.1"
+    # and it passed at 0.0944 using the LINEAR peak-velocity estimate H0*omega. Kramer
+    # 2021 Figure 17b (p.15) shows a measured peak heave speed at H0=0.5D of roughly
+    # 1.3 m/s, which gives Ma ~ 0.10. So the old check passed on the estimator most
+    # favourable to passing. It is replaced by a reported band, not a pass/fail, because
+    # a threshold this close to the true value is not something a self-chosen estimator
+    # should be allowed to adjudicate.
+    ma_lin = sh.H0_M[-1] * 2 * math.pi / t_n / ref["sound_speed_m_s"]
+    ma_meas = 1.3 / ref["sound_speed_m_s"]
+    print(f"      largest drop Mach: linear estimate {ma_lin:.4f}, "
+          f"from Kramer Fig 17b measured peak ~1.3 m/s: {ma_meas:.4f}")
+    check("the largest drop is reported as AT the weak-compressibility limit, not below it",
+          ma_lin < 0.1 <= ma_meas * 1.02,
+          f"(linear {ma_lin:.4f} < 0.1 <= measured {ma_meas:.4f}; the two straddle the "
+          f"limit, so any number from the 0.5D case must carry its Mach)")
 
 
 def test_floor_wall_guard():

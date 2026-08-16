@@ -108,9 +108,9 @@ for MU in 0.55 0.30 0.0250; do
 done
 ```
 
-**250 frames, not 90, and that is a direct consequence of my own blocking result**: 41% of
-the canonical 91-frame series hit the transient-search cap, so 90 frames is demonstrably
-too short to show a transient has ended **[measured]**.
+**250 frames, not 90, and that is a direct consequence of my own blocking result**: 24% of
+the canonical 91-frame `vmag` series hit the transient-search cap (corrected from a pooled
+41% that wrongly included `dmag`), and 0 of 17 reach a trustworthy blocking plateau at 91 frames **[measured]**.
 
 **Comparison and pass criterion, fixed in advance.**
 
@@ -194,8 +194,17 @@ $PY simulation/r5_physics/sphere_heave.py --fixed \
     --out /work/11603/jcerrell0629/vista/d4_jobB/sphere_fixed_g64.json
 ```
 
-Scene: dx = 0.01875 m, 16 cells across the sphere, **606,814 water particles**, **82
-substeps**, 200 frames **[derived]**. 200 frames for the same reason as A1.
+Scene: dx = 0.01875 m, 16 cells across the sphere, **598,505 water particles** after the
+carve, **82 substeps**, 200 frames **[measured by replicating the seeding block]**. The
+earlier figure of 606,814 was wrong: it exceeded even the uncarved lattice ceiling of
+606,797. Cost impact 1.4%.
+
+**Domain corrected 2026-08-16.** `lim = 1.2` buys only **1.06** clean natural periods on
+Kramer's own phase-celerity convention, not the 2.12 first claimed on a group-velocity
+convention the benchmark explicitly rejects (section 3.5, p.16). Job B is kept at
+`lim = 1.2` deliberately, as a **cheap hydrostatic pilot where reflections do not matter**:
+the sphere is pinned and the quantity is a steady reaction, not a decay. **Job C cannot use
+this domain** and is re-specified below.
 
 **Comparison number:** analytic buoyancy on the submerged hemisphere at Table 1's
 `rho_w = 998.2` and the engine's `g = 9.81`, which is **69.2180 N** **[derived, asserted by
@@ -239,7 +248,7 @@ neither of which has ever run. If B fails criterion 1 or 3, C is not worth its w
 tacc_submit(
   host      = "vista",
   nodes     = 1,
-  walltime  = "01:30:00",
+  walltime  = "04:30:00",
   cwd       = "/work/11603/jcerrell0629/vista/can-it-ford",
   logfile   = "/work/11603/jcerrell0629/vista/d4_jobC/jobC.out",
   command   = "bash /work/11603/jcerrell0629/vista/d4_jobC/run_jobC.sh"
@@ -274,13 +283,22 @@ criterion sets and only the first is available today:
 
 **Requires `/s1`, and is deferred until it arrives:**
 
-- Displacement against the published series, graded on the **absolute** tolerances
-  **0.090 / 0.270 / 0.450 mm** for `H0` = 30 / 90 / 150 mm, remembering these are an
-  **average at 95% confidence**, not a per-sample envelope **[read]**.
+- **CRITERION CORRECTED 2026-08-16 before the job ran; the original was unworkable.**
+  Kramer **Table 4, p.17** gives the **measured** drop heights as
+  **{29.16, 89.18, 150.06} mm**, not the nominal {30, 90, 150}, and p.21 states results are
+  normalised "with respect to the measured drop height in each repetition". At 0.1D the
+  nominal-versus-measured gap is **0.84 mm, which is 9.6x the 0.090 mm tolerance** the
+  original criterion proposed to grade against. Grading absolute displacement at nominal
+  `H0` was therefore incoherent.
+  **Corrected criterion:** compare on **normalised** `x3/H0`, or on absolute displacement
+  with each run's `H0` set to its **measured** value. The tolerances remain
+  **0.090 / 0.270 / 0.450 mm**, still an **average at 95% confidence** rather than a
+  per-sample envelope **[read]**. This is exactly what fixing criteria in advance is for:
+  the error was caught before the run, not after it.
 - The irreducible **+0.051%** period bias from `g = 9.81` against the benchmark's 9.82 must
   be stated beside any period comparison **[derived]**.
 
-**Cost:** ~56 min, **1.0 node-hours**. This is the most expensive item and the only one that
+**Cost:** ~221 min, **3.7 node-hours** at the corrected `lim = 2.2` domain, up from 1.0 at the retracted `lim = 1.2`. Needs the `gh` partition, not `gh-dev`. This is by far the most expensive item and the only one that
 cannot be fully graded on arrival.
 
 ---
@@ -300,9 +318,9 @@ whoever owns render, not to D4.
 | 1 | **A1** brake sweep | ~0.02 | an **INFERRED** claim into a measurement | **never drop** |
 | 2 | **A2** repeats + P2G | ~0.28 | N = 1 into spread and gate-pass frequency | drop n = 10 to n = 5 first |
 | 3 | **B** sphere hydrostatic | ~0.35 | no external validation into one | drop frames 200 to 120 |
-| 4 | **C** sphere free decay | ~1.0 | nothing gradeable until `/s1` arrives | **drop this first** |
+| 4 | **C** sphere free decay | ~3.7 | nothing gradeable until `/s1` arrives | **drop this first** |
 
-**Total ~1.6 node-hours.**
+**Total ~4.3 node-hours**, up from 1.6 after Job C moved to the corrected domain. Still under 1% of the allocation at 1 SU per node-hour, so the conclusion that SU is not the binding constraint is unchanged.
 
 **Drop order: C, then A2's repeat count, then B's frame count. A1 is never dropped**: it
 costs 45 seconds and it is the only item that resolves a claim currently standing on

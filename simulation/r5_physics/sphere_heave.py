@@ -47,16 +47,34 @@ as blocked by the Round-5 coordinator.
 WHAT IS DELIBERATELY DIFFERENT FROM THE EXPERIMENT, AND WHY
 -----------------------------------------------------------
 1. Basin size. 13.00 x 8.44 m cannot be resolved at the dx a 300 mm sphere needs. The
-   domain here is a square tank of side `lim`. The radiated wave is deep-water
-   (L = 0.9425 m at T_n = 0.777 s), so its ENERGY travels at the group velocity
-   c_g = g*T/(4*pi) = 0.6065 m/s, not at sqrt(g*h) = 2.2 m/s. `reflection_return_s`
-   reports when wall reflections first contaminate the sphere; only cycles before it
-   may be compared. This is a truncation of the comparison window, not of the physics.
+   domain here is a square tank of side `lim`, so wall reflections truncate the
+   comparison window.
+
+   CORRECTED 2026-08-16 after an adversarial review, and this changed a scene-sizing
+   decision, not just a sentence. An earlier version of this file used the deep-water
+   GROUP velocity on the argument that radiated ENERGY travels at c_g. Kramer 2021
+   section 3.5, p.16, uses the PHASE celerity for exactly this purpose and says why,
+   verbatim: "This can be considered a conservative estimate, as the main wave front of
+   radiated waves would have propagated with the group velocity rather than the phase
+   velocity." So the benchmark deliberately picks the FASTER, more conservative speed,
+   and the group-velocity choice was the less conservative one dressed as the more
+   physical one. `reflection_return_s` now defaults to Kramer's convention and
+   `reflection_windows()` reports all three so the choice is visible rather than
+   embedded:
+
+       c_group   = g*T/(4*pi) = 0.6065 m/s   least conservative
+       c_phase   = g*T/(2*pi) = 1.2131 m/s   KRAMER'S OWN CHOICE, the default here
+       sqrt(g*h)              = 2.2147 m/s   fastest possible component, hardest bound
+
+   The practical cost of the correction: at lim = 1.2 the clean window is 1.06 natural
+   periods on Kramer's convention, not the 2.12 previously claimed on the group
+   convention, and only 0.58 on the sqrt(g*h) bound. Two clean periods on Kramer's
+   convention needs lim >= 2.085 m, which is why PLANNED_CONFIGS now carries 2.2.
 2. Water depth. 900 mm is reduced to `depth`. At 500 mm, kh = 3.333 and
    tanh(kh) = 0.99746, so the dispersion relation is deep-water to 0.25%. Stated as a
    quantified approximation, not asserted as equivalent.
 3. Air is absent. The paper's test case also disregards the air phase.
-4. The solver's artificial sound speed is c = sqrt(GAMMA*BULK/RHO_W) = 12.845 m/s, not
+4. The solver's artificial sound speed is c = sqrt(GAMMA*BULK/RHO_W_BENCHMARK) = 12.8568 m/s, not
    1481 m/s. `mach_peak` is reported per drop height: 0.019 / 0.057 / 0.094 for
    0.1D / 0.3D / 0.5D on the linear peak-velocity estimate. The largest drop sits at
    the edge of the weak-compressibility assumption and must be reported with that
@@ -66,7 +84,23 @@ COUPLING
 --------
 The sphere is an SDF collider, which is the path validated to 7.3-7.7% of analytic
 buoyancy (register; NOT the 1.6-7.7% range, which conflates the free-rigid late-window
-fit). The collider is kinematic, so this driver integrates the body itself:
+fit).
+
+REGISTER J.1 CAVEAT, added 2026-08-16 after an adversarial review found it missing from
+every R5 document while two of them leaned on the 7.3-7.7% figure as a warrant. That
+validation DOES NOT CLEAR THE 17 CANONICAL RUNS, for three recorded reasons: the 17 runs
+use restitution 0.05 on floor and walls where C1 used 0.0 everywhere; they resolve depth
+at 2 grid cells; and self-consistency is not validation. Citing the SDF path as
+"validated" is a statement about the C1-SDF box scene only. It is precisely because that
+warrant is so narrow that an external benchmark is worth building, so quoting it without
+the caveat would undercut this file's own reason for existing.
+
+A further qualification measured this session, see docs/R5_PHYSICS_SDF_RANGE_CORRECTION.md:
+the 7.3-7.7% range is NOT one uniform band. At g96 the residual drift is 0.07x the error
+being claimed; at g64 it is 0.57x, and on the actually-published back-half window it is
+1.18x, i.e. the drift exceeds the error. Quote the grids separately.
+
+The collider is kinematic, so this driver integrates the body itself:
 
     reset_sdf_force -> step -> sdf_wrench(dt=TICK) -> integrate -> set_sdf_pose
 
@@ -155,7 +189,7 @@ PLANNED_CONFIGS_DOC = "see PLANNED_CONFIGS below"
 # forced FLOOR/WALL up: at n_grid 96 it needs 3dx = 0.0625 and 4dx = 0.0833, which the
 # original 0.060 / 0.080 did not clear, and the first version of the guard test hid that
 # by hardcoding the coarsest dx as 1.5/80.
-PLANNED_CONFIGS = ((1.2, 64), (1.2, 80), (1.5, 80), (2.0, 96))
+PLANNED_CONFIGS = ((1.2, 64), (1.5, 80), (2.0, 107), (2.2, 117))
 
 PROVENANCE = {
     "benchmark_doi": "10.3390/en14020269",
@@ -244,7 +278,18 @@ def sphere_reference(d=D_SPHERE, rho_w=RHO_W_BENCHMARK, g=G_ENGINE, mass=M_SPHER
         "natural_period_gravity_bias_frac": (t_n - t_n_bench) / t_n_bench,
         "radiated_wavelength_m": wavelength,
         "group_velocity_m_s": g * t_n / (4.0 * math.pi),
+        "phase_velocity_m_s": g * t_n / (2.0 * math.pi),
         "sound_speed_m_s": sound_speed(),
+        # T ~ sqrt(1 + a33/m), so the added-mass ASSUMPTION propagates into the period,
+        # the wavelength, both wave speeds and therefore every reflection window. It is
+        # not a cosmetic input. Sensitivity is reported so it travels with those numbers
+        # instead of sitting silently under them.
+        "natural_period_s_at_a33_ratio_0p83": (
+            2.0 * math.pi * math.sqrt((mass + 0.83 * mass) / k)),
+        "period_sensitivity_note": (
+            "a33/m=0.5 is an ESTIMATE, not a source. Raising it to 0.83 lengthens T_n by "
+            "about 10 percent and shortens every reflection window in periods by the "
+            "same factor. Any reflection figure inherits this."),
     }
 
 
@@ -471,15 +516,38 @@ class SphereTank:
         self.vz = 0.0
 
     # --- reporting -------------------------------------------------------------------
-    def reflection_return_s(self):
-        """When wall-reflected radiated energy first returns to the sphere.
+    def reflection_windows(self):
+        """Round-trip time to the nearest wall under all three defensible wave speeds.
 
-        Uses the deep-water GROUP velocity, which is the speed radiated energy actually
-        travels at; using sqrt(g*h) here would understate the clean window by ~3.6x and
-        is the wrong wave speed for a 0.94 m wave in 0.5 m of water.
+        CORRECTED 2026-08-16. The earlier version used the deep-water GROUP velocity and
+        argued that radiated ENERGY travels at c_g, dismissing sqrt(g*h) as the wrong
+        speed. Kramer 2021 section 3.5, p.16, does the same calculation with the PHASE
+        celerity and states the reason: "This can be considered a conservative estimate,
+        as the main wave front of radiated waves would have propagated with the group
+        velocity rather than the phase velocity." The benchmark deliberately takes the
+        FASTER speed because it bounds contamination earlier. Choosing c_g gave a window
+        exactly 2x longer than the benchmark's own convention would allow, which is the
+        least conservative of the three options presented as the most physical.
+
+        All three are returned. `kramer_phase` is the one to quote.
         """
         d_wall = 0.5 * self.lim - self.WALL
-        return 2.0 * d_wall / self.ref["group_velocity_m_s"]
+        c_g = self.ref["group_velocity_m_s"]
+        c_p = self.ref["phase_velocity_m_s"]
+        c_sh = math.sqrt(G_ENGINE * self.depth)
+        t_n = self.ref["natural_period_s_predicted"]
+        out = {}
+        for name, c in (("group", c_g), ("kramer_phase", c_p), ("shallow_bound", c_sh)):
+            t = 2.0 * d_wall / c
+            out[f"reflect_{name}_s"] = t
+            out[f"reflect_{name}_periods"] = t / t_n
+            out[f"c_{name}_m_s"] = c
+        out["wall_distance_m"] = d_wall
+        return out
+
+    def reflection_return_s(self):
+        """Kramer's own convention: deep-water PHASE celerity. See reflection_windows."""
+        return self.reflection_windows()["reflect_kramer_phase_s"]
 
     def config(self):
         cg = self.ref["group_velocity_m_s"]
@@ -495,8 +563,7 @@ class SphereTank:
             "substeps": self.substeps, "dt_substep_s": self.dt, "dt_tick_s": self.tick,
             "sphere_cells_across": self.diameter / self.dx,
             "depth_over_dx": self.depth / self.dx,
-            "reflection_return_s": self.reflection_return_s(),
-            "reflection_return_periods": self.reflection_return_s() / t_n,
+            **self.reflection_windows(),
             "deep_water_error": deep_water_error(self.depth, self.ref["radiated_wavelength_m"]),
             "peak_velocity_estimate_m_s": v_peak,
             "mach_peak": v_peak / self.ref["sound_speed_m_s"],

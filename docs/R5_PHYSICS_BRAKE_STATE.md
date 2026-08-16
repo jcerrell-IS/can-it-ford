@@ -14,6 +14,27 @@ a sibling's commit, **[inferred]** reasoning that a re-run would be needed to co
 **Brake state cannot flip any of the 16 SLIDE verdicts. It threatens exactly one verdict,
 the single STUCK, and it threatens it in the direction of SLIDE.**
 
+> **ARGUMENT CORRECTED 2026-08-16 by adversarial review; the conclusion survives on a
+> different warrant. See `R5_PHYSICS_SKEPTIC_CORRECTIONS.md` B2.** The version below argued
+> only about sliding. But `simulation/failure_modes.py:33` and `:230-234` make the reported
+> mode a **severity-ranked competition**, `MODE_SEVERITY = (SLIDE, TOPPLE, FLOAT)` with
+> `mode = reached[-1]`. **A SLIDE verdict does not need sliding to stop in order to flip;
+> it only needs a higher-ranked mode to trigger**, and lower friction raises surge
+> acceleration, which is what TOPPLE gates on. My argument never addressed the only
+> mechanism that could refute it.
+>
+> **The bound that actually settles it**, computed in review: every run's peak surge
+> acceleration is a 1- or 2-frame spike, and the sustained 3-frame level is 0.08 to 0.51 of
+> `ssf`, worst case `sweepV_g64_v3p0` at `T3 = 0.721`. Removing friction entirely can add
+> at most `mu*(1+e) = 0.55 x 1.05 = 0.578 g`. Then `0.721 + 0.578 = 1.299 < 1.42 = ssf`, so
+> **no run can reach TOPPLE by friction removal alone**. FLOAT is further still: only
+> `sweepV_g64_v3p0` clears the lift gate at all, with zero frames where lift and vertical
+> speed hold together, and friction is tangential so there is no first-order lift path.
+>
+> Read the section below as **the direction, plus that bound**. The direction alone was not
+> sufficient, and an argument that reaches the right answer without engaging the refuting
+> mechanism is not a verified argument.
+
 The direction is the whole answer and it is the opposite of what "could this flip our
 verdicts?" first suggests. Releasing the brake *lowers* the effective friction, which
 *increases* sliding. A verdict that already says SLIDE cannot be undone by making sliding
@@ -30,6 +51,14 @@ That last point matters: the run everyone worries about and the run brake state 
 are different runs.
 
 ## 2. What the source says, and whose reading it is
+
+> **CAVEAT ADDED 2026-08-16, and it was missing from the version below.** D1's own source
+> record says verbatim: "**Status: OPEN.** Do not treat the numbers below as final until
+> someone with publisher access reads the corrigendum." The corrigendum
+> `10.1016/j.rineng.2025.107527` exists and is **unread**. Every quantitative row in this
+> section inherits that. Separately, "0.3x lower" is **ambiguous** between a factor of 0.3
+> and a 30% reduction; D1 and I independently chose the same reading, and one source read
+> twice is not corroboration.
 
 From Nihei 2025, quoted verbatim in D1's `13f7a2d` from the abstract **[recalled from D1's
 commit; I have not read the abstract myself, so this is second-hand and tagged as such]**:

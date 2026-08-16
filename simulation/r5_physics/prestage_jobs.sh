@@ -32,8 +32,8 @@ DRIVER_SHA=4696c3b2d39f4e28f9c49c9f96c5c28a786c237f19204cc32036f703277d10d9
 
 # Repeat count for job A2. Drop to 5 first if the allocation is short.
 NREP=${NREP:-10}
-# Frames. 250/200 rather than 90, because 41 percent of the canonical 91-frame
-# series hit the transient-search cap: 90 frames cannot show a transient ended.
+# Frames. 250/200 rather than 90: 24 percent of the canonical 91-frame vmag
+# series hit the transient cap, and 0 of 17 reach a trustworthy blocking plateau.
 FRAMES_CANON=250
 FRAMES_SPHERE=200
 
@@ -133,7 +133,7 @@ echo "TIMING_ANCHOR_START=\$(date +%s)"
 for H0D in 0.1 0.3 0.5; do
   echo "=== C h0/D=\$H0D ==="
   $PY simulation/r5_physics/sphere_heave.py \\
-      --n-grid 64 --lim 1.2 --depth 0.5 --h0-over-d \$H0D \\
+      --n-grid 117 --lim 2.2 --depth 0.5 --h0-over-d \$H0D \\
       --frames $FRAMES_SPHERE --sdf-res 96 --verbose \\
       --out \$OUT/sphere_h0_\${H0D}.json
   echo "RC_C_\${H0D}=\$?"
@@ -164,7 +164,7 @@ case "${1:-}" in
     case "${2:-}" in
       A) job_a; submit_line A "00:45:00" ;;
       B) job_b; submit_line B "00:45:00" ;;
-      C) job_c; submit_line C "01:30:00" ;;
+      C) job_c; submit_line C "04:30:00" ;;
       *) echo "usage: $0 --go {A|B|C}" >&2; exit 2 ;;
     esac ;;
   *)
@@ -173,9 +173,9 @@ D4 pre-staged batch plan. Nothing runs without --go.
 
   JOB A  ~0.30 node-h  brake sweep (45 s) FUSED with ${NREP} repeats + P2G onset
   JOB B  ~0.35 node-h  sphere hydrostatic pilot vs 69.2180 N
-  JOB C  ~1.0  node-h  sphere free decay, 3 drops   [gated on B; /s1 still blocked]
+  JOB C  ~3.7  node-h  sphere free decay, 3 drops at lim=2.2 [gated on B; /s1 blocked]
 
-  Total ~1.6 node-hours against 629 SU remaining. SU is NOT the binding
+  Total ~4.3 node-hours against 629 SU remaining. SU is NOT the binding
   constraint; wall clock and socket availability are.
 
   Drop order if short: C, then NREP 10->5, then B's frames 200->120.
