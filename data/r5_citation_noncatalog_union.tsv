@@ -10,7 +10,7 @@ doi	year	title	discovery_routes
 10.2208/jscejj.24-16110	2025	FLOOD-INDUCED SMALL CAR DRIFTING CONDITIONS BASED ON ACTUAL VEHICLE EXPERIMENTS	author-cluster
 10.1111/jfr3.12979	2024	Flood risk investigation of pedestrians and vehicles in a mountainous city using a coupled coastal ocean and stormwater management model	graph-1hop
 10.1007/978-3-031-77489-8_32	2024	Numerical Studies of 3D Vehicle Wading Phenomenon with an Improved Single-Layer Particle Boundary Technique Within the SPH Framework	graph-1hop;graph-2hop-strict
-10.26190/unsworks/27433	2024	Experimental Testing of Flood Hazard Curves for a Partially Submerged Vehicle	author-cluster
+10.26190/unsworks/27433	2017	Experimental Testing of Flood Hazard Curves for a Partially Submerged Vehicle	author-cluster
 10.4271/2023-01-0609	2023	Vehicle Underbody Structural Performance Prediction During Waterfording Events Using A One Way Coupled CFD-CAE Approach	graph-1hop
 10.1093/acrefore/9780199389407.013.438	2023	Vehicle-Related Causes of Flood Fatalities	author-cluster
 10.1016/j.scitotenv.2022.154098	2022	Integrated modeling of 2D urban surface and 1D sewer hydrodynamic processes and flood risk assessment of people and vehicles	graph-1hop
@@ -21,7 +21,7 @@ doi	year	title	discovery_routes
 10.1016/j.oceaneng.2020.107460	2020	Experimental and computational study of operation of an amphibious craft in calm water	graph-1hop
 10.4271/2024-01-3805	2019	Amphibious Vehicle Water Egress Modeling and Simulation Using CFD and Wong’s Methodology	author-cluster-v2
 10.4271/2017-01-1327	2017	Water Ingress Analysis and Splash Protection Evaluation for Vehicle Wading using Non-Classical CFD Simulation	graph-1hop;graph-2hop-strict
-10.4225/53/58e1dfd63f1f4	2017	Expert opinion: stability of people, vehicles and buildings in flood water	author-cluster
+10.4225/53/58e1dfd63f1f4	2015	Expert opinion: stability of people, vehicles and buildings in flood water	author-cluster
 10.4271/2016-28-0072	2016	Passenger Car Water Wading Evaluation Using CFD Simulation	graph-1hop;graph-2hop-strict
 10.24355/dbbs.084-201611141038-0	2016	Vehicles, pedestrians and flood risk: a focus on the incipient motion due to the mean flow	author-cluster
 10.4271/2014-36-0251	2014	Water Ingestion and Pressure Analysis of Automotive Vehicles using Multiphase CFD	graph-1hop

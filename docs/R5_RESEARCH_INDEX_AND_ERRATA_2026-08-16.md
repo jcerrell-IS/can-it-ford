@@ -30,12 +30,27 @@ with a number in an earlier unit, the number below wins.**
 | 13 | Al-Qadami Table 1 series, carried from the review | unit 8 §4 | **independently verified**, review reproduces exactly | `4140127` |
 | 14 | "state the model scale" is the rule | unit 9 §2 | **insufficient.** Needs a second label, `value_basis`, or Azhar 2026 gets inflated 52x | `66f7427`, unit 9 §2b |
 | 15 | the CSV holds 42 unique papers; yields are 10/42 and 9/42 | units 1, 9 | **41 unique papers.** Rows 6 and 16 are the same paper (`10.1111/jfr3.12262`, online 2016 vs print 2018). Yields are **10/41** and **9/41**; numerators unchanged | unit 12 §2 |
-| 16 | `10.26190/unsworks/27433` is dated 2024 | unit 6, and `data/r5_citation_noncatalog_union.tsv` | **2017.** OpenAlex was wrong; DataCite is the registering agency and says 2017, consistent with Elicit row 28. **The TSV still carries the wrong year** | unit 12 §3 |
+| 16 | `10.26190/unsworks/27433` is dated 2024 | unit 6, and `data/r5_citation_noncatalog_union.tsv` | **2017.** OpenAlex was wrong; DataCite is the registering agency. **Superseded by erratum 17: it was not the only one, and the TSV is now fixed** | unit 12 §3, then unit 13 |
+| 17 | one wrong year, documented but left in the data file | erratum 16 | **two wrong years, both now CORRECTED in the TSV.** `10.26190/unsworks/27433` 2024→**2017** and `10.4225/53/58e1dfd63f1f4` 2017→**2015**. All 28 union rows re-checked against the registering agency: **0 errors in the 25 Crossref-registered DOIs, 2 errors in the 3 DataCite-registered ones** | unit 13 |
 
 **Three of these matter most.** #3, because I proposed the L-2 amendment and my
 own test killed it. #8, because it means the paper does not cite its closest
 comparator at all. #11, because a contaminated percentage is exactly the kind of
 number that survives into a draft if nobody writes down that it was withdrawn.
+
+**A standing caution that came out of #16 and #17.** Four separate metadata
+defects in this dispatch all came from bibliographic aggregators rather than from
+publishers: the Bando given name (OpenAlex and scite say "Yoshinori", the
+publisher deposit says "Yu" in both DOIs), the Azhar subtitle that
+`auditBibliography` passed as `matched` while the trailing phrase differed, and
+two wrong publication years. The years split cleanly by registering agency:
+**0 wrong in 25 Crossref-registered DOIs, 2 wrong in 3 DataCite-registered
+ones.** N is only 3 on the DataCite side, so treat that as a signal to check
+repository deposits against DataCite directly, not as a rate. General rule:
+**for any citation that will reach the paper, take author names, titles and years
+from the registering agency (Crossref or DataCite), never from OpenAlex, scite or
+Semantic Scholar.** Those are excellent for discovery and unreliable for
+transcription.
 
 ## 2. Current best value of every headline number
 
