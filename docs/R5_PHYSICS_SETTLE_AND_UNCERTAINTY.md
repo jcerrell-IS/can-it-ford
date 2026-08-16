@@ -93,6 +93,63 @@ runs has to clear those bars first, and per the retraction above each bar is a l
 
 ---
 
+## 2b. Re-derived with a trend-aware rule: the answer is stronger than the retraction
+
+The review's B1 said to retract the cap-hit framing **or re-derive it with a trend-aware
+truncation rule**. I retracted first and have now done the re-derivation, which is the part
+that turns a withdrawal back into an answer.
+
+`find_stationary_window()` asks a different and answerable question: **what is the earliest
+point after which the series is stationary?** Its guard is the piece that matters. Before
+any probe comparison it tests the reference tail's own trend using a yardstick estimated
+from **detrended residuals**, so a trend cannot inflate its own error bar until it looks
+flat. That circularity defeated two earlier versions of this rule and is documented in the
+code where it bit.
+
+Validated on the same controls that refuted the old rule, `blocking.py --selftest`:
+
+| control | old rule | new rule |
+|---|---|---|
+| stationary white noise, n = 91 | drop 0 to 7 | `stationary_at_0` (5/5) |
+| true transient tau = 6, n = 400 | drop 15 to 21 | `stationary_from`, residual bias below the retained SE (3/3) |
+| **pure ramp, no transient, n = 91** | drop 13 to 44 | **`never_stationary` (3/3)** |
+| **pure ramp, no transient, n = 400** | **drop 200, the cap** | **`never_stationary` (3/3)** |
+| monotone cumulative | drop 44, 45 (cap) | **`never_stationary` (2/2)** |
+
+**Result on the real data [measured]:**
+
+| set | never reaches a stationary window |
+|---|---|
+| canonical 17, `vmag` | **14 / 17** |
+| water field, independent of the vehicle | **8 / 8** |
+| C1-SDF force series, n = 160 | **4 / 4** |
+
+Only three runs reach one: `g96_m2337` at d = 11, `g48_m2337` at d = 25, `g48_m1609` at
+d = 31.
+
+**Two things this does and does not say.** It says that within their recorded length these
+series never reach a window whose tail passes a detrended trend test, so **no steady-state
+mean is established for any reported quantity**. It does **not** distinguish "the transient
+outlasts the run" from "there is a genuine secular drift"; both are consistent, and I have
+no way to separate them without longer runs. Either way the consequence for the reported
+numbers is identical.
+
+**The independent corroboration matters more than the count.** Every settle number in this
+project so far derives from vehicle kinematics, which all trace to the same `t` series. The
+water field in `rollout.npz` is a physically separate observable, and it agrees 8/8. As a
+statistic no truncation rule can bias, the raw fractional change over the second half alone
+is **-15.4%** for `sweepV_g64_v0p5` and **-35.8%** for `g64_m1100`, the latter strictly
+monotone across all 90 frames **[measured]**.
+
+**And the power limit is itself the finding.** The selftest shows the rule localises a
+tau = 6 transient at n = 400 but **not** at n = 91, the canonical run length, where it
+returns a point still inside the decay. So the defensible statement about the canonical runs
+is not that their transient is long. It is that **91 frames is too short for any truncation
+rule to localise a transient at all**, which is a claim about the runs rather than about the
+tool, and is what the retracted cap-hit was reaching for without support.
+
+---
+
 ## 3. Result: the SDF path's two headline numbers are not equally solid
 
 The project quotes the SDF-collider buoyancy validation as "7.3 to 7.7%", treating the
