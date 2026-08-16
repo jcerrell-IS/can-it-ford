@@ -8,6 +8,14 @@ this session, via `git show origin/main:<path>` and `git ls-tree -r --long
 origin/main`, unless tagged otherwise. Claims are tagged **[read]**, **[recalled]**
 or **[inferred]**.
 
+> **UNITS. 1 MB = 1,000,000 bytes (decimal SI) throughout this document.**
+> **CORRECTED 2026-08-16:** the first revision computed every size as bytes/1048576
+> (mebibytes) and labelled the result "MB", understating each headline figure by
+> 4.6%: the total was published as 168.09 MB when it is 176.25 MB, and the verbatim
+> share as 152.90 MB when it is 160.32 MB. Byte counts were correct throughout and
+> **the 91.0% proportion is unaffected**, being a ratio, which is why nothing
+> downstream broke. Labels are reissued below and exact bytes accompany every figure.
+
 ---
 
 ## 0. The headline, and why it changes the framing
@@ -20,15 +28,15 @@ exposure as four `.ply` files plus fifteen renders.
 the direction that matters.** [read]
 
 `vehicle_geometry_research/` on `origin/main` holds **176,252,809 bytes across 30
-files (168.09 MB)**. Of that:
+files (176.25 MB)**. Of that:
 
 | Class | Bytes | MB | Files | Share |
 |---|---|---|---|---|
-| **Upstream CCSA material, verbatim** (4 `.zip`, 14 `.key`, 4 upstream `README.md`) | 160,322,098 | 152.90 | 22 | **91.0%** |
-| Derived hulls (`.ply`) from CCSA decks | 13,422,794 | 12.80 | 2 | 7.6% |
-| Reconstructions, not CCSA | 2,400,894 | 2.29 | 2 | 1.4% |
-| Repo-authored docs | 107,023 | 0.10 | 4 | 0.1% |
-| **Total** | **176,252,809** | **168.09** | **30** | 100% |
+| **Upstream CCSA material, verbatim** (4 `.zip`, 14 `.key`, 4 upstream `README.md`) | 160,322,098 | 160.32 | 22 | **91.0%** |
+| Derived hulls (`.ply`) from CCSA decks | 13,422,794 | 13.42 | 2 | 7.6% |
+| Reconstructions, not CCSA | 2,400,894 | 2.40 | 2 | 1.4% |
+| Repo-authored docs | 107,023 | 0.11 | 4 | 0.1% |
+| **Total** | **176,252,809** | **176.25** | **30** | 100% |
 
 The public exposure is **not primarily derived geometry. It is verbatim
 redistribution of the original CCSA FE models**, including the complete
@@ -41,6 +49,34 @@ copy**. The repo redistributes the artifact itself.
 
 The commit that introduced them says so in its own subject line: `f85c385 Add
 downloaded NCAC vehicle FE models, Silverado and Yaris, coarse and detailed`. [read]
+
+### And it is on every branch, not one
+
+Raised by D3, and **verified independently here** rather than taken on report, by
+walking `git ls-remote --heads origin` and counting `.key` blobs in each tree:
+
+**30 of 30 public branches carry exactly 14 CCSA `.key` decks each. No branch
+deviates, and no branch tree was missing.** [read]
+
+So the exposure is not "a tree on `main`". It is the upstream LS-DYNA **source decks
+on the entire public branch surface**. This is the same lesson the credential
+correction produced (`5f01dd2`): a one-tree measurement is not a public-surface
+measurement, and I made that error in both documents before catching it in neither.
+
+For proportion, the `.ply` files that the original dispatch scoped this task around
+are **15,823,688 B (15.82 MB), 9.0% of the tree**, all four of them together. The
+`.key` decks and archives are the other 91.0%.
+
+**Severity therefore follows bytes and rights-holder clarity, not file type:**
+
+| Rank | What | Bytes | Rights holder | Why it ranks here |
+|---|---|---|---|---|
+| 1 | CCSA `.key` decks and `.zip` archives, on all 30 branches | 160,322,098 | CCSA/GMU, unambiguous author, silent licence | Verbatim redistribution, largest by far, no transformation argument available |
+| 2 | Derived hulls, 2 `.ply` | 13,422,794 | Derived from rank 1 | Inherits rank 1's status, but a genuine derived-work argument exists |
+| 3 | Renders depicting the hull, 6 files | see section 3 | Derived from rank 2 | Two steps removed, lowest-resolution depiction |
+| 4 | `car_mesh*.ply`, 2 files | 2,400,894 | Not CCSA at all | Outside E8. Do not remediate under it |
+
+The original framing had rank 4 and rank 2 in scope and rank 1 entirely absent.
 
 ---
 
@@ -172,7 +208,7 @@ licence."
 
 - Derived geometry (2 `.ply` hulls, 6 renders) is committed to a public repo. Direct
   violation.
-- Verbatim upstream material (152.90 MB) is committed to the same public repo. Not
+- Verbatim upstream material (160.32 MB) is committed to the same public repo. Not
   contemplated by E8's wording, and strictly harder to defend.
 - Written permission: none exists. **[recalled: register item 11 lists establishing
   these rights as still open, and nothing in this session found a grant]**
@@ -209,12 +245,16 @@ knowingly continued, which is worse than the current position of not having aske
 
 **Option 2. Remove from HEAD, keep history.**
 `git rm` the 22 upstream files, keep the 2 derived hulls or remove them too.
-*Consequence:* the repo stops actively presenting the material. **It does not
-unpublish it.** GitHub has served removed blobs by SHA after history rewrites in this
-very account. **[recalled from project memory; the W&B key precedent]** Anyone with a
-commit SHA retains access.
-*Cost:* low. Breaks any script reading those paths (the hull is load-bearing: it is
-the canonical mesh for all 17 gated runs).
+*Consequence:* the repo stops actively presenting the material on `main`. **It does
+not unpublish it**, on two independent grounds now. First, GitHub has served removed
+blobs by SHA after history rewrites in this very account. **[recalled from project
+memory; the W&B key precedent]** Second, and this is the newer and larger point,
+**the decks are on all 30 public branches**, so removing them from `main` leaves 29
+branches still serving them. A `main`-only removal would look like remediation and
+achieve close to none of it.
+*Cost:* low, and the benefit is correspondingly low unless every branch is handled.
+Breaks any script reading those paths (the hull is load-bearing: it is the canonical
+mesh for all 17 gated runs).
 
 **Option 3. History rewrite with `git filter-repo`, then force-push.**
 *Consequence:* the only option that materially reduces public availability, and it
@@ -227,11 +267,16 @@ cites SHAs as primary provenance throughout.
 irreversible. The `git-history-rewrite` skill exists and must be loaded first.
 
 **Option 4. Remove the verbatim upstream material only, keep the derived hull.**
-Delete the 4 `.zip`, 14 `.key` and 4 upstream `README.md` (22 files, 152.90 MB);
+Delete the 4 `.zip`, 14 `.key` and 4 upstream `README.md` (22 files, 160.32 MB);
 retain the 2 derived `.ply` and the renders.
 *Consequence:* removes 91.0% of the exposure and the entire indefensible verbatim
 portion, while keeping every artifact the project actually needs to run and to
 reproduce. The derived-hull question stays open under option 1.
+*Scope requirement, from the 30-branch finding:* this has to be applied **across all
+30 branches**, or it is cosmetic. Most of the 29 non-`main` branches are finished or
+abandoned work; the cheapest honest route is to delete the stale ones outright rather
+than rewrite each, which is a decision about branch hygiene as much as licensing.
+Enumerate them before acting: several are named in D3's branch taxonomy.
 
 ---
 
@@ -245,7 +290,7 @@ Reasoning, stated so it can be argued with:
    removes the assertion of ownership that would most damage a permission request.
    Doing it before writing to CCSA also means the email describes a repo that already
    attributes them properly.
-2. **Option 4 next** because the verbatim 152.90 MB is the part with no defence and
+2. **Option 4 next** because the verbatim 160.32 MB is the part with no defence and
    no project need. The pipeline consumes the derived `.ply` hull, not the `.key`
    decks. Removing them costs the project nothing operationally and removes the
    overwhelming majority of the exposure. Anyone reproducing the work can download the

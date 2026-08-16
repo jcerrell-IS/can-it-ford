@@ -14,102 +14,150 @@ Scope note: D1 mines the **content** of these files. This assesses their
 
 ## 1. The finding
 
-`citations/` **is tracked and public.** 38 files, **19,759,424 bytes (18.84 MB)** on
+> **UNITS. 1 MB = 1,000,000 bytes (decimal SI) throughout this document.**
+> **CORRECTED 2026-08-16:** an earlier revision computed every size as
+> bytes/1048576 (mebibytes) and labelled the result "MB", understating each headline
+> figure by 4.6%. The byte counts were always right and every proportion was
+> unaffected, but the labels were wrong and are reissued below. Exact bytes are given
+> alongside each figure so nothing has to be taken on trust. The same defect in
+> `E8_GEOMETRY_REDISTRIBUTION_DECISION_2026-08-16.md` is corrected there.
+
+`citations/` **is tracked and public.** 38 files, **19,759,424 bytes (19.76 MB)** on
 `origin/main`. There is **no `citations` rule in `.gitignore`**, so nothing was ever
 intended to keep it out. [read]
 
 **99.2% of it by bytes is third-party material**, not repo-authored work:
 
-| Class | Bytes | MB | Files | Redistribution risk |
+| Class | Bytes | MB | Files | Redistribution risk, AFTER the DOI lookups |
 |---|---|---|---|---|
-| Full-text publisher PDFs | 11,999,575 | 11.44 | 3 | **HIGH** |
-| Screenshots of copyrighted figures and tables | 7,213,546 | 6.88 | 20 | **HIGH** |
-| Elicit exports | 350,369 | 0.33 | 2 | Medium, terms-of-service not copyright |
+| Full-text publisher PDFs | 11,999,575 | 12.00 | 3 | **Mostly CLEARED.** 2 of 3 carry CC licences (10.88 MB). 1 undetermined |
+| Reproductions of figures and tables | 7,213,546 | 7.21 | 20 | **HIGH, and now the largest real problem.** 15 of them reproduce a **bronze** article carrying no licence |
+| Elicit exports | 350,369 | 0.35 | 2 | Medium, terms-of-service not copyright |
 | Third-party code, `(kks32)` | 30,170 | 0.03 | 2 | Low, provenance unrecorded |
-| Repo-authored notes | 165,764 | 0.16 | 11 | None |
-| **Total** | **19,759,424** | **18.84** | **38** | |
+| Repo-authored notes | 165,764 | 0.17 | 11 | None |
+| **Total** | **19,759,424** | **19.76** | **38** | |
 
-This is the same family of problem as the CCSA decks, and in one respect it is
-**cleaner cut**: CCSA is licence-*silent*, which leaves a genuine open question,
-whereas a subscription-journal PDF has an unambiguous copyright holder and an
-unambiguous answer.
+**The lookups inverted the ranking.** Before them, the three PDFs looked like the worst
+item and the screenshots like a secondary concern. After them, two of the three PDFs
+are licensed for redistribution and **the screenshots are the problem**, because the
+article they reproduce is bronze OA: free to read, no licence. Section 3.
+
+This is the same family of problem as the CCSA decks, but it is **not** uniformly
+"cleaner cut" as the first revision claimed. Journal licensing turned out to have three
+distinct answers across three files from two publishers, and the single most important
+one is the least visible: an `isOa: true` flag with no licence behind it.
 
 ---
 
 ## 2. Full-text PDFs, per file
 
-| File | Bytes | Source | Status |
-|---|---|---|---|
-| `Water Resources Research - 2021 - Wang and Marsooli - Physical Instability of Individuals Exposed to Storm-Induced Coastal Flooding.pdf` | 7,399,829 | AGU / Wiley | **Probably not OA. See probe below.** |
-| `J Flood Risk Management - 2025 - Dasallas - Integration of Stability Functions Into a Transport Flood Risk Modelling.pdf` | 3,484,612 | Wiley | **Probably not OA. See probe below.** |
-| `ARR_Project_10_Stage2_Report_Final.pdf` | 1,115,134 | Shand, Cox, Blacka & Smith (2011), AR&R Report P10/S2/020, Water Research Laboratory, UNSW | **UNDETERMINED, probe was blind** |
+**RESOLVED 2026-08-16 by DOI lookup (scite).** The three files have **three different
+answers**, and none matches what my earlier probe suggested.
 
-The first two filenames follow the **Wiley Online Library download convention**
-(`Journal - Year - FirstAuthor - Title.pdf`), which is what a logged-in subscriber
-download produces. **[inferred, from filename form]**
+| File | Bytes | DOI | OA status | Licence | Redistribution |
+|---|---|---|---|---|---|
+| `J Flood Risk Management - 2025 - Dasallas - ...pdf` | 3,484,612 | **10.1111/jfr3.70154** | **gold** | **CC BY** | **PERMITTED** with attribution |
+| `Water Resources Research - 2021 - Wang and Marsooli - ...pdf` | 7,399,829 | **10.1029/2020WR028616** | **hybrid** | **CC BY-NC-ND** | **PERMITTED** with attribution, **non-commercial, no derivatives** |
+| `ARR_Project_10_Stage2_Report_Final.pdf` | 1,115,134 | n/a, report P10/S2/020 | n/a | **UNDETERMINED** | see flag file |
 
-### The licence probe, and why it is valid for two files and void for the third
+**Two of the three PDFs are cleared outright.** 10.88 MB of the 12.00 MB is licensed
+for redistribution. That is the opposite of what section 1's risk table assumed, and
+the risk table is corrected accordingly.
 
-I scanned each PDF with `strings` for `creativecommons.org/licenses/...`, `CC BY`,
-"open access article", and copyright lines. **All three returned zero matches.**
+**The CC BY-NC-ND file is the one that proves the carve-out matters.** Wang and
+Marsooli is **non-commercial** and **no-derivatives**, while the repo's root `LICENSE`
+is BSD 3-Clause, which grants every recipient commercial rights and the right to
+modify. The repo is therefore currently offering downstream users terms on this PDF
+that its own licence forbids. This is no longer a hypothetical argument for the
+carve-out in `E8_THIRD_PARTY_NOTICES_DRAFT_2026-08-16.md`: it is a concrete,
+documented instance. Keeping the file is fine; keeping it under an unqualified BSD
+grant is not.
 
-That negative is worthless without a control, because PDF text is usually inside
-compressed streams that `strings` cannot read. So I ran one: count any `http(s)://`
-URL and any Wiley/DOI marker in each file.
+### WITHDRAWN: my `strings` licence probe, in full
 
-| File | URLs visible | Wiley/DOI markers | Probe verdict |
-|---|---|---|---|
-| Wang and Marsooli 2021 | **413** | 3 | **Valid.** A CC licence URL would very likely have appeared. Absence is real evidence. |
-| Dasallas 2025 | **199** | 3 | **Valid.** Same reasoning. |
-| ARR Project 10 | **0** | 0 | **BLIND. The negative for this file is void and is withdrawn.** |
+The earlier revision of this section reported a `strings` scan for CC markers, found
+none in any of the three PDFs, and ran a control counting visible URLs. The control
+showed 413 and 199 URLs in the two Wiley files and 0 in the AR&R report, and I
+concluded the probe was **"valid"** for the two Wiley files and blind only for AR&R.
 
-So: for the two Wiley PDFs, "no CC licence marker" is meaningful evidence they are
-not open-access. For the AR&R report the probe saw nothing at all, so it establishes
-nothing either way. **[read]**
+**That conclusion was wrong, and the whole probe is withdrawn.** The DOI lookup shows
+both Wiley files carry Creative Commons licences, so the probe returned a **false
+negative on both of the files where I had just declared it reliable**. It was 0 for 3.
 
-**Neither result is a licence determination.** The decisive check is each DOI's
-open-access status at the publisher, which was not performed this session (no
-DOI-resolution tool was invoked). Two of the three DOIs are already recorded in
-`citations/README.md`; the WRR one is not. **This is the single cheapest open item in
-this document.**
+The methodological error is worth stating, because the control looked rigorous and was
+not: **I proved the probe could see URLs, then treated that as proof it would see a CC
+licence URL if one existed. Those are two different propositions.** A control that
+establishes a probe's *reach* does not establish its *sensitivity to the specific
+thing being tested*. The correct control would have been to run the identical probe
+against a PDF of known CC-BY status and confirm it fires. I did not do that.
 
-Note in AR&R's favour: it is a publicly funded Australian government engineering
-guideline programme, and such reports are often freely distributable. But
-`~/can-it-ford` memory records that `arr.ga.gov.au` returns 403 and that the
-obtainable mirror is a different report, so its terms have not actually been read.
-**[recalled]** Do not assume "government report" means "redistributable".
+No conclusion in this document now rests on that probe. The three rows above come from
+DOI lookup only.
+
+### Also found: a citation defect in `citations/README.md`
+
+`README.md` gives DOI `10.1111/jfr3.12527` the title **"Full-scale testing of vehicle
+floating and sliding in flowing floodwater"**. The DOI actually resolves to
+**"Full-scale testing of stability curves for vehicles in flood waters"**, Smith,
+Modra & Felder, *JFRM* 12(S2), 2019-03-05. [read, scite]
+
+The DOI is right and the title is wrong. Worth fixing before the bibliography is
+frozen, and worth checking whether the wrong title propagated into the paper's `.bib`.
+That is D1's territory, not mine; flagging, not touching.
 
 ---
 
-## 3. Screenshots, 20 files, 6.88 MB
+## 3. Reproductions of figures and tables, 20 files, 7,213,546 B (7.21 MB)
 
 This is the class most likely to be overlooked, because a `.png` does not look like a
 copy of a paper. Every one of these reproduces third-party expression verbatim.
 
-| Group | Files | Bytes | What it is |
-|---|---|---|---|
-| `Smith-Modra-Felder/Screenshot 2026-07-03 at 3.15-3.16 PM.png` | 14 | 5,428,911 | Screen captures taken in one 50-second burst, so a page-by-page capture of a single document **[inferred, from the timestamps]** |
-| `Smith-Modra-Felder/smith2019_instability_table.png` | 1 | 369,463 | A table from the same paper |
-| `WRL reports technical and Research/` Figure 5-5, Table 5-1, Table 5-2 | 3 | 760,715 | Figures and tables from a Water Research Laboratory, UNSW report |
-| `ARR table 1 - guidelines and recommendations for limits for vehicle stability.png` | 1 | 237,832 | A table reproduced from AR&R |
+**Counts corrected 2026-08-16**, by tab-aware re-parse of `git ls-tree` (these
+filenames contain spaces, which silently broke the first pass and produced a
+14-screenshot figure and two wrong subtotals):
 
-`citations/README.md` identifies the Smith-Modra-Felder source as Smith, G., Modra, B.,
-& Felder, S. (2019), *Journal of Flood Risk Management*, **DOI 10.1111/jfr3.12527**,
-and says "Source in `citations/Smith-Modra-Felder/`". [read]
+| Group | Files | Bytes | MB | What it is |
+|---|---|---|---|---|
+| `Smith-Modra-Felder/Screenshot 2026-07-03 at 3.15-3.16 PM.png` | **15** | **5,846,160** | **5.85** | Screen captures taken in one 50-second burst, so a page-by-page capture of a single document **[inferred, from the timestamps]** |
+| `Smith-Modra-Felder/smith2019_instability_table.png` | 1 | 369,463 | 0.37 | A table from the same paper |
+| **Smith group, total** | **16** | **6,215,623** | **6.22** | |
+| `WRL reports technical and Research/` Figure 5-5, Table 5-1, Table 5-2 | 3 | 760,091 | 0.76 | Figures and tables from a Water Research Laboratory, UNSW report |
+| `ARR table 1 - guidelines and recommendations for limits for vehicle stability.png` | 1 | 237,832 | 0.24 | A table reproduced from AR&R |
+| **All reproductions** | **20** | **7,213,546** | **7.21** | |
 
-**That DOI is worth checking first, because it may dissolve this whole group.** JFRM
-publishes open-access articles under CC BY, and the project's own skill file records a
-sibling JFRM paper, Azhar, Pauwels and Bui 2023, DOI 10.1111/jfr3.12885, explicitly as
-"**open access**". **[read, from
-`vehicle_geometry_research/flood-mpm-debugging-reference_SKILL_v3_friction_corrected.md:58`]**
-If Smith 2019 is likewise CC BY, then the 15 Smith-Modra-Felder files are fine to
-redistribute **with attribution**, and 5.80 MB of the 6.88 MB problem disappears. If it
-is not, they are 15 verbatim reproductions of a paywalled paper.
+### RESOLVED, and it went the wrong way. Smith 2019 is BRONZE.
 
-**One DOI lookup decides the largest single group here.** Do that before any removal.
+The earlier revision hoped this group might dissolve: JFRM publishes CC BY articles,
+and a sibling JFRM paper (Azhar, Pauwels and Bui 2023, `10.1111/jfr3.12885`) is
+recorded in the project's own skill file as "open access", so Smith 2019 might be
+CC BY too, clearing the largest image group at a stroke.
 
-The AR&R and WRL images do not have that escape route available as cheaply, since
-their source terms have not been read.
+**Checked. It is not.** `10.1111/jfr3.12527` returns `isOa: true`, **`oaStatus:
+"bronze"`**, and **no `license` field at all**. [read, scite]
+
+**Bronze open access is the trap in this whole exercise.** It means the publisher has
+made the article free to *read* on their own site, at their discretion and revocably,
+under **no open licence**. Contrast the two files resolved in section 2, which return
+an explicit `license` of `cc-by` and `cc-by-nc-nd`. Bronze returns none, because there
+is none.
+
+So `isOa: true` is **not** a redistribution permission, and anything that reads only
+that boolean will reach the wrong answer. Free to read is not free to republish.
+
+**Consequence:** the 15 Smith-Modra-Felder screenshots (5,846,160 B, 5.85 MB), and the 1 table image beside them (369,463 B), are verbatim
+reproductions of an article that carries no redistribution licence. This is the
+**largest genuine problem in `citations/`**, and it is larger than the PDFs, two of
+which turned out to be licensed.
+
+**Warning for the sibling citation:** Azhar 2023 `10.1111/jfr3.12885` is described in
+the repo as "open access" with no qualifier. Given that its sibling in the same
+journal is bronze, **that description should not be trusted to mean CC BY** until its
+`license` field is checked the same way. The repo's own notes do not distinguish
+bronze from gold anywhere, so the same conflation may sit elsewhere in the
+bibliography. [read / inferred]
+
+The AR&R and WRL images remain undetermined; their source terms are unread and two
+attempts to reach them failed, see the flag file.
 
 ---
 
@@ -138,22 +186,48 @@ them under `third_party/` with the same `VENDORED.md` + `PINNED_SHA.txt` treatme
 
 ## 5. Recommendation
 
-Ordered, and deliberately cheap-first, because three lookups may shrink the problem
-before anything is removed.
+Three of the four lookups are now done, so this is no longer speculative.
 
-1. **Resolve four DOIs.** Smith 2019 `10.1111/jfr3.12527` first, since it governs 15
-   of the 20 screenshots. Then Dasallas 2025, Wang and Marsooli 2021, and the AR&R
-   report's terms. Anything CC BY is **keep, with attribution added**.
-2. **For whatever is confirmed not open-access: untrack, do not delete.** These are
-   the working sources for the paper and Josie needs them locally. `git rm --cached`
-   plus a `.gitignore` rule keeps the files on disk and removes them from future
-   commits. It does **not** unpublish what is already public, for the same reason
-   given in the geometry document.
-3. **Replace each removed PDF with its citation and DOI**, which `citations/README.md`
-   already does well for most entries and is the correct long-term pattern: cite, do
-   not carry.
-4. **Move the two `(kks32)` files** under `third_party/` with `VENDORED.md`.
-5. **Add `citations/` to the notices file** once 1 is done.
+1. **KEEP, and add attribution:** `Dasallas 2025` (CC BY) and `Wang and Marsooli 2021`
+   (CC BY-NC-ND). Both are licensed for redistribution. Record each licence in
+   `THIRD_PARTY_NOTICES.md`, and note that the NC-ND terms on Wang and Marsooli are
+   **narrower than the repo's BSD grant**, which is exactly what the carve-out clause
+   is for.
+2. **UNTRACK the 16 Smith-Modra-Felder files** (6,215,623 B, 6.22 MB: 15 screenshots plus 1 table image). Bronze OA
+   gives no redistribution right. `git rm --cached` plus a `.gitignore` rule keeps the
+   files on Josie's disk, where they are legitimately useful, and stops them being
+   carried forward. As everywhere in this dispatch, it does **not** unpublish what is
+   already public.
+3. **Replace them with the citation and a link.** The article is free to read at the
+   publisher, so a DOI link gives any reader the same access the screenshots do, at
+   zero redistribution risk. `citations/README.md` already does this well for most
+   entries and is the right long-term pattern: cite, do not carry.
+4. **Resolve the AR&R and WRL terms** before deciding on those **4** images (3 WRL,
+   1 AR&R table). Blocked twice, see `E8_FLAG_ARR_TERMS_UNRESOLVED_2026-08-16.md`.
+   Until then, leave them: deleting on an unread licence is as unevidenced as keeping
+   on one.
+
+   **The AR&R PDF specifically must NOT be treated like the other two PDFs, because
+   removing it has a research cost they do not carry.** It is load-bearing evidence,
+   not just an exposure item:
+   - D1 used it **tonight** as the primary source to refute a proposed `CLAUDE.md`
+     amendment. **[relayed by the coordinator, not verified by me]**
+   - Project memory records it as the primary PDF that prints the **verified AR&R
+     ISBN and Table 3**, after an audit wrongly called both unverified and had them
+     deleted. **[recalled]** That is a documented instance of this exact file being
+     removed on a bad call and having to be restored.
+   - `citations/README.md` sources the entire **L1 depth-velocity hazard threshold**
+     to it, including the DV <= 0.60 m2/s figure and the report's own "draft, interim,
+     informal" caveat. **[read]**
+
+   So the ranking for the three PDFs is: Dasallas and Wang are **licensed, keep,
+   attribute**; AR&R is **undetermined, and the highest-cost of the three to remove**.
+   If its terms come back unfavourable, prefer untracking over deleting, and record
+   the DOI and ISBN in `README.md` first so the evidence survives the file.
+5. **Re-check Azhar 2023** `10.1111/jfr3.12885` and any other repo citation described
+   as "open access" without a licence name, per the bronze warning in section 3.
+6. **Move the two `(kks32)` files** under `third_party/` with `VENDORED.md`.
+7. **Fix the `README.md` title mismatch** on `10.1111/jfr3.12527`, section 2.
 
 **Do not bulk-delete `citations/`.** 11 files are repo-authored analysis, including
 `README.md`, `drift_threshold_grounding.md` and
