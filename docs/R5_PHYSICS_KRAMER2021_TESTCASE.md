@@ -79,28 +79,85 @@ All **[read]** from the article's own full text this session, not recalled:
 
 At `H0 = 0.5D` the whole sphere starts above the water.
 
-Half submergence **fixes the mass**, so these follow with no further input **[derived]**:
+### 3.1 Table 1, now READ, and the three values it corrected
 
-| quantity | value |
-|---|---|
-| sphere volume | 0.014137167 m^3 |
-| mass | 7.0686 kg |
-| mean density | exactly 500.0 kg/m^3 |
-| waterplane area at the equator | 0.0706858 m^2 |
-| hydrostatic heave stiffness `rho g A_w` | 693.428 N/m |
-| buoyancy at equilibrium | **69.3428 N** |
-| natural period, at an assumed `a33/m = 0.5` | 0.7769 s |
+**Superseded 2026-08-16 by the article PDF**, delivered by the Round-5 coordinator to
+`/Users/josie/can-it-ford-refs/2026-08-16/`, sha256 verified
+`0d885109119d390ae30d42c620ddf0bd8bcad130396dcfe8053b67510d4e9354`, held deliberately
+outside the repo because the repo is public and E8 is unresolved. Table 1, p.4,
+"Values of the test case physical parameters" **[read]**:
 
-The last row is a **prediction used to size the run**, not a result: the added-mass ratio
-is an assumption. The measured period is what gets compared.
+| `D` | `m` | `CoG` | `g` | `H0` | `rho_w` | `d` |
+|---|---|---|---|---|---|---|
+| 300 mm | 7.056 kg | (0, 0, -34.8) mm | 9.82 m/s^2 | {30, 90, 150} mm | 998.2 kg/m^3 | 900 mm |
 
-**What I could not get.** The paper's Table 1 (measured physical parameters) and the
-benchmark **time series itself**, which lives in the MDPI Supplementary Materials, are
-not reachable from this host. MDPI returns 403 to both the article page and the PDF;
-DTU Orbit's full-text PDF sits behind a Cloudflare challenge; OSTI carries metadata
-only. Scite's full-text index served the running prose, which is where everything in the
-table above came from, but not the tables or the supplementary archive. This is a
-**blocker on the comparison, not on the scene**, and is tracked in section 7.
+Also read: four repetitions per drop height, so the benchmark's own N is 4; and the
+seabed depth `d = 3D`, which Table 1's 900 mm confirms exactly.
+
+**The earlier version of this document derived the test case and three values were
+wrong.** They are corrected here rather than quietly overwritten:
+
+| quantity | I had | Table 1 | error |
+|---|---|---|---|
+| `rho_w` | 1000 kg/m^3 (assumed) | **998.2** | +0.18% |
+| `m` | 7.0686 kg (derived) | **7.056** | +0.18%, inherited from `rho_w` |
+| `g` | 9.81 (the engine's) | **9.82** | -0.102%, and irreducible: see 3.3 |
+| buoyancy at equilibrium | 69.3428 N | **69.2180 N** | +0.180% |
+| heave stiffness | 693.428 N/m | **692.180 N/m** | +0.180% |
+
+The reasoning was sound and the input was not: `998.2 * V/2 = 7.05586 kg` reproduces
+Table 1's 7.056 to its quoted precision, so half submergence really does fix the mass.
+This is the cleanest example I have of why a derived value is not a read one **even when
+the algebra is right**. Anything still quoting 69.34 N or 7.0686 kg is quoting the
+superseded derivation.
+
+`CoG = (0, 0, -34.8) mm` is new information, not a correction: the sphere is **ballasted**,
+with its centre of gravity 34.8 mm below the geometric centre. In a 1-DOF heave
+integration that is immaterial, which is a second and independent reason the sphere suits
+this engine (section 1, reason 2).
+
+### 3.2 The 0.3% is an absolute displacement tolerance, not a relative one
+
+Verbatim from the abstract **[read]**: "At a 95% confidence level, uncertainties were
+found to be very low - on average only about 0.3% of the respective drop heights."
+
+Three qualifiers, all load-bearing, and all lost in the paraphrase carried by the Round-5
+bootstrap and by `RECONCILE_ROUND4`:
+
+1. it is an **average** over the decay series, not a per-sample bound;
+2. it is at **95% confidence**;
+3. it is a fraction of the **drop height**, which makes it an **absolute displacement**
+   tolerance of **0.090 / 0.270 / 0.450 mm** for the three drops.
+
+**It therefore cannot be applied to a period, a damping ratio or a force.** My pass
+criterion has to be stated against displacement, in metres, per drop height. A "within
+0.3%" claim about a natural period would be a category error, and I would have made it
+had this not been corrected.
+
+### 3.3 The gravity mismatch is irreducible, and I quantified what it costs
+
+Table 1's local `g` is **9.82 m/s^2**. The solver hardcodes **9.81** inside
+`Solver.set_material()` at `core/solver.py:167-169`, and `newtonian()` carries no `g` key
+to override it **[recalled, and consistent with CLAUDE.md item 3]**. **This scene cannot
+be run at the benchmark's gravity.** The bias is -0.102% in `g`.
+
+Both the weight and the hydrostatic stiffness scale with `g`, so the equilibrium
+submerged fraction is **exactly unaffected** (asserted, and it holds to 1e-15). Only the
+period moves, as `T ~ 1/sqrt(g)`: **+0.051%, or +0.396 ms on a 0.777 s period**
+**[derived]**. That is about two orders of magnitude below the benchmark's own 0.090 mm
+displacement tolerance expressed as a timing error, so it is a stated systematic rather
+than the limiting error. It must still travel with every period this scene reports.
+
+Water density I *can* match, and now do: the material is built at `rho_w = 998.2`, a
+deliberate departure from the project's canonical `RHO_W = 1000.0`. For a validation
+against an external benchmark, matching the benchmark is the correct choice, and it is
+flagged here so nobody reads it as drift.
+
+### 3.4 What is still missing
+
+The **benchmark time series itself** ships as MDPI Supplementary Materials at `/s1`.
+Still 403, independently reproduced by the coordinator from a second host. The PDF is
+the paper, not the data. Tracked in section 7.
 
 ---
 
@@ -159,7 +216,7 @@ That is a quantified approximation, not an assertion of equivalence.
 
 ### 4.3 The artificial sound speed is a real caveat at the largest drop
 
-`c = sqrt(GAMMA * BULK / RHO_W) = 12.8452 m/s` **[derived from engine constants read at
+`c = sqrt(GAMMA * BULK / rho_w) = 12.8568 m/s` at Table 1's rho_w = 998.2 (12.8452 at the superseded 1000) **[derived from engine constants read at
 `simulation/validate_coupling_force.py:15-23`]**, against ~1481 m/s for real water. On the
 linear peak-velocity estimate:
 
@@ -196,11 +253,30 @@ currently reports ALL PASS. It found two real defects on its first run, both now
 The second one is the same failure mode as the tunable at-rest gate, at a smaller scale:
 a check that picks its own operating point will pass.
 
+**A third, found once Table 1 was in hand.** Table 1 over-determines the sphere: `D`, `m`
+and `rho_w` are three independent read values and half submergence is a stated property,
+so any two predict the third. That became a check on my own transcription, which is the
+step most likely to be wrong. It passes, and it also surfaced something real: **Table 1's
+`m` is rounded to 7.056 kg where exact half submergence needs 7.05586 kg, so the published
+sphere is 0.140 g heavy and does not float exactly at the equator.** The residual is
++1.373 mN, which against the 692.180 N/m stiffness is an equilibrium offset of
+**1.98 micrometres** **[derived]**. That is a factor of 45 below the benchmark's own
+0.090 mm tolerance at the smallest drop, so it is immaterial, but the first version of the
+check simply asserted "buoyancy equals weight" with a 1e-3 N tolerance and **failed**. The
+fix was to assert the physical consequence against the benchmark's own tolerance rather
+than to loosen the number until it passed. Loosening would have been the easier move and
+would have thrown away the finding.
+
+The suite also now asserts that the superseded `rho_w = 1000` derivation is **measurably
+wrong rather than a rounding**, so it cannot be quietly reintroduced, and that the
+benchmark tolerance **scales** with drop height by exactly 5x from the smallest to the
+largest, which is the property a flat "0.3%" paraphrase destroys.
+
 Also asserted and passing: the UV sphere is closed and consistently oriented (every
 directed edge used exactly once, every undirected edge shared by exactly two faces,
 V-E+F = 2 at V=4514, E=13536, F=9024), outward-wound by signed volume, with a 0.1784%
 polyhedral volume deficit; all vertices lie on the sphere to 2.8e-17 m; the submerged-cap
-formula reproduces exactly half the sphere at `h = R` and 69.3428 N of buoyancy; and the
+formula reproduces exactly half the sphere at `h = R` and **69.2180 N** of buoyancy; and the
 SDF margin clears the engine's `band = dx` guard at every planned resolution.
 
 ---
@@ -234,22 +310,50 @@ Nothing in `sim_standing.py` was touched. Its sha256 stamps every published run.
 
 ## 7. Open, with the second approach already tried
 
-**BLOCKER-B1: the benchmark time series is not reachable from this host.** MDPI 403s the
-article and the PDF; DTU Orbit's PDF is behind a Cloudflare challenge; OSTI has metadata
-only; scite's full-text index has the prose but not the tables or the supplementary
-archive. Two genuinely different routes were tried (publisher, then three independent
-repositories) before this was written down. Without the time series the scene can be run
-and self-checked but the **comparison** cannot be closed, which is half of the dispatch's
-definition of done for Option B.
+**BLOCKER-B1 is now HALF CLOSED.** The paper is on disk; the time series is not.
 
-Nearest paths, in order of expected cost: download the Supplementary Materials from
-`https://www.mdpi.com/1996-1073/14/2/269#supplementary` on a normal browser session and
-drop the archive into the corpus; or pull the same dataset from a citing paper's
-replication package, since the OES Task 10 group reused it.
+**The half that closed, with the route recorded so nobody repeats the archaeology.**
+Exactly one host serves the PDF:
+
+```
+https://backend.orbit.dtu.dk/ws/portalfiles/portal/238040494/KramerEtAl_SphereDecay_Energies2021.pdf
+```
+
+**My earlier note "DTU behind Cloudflare" was half wrong and is corrected here**: the DTU
+Orbit *front end* returns 403, and the DTU Pure *backend* returns 200 with
+`application/pdf`. Filing that as "DTU is blocked" would have been a false negative that
+cost the next session the same hour. Probed live 2026-08-16, all failing: `mdpi.com`
+article, `/pdf` and `/s1` all 403; `orbit.dtu.dk/files/...` 403; `vbn.aau.dk/files/...`
+403 to curl although its record page reads fine; `hdl.handle.net/10026.1/16780` 404;
+`research-hub.nrel.gov` DNS ENOTFOUND.
+
+**The half still open.** The raw heave-decay series is MDPI Supplementary Materials at
+`/s1`, 403 from two independent hosts. Section 1 of the paper states the dataset is in
+the Supplementary Materials and points to Appendix A; the paper carries figures and
+summary tables, not the series. So the scene can be run and self-checked, but the
+**quantitative comparison** cannot close, which is half of the dispatch's definition of
+done.
+
+Per the coordinator, this is **a Josie action, not a stall**: fetch
+`https://www.mdpi.com/article/10.3390/en14020269/s1` from a normal browser session and
+drop the archive beside the PDF in `can-it-ford-refs/`, outside the repo. Failing that,
+the corresponding author is `mmk@build.aau.dk` **[read from the PDF title page]**. I will
+mine the PDF's own figures and appendices for comparable summary quantities in the
+meantime, and will say plainly if the series exists only in `/s1`.
+
+**Unrelated correction, for the coordinator.** `PROVENANCE.txt` beside the PDF lists the
+authors as "Kramer, Andersen, Thomas, Ferri, Crowley, Stratigaki, Troch et al." The PDF's
+own title page and the DTU citation block give 16 authors: Kramer, Andersen, Thomas,
+Bendixen, Bingham, Read, Holk, Ransley, Brown, Yu, Tran, Davidson, Horvath, Janson,
+Nielsen and Eskilsson. **Ferri, Crowley, Stratigaki and Troch are not authors of this
+paper** and look like a bleed from a different WEC reference. The file itself is the
+right paper: title, DOI, journal, volume, issue and page all match, and the sha256 I
+verified is the one quoted. Only that author line is wrong, and it should be fixed before
+it is cited anywhere.
 
 **Next units in my scope, in order.** Pilot `--fixed` at `lim = 1.2, n_grid = 64` on
 Vista to (a) time a frame and convert 629 SUs into a real budget, (b) read the steady
-reaction against 69.3428 N, and (c) test the grid-count-versus-dx question in section
+reaction against **69.2180 N**, and (c) test the grid-count-versus-dx question in section
 4.1. Then the three drops. Every number will carry N, spread, and the settle length it
 was measured at, and will go through the physics-skeptic subagent before it is stated as
 a result.

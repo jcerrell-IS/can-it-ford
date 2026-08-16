@@ -20,22 +20,29 @@ doi:10.3390/en14020269. Gold OA, CC-BY (verified via Unpaywall 2026-08-16).
 NOT the same paper as Kramer, Terheiden & Wieprecht 2016 (watertightness,
 doi:10.1016/J.IJDRR.2016.04.003) already in the register. Same first author only.
 
-Test case, read directly from the paper's full text (scite full-text excerpts,
-2026-08-16), not recalled:
-  * sphere diameter D = 300 mm, ballasted to half submergence, so the waterline sits
-    at the equator at rest;
-  * three drop heights H0 = {0.1D, 0.3D, 0.5D} (linear, moderately nonlinear, and a
-    highly nonlinear case released with the whole sphere above the water);
-  * "around eight natural periods in heave should be captured for comparison";
-  * wave basin 13.00 x 8.44 m, water depth 900 mm;
-  * expanded uncertainty ~0.3% of the respective drop heights at 95% confidence.
+Test case READ from Table 1 of the article PDF (p.4), held outside the repo at
+/Users/josie/can-it-ford-refs/2026-08-16/, sha256 0d885109...4e9354. See the constants
+block below. The earlier version of this file derived the test case from the abstract
+plus a half-submergence argument, and THREE of those values were wrong:
 
-Half submergence FIXES the mass: m = rho_w * V/2 = 7.0686 kg at rho_w = 1000, i.e. a
-mean sphere density of exactly 500 kg/m3. The paper's Table 1 carries the measured
-values; they are NOT reproduced here because the tables did not come through the
-full-text extraction and MDPI/DTU are both behind a bot wall from this host. Anything
-this script prints as "published" is therefore derived from the half-submergence
-constraint, and is labelled DERIVED, never READ.
+    quantity   assumed here   Table 1    consequence
+    rho_w      1000 kg/m3     998.2      buoyancy and stiffness both 0.18% high
+    m          7.0686 kg      7.056      the mass followed the wrong rho_w
+    g          9.81 (engine)  9.82       IRREDUCIBLE, see GRAVITY_BIAS_FRACTION
+
+The derivation method was sound: 998.2 * V/2 = 7.0559 kg reproduces Table 1's 7.056 to
+the quoted precision, so half submergence really does fix the mass. The input was wrong,
+not the reasoning. This is why a derived value is not a read one even when the algebra
+is right.
+
+Table 1 also gives CoG = (0, 0, -34.8) mm, i.e. the sphere is BALLASTED and its centre
+of gravity sits 34.8 mm below the geometric centre. In a 1-DOF heave integration that is
+immaterial, which is a second and independent reason the sphere is the right first
+benchmark for this engine: see trap T4 below.
+
+The PDF is the paper, NOT the benchmark time series. The raw decay series ships as MDPI
+Supplementary Materials at /s1, which is 403 from this host and independently reproduced
+as blocked by the Round-5 coordinator.
 
 WHAT IS DELIBERATELY DIFFERENT FROM THE EXPERIMENT, AND WHY
 -----------------------------------------------------------
@@ -92,18 +99,56 @@ import numpy as np
 
 # Engine constants, read directly from simulation/validate_coupling_force.py:15-23,
 # which reads them from the pinned solver. Do not fork these.
-RHO_W = 1000.0
+RHO_W = 1000.0        # the project's canonical water density, NOT the benchmark's
 BULK = 1.5e5
 ETA = 1.0e-3
-G = 9.81
+G_ENGINE = 9.81       # hardcoded at core/solver.py:167-169 and NOT overridable
 GAMMA = 1.1
 FPS = 30.0
 
-# Kramer 2021 test case.
-D_SPHERE = 0.300                      # m, READ from the paper
-RHO_SPHERE = 500.0                    # kg/m3, DERIVED from half submergence
-H0_OVER_D = (0.1, 0.3, 0.5)           # READ from the paper
-PUBLISHED_UNCERTAINTY_PCT = 0.3       # READ: ~0.3% of drop height, 95% confidence
+# --------------------------------------------------------------------------------------
+# Kramer 2021 Table 1, READ from the article PDF (p.4, "Values of the test case physical
+# parameters"), sha256 0d885109119d390ae30d42c620ddf0bd8bcad130396dcfe8053b67510d4e9354.
+# Every one of these was previously DERIVED or assumed here and three of them were wrong.
+# --------------------------------------------------------------------------------------
+D_SPHERE = 0.300                      # m       Table 1 D = 300 mm
+M_SPHERE = 7.056                      # kg      Table 1 m = 7.056 kg   (was derived 7.0686)
+COG_M = (0.0, 0.0, -0.0348)           # m       Table 1 CoG = (0, 0, -34.8) mm
+G_BENCHMARK = 9.82                    # m/s2    Table 1 g = 9.82       (engine has 9.81)
+H0_M = (0.030, 0.090, 0.150)          # m       Table 1 H0 = {30 90 150} mm
+RHO_W_BENCHMARK = 998.2               # kg/m3   Table 1 rho_w = 998.2  (was assumed 1000)
+SEABED_DEPTH_M = 0.900                # m       Table 1 d = 900 mm, and section 1.1 d = 3D
+N_REPEATS_PUBLISHED = 4               # "Four repetitions were carried out for each drop height"
+
+H0_OVER_D = tuple(h / D_SPHERE for h in H0_M)   # exactly (0.1, 0.3, 0.5)
+
+# THE UNCERTAINTY IS NOT A BLANKET RELATIVE TOLERANCE. Verbatim from the abstract:
+# "At a 95% confidence level, uncertainties were found to be very low - on average only
+# about 0.3% of the respective drop heights." So it is (a) an AVERAGE over the decay
+# series, not a per-sample bound, (b) at 95% confidence, and (c) a fraction of the DROP
+# HEIGHT, which makes it an ABSOLUTE DISPLACEMENT tolerance of 0.09 / 0.27 / 0.45 mm for
+# the three drops. It cannot be applied to a period, a damping ratio or a force. Both the
+# Round-5 bootstrap and RECONCILE_ROUND4 paraphrase it as a flat 0.3%; do not inherit that.
+UNCERTAINTY_FRACTION_OF_DROP = 0.003
+UNCERTAINTY_IS_AVERAGE_AT_95PCT = True
+
+
+def published_displacement_tolerance_m(h0):
+    """The benchmark's stated tolerance, in metres, for a given drop height."""
+    return UNCERTAINTY_FRACTION_OF_DROP * float(h0)
+
+
+# THE GRAVITY MISMATCH IS IRREDUCIBLE. The benchmark's local g is 9.82 m/s2; the solver
+# hardcodes 9.81 inside Solver.set_material() and newtonian() carries no g key to
+# override it, so this scene CANNOT be run at the benchmark's gravity. The bias is
+# +0.102% in g. Both the weight and the hydrostatic stiffness scale with g, so the
+# equilibrium draft is unaffected and only the period moves, as T ~ 1/sqrt(g): -0.051%,
+# about -0.0004 s on a 0.777 s period. That is roughly an order of magnitude below the
+# benchmark's own displacement tolerance, so it is a stated systematic, not the limiting
+# error. It must still travel with every period reported from this scene.
+GRAVITY_BIAS_FRACTION = (G_ENGINE - G_BENCHMARK) / G_BENCHMARK
+
+PLANNED_CONFIGS_DOC = "see PLANNED_CONFIGS below"
 
 # Every (lim, n_grid) this scene is intended to be run at, in one place so a check
 # cannot quietly evaluate itself against a friendlier subset. The 2.0 m domain is what
@@ -115,9 +160,13 @@ PLANNED_CONFIGS = ((1.2, 64), (1.2, 80), (1.5, 80), (2.0, 96))
 PROVENANCE = {
     "benchmark_doi": "10.3390/en14020269",
     "benchmark_oa": "gold, cc-by, verified via Unpaywall 2026-08-16",
-    "testcase_source": "scite full-text excerpts of the OA article, 2026-08-16",
-    "testcase_read": "D=300mm; half submergence; H0={0.1D,0.3D,0.5D}; basin 13.00x8.44m; depth 900mm; ~0.3% expanded uncertainty at 95%",
-    "testcase_derived": "m=rho_w*V/2=7.0686 kg and rho_sphere=500 kg/m3 follow from half submergence; Table 1 itself was NOT readable from this host",
+    "testcase_source": "Table 1, p.4 of the article PDF at /Users/josie/can-it-ford-refs/2026-08-16/, sha256 0d885109119d390ae30d42c620ddf0bd8bcad130396dcfe8053b67510d4e9354",
+    "testcase_read": "D=300mm; m=7.056kg; CoG=(0,0,-34.8)mm; g=9.82; H0={30,90,150}mm; rho_w=998.2; d=900mm; 4 repetitions per drop height",
+    "testcase_superseded": "an earlier version of this file DERIVED m=7.0686 kg and rho=500 kg/m3 assuming rho_w=1000; Table 1 gives rho_w=998.2 and m=7.056, so all three were wrong. The half-submergence reasoning was correct; its input was not.",
+    "uncertainty_semantics": "0.3% is an AVERAGE at 95% confidence expressed as a fraction of DROP HEIGHT, i.e. 0.09/0.27/0.45 mm absolute. NOT a blanket relative tolerance and NOT applicable to a period, damping ratio or force.",
+    "gravity_irreducible": "benchmark g=9.82, engine hardcodes 9.81 at core/solver.py:167-169 with no override; +0.102% in g, -0.051% in period, equilibrium draft unaffected",
+    "pdf_route": "only https://backend.orbit.dtu.dk/ws/portalfiles/portal/238040494/ serves it. MDPI article/pdf/s1 403, orbit.dtu.dk front end 403, vbn.aau.dk files 403 to curl, hdl.handle.net 404, research-hub.nrel.gov DNS failure. 'DTU is blocked' is wrong: the FRONT END is blocked and the Pure BACKEND is not.",
+    "timeseries_blocked": "the raw decay series is MDPI Supplementary Materials at /s1, 403 from this host, independently reproduced by the Round-5 coordinator",
     "pinned_sha": "544c93dd02cb9c7ead89e1155a62967243244fce",
     "sdf_api": "core/solver.py:324 add_sdf_collider, :339 set_sdf_pose, :348 reset_sdf_force, :354 sdf_wrench",
     "wrench_sign": "core/solver.py:305-307 a static cup of m kg reads (0,0,-m*g), so buoyancy on a submerged collider is +z",
@@ -133,11 +182,11 @@ PROVENANCE = {
 # --------------------------------------------------------------------------------------
 # analytic reference quantities
 # --------------------------------------------------------------------------------------
-def sound_speed(bulk=BULK, rho=RHO_W):
+def sound_speed(bulk=BULK, rho=RHO_W_BENCHMARK):
     return math.sqrt(GAMMA * bulk / rho)
 
 
-def substeps_and_dt(dx, eta=ETA, rho=RHO_W, bulk=BULK, fps=FPS):
+def substeps_and_dt(dx, eta=ETA, rho=RHO_W_BENCHMARK, bulk=BULK, fps=FPS):
     """Identical form to validate_coupling_force.py:49-56. Not re-tuned."""
     c = sound_speed(bulk, rho)
     rate = max(c / (0.28 * dx), 6.0 * eta / (rho * dx * dx), 1.0e-6 / (0.5 * dx))
@@ -145,33 +194,54 @@ def substeps_and_dt(dx, eta=ETA, rho=RHO_W, bulk=BULK, fps=FPS):
     return substeps, (1.0 / fps) / substeps
 
 
-def sphere_reference(d=D_SPHERE, rho_w=RHO_W, g=G, added_mass_ratio=0.5):
-    """Closed-form heave quantities for a half-submerged sphere.
+def sphere_reference(d=D_SPHERE, rho_w=RHO_W_BENCHMARK, g=G_ENGINE, mass=M_SPHERE,
+                     added_mass_ratio=0.5):
+    """Closed-form heave quantities for the Kramer sphere.
 
-    `added_mass_ratio` is a33 / m_displaced. 0.5 is the conventional value for a
-    half-immersed sphere near its heave natural frequency; it is an ESTIMATE used only
-    to predict T_n and to size the run, and is never compared against as truth. The
-    measured T_n is what gets compared to the benchmark.
+    `mass` defaults to Table 1's READ value, not to a half-submergence derivation.
+    `mass_from_half_submergence_kg` is returned alongside it so the two routes stay
+    visible and any future drift between them is legible rather than silent.
+
+    `g` defaults to the ENGINE's 9.81, because that is what the simulation will actually
+    run at and this dict is used to size and interpret the run. The benchmark's own 9.82
+    is carried in the same dict as `natural_period_s_at_benchmark_g` so the two are never
+    confused. Both weight and stiffness scale with g, so the equilibrium draft is
+    identical and only the period moves.
+
+    `added_mass_ratio` is a33 / m. 0.5 is the conventional value for a half-immersed
+    sphere near its heave natural frequency; it is an ESTIMATE used only to predict T_n
+    and to size the run, and is never compared against as truth. The measured T_n is what
+    gets compared to the benchmark.
     """
     r = 0.5 * d
     vol = 4.0 / 3.0 * math.pi * r ** 3
-    mass = rho_w * vol / 2.0                     # half submergence
+    m_half = rho_w * vol / 2.0                   # the independent half-submergence route
     a_wp = math.pi * r ** 2                      # waterplane area at the equator
     k = rho_w * g * a_wp                         # hydrostatic heave stiffness
     a33 = added_mass_ratio * mass
     t_n = 2.0 * math.pi * math.sqrt((mass + a33) / k)
+    k_bench = rho_w * G_BENCHMARK * a_wp
+    t_n_bench = 2.0 * math.pi * math.sqrt((mass + a33) / k_bench)
     wavelength = g * t_n ** 2 / (2.0 * math.pi)  # deep water
     return {
         "diameter_m": d,
         "radius_m": r,
         "volume_m3": vol,
         "mass_kg": mass,
+        "mass_from_half_submergence_kg": m_half,
+        "mass_route_disagreement_kg": mass - m_half,
         "density_kg_m3": mass / vol,
+        "water_density_kg_m3": rho_w,
+        "gravity_used_m_s2": g,
+        "gravity_benchmark_m_s2": G_BENCHMARK,
         "waterplane_area_m2": a_wp,
         "heave_stiffness_N_per_m": k,
         "buoyancy_at_equilibrium_N": rho_w * g * vol / 2.0,
+        "weight_N": mass * g,
         "added_mass_ratio_assumed": added_mass_ratio,
         "natural_period_s_predicted": t_n,
+        "natural_period_s_at_benchmark_g": t_n_bench,
+        "natural_period_gravity_bias_frac": (t_n - t_n_bench) / t_n_bench,
         "radiated_wavelength_m": wavelength,
         "group_velocity_m_s": g * t_n / (4.0 * math.pi),
         "sound_speed_m_s": sound_speed(),
@@ -310,7 +380,7 @@ class SphereTank:
     WALL = 0.100       # m
 
     def __init__(self, n_grid, lim, depth, h0_over_d=0.1, diameter=D_SPHERE,
-                 rho_sphere=RHO_SPHERE, seed=0, device="auto", sdf_res=96,
+                 mass=M_SPHERE, seed=0, device="auto", sdf_res=96,
                  sdf_band_safety=2.0, free=True):
         from warpmpm.core.solver import GridConfig, Solver
         from warpmpm.materials import newtonian
@@ -330,17 +400,21 @@ class SphereTank:
                 f"WALL={self.WALL} offsets (need >=3dx and >=4dx). Raise --n-grid or "
                 f"lower --lim.")
 
-        self.ref = sphere_reference(self.diameter)
-        # Mass is set from the DENSITY, and cross-checked against the independent
-        # half-submergence route (m = rho_w*V/2). They agree only because
-        # rho_sphere = rho_w/2 exactly; if a future run perturbs either, this raises
-        # rather than silently simulating a sphere that no longer matches the benchmark.
-        self.mass = float(rho_sphere) * self.ref["volume_m3"]
-        if abs(self.mass - self.ref["mass_kg"]) > 1e-9:
+        self.ref = sphere_reference(self.diameter, mass=float(mass))
+        # Mass is Table 1's READ value. It is cross-checked against the INDEPENDENT
+        # half-submergence route rho_w*V/2, which is how it was (wrongly) derived before
+        # the PDF was in hand. The two agree to 1.5e-4 kg, which is Table 1's own
+        # rounding to three decimals; a wider gap means someone has changed rho_w, D or m
+        # without changing the others, and the sphere is no longer the benchmark's.
+        self.mass = float(mass)
+        gap = abs(self.mass - self.ref["mass_from_half_submergence_kg"])
+        if gap > 1.0e-3:
             raise ValueError(
-                f"rho_sphere={rho_sphere} gives m={self.mass:.6f} kg but half "
-                f"submergence requires {self.ref['mass_kg']:.6f} kg. The Kramer test "
-                f"case is defined by half submergence; change both or neither.")
+                f"m={self.mass:.6f} kg disagrees with half submergence at rho_w="
+                f"{RHO_W_BENCHMARK} ({self.ref['mass_from_half_submergence_kg']:.6f} kg) "
+                f"by {gap:.6f} kg, beyond Table 1's 1e-3 kg rounding. The Kramer sphere "
+                f"is DEFINED as floating with the waterline at the equator; changing one "
+                f"of m, D or rho_w without the others makes this a different experiment.")
 
         self.surface_z = self.FLOOR + self.depth
         self.h0 = h0_over_d * self.diameter
@@ -372,7 +446,7 @@ class SphereTank:
 
         s = Solver(grid=GridConfig(n_grid=self.n_grid, grid_lim=self.lim),
                    device=device).load_particles(w.astype(np.float32), vol)
-        s.set_material(newtonian(eta=ETA, density=RHO_W, bulk_modulus=BULK))
+        s.set_material(newtonian(eta=ETA, density=RHO_W_BENCHMARK, bulk_modulus=BULK))
         s.add_plane((0, 0, self.FLOOR), (0, 0, 1), "slip", friction=0.0, restitution=0.0)
         for pt, nrm in (((self.WALL, 0, 0), (1, 0, 0)),
                         ((self.lim - self.WALL, 0, 0), (-1, 0, 0)),
@@ -444,7 +518,7 @@ class SphereTank:
         w = self.solver.sdf_wrench(self.collider, self.tick)  # T1: tick, not substep
         fz = float(np.asarray(w["force"], dtype=float)[2])
 
-        az = fz / self.mass - G
+        az = fz / self.mass - G_ENGINE
         if self.free:
             # semi-implicit (symplectic) Euler: velocity first, then position
             self.vz += az * self.tick
@@ -458,7 +532,7 @@ class SphereTank:
             "fz_N": fz,
             "az_m_s2": az,
             "heave_m": self.z - self.surface_z,
-            "net_N": fz - self.mass * G,
+            "net_N": fz - self.mass * G_ENGINE,
         }
 
 
@@ -481,7 +555,7 @@ def run(args):
         sub = min(max(sub, 0.0), tank.diameter)
         cap_v = math.pi * sub ** 2 * (3.0 * tank.radius - sub) / 3.0
         cfg["analytic_submerged_volume_m3"] = cap_v
-        cfg["analytic_buoyancy_N"] = RHO_W * G * cap_v
+        cfg["analytic_buoyancy_N"] = RHO_W_BENCHMARK * G_ENGINE * cap_v
 
     rows = []
     for i in range(args.frames):

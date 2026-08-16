@@ -123,20 +123,64 @@ def test_sdf_margin_clears_the_band():
           f"{16 - 1 - 2 * margin_ok} cells across the mesh)")
 
 
+def test_table1_is_self_consistent():
+    """Table 1 over-determines the sphere, so it can be checked against itself.
+
+    D, m and rho_w are three independent READ values, and half submergence is a stated
+    property of the model. Any two of them predict the third. That is a check on my
+    transcription of the table, which is the step most likely to be wrong.
+    """
+    print("\nKramer 2021 Table 1, internal consistency")
+    r = 0.5 * sh.D_SPHERE
+    vol = 4.0 / 3.0 * math.pi * r ** 3
+    m_half = sh.RHO_W_BENCHMARK * vol / 2.0
+    check("Table 1 m reproduces from D and rho_w by half submergence",
+          abs(sh.M_SPHERE - m_half) < 1.0e-3,
+          f"(Table 1 m={sh.M_SPHERE} kg, half submergence gives {m_half:.5f} kg, "
+          f"gap {abs(sh.M_SPHERE - m_half):.6f} kg vs 1e-3 rounding)")
+    check("Table 1 seabed depth d == 3D as section 1.1 states",
+          abs(sh.SEABED_DEPTH_M - 3.0 * sh.D_SPHERE) < 1e-12,
+          f"(d={sh.SEABED_DEPTH_M} m, 3D={3 * sh.D_SPHERE} m)")
+    check("Table 1 H0 values are exactly {0.1D, 0.3D, 0.5D}",
+          all(abs(a - b) < 1e-12 for a, b in zip(sh.H0_OVER_D, (0.1, 0.3, 0.5))),
+          f"({sh.H0_M} m -> {tuple(round(x, 6) for x in sh.H0_OVER_D)} D)")
+    check("CoG sits BELOW the geometric centre (ballasted, stable in pitch)",
+          sh.COG_M[2] < 0 and abs(sh.COG_M[2]) < r,
+          f"(CoG_z={sh.COG_M[2] * 1000:.1f} mm, inside the sphere)")
+    # The superseded derivation is asserted as WRONG, so nobody reintroduces it.
+    check("the old rho_w=1000 derivation is measurably wrong, not a rounding",
+          abs(1000.0 * vol / 2.0 - sh.M_SPHERE) > 1.0e-3,
+          f"(rho_w=1000 gives {1000.0 * vol / 2.0:.5f} kg vs Table 1 {sh.M_SPHERE})")
+
+
 def test_reference_quantities():
     print("\nclosed-form heave reference")
     ref = sh.sphere_reference()
     r = 0.15
     vol = 4.0 / 3.0 * math.pi * r ** 3
     check("volume", abs(ref["volume_m3"] - vol) < 1e-12, f"({ref['volume_m3']:.9f} m3)")
-    check("mass from half submergence == 500 kg/m3 sphere",
-          abs(ref["density_kg_m3"] - 500.0) < 1e-9,
-          f"(m={ref['mass_kg']:.4f} kg, rho={ref['density_kg_m3']:.4f})")
-    check("equilibrium buoyancy == weight",
-          abs(ref["buoyancy_at_equilibrium_N"] - ref["mass_kg"] * sh.G) < 1e-9,
-          f"({ref['buoyancy_at_equilibrium_N']:.4f} N)")
-    check("heave stiffness == rho*g*pi*R^2",
-          abs(ref["heave_stiffness_N_per_m"] - 1000.0 * 9.81 * math.pi * r ** 2) < 1e-9,
+    check("mass is Table 1's READ value, not a derivation",
+          abs(ref["mass_kg"] - sh.M_SPHERE) < 1e-12,
+          f"(m={ref['mass_kg']:.4f} kg, rho={ref['density_kg_m3']:.2f} kg/m3)")
+    # Table 1 rounds m to 7.056 kg, where exact half submergence needs 7.05586 kg. The
+    # published sphere is therefore 0.14 g HEAVY and does not float exactly at the
+    # equator. Loosening a force tolerance would hide that; the meaningful test is what
+    # the residual does to the equilibrium position, against the benchmark's OWN
+    # displacement tolerance. Smallest drop is 30 mm, so the tolerance there is 0.09 mm.
+    resid_N = ref["weight_N"] - ref["buoyancy_at_equilibrium_N"]
+    offset_m = resid_N / ref["heave_stiffness_N_per_m"]
+    tol_m = sh.published_displacement_tolerance_m(min(sh.H0_M))
+    check("Table 1's rounded mass is not exactly neutrally floating",
+          abs(resid_N) > 1e-4,
+          f"(residual {resid_N * 1000:+.3f} mN, sphere is "
+          f"{1000 * (sh.M_SPHERE - ref['mass_from_half_submergence_kg']):+.3f} g heavy)")
+    check("but the implied equilibrium offset is far below the benchmark tolerance",
+          abs(offset_m) < 0.05 * tol_m,
+          f"(offset {offset_m * 1e6:.2f} um vs tolerance {tol_m * 1000:.3f} mm at the "
+          f"smallest drop, a factor of {tol_m / abs(offset_m):.0f})")
+    check("heave stiffness == rho_w*g*pi*R^2",
+          abs(ref["heave_stiffness_N_per_m"]
+              - sh.RHO_W_BENCHMARK * sh.G_ENGINE * math.pi * r ** 2) < 1e-9,
           f"({ref['heave_stiffness_N_per_m']:.4f} N/m)")
     # sanity band only: the added-mass ratio is an assumption, so the period is a
     # PREDICTION used to size the run, never a result.
@@ -145,8 +189,48 @@ def test_reference_quantities():
           f"(T_n={ref['natural_period_s_predicted']:.4f} s, "
           f"assumed a33/m={ref['added_mass_ratio_assumed']})")
     check("artificial sound speed is the engine's, not water's",
-          abs(ref["sound_speed_m_s"] - math.sqrt(1.1 * 1.5e5 / 1000.0)) < 1e-9,
+          abs(ref["sound_speed_m_s"]
+              - math.sqrt(1.1 * 1.5e5 / sh.RHO_W_BENCHMARK)) < 1e-9,
           f"({ref['sound_speed_m_s']:.4f} m/s, real water is ~1481)")
+
+
+def test_gravity_bias_is_small_but_stated():
+    print("\nirreducible gravity mismatch (engine 9.81 vs benchmark 9.82)")
+    ref = sh.sphere_reference()
+    bias = abs(ref["natural_period_gravity_bias_frac"])
+    check("gravity bias is negative in g and halves in period",
+          abs(abs(sh.GRAVITY_BIAS_FRACTION) / 2.0 - bias) / bias < 0.01,
+          f"(g bias {sh.GRAVITY_BIAS_FRACTION * 100:+.4f}%, "
+          f"period bias {ref['natural_period_gravity_bias_frac'] * 100:+.4f}%)")
+    dt_period = abs(ref["natural_period_s_predicted"]
+                    - ref["natural_period_s_at_benchmark_g"])
+    check("period bias is below 1 ms and cannot be the limiting error",
+          dt_period < 1e-3, f"({dt_period * 1000:.4f} ms on a "
+          f"{ref['natural_period_s_predicted']:.4f} s period)")
+    # The draft must be untouched: weight and stiffness both scale with g.
+    r = 0.15
+    vol = 4.0 / 3.0 * math.pi * r ** 3
+    draft = [sh.M_SPHERE / (sh.RHO_W_BENCHMARK * vol) for _ in (0, 1)]
+    check("equilibrium submerged FRACTION is independent of g",
+          abs(draft[0] - draft[1]) < 1e-15,
+          f"(submerged fraction {draft[0]:.6f}, i.e. {'half' if abs(draft[0] - 0.5) < 1e-3 else 'NOT half'})")
+
+
+def test_uncertainty_semantics():
+    print("\nbenchmark uncertainty: absolute, per drop height, average, 95%")
+    check("uncertainty is recorded as a fraction of DROP HEIGHT",
+          abs(sh.UNCERTAINTY_FRACTION_OF_DROP - 0.003) < 1e-12)
+    check("it is flagged as an average at 95%, not a per-sample bound",
+          sh.UNCERTAINTY_IS_AVERAGE_AT_95PCT is True)
+    for h0 in sh.H0_M:
+        tol = sh.published_displacement_tolerance_m(h0)
+        print(f"      H0={h0 * 1000:5.1f} mm -> tolerance {tol * 1000:.3f} mm")
+    tols = [sh.published_displacement_tolerance_m(h) for h in sh.H0_M]
+    check("the three tolerances are 0.09 / 0.27 / 0.45 mm",
+          all(abs(a - b) < 1e-9 for a, b in zip(tols, (9e-5, 2.7e-4, 4.5e-4))))
+    check("tolerance SCALES with drop height (it is not one flat number)",
+          tols[-1] > tols[0] * 4.9,
+          f"({tols[-1] / tols[0]:.1f}x from the smallest drop to the largest)")
 
 
 def test_hydrostatic_cap_volume():
@@ -161,9 +245,16 @@ def test_hydrostatic_cap_volume():
     check("cap at h=2R is the whole sphere",
           abs(cap(2 * r) - 4.0 / 3.0 * math.pi * r ** 3) < 1e-15)
     check("cap at h=0 is zero", abs(cap(0.0)) < 1e-18)
-    check("equilibrium buoyancy from the cap == 69.343 N",
-          abs(1000.0 * 9.81 * cap(r) - 69.3428) < 1e-3,
-          f"({1000.0 * 9.81 * cap(r):.4f} N)")
+    # The number the --fixed pilot will be read against. It moved when rho_w did:
+    # 69.3428 N at the assumed rho_w=1000, 69.2180 N at Table 1's 998.2. Anything that
+    # still quotes 69.34 is quoting the superseded derivation.
+    f_eq = sh.RHO_W_BENCHMARK * sh.G_ENGINE * cap(r)
+    check("equilibrium buoyancy at Table 1 rho_w and engine g",
+          abs(f_eq - 69.2180) < 1e-3, f"({f_eq:.4f} N; the old rho_w=1000 value was "
+          f"{1000.0 * 9.81 * cap(r):.4f} N, a {100 * (1000.0 * 9.81 * cap(r) - f_eq) / f_eq:.3f}% overstatement)")
+    check("it equals the sphere's weight at the same g",
+          abs(f_eq - sh.M_SPHERE * sh.G_ENGINE) < 2e-3,
+          f"(W={sh.M_SPHERE * sh.G_ENGINE:.4f} N)")
 
 
 def test_domain_sizing():
@@ -190,12 +281,11 @@ def test_domain_sizing():
           f"(lim={smallest} m gives "
           f"{2.0 * (0.5 * smallest - sh.SphereTank.WALL) / cg / t_n:.2f} T_n)")
 
-    for f in sh.H0_OVER_D:
-        h0 = f * sh.D_SPHERE
+    for h0 in sh.H0_M:
         ma = h0 * 2 * math.pi / t_n / ref["sound_speed_m_s"]
-        print(f"      H0={f}D = {h0:.4f} m: peak Mach ~ {ma:.4f}"
+        print(f"      H0={h0 * 1000:5.1f} mm: peak Mach ~ {ma:.4f}"
               f"{'   <-- at the weak-compressibility limit' if ma > 0.09 else ''}")
-    ma_max = sh.H0_OVER_D[-1] * sh.D_SPHERE * 2 * math.pi / t_n / ref["sound_speed_m_s"]
+    ma_max = sh.H0_M[-1] * 2 * math.pi / t_n / ref["sound_speed_m_s"]
     check("largest drop stays below Ma 0.1", ma_max < 0.1, f"(Ma={ma_max:.4f})")
 
 
@@ -221,7 +311,10 @@ def main():
     test_module_imports_without_warpmpm()
     test_mesh_is_closed_and_outward()
     test_sdf_margin_clears_the_band()
+    test_table1_is_self_consistent()
     test_reference_quantities()
+    test_gravity_bias_is_small_but_stated()
+    test_uncertainty_semantics()
     test_hydrostatic_cap_volume()
     test_domain_sizing()
     test_floor_wall_guard()
