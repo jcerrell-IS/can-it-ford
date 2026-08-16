@@ -56,7 +56,7 @@ intended to keep it out. [read]
 
 | Class | Bytes | MB | Files | Redistribution risk, AFTER the DOI lookups |
 |---|---|---|---|---|
-| Full-text publisher PDFs | 11,999,575 | 12.00 | 3 | **Mostly CLEARED.** 2 of 3 carry CC licences (10.88 MB). 1 undetermined |
+| Full-text publisher PDFs | 11,999,575 | 12.00 | 3 | **Split, all resolved.** 2 carry CC licences (10.88 MB), **keep + attribute**. AR&R (1.12 MB) is **licence-silent**, same category as the CCSA decks |
 | Reproductions of figures and tables | 7,213,546 | 7.21 | 20 | **HIGH, and now the largest real problem.** 15 of them reproduce a **bronze** article carrying no licence |
 | Elicit exports | 350,369 | 0.35 | 2 | Medium, terms-of-service not copyright |
 | Third-party code, `(kks32)` | 30,170 | 0.03 | 2 | Low, provenance unrecorded |
@@ -84,11 +84,20 @@ answers**, and none matches what my earlier probe suggested.
 |---|---|---|---|---|---|
 | `J Flood Risk Management - 2025 - Dasallas - ...pdf` | 3,484,612 | **10.1111/jfr3.70154** | **gold** | **CC BY** | **PERMITTED** with attribution |
 | `Water Resources Research - 2021 - Wang and Marsooli - ...pdf` | 7,399,829 | **10.1029/2020WR028616** | **hybrid** | **CC BY-NC-ND** | **PERMITTED** with attribution, **non-commercial, no derivatives** |
-| `ARR_Project_10_Stage2_Report_Final.pdf` | 1,115,134 | n/a, report P10/S2/020 | n/a | **UNDETERMINED** | see flag file |
+| `ARR_Project_10_Stage2_Report_Final.pdf` | 1,115,134 | n/a, report P10/S2/020, ISBN 978-0-85825-948-5 | n/a | **LICENCE-SILENT**, resolved 2026-08-16 | **NOT permitted.** No copyright, licence or permission text anywhere in the extractable text layer. Same category as the CCSA decks |
 
 **Two of the three PDFs are cleared outright.** 10.88 MB of the 12.00 MB is licensed
-for redistribution. That is the opposite of what section 1's risk table assumed, and
-the risk table is corrected accordingly.
+for redistribution. The third, AR&R, was resolved on 2026-08-16 by a purpose-built
+zlib PDF text extractor after a 403 and a 404: it is **licence-silent**, carrying no
+copyright statement, no licence and no permission terms, which **refutes** the earlier
+hypothesis that it might be Commonwealth CC BY. Publisher is **Engineers Australia**,
+contact `arr@engineersaustralia.org.au`, and its ISBN **978-0-85825-948-5** is now read
+directly rather than recalled. Full method, control and the one remaining limitation
+(the probe reads the text layer only, so an image-only rights page would be invisible)
+are in `E8_FLAG_ARR_TERMS_UNRESOLVED_2026-08-16.md`.
+
+**All three PDFs are now resolved: two licensed, one licence-silent.** That is the
+opposite of what section 1's original risk table assumed, and it is corrected there.
 
 **The CC BY-NC-ND file is the one that proves the carve-out matters.** Wang and
 Marsooli is **non-commercial** and **no-derivatives**, while the repo's root `LICENSE`
