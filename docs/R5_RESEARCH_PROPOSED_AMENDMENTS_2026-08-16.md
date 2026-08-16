@@ -64,10 +64,54 @@ also produced `10.1115/1.4064971` and `10.1016/j.oceaneng.2022.111607`.
 > paper's body.
 
 **Honest limitation on this proposal:** I read He 2026's abstract, not its full
-text. The abstract is explicit about model scale and about experimental
-validation, so those two axes are solid. Whether the paper also reports a
-stability or safety threshold, which would narrow the third axis, is UNVERIFIED.
-Someone should read the full text before the novelty paragraph is finalised.
+text. He 2026 is closed access, `oa_status: closed`, with no OA location in
+Unpaywall or OpenAlex, so I could not obtain the body. The abstract is explicit
+about model scale and about experimental validation, so those two axes are solid.
+
+### 1a. AMENDMENT TO MY OWN AMENDMENT: two of the three surviving axes are also occupied
+
+Written after the section above, on evidence found later in the same unit. **The
+three axes I proposed as surviving are not all safe, and the paper that takes two
+of them is already in the project's own bibliography.**
+
+`10.3390/su151713262`, Al-Qadami et al. 2023, "Understanding the Stability of
+Passenger Vehicles Exposed to Water Flows through 3D CFD Modelling",
+*Sustainability* 15(17) 13262. Abstract READ DIRECTLY via OpenAlex:
+
+> In this paper, a numerical framework was proposed to assess the response of a
+> **full-scale medium-size passenger vehicle** exposed to floodwaters through
+> three-dimensional computational fluid dynamic modelling. The vehicle was
+> simulated under subcritical and supercritical flows with the Froude number
+> ranging between 0.09 and 2.46. The results showed that the vehicle experienced
+> the **floating instability mode** once the flow depth reached 0.38 m, while the
+> **sliding instability mode** was observed once the depth x velocity threshold
+> function exceeded 0.36 m2/s.
+
+Against my proposed three axes:
+
+| proposed surviving axis | status after this |
+|---|---|
+| **full scale** | **OCCUPIED.** Al-Qadami 2023 is explicitly a full-scale passenger vehicle. |
+| **stability verdict** | **OCCUPIED.** It reports floating and sliding instability modes and gives both thresholds. |
+| **particle method (MPM)** | **survives.** Al-Qadami 2023 is mesh CFD; He 2026 is CFD plus multibody dynamics. |
+
+And this DOI is **already cited in `paper/can_it_ford_references_IEEE.bib`**, one
+of only 8 catalogued DOIs that reach the paper at all. So the project already
+cites the work that occupies two of the three axes I proposed as its novelty.
+
+**Revised recommendation for L-7.** Do not claim full scale or a stability
+verdict as novel. What survives is narrower and should be stated as such: the
+**method** (a GPU particle method, MPM, rather than mesh CFD or CFD plus MBD) and
+whatever the **reconstruction-to-simulation pipeline** contributes, which is the
+arXiv 2607.00673 lineage L-7 already names. Anyone drafting the novelty paragraph
+should treat Al-Qadami 2023 as the paper to distinguish from first, ahead of He
+2026, precisely because it is already in the bibliography and a reviewer will
+have read it.
+
+Consistency cross-check, which passed: Al-Qadami 2023's 0.38 m and 0.36 m2/s are
+exactly the values Elicit row 37 extracted for this DOI, and the same group's
+2022 moving-vehicle paper (`10.1111/jfr3.12828`, Elicit row 2) gives 0.38 m and
+0.39 m2/s. Independent routes, same numbers.
 
 ## 2. Row 7: the stored 1:10 must not be applied to it
 
@@ -146,8 +190,14 @@ question the novelty claim turns on, and one hop is not exhaustive.
 | 2017 | `10.4271/2017-01-1327` | Water Ingress Analysis and Splash Protection for Vehicle Wading, CFD |
 | 2016 | `10.4271/2016-28-0072` | Passenger Car Water Wading Evaluation Using CFD Simulation |
 | 2014 | `10.4271/2014-36-0251` | Water Ingestion and Pressure Analysis using Multiphase ... |
-| 2012 | `10.1007/978-3-642-33835-9_15` | Vehicle Wading Simulation with STAR-CCM+ |
+| 2012 | `10.1007/978-3-642-33835-9_15` | Vehicle Wading Simulation with STRA-CCM+ |
 | 2010 | `10.1680/wama.2010.163.6.273` | Modelling the hydraulics of the Carlisle 2005 flood event |
+
+**All sixteen verified 2026-08-16**: each DOI resolves via Crossref to a title
+consistent with the one listed, **16 of 16**, zero needing follow-up. One
+citation detail: the 2012 record's published title really does read
+"STRA-CCM+", a typo for STAR-CCM+ in the publisher record itself. Quote it as
+published, or the citation will not match.
 
 **What this means, in terms.** Vehicle wading CFD is not an emerging research
 question. It is established automotive-industry practice with a continuous SAE
