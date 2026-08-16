@@ -6,6 +6,20 @@ D3 SAFE-THE-WORK. Every number below was measured live on 2026-08-16 between
 re-derived rather than trusted. Claims are tagged **read** (direct measurement),
 **inferred**, or **UNREVIEWED** (no independent check run).
 
+### Corrections to commit 7d1ec34, made the same day
+
+`7d1ec34`'s commit body ends "all four round-5 sessions share one worktree and
+one index". **The index half is RETRACTED**, on the coordinator's independent
+inode measurement and my own re-measurement, which agree exactly. The four
+worktrees have four separate indexes; what they share is the object store, the
+refs namespace, config and hooks. Full correction in section 7. The commit body
+cannot be edited without rewriting history, so it will keep propagating the wrong
+claim; cite this section, not that commit message.
+
+Two claims in that commit body **stand**, both re-checked: the public
+`FLAG_CREDENTIAL_EXPOSURE` file (section 5, now confirmed on two separate
+origins) and the register merge result (section 6).
+
 ---
 
 ## 1. The work is bundled. 34 bundles, all verified, restore tested
@@ -16,8 +30,17 @@ re-derived rather than trusted. Claims are tagged **read** (direct measurement),
 
 | artifact | contents | bytes | verify |
 |---|---|---|---|
-| `ALL-refs.bundle` | 147 refs, self-contained | 507,116,489 | OK |
-| `branch~*.bundle` x 33 | one per at-risk branch, incremental | 1,142 to 7,082,463 | OK, all 33 |
+| `ALL-refs.bundle` | 147 refs, self-contained, snapshot **15:02** | 507,116,489 | OK |
+| `branch~*.bundle` x 33 | one per at-risk branch, thin, snapshot **15:02** | 1,142 to 7,082,463 | OK, all 33 |
+| `INCREMENTAL-all-branches-1540.bundle` | all 33 branches' unpushed commits in one thin bundle, snapshot **15:40** | 7,609,387 | OK |
+
+**Scope, because these are snapshots of a moving repo.** The 34 bundles at 15:02
+cover the **241** commits at-risk at 15:02. The single incremental bundle at 15:40
+covers the state after three sibling sessions committed, including this ledger's
+own commit 7d1ec34, and is the cheap way to re-take the snapshot: 7.6 MB against
+507 MB, because it carries only what origin lacks. Re-run it, do not re-run
+`--all`, unless full standalone recovery is the goal.
+sha256 of the incremental: `54d5ccebf7db12cf3dfb5fce8cd6afc337c9142ad16e49f473254bebf4256733`
 
 Per-branch sizes, sha256 of every file, and head SHAs are in
 `/Users/josie/can-it-ford-bundles/2026-08-16/ledger.tsv` (35 lines, tab
@@ -66,19 +89,59 @@ explicit destination decision. Not done, deliberately.
 **read.** The round-4 reconciliation and the round-5 bootstrap both say
 "**188 commits across 11 branches**". Live:
 
-    git rev-list --count --branches --not --remotes         ->  241
+    git rev-list --count --branches --not --remotes         ->  248  (15:47)
     (per branch: git rev-list --count <b> --not --remotes)  ->  33 branches > 0
 
-**241 commits across 33 branches**, deduplicated. The 11-branch figure came from
-the 13-row dispatch table baked into `canford_monitor.sh` (see section 3), not
-from the branch list. **22 of the 33 at-risk branches were never in scope of any
-previous safety check.** Several are old and small (`analysis/failure-modes` 3,
-`audit/g-mergetest-2026-08-04` 5, `paper/submission-close` 7), which is probably
-why they were dropped, but "188 across 11" should not be repeated.
+**248 commits across 33 branches**, deduplicated. Every count in this document is
+a timestamp, not a constant: the repo-wide total was **241 at 15:02** and **248
+at 15:47** because three sibling sessions committed while I measured. Quote the
+time with the number or do not quote it.
 
-Note the count moves under your feet: `claude/r5-exposure` went 1 -> 3 and
-`claude/r5-research` 1 -> 2 during this session, because sibling sessions were
-committing while I measured. Any total here is a timestamp, not a constant.
+### 188 was not arithmetically wrong. It was correct for a scope nobody stated
+
+**read.** Splitting the 33 at-risk branches three ways:
+
+| group | branches | commits |
+|---|---|---|
+| in `canford_monitor.sh`'s 13-row dispatch table | 11 | **189** |
+| pre-existing, never in scope of any prior check | **17** | **55** |
+| created after the round-4 check (2026-08-15 18:01) | 5 | 12 |
+
+189 against the bootstrap's 188 is one commit of drift on the same branch set in
+a day. **So the 188 reproduces.** It is not an undercount of what it measured; it
+is an undercount of the repo, because 22 of 33 branches were outside a scope that
+was never written down. This is the same failure CLAUDE.md item 13 already records
+for DRIFT_THRESHOLD: a bare number is what is wrong, not any particular value.
+189 + 55 + 12 = 256, above the deduplicated 248, because branches share commits
+(777567a alone is the tip of five of them).
+
+**The 17 pre-existing branches that were genuinely never checked**, with their
+at-risk commit counts:
+
+    claude/meta-prompt-reconcile-dispatch-14a3c8   8    <- holds canford_monitor.sh itself
+    claude/fork-s3-rescue-2026-08-14               8
+    paper/submission-close                         7
+    paper/close-for-submission                     5
+    audit/g-mergetest-2026-08-04                   5
+    push-ready-2026-08-04                          4
+    claude/reverent-heisenberg-fe731c              3
+    analysis/failure-modes                         3
+    reconcile/overleaf-base                        2
+    claude/figure-validation-sources-826ba6        2
+    claude/festive-goodall-e08861                  2
+    warpmpm-continue                               1
+    claude/verify-execute-code-changes-d89fd8      1
+    claude/overleaf-gci-citations-2026-08-08       1
+    claude/figure-verification-citations-f36b1c    1
+    claude/can-it-ford-runs-analysis-4e93c6        1
+    claude/bibliography-formatting-fix-4c3864      1
+
+The first entry is the one that matters: the branch carrying the only copy of the
+safety tool was itself outside the safety tool's scope. All 17 are bundled now,
+and all 17 come back OK or FALSE_POSITIVE_ONLY in section 4.
+
+The other 5 (`claude/add-ci-checks` at 2026-08-15 19:31, and the four `r5-*`
+branches created today) post-date the round-4 check and could not have been in it.
 
 ---
 
@@ -210,6 +273,13 @@ credential with no recognisable prefix or label.
 
 ## 5. The D1 block is a false positive, and the file is already public
 
+**CONFIRMED ON TWO SEPARATE ORIGINS.** This is the one finding here that is not a
+single source cited twice. I reached it via `git ls-remote` plus
+`merge-base --is-ancestor` against the local remote-tracking ref. The coordinator
+reached it independently by fetching and running `git ls-tree -r --name-only
+FETCH_HEAD` on the fetched tree, which does not depend on my local cache being
+current. Both return the same remote tip and both list the file.
+
 **read, verified against the live remote, not the local cache.**
 
     git ls-remote --heads origin refs/heads/claude/rtfd-test-phase-1-4-569130
@@ -243,8 +313,11 @@ Three consequences:
    credential pattern. On the evidence they are authorizable. That is Josie's
    call, not mine.
 3. **The exposure is worse than the ledger recorded**, because it was booked as
-   "blocked, therefore contained". It is not contained. It is live on a public
-   repo with the credentials it describes still unrotated.
+   "blocked, therefore contained". It is not contained. **A document naming which
+   machines hold unrotated credentials, which file is world-readable, and how many
+   distinct tokens sit on which cluster is world-readable on GitHub right now**,
+   and has been since 2026-08-13. The blocked-branch bookkeeping described a file
+   that had already been published three days earlier.
 
 **What to do instead** (proposal only, nothing executed):
 - Rotation first. The document's own remediation section is the work item; the
@@ -338,25 +411,59 @@ marker and no reflog entry.
 
 ---
 
-## 7. Live hazard, outside my scope but reported here because it is a safety issue
+## 7. Shared pane cwd. CORRECTED: this is NOT a shared index
 
-**read.** All four round-5 dispatch sessions are running in the **same working
-tree on the same branch**:
+**RETRACTED, same day, on the coordinator's evidence and re-measured by me.**
+An earlier version of this section, and the body of commit 7d1ec34, said the
+four round-5 sessions "share one worktree and one index". **The index half is
+false and is withdrawn.** It matters because "one shared index" implies another
+session's staged entries can ride along on your path-limited commit, and in this
+layout they cannot.
 
-    tmux list-panes -a -F '#{session_name}:#{window_index} #{pane_current_path}'
-    canford5:1  /Users/josie/can-it-ford/.claude/worktrees/r5-research
-    canford5:2  /Users/josie/can-it-ford/.claude/worktrees/r5-research
-    canford5:3  /Users/josie/can-it-ford/.claude/worktrees/r5-research
-    canford5:4  /Users/josie/can-it-ford/.claude/worktrees/r5-research
+**read.** Each worktree has its own git-dir and its own index, four distinct
+inodes. `git rev-parse --git-path index` returns a different path per worktree:
 
-Confirmed independently by `lsof -a -p <pane shell pid> -d cwd` on all four.
+    r5-research     .git/worktrees/r5-research/index      inode 14075666
+    r5-exposure     .git/worktrees/r5-exposure/index      inode 14074323
+    r5-safekeeping  .git/worktrees/r5-safekeeping/index   inode 14075592
+    r5-physics      .git/worktrees/r5-physics/index       inode 14075548
+
+Those inodes reproduce the coordinator's independent measurement exactly. The
+2026-08-07 breach was several sessions inside **one** tree, which is a different
+topology from four worktrees and must not be cited as a precedent for this.
+
+**What the four genuinely do share**, and these are real:
+
+- **the object store**, `.git/objects`, inode 1770732, identical from every
+  worktree
+- **the refs namespace**, so concurrent ref updates can race
+- **`.git/config`**
+- **`.git/hooks`**, inode 1770708, identical from every worktree: **one**
+  `pre-commit` (refuses more than 8 staged files) and **one** `pre-push`
+  (requires `PUSH_OK=1`) govern all four. Editing a hook changes it for everyone
+  at once, with no per-worktree override.
+
+### The residual hazard, stated precisely
+
+**read.** All four pane shells still have cwd
+`/Users/josie/can-it-ford/.claude/worktrees/r5-research`, confirmed by
+`tmux list-panes -a -F '#{pane_current_path}'` and by
+`lsof -a -p <pane shell pid> -d cwd` on all four. So a **bare** `git` command
+typed in any pane operates on r5-research's index and r5-research's branch. The
+risk is **misdirected** work, not **swept** work: a commit meant for r5-physics
+would land on `claude/r5-research`, not scoop up a sibling's staging area.
+
+**read, and it has not happened.** All four branches carry their own distinct
+commits, and every commit on `claude/r5-research` is D1's own work:
+
+    cf9edab Fix a transposed file count: jfr3.12885 is 25, not 27
+    e9b3717 R5-D1 unit 2: mine the settling and multi-resolution catalogs
+    e7190b7 R5-D1: mine the Elicit outputs and all 14 paper catalogs
+    777567a Add CI running the three existing checks   (shared base)
+
 `round5_launch.sh` is not the cause: its window loop passes `-c "$REPO/$dir"`
 with the correct per-dispatch directory, and all four worktrees exist on their
 correct branches. The panes were started somewhere other than that loop.
-
-This is the exact 2026-08-07 failure: one shared index, so a bare `git commit`
-from any session sweeps another's staged work, and CLAUDE.md's standing rule
-against `git add -A` is not sufficient protection on its own.
 
 **I did not `cd`.** A single `cd` in this repo relocates the tracked working
 directory and the relative-path PreToolUse hook then fails before every later
