@@ -420,6 +420,40 @@ rule fires but the branch adds nothing risky. `OK` = clean on all four columns.
 Tally: **24 OK, 7 FALSE_POSITIVE_ONLY, 1 BLOCK_PATH, 1 SKIP_BY_DESIGN.**
 Full table with all four columns: `can-it-ford-bundles/2026-08-16/pushcheck_v3.tsv`.
 
+### REFRESHED 00:45. A stale push ledger is a dangerous one
+
+The table above is the **15:00** snapshot. Nine hours and roughly 60 sibling
+commits later it could have been quietly wrong, and someone authorising a push
+from a stale ledger is the exact failure this document exists to prevent. So it
+was re-run in full. The 15:00 run is preserved for diffing at
+`pushcheck_v3_1500.tsv`; the current run overwrites `pushcheck_v3.tsv`.
+
+**Every verdict held.** 24 OK, 7 FALSE_POSITIVE_ONLY, 1 BLOCK_PATH, 1
+SKIP_BY_DESIGN, unchanged. Only the four live dispatch branches moved at all:
+
+| branch | at-risk 15:00 | at-risk 00:45 | verdict |
+|---|---|---|---|
+| `claude/r5-research` | 2 | **20** | OK, unchanged |
+| `claude/r5-safekeeping` | 1 | **11** | OK, unchanged |
+| `claude/r5-exposure` | 3 | **9** | **BLOCK_PATH**, unchanged |
+| `claude/r5-physics` | 1 | **9** | OK, unchanged |
+
+Sum of per-branch at-risk counts moved **252 to 294** (that sum double-counts
+shared commits; the deduplicated repo-wide figure is **280** at 00:27). So
+roughly **42 branch-commits of new work were scanned for credentials and
+restricted geometry, and none was found.**
+
+The single BLOCK_PATH is still D2's `claude/r5-exposure`, still for exactly one
+added path, `docs/CREDENTIAL_ROTATION_CHECKLIST_2026-08-16.md`. It did not grow
+despite that branch tripling in size, so D2's later six commits added nothing
+further of that kind.
+
+**Standing watch on the orphaned register, same timestamp:** main-tree
+`CANONICAL_CORRECTIONS_REGISTER_2026-08-06.md` still reads **760 lines**,
+`CLAUDE.md` still **749**, and `git status` still shows the same four modified
+files with nothing staged. **Side A is intact and still uncommitted**, now
+roughly ten hours after it was written.
+
 ### One live BLOCK, and it is new
 
 `claude/r5-exposure` (sibling D2, committing during this session) adds
