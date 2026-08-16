@@ -666,6 +666,36 @@ silently picked up an unrelated live session's commit in this repo on
 CLAUDE.md needs no merge at all: blob `37983d2` at base, main HEAD and the fork
 tip alike, so the only thing that can happen to it is loss.
 
+### A third protection, armed 00:53: something is now watching
+
+The blockquote at the top of this section says the abort condition and the
+survival test are the only protection those 177 lines have, because nobody is
+watching the file. That is no longer quite true.
+
+`can-it-ford-bundles/watch_side_a.sh` is armed as a persistent monitor. It polls
+every 60s and emits **only on a state change**, so silence means unchanged. It
+classifies the transition rather than just reporting a diff:
+
+| observed | meaning |
+|---|---|
+| 760 lines, still modified, sha `ed96e72e...` | unchanged, the expected state |
+| 760 lines, **no longer modified** | **GOOD**, it was committed. Step 2 can proceed |
+| **656 lines** | **SIDE A LOST.** 656 is the pre-edit baseline, so the 104 lines are gone with no reflog entry. The alert carries the `cp` command to restore from the snapshot |
+| any other shrink | lines removed, compare against the snapshot before anyone writes again |
+| file absent | restore from the snapshot |
+
+It also emits on arming and on stop, so a dead watcher cannot be mistaken for a
+quiet one. **Verified before arming:** the live signature is
+`760 lines / 2 modified / ed96e72e`, matching the baseline the script expects,
+and the restore path it names exists and is 90,116 bytes.
+
+**read, 00:52.** The 15:08 snapshot is still a valid restore point: all four
+files are byte-identical to live, register sha256
+`ed96e72ed230dc8c0e47c38b507f9722405d103dbba2bbe99c1b53286047c7e6`.
+
+This is a watchdog, not an owner. It cannot commit anything, and it dies when
+this session does. **Step 1 still needs a human.**
+
 **What I did not do, so the next reader does not assume it is handled:** I did
 not commit side A. Committing another session's uncommitted work under my own
 message is the 2026-08-07 failure, and the orphan status does not change that.
