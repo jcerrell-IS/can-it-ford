@@ -1027,7 +1027,66 @@ scratchpads from earlier sessions (`track1_6dof_rescue_2026-08-14`,
 covered by both a local branch and an `origin` ref. Nothing unique. They can be
 lost without consequence, which is not true of `can-it-ford-bundles/`.
 
-### THE GAP THAT REMAINS OPEN, and I could not close it tonight
+### GAP CLOSED 22:51, and it was not empty
+
+**The gap below was real.** It is now closed, and the closing found work that
+existed nowhere else.
+
+**How the gate opened.** A sibling's commit message said a job had been
+*measured* on TACC, which contradicted my finding that MFA was blocking. That is
+a testable contradiction, so I retested rather than trusting either. Vista
+answered.
+
+**What was unprotected on Vista `$WORK/can-it-ford`:**
+
+| | |
+|---|---|
+| commits on no remote | **2**, on its local `main` |
+| uncommitted tracked files | **4**, 50 insertions, 9 deletions |
+| untracked files | 102 |
+
+The two commits: `15275f2` "settings.json: adopt origin/main's full config as
+the base, add git-push ask" and `e9f3b60` "add TACC global-rules import target,
+citation-verifier subagent, git-push ask rule".
+
+**The uncommitted change that matters.** `simulation/failure_modes.py`, one
+line:
+
+    -G = 9.80665
+    +G = 9.81
+
+That is **exactly the open action item in CLAUDE.md item 15**, which says to
+close the gravity fork by setting `failure_modes.py:14` to 9.81, re-running
+`analysis/classify_failure_modes.py`, and confirming the verdicts are
+byte-identical. **Someone started that fix on Vista and left it uncommitted.** It
+existed in exactly one place, on a cluster scratch filesystem, and no bundle
+anywhere covered it. The re-run and the verdict comparison have **not** been
+done, so the item is not closed, only started; do not record it as closed on the
+strength of this line.
+
+**Capture, and the transfer verified rather than assumed.**
+
+    can-it-ford-bundles/incoming/     (0700)
+      vista-capture.bundle       5,994 B   the 2 commits
+      vista-uncommitted.patch    6,974 B   152 lines, the 4 modified files
+      vista-status.txt                     full porcelain status
+      vista-untracked.txt                  the 102 untracked paths
+
+sha256 computed **on Vista** and **on arrival** agree exactly:
+`ffab89899817bb6efc80ba10b5b881f2648173e1c3ff7ab1d610573476fcd8cb`.
+
+Fetched into `refs/remotes/vista/*`, a new namespace that touches no branch, and
+a refresh then swept it into the standalone: **`ALL-refs-2251.bundle`, 142 refs**,
+up from 138. Vista's two commits are now covered by the same insurance as
+everything else.
+
+**LS6, checked the same way:** one git repo found across `$WORK` and `$HOME`,
+`~/taichi_mpm`, which is a third-party engine clone, not this project. **0
+commits on no remote**, 39 dirty files that are consistent with build output.
+Nothing captured, and nothing appears to be at risk there. Stated as a bounded
+search: `$WORK/*/` and `$HOME/*/` at one level, not a full filesystem sweep.
+
+### The original gap, kept for the record
 
 **Work committed on Vista or LS6 and never fetched to this Mac is invisible to
 every bundle here.** The standing record says Vista's `$WORK` held a
