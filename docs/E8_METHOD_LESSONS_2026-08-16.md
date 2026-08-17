@@ -185,6 +185,47 @@ from primitives already available. The AR&R extractor was `zlib` plus a regex.
 
 ---
 
+## L-E. Verify every scripted replacement, and audit the document set, not the edit
+
+**The rule:** when you edit documents with a script, **assert on every replacement**,
+and afterwards **grep the whole set for the class of defect**, not just the lines you
+touched.
+
+**Three failures in one session, same shape:**
+
+1. `77148c1`: a placeholder SHA (`1a6a...`) committed into a retraction table, because
+   the table was written before the commit it referenced existed.
+2. `bde09d8`: a table my commit message described in detail and which **never landed**.
+   My script printed `MISS` for that replacement; I did not read the output.
+3. This commit: a **bare "UNTRACK the 16 files" imperative survived** in the section 5
+   recommendation list, in the same document where I had written the warning about
+   stale removal lines. An earlier edit targeted `"the 15 ... screenshots"` while a
+   prior count correction had already rewritten that text to `"the 16 ... files"`, so
+   the replacement silently matched nothing. **No print, no assert, no notice.**
+
+**Why 3 is the dangerous one.** 1 and 2 are visible defects: a reader sees a broken SHA
+or a missing table. **3 is invisible and actively harmful**, because the surviving line
+reads as current advice. This is exactly the failure the coordinator named: *a stale
+"recommend removal" line is how someone deletes something in six months for a reason
+that stopped applying tonight.* It survived **in the document that contains that
+warning**.
+
+**The two checks to actually run:**
+
+- **Assert, do not print.** `assert old in text` before every replace. A printed
+  `MISS` in a wall of output is not a guard; an exception is.
+- **Audit by defect class across the whole set**, after the edits:
+  `grep -nE '^[^>|]*\*\*(UNTRACK|Remove|Delete)' docs/*.md | grep -v '~~'`
+  finds surviving imperatives regardless of which file or wording they hid in. That one
+  command found defect 3 after five commits had passed over the file.
+
+**Generalisation:** editing is per-line, but **correctness is per-document-set**. After
+a supersession, the question is never "did my edit apply" but "does any stale
+instruction survive anywhere". Those have different tests, and only the second one
+catches a line you forgot existed.
+
+---
+
 ## Why these are worth promoting
 
 Both are **falsifiable checks**, not advice. L-A names a control to run; L-B names a

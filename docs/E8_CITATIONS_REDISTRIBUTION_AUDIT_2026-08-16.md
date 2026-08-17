@@ -342,12 +342,14 @@ Three of the four lookups are now done, so this is no longer speculative.
    `THIRD_PARTY_NOTICES.md`, and note that the NC-ND terms on Wang and Marsooli are
    **narrower than the repo's BSD grant**, which is exactly what the carve-out clause
    is for.
-2. **UNTRACK the 16 Smith-Modra-Felder files** (6,215,623 B, 6.22 MB: 15 screenshots plus 1 table image). Bronze OA
-   gives no redistribution right. `git rm --cached` plus a `.gitignore` rule keeps the
-   files on Josie's disk, where they are legitimately useful, and stops them being
-   carried forward. As everywhere in this dispatch, it does **not** unpublish what is
-   already public.
-3. **Replace them with the citation and a link.** The article is free to read at the
+2. ~~**UNTRACK the 16 Smith-Modra-Felder files.**~~ **WITHDRAWN 2026-08-18. DO NOT
+   UNTRACK THEM.** Permission is reported for the Wiley/CIWEM article. The original
+   reasoning is retained struck through, not deleted, so a future reader can see why it
+   was once right and what changed: *bronze OA gives no redistribution right, so
+   `git rm --cached` plus a `.gitignore` rule would keep the files on Josie's disk while
+   stopping them being carried forward.* **That reason stopped applying on 2026-08-18.**
+3. ~~**Replace them with the citation and a link.**~~ **No longer required by any licence
+   position**, though still worth doing as citation practice. The article is free to read at the
    publisher, so a DOI link gives any reader the same access the screenshots do, at
    zero redistribution risk. `citations/README.md` already does this well for most
    entries and is the right long-term pattern: cite, do not carry.
