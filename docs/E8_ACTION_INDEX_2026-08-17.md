@@ -77,10 +77,27 @@ figure cannot be cited from an early commit.
 > report does not use. Probe validated first: it sees 27 `Figure N` and 7 `Table N`
 > references in the AR&R text, so the absence is real, not blindness. [read]
 >
-> **So do not fold these three into the AR&R grant.** They are 760,091 B from an
-> unidentified WRL document. **One question to Josie settles it:** does the Engineers
-> Australia permission extend to WRL-authored figures from other reports, or is UNSW
-> WRL a fourth rights holder?
+> **IDENTIFIED 2026-08-18. The source is named on the page itself.**
+> `Table 5-1`'s footer reads **"WRL Technical Report 2014/07  FINAL  September 2014"**,
+> page 38. [read, by opening the image]
+>
+> So these are from **WRL Technical Report 2014/07 (UNSW Water Research Laboratory,
+> September 2014)** — a different document from AR&R P10/S2/020 (Engineers Australia,
+> February 2011) by **publisher, body and year**. The content is the **H1 to H6 flood
+> hazard vulnerability classification** with its D*V limits.
+>
+> Precision on what is verified: **`Table 5-1` carries the footer directly.**
+> `Table 5-2` is its companion limits table (5-1 classifies, 5-2 gives the limits) and
+> `Figure 5-5` shares the caption family and numbering, but both are cropped without a
+> footer, so their attribution is **by caption family and numbering, not by a footer I
+> read.** Same document on the balance of evidence; only one of the three is
+> footer-confirmed.
+>
+> **So do not fold these three into the AR&R grant. The rights holder is UNSW WRL, and
+> the question for Josie is now specific rather than open:** does the permission cover
+> **WRL Technical Report 2014/07**, or only the Engineers Australia AR&R report? If it
+> does not, WRL is a **fourth rights holder** and these 760,091 B are the one piece of
+> `citations/` still uncovered.
 >
 > By contrast `ARR table 1 - ...png` **is** plausibly covered: the AR&R report does have
 > a Table 1.
@@ -94,7 +111,7 @@ They are **not equally serious, and they differ in kind, not just size.**
 | 1 | **CCSA/NCAC geometry.** 4 original distribution archives (88,592,238 B) + 14 LS-DYNA decks (71,716,670 B), **byte-identical to upstream, proven by SHA384** | 160,322,098 B | **Silent.** Confirmed on both CCSA download pages, not just the bundled README | **30 of 30 branches** | Ask permission; removal must cover every branch or it is cosmetic |
 | 2 | **Smith 2019.** The complete 15-page article, page by page | 6,215,623 B | **Asserted** "© 2019 CIWEM and John Wiley & Sons Ltd", **and permission reported 2026-08-18** | 1 tree | **CLEARED.** No action |
 | 3 | **AR&R report + 1 AR&R table image** | 1,352,966 B | **Silent**, permission reported 2026-08-18 | 1 tree | **CLEARED.** No action |
-| 3b | **3 WRL images** | 760,091 B | **Silent**, different document from the AR&R report | 1 tree | **One question:** does the AR&R grant reach UNSW WRL figures? |
+| 3b | **3 WRL images**, from **WRL Technical Report 2014/07** (UNSW WRL, Sept 2014) | 760,091 B | **Fourth rights holder**, distinct from Engineers Australia | 1 tree | **One question:** does the grant cover WRL TR 2014/07? |
 | 4 | Two CC-licensed PDFs | 10,884,441 B | **Licensed** (CC BY; CC BY-NC-ND) | 1 tree | Keep, add attribution |
 | 5 | CC0 assets (ambientCG ×2, Poly Haven) | 11,205,063 B | **CC0.** No violation, ever | 1 tree | Courtesy attribution only |
 | 6 | **Credentials.** 12, across Vista, LS6, Mac | n/a | **THE ONLY OPEN EXPOSURE** | **No value public.** A holder-enumerating doc is public on 1 of 30 branches | **REVOKE.** Deletion cannot win |

@@ -181,7 +181,7 @@ filenames contain spaces, which silently broke the first pass and produced a
 | `Smith-Modra-Felder/Screenshot 2026-07-03 at 3.15-3.16 PM.png` | **15** | **5,846,160** | **5.85** | Screen captures taken in one 50-second burst, so a page-by-page capture of a single document **[inferred, from the timestamps]** |
 | `Smith-Modra-Felder/smith2019_instability_table.png` | 1 | 369,463 | 0.37 | A table from the same paper |
 | **Smith group, total** | **16** | **6,215,623** | **6.22** | |
-| `WRL reports technical and Research/` Figure 5-5, Table 5-1, Table 5-2 | 3 | 760,091 | 0.76 | Figures and tables from a Water Research Laboratory, UNSW report |
+| `WRL reports technical and Research/` Figure 5-5, Table 5-1, Table 5-2 | 3 | 760,091 | 0.76 | **WRL Technical Report 2014/07, UNSW Water Research Laboratory, September 2014.** Identified 2026-08-18 from Table 5-1's own page footer. The H1-H6 flood hazard vulnerability classification. **A fourth rights holder**, distinct from Engineers Australia |
 | `ARR table 1 - guidelines and recommendations for limits for vehicle stability.png` | 1 | 237,832 | 0.24 | A table reproduced from AR&R |
 | **All reproductions** | **20** | **7,213,546** | **7.21** | |
 
