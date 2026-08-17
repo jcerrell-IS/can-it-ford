@@ -94,6 +94,53 @@ way needs the same re-check.
 
 ---
 
+## L-C. A credential can be identified without reading it, and counting mentions is not evidence
+
+**Two rules, from one case.**
+
+**C-1. Identity from format and endpoint, never from the value.** A credential's
+issuer can almost always be settled without a single character of the secret entering
+anyone's context or transcript:
+
+| Question | Safe probe |
+|---|---|
+| Which issuer? | `grep -oE 'https?://[A-Za-z0-9._-]+'` on the config. `-o` emits **only** the matched substring, so a token on the same line cannot come with it |
+| What kind of token? | Parse the config and report the value's **length** and **prefix class** (`github_pat_`, `ghp_`, `hf_`, `sk-ant-`), never its characters |
+| Real secret or placeholder? | **Character-class and entropy.** A placeholder is uppercase-and-underscore only, no digits, no lowercase, and around 3.5 bits/char. A real token runs 5.5 to 6.0 |
+
+This matters because the project's own record shows a prior session **leaking a token
+into its own transcript while investigating that token**, which turned the transcript
+into a credential-bearing location. The investigation created a new instance of the
+thing it was investigating. These probes make that failure impossible rather than
+merely discouraged.
+
+Worked instance: credential H was identified as a **GitHub fine-grained PAT** from
+endpoint `api.githubcopilot.com` plus length 93 plus prefix class `github_pat_`. A
+second entry at the same endpoint was ruled out as a **placeholder** from entropy
+3.51 bits/char and an uppercase-only character class. Neither required reading a value.
+
+**C-2. Counting mentions is not counting evidence.** Four places in one document
+described H. Three said "Copilot MCP bearer", one said "GitHub fine-grained PAT". I
+weighted three against one, concluded the lone dissenter was wrong, and published that
+as "the worst single defect here".
+
+**The lone dissenter was right.** All four were describing the **same** credential:
+three described how it is *used* (a Bearer header to Copilot's MCP endpoint), one
+described what it *is*. They were never in conflict, so the majority was never
+evidence.
+
+**The check to actually run:** before treating agreement as corroboration, ask whether
+the agreeing statements could all be **restatements of one another or of one
+underlying fact**. If they could, go to the primary source instead. One read of the
+config settled in a single step what no amount of weighing secondary descriptions
+could.
+
+This is `CLAUDE.md`'s existing "one source cited twice is not two sources" rule,
+reached from the opposite direction: there, repetition inflated confidence; here,
+repetition inflated a **majority**. Same defect, and the same fix.
+
+---
+
 ## Why these are worth promoting
 
 Both are **falsifiable checks**, not advice. L-A names a control to run; L-B names a

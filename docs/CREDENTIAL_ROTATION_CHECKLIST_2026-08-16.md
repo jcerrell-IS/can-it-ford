@@ -163,44 +163,81 @@ instruction is **"identify before acting. Shorter than a full token, may be
 truncated."** Treat it as a credential until shown otherwise: 35 characters is short
 for a modern token but ample for an API key.
 
-**(b) Row 1 contradicts three other places in the same document about what H IS, and
-the disagreement points at the wrong revocation page.** [read]
+**(b) RESOLVED 2026-08-16, and the resolution overturns what I wrote here first.
+Row 1 is CORRECT. Revoke H exactly where it says.** [read]
 
-| Where | What it says H is | Files |
-|---|---|---|
-| Rotation list **row 1** (line 139) | **GitHub, fine-grained PAT**, revoke at *github.com, Developer settings, Fine-grained tokens* | 92 |
-| Line 432 | **Copilot MCP bearer**, fingerprint `5b99f970b467624d`, 93 chars | 7 |
-| Line 444 | "H is a **`Bearer` token for a `copilot.com` MCP endpoint**" | 7 |
-| Line 938 | "**H**, Copilot MCP `Bearer` token", revoke at *github.com Copilot / the MCP endpoint that issued it* | 7 |
+The earlier revision of this section called row 1 "the worst single defect here",
+on the grounds that three places in the source call H a Copilot MCP bearer while
+only row 1 calls it a GitHub fine-grained PAT, and that revoking the wrong issuer
+would leave H live. **That is withdrawn. Row 1 was right and I was wrong.**
 
-**Three sites say Copilot MCP bearer; one, the rotation list, says GitHub
-fine-grained PAT.** The three include an explicit fingerprint and character count.
+Settled from the primary source, the config file itself:
 
-**Why this matters operationally, and it is the worst single defect here:** row 1 is
-**first** in the blast-radius order, so it is the first thing anyone does. If H is a
-`copilot.com` MCP bearer and you revoke a GitHub fine-grained token instead, **H stays
-live and the list still reads as complete.** That is a rotation-completeness failure of
-exactly the kind this whole exercise exists to prevent.
+| Evidence | Result |
+|---|---|
+| Endpoint the `Bearer` header is sent to | **`https://api.githubcopilot.com/mcp/`** |
+| Secret length | **93 characters** |
+| Secret prefix class | **`github_pat_`** |
 
-There is a second, separable discrepancy in the same row: **92 files versus 7**. Section
-2.36 records "H is far larger than recorded: 92 files, of which 89 are
-`~/.zsh_sessions/*.history`", so 92 is the later count. But row 1 also lists
-`~/.secrets_tmp/gh_token.txt` among H's locations, and a file named for a *GitHub*
-token is weak evidence for a *Copilot* credential. **A plausible reading is that row 1
-merged two different credentials.** Not resolved here.
+`api.githubcopilot.com` is a **GitHub** domain, and a 93-character `github_pat_`
+value is the GitHub **fine-grained PAT** format exactly. It matches the source's own
+93-character figure for H at its line 432.
 
-**Do this before revoking row 1:** open one of the 7 `.claude.json` backups, find the
-`Bearer` entry and read which host its MCP endpoint points at. That is a local file
-read, needs no network, and settles it in one step. **I did not do it myself, because
-it means opening a file whose purpose is to hold a credential value, and this dispatch
-forbids reading values.** Josie can do it in a second, or grant a narrowly scoped
-exception.
+**So the two descriptions were never in conflict.** H *is* a GitHub fine-grained PAT
+(what it is), *used as* a Bearer token against GitHub's Copilot MCP endpoint (how it
+is used). Line 444's "a `copilot.com` MCP endpoint" is imprecise about the host, which
+is what made it look like a different issuer. **Row 1's destination, github.com ->
+Developer settings -> Fine-grained tokens, is the right place.**
+
+Expect one side effect: revoking H **breaks the `github` MCP server** until a
+replacement is minted. That is correct behaviour, not a symptom.
+
+**My method was the error, and it is worth naming.** I counted mentions, three against
+one, and treated the majority as evidence. Mentions are not independent sources: all
+four were describing the same credential, and three of them were describing its
+*usage*. One look at the primary source settled in a single step what no amount of
+weighing secondary descriptions could. This is the project's own "one source cited
+twice is not two sources" rule, met from an unfamiliar direction.
+
+**No credential value was read to establish any of this.** See L-C in
+`E8_METHOD_LESSONS_2026-08-16.md`: hostnames were extracted with `grep -o`, which emits
+only the matched substring, and the format was reported as length plus prefix-class
+plus entropy, never as characters.
+
+**Bonus negative, recorded so nobody adds a phantom 13th item.** The same file has a
+*second* `github` MCP entry pointing at the same endpoint, whose Bearer value is **15
+characters**. It is **not a credential**: uppercase-and-underscore only, no digits, no
+lowercase, 12 distinct characters, Shannon entropy **3.51 bits/char** against roughly
+5.5 to 6.0 for a random token. That is a **placeholder string**. The count stays at 12.
 
 **(c) The source's rotation list repeats the "nothing is public" overstatement.** Line
 131 reads: *"**Nothing here is public.** Every item below is local or on TACC."* The
 correction in `5f01dd2` applies to the source document too, not only to this file: no
 credential **value** is public, **and** a document enumerating the holders is public on
 one of 30 branches. Whoever owns the source should carry that correction across.
+
+---
+
+## 0.3 The exposure is cloning itself RIGHT NOW. Measured, not recalled.
+
+The source document says the exposure "is growing on its own". That is testable, so I
+tested it, at 2026-08-16 ~22:30 local: [read]
+
+| Measurement | Value |
+|---|---|
+| `~/.claude/backups/.claude.json.backup.*` files present | **5** |
+| Of those, carrying a real token format (`github_pat_`, `ghp_`, `hf_`, `sk-ant-`) | **5 of 5** |
+| Age of the newest | **57 seconds** |
+| Span across all five | **6 minutes** |
+
+**N = 5, all five positive, spread 57 s to ~7 min.** Every one of those files was
+written by ordinary Claude Code activity, and each carries a live credential format.
+The set rolls continuously.
+
+**This is the strongest single argument for revoking rather than deleting.** You cannot
+win a deletion race against a process that writes a fresh copy every minute or two, and
+the older copies have already propagated into backups and history. Revocation at the
+issuer ends it in one action; deletion cannot.
 
 ---
 
