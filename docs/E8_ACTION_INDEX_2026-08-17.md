@@ -17,9 +17,9 @@ They are **not equally serious, and they differ in kind, not just size.**
 |---|---|---|---|---|---|
 | 1 | **CCSA/NCAC geometry.** 4 original distribution archives (88,592,238 B) + 14 LS-DYNA decks (71,716,670 B), redistributed **intact** | 160,322,098 B | **Silent.** No grant, no licence, no copyright statement | **30 of 30 branches** | Ask permission; removal must cover every branch or it is cosmetic |
 | 2 | **Smith 2019.** The complete 15-page article, page by page | 6,215,623 B | **Asserted.** "© 2019 CIWEM and John Wiley & Sons Ltd" legible in the copy | 1 tree | Untrack, keep 4 scalars, cite the DOI. Free |
-| 3 | **AR&R report + 4 images** | 1,352,966 B | **Silent.** No copyright, licence or permission text | 1 tree | Ask permission. **Do not delete: load-bearing evidence** |
+| 3 | **AR&R report + 4 images** | 2,113,057 B | **Silent.** No copyright, licence or permission text | 1 tree | Ask permission. **Do not delete: load-bearing evidence** |
 | 4 | Two CC-licensed PDFs | 10,884,441 B | **Licensed** (CC BY; CC BY-NC-ND) | 1 tree | Keep, add attribution |
-| 5 | CC0 assets (ambientCG ×2, Poly Haven) | 11,225,569 B | **CC0.** No violation, ever | 1 tree | Courtesy attribution only |
+| 5 | CC0 assets (ambientCG ×2, Poly Haven) | 11,205,063 B | **CC0.** No violation, ever | 1 tree | Courtesy attribution only |
 | 6 | **Credentials.** 12, across Vista, LS6, Mac | n/a | n/a | **No value public.** A holder-enumerating doc is public on 1 of 30 branches | **Revoke.** Deletion cannot win |
 
 **1 is largest and most widespread. 2 is smallest of the licence problems but the
@@ -131,6 +131,31 @@ verbatim total is **160,322,098 B** including the 4 upstream READMEs, or
 | `E8_FLAG_ARR_TERMS_UNRESOLVED_2026-08-16.md` | AR&R resolved on the third approach; ISBN read directly; one human check left |
 | `E8_METHOD_LESSONS_2026-08-16.md` | L-A reach≠sensitivity, L-B read `license` not `isOa`, L-C identify a credential without reading it |
 | `CREDENTIAL_ROTATION_CHECKLIST_2026-08-16.md` | Companion to the source's list: public surface, divergent copies, 3 defects, live-cloning measurement |
+
+## 6. Erratum to this file, same day
+
+**Two of the three totals I introduced in section 1 were wrong on first commit
+(`aacf12e`) and are corrected here.** I caught them by running an arithmetic check
+against the tree immediately after committing, which is why the window was minutes
+rather than permanent.
+
+| Row | Published in `aacf12e` | Correct | Cause |
+|---|---|---|---|
+| 3, AR&R + 4 images | 1,352,966 B | **2,113,057 B** | I summed the AR&R PDF and the AR&R table image and **omitted the 3 WRL images** (760,091 B) |
+| 5, CC0 assets | 11,225,569 B | **11,205,063 B** | Hand-summed, off by 20,506 B |
+
+Both are now recomputed directly from `git ls-tree`, not by hand. Neither affects any
+other figure or any recommendation: no ranking, proportion or decision in this document
+depends on them.
+
+**The pattern is the point, and it is now three for three:** every size figure I have
+produced by hand or by a quick script this round has been wrong at least once (MiB
+labels in `ac9fb54`, the 14-file Smith count in `ac9fb54`, these two). Every figure
+recomputed from `git ls-tree` in a checked script has been right. **Compute totals from
+the tree, print the enumeration, and check the sum before publishing it**, which is the
+corollary already stated in `E8_METHOD_LESSONS_2026-08-16.md` L-A.
+
+---
 
 **Not reviewed by physics-skeptic.** Every number here is a byte count, a file count or
 a licence status, none of which that agent is scoped to. **UNREVIEWED by scope, not by
