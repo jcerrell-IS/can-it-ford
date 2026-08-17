@@ -1,7 +1,67 @@
 # R5-D1 unit 34: an unintegrated 2026-08-07 audit contradicts register B5 on the hull density
 
-Date 2026-08-17. Branch `claude/r5-research`. **ESCALATION for D4 and whoever owns
-the register. I am not adjudicating this.**
+Date 2026-08-17. Branch `claude/r5-research`.
+
+> # RETRACTED, unit 36. DO NOT ACT ON THIS AS WRITTEN.
+>
+> I sent this to physics-skeptic before anyone acted on it. It came back **NOT
+> CLEAN with seven blocking issues**, and I verified the worst of them myself.
+> **Five of my eight claims are wrong**, several contradicted by files already in
+> this repo. The retraction and what survives are in section 0 below. The original
+> text is kept underneath, unedited, because the errors are the point.
+>
+> **Net: this is a note, not an escalation. D4 and the register owner need do
+> nothing.**
+
+## 0. RETRACTION, and the one thing that survives
+
+**What I actually measured, after the skeptic pointed out my stated reason for not
+measuring was false.** A working `trimesh 4.12.2` / `numpy 2.5.1` venv is
+documented at `docs/MESH_RECONCILIATION_2026-08-08.md:39`, in a repo file on this
+exact topic. One command:
+
+```
+volume     3.5427387900160743      (exact match to the recorded 3.5427)
+watertight True
+euler      -442   ->  genus 222
+extents    4.28261 x 1.74638 x 1.51801     bbox 11.3533 m3
+vol/bbox   0.31205
+```
+
+**SURVIVES: the audit's genus 222 is real, and I have now verified it myself.** A
+clean vehicle envelope is genus ~0. A watertight surface with 222 handles is a
+genuinely pathological topology for a collider, and that is the audit's actual
+load-bearing evidence. The volume and the 31.2% fill also reproduce exactly.
+
+**RETRACTED, claim by claim:**
+
+| claim | why it fails |
+|---|---|
+| **C2, "contradicts B5"** | **B5 has a second sentence I never read.** `register:86`: "Realized density is grid-coupled by construction, since `solid_volume = n_particles * h^3`. It is not an independent physics validation metric." B5 and the audit **agree** that 310.494 is not a physical vehicle density. They differ only on prescription. I quoted a two-sentence entry truncated to one. |
+| **C4, "entirely unintegrated, ZERO hits"** | **False.** Live: `genus` 33 hits, `mesh2sdf` 337 hits in the main tree. My grep passed `--exclude-dir=.claude`, which excluded my own worktree, under a `timeout 90` on a large tree. And `realism_track/FINDINGS.md:217-219` shows the finding *was* triaged in-repo and deliberately deferred, for the same provenance reason I gave. |
+| **C5, "no geometry fix can resolve 1609/2337"** | **False.** `docs/MESH_RECONCILIATION_2026-08-08.md:196,201` already publishes both on their **own** hulls (1609 -> 325.0, 2337 -> 293.5), and flood-filled they land in band (263.8, 252.3). The geometry fix is loading the right hull, and per register E3a those hulls have already run. |
+| **C6, "independent corroboration"** | **One source cited twice.** My 31.2% and item 4(b)'s 33.2% share the numerator 3.542739, the very quantity in dispute, over two different bounding boxes. And 0.312 is printed in the audit's own `fill` column. It is not independent and it corroborates nothing. |
+| **C8, "qualifies D4's P-2 conclusion"** | **Answered inside the commit I cited.** `5dbe04d` measures in-hull water at a median **6.50%** share of P-2 and reports the genuinely in-hull fraction rising **12x** across the velocity sweep. D4 did not deny leakage; D4 measured it, isolated it from the void, and named it as the quantity to report. I carried only the pile-up half of a commit I had read. |
+
+**Also wrong and worth naming:** my "no Mac interpreter here has numpy" was the
+stated reason I did not verify, and it was false. Verifying was a ten-minute job
+on this machine. I escalated instead of measuring.
+
+**Still open, and genuinely:** the audit's flood-fill numbers (4.5628 / 6.0985 /
+9.2623) have no script, no output mesh and no hash. They exist in two prose files
+from one session. That is a real provenance gap, and it is the one thing worth
+carrying forward, as a note.
+
+**C7 is withdrawn as a finding too.** It re-derives `fill_ratio` 1.0024, already a
+column in `data/all_runs_inventory.csv` and already register E2. The skeptic also
+notes the inertia tension may run backwards: real vehicle mass sits in panels and
+structure, so a shell-distributed cloud could be a *better* inertia proxy than a
+uniform fill that puts mass in cabin air. I have not tested either direction, so
+it should not go to D4 at all.
+
+---
+
+## ORIGINAL TEXT BELOW, UNEDITED
 
 Reading the never-opened `03_Gaussian_Splatting_and_Reconstruction` corpus
 directory surfaced `mesh_realism_splat_audit_2026-08-07.md`. It reaches the
