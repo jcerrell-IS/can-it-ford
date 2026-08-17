@@ -114,6 +114,37 @@ frame 89 on every grid, and `g48_m1100` starts at +0.0418 m and ends at 0.0000, 
 sank during the run. That matches the register's own P-3 note that all three g48 runs show
 a negative z rise near -0.05 m. **[unreviewed]**
 
+## 3c. A challenge to L-3 that FAILED, and one precision that came out of it
+
+Following the settle-phase result I checked whether the unrecorded settle invalidates
+CLAUDE.md L-3's "realized_depth_m / dx is exactly 2.000" and "water_layers is 4". The
+measured free surface at recorded frame 0 came out **5 to 25% below nominal depth**, which
+looked like a settling deficit.
+
+**It was my own convention error and the challenge fails.** The lattice is
+`arange(floor + 0.5h, floor + depth, h)`, so the top particle **centre** sits `h/2` below
+the nominal **surface**. Predicting the top layer centre and comparing:
+
+| | result |
+|---|---|
+| measured surface within one jitter (+/-0.2h) of the predicted top layer centre | **13/17** |
+| the 4 exceptions | all **ABOVE** prediction by 0.0004 to 0.005 m, i.e. a slight rise |
+| runs sitting **below** prediction | **0 of 17** |
+
+There is no settling deficit. **L-3 stands as written**: `realized_depth_m = layers * h =
+4 * 0.0736 = 0.2944 = exactly 2.000 dx` at g64, by lattice construction, which is what L-3
+says.
+
+**The precision that did come out of it, and L-3 does not say this: 4 layers is the g64
+value, not a universal one.** Measured layer counts are **g48 = 3, g64 = 4, g96 = 6**, and
+the depth sweep gives 3, 5, 6 for the 0.25 / 0.35 / 0.45 runs.
+
+So **the g48 rung carries only 3 particle layers, i.e. 1.5 grid cells** against L-3's
+stated 4 layers and 2 cells. L-3 already flags 4 layers as a resolution limitation. **The
+g48 runs are thinner than the limitation as stated, and g48 is one of the three rungs in
+item 5's grid-convergence study.** Anyone quoting L-3 alongside item 5 should say which
+rung they mean. **[unreviewed]**
+
 ## 4. Nothing on this branch has been run on a GPU
 
 TACC has been cold the entire session. `R5_PHYSICS_BATCH_MANIFEST.md` and
