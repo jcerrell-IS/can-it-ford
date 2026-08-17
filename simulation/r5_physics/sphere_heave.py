@@ -301,7 +301,7 @@ def deep_water_error(depth, wavelength):
 # --------------------------------------------------------------------------------------
 # geometry
 # --------------------------------------------------------------------------------------
-def sphere_mesh(diameter, n_lat=48, n_lon=96):
+def sphere_mesh(diameter, n_lat=32, n_lon=64):
     """Watertight UV sphere centred on the ORIGIN, faces wound outward.
 
     add_sdf_collider stores the field in the BODY frame and queries it as
@@ -312,6 +312,24 @@ def sphere_mesh(diameter, n_lat=48, n_lon=96):
 
     A UV sphere is used instead of trimesh's icosphere because neither Vista venv has
     trimesh and the shared venv must not be mutated.
+
+    RESOLUTION REDUCED 48x96 -> 32x64 ON EVIDENCE, 2026-08-17, after job 917909 spent
+    over five minutes inside build_sdf without reaching its first solver step. Measured
+    on the node: python at 98.7% of ONE core with the GPU at 0% and 802 MiB, i.e. serial
+    numpy, not physics. The cost is structural: mesh_sdf._winding_number builds
+    (chunk, n_faces, 3) temporaries, so it scales as faces x grid points, and 9024 faces
+    against a 96^3 grid is ~8e9 element-operations per einsum (RSS reached 8.3 GB).
+
+    32x64 is chosen because it is the coarsest mesh that still passes the EXISTING 0.5%
+    polyhedral-volume assertion, rather than by relaxing the assertion to fit a faster
+    mesh. Measured deficits: 48x96 0.1784%, 40x80 0.2568%, 32x64 0.4009% (PASS),
+    28x56 0.5234% (FAIL). 3968 faces against 9024 is 0.44x the builder cost.
+
+    This does NOT change what the solver sees in any way that matters, and the scene
+    checks that itself rather than assuming it: sdf_radius_rms_err_m compares the built
+    field against the closed form |x| - r, which is exact for a sphere. The mesh only
+    feeds the builder. If the RMS error degrades materially at 32x64, that check reports
+    it in sdf_info on every run.
     """
     r = 0.5 * float(diameter)
     verts = [(0.0, 0.0, +r)]
@@ -364,7 +382,7 @@ def sdf_margin_cells(span, dx, res, band_safety=2.0):
     return margin
 
 
-def build_sphere_sdf(diameter, dx, res=96, band_safety=2.0):
+def build_sphere_sdf(diameter, dx, res=96, band_safety=2.0, cache_dir=None):
     """Build the sphere SDF and return (SDFData, provenance dict).
 
     The provenance dict carries `sdf_radius_rms_err_m`: the SDF of a sphere has a
@@ -372,11 +390,21 @@ def build_sphere_sdf(diameter, dx, res=96, band_safety=2.0):
     way a vehicle hull can never be. That check is the reason a sphere is the right
     first external benchmark and it costs nothing.
     """
-    from warpmpm.geometry import build_sdf
+    from warpmpm.geometry import build_sdf, build_sdf_cached
 
     verts, faces = sphere_mesh(diameter)
     margin = sdf_margin_cells(diameter, dx, res, band_safety)
-    sdf = build_sdf(verts, faces, res=res, margin_cells=float(margin))
+    # CACHED when a cache_dir is given. The field is a deterministic function of
+    # (verts, faces, res, margin_cells) and build_sdf_cached keys on exactly that, so
+    # reuse is safe and any geometry change invalidates it automatically. Job C runs the
+    # same sphere three times and would otherwise pay the multi-minute serial build on
+    # each. cache_dir=None falls through to build_sdf, so an unwritable or absent cache
+    # degrades to the current behaviour rather than failing the run.
+    if cache_dir is not None:
+        sdf = build_sdf_cached(verts, faces, res=res, margin_cells=float(margin),
+                               cache_dir=cache_dir)
+    else:
+        sdf = build_sdf(verts, faces, res=res, margin_cells=float(margin))
     vals = np.asarray(sdf.values)
     boundary_min = float(min(vals[0].min(), vals[-1].min(),
                              vals[:, 0, :].min(), vals[:, -1, :].min(),
@@ -426,7 +454,7 @@ class SphereTank:
 
     def __init__(self, n_grid, lim, depth, h0_over_d=0.1, diameter=D_SPHERE,
                  mass=M_SPHERE, seed=0, device="auto", sdf_res=96,
-                 sdf_band_safety=2.0, free=True):
+                 sdf_band_safety=2.0, free=True, sdf_cache=None):
         from warpmpm.core.solver import GridConfig, Solver
         from warpmpm.materials import newtonian
 
@@ -501,6 +529,7 @@ class SphereTank:
         s.add_domain_walls()
 
         sdf, self.sdf_info = build_sphere_sdf(self.diameter, self.dx, res=sdf_res,
+                                              cache_dir=sdf_cache,
                                               band_safety=sdf_band_safety)
         # surface and friction are the engine's own add_sdf_collider defaults and are NOT
         # tuned. For surface_type 2 the impulse is m*(v_free - v_surf - v_tan_scaled)
@@ -607,7 +636,8 @@ class SphereTank:
 def run(args):
     tank = SphereTank(n_grid=args.n_grid, lim=args.lim, depth=args.depth,
                       h0_over_d=args.h0_over_d, seed=args.seed, device=args.device,
-                      sdf_res=args.sdf_res, free=not args.fixed)
+                      sdf_res=args.sdf_res, free=not args.fixed,
+                      sdf_cache=args.sdf_cache)
     cfg = tank.config()
     cfg["mode"] = "fixed" if args.fixed else "free"
     cfg["seed"] = args.seed
@@ -653,6 +683,9 @@ def main():
     p.add_argument("--fixed", action="store_true",
                    help="pin the sphere and measure the steady reaction (hydrostatic control)")
     p.add_argument("--sdf-res", type=int, default=96)
+    p.add_argument("--sdf-cache", default=None,
+                   help="directory for build_sdf_cached; the serial numpy SDF build "
+                        "dominated job 917909 at over 5 min before its first solver step")
     p.add_argument("--seed", type=int, default=0)
     p.add_argument("--device", default="auto")
     p.add_argument("--verbose", action="store_true")
