@@ -1,5 +1,88 @@
 # D4: Option A re-diagnosed. The blocker is mass, not grid nodes.
 
+> ## SUPERSEDED IN ITS CENTRAL ARGUMENT, 2026-08-17, by a second adversarial review
+>
+> **The event this document set out to explain never happened.** Sections 3 to 5 below are
+> retained for the record; read this box first. Corrections are applied in
+> `simulation/r5_physics/spin_down.py` and summarised here.
+>
+> **C1. I explained a non-event.** I wrote that the BC "was wired and validated 3/3 on
+> closed-form cases, then the level did NOT hold under steady inflow equals outflow",
+> tagged `[recalled]` from my dispatch, and never checked it. The implementation says
+> otherwise in its own header, `simulation/coupling_force/inflow_outflow.py:2-5`
+> **[read live]**: "inlet IMPLEMENTED, outflow **SUBSTITUTED** ... CPU reference
+> implementation, analytically self-tested. **NOT run against the GPU solver. No gated run
+> uses it. Do not cite as validated.**" The file goes on to head a section "WHY THE OUTFLOW
+> HALF CANNOT BE PORTED, AND IS NOT ATTEMPTED". No run artifact anywhere references it
+> **[measured, zero hits]**. **There was never an outflow, so there was never a level
+> failure.** The "3/3" is the analytic self-test of a CPU numpy module. My whole section 4
+> explanation is an explanation of nothing, and the string it explains exists only in the
+> dispatch prompt. This is the exact discipline failure this project is built around, and I
+> committed it while tagging the source `[recalled]`.
+>
+> **C2. Volume is NOT fixed by construction. Mass is.** `core/solver.py:589-591`
+> **[read]**: `def vol(): return self._vol0 * self._checked_jacobian()`. `particle_vol` is
+> the REFERENCE volume; current volume is `J*V0` and `J = det(F)` evolves every substep. So
+> "total water volume is fixed by construction" is wrong, and the chain "conserved mass ->
+> level fixed" needs an incompressibility premise this material does not satisfy. I even
+> computed an EOS bound two paragraphs earlier and then contradicted it.
+>
+> **C3. The public wrapper already exists, and I listed it while denying it.**
+> `core/solver.py:224-237` **[read]**: `add_box` calls `self._sim.set_velocity_on_cuboid`,
+> and its own docstring says "volumetric grid-node velocity overwrite over the box". I
+> searched method names for the string "cuboid", got a name-based false negative, and
+> enumerated `add_box` in the same list. **Section 5 step 1 is already-done work.**
+>
+> **C4. The mass-sink hook exists too.** `mpm_utils.py:922` gates P2G on
+> `particle_selection[p] == 0`, and `mpm_solver_warp.py:1679`
+> `import_particle_selection_from_torch` writes that array at runtime, so a deselected
+> particle's mass never reaches `grid_m`. My "the engine offers no hook" is false, and
+> "variable particle count, a genuine solver change" was a strawman: no array needs
+> resizing. What is missing is only a public wrapper for `particle_selection`.
+>
+> **C5. Recycling already exists and is unsound as written.** `RecyclingConveyor` at
+> `inflow_outflow.py:166`, already in `__all__` **[read]**. It rewrites position and
+> velocity only, never `particle_F`, `particle_C` or `particle_Jp`, so a reissued particle
+> carries the outlet's compression back to the inlet. It is also not exact mass
+> conservation; the file says so itself. **Recommending it as new was wrong twice over.**
+>
+> **C6. My measurements were mislabelled and origin-dependent.** They were computed frame
+> 0 to 89 and reported as "settle 8". Re-measured properly with the committed script, first
+> retained frame 8, N=17:
+>
+> | quantity | median | range |
+> |---|---|---|
+> | bulk mean speed | **-66.33%** | -87.37 to -41.34% |
+> | mean z, absolute origin (what I reported) | +3.73% | +0.41 to +5.63% |
+> | mean z, **floor datum**, the only datum a level has | **+13.19%** | +1.68 to +19.67% |
+>
+> So "the level proxy is about 17x more stable than the flow" was an artifact of an
+> arbitrary origin. On the floor datum it is **5.0x**. The review, measuring at settle 0,
+> got 3.8x; both refute 17x.
+>
+> **C7. And my interpretation does not survive either, but not the way the review said.**
+> The review found the centroid rise was spray-dominated, with the bulk centroid FALLING in
+> 7 of 17 runs once particles above the initial free surface were excluded. Using a 99th
+> percentile cutoff at the first retained frame I get the bulk centroid RISING in **17 of
+> 17** (median +15.50%). **The two results disagree because the spray cutoff differs, and
+> neither cutoff is privileged.** That sensitivity is the honest finding: a +13% floor-datum
+> centroid rise exceeds the compressibility bound by an order of magnitude, **and I do not
+> have a verified mechanism for it**. Candidates raised and not settled: spray, floor
+> penetration (which would push the other way), and the vehicle carve filling. My original
+> "evidence of sustained redistribution" claimed a mechanism I had not established.
+>
+> **What survives, and is now better grounded than before:** the engine imposes all six of
+> its registered BCs at grid nodes; no registered grid BC writes `grid_m`; the canonical
+> scene has no outflow; and the water spins down hard, median **-66.3%** at settle 8 with
+> **0 of 17 gaining**. The strongest statement about Option A is not mine at all, it is the
+> implementation file's own: **the outflow half cannot be ported and was not attempted.**
+>
+> Minor, all confirmed: `:2615` is `pointcloud` and `:2775` is `mesh_sdf`, not SDF and CDF;
+> `add_cdf_collider` at `:2819` never registers a grid kernel; the canonical registry holds
+> **11** entries, not 6, because `add_domain_walls` appends six shells; and a cuboid
+> registered after `add_domain_walls` overrides its no-penetration projection, so material
+> CAN be driven out, making my "no flow in either direction" asymmetric and wrong.
+
 2026-08-17. Branch `claude/r5-physics`. Mac only, no GPU. Every source line below was read
 live this session from the pinned engine at
 `third_party/mpm-engine-544c93dd-solver-core/`, SHA `544c93dd`.
