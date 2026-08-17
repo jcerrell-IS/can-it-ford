@@ -1,5 +1,43 @@
 # D4: the velocity sweep is also a depth sweep, and the labels are not the depths
 
+> ## CORRECTED BY MY OWN FOLLOW-UP, 2026-08-17. The headline drops from 2.6x to 1.8x.
+>
+> Section 5 of the first version flagged that I had not read `local_depth_footprint`'s
+> definition. I read it, and it contains a confound I had not anticipated
+> **[read, `sim_standing.py:473-475`]**: the selection window is the vehicle's **current**
+> bounding box, `lo_v`/`hi_v`, which **slides downstream with the vehicle** into the very
+> pile-up whose depth it is measuring. So the diagnostic entangles the water getting deeper
+> with the measurement window moving into deeper water.
+>
+> I separated them by recomputing the identical statistic (same 99.5th percentile, same
+> floor datum, same `>= 20` guard) over the vehicle's **frame-0 footprint held fixed**.
+> Script committed at `simulation/r5_physics/depth_station.py`. Velocity sweep, all
+> labelled 0.30 m, settle 8 **[measured]**:
+>
+> | v (m/s) | moving window | **fixed station** | drift (m) |
+> |---|---|---|---|
+> | 0.5 | 0.2341 | **0.2400** | 0.050 |
+> | 1.0 | 0.2586 | **0.3139** | 0.225 |
+> | 1.5 | 0.3313 | **0.3581** | 0.637 |
+> | 2.0 | 0.4050 | **0.3832** | 0.992 |
+> | 2.5 | 0.5002 | **0.4067** | 1.192 |
+> | 3.0 | 0.6049 | **0.4356** | 1.326 |
+>
+> **The confound is real and still monotone, but it is 1.81x, not the 2.58x I reported.**
+> Depth at a fixed station still runs from **-20% to +45%** of the 0.30 m label. My central
+> claim survives; its size does not, and I overstated it by about 40%.
+>
+> **The remainder is a defect in the diagnostic itself, and it is worth its own line.** The
+> gap between the moving and fixed readings correlates with vehicle drift at **+0.907**
+> across the 17 runs **[measured]**. `local_depth_footprint` reads high exactly in
+> proportion to how far the vehicle has travelled, so **anything downstream of that
+> diagnostic inherits a drift-proportional bias**. The depth sweep is affected too: labels
+> 0.35 and 0.45 read 0.4433 and 0.5201 on the moving window but **0.4055 and 0.4602** at a
+> fixed station, and both of those runs drift more than 0.94 m.
+>
+> Everything below stands except the 2.6x figure and the per-run moving-window depths in
+> section 4, which should be read as the fixed-station column above.
+
 2026-08-17. Branch `claude/r5-physics`. Mac only, no GPU. Reproduce with
 `simulation/r5_physics/spin_down.py` for the spin-down and with the snippet in section 5
 for the depth figures.
