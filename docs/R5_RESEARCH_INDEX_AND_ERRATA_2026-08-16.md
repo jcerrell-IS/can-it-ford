@@ -1,15 +1,58 @@
 # R5-D1 index and errata: read this before using any number I produced
 
-Date 2026-08-16. Branch `claude/r5-research`, 14 commits from `777567a` to
-`66f7427`. Eight documents, five data files.
+Date 2026-08-16, **last updated 2026-08-17**. Branch `claude/r5-research`,
+**32 commits** from `777567a` to `b130718`. **21 documents (3,707 lines), 6 data
+files.**
 
-**Why this file exists.** I corrected myself fourteen times across nine units.
+**Why this file exists.** I corrected myself more than twenty times across
+twenty-five units.
 Anyone opening a single document can act on a number I later withdrew. Section 1
 is the errata: every superseded claim, what replaced it, and where. Section 2 is
 the current best value of every headline number. **If a number below disagrees
 with a number in an earlier unit, the number below wins.**
 
 ---
+
+
+## 0. What is here, in reading order
+
+Start with this file, then section 3 below for the four papers that matter. The
+rest is grouped by what it answers.
+
+**Mining the corpus**
+| doc | what it establishes |
+|---|---|
+| `R5_RESEARCH_ELICIT_AND_CATALOG_MINE_2026-08-16.md` | the Elicit CSV (42 rows, 41 unique papers), 14 catalogs, the 489-DOI cross-reference |
+| `R5_RESEARCH_SETTLING_AND_RESOLUTION_MINE_2026-08-16.md` | settle length has no constant but a citable protocol; the determinism floor has a named cause |
+| `R5_RESEARCH_TWO_MORE_CATALOGS_2026-08-17.md` | "not a common Yaris hull with relabelled mass"; P-2 has no anchorable threshold |
+| `R5_RESEARCH_REMAINING_TEN_CATALOGS_2026-08-17.md` | the other ten summaries. **Its section 1 is RETIRED**, see erratum 19 |
+| `R5_RESEARCH_COUPLING_TABLE_AND_P2_UPDATE_2026-08-17.md` | the coupling table; the GCI gate's sources are already documented (a negative) |
+| `R5_RESEARCH_MPM_BOUNDARY_CLUSTER_2026-08-17.md` | **for D4**: the BC anchor and a 2024 paper on the open BC question |
+
+**Novelty and the papers that matter**
+| doc | what it establishes |
+|---|---|
+| `R5_RESEARCH_PRIMARY_SOURCE_VERDICTS_2026-08-16.md` | L-2 amendment refuted at the AR&R primary source; He 2026 and Zhang 2023 verdicts |
+| `R5_RESEARCH_PROPOSED_AMENDMENTS_2026-08-16.md` | proposed L-7 amendment; catalog recall measured |
+| `R5_RESEARCH_NOVELTY_COLLAPSE_2026-08-16.md` | every novelty axis I proposed is occupied; only MPM-vs-SPH and geometry provenance survive |
+| `R5_RESEARCH_CENSUS_ATTEMPT_2026-08-16.md` | the census did **not** reach fixpoint; two of my own errors caught pre-publication |
+| `R5_RESEARCH_AUTHOR_SWEEP_2026-08-16.md` | author-cluster sweep; my own filter hid the most important cluster |
+
+**Thresholds, scale and terminology traps**
+| doc | what it establishes |
+|---|---|
+| `R5_RESEARCH_SCALE_TRAP_2026-08-16.md` | six model scales, `lambda^1.5`, and the rebuilt threshold table |
+| `R5_RESEARCH_KRAMER_CONFIRMED_MODE_DEPENDENT_2026-08-17.md` | model-vs-prototype bias is **mode-dependent with opposite signs** |
+| `R5_RESEARCH_WATERTIGHT_TWO_SENSES_2026-08-17.md` | "watertight" is two different properties; A-4 straddles them |
+| `R5_RESEARCH_NIHEI_DRIFTING_AND_CSV_DUPLICATE_2026-08-17.md` | the full-scale drifting paper; the CSV duplicate |
+
+**Method, verification and blockers**
+| doc | what it establishes |
+|---|---|
+| `R5_RESEARCH_RESOLUTION_COMPARISON_2026-08-16.md` | the resolution claim an adversarial review killed, and the corrected version |
+| `R5_RESEARCH_ASYMMETRY_DOWNGRADED_2026-08-17.md` then `..._RETIRED_2026-08-17.md` | how my best finding was downgraded, then retired |
+| `R5_RESEARCH_NIHEI_ROUTES_AND_AUTHOR_TRAP_2026-08-16.md` | ten routes to the corrigendum; the Bando author trap |
+| `R5_RESEARCH_FLAG_BLOCKED_2026-08-17.md` | **the 5 blocked items and exactly what unblocks each** |
 
 ## 1. ERRATA. Every claim of mine that was corrected or withdrawn
 
@@ -34,6 +77,9 @@ with a number in an earlier unit, the number below wins.**
 | 17 | one wrong year, documented but left in the data file | erratum 16 | **two wrong years, both now CORRECTED in the TSV.** `10.26190/unsworks/27433` 2024→**2017** and `10.4225/53/58e1dfd63f1f4` 2017→**2015**. All 28 union rows re-checked against the registering agency: **0 errors in the 25 Crossref-registered DOIs, 2 errors in the 3 DataCite-registered ones** | unit 13 |
 | 18 | "never take titles, authors or years from aggregators" | unit 13 | **too broad.** Field-specific: titles 28/28 correct, years wrong only on DataCite deposits, author `display_name` unreliable because it is a disambiguation product | unit 14 |
 | 19 | the FORD/NO-FORD evidentiary asymmetry is "the single most valuable thing found in this whole dispatch" | unit 16 §1 | **RETIRED, superseding unit 17's downgrade.** Both readable references now read in FULL: Easterling 2001 has zero hits across 2,818 lines, and Eca/Dowding/Roache 2020 states the pass/fail accept-reject aspect "is not included in V&V20-2009". **Contradicted by one of its own cited sources.** Do not use it. Survivors: Easterling's "model validation is not binary", and a V&V 20 scope limit on extrapolation | units 17, 18 |
+| 21 | "model-scale thresholds are non-conservative", unqualified | unit 12 §1b | **mode-dependent.** True for sliding, **false for floating**: Kramer finds prototype flotation depths *higher* than model. Our dominant mode is SLIDE, the unsafe-erring side | unit 20 §2 |
+| 22 | g64_m1100 "fails gate P-2", disclosed as a leakage defect | unit 8 §2 | **not leakage.** P-2 counts water in the vehicle's axis-aligned **bounding box**, and the hull fills only 33.2% of it. It is a pile-up test | D4 `26971c0`, unit 24 |
+| 23 | P-2's transparent-box null baseline is 10.3 to 11.0% | unit 24 | **11.30 to 14.90%**, so the null **exceeds** the 0.10 gate in **17 of 17** runs. D4 re-derived their own figure upward | D4 `5dbe04d`, unit 25 |
 | 20 | the Nihei corrigendum is "blocked on publisher access" | unit 3 §5a, §8 | **overstated, withdrawn.** It is **gold OA, CC-BY, publishedVersion**. The barrier is host-level bot filtering plus `tdm-reservation`, a **fetch** status, not a **licence** status. My own flag file already had this right; unit 3 was never brought into line | D4 `7acb95f`, corrected unit 3 |
 
 **EVERY ORIGINAL IS NOW MARKED IN PLACE, unit 23.** This index only helps a
