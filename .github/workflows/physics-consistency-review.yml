@@ -8,11 +8,31 @@ permissions:
 jobs:
   check:
     runs-on: ubuntu-latest
+    # Presence probe. `secrets` is not available in a step-level `if`, so the
+    # two accepted credentials are concatenated into one job-level env var and
+    # the AI step tests that instead. Either one being set is enough.
+    env:
+      CLAUDE_AUTH_PRESENT: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}${{ secrets.ANTHROPIC_API_KEY }}
     steps:
       - uses: actions/checkout@v4
+
+      # Free, no credentials, and the part that actually gates merges.
       - run: python3 .claude/checks/params_check.py
-      - uses: anthropics/claude-code-action@v1
+
+      # Optional AI review. Skipped, not failed, when no credential is
+      # configured. Before this guard the job reported a red X on EVERY pull
+      # request, because the action was handed an empty anthropic_api_key and
+      # exited 1. A check that cannot pass is noise, not a signal.
+      - name: AI physics-consistency review
+        if: env.CLAUDE_AUTH_PRESENT != ''
+        uses: anthropics/claude-code-action@v1
         with:
+          # Two supported routes, set whichever you have:
+          #   CLAUDE_CODE_OAUTH_TOKEN  from `claude setup-token`, uses the
+          #                            existing Claude subscription
+          #   ANTHROPIC_API_KEY        from console.anthropic.com, billed
+          #                            separately from any subscription
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           prompt: |
             Review this diff ONLY for: physical-parameter inconsistencies across
@@ -21,3 +41,11 @@ jobs:
             citation claims that assert a numeric threshold as sourced from a
             specific paper/equation. For each finding cite file:line and say what
             to verify. Do not comment on style.
+
+      - name: Note when the AI review was skipped
+        if: env.CLAUDE_AUTH_PRESENT == ''
+        run: |
+          echo "::notice::AI review skipped: neither CLAUDE_CODE_OAUTH_TOKEN nor ANTHROPIC_API_KEY is set."
+          echo "params_check.py still ran and passed. To enable the AI review, set one secret:"
+          echo "  claude setup-token   then  gh secret set CLAUDE_CODE_OAUTH_TOKEN -R jcerrell-IS/can-it-ford"
+          echo "  or an API key from console.anthropic.com via  gh secret set ANTHROPIC_API_KEY -R jcerrell-IS/can-it-ford"
