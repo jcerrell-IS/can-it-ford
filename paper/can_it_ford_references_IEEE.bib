@@ -203,3 +203,147 @@
   year         = {2026},
   note         = {VERIFY: confirm exact title, author list, and public availability before citing as a committed future-work source.}
 }
+
+% ---------------------------------------------------------------------------
+% Added 2026-08-15 from the project's own Undermind research corpus.
+% PRIOR ART: four vehicle fording/wading simulations that were catalogued in our
+% own reports and cited nowhere in this paper. Any novelty claim about
+% simulating a vehicle in floodwater must be positioned against these.
+% Query with: python3 analysis/research_index.py --method vehicle-fording
+% ---------------------------------------------------------------------------
+
+@article{he2026vehiclewater,
+  author  = {He, Hao and others},
+  title   = {Predicting Vehicle-Water Interaction in Shallow Water: Simulations and Experimental Validation},
+  journal = {Journal of Computational and Nonlinear Dynamics},
+  year    = {2026},
+  doi     = {10.1115/1.4071177},
+  note    = {Physics-based and data-driven coupled models, validated against a model-scale free-running vehicle in a shallow water pool plus flume load measurements.}
+}
+
+@inproceedings{wasfy2015fording,
+  author    = {Wasfy, Tamer and Wasfy, Hatem M. and Peters, Jeanne},
+  title     = {Coupled Multibody Dynamics and Smoothed Particle Hydrodynamics for Modeling Vehicle Water Fording},
+  booktitle = {ASME IDETC/CIE},
+  year      = {2015},
+  doi       = {10.1115/DETC2015-47142},
+  note      = {Multibody vehicle systems coupled to SPH water, applied to a Humvee-type vehicle in a shallow pool.}
+}
+
+@techreport{pazouki2016fording,
+  author = {Pazouki, Arman and Jayakumar, Paramsothy and Negrut, Dan},
+  title  = {Investigation of the Vehicle Mobility in Fording},
+  year   = {2016},
+  note   = {Fluid-multibody framework, weakly compressible SPH, point-cloud discretisation of the solid for fluid-solid coupling forces. Semantic Scholar 61da26b63ef7bf224b6a8cac098e077de207423d.}
+}
+
+@inproceedings{khapane2014wading,
+  author    = {Khapane, Prashant and Ganeshwade, Uday},
+  title     = {Wading Simulation - Challenges and Solutions},
+  booktitle = {SAE Technical Paper Series},
+  year      = {2014},
+  doi       = {10.4271/2014-01-0936},
+  note      = {Combined MBS and CFD for vehicle wading. Was cited nowhere in this repository before 2026-08-15.}
+}
+
+@article{alqadami2022moving,
+  author  = {Al-Qadami, Ebrahim and others},
+  title   = {A numerical approach to understand the responses of passenger vehicles moving through floodwaters},
+  journal = {Journal of Flood Risk Management},
+  year    = {2022},
+  doi     = {10.1111/jfr3.12828},
+  note    = {Claims the first numerical simulation of a full-scale passenger vehicle MOVING perpendicular to floodwaters. Reports critical depth 0.38 m and minimum depth-velocity 0.39 m2/s.}
+}
+
+% LIMITATIONS: these constrain how the AR&R comparison may be framed.
+
+@article{shah2019guidelines,
+  author  = {Shah, Syed Hamid Hussain and Mustaffa, Zahiraniza and Mart{\'i}nez-Gomariz, Eduardo and Yusof, Khamaruzaman and Al-Qadami, Ebrahim},
+  title   = {A review of safety guidelines for vehicles in floodwaters},
+  journal = {International Journal of River Basin Management},
+  year    = {2019},
+  doi     = {10.1080/15715124.2019.1687487},
+  note    = {AR\&R 2011 limits derive from 1967-1993 studies on old-fashioned vehicles; chassis design has changed considerably since.}
+}
+
+@article{bocanegra2019review,
+  author  = {Bocanegra, Ricardo A. and Vall{\'e}s-Mor{\'a}n, Francisco and Franc{\'e}s, F{\'e}lix},
+  title   = {Review and analysis of vehicle stability models during floods and proposal for future improvements},
+  journal = {Journal of Flood Risk Management},
+  year    = {2019},
+  doi     = {10.1111/jfr3.12551},
+  note    = {Published stability thresholds vary over a relatively wide range and several models do not fit measured data well.}
+}
+
+@article{kramer2016trafficability,
+  author  = {Kramer, Matthias and Terheiden, Kristina and Wieprecht, Silke},
+  title   = {Safety criteria for the trafficability of inundated roads in urban floodings},
+  journal = {International Journal of Disaster Risk Reduction},
+  year    = {2016},
+  doi     = {10.1016/J.IJDRR.2016.04.003},
+  note    = {Proposes constant total head as the decisive parameter: 0.3 m for passenger cars, 0.6 m for emergency vehicles. Floating depths higher in prototype than in a watertight model.}
+}
+
+% NUMERICS AND UNCERTAINTY: methods used or recommended by this work.
+
+@article{syamlal2017uncertainty,
+  author  = {Syamlal, Madhava and Celik, Ismail and Benyahia, Sofiane},
+  title   = {Quantifying the uncertainty introduced by discretization and time-averaging in two-fluid model predictions},
+  journal = {AIChE Journal},
+  year    = {2017},
+  doi     = {10.1002/AIC.15868},
+  note    = {Successive grid refinement may not yield grid-independent TRANSIENT quantities; time-averaged quantities converge on sufficiently fine grids. Autocorrelation beats binning for time-averaging uncertainty.}
+}
+
+@article{bergmann2021mser,
+  author  = {Bergmann, Michael and Morsbach, Christian and Ashcroft, Graham and K{\"u}geler, Edmund},
+  title   = {Statistical Error Estimation Methods for Engineering-Relevant Quantities From Scale-Resolving Simulations},
+  journal = {Journal of Turbomachinery},
+  year    = {2021},
+  doi     = {10.1115/1.4052402},
+  note    = {Marginal Standard Error Rule for initial-transient detection, then correlated-sample confidence intervals.}
+}
+
+@article{brouwer2019rum,
+  author  = {Brouwer, Jaap and Tukker, Jan and Klinkenberg, Yvette J. C. and van Rijsbergen, Michiel},
+  title   = {Random uncertainty of statistical moments in testing: Mean},
+  journal = {Ocean Engineering},
+  year    = {2019},
+  doi     = {10.1016/J.OCEANENG.2019.04.068},
+  note    = {Transient Scanning Technique and Random Uncertainty of the Mean from a single stationary record, without repeat tests.}
+}
+
+@article{flyvbjerg1989blocking,
+  author  = {Flyvbjerg, H. and Petersen, H. G.},
+  title   = {Error estimates on averages of correlated data},
+  journal = {Journal of Chemical Physics},
+  year    = {1989},
+  doi     = {10.1063/1.457480}
+}
+
+@article{baumgarten2023integration,
+  author  = {Baumgarten, Aaron S. and Kamrin, Ken},
+  title   = {Analysis and mitigation of spatial integration errors for the material point method},
+  journal = {International Journal for Numerical Methods in Engineering},
+  year    = {2023},
+  doi     = {10.1002/nme.7217},
+  note    = {Particle ringing instability and solution-dependent integration error; improvement for fluid-like MPM without significant framework augmentation.}
+}
+
+@article{grift2019acceleratingplate,
+  author  = {Grift, E. J. and Vijayaragavan, N. and Tummers, M. J. and Westerweel, J.},
+  title   = {Drag force on an accelerating submerged plate},
+  journal = {Journal of Fluid Mechanics},
+  year    = {2019},
+  doi     = {10.1017/jfm.2019.102},
+  note    = {Drag during prolonged acceleration is not captured by a single added-mass coefficient; an entrainment rate is required. Steady drag rises 45 percent at one-fifth plate-height submergence.}
+}
+
+@article{kramer2021spherebenchmark,
+  author  = {Kramer, Morten and others},
+  title   = {Highly Accurate Experimental Heave Decay Tests with a Floating Sphere: A Public Benchmark Dataset for Model Validation of Fluid-Structure Interaction},
+  journal = {Energies},
+  year    = {2021},
+  doi     = {10.3390/en14020269},
+  note    = {Approximately 0.3 percent uncertainty at 95 percent confidence. Candidate locked regression case for this project.}
+}
