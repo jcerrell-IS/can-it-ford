@@ -1080,6 +1080,53 @@ a refresh then swept it into the standalone: **`ALL-refs-2251.bundle`, 142 refs*
 up from 138. Vista's two commits are now covered by the same insurance as
 everything else.
 
+### My own Vista check was asymmetric, and fixing it found a second repo
+
+**read.** I searched **LS6** for every repo under `$WORK` and `$HOME`, but on
+**Vista** I only looked at the one path I already knew, `$WORK/can-it-ford`.
+That is the failure this project has a standing rule about: a search that skips
+paths cannot prove absence. Re-run symmetrically across `$HOME`, `$WORK` and
+`$SCRATCH`, two levels: **10 repositories**, of which **two** hold commits on no
+remote.
+
+    $WORK/can-it-ford                              ATRISK=2  DIRTY=4   <- captured above
+    $WORK/can-it-ford-OLD-pre-purge                ATRISK=2  DIRTY=5   <- NEW
+    $WORK/home_archive/can-it-ford_STALE_...       ATRISK=0  DIRTY=4
+    + 7 others (mpm-engine forks, genesis-world, chrono), all 0 and 0
+
+**The second repo is a different lineage, not a duplicate.** Its two commits are
+`8eab759` "Remove RayTracer from gs.Scene for headless runs; add --horizon flag"
+and `0736dc3` "Add project identity/deadlines to CLAUDE.md, add repo-root
+STATUS.md". Neither is the pair found in the live repo. **Both are ABSENT from
+this Mac's object store**, checked with `cat-file -t`, so their content existed
+in exactly one place on Earth.
+
+**Captured as PATCHES, not as history, and the distinction is deliberate.** The
+directory is named `-OLD-pre-purge`, so its history predates a credential purge.
+Bundling it would have re-imported pre-purge objects into the insurance
+artifacts, and this project has already had GitHub serve a removed key by SHA
+after a `filter-repo` pass. `git format-patch` carries the content of those two
+commits without their ancestry.
+
+    can-it-ford-bundles/incoming/vista-prepurge/   (0700)
+      0001-Remove-RayTracer-...patch    1,720 B   simulation/can_it_ford_L2_mpm.py
+      0002-Add-project-identity-...patch 11,148 B  CLAUDE.md, STATUS.md, kumar_july9_update/STATUS.md
+      dirty.patch                      12,885 B   its 5 uncommitted files
+      stale-dirty.patch                 1,785 B   the archived repo's 4 uncommitted files
+      status.txt
+
+**Scanned before letting them sit here:** **0 credential-pattern hits**. Two
+40-hex strings appear, and rather than wave them off as "probably SHAs" I
+checked: they are `8eab759503e317e836984b426945eb7ac3173d02` and
+`0736dc3a2683cdcb8b9dea73060974de098ecb66`, which are the two commits' own
+`From ` headers. Not keys.
+
+**Not fetched into any ref, by choice.** Those commits' parents do not exist
+here, so a fetch would fail on missing prerequisites anyway, and grafting a
+pre-purge lineage into a post-purge repo is not a decision to make in passing.
+The content is preserved and recoverable; whether it is wanted is someone
+else's call.
+
 **LS6, checked the same way:** one git repo found across `$WORK` and `$HOME`,
 `~/taichi_mpm`, which is a third-party engine clone, not this project. **0
 commits on no remote**, 39 dirty files that are consistent with build output.
