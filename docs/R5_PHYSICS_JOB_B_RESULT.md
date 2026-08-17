@@ -84,3 +84,51 @@ substantially more frames, and now costs less per run: the mesh is 0.44x the bui
 and `--sdf-cache` removes the rebuild entirely on repeats.
 
 **UNREVIEWED.** No physics-skeptic pass has run on this document.
+
+## 6. Diagnosis: the free surface falls, and the sphere is pinned to where it used to be
+
+Added after section 5. The sphere never moves: `z_m = 0.575000` and `vz = 0` at frames 0,
+50, 100 and 199, spanning 0.425 to 0.725 with the waterline at 0.575, i.e. exactly half
+submerged **[read]**. So the sphere is not the variable. The water is.
+
+**A falling free surface accounts for the deficit exactly** **[derived]**:
+
+| quantity | value |
+|---|---|
+| deficit, target minus final | 69.2180 - 47.8554 = **21.3626 N** |
+| `dF/d(surface)` = `rho*g*A_w` | 692.1799 N per metre |
+| **implied surface drop** | **3.09 cm**, 6.17% of the 0.5 m column |
+
+The sphere is held at the ORIGINAL surface height, so as the water drops it sits
+progressively proud of the waterline and its submerged cap shrinks. The reaction decays
+because the geometry it is measuring is changing underneath it.
+
+**Compression explains only a quarter of it.** From the scene's own EOS constants,
+`b = 0.00593475 /m`, the mean density rise over a 0.5 m column is 1.4970%, which shortens
+the column by about **0.74 cm**, i.e. **23.9%** of the observed 3.09 cm. **The other 76%
+is not compression** and is the thing to find: candidates are water leaving through the
+floor or wall bands, or the jittered seed lattice settling into a denser packing than it
+was created at.
+
+**This reframes the whole run.** Section 5 called it a run-length problem. That is at best
+half right: more frames alone would let the surface keep falling and the reaction keep
+decaying, which is consistent with the extrapolation refusing to converge in section 5.1.
+The scene measures a moving target.
+
+**Two candidate fixes, neither yet implemented:**
+1. Settle the water FIRST, then place the sphere at the settled surface, so the pose is
+   defined against the equilibrium free surface rather than the seeded one.
+2. Measure the actual free-surface height per frame and compare the reaction against the
+   analytic cap volume AT THAT SURFACE, so the target tracks the geometry.
+
+Option 2 is the better validation: it removes an assumption instead of tuning the setup to
+satisfy it, and it converts a moving target into a measured one.
+
+**The extrapolation in support of this is INCONCLUSIVE and must not be quoted.** Fitting
+`A + B*exp(-t/tau)` over five late windows gives asymptotes of 13.639, 32.700, 41.547,
+43.856 and 47.277 N: N=5, range [13.639, 47.277], **spread 33.638 N** against a 69.218 N
+target. The model does not describe the decay and no asymptote is determined by this data.
+The only robust statement is directional: every window's estimate lies well below the
+target, so there is no evidence the decay is heading toward 69.218 N.
+
+**UNREVIEWED**, including every number in this section.
