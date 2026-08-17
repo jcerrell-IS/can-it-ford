@@ -1,7 +1,12 @@
 # D2 action index: what to do, what is blocked on you, what is withdrawn
 
-Dispatch R5-D2, branch `claude/r5-exposure`, 10 commits on top of `777567a`.
+Dispatch R5-D2, branch `claude/r5-exposure`, based on `777567a`.
 **Everything is diagnosis. Nothing was rotated, deleted, untracked or pushed.**
+
+For the commit count and log, run `git log 777567a..claude/r5-exposure`. An earlier
+revision hard-coded "10 commits" here, which went stale within the hour, on the same
+day this file added a section about publishing figures that go stale. Prefer the
+command to the number.
 
 Written because acting on six documents is harder than acting on one, and because
 several of my own claims were retracted mid-round. Section 4 exists so a withdrawn
