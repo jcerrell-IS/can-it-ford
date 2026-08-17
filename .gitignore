@@ -112,3 +112,7 @@ render_s2/
 # un-ignored or J15 becomes unreproducible again.
 !data/g128_2026-08-18/
 !data/g128_2026-08-18/**
+
+# g128 velocity/depth sweeps, register J18.
+!data/g128_sweeps_2026-08-18/
+!data/g128_sweeps_2026-08-18/**
