@@ -1,4 +1,4 @@
-# Two method results from the E8 work, written to be reusable
+# Method results from the E8 work, written to be reusable
 
 Dispatch R5-D2, 2026-08-16. Branch `claude/r5-exposure`.
 
@@ -8,8 +8,12 @@ that is D2's writable scope. **They belong in
 forbidden to edit either.** Whoever owns those files should lift them; this document
 is a holding place, not the right home.
 
-Both were produced by being wrong first, in this session, and both have already
-caught more than one person tonight.
+**Every one was produced by being wrong first**, in this session, and several have
+already caught more than one person tonight.
+
+The count is deliberately not stated in this heading. An earlier revision said "Two
+method results" and was stale by L-C; **the same defect L-E is about.** For the current
+list, read the `## L-` headings below.
 
 ---
 
