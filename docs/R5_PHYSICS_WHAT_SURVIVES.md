@@ -97,8 +97,22 @@ only.**
 | g96 | 0.0981 | **0.00%** | **+0.031 to +0.047** (above the floor) |
 
 g48 and g96 keep every water particle above the floor. g64 drives 10-19% of it down to the
-clamp. That is resolution-specific and non-monotone, on **the grid 13 of the 17 canonical
-runs use**. I have no verified mechanism for it and am not proposing one. **[unreviewed]**
+clamp. Resolution-specific and non-monotone, on **the grid 13 of the 17 canonical runs use**.
+
+**Narrowed by a follow-up check, which changed the framing again.** It is **not** a dynamic
+leak that accumulates: it is already **4.8 to 5.8% at recorded frame 0**, jumps to ~15% by
+frame 5, then oscillates 8-19%. And recorded frame 0 is **not** initialisation: the 8
+settle frames run inside `__init__` before recording begins (`sim_standing.py:235-237`).
+The lattice itself cannot place a particle below the floor, since it starts at
+`floor + dx/4` and the jitter is only +/-0.1 dx.
+
+**So the water settles into the clamp band during the 8 UNRECORDED settle frames, at g64
+and not at g48 or g96.** Mechanism beyond that is unresolved and I am not proposing one.
+
+One consistency check that did pass: the hull rests at exactly 0.0000 m above the floor at
+frame 89 on every grid, and `g48_m1100` starts at +0.0418 m and ends at 0.0000, i.e. it
+sank during the run. That matches the register's own P-3 note that all three g48 runs show
+a negative z rise near -0.05 m. **[unreviewed]**
 
 ## 4. Nothing on this branch has been run on a GPU
 
