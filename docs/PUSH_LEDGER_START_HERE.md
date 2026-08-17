@@ -122,10 +122,13 @@ its session.**
 | 3 | TACC `$WORK` | blocked on MFA, and those machines already hold the unrotated tokens |
 | 4 | plain cloud sync | **disqualified**: this project has already had an iCloud-synced token exposed |
 
-**UPDATED 2026-08-17 23:26: the licence axis is closed, so this is now a
-one-axis decision.** Permission is reported granted for the NCAC/CCSA material
-(D2 `a386704`, verified to exist) and for the Wiley/CIWEM files (relayed, no SHA
-yet). Both are **Josie's report with the artifact pending, not confirmations**.
+**UPDATED 2026-08-17 23:35: the licence axis is closed, so this is now a
+one-axis decision.** Permission is **reported** granted for the NCAC/CCSA
+material (D2 `a386704`) and for the Wiley/CIWEM files (D2 `2732e2b`), both
+verified to exist. All three grants are **Josie's report with the artifact
+pending, not confirmations**: nobody in this round has read the paperwork, and
+as D2 puts it, a second and third report arriving does not upgrade the first.
+Three rights holders, three artifacts still to file.
 
 That leaves the credential axis alone, and it splits cleanly:
 

@@ -223,14 +223,25 @@ neither the coordinator nor I has seen the paperwork.**
 
 | grant | provenance | strength |
 |---|---|---|
-| NCAC/CCSA meshes, decks, derived hulls, renders, AR&R report and its images | D2 `b63201e`, then `a386704` "permission granted, global, permits republication", verified by me to exist on `claude/r5-exposure` | **a commit I read** |
-| Wiley/CIWEM, the 16 Smith-Modra-Felder files | relayed to me in chat, **no commit SHA given** | **a relay of a report**, two removes from the paperwork |
+| NCAC/CCSA meshes, decks, derived hulls, renders, AR&R report and its images | D2 `b63201e`, then `a386704` "permission granted, global, permits republication" | **a commit I read**, verified on `claude/r5-exposure` |
+| Wiley/CIWEM, the 16 Smith-Modra-Felder files | D2 `2732e2b` "last licence item closed, credentials now the only open exposure" | **a commit I read**, verified on `claude/r5-exposure` |
+
+**SHA now attached, 23:31.** I flagged the Wiley grant as a relay with no commit
+behind it; D2 committed it as `2732e2b` and I verified it. Both grants are now at
+the same provenance strength.
+
+**D2's own note is worth carrying, because it is a correction to how I framed
+this.** It harmonised the wording across all three grants from "Josie confirms"
+to "Josie reports", and states the reason plainly: **a second and third report
+arriving does not upgrade the first. Two reports are still two reports.** Three
+grants, three separate rights holders (CCSA/GMU via NHTSA, Engineers Australia,
+Wiley/CIWEM), three artifacts still to be filed. Nothing here has been read by
+D2, the coordinator, or me.
 
 The Wiley item is worth one line of care: **it was never one of this plan's two
 reasons.** I repeated it earlier only as a carve-out so nobody would read the
 30-of-30 table as fully cleared. Its clearance therefore **does not change my
-reasoning further**, and I am not restating it as though it did. Someone should
-still attach a SHA to it, as was done for the geometry.
+reasoning further**, and I am not restating it as though it did.
 
 ### The off-machine decision, now one axis, for Josie
 
