@@ -93,17 +93,52 @@ random error.
 quote's tail, find it in the source, print the next 90 characters. It runs in under
 a minute over all 32 documents.
 
-## 4. Status
+## 4. The opposite error: tested, and a clean negative
+
+Item 3 of my first status list said I had not tested whether any quotation *begins*
+mid-sentence, dropping a qualifying subject, condition or negation. **That gap is
+now closed.** Same index, leading context instead of trailing:
+
+```
+testable passages          : 81
+located in a local source  : 43
+BEGIN mid-sentence         : 15
+  dropping a condition or negation : 0
+```
+
+**I did not stop at the mechanical zero.** My own unit-37 lesson is that a keyword
+zero is not the same as having looked, and unit 36's failure was a false zero, so I
+read all fifteen. The result holds:
+
+- **Thirteen of fifteen begin immediately after a markdown header, a bullet, or a
+  semicolon in an enumerated list.** The mechanical test fires because the preceding
+  character is not sentence-ending punctuation, but those are **structural**
+  boundaries, not sentential ones. Quoting a list item from its start is correct.
+- **One is my own quotation of the E8 rule in this document**, deliberately split
+  across lines in section 2 to show the truncation. Self-referential.
+- **One is mildly lossy and not material:** in
+  `KRAMER_CONFIRMED_MODE_DEPENDENT:20` I begin at "experimental investigations on
+  the stability of..." where the source reads "In order to determine those criteria,
+  experimental investigations...". I dropped a **purpose clause**, which carries no
+  condition and reverses nothing.
+
+**So the bias runs one way.** I truncate at the end, where a sentence gets
+complicated; I do not truncate at the start. That is consistent with the mechanism
+proposed in section 3: the error is stopping when the text stops being convenient,
+not carelessness about quotation boundaries in general.
+
+## 5. Status
 
 UNVERIFIED:
 1. **Half my quotations are unaudited.** 40 of 81 were not locatable in a local
-   source. External-paper quotes are unchecked by this method.
-2. The benign/needing-judgement split is my classification, applied by inspecting
-   the 18 continuations. Someone else might rule differently on borderline cases;
-   the 17 I called benign all continue into a citation marker, a parenthetical or a
-   list item.
-3. I did not check for the **opposite** error, a quotation that begins mid-sentence
-   and so drops a qualifying subject or condition. That would need a different test.
-4. Whether the confirmed-licence route is actually available for the NCAC/CCSA
+   source. External-paper quotes are unchecked by this method, and both tests share
+   that limit.
+2. The benign/material split is my classification, applied by inspecting all 18
+   trailing and all 15 leading cases by eye. Someone else might rule differently on
+   the borderline ones; I have named every case I set aside and why.
+3. Whether the confirmed-licence route is actually available for the NCAC/CCSA
    meshes is **D2's question**, not mine. I establish only that the register offers
    it and that I had hidden it.
+4. Neither test catches a quotation that is accurate at both ends but **omits an
+   interior clause** with an ellipsis. Several of my quotes do that legitimately;
+   verifying them would require reading each source passage in full.
