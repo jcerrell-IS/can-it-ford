@@ -81,6 +81,7 @@ rest is grouped by what it answers.
 | `R5_RESEARCH_BIB_DOI_SUPPLEMENT_2026-08-17.md` | **four verified DOIs the bibliography lacks**, and its year audit |
 | `R5_RESEARCH_UNCITED_AUDIT_2026-08-17.md` | audit of my own uncited method; it mostly holds |
 | `R5_RESEARCH_HULL_VOLUME_CONFLICT_2026-08-17.md` | **RETRACTED escalation.** Read section 0 only; the rest is kept as a worked error |
+| `R5_RESEARCH_UNCITED_SHAPE_2026-08-19.md` | **for the novelty statement**: 86% of catalogued V&V literature is uncited while the claimed contribution IS validation; application literature is nearly fully cited |
 | `R5_RESEARCH_MPM_FOUNDATIONS_UNCITED_2026-08-18.md` | **most actionable finding of the dispatch**: the paper cites ZERO MPM method literature. No Sulsky, no GIMP, no review, no benchmark. 37 uncited candidates already in the corpus |
 | `R5_RESEARCH_MPM_METHOD_CITATION_GAP_2026-08-18.md` | **for the bibliography**: a corpus file built my unit-3 deliverable first; its 9 gaps are still open, and 4 are MPM METHOD papers incl. a free-surface/body benchmark |
 | `R5_RESEARCH_NOVELTY_GUARD_GAP_2026-08-17.md` | the novelty guard reports `cited` for four papers that never reached any `.tex`; an instrument gap, latent not live |
