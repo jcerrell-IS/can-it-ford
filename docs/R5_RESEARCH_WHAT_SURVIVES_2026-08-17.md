@@ -27,8 +27,8 @@ adversarial review or was never challenged.
 | A5 | **Scale reporting needs two labels, not one.** "State the model scale" is insufficient; a `value_basis` label is required or model-scale values get read as full-scale. Row 7 is **1:24**, and its threshold is **~118x** below the others under Froude | `THRESHOLD_TABLE`, erratum 2, 14 |
 | A6 | **Four bibliography DOIs verified and supplied**, plus one year error (`ccsa2010yaris`, bib 2010 vs DataCite 2016). The year audit found the error **isolated**, 8 of 9 correct | `BIB_DOI_SUPPLEMENT` |
 | A7 | **All four shipped NCAC/CCSA packages are TRACKED in the public repo**, all four carry an acknowledgement request and a liability disclaimer, **none carries any licence word**. The paper names CCSA/GMU but not FHWA; the README asks for both. **One-word fix** | `NCAC_README_TERMS` |
-| A8 | **`martinezgomariz2018` resolves to `10.1111/jfr3.12262`** (title match, score 1). Crossref `issued` 2016 online-first, print issue 2018. Confirmed independently by the Elicit CSV holding both versions as rows 6 and 16 | `SEALING_AND_FLAG4` |
-| A9 | **The experimental literature does not agree on vehicle sealing.** Across twelve studies: water-filled, foam-filled watertight, ingress-permitted and solid-rigid all appear. Per the source, Xia 2011 differed from others by up to an order of magnitude and Shu 2011 corrected it | `SEALING_AND_FLAG4` |
+| A8 | **DOI `10.1111/jfr3.12262` is confirmed** for the Martinez-Gomariz state-of-the-art review (title match score 1; Crossref `issued` 2016-08-03, `published-print` 2018-02). **The `martinezgomariz2018` bib REFERENT is NOT settled**: a rival 2017 paper fits the entry's `note` equally well. See B-list | `SEALING_AND_FLAG4` §3 |
+| A9 | **The experimental literature does not agree on vehicle sealing.** Across twelve studies: water-filled, foam-filled watertight, ingress-permitted and solid-rigid all appear, and two of the "sealed" entries are not physical experiments. **Sealing is NOT the cause of any headline disagreement** (see B-list) | `SEALING_AND_FLAG4` §1, §1a |
 | A10 | **Hull geometry, measured directly:** volume **3.5427387900160743 m3**, watertight, `body_count` 1, euler -442 so **genus 222**. `1100/3.542739 = 310.4942`, reproducing CLAUDE.md's canonical 310.494 | `FLOODFILL_MEASURED` |
 | A11 | **The audit's flood-fill volumes are not reproducible as values.** 4.5628 does not reproduce; the comparable quantity is the **sealed cavity**, where two implementations disagree **2.1x** (1.020 vs 2.161 m3); the operation is **bistable and grid-phase fragile** near 22.2 mm | `FLOODFILL_MEASURED` |
 | A12 | **L-2 stands as written.** I proposed amending it and then **refuted my own amendment** from the AR&R primary source: the 3.0 m/s cap exists for human stability and occupant egress, so it is administrative, not vehicle-derived | `PROPOSED_AMENDMENTS`, erratum 3 |
@@ -57,6 +57,9 @@ Every one of these appears somewhere in my committed work as a positive claim.
 | The **hull-density escalation** (unit 34/35) | **RETRACTED**, 5 of 8 claims wrong. Only genus 222 survives |
 | The **flood-fill interpretation** (unit 39 draft) | **FOUR WITHDRAWN**: the ~6.8 agreement, the "35%" step, the cabin/window mechanism, and "density falls 11-52%" |
 | "Nihei brake state bears on our 16 SLIDE verdicts" | **direction wrong**; lower friction increases sliding, so SLIDEs get more room |
+| "vehicle sealing is the recorded cause of the largest disagreement in the incipient-motion literature" (unit 40 draft) | **WITHDRAWN.** The source names **incorrect density/mass scaling**; Shu's D×V shift is attributed to **friction** (mu 0.39-0.68 vs 0.3); foam-filling is one of two components of the fix. "Largest" was my own superlative and appears nowhere in the source. **I truncated the quote one clause short** |
+| "our pipeline picks the fill on one line, and no gate or document records why" (unit 40 draft) | **WITHDRAWN, three ways.** `vehicle.py:175` is **automatic dispatch** on `is_watertight`, not a knob; the canonical hull is watertight so `solidify_columns` is **unreachable**; the reason is recorded at `vehicle.py:93-94` ("buoyancy is unbiased"); and `sim_standing.py:381-383` would **abort** at fill_ratio 2.16518 |
+| "the Elicit CSV independently and decisively confirms the FLAG-4 referent" | **DOWNGRADED to consistent.** Its 2018 stamp is the same publisher metadata Crossref serves, so it is one source cited twice; and the **rival candidate sits in the same CSV at row 31** |
 
 ## C. UNVERIFIED, and why
 
@@ -105,8 +108,12 @@ an assumption. That is a citable statement about the literature's structure.
 
 ## E. Handed off, not mine to close
 
-- **D4**: the sealing axis at `warpmpm/vehicle.py:175` (2.165x in `solid_volume`);
-  the P-2 null baseline of 11.30-14.90%; the MPM boundary-condition cluster.
+- **D4**: the P-2 null baseline of 11.30-14.90%; the MPM boundary-condition cluster.
+  **NOT the sealing axis**: I withdrew that handoff. `vehicle.py:175` is automatic
+  dispatch, `solidify_columns` is unreachable for a watertight hull and would abort
+  the preflight guard, and the reason is already recorded at `vehicle.py:93-94`.
+  What is left for the paper is one limitations sentence: the hull is deliberately
+  built underbody-open, and no gate tests that against an external measurement.
 - **D2 / E8**: the NCAC README terms and the DataCite rights evidence.
 - **Paper owner**: the FHWA acknowledgement one-word fix; four verified DOIs; the
   `xie2023physgaussian` 2023-vs-2024 decision.
