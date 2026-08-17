@@ -130,9 +130,13 @@ from the 2021 companion's 9.2 kN buoyancy figure.
 > CLAUDE.md item 4b independently records that the hull fills only **33.2%** of its
 > own bounding box, so most of the box is void by construction. D4 measured the
 > transparent-box null baseline, what P-2 reads if the vehicle displaced nothing at
-> all, at **10.3 to 11.0%** for every run, against a gate set at 0.10. **The gate
-> therefore sits essentially on its own null baseline and behaves as a pile-up
-> test, not a leakage test.** The disclosure above stands as a fact about the gate;
+> all, at **11.30 to 14.90%** for every run, against a gate set at 0.10. **So the
+> null baseline EXCEEDS the gate limit in 17 of 17 runs**, and the gate behaves as
+> a pile-up test, not a leakage test. (D4 first reported 10.3-11.0% from a
+> reviewer, then re-derived it independently in `5dbe04d` from the rollout
+> artifacts with no shared code path and corrected their own figure upward; the
+> tighter baseline uses the water's own footprint extent rather than the domain
+> area. I have quoted the re-derived number.) The disclosure above stands as a fact about the gate;
 > it should not be read as evidence that water passes through the hull.
 
 ## 3. The result worth leading with instead

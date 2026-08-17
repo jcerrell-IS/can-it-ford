@@ -115,8 +115,11 @@ verified it at source: `sim_standing.py:463-465` takes the vehicle's
 axis-aligned bounding box and counts the fraction of water particles inside
 **that box**, not inside the hull. Since CLAUDE.md item 4b records the hull
 filling only 33.2% of its own bbox, most of the box is void by construction. D4
-measured the transparent-box null baseline at **10.3 to 11.0%** against a gate of
-**0.10**.
+measured the transparent-box null baseline at **11.30 to 14.90%** against a gate
+of **0.10**, so the null **exceeds** the gate in **17 of 17** runs. (D4's first
+figure, 10.3-11.0%, came from a reviewer; `5dbe04d` re-derives it independently
+from the rollout artifacts and corrects it upward. Median share genuinely inside
+the hull is 6.50%, range 3.27-22.84%.)
 
 So P-2 is not merely an unsourced threshold, which is what I claimed. **It is a
 threshold sitting on its own null baseline, measuring pile-up rather than
