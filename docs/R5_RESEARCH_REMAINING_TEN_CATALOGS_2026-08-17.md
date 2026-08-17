@@ -35,6 +35,11 @@ issuable under uncertainty. The project's existing "necessary not sufficient"
 framing is compatible with it and should probably be stated in these terms.
 That framing choice is not mine to make, so I am flagging it, not asserting it.
 
+> **RETIRED, unit 18. Superseding the downgrade below: a SECOND reference has now
+> been read in full and it says the accept/reject aspect is NOT in the standard it
+> interprets, so this claim is contradicted by one of its own sources. See
+> `docs/R5_RESEARCH_ASYMMETRY_RETIRED_2026-08-17.md`.**
+>
 > **DOWNGRADED, unit 17, same session. I resolved this sentence's three
 > references and checked the one I could read. It does NOT support the
 > asymmetry.** Reference [17] is Easterling 2001 (`10.2172/780290`), whose
