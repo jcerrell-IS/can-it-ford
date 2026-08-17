@@ -1,0 +1,110 @@
+doi	cited_anywhere_in_repo	in_paper_dirs	n_files	sample_file	source_corpus_docs
+10.1002/2014jf003404	NO	NO	0	-	03_Gaussian_Splatting_and_Reconstruction/2026-08-12_readme_flood-render-realism-optics_CURRENT.md; 10_Claude_Code_Session_Transcripts/Untitled 3.txt
+10.1002/9781119719984	NO	NO	0	-	04_Validation_Literature_and_Citations/compass_artifact_wf-65474f37-43a9-5ab0-817a-2b78217ff50f_text_markdown.md
+10.1002/fld.1971	NO	NO	0	-	01_Solver_Physics_and_Coupling/combined_SET_B_genesis_mpm_parameters.md
+10.1002/lom3.10120	NO	NO	0	-	00_DISPATCH7_FINDINGS_PASS4_2026-08-14.md; 04_Validation_Literature_and_Citations/2026-08-14_optics-coefficient-followup_Q3-unblock_CURRENT.md
+10.1006/jare.2002.1020	NO	NO	0	-	03_Gaussian_Splatting_and_Reconstruction/2026-08-12_readme_flood-render-realism-optics_CURRENT.md; 10_Claude_Code_Session_Transcripts/Untitled 3.txt
+10.1007/s10035-020-01024-y	NO	NO	0	-	05_Abstraction_Ladder_Framing_and_Positioning/combined_SET_C_kumar_pvwm_reference.md
+10.1007/s10409-022-22053-x	NO	NO	0	-	04_Validation_Literature_and_Citations/2026-08-14_research-artifact_compass-wf-18992794_UNCLEAR.md
+10.1007/s10661-015-4710-4	NO	NO	0	-	03_Gaussian_Splatting_and_Reconstruction/2026-08-12_readme_flood-render-realism-optics_CURRENT.md; 10_Claude_Code_Session_Transcripts/Untitled 3.txt
+10.1007/s11069-022-05526-1	NO	NO	0	-	04_Validation_Literature_and_Citations/Ground-Material Friction and Road-Camber Physics for Flood-Traversability Simulation- A Provenance-Grade Literature Audit.md
+10.1007/s11440-014-0309-0	NO	NO	0	-	05_Abstraction_Ladder_Framing_and_Positioning/combined_SET_C_kumar_pvwm_reference.md
+10.1007/s40571-020-00354-1	NO	NO	0	-	01_Solver_Physics_and_Coupling/combined_SET_B_genesis_mpm_parameters.md
+10.1007/s40571-022-00511-8	YES	NO	3	_inbox/CAN_IT_FORD_PROJECT_INSTRUCTIONS_v8.md	01_Solver_Physics_and_Coupling/2026-08-14_REU-knowledge-findings_unsteady-flow-and-resolution_CURRENT.md; 04_Validation_Literature_and_Citations/Citation Verification- Mesh Resolution, SPH Bulk Modulus, and Dam-Break vs. Steady-Flow Sensitivity in Vehicle Flood-Stability Simulation.md
+10.1016/j.cma.2020.113119	NO	NO	0	-	01_Solver_Physics_and_Coupling/combined_SET_B_genesis_mpm_parameters.md
+10.1016/j.cma.2022.114904	NO	NO	0	-	05_Abstraction_Ladder_Framing_and_Positioning/combined_SET_C_kumar_pvwm_reference.md
+10.1016/j.cma.2022.114965	NO	NO	0	-	00_DISPATCH7_FINDINGS_2026-08-14.md
+10.1016/j.compfluid.2015.04.018	NO	NO	0	-	04_Validation_Literature_and_Citations/Citation Verification- Mesh Resolution, SPH Bulk Modulus, and Dam-Break vs. Steady-Flow Sensitivity in Vehicle Flood-Stability Simulation.md; _BUILD_LOG/sprint3_loose_extract_batch2.txt
+10.1016/j.cpc.2022.108581	NO	NO	0	-	04_Validation_Literature_and_Citations/2026-08-14_research-artifact_compass-wf-18992794_UNCLEAR.md
+10.1016/j.cviu.2026.104699	NO	NO	0	-	05_Abstraction_Ladder_Framing_and_Positioning/combined_SET_C_kumar_pvwm_reference.md
+10.1016/j.enganabound.2021.04.006	NO	NO	0	-	01_Solver_Physics_and_Coupling/combined_SET_B_genesis_mpm_parameters.md
+10.1016/j.enggeo.2014.08.018	NO	NO	0	-	05_Abstraction_Ladder_Framing_and_Positioning/combined_SET_C_kumar_pvwm_reference.md
+10.1016/j.enggeo.2020.105950	NO	NO	0	-	05_Abstraction_Ladder_Framing_and_Positioning/combined_SET_C_kumar_pvwm_reference.md
+10.1016/j.enggeo.2021.106303	NO	NO	0	-	05_Abstraction_Ladder_Framing_and_Positioning/combined_SET_C_kumar_pvwm_reference.md
+10.1016/j.enggeo.2022.106902	NO	NO	0	-	05_Abstraction_Ladder_Framing_and_Positioning/combined_SET_C_kumar_pvwm_reference.md
+10.1016/j.euromechflu.2012.02.002	NO	NO	0	-	01_Solver_Physics_and_Coupling/combined_SET_B_genesis_mpm_parameters.md
+10.1016/j.euromechflu.2022.09.001	NO	NO	0	-	01_Solver_Physics_and_Coupling/combined_SET_B_genesis_mpm_parameters.md
+10.1016/j.jcp.2012.05.005	NO	NO	0	-	01_Solver_Physics_and_Coupling/combined_SET_B_genesis_mpm_parameters.md
+10.1016/j.jcp.2018.10.045	NO	NO	0	-	05_Abstraction_Ladder_Framing_and_Positioning/combined_SET_C_kumar_pvwm_reference.md
+10.1016/j.jcp.2023.111997	NO	NO	0	-	01_Solver_Physics_and_Coupling/combined_SET_B_genesis_mpm_parameters.md
+10.1016/j.jhydrol.2016.01.027	NO	NO	0	-	04_Validation_Literature_and_Citations/Citation Verification- Mesh Resolution, SPH Bulk Modulus, and Dam-Break vs. Steady-Flow Sensitivity in Vehicle Flood-Stability Simulation.md
+10.1016/j.jhydrol.2016.02.009	NO	NO	0	-	_BUILD_LOG/sprint3_loose_extract_batch2.txt
+10.1016/s1001-6058(16	NO	NO	0	-	01_Solver_Physics_and_Coupling/mpm_solver_parameters_B1.md; 09_Claude_and_AI_Tooling_HowTo/2026-08-02_reference_genesis-gh200-solver-parameters_CURRENT.md
+10.1017/s0022112005006415	NO	NO	0	-	05_Abstraction_Ladder_Framing_and_Positioning/combined_SET_C_kumar_pvwm_reference.md
+10.1017/s0022112098002845	NO	NO	0	-	04_Validation_Literature_and_Citations/Ground-Material Friction and Road-Camber Physics for Flood-Traversability Simulation- A Provenance-Grade Literature Audit.md
+10.1029/2011wr010391	NO	NO	0	-	04_Validation_Literature_and_Citations/2026-08-14_optics-coefficient-followup_Q3-unblock_CURRENT.md
+10.1029/2012wr012381	NO	NO	0	-	10_Claude_Code_Session_Transcripts/Untitled 3.txt
+10.1051/epjconf/201921302030	NO	NO	0	-	01_Solver_Physics_and_Coupling/combined_SET_B_genesis_mpm_parameters.md; 01_Solver_Physics_and_Coupling/genesis_boundary_conditions_report.md
+10.1051/matecconf/201927601006	NO	NO	0	-	01_Solver_Physics_and_Coupling/combined_SET_B_genesis_mpm_parameters.md; 01_Solver_Physics_and_Coupling/genesis_boundary_conditions_report.md
+10.1061/9780784408148	NO	NO	0	-	10_Claude_Code_Session_Transcripts/Untitled 3.txt
+10.1061/9780784412947.167	NO	NO	0	-	00_DISPATCH7_FINDINGS_2026-08-14.md; 03_Gaussian_Splatting_and_Reconstruction/2026-08-12_readme_flood-render-realism-optics_CURRENT.md
+10.1061/9780784483701.008	NO	NO	0	-	05_Abstraction_Ladder_Framing_and_Positioning/combined_SET_C_kumar_pvwm_reference.md
+10.1061/9780784485347.034	NO	NO	0	-	02_Vehicle_Geometry_and_Mass/GNN Surrogates for Fluid–Rigid Coupling & NCAC:CCSA Vehicle-Mesh Reuse- A Provenance-Disciplined Assessment.md
+10.1061/taceat.0004872	NO	NO	0	-	10_Claude_Code_Session_Transcripts/Untitled 3.txt
+10.1063/5.0126234	NO	NO	0	-	01_Solver_Physics_and_Coupling/combined_SET_B_genesis_mpm_parameters.md
+10.1063/5.0182801	NO	NO	0	-	02_Vehicle_Geometry_and_Mass/GNN Surrogates for Fluid–Rigid Coupling & NCAC:CCSA Vehicle-Mesh Reuse- A Provenance-Disciplined Assessment.md
+10.1080/00221686.2015.1119209	NO	NO	0	-	01_Solver_Physics_and_Coupling/combined_SET_B_genesis_mpm_parameters.md; 01_Solver_Physics_and_Coupling/mpm_solver_parameters_B1.md
+10.1080/00221686.2017.1410732	NO	NO	0	-	01_Solver_Physics_and_Coupling/combined_SET_B_genesis_mpm_parameters.md
+10.1080/19475705.2017.1388854	NO	NO	0	-	10_Claude_Code_Session_Transcripts/Untitled 3.txt
+10.1080/23311916.2025.2473349	NO	NO	0	-	04_Validation_Literature_and_Citations/Ground-Material Friction and Road-Camber Physics for Flood-Traversability Simulation- A Provenance-Grade Literature Audit.md
+10.1093/bioinformatics/btu829	NO	NO	0	-	04_Validation_Literature_and_Citations/2026-08-10_claude-research-artifact_compass-artifact-wf-98b1f322-17d9-5497-a4ec-bf940706e818-text-markdown_UNCLEAR.md
+10.1098/rspa.2019.0801	NO	NO	0	-	01_Solver_Physics_and_Coupling/combined_SET_B_genesis_mpm_parameters.md; 01_Solver_Physics_and_Coupling/mpm_solver_parameters_B1.md
+10.1098/rspa.2023.0934	NO	NO	0	-	09_Claude_and_AI_Tooling_HowTo/2026-08-02_reference_mpm-technical-deep-reference-incomplete-prompt_STALE.md
+10.1109/acc.2014.6859073	NO	NO	0	-	05_Abstraction_Ladder_Framing_and_Positioning/combined_SET_C_kumar_pvwm_reference.md
+10.1109/cvpr52733.2024.00420	YES	YES	3	paper/canonical_2026-08-02/can_it_ford_references_IEEE.bib	_BUILD_LOG/sprint3_loose_extract_batch2.txt
+10.1109/icra.2018.8461184	NO	NO	0	-	05_Abstraction_Ladder_Framing_and_Positioning/combined_SET_C_kumar_pvwm_reference.md
+10.1109/icra48891.2023.10160856	NO	NO	0	-	05_Abstraction_Ladder_Framing_and_Positioning/combined_SET_C_kumar_pvwm_reference.md
+10.1109/mcse.2022.3155074	YES	NO	4	archive/superseded_docs/SKILL_NEW_mpm-render-pipeline.md	03_Gaussian_Splatting_and_Reconstruction/kumar_mpm_visualization_conventions.md; 06_Infrastructure_TACC_and_Environment/2026-08-02_skill_geoelements-tech-reference-skill_CURRENT.md
+10.1109/tfr.2024.3464369	NO	NO	0	-	05_Abstraction_Ladder_Framing_and_Positioning/combined_SET_C_kumar_pvwm_reference.md
+10.1109/tro.2018.2865891	NO	NO	0	-	05_Abstraction_Ladder_Framing_and_Positioning/combined_SET_C_kumar_pvwm_reference.md
+10.1111/j.1752-1688.1989.tb05404.x	NO	NO	0	-	_BUILD_LOG/sprint3_loose_extract_batch2.txt
+10.1111/j.1752-1688.2001.tb03624.x	NO	NO	0	-	03_Gaussian_Splatting_and_Reconstruction/2026-08-12_readme_flood-render-realism-optics_CURRENT.md; 10_Claude_Code_Session_Transcripts/Untitled 3.txt
+10.1111/jfr3.12048	NO	NO	0	-	_BUILD_LOG/sprint3_loose_extract_batch1.txt
+10.1137/16m1082469	NO	NO	0	-	05_Abstraction_Ladder_Framing_and_Positioning/Task-Conditioned Model Fidelity Selection- Is There Established Prior Art?.md
+10.1145/2185520.2185558	NO	NO	0	-	01_Solver_Physics_and_Coupling/combined_SET_B_genesis_mpm_parameters.md; 04_Validation_Literature_and_Citations/2026-08-14_research-artifact_compass-wf-18992794_UNCLEAR.md
+10.1145/2508363.2508395	NO	NO	0	-	10_Claude_Code_Session_Transcripts/Untitled 3.txt
+10.1145/3284980	NO	NO	0	-	10_Claude_Code_Session_Transcripts/Untitled 3.txt
+10.1145/3386569.3392442	YES	NO	1	_inbox/session_archive/LIVE_SESSION_LOG_2026-07-23.md	01_Solver_Physics_and_Coupling/mpm_solver_parameters_B1.md; 09_Claude_and_AI_Tooling_HowTo/2026-08-02_reference_genesis-gh200-solver-parameters_CURRENT.md
+10.1145/3592433	YES	YES	4	paper/canonical_2026-08-02/can_it_ford_references_IEEE.bib	04_Validation_Literature_and_Citations/2026-07-26_reference-list_poster-references_CURRENT.txt; _BUILD_LOG/sprint1_extraction_raw.txt
+10.1145/3618318	NO	NO	0	-	04_Validation_Literature_and_Citations/2026-08-14_research-artifact_compass-wf-18992794_UNCLEAR.md; 10_Claude_Code_Session_Transcripts/Untitled 3.txt
+10.1145/3624062.3626082	NO	NO	0	-	02_Vehicle_Geometry_and_Mass/GNN Surrogates for Fluid–Rigid Coupling & NCAC:CCSA Vehicle-Mesh Reuse- A Provenance-Disciplined Assessment.md
+10.1146/annurev-fluid-120710-101220	NO	NO	0	-	01_Solver_Physics_and_Coupling/combined_SET_B_genesis_mpm_parameters.md; 01_Solver_Physics_and_Coupling/mpm_solver_parameters_B1.md
+10.1177/02783649231221580	YES	NO	4	_inbox/session_archive/LIVE_SESSION_LOG_2026-07-23.md	04_Validation_Literature_and_Citations/2026-07-07_perplexity-report_citation-verification-report_CURRENT.md; 04_Validation_Literature_and_Citations/2026-08-02_reference_citations-physgaussian-bridge_CURRENT.md
+10.1177/09544070221135908	NO	NO	0	-	04_Validation_Literature_and_Citations/Citation Verification- Mesh Resolution, SPH Bulk Modulus, and Dam-Break vs. Steady-Flow Sensitivity in Vehicle Flood-Stability Simulation.md
+10.13021/g8cc7g	YES	NO	1	vehicle_geometry_research/2010-toyota-yaris-detailed-v2j/2010-toyota-yaris-detailed-v2j/README.md	_BUILD_LOG/step6_extract_batch1.txt
+10.13021/g8f312	YES	NO	1	vehicle_geometry_research/2007-chevrolet-silverado-detailed-v3e/2007-chevrolet-silverado-detailed-v3e/README.md	_BUILD_LOG/step6_extract_batch1.txt
+10.13021/g8js5d	YES	YES	18	paper/can_it_ford_references_IEEE.bib	00_DISPATCH7_FINDINGS_2026-08-14.md; 02_Vehicle_Geometry_and_Mass/2016-10-27_vehicle-mesh-readme_yaris-mesh-readme-NCAC_CURRENT.md
+10.13021/g8sc8k	YES	NO	3	vehicle_geometry_research/2007-chevrolet-silverado-coarse-v3a/2007-chevrolet-silverado-course-v3a/README.md	02_Vehicle_Geometry_and_Mass/2016-12-08_vehicle-mesh-readme_silverado-mesh-readme-CCSA_CURRENT.md
+10.13021/xb7g-8z06	YES	NO	2	_inbox/session_archive/LIVE_SESSION_LOG_2026-07-23.md	02_Vehicle_Geometry_and_Mass/2024-08-06_vehicle-mesh-readme_rogue-mesh-readme-CCSA_CURRENT.md
+10.1371/journal.pone.0029018	NO	NO	0	-	09_Claude_and_AI_Tooling_HowTo/2026-08-02_reference_mpm-technical-deep-reference-incomplete-prompt_STALE.md
+10.15607/rss.2023.xix.025	NO	NO	0	-	05_Abstraction_Ladder_Framing_and_Positioning/combined_SET_C_kumar_pvwm_reference.md
+10.15607/rss.2023.xix.103	NO	NO	0	-	05_Abstraction_Ladder_Framing_and_Positioning/combined_SET_C_kumar_pvwm_reference.md
+10.1680/jgeot.15.lm.005	NO	NO	0	-	05_Abstraction_Ladder_Framing_and_Positioning/combined_SET_C_kumar_pvwm_reference.md
+10.1680/jgeot.21.00399	YES	NO	2	_inbox/CAN_IT_FORD_PROJECT_INSTRUCTIONS_v8.md	05_Abstraction_Ladder_Framing_and_Positioning/Reconstruction-to-Decision Pipelines- Prior-Art Assessment for Sensor-Reconstruction → Physics-Simulation → Validated Feasibility:Safety Verdict.md; 07_Repo_Provenance_and_Corrections/CANONICAL_CORRECTIONS_REGISTER_2026-08-06.md
+10.17603/ds2-0phb-dg64	YES	NO	1	_inbox/session_archive/LIVE_SESSION_LOG_2026-07-23.md	02_Vehicle_Geometry_and_Mass/GNN Surrogates for Fluid–Rigid Coupling & NCAC:CCSA Vehicle-Mesh Reuse- A Provenance-Disciplined Assessment.md
+10.17603/ds2-fzg7-1719	YES	NO	1	_inbox/session_archive/LIVE_SESSION_LOG_2026-07-23.md	02_Vehicle_Geometry_and_Mass/GNN Surrogates for Fluid–Rigid Coupling & NCAC:CCSA Vehicle-Mesh Reuse- A Provenance-Disciplined Assessment.md
+10.17603/ds2-gvvw-gt60	NO	NO	0	-	05_Abstraction_Ladder_Framing_and_Positioning/combined_SET_C_kumar_pvwm_reference.md
+10.17616/r30s94	NO	NO	0	-	04_Validation_Literature_and_Citations/compass_artifact_wf-62a7f8e6-d07d-5c14-b7f0-3400f917afbe_text_markdown.md
+10.17863/cam.8780	NO	NO	0	-	01_Solver_Physics_and_Coupling/mpm_solver_parameters_B1.md; 09_Claude_and_AI_Tooling_HowTo/2026-08-02_reference_genesis-gh200-solver-parameters_CURRENT.md
+10.21105/joss.05025	YES	NO	4	archive/superseded_docs/SKILL_NEW_mpm-render-pipeline.md	02_Vehicle_Geometry_and_Mass/GNN Surrogates for Fluid–Rigid Coupling & NCAC:CCSA Vehicle-Mesh Reuse- A Provenance-Disciplined Assessment.md; 03_Gaussian_Splatting_and_Reconstruction/kumar_mpm_visualization_conventions.md
+10.2312/vmv.20231244	NO	NO	0	-	04_Validation_Literature_and_Citations/2026-08-14_research-artifact_compass-wf-18992794_UNCLEAR.md
+10.23953/cloud.ijarsg.117	NO	NO	0	-	03_Gaussian_Splatting_and_Reconstruction/2026-08-12_readme_flood-render-realism-optics_CURRENT.md; 10_Claude_Code_Session_Transcripts/Untitled 3.txt
+10.2514/1.g001921	NO	NO	0	-	05_Abstraction_Ladder_Framing_and_Positioning/combined_SET_C_kumar_pvwm_reference.md
+10.3389/frobt.2023.1113881	YES	NO	1	_inbox/session_archive/LIVE_SESSION_LOG_2026-07-23.md	04_Validation_Literature_and_Citations/Ground-Material Friction and Road-Camber Physics for Flood-Traversability Simulation- A Provenance-Grade Literature Audit.md
+10.3390/jmse8110905	NO	NO	0	-	01_Solver_Physics_and_Coupling/combined_SET_B_genesis_mpm_parameters.md; 01_Solver_Physics_and_Coupling/genesis_boundary_conditions_report.md
+10.3390/w12041142	NO	NO	0	-	01_Solver_Physics_and_Coupling/combined_SET_B_genesis_mpm_parameters.md; 01_Solver_Physics_and_Coupling/genesis_boundary_conditions_report.md
+10.3390/w13152133	NO	NO	0	-	01_Solver_Physics_and_Coupling/combined_SET_B_genesis_mpm_parameters.md; 01_Solver_Physics_and_Coupling/genesis_boundary_conditions_report.md
+10.3390/w18010080	YES	NO	3	archive/superseded_docs/vehicle_class_comparison_2026-07-21.SUPERSEDED.json	04_Validation_Literature_and_Citations/compass_artifact_wf-045982be-1f56-5c57-9f47-d78a05d7e156_text_markdown.md; compass_artifact_wf-045982be-1f56-5c57-9f47-d78a05d7e156_text_markdown.md
+10.3390/w9090731	YES	NO	1	_inbox/session_archive/LIVE_SESSION_LOG_2026-07-23.md	01_Solver_Physics_and_Coupling/2026-07-07_perplexity-report_genesis-mpm-flood-sim-parameters_CURRENT.md; 01_Solver_Physics_and_Coupling/combined_SET_B_genesis_mpm_parameters.md
+10.3799/dqkx.2012.s1.002	NO	NO	0	-	10_Claude_Code_Session_Transcripts/Untitled 3.txt
+10.3989/scimar.2000.64n4427	NO	NO	0	-	00_DISPATCH7_FINDINGS_2026-08-14.md; 04_Validation_Literature_and_Citations/2026-08-14_optics-coefficient-followup_Q3-unblock_CURRENT.md
+10.4121/c.5353691	NO	NO	0	-	02_Vehicle_Geometry_and_Mass/compass_artifact_wf-b0d2664f-3b65-5bfe-8e3f-f06e77a59f79_text_markdown.md
+10.4271/1999-01-1336	YES	YES	28	paper/can_it_ford_references_IEEE.bib	00_DISPATCH7_FINDINGS_2026-08-14.md; 02_Vehicle_Geometry_and_Mass/VEHICLE_PLY_AND_PARAMETERS_REFERENCE_july19.md
+10.4271/2021-01-0970	YES	NO	2	_inbox/session_archive/LIVE_SESSION_LOG_2026-07-23.md	02_Vehicle_Geometry_and_Mass/vehicle_mpm_coupling_reference.md
+10.48550/arxiv.2507.09005	YES	YES	2	deliverables/refs.bib	03_Gaussian_Splatting_and_Reconstruction/2026-07-07_perplexity-report_physgaussian-bridge-findings_CURRENT.md; 04_Validation_Literature_and_Citations/2026-07-07_perplexity-report_physgaussian-bridge-findings_CURRENT.md
+10.48550/arxiv.2607.00673	NO	NO	0	-	01_Solver_Physics_and_Coupling/2026-08-07_report_upstream-kks32-census-findings_CURRENT.md
+10.5194/piahs-367-170-2015	NO	NO	0	-	00_DISPATCH7_FINDINGS_PASS4_2026-08-14.md; 00_VIDEO_CAPTION_PACK_2026-08-14.md
+10.5220/0010529200620070	NO	NO	0	-	09_Claude_and_AI_Tooling_HowTo/2026-08-02_reference_mpm-technical-deep-reference-incomplete-prompt_STALE.md
+10.5281/zenodo.14833532	NO	NO	0	-	04_Validation_Literature_and_Citations/compass_artifact_wf-62a7f8e6-d07d-5c14-b7f0-3400f917afbe_text_markdown.md
+10.5281/zenodo.160339	NO	NO	0	-	05_Abstraction_Ladder_Framing_and_Positioning/combined_SET_C_kumar_pvwm_reference.md
+10.5281/zenodo.17151262	NO	NO	0	-	04_Validation_Literature_and_Citations/compass_artifact_wf-62a7f8e6-d07d-5c14-b7f0-3400f917afbe_text_markdown.md
