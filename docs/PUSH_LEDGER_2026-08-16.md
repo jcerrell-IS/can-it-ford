@@ -212,24 +212,42 @@ from Josie.**
   draft said "83.5 MB across 18 files"; that was wrong in both set and unit, see
   section 9.
 
-**UPDATED 2026-08-17, and it narrows the reason without removing it.** D2 records
-(`b63201e`) that **Josie reports she has obtained confirmation to use the
-NCAC/CCSA meshes**, with the written artifact pending. D2 recorded that as her
-report rather than as something it verified, and so do I: **I have not seen the
-artifact.** On that basis the CCSA material is no longer the open licence
-question it was when this plan was written.
+### UPDATED 2026-08-17 23:26. THE LICENCE AXIS IS CLOSED. THE DECISION IS NOW ONE AXIS
 
-**The destination must still be private and encrypted**, and the reason is now
-almost entirely the credentials rather than the geometry:
+This plan originally rested on **two** load-bearing objections to shipping the
+full bundle: **unresolved third-party geometry**, and **credential-bearing
+content**. The first is gone.
 
-- `docs/CREDENTIAL_EXPOSURE_2026-08-13.md` has never been published, and D2
-  records that **the credentials themselves are entirely unaffected by the
-  permission and none has been rotated**;
-- D2 also warns that a permission covering CCSA and AR&R **must not be read as
-  covering the Wiley/CIWEM material**, which is a different rights holder.
+**Both as reports, dated, artifact pending. Neither is a confirmation, because
+neither the coordinator nor I has seen the paperwork.**
 
-So: fewer reasons than before, and still enough. Use
-`ALL-refs-MINUS-credentials-*.bundle` for any destination you are less sure of.
+| grant | provenance | strength |
+|---|---|---|
+| NCAC/CCSA meshes, decks, derived hulls, renders, AR&R report and its images | D2 `b63201e`, then `a386704` "permission granted, global, permits republication", verified by me to exist on `claude/r5-exposure` | **a commit I read** |
+| Wiley/CIWEM, the 16 Smith-Modra-Felder files | relayed to me in chat, **no commit SHA given** | **a relay of a report**, two removes from the paperwork |
+
+The Wiley item is worth one line of care: **it was never one of this plan's two
+reasons.** I repeated it earlier only as a carve-out so nobody would read the
+30-of-30 table as fully cleared. Its clearance therefore **does not change my
+reasoning further**, and I am not restating it as though it did. Someone should
+still attach a SHA to it, as was done for the geometry.
+
+### The off-machine decision, now one axis, for Josie
+
+**On the licence axis the full bundle no longer carries an unresolved-rights
+objection.** What remains is the credential axis alone, and the instrument for
+it already exists. So the choice is two lines:
+
+- **`ALL-refs-MINUS-credentials-2251.bundle`** (507,831,989 B, 123 refs,
+  verify OK, controlled by mirror-cloning and confirming
+  `docs/CREDENTIAL_EXPOSURE_2026-08-13.md` is unreachable) is **shippable to an
+  ordinary destination tonight, clear on both axes.**
+- **`ALL-refs-2251.bundle`** (507,891,648 B, 142 refs) needs **either a private
+  encrypted destination, or the credentials dead first.** D2 records the
+  credentials are entirely unaffected by any permission and that **none has been
+  rotated**.
+
+Commands and checksums are below. **Nothing has been copied; that step is yours.**
 
 So the destination must be **private and encrypted**. A plain cloud sync is
 disqualified: this project has already had a 0644 iCloud-synced token as part of
@@ -1056,17 +1074,24 @@ not seen the artifact, so this is a report, not a confirmation.** If it holds, t
 30-branch spread stops being an exposure and becomes merely an inventory, and the
 removal options in D2's analysis never have to be exercised.
 
-**Two things this does not touch**, both from D2 and both worth repeating here so
-nobody reads my 30-of-30 table as fully cleared:
+**UPDATED 23:26, the Wiley carve-out is closed too.** I previously flagged that
+the Wiley/CIWEM material was a different rights holder with no permission
+reported. Josie now reports that grant as well, covering the 16
+Smith-Modra-Felder files. Same standing as the first: **her report, dated,
+artifact pending, not a confirmation**, and this one reached me as a **relay with
+no commit SHA**, so it is one step weaker in provenance than the geometry
+clearance. Attach a SHA to it.
 
-- the **Wiley/CIWEM** material has a different rights holder and **no permission
-  has been reported for it**;
-- the **credentials are entirely unaffected and none has been rotated**, which is
-  why section 1's destination requirement stands.
+**One thing this still does not touch:** the **credentials are entirely
+unaffected by any of these permissions and none has been rotated**, which is why
+section 1's destination requirement survives on that axis alone.
 
-The measurement in this section is unchanged either way: 30 of 30 public branches
-carry all 4 `.zip` and all 14 `.key`. What changed is whether that is a problem,
-and that is D2's and Josie's call, not mine. I have touched none of it.
+**The measurement in this section is unchanged, and this is the line to keep:**
+30 of 30 public branches carry all 4 `.zip` and all 14 `.key`, 160,308,908 B on
+`main` across 18 files. **What changed is whether that is a problem, not what is
+there.** D2's own clearance note cites 160,322,098 B across 30 branches, a
+different scope from my main-only 18-file set rather than a disagreement; neither
+number should be quoted without saying which it is. I have touched none of it.
 
 ---
 

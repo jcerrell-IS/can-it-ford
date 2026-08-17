@@ -122,11 +122,19 @@ its session.**
 | 3 | TACC `$WORK` | blocked on MFA, and those machines already hold the unrotated tokens |
 | 4 | plain cloud sync | **disqualified**: this project has already had an iCloud-synced token exposed |
 
-**Not a neutral backup.** The bundle carries the never-published
-`CREDENTIAL_EXPOSURE` doc, the already-public `FLAG_CREDENTIAL_EXPOSURE` doc, and
-160,308,908 B (160.31 MB, 152.88 MiB) of NCAC/CCSA material. Destination must be
-private and encrypted. `ALL-refs-MINUS-credentials-2207.bundle` exists for the
-cheaper options, verified to exclude the credential branch.
+**UPDATED 2026-08-17 23:26: the licence axis is closed, so this is now a
+one-axis decision.** Permission is reported granted for the NCAC/CCSA material
+(D2 `a386704`, verified to exist) and for the Wiley/CIWEM files (relayed, no SHA
+yet). Both are **Josie's report with the artifact pending, not confirmations**.
+
+That leaves the credential axis alone, and it splits cleanly:
+
+- **`ALL-refs-MINUS-credentials-2251.bundle`** (507,831,989 B, 123 refs,
+  controlled to exclude `CREDENTIAL_EXPOSURE`) is **clear on both axes and
+  shippable to an ordinary destination tonight.** Restore test must print **76**.
+- **`ALL-refs-2251.bundle`** (507,891,648 B, 142 refs) still needs **a private
+  encrypted destination, or the credentials dead first** (none rotated). Restore
+  test must print **77**.
 
     cp .../ALL-refs-2207.bundle /Volumes/<NAME>/canford-2026-08-17/
     shasum -a 256 /Volumes/<NAME>/canford-2026-08-17/ALL-refs-2207.bundle
