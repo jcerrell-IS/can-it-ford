@@ -93,6 +93,32 @@ because I read the file after the grep came back empty.
    the README points at `doi:10.13021/G8JS5D` as the validation reference, which
    is the presentation DOI unit 31 examined.
 
+## 4a. Checked: the acknowledgement is half satisfied, and the fix is one word
+
+I listed "whether the paper acknowledges CCSA and FHWA" as unverified, then
+checked it.
+
+**CCSA/GMU: yes.** `paper/conference_101719.tex:174`: "The vehicle is a single
+watertight triangle mesh derived from the **CCSA/GMU** coarse 2010 Toyota Yaris
+crash-test finite-element deck `\cite{ccsa2010yaris}`, a 378,376-element ...".
+Named in the Methods text and cited.
+
+**FHWA: no.** `FHWA` and `Federal Highway` return **zero** hits across
+`paper/*.tex`, `overleaf_sync/*.tex` and `paper/canonical_2026-08-02/*.tex`.
+
+The README asks for "the CCSA at GMU **and the FHWA**" to be acknowledged. So the
+request is half met, and closing it is a one-word edit to a sentence that already
+exists. **That is the smallest actionable item this dispatch has produced, and it
+is the only one that is an obligation rather than a suggestion**, weak as the
+"we ask" framing is.
+
+**A positive worth recording while I am in that file.** Line 176 reads: "The three
+AR&R stability classes are realized as *mass overrides applied to that same hull*,
+not as three distinct vehicle geometries." **The paper already states the E3
+caveat correctly**, in its own text, unprompted. Unit 15 raised the one-hull
+mass-sweep concern from the coupling catalog; the paper had it right already. I
+should say so as plainly as I say the defects.
+
 ## 5. Status
 
 I did not edit anything outside my scope, and I am not resolving E8.
@@ -105,4 +131,4 @@ UNVERIFIED:
    derived watertight hull is a judgement, not a fact in the file.
 3. Whether these README files being tracked changes E8's exposure analysis is
    D2's call. I established that they are tracked and what they say.
-4. I have not checked whether the paper currently acknowledges CCSA and FHWA.
+4. I read one README of four shipped packages, so the Silverado and detailed-Yaris packages may carry different text. (The paper-acknowledgement question from this slot is now answered in section 4a.)
