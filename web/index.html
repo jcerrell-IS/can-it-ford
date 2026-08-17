@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Can It Ford?</title>
+<meta name="description" content="Autonomous vehicle flood traversability via reconstruct-to-decide world models. NSF SCIPE REU 2026, GeoElements Lab, UT Austin.">
+<style>
+  :root {
+    --bg: #ffffff;
+    --fg: #14181f;
+    --muted: #5a6472;
+    --line: #e3e7ec;
+    --card: #f7f9fb;
+    --accent: #1d4ed8;
+    --warn-bg: #fff8e6;
+    --warn-line: #e8cf8f;
+    --warn-fg: #6b4e00;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0e1117;
+      --fg: #e7ebf0;
+      --muted: #9aa4b2;
+      --line: #232a35;
+      --card: #151b24;
+      --accent: #7aa2f7;
+      --warn-bg: #241f10;
+      --warn-line: #5a4a1e;
+      --warn-fg: #e8cf8f;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--fg);
+    font: 16px/1.6 ui-sans-serif, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 760px; margin: 0 auto; padding: 56px 22px 80px; }
+  header { border-bottom: 1px solid var(--line); padding-bottom: 26px; margin-bottom: 34px; }
+  h1 { font-size: clamp(30px, 6vw, 42px); line-height: 1.15; margin: 0 0 10px; letter-spacing: -0.02em; }
+  .tagline { color: var(--muted); font-size: 17px; margin: 0; }
+  h2 { font-size: 19px; margin: 38px 0 12px; letter-spacing: -0.01em; }
+  p { margin: 0 0 14px; }
+  a { color: var(--accent); }
+  .links { display: flex; flex-wrap: wrap; gap: 10px; margin: 26px 0 0; }
+  .btn {
+    display: inline-block; padding: 10px 16px; border-radius: 8px;
+    border: 1px solid var(--line); background: var(--card);
+    text-decoration: none; color: var(--fg); font-weight: 550; font-size: 15px;
+  }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .grid { border: 1px solid var(--line); border-radius: 10px; overflow: hidden; margin: 16px 0 0; }
+  .row { display: grid; grid-template-columns: 64px 1fr; gap: 0; border-top: 1px solid var(--line); }
+  .row:first-child { border-top: 0; }
+  .lvl { padding: 14px 16px; font-weight: 650; background: var(--card); }
+  .desc { padding: 14px 16px; }
+  .desc small { display: block; color: var(--muted); margin-top: 4px; }
+  .note {
+    background: var(--warn-bg); border: 1px solid var(--warn-line); color: var(--warn-fg);
+    padding: 14px 16px; border-radius: 10px; margin: 26px 0 0; font-size: 15px;
+  }
+  footer { margin-top: 46px; padding-top: 22px; border-top: 1px solid var(--line); color: var(--muted); font-size: 14px; }
+  code { background: var(--card); border: 1px solid var(--line); border-radius: 4px; padding: 1px 5px; font-size: 0.9em; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <h1>Can It Ford?</h1>
+    <p class="tagline">Autonomous vehicle flood traversability via reconstruct-to-decide world models.</p>
+  </header>
+
+  <p>Given a real flooded road, this project asks whether a specific vehicle can ford the crossing, and looks for the simplest physical abstraction that still answers correctly.</p>
+
+  <p>The question is posed as a ladder. Each rung is a cheaper model than the one below it, and the experiment is about finding where a cheaper rung stops being sufficient.</p>
+
+  <div class="grid">
+    <div class="row">
+      <div class="lvl">L0</div>
+      <div class="desc">Static depth threshold
+        <small>Depth alone, following NWS Turn Around Don't Drown guidance.</small>
+      </div>
+    </div>
+    <div class="row">
+      <div class="lvl">L1</div>
+      <div class="desc">AR&amp;R stationary-vehicle stability, joint rule
+        <small>Depth, velocity and the depth-velocity product must all sit inside the limits for the vehicle class. Thresholds differ by class, so the class matters.</small>
+      </div>
+    </div>
+    <div class="row">
+      <div class="lvl">L2</div>
+      <div class="desc">Full physics
+        <small>A warpmpm material point method simulation, weakly compressible water coupled to a rigid vehicle hull. Runs on GPU, not in a browser.</small>
+      </div>
+    </div>
+  </div>
+
+  <h2>Try it</h2>
+  <p>L0 and L1 are pure arithmetic, so they run live. The interactive demo is hosted on Hugging Face Spaces.</p>
+
+  <div class="links">
+    <a class="btn primary" href="https://huggingface.co/spaces/josiecerrell/can-it-ford">Open the live demo</a>
+    <a class="btn" href="https://github.com/jcerrell-IS/can-it-ford">Source on GitHub</a>
+  </div>
+
+  <div class="note">
+    <strong>This is not a safety tool.</strong> The stability criteria used here are the source report's own draft interim figures for stationary vehicles, not an endorsed safety standard. Nothing on this site should be used to decide whether to drive into floodwater. Turn around, don't drown.
+  </div>
+
+  <h2>Status</h2>
+  <p>This is active research, not a finished result. Quantitative L2 findings, including their limitations and the resolution behaviour behind them, are recorded in the repository rather than summarised here, so that any number stays next to the caveats it needs.</p>
+
+  <footer>
+    Josie Cerrell &middot; NSF SCIPE REU 2026 &middot; GeoElements Lab, UT Austin (PI: Krishna Kumar).
+  </footer>
+
+</div>
+</body>
+</html>
