@@ -189,7 +189,15 @@ job_a() {
 # import startup, so its own job would spend more on startup than on physics.
 set -uo pipefail
 export PYTHONPATH=$PYPATH:\${PYTHONPATH:-}
-OUT=$VISTA_ROOT/d4_jobA
+# OUT IS KEYED BY SLURM JOB ID. A fixed output path is a silent-overwrite hazard every
+# time a job is submitted twice, and jobs DO get submitted twice: 917786, 917796 and
+# 917797 all targeted one d4_jobA directory. It did not corrupt anything, because 917796
+# was cancelled at 16:44:27 and every byte in that directory was written from 16:45, but
+# the hazard was real and it lands hardest on A2, whose whole purpose is a ten-repeat
+# spread. Two jobs interleaving rep_*_1..10 into one directory would produce a mixture
+# that looks like a result rather than an error, which is the worst failure shape here.
+# The sbatch wrapper must use %j in its -o and -e paths to match.
+OUT=$VISTA_ROOT/d4_jobA_\${SLURM_JOB_ID:-manual}
 mkdir -p \$OUT
 cd $REPO
 # Job 917786 reported COMPLETED with ExitCode 0:0 while all 23 of its runs failed,
@@ -254,7 +262,7 @@ job_b() {
 # rho_w=998.2 (Table 1) and g=9.81 (engine). NOT 69.3428, the superseded value.
 set -uo pipefail
 export PYTHONPATH=$PYPATH:\${PYTHONPATH:-}
-OUT=$VISTA_ROOT/d4_jobB
+OUT=$VISTA_ROOT/d4_jobB_\${SLURM_JOB_ID:-manual}
 mkdir -p \$OUT
 echo "TIMING_ANCHOR_START=\$(date +%s)"
 $PY $SCENE_DIR/sphere_heave.py --fixed \\
