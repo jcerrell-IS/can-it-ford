@@ -143,7 +143,26 @@ So **the g48 rung carries only 3 particle layers, i.e. 1.5 grid cells** against 
 stated 4 layers and 2 cells. L-3 already flags 4 layers as a resolution limitation. **The
 g48 runs are thinner than the limitation as stated, and g48 is one of the three rungs in
 item 5's grid-convergence study.** Anyone quoting L-3 alongside item 5 should say which
-rung they mean. **[unreviewed]**
+rung they mean.
+
+**VERIFIED 2026-08-17 by a second, independent route.** The counts above came from
+re-deriving the driver's `arange`. I then counted layers **directly from particle z** at
+frame 0, histogramming in h-wide bins (jitter is only +/-0.2h, so the rows are separable).
+**The two methods agree in 17 of 17 runs:**
+
+| grid | layers | **cells = layers*h/dx** |
+|---|---|---|
+| g48 | 3 | **1.500** |
+| g64 | 4 | **2.000** (L-3's stated values) |
+| g96 | 6 | 3.000 |
+| sweepD 0.25 / 0.35 / 0.45 | 3 / 5 / 6 | **1.500** / 2.500 / 3.000 |
+
+**So four of the seventeen canonical runs sit below L-3's stated resolution floor**: the
+three g48 runs and `sweepD_g64_d0p25`, all at 3 layers and 1.5 cells against L-3's 4 and 2.
+L-3 is correct for the canonical grid; it is not a universal statement about the set, and
+it does not say so. That matters because g48 is one of the three rungs in item 5's
+grid-convergence study, so **the coarsest rung of the project's most durable physics result
+is resolved more thinly than the limitation the project already flags as a concern.**
 
 ## 4. Nothing on this branch has been run on a GPU
 
