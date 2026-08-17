@@ -1,5 +1,102 @@
 # D4: the velocity sweep is also a depth sweep, and the labels are not the depths
 
+> ## SECOND REVIEW, 2026-08-17. FIVE BLOCKING ISSUES. Most of this document is withdrawn.
+>
+> **Read this box and section 0 below; treat everything after them as superseded except
+> the one claim listed as surviving.**
+>
+> **W1. The 15% deconfounding is withdrawn, and with it the item-7 reinstatement.** The
+> arithmetic reproduces, nothing else does. On N = 4 the slope's **95% CI is
+> [-5.95, +17.93] pp/m, p = 0.164, and it includes zero**. The fraction-explained is
+> **15% with CI [-15%, +44%]**. Leave-one-out: dropping the 0.25 run collapses it to
+> **3.5%**, and the remaining three points are flat and non-monotone in depth. It was a
+> one-point lever, not a four-point one, and I called it "thin" while treating it as
+> decisive.
+>
+> **W2. My deconfounding lever was structurally invalid, which is worse than being noisy.**
+> Two reasons, both from source. `n_water` moves **1.965x** across the depth sweep
+> (36842 to 72381) and is **constant** across the velocity sweep, so the P-2 denominator is
+> a different variable in each. And `sim_standing.py:160` sets
+> `lim = max(2.2*ext[1], 3.5*ext[0], 6.0*depth)`, which is **9.4217 m for every run**: the
+> domain footprint is depth-independent, the vehicle bbox spans the whole water column, so
+> numerator and denominator scale together and **the fraction is analytically invariant to a
+> uniform depth change**. The depth sweep varies mean depth; the velocity sweep varies the
+> local-to-mean ratio at fixed volume. Those are different perturbations. My caveat 3, that
+> the ranges overlap so "this is interpolation ... that part is sound", is refuted: 3 of 6
+> velocity points sit outside the depth sweep's range on the ratio that matters.
+>
+> Same four runs, same regressor, three answers depending on normalisation: **15%, 70%, or
+> 131%**. I bolded one of them.
+>
+> **W3. My fixed station is not vehicle-free. I swapped one perfect confound for another.**
+> The vehicle's overlap with its own frame-0 footprint collapses monotonically across the
+> sweep, 96.9% at v = 0.5 to **6.6%** at v = 3.0, and
+> **corr(occupancy, reading) = -0.951** against corr(velocity, reading) = +0.971. The
+> statistic under-reads its own initial condition by 18.4% because the driver carves water
+> out of the footprint, and that carve refills as the vehicle leaves. Vehicle-free controls
+> at the same station: **1.132x, non-monotone** (spanwise bands the vehicle never enters)
+> and **1.374x, monotone** (mass-based, full-width slab). **So 1.81x is the largest of four
+> defensible estimates and the monotonicity does not survive removing the vehicle. The
+> honest range is 1.13x to 1.37x.**
+>
+> **W4. The +0.907 is carried by five runs and its stated sign is wrong.** Spearman is
+> +0.735; dropping drift >= 0.6 m gives **r = -0.019**. The bias is **negative in 12 of 17
+> runs**, range -0.085 to +0.169 m, crossing zero near 0.6-0.9 m of drift. So
+> "`local_depth_footprint` reads high in proportion to how far the vehicle travelled" is
+> wrong for the majority: the bias *increases* with drift and *changes sign*, and nothing is
+> proportional. The mechanism is also not the one I gave: the moving window stays
+> vehicle-occluded while the fixed station progressively de-occludes, so the gap is mostly
+> the fixed station rising.
+>
+> **W5. Correlation is the wrong statistic at N = 17 here.** The runs are five overlapping
+> designed sweeps sharing one run, 9 of them from a single 3x3 block. They are not
+> independent draws and both variables are driven by the same latent input momentum.
+>
+> **WHAT SURVIVES, checked against every control including the vehicle-free ones: the runs
+> are not at their labelled depths.** At the vehicle-free station that is **+13% to +28%**
+> of label; the direction and the existence of the mislabelling hold. What does not survive
+> is the size, the monotonicity, the attribution, and the reinstatement.
+>
+> Also corrected: section 3's `+15.6%` becomes **+23.0%** and its `-22.0% to +102%` becomes
+> **-20.0% to +45.2%** at the fixed station, so the `+102%` headline is more than halved by
+> my own correction and I left it standing; `14 of 17` becomes 15 of 17. Section 4's
+> "intervals are uneven" is **backwards**: interval CV is 35.4% for the nominal labels
+> against 11.2% at the fixed station and exactly **0.0%** for the initial fills. My "settle
+> 8" label is wrong throughout: `sim_standing.py:235-237` runs the settle inside `__init__`
+> before recording, so recorded frames 0-7 are post-kick development, not settle.
+
+## 0. The finding that outranks everything I claimed: P-2 does not measure passthrough
+
+This came out of the review and it is worth more than the confound I was chasing
+**[measured, and I have not independently re-derived it]**.
+
+`passthrough_max_frac` is `((w >= veh.min(0)) & (w <= veh.max(0))).all(axis=1).mean()`,
+maximised over frames (`sim_standing.py:463-465`). It counts water inside the vehicle's
+**axis-aligned bounding box**, not inside the hull. Partitioned at each run's own argmax
+frame:
+
+| run | P-2 | actually **in the hull** | box void | transparent-box baseline |
+|---|---|---|---|---|
+| `sweepV_g64_v0p5` | 7.99% | **0.23 pp** | 7.77 | 10.41% |
+| `g64_m1100` | 10.68% | **0.83 pp** | 9.85 | 10.97% |
+| `sweepV_g64_v3p0` | 15.83% | **3.43 pp** | 12.40 | 10.92% |
+
+**78 to 97 percent of P-2 is bounding-box void, not passthrough.** The transparent-box
+baseline, what P-2 reads if the vehicle displaced no water whatsoever, is **10.3 to 11.0%
+for every run**, and `gates.py:147-148` gates at **0.10**. So the P-2 gate sits essentially
+*on* its own null baseline: it is numerically a test of whether the vehicle's bounding prism
+holds more water than an equal prism of undisturbed water, which is a **pile-up condition,
+not a leakage condition**.
+
+That reframes CLAUDE.md item 7's seven failing runs and the "monotone failure rate" much
+more than my depth confound ever did. It also means item 7's phrase "failure rate" is a
+mislabel I propagated uncritically: 7.99% is a metric value, not a rate.
+
+Separately, `sweepV_g64_v0p5`'s P-2 max occurs at **frame 0** and the run never exceeds its
+initial value, while every other run peaks at frame 69-89. The low anchor of the monotone
+trend is an initial condition compared against late-time peaks. On medians over frames 8+
+the span is 6.55 pp, not 7.89 pp.
+
 > ## CORRECTED BY MY OWN FOLLOW-UP, 2026-08-17. The headline drops from 2.6x to 1.8x.
 >
 > Section 5 of the first version flagged that I had not read `local_depth_footprint`'s

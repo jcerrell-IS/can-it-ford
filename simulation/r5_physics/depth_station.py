@@ -10,6 +10,11 @@ This script separates them by recomputing the identical statistic over the vehic
 FRAME-0 footprint, held fixed for the whole run. Same percentile, same floor datum, same
 selection logic; only the window differs.
 
+WITHDRAWN IN PART, review 2026-08-17: this fixed station is NOT vehicle-free. Occupancy of
+the frame-0 footprint collapses 96.9 -&gt; 6.6 percent across the sweep and correlates with the
+reading at -0.951, so it swaps one perfect confound for another. Vehicle-free controls give
+1.132x (non-monotone) and 1.374x (mass-based). Treat 1.81x as an upper bound.
+
 Result on the canonical velocity sweep: the moving window spans 2.58x across v = 0.5 to
 3.0, the fixed station spans 1.81x. Both are monotone in velocity. So the depth confound is
 real but roughly 40 percent smaller than the driver's own diagnostic implies, and the
@@ -25,7 +30,11 @@ import os
 
 import numpy as np
 
-RUNS = "/Users/josie/can-it-ford/renders/yaris_render_s1/_incoming/*/rollout.npz"
+RUNS = os.environ.get(
+    "CANFORD_RUNS",
+    # Data lives in the MAIN checkout, not in this worktree; a checkout of this branch
+    # alone cannot reproduce these numbers. Override with CANFORD_RUNS. Flagged by review.
+    "/Users/josie/can-it-ford/renders/yaris_render_s1/_incoming/*/rollout.npz")
 PCTL = 99.5          # identical to sim_standing.py:470,474
 MIN_SEL = 20         # identical guard
 
@@ -85,7 +94,17 @@ def main():
     b = np.array([r["moving_median"] - r["fixed_median"] for r in rows])
     if len(d) > 2:
         print(f"\n  correlation(drift, moving-minus-fixed bias) = {np.corrcoef(d, b)[0, 1]:+.3f}")
-        print("  i.e. the driver's diagnostic reads high exactly when the vehicle has moved.")
+        print(f"  bias is NEGATIVE in {int((b < 0).sum())}/{len(b)} runs, "
+              f"range {b.min():+.4f} to {b.max():+.4f} m")
+        keep = d < 0.6
+        if keep.sum() > 2:
+            print(f"  with drift >= 0.6 m removed (N={int(keep.sum())}): "
+                  f"r = {np.corrcoef(d[keep], b[keep])[0, 1]:+.3f}")
+        print("  CORRECTED after review 2026-08-17: the Pearson r is carried by ~5 high-drift")
+        print("  runs and the bias CHANGES SIGN near 0.6-0.9 m of drift. The diagnostic does")
+        print("  NOT simply 'read high', and nothing here is proportional. These 17 runs are")
+        print("  also five overlapping designed sweeps sharing a run, not independent draws,")
+        print("  so this r is descriptive co-variation and not an effect size.")
     return 0
 
 

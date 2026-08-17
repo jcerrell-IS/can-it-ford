@@ -32,7 +32,11 @@ import os
 
 import numpy as np
 
-RUNS = "/Users/josie/can-it-ford/renders/yaris_render_s1/_incoming/*/rollout.npz"
+RUNS = os.environ.get(
+    "CANFORD_RUNS",
+    # Data lives in the MAIN checkout, not in this worktree; a checkout of this branch
+    # alone cannot reproduce these numbers. Override with CANFORD_RUNS. Flagged by review.
+    "/Users/josie/can-it-ford/renders/yaris_render_s1/_incoming/*/rollout.npz")
 
 
 def measure(path, settle=8):
