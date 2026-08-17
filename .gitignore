@@ -102,3 +102,8 @@ bridge/_pre_fix_backup_2026-08-05/
 !docs/SESSION_INDEX_2026-07-25_SHIPv3.md
 node_modules/
 render_s2/
+
+# The research corpus index is the retrieval layer for 332 external papers and
+# MUST travel with the repo: every session queries it instead of ~/Downloads,
+# which has returned EPERM and silently produced zero-hit searches.
+!data/research_corpus_index.json
