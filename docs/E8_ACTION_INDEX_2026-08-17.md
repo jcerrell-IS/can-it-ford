@@ -33,7 +33,15 @@ figure cannot be cited from an early commit.
 > | 3 | The 16 Smith-Modra-Felder files | Wiley / CIWEM | **Reported 2026-08-18** |
 >
 > **These are three reports, from three rights holders, and no artifact has been filed
-> or read by me or by the coordinator.** That is not a doubt about any of them; it is
+> or read by me, by the coordinator, or by D3** — three parties, checked separately,
+> none of whom has seen a document.
+>
+> **The settledness illusion, and it is worth naming because it is acting on us right
+> now.** D3 puts it well: *three independent grants arriving inside ninety minutes
+> creates a strong feeling of settledness that the evidence does not support. The
+> evidence is three reports and zero artifacts.* The feeling comes from the **count**,
+> which is not evidence of any of them individually. Each grant needs its own document;
+> none corroborates the others, because they are from three unrelated rights holders. That is not a doubt about any of them; it is
 > what a licence record on a public repo is for. **A second or third report arriving
 > does not upgrade the earlier ones.** File all three at
 > `docs/E8_PERMISSION_<body>_<date>` — a DesignSafe DOI is gated on written permission
