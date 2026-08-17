@@ -81,6 +81,38 @@ match closely enough to assert it.
 
 ---
 
+## FLAG-6. The Overleaf head is unverifiable, and it blocks more than one claim
+
+**Added 2026-08-18, unit 46. This is the highest-value flag in this file, because it
+is not specific to one finding.**
+
+**Nobody can currently verify any statement about what the paper says.** Three
+routes, all closed:
+
+1. **Overleaf MCP connector: authentication failure.** `list_files` dies at
+   `git clone https://git.overleaf.com/6a5958d10484feadf65a934e` with
+   `fatal: Authentication failed`. The token was taken off local disk on 2026-08-08
+   and **never revoked**, so nothing can authenticate.
+2. **Fetched `overleaf/main` ref: 18 days stale.** Present at `6466dfa`, dated
+   **2026-07-31**.
+3. **`92ce4de`, the shared paper state in project memory: older still**, 2026-07-30,
+   and `git merge-base --is-ancestor` shows it and `6466dfa` are **unrelated**.
+
+**How I know the staleness is real rather than assumed:** a positive control.
+`warpmpm` returns **zero** files on `92ce4de`, while project memory records the
+Genesis-to-Warp-MPM relabelling as landed on overleaf/main. A ref missing a change
+known to be landed is behind, full stop.
+
+**What this blocks:** every "the paper does/does not say X" claim in this dispatch,
+including unit 45's, my novelty statement, and the bibliography recommendations in
+`BIB_DOI_SUPPLEMENT`. All of them are verified against copies from 2026-07-30 to
+2026-08-02 only.
+
+**What unblocks it:** a fresh Overleaf Git authentication token from Overleaf
+account settings. **Human action, and it closes a second problem at the same time**:
+project memory records the old token as still valid server-side, so rotating it both
+restores verification and revokes a live credential. One task, two problems.
+
 ## What is NOT blocked
 
 Everything in D1's definition of done is complete and committed. The 28
