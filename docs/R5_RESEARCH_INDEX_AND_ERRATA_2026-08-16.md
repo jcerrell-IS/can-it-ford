@@ -1,9 +1,9 @@
 # R5-D1 index and errata: read this before using any number I produced
 
-Date 2026-08-16, **last updated 2026-08-17 (unit 33)**. Branch
-`claude/r5-research`, **41 commits** ahead of `origin/main` (which sits at
-`1a868f3`), HEAD `b66d875`. **27 documents (4,481 lines), 7 data files.**
-Note that `777567a`, the base my work sits on, is itself unpushed.
+Date 2026-08-16, **last updated 2026-08-17 (unit 38)**. Branch
+`claude/r5-research`, **47 commits** ahead of `origin/main` (`1a868f3`), HEAD
+`4a0c374`. **29 documents, 7 data files.** Note that `777567a`, the base my work
+sits on, is itself unpushed.
 
 ---
 
@@ -73,6 +73,8 @@ rest is grouped by what it answers.
 | `R5_RESEARCH_GNN_AND_MESH_LICENCE_2026-08-17.md` | DataCite answers E8's open question; a third novelty candidate |
 | `R5_RESEARCH_BIB_DOI_SUPPLEMENT_2026-08-17.md` | **four verified DOIs the bibliography lacks**, and its year audit |
 | `R5_RESEARCH_UNCITED_AUDIT_2026-08-17.md` | audit of my own uncited method; it mostly holds |
+| `R5_RESEARCH_HULL_VOLUME_CONFLICT_2026-08-17.md` | **RETRACTED escalation.** Read section 0 only; the rest is kept as a worked error |
+| `R5_RESEARCH_NCAC_README_TERMS_2026-08-17.md` | **for D2**: the NCAC READMEs are tracked, carry an acknowledgement request, and no licence |
 | `R5_RESEARCH_MPM_BOUNDARY_CLUSTER_2026-08-17.md` | **for D4**: the BC anchor and a 2024 paper on the open BC question |
 
 **Novelty and the papers that matter**
@@ -130,6 +132,8 @@ rest is grouped by what it answers.
 | 24 | 137 catalog-absent DOIs in corpus prose, 101 uncited | unit 29 first pass | **109 and 88.** The regex captured bare journal stubs, and `10.1111/jfr3` matched 47 files as a substring; a later over-correction then dropped two real DOIs | unit 29 §1 |
 | 25 | the live bibliography regressed against the 2026-08-02 snapshot | unit 32 hypothesis | **false.** Live has 9 DOIs / 21 entries vs the snapshot's 1 / 15. The snapshot parks one DOI in a `note` field, which live drops entirely | unit 32 §1 |
 | 26 | "the project does not cite its closest comparator" (board wording) | units 7, 27 relays | **too loose.** The *bibliography* does not cite Al-Qadami 2023; the register names Al-Qadami in G5 and G8 as a misattribution hazard | unit 28 §2 |
+| 27 | the hull-density escalation: B5 contradicted, finding unintegrated, D4's P-2 qualified | units 34, 35 | **RETRACTED, 5 of 8 claims wrong.** B5 has a 2nd sentence I never read and AGREES; `genus` 33 and `mesh2sdf` 337 hits, not zero; `MESH_RECONCILIATION:196,201` already resolves 1609/2337; my "independent" 31.2% shares its numerator with item 4(b)'s 33.2%; and `5dbe04d` already measured in-hull water at median 6.50% rising 12x. **Survives: genus 222, which I finally measured myself** | unit 36, physics-skeptic |
+| 28 | "no Mac interpreter here has numpy", my reason for not verifying | unit 34 §7 | **false.** `~/Downloads/vehicle_meshes/mesh_venv` has trimesh 4.12.2 and numpy 2.5.1, documented at `MESH_RECONCILIATION_2026-08-08.md:39`. Verifying was a ten-minute job; I escalated instead of measuring | unit 36 |
 
 **EVERY ORIGINAL IS NOW MARKED IN PLACE, unit 23.** This index only helps a
 reader who opens *it*. D4 read unit 3 directly and picked up a stale claim
