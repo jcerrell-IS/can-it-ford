@@ -19,7 +19,27 @@ this document draws:
 > information and may be distributed or copied" statement, whereas
 > **CCSA-hosted** copies [do not] ... **Operative rule, unchanged and still
 > conservative: do not commit any derived NCAC/CCSA geometry to the public repo,
-> and do not include it in a DesignSafe DOI, without written permission.**
+> and do not include it in a DesignSafe DOI, without written permission or a
+> confirmed licence.**
+
+> ### CORRECTED 2026-08-17 (unit 43). FOR D2, THIS CHANGES WHAT CLEARS E8.
+>
+> **The clause "or a confirmed licence" was missing from this quotation until now,
+> and I had closed the sentence with a full stop as though it ended there.** The
+> register offers **two** routes to clearance, not one: written permission **or** a
+> confirmed licence. My truncated version presented permission as the only route.
+>
+> **Why this matters operationally:** D2 is working E8. Under my version the only
+> path is obtaining written permission from CCSA/GMU. Under the register's actual
+> rule, **establishing a confirmed licence clears it equally**, which is a different
+> and possibly cheaper line of enquiry given that unit 37 established all four
+> shipped READMEs carry no licence text at all (a negative that is itself evidence
+> about which route is available).
+>
+> Found by a systematic audit of all 81 block quotations across my 32 documents,
+> run after I made the same class of error twice (unit 36, unit 40). **This is the
+> third instance**, and unlike the first two it was affecting a sibling's live work
+> rather than only my own conclusions.
 
 GNS and Choi are also known: 5 and 2 register hits, 4 each in CLAUDE.md. None of
 that is new.
