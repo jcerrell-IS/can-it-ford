@@ -22,7 +22,7 @@ adversarial review or was never challenged.
 |---|---|---|
 | A1 | **The Elicit CSV holds 41 unique papers across 42 rows** (re-derived 2026-08-18, both reproduce). Yields **CORRECTED**: **9/41** report a depth-velocity threshold (was 10, wrong), **9/41** a friction coefficient (confirmed). The 9 threshold rows are enumerated in §A1a so the count can be audited, not trusted. Always give the denominator | `ELICIT_AND_CATALOG_MINE`, §A1a |
 | A2 | **CORRECTED 2026-08-18, this row was WRONG.** It read "only 3 are actually `\cite`d". True figures: **11 distinct keys** cited in `paper/conference_101719.tex`, **14** in `canonical_2026-08-02/conference_101719_1.tex`, and the **compiled PDF renders 14 references with 51 inline citations**. The "3" belonged to erratum 4, which was scoped to the **8 catalogued DOIs**; I dropped the qualifier when consolidating. See §A2a | `MPM_FOUNDATIONS_UNCITED` §A2a |
-| A3 | **Catalog recall is roughly 50%**, measured three independent ways. This is the dispatch's most robust quantitative finding | `ELICIT_AND_CATALOG_MINE`, `CENSUS_ATTEMPT` |
+| A3 | **Catalog recall is roughly 50%**, measured **TWO** independent ways, not three: **16/32** (loose class, 1 hop) and **7/14** (strict class, 2 hops). **CORRECTED 2026-08-18**: I had counted `7/15` and `7/14` as separate measurements; they are **one measurement with a borderline case resolved**. Still the dispatch's most robust finding, because two genuinely different class definitions at different depths both land on exactly one half | `CENSUS_ATTEMPT`, `AUTHOR_SWEEP` §4, §A3a |
 | A4 | **The citation-graph fixpoint is NOT achievable.** Topic-bounded traversal from 32 seeds grew 32 -> 92 -> 174 and touched 3,575 works by hop 2. Independently re-confirmed 2026-08-17: mean branching **82.2**, hop-3 upper bound **3.3M** nodes. **Any count from this literature is a floor, and that is now measured rather than assumed** | `CENSUS_ATTEMPT`, section D below |
 | A5 | **Scale reporting needs two labels, not one.** "State the model scale" is insufficient; a `value_basis` label is required or model-scale values get read as full-scale. Row 7 is **1:24**, and its threshold is **~118x** below the others under Froude | `THRESHOLD_TABLE`, erratum 2, 14 |
 | A6 | **Four bibliography DOIs verified and supplied**, plus one year error (`ccsa2010yaris`, bib 2010 vs DataCite 2016). The year audit found the error **isolated**, 8 of 9 correct | `BIB_DOI_SUPPLEMENT` |
@@ -32,6 +32,50 @@ adversarial review or was never challenged.
 | A10 | **Hull geometry, measured directly:** volume **3.5427387900160743 m3**, watertight, `body_count` 1, euler -442 so **genus 222**. `1100/3.542739 = 310.4942`, reproducing CLAUDE.md's canonical 310.494 | `FLOODFILL_MEASURED` |
 | A11 | **The audit's flood-fill volumes are not reproducible as values.** 4.5628 does not reproduce; the comparable quantity is the **sealed cavity**, where two implementations disagree **2.1x** (1.020 vs 2.161 m3); the operation is **bistable and grid-phase fragile** near 22.2 mm | `FLOODFILL_MEASURED` |
 | A12 | **L-2 stands as written.** I proposed amending it and then **refuted my own amendment** from the AR&R primary source: the 3.0 m/s cap exists for human stability and occupant egress, so it is administrative, not vehicle-derived | `PROPOSED_AMENDMENTS`, erratum 3 |
+
+### A3a. Two ways, not three, and the audit that found it
+
+**The source document says so in its own words.** `AUTHOR_SWEEP` section 4:
+
+> "So the recall figure now stands at 16/32 in unit 4's loose class at one hop and
+> 7/14 in unit 5's strict class at two hops. **Two different class definitions, two
+> different depths, and both give exactly one half.**"
+
+I turned that into "three independent ways" by counting `7/15` and `7/14` as
+separate results. They are the same seven papers over a denominator that changed
+when a borderline case was excluded, which is erratum 10. **One source cited twice
+is not two sources** is this project's own rule, and I broke it in the row that
+calls itself the most robust finding.
+
+**The finding is undamaged, and arguably better stated now:** two class definitions
+that differ in scope *and* in traversal depth both return exactly one half.
+
+### A0. Result of auditing every safe-to-cite row
+
+Prompted by unit 50, which found A2 false by accident. **Three of twelve rows were
+wrong. All three were mine, introduced during consolidation, and none was a defect
+in the underlying unit.**
+
+| row | verdict |
+|---|---|
+| A1 | **WRONG**: threshold yield 10 -> **9**. Friction 9 confirmed |
+| A2 | **WRONG**: "only 3 cited" -> **11 / 14 / 14 rendered**; dropped erratum 4's "catalogued DOIs" qualifier |
+| A3 | **WRONG**: "three independent ways" -> **two** |
+| A4 | holds; re-measured independently in unit 41 |
+| A5 | holds; row 7 is 1:24 and the factor is **117.58**, so "~118x" is fair |
+| A6 | holds; 8/9 years match, 4 of 4 DOIs verified |
+| A7 | holds; re-verified 2026-08-18 in unit 48 |
+| A8, A9 | already corrected in unit 42 |
+| A10 | holds; measured twice, `body_count` 1 |
+| A11 | holds; survived adversarial review |
+| A12 | holds; refuted from the AR&R primary source |
+
+**The common mechanism in all three failures is compression.** Each underlying unit
+was correct; each became false when I shortened it into a one-line row and dropped
+a qualifier, a scope, or a distinction. **A summary document is not a safe
+restatement of work that has already been checked. It is new writing, and it needs
+checking as new writing.** My verification passes checked errata numbering and
+manifest coverage, which is structure, and never re-derived a single claim.
 
 ### A1a. The threshold count, enumerated
 
