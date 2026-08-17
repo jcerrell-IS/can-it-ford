@@ -132,3 +132,60 @@ The only robust statement is directional: every window's estimate lies well belo
 target, so there is no evidence the decay is heading toward 69.218 N.
 
 **UNREVIEWED**, including every number in this section.
+
+## 7. The 600-frame run: the decay is the surface, and a stable +61% remains
+
+Run on idev **917886**, node c642-032, 600 frames, `RC_B=0`, **423 s wall clock** against
+13:55 for the 200-frame run: the 32x64 mesh and the SDF cache did what they were meant to,
+and the cache is now on disk at 22.3 MB.
+
+Still **NOT GRADEABLE** on the nominal criterion, but converging: the decay slope fell from
+**-0.128 N/frame at 200 frames to -0.0183 at 600**, a factor of 7, still 10.30 sigma from
+stationary.
+
+**The free-surface instrumentation earns itself here** **[derived]**:
+
+| frames | surface (m) | drop (cm) | submerged (m) | Fz (N) | analytic @ surface (N) | ratio |
+|---|---|---|---|---|---|---|
+| 0-99 | 0.54064 | 3.44 | 0.11564 | 71.452 | 45.946 | 1.5908 |
+| 100-199 | 0.51999 | 5.50 | 0.09499 | 53.591 | 32.872 | 1.6308 |
+| 200-299 | 0.51081 | 6.42 | 0.08581 | 45.941 | 27.502 | 1.6707 |
+| 300-399 | 0.50702 | 6.80 | 0.08202 | 40.989 | 25.385 | 1.6145 |
+| 400-499 | 0.50474 | 7.03 | 0.07974 | 38.879 | 24.145 | 1.6102 |
+| 500-599 | 0.50338 | 7.16 | 0.07838 | 37.418 | 23.411 | 1.5983 |
+
+**`Fz` falls by a factor of 1.9 across the run while the ratio against the measured
+surface stays flat.** Retained half (frames 300-599, N=300): ratio mean **1.6077**, range
+[1.5771, 1.6778], spread 0.1007, slope -9.6e-05 per frame. **The decay in the reaction is
+almost entirely the falling surface**, which is what the instrumentation was built to
+separate and what job 917909 could not.
+
+The surface fell **7.23 cm** by the end, not the 3.09 cm measured at 200 frames. It was
+still falling.
+
+### 7.1 What remains, and the two readings I cannot yet separate
+
+A stable **+60.8%** of the closed form at the measured surface. Two candidates, and this
+document does not choose between them:
+
+1. **The coupling over-predicts buoyancy** by roughly 60% on a shallow spherical cap.
+2. **`measure_surface()` under-reads the surface.** It takes the 99th percentile outside a
+   2R annulus. If the water has spread outward past the slip planes, particles sitting in
+   the margin would pull the percentile down, making the cap too small and the ratio too
+   large.
+
+Reading 2 has direct arithmetic support and should be tested first. A 7.2 cm drop over the
+nominal 1.0 x 1.0 m tank is **14.4% of a 0.5 m3 column**, against about 1.5% available
+from EOS compression. Volume has to go somewhere. The slip planes sit at 0.1 m while the
+domain runs to 1.2 m, so there is a 0.1 m margin outside them on every side; water
+spreading into it conserves volume while lowering the column. Spreading to the full
+1.2 x 1.2 m footprint would give 0.5/1.44 = 0.347 m, a **15.3 cm** drop, and 7.2 cm is
+consistent with partial spreading.
+
+**Next test, and it is cheap and Mac-side if the particle positions are dumped:** count
+water particles outside the slip-plane footprint. If a material fraction sits in the
+margin, reading 2 is confirmed and the scene needs the walls fixed, not the coupling.
+Until that is done, **the +60.8% must not be reported as a coupling error**.
+
+**UNREVIEWED**, every number in this section, settle 8 constructor-only, trimesh 4.12.2,
+engine 627367e.
