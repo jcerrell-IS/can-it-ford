@@ -1,8 +1,48 @@
 # R5-D1 index and errata: read this before using any number I produced
 
-Date 2026-08-16, **last updated 2026-08-17**. Branch `claude/r5-research`,
-**32 commits** from `777567a` to `b130718`. **21 documents (3,707 lines), 6 data
-files.**
+Date 2026-08-16, **last updated 2026-08-17 (unit 33)**. Branch
+`claude/r5-research`, **41 commits** ahead of `origin/main` (which sits at
+`1a868f3`), HEAD `b66d875`. **27 documents (4,481 lines), 7 data files.**
+Note that `777567a`, the base my work sits on, is itself unpushed.
+
+---
+
+## THE SHORT VERSION: eight things that change what you do
+
+Everything below this section is evidence. This is the part that is actionable.
+
+1. **The pipeline shape is prior art and the register already says so** (G12,
+   G13). Do not claim it. Position as a domain transfer.
+2. **Every novelty axis I proposed got occupied**: Al-Qadami 2023 takes full scale
+   and stability thresholds, Azhar 2023 takes the particle method, He 2026 takes
+   solver validation. **The paper cites none of the first two.** Three orphan
+   candidates survive, and the project already has code for two:
+   reconstruction-to-collider, **viscoplastic mud** (`bingham_cfl_crossover.py`
+   plus a branch on origin), and **GNN free rigid-body coupling** (open
+   hypothesis, no measured speedup anywhere).
+3. **L-2 needs no amendment.** I proposed one and the AR&R primary source killed
+   it: the 3.0 m/s cap is human-derived, for occupant egress. Attach Cox, Shand
+   and Blacka (2010) as its source and stop there. **L-7 does need amending**, see
+   `PROPOSED_AMENDMENTS` section 1 as narrowed by 1a.
+4. **No catalog-based or keyword search can bound this literature.** Measured
+   three independent ways: citation graph, author clusters, and the corpus's own
+   prose. Any "N fording simulations exist" number is a floor.
+5. **Never quote a depth-velocity threshold without its model scale AND its value
+   basis.** Six scales are in play, `lambda^1.5` spans a factor of 282, and
+   Azhar 2026's "1:14" is a validation scale not a value scale. Use the rebuilt
+   `data/r5_citation_thresholds.tsv`, never a prose table.
+6. **FM 90-13's 1.5 m/s vehicle fording limit is in neither canonical file**, only
+   a non-canonical inbox note. It is the closest vehicle-derived velocity
+   criterion found, at half the AR&R cap. Record it; I have not read the manual.
+7. **Bibliography, all verified, latent not live**: add four DOIs
+   (`kerbl20233dgs`, `xie2023physgaussian`, `alqadami2022`, `thorpe2026pvwm`), fix
+   `ccsa2010yaris` 2010 to 2016, and mind that adding PhysGaussian's CVPR DOI
+   forces its year to 2024. The three entries actually cited are sound.
+8. **FLAG-1 is one browser-minute of work** and unblocks the Nihei
+   rolling-resistance numbers, which are currently provisional. It is gold OA
+   CC-BY; only bot filtering blocks automation.
+
+---
 
 **Why this file exists.** I corrected myself more than twenty times across
 twenty-five units.
@@ -27,6 +67,12 @@ rest is grouped by what it answers.
 | `R5_RESEARCH_TWO_MORE_CATALOGS_2026-08-17.md` | "not a common Yaris hull with relabelled mass"; P-2 has no anchorable threshold |
 | `R5_RESEARCH_REMAINING_TEN_CATALOGS_2026-08-17.md` | the other ten summaries. **Its section 1 is RETIRED**, see erratum 19 |
 | `R5_RESEARCH_COUPLING_TABLE_AND_P2_UPDATE_2026-08-17.md` | the coupling table; the GCI gate's sources are already documented (a negative) |
+| `R5_RESEARCH_PROSE_CORPUS_SWEEP_2026-08-17.md` | 109 DOIs in corpus prose that no catalog holds, 88 uncited |
+| `R5_RESEARCH_PRIOR_ART_ALREADY_INTEGRATED_2026-08-17.md` | the prior-art assessment; the register already had it as G12/G13 |
+| `R5_RESEARCH_FRICTION_AUDIT_AND_MUD_GAP_2026-08-17.md` | friction is known; **the viscoplastic-mud gap is not**, and we have code |
+| `R5_RESEARCH_GNN_AND_MESH_LICENCE_2026-08-17.md` | DataCite answers E8's open question; a third novelty candidate |
+| `R5_RESEARCH_BIB_DOI_SUPPLEMENT_2026-08-17.md` | **four verified DOIs the bibliography lacks**, and its year audit |
+| `R5_RESEARCH_UNCITED_AUDIT_2026-08-17.md` | audit of my own uncited method; it mostly holds |
 | `R5_RESEARCH_MPM_BOUNDARY_CLUSTER_2026-08-17.md` | **for D4**: the BC anchor and a 2024 paper on the open BC question |
 
 **Novelty and the papers that matter**
@@ -81,6 +127,9 @@ rest is grouped by what it answers.
 | 21 | "model-scale thresholds are non-conservative", unqualified | unit 12 §1b | **mode-dependent.** True for sliding, **false for floating**: Kramer finds prototype flotation depths *higher* than model. Our dominant mode is SLIDE, the unsafe-erring side | unit 20 §2 |
 | 22 | g64_m1100 "fails gate P-2", disclosed as a leakage defect | unit 8 §2 | **not leakage.** P-2 counts water in the vehicle's axis-aligned **bounding box**, and the hull fills only 33.2% of it. It is a pile-up test | D4 `26971c0`, unit 24 |
 | 23 | P-2's transparent-box null baseline is 10.3 to 11.0% | unit 24 | **11.30 to 14.90%**, so the null **exceeds** the 0.10 gate in **17 of 17** runs. D4 re-derived their own figure upward | D4 `5dbe04d`, unit 25 |
+| 24 | 137 catalog-absent DOIs in corpus prose, 101 uncited | unit 29 first pass | **109 and 88.** The regex captured bare journal stubs, and `10.1111/jfr3` matched 47 files as a substring; a later over-correction then dropped two real DOIs | unit 29 §1 |
+| 25 | the live bibliography regressed against the 2026-08-02 snapshot | unit 32 hypothesis | **false.** Live has 9 DOIs / 21 entries vs the snapshot's 1 / 15. The snapshot parks one DOI in a `note` field, which live drops entirely | unit 32 §1 |
+| 26 | "the project does not cite its closest comparator" (board wording) | units 7, 27 relays | **too loose.** The *bibliography* does not cite Al-Qadami 2023; the register names Al-Qadami in G5 and G8 as a misattribution hazard | unit 28 §2 |
 
 **EVERY ORIGINAL IS NOW MARKED IN PLACE, unit 23.** This index only helps a
 reader who opens *it*. D4 read unit 3 directly and picked up a stale claim
