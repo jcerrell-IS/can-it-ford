@@ -243,6 +243,40 @@ reasons.** I repeated it earlier only as a carve-out so nobody would read the
 30-of-30 table as fully cleared. Its clearance therefore **does not change my
 reasoning further**, and I am not restating it as though it did.
 
+### UPDATED 00:44: credentials are DEFERRED, which settles the choice
+
+**read, D2 `1b67080`.** Two things landed, and only one changes my reasoning.
+
+**Does not change it:** Josie reports **blanket** permission, "everything is
+permitted and nothing prohibited", extending to Wiley/CIWEM and the UNSW WRL
+figures. The licence axis was already closed in this plan, so this confirms it
+rather than moving it. **I am adopting D2's precision on how to say it:** outside
+this repo the accurate form is **"the project reports permission from each rights
+holder"**, not "this material is unrestricted". Four bodies granted separately
+(CCSA/GMU, Engineers Australia, Wiley/CIWEM, UNSW WRL), all four as reports with
+artifacts pending. A third party redistributing CCSA material on the strength of
+a summary line in this repo would be relying on something no licence file
+supports.
+
+**Does change it, and it is the deciding fact:** **credentials are DEFERRED, not
+resolved.** 12 named, **0 rotated**, deprioritised by Josie, which is hers to
+decide. D2 marked it deferred rather than closed precisely so a later reader can
+tell which it was.
+
+**So the "or" in my two-line choice has collapsed.** This plan offered the full
+bundle on either of two conditions: a private encrypted destination, **or the
+credentials dead first**. The second is now explicitly not happening in the near
+term. That leaves:
+
+| | |
+|---|---|
+| **`ALL-refs-MINUS-credentials-*.bundle`** | **the practical default.** Clear on the licence axis, and it does not carry the never-published exposure document. Ships anywhere. |
+| `ALL-refs-*.bundle` | **private encrypted destination only**, and that is now its sole route rather than one of two. |
+
+Nothing about this is an argument for rotating tonight. It is an argument for
+using the MINUS-credentials variant, which exists exactly so a credential
+decision never has to gate a backup.
+
 ### The off-machine decision, now one axis, for Josie
 
 **On the licence axis the full bundle no longer carries an unresolved-rights
@@ -788,6 +822,41 @@ find in a year.
 `claude/add-ci-checks` with both files. `.claude/settings.json` and `.mcp.json`
 remain uncommitted there and are a separate unit of work, unrelated to this
 collision.
+
+### Merge target: COMPUTE, do not quote
+
+**DO NOT QUOTE A FIXED TARGET. COMPUTE IT.** Side A is under active development
+and its register has moved three times in two hours: **760 -> 803 -> 848**, taking
+the target with it, **1559 -> 1602 -> 1647**. Any number written into a document
+here is stale within the hour, and a stale target is worse than none because it
+will be checked against confidently.
+
+**The invariant, which has held through every move:** side A's change is a single
+append hunk past the end of the merge base (`@@ -656,0 +657,N @@`, one hunk, every
+time), and side B has not moved. So:
+
+    target = B + (A - 656)
+
+Compute it immediately before merging, not from this page:
+
+    R=/Users/josie/can-it-ford
+    F=docs/CANONICAL_CORRECTIONS_REGISTER_2026-08-06.md
+    A=$(git -C $R show claude/add-ci-checks:$F            | wc -l)
+    B=$(git -C $R show claude/fork-register-reconcile:$F  | wc -l)
+    echo "expect $(( B + A - 656 ))   sideA-vanished=$B   sideB-vanished=$A"
+
+**Verify the invariant too**, because the formula depends on it. This must print
+**1**, a single hunk starting at 656:
+
+    git -C $R diff --unified=0 1a868f3:$F claude/add-ci-checks:$F | grep -c '^@@'
+
+If it ever prints more than 1, side A is no longer a pure append and the
+arithmetic does not apply: run `git merge-file` on the three blobs and read the
+result instead.
+
+Last measured 00:45: A=848, B=1455, **target 1647**, `merge-file` exit 0, 0
+conflict markers, 1647 lines. The watcher computes this on every poll and reports
+the current target, so trust its message over this paragraph.
 
 ### Merge arithmetic RE-DERIVED from committed objects, 23:40
 

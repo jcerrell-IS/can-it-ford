@@ -97,9 +97,15 @@ Never `--force` a branch checked out elsewhere.
 
 **Step 2b, merge the SHA `790d999`, never the branch name. Then confirm by count and by content:**
 
-    git show claude/fork-register-reconcile:docs/CANONICAL_CORRECTIONS_REGISTER_2026-08-06.md | wc -l
-    # MUST be 1602.  1455 = side A vanished.  803 = side B vanished.
-    # Neither raises a conflict marker, which is why the count is the test.
+    # COMPUTE the target first: side A moves, and it has moved three times tonight
+    R=/Users/josie/can-it-ford
+    F=docs/CANONICAL_CORRECTIONS_REGISTER_2026-08-06.md
+    A=$(git -C $R show claude/add-ci-checks:$F           | wc -l)
+    B=$(git -C $R show claude/fork-register-reconcile:$F | wc -l)
+    echo "expect $(( B + A - 656 ))   sideA-vanished=$B   sideB-vanished=$A"
+    # then after merging, check the result against that number.
+    # Neither failure raises a conflict marker, which is why the count is the test.
+    # At 00:45 this was: expect 1647, sideA-vanished=1455, sideB-vanished=848.
 
 A watchdog now guards the **merge** rather than side A: it alerts if side B's
 register leaves 1455 and says whether it landed on its computed target or on a
@@ -129,9 +135,14 @@ That leaves the credential axis alone, and it splits cleanly:
 - **`ALL-refs-MINUS-credentials-2251.bundle`** (507,831,989 B, 123 refs,
   controlled to exclude `CREDENTIAL_EXPOSURE`) is **clear on both axes and
   shippable to an ordinary destination tonight.** Restore test must print **76**.
-- **`ALL-refs-2251.bundle`** (507,891,648 B, 142 refs) still needs **a private
-  encrypted destination, or the credentials dead first** (none rotated). Restore
-  test must print **77**.
+- **`ALL-refs-2251.bundle`** (507,891,648 B, 142 refs) needs **a private
+  encrypted destination. That is now its ONLY route**: credentials are reported
+  DEFERRED, not resolved (12 named, 0 rotated), so "the credentials dead first"
+  is not a near-term option. Restore test must print **77**.
+
+**Recommendation, since the choice has collapsed to one:** use the
+MINUS-credentials variant. It exists so a credential decision never has to gate
+a backup.
 
     cp .../ALL-refs-2251.bundle /Volumes/<NAME>/canford-2026-08-17/
     shasum -a 256 /Volumes/<NAME>/canford-2026-08-17/ALL-refs-2251.bundle
