@@ -1,18 +1,57 @@
 name: Sync to Hugging Face Space
+
+# Pushes ONLY hf_space/ to the Space, not the whole repository.
+#
+# The previous version used huggingface/hub-sync, which mirrors the entire
+# GitHub repo. That is wrong here for two reasons: the repo is 407 MB across
+# 849 files, and it contains the NCAC LS-DYNA vehicle models (40 MB each)
+# whose redistribution licence is still unresolved (register E8). The Space
+# needs three files totalling about 4 KB.
+#
+# The paths filter matters as much as the fix: the old workflow ran on EVERY
+# push to main and emailed a failure each time, even for commits that never
+# touched the demo.
+
 on:
   push:
-    branches:
-      - main
+    branches: [main]
+    paths:
+      - 'hf_space/**'
+      - '.github/workflows/sync-to-hub.yml'
+  workflow_dispatch:
+
 jobs:
   sync:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
-          fetch-depth: 0
-      - uses: huggingface/hub-sync@v0.1.0
+          # Only fetch hf_space/. A full checkout drags in ~400 MB of meshes
+          # and mp4s that this job never reads.
+          sparse-checkout: hf_space
+          sparse-checkout-cone-mode: false
+
+      - uses: actions/setup-python@v5
         with:
-          github_repo_id: jcerrell-IS/can-it-ford
-          huggingface_repo_id: josiecerrell/can-it-ford
-          repo_type: space
-          hf_token: ${{ secrets.HF_TOKEN }}
+          python-version: '3.12'
+
+      - name: Install Hugging Face CLI
+        run: pip install --upgrade "huggingface_hub[cli]"
+
+      - name: Upload hf_space/ to the Space
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          if [ -z "$HF_TOKEN" ]; then
+            echo "::error::HF_TOKEN secret is empty or unset."
+            echo "Create a WRITE token at https://huggingface.co/settings/tokens"
+            echo "then: gh secret set HF_TOKEN -R jcerrell-IS/can-it-ford"
+            exit 1
+          fi
+          hf upload josiecerrell/can-it-ford ./hf_space . \
+            --repo-type space \
+            --exclude "__pycache__/*" "*.pyc" \
+            --commit-message "Sync from ${GITHUB_SHA:0:7}"
+
+      - name: Report
+        run: echo "Space updated -> https://huggingface.co/spaces/josiecerrell/can-it-ford"
