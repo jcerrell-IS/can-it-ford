@@ -846,3 +846,41 @@ J18. **THE g128 VELOCITY SWEEP: EVERY VERDICT HOLDS, AND PASSTHROUGH GETS WORSE.
 
      Artifacts at `data/g128_sweeps_2026-08-18/`. The three `sweepD_g128_*` depth
      cases from the same runner are NOT yet classified here.
+
+J19. **THE g128 DEPTH SWEEP COMPLETES AN 11-CASE GRID-INVARIANCE RESULT, AND
+     REFINEMENT INTRODUCES A NEW P-2 FAILURE.** Same run as J18, `run_sweep.sh 128`,
+     Vista c642-032, job 917886.
+
+     | depth (m) | g64 margin | g128 margin | g64 verdict | g128 verdict | g128 layers |
+     |-----------|-----------:|------------:|-------------|--------------|------------:|
+     | 0.25      |         22 |          17 | SLIDE       | SLIDE        |           7 |
+     | 0.35      |         56 |          40 | SLIDE       | SLIDE        |          10 |
+     | 0.45      |         49 |          44 | SLIDE       | SLIDE        |          12 |
+
+     **THE COMPLETE g128 PICTURE IS NOW 11 CASES**, three masses (J17), five
+     velocities (J18) and three depths here. **Every one of the 11 verdicts is
+     identical to its g64 counterpart**, including the single STUCK at v=0.5. The
+     binary verdict is therefore grid-invariant from g64 to g128 across the entire
+     canonical design, which is a materially stronger statement than the
+     three-grid, verdict-only claim of August 4 item 5. `margin_frames` remains
+     non-convergent in all three families.
+
+     **REFINEMENT CREATES A P-2 FAILURE THAT DID NOT EXIST AT g64.**
+
+     | depth | g64 P-2 | g128 P-2 | delta | newly failing |
+     |-------|--------:|---------:|------:|---------------|
+     | 0.25  |  0.0968 |   0.1051 | +0.0083 | **YES** |
+     | 0.35  |  0.1044 |   0.1141 | +0.0097 | no, already failing |
+     | 0.45  |  0.1080 |   0.1203 | +0.0123 | no, already failing |
+
+     `sweepD_d0p25` PASSED the 0.10 limit at g64 and FAILS it at g128. Across all
+     11 g128 cases passthrough rose without exception. Refinement is not merely
+     failing to fix wall penetration, it is actively worsening it and can convert
+     a passing case into a failing one. Anyone reporting "we refined the grid" as
+     a robustness improvement must report this alongside it.
+
+     Water layers scale as expected with depth, 7 / 10 / 12, so the free surface
+     is better resolved at g128 even where P-2 degrades. Those two facts are not
+     in conflict: layer count measures how well the water column is sampled,
+     passthrough measures the boundary treatment at the hull, and only the second
+     is what image particles (Schulz and Sutmann 2019) would address.
