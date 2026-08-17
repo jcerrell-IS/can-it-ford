@@ -33,7 +33,7 @@ figure cannot be cited from an early commit.
 > | 3 | The 16 Smith-Modra-Felder files | Wiley / CIWEM | **Reported 2026-08-18** |
 >
 > **These are three reports, from three rights holders, and no artifact has been filed
-> or read by me, by the coordinator, or by D3** — three parties, checked separately,
+> or read by me, by the coordinator, or by D3**: three parties, checked separately,
 > none of whom has seen a document.
 >
 > **The settledness illusion, and it is worth naming because it is acting on us right
@@ -44,7 +44,7 @@ figure cannot be cited from an early commit.
 > none corroborates the others, because they are from three unrelated rights holders. That is not a doubt about any of them; it is
 > what a licence record on a public repo is for. **A second or third report arriving
 > does not upgrade the earlier ones.** File all three at
-> `docs/E8_PERMISSION_<body>_<date>` — a DesignSafe DOI is gated on written permission
+> `docs/E8_PERMISSION_<body>_<date>`, because a DesignSafe DOI is gated on written permission
 > (register item 10), and a reviewer will ask for the documents.
 >
 > **What changes when each artifact arrives**, so the record closes cleanly instead of
@@ -73,7 +73,7 @@ figure cannot be cited from an early commit.
 >
 > The AR&R report P10/S2/020 uses **flat numbering throughout: Figure 1 to Figure 11,
 > Table 1 to Table 3**, with no section-prefixed labels anywhere. The three WRL images
-> are **"Figure 5-5", "Table 5-1" and "Table 5-2"** — a chapter-section scheme the
+> are **"Figure 5-5", "Table 5-1" and "Table 5-2"**, a chapter-section scheme the
 > report does not use. Probe validated first: it sees 27 `Figure N` and 7 `Table N`
 > references in the AR&R text, so the absence is real, not blindness. [read]
 >
@@ -82,7 +82,7 @@ figure cannot be cited from an early commit.
 > page 38. [read, by opening the image]
 >
 > So these are from **WRL Technical Report 2014/07 (UNSW Water Research Laboratory,
-> September 2014)** — a different document from AR&R P10/S2/020 (Engineers Australia,
+> September 2014)**, a different document from AR&R P10/S2/020 (Engineers Australia,
 > February 2011) by **publisher, body and year**. The content is the **H1 to H6 flood
 > hazard vulnerability classification** with its D*V limits.
 >
