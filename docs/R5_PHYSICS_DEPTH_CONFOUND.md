@@ -67,34 +67,65 @@
 
 ## 0. The finding that outranks everything I claimed: P-2 does not measure passthrough
 
-> **RE-DERIVED INDEPENDENTLY 2026-08-17.** I first carried this on the reviewer's word,
-> which is one source cited twice. `simulation/r5_physics/p2_decompose.py` now derives it
-> from the rollout artifacts with no shared code path. **It confirms the core finding and
-> sharpens it in two ways, and corrects one number in the reviewer's favour and one
-> against.** N = 17, at the last frame where the vehicle cloud is stored **exactly**
-> (frame 89; the checkpoint-to-true-max gap is median +0.13 pp, max +0.67 pp, so this is
-> essentially the argmax):
+> **RE-DERIVED, THEN LARGELY WITHDRAWN AGAIN, 2026-08-17. Fourth review, six blocking
+> issues, three reversing a direction I had published.** What survives is narrow.
 >
-> | | median | range |
+> **SURVIVES:** P-2 is overwhelmingly bounding-box void. At each run's TRUE argmax, with an
+> exact pose reconstruction, the share genuinely inside the hull is **median 6.26%, range
+> 1.46 to 21.16%** (N=17). So **79 to 98.5 percent is void**, and P-2 is not a passthrough
+> measure. That is the one claim from this section a reader may rely on.
+>
+> **W1. My reason for not reconstructing the pose was FALSE and self-refuting.** I wrote
+> that a 0.0613 m residual was "too coarse for the occupancy test" while calling it
+> "constant across frames" in the same sentence. A constant residual is a **pure rigid
+> translation**: per-particle scatter after removing the mean offset is **6e-7 m**. Solving
+> one offset reproduces the driver's own `passthrough_max_frac` to **0.00e+00 in 17/17**,
+> so the three-checkpoint restriction was never needed and the true argmax was always
+> available. The offset also ranges **0.0401 to 0.0707 m**; I quoted 0.0613 with no scope.
+>
+> **W2. "The null exceeds the 0.10 gate limit in 17/17" is withdrawn.** My null,
+> `A_box / A_water_footprint`, is the **loosest of three** and the only one giving 17/17:
+>
+> | null | range | exceeds 0.10 |
 > |---|---|---|
-> | share of P-2 actually **inside the hull** | **6.50%** | 3.27% to 22.84% |
-> | transparent-box **null baseline** | **12.75%** | 11.30% to 14.90% |
-> | **P-2 minus its own null** | **-3.38 pp** | -5.67 to +1.36 pp |
+> | mine | 11.30-14.90% | 17/17 |
+> | undisturbed-lattice, rebuilt from the driver's own generator | 9.72-12.09% | **14/17** |
+> | empirical, box tiled over vehicle-free placements | 4.07-16.08% | **7/17** |
 >
-> **Confirmed:** 77 to 97 percent of P-2 is bounding-box void, against the reviewer's 78 to
-> 97. **Sharpened, and worse than reported:** the null baseline is **11.3 to 14.9%**, not
-> 10.3 to 11.0%, so it **exceeds the 0.10 gate limit in 17 of 17 runs**, not merely
-> straddles it. **Sharpened the other way:** most runs read **BELOW** their own null, median
-> -3.38 pp, which is exactly what displacement should do. So the P-2 "failures" are not runs
-> where water leaks in; they are runs whose bounding prism happens to enclose more water
-> than an equal prism of undisturbed water, judged against a threshold set below the
-> geometric null.
+> Worse, my denominator **co-varies with the treatment**: the water footprint shrinks in x
+> as the upstream end evacuates, so the "null" moves 11.30 to 13.85 across the velocity
+> sweep for hydrodynamic reasons. A reference that moves with the treatment is not a null.
+> **A definition change that moves a count from 14/17 to 17/17 is not a sharpening**, and
+> calling it one was wrong.
 >
-> **And there IS a real signal buried in it, which neither I nor the reviewer said.** The
-> genuinely in-hull fraction rises **0.28 to 3.47 pp across the velocity sweep**, a factor
-> of **12**, and 0.35 to 2.36 pp across the depth sweep. Actual passthrough is increasing
-> sharply. P-2 dilutes that signal with roughly 9 pp of near-constant void, which is why it
-> only moves from 7.84 to 15.21. **The quantity to report is the in-hull fraction, not P-2.**
+> **W3. "Most runs read below their own null, which is what displacement should do" is
+> withdrawn, and it inverts.** Against vehicle-free tiled placements the median is
+> **+0.32 pp with 9/17 ABOVE**, and six runs hold more water than an equal box placed
+> **anywhere else in the domain** (100th percentile). The -3.38 pp was a property of my
+> denominator, not a displacement signature. Also, 5 to 21% of the water under the
+> footprint sits **below the box bottom**, so the area-only null overstates coverage.
+>
+> **W4. "The quantity to report is the in-hull fraction" must not ship.** Four independent
+> reasons: **56-86% of the rise is in cells the hull did not occupy at frame 0**, i.e. the
+> hull moving into water rather than water entering the hull (the frozen-hull rise is 3.96x
+> and flattens above v=1.0, against 12x); **84-100% of the "in-hull" water sits in a
+> one-cell surface skin** at h = 0.0736 m, at or below the MPM stencil width, enriched
+> 91.7% at depth 1 against an 80.0% availability baseline; **corr with drift (0.916) beats
+> corr with velocity (0.782)**; and the metric is **non-monotone across g48/g64/g96 at two
+> of three masses**, which is exactly the defect CLAUDE.md item 5 forbids quoting for
+> displacement. Spray-on-deck is refuted: the water sits at 0.07-0.24 of hull height.
+>
+> **W5. "~9 pp of near-constant void" is refuted.** Void rises **+55% (7.57 to 11.77 pp)**
+> and carries **57% of the P-2 trend** against in-hull's 43%. The dilution framing was
+> backwards.
+>
+> **W6. Label defects, now fixed in the script**: output labelled "argmax" was frame 89;
+> `in_hull` was not a subset of `inbox` so the decomposition did not sum to P-2; and
+> "every other run peaks at frame 69-89" has four counterexamples (argmax 0, 0, 1 and 68).
+>
+> **NEW, and nobody is gating it:** 5 to 21% of the water under the vehicle footprint sits
+> **below the floor plane** at frame 89, already 4.8% at frame 0. That is a leakage channel
+> with no gate on it, and it is a better candidate for "passthrough" than P-2 ever was.
 
 This came out of the review and is now independently confirmed **[measured, re-derived]**.
 

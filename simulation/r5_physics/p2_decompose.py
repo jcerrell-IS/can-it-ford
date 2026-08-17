@@ -47,27 +47,29 @@ RUNS = os.environ.get(
 GATE_LIMIT = 0.10        # gates.py:147-148
 
 
-def checkpoint_frames(z):
-    """Frames where the vehicle particle cloud is stored EXACTLY, with its cloud.
+def vehicle_at(z, f):
+    """Vehicle particles in world frame at frame f. Exact, via offset-corrected pose.
 
-    Reconstructing the pose from `R`/`t` and `veh_particles_vehframe` is possible,
-    `body @ R.T + t` is the right convention, but it carries a **0.0613 m** maximum
-    registration residual against the stored clouds, constant across frames. On a 4.2 m
-    hull that is 1.5 percent, and at h = 0.0736 m it is most of a voxel, which is too
-    coarse for the occupancy test that decides `in_hull`.
+    CORRECTED 2026-08-17. An earlier version refused to reconstruct, citing a 0.0613 m
+    registration residual as "too coarse for the occupancy test". THAT REASON WAS FALSE
+    and self-refuting: the residual is a PURE RIGID TRANSLATION, which the same docstring
+    called "constant across frames" without drawing the obvious conclusion. Per-particle
+    scatter after removing the mean offset is 6e-7 m, i.e. float32 round-off.
 
-    So this uses only the three frames the driver stored exactly, `sim_standing.py:451`:
-    frame 0, `min(45, frames-1)`, and the last frame. No reconstruction, no residual.
+    Solving one constant body-frame offset from frame 0 and applying it at every frame
+    reproduces the driver's own `passthrough_max_frac` to 0.00e+00 in 17 of 17 runs. So
+    the reconstruction is exact, the three-checkpoint restriction was unnecessary, and the
+    decomposition can be evaluated at the TRUE argmax rather than at frame 89.
 
-    LIMITATION, stated rather than hidden: P-2 is a MAX over all frames, and its argmax is
-    usually frame 69-89. The last checkpoint is therefore near, but generally not exactly
-    at, the argmax. The decomposition is reported at the last checkpoint and P-2 at that
-    frame is reported beside the run's true max, so the gap is visible.
+    The offset also is not one number: it ranges 0.0401 m to 0.0707 m across runs, and the
+    earlier text quoted 0.0613 with no scope.
     """
-    nf = int(z["frames"]) if "frames" in z else np.asarray(z["water"]).shape[0]
-    return [(0, np.asarray(z["veh_particles_scene0"], dtype=float)),
-            (min(45, nf - 1), np.asarray(z["veh_check_45"], dtype=float)),
-            (nf - 1, np.asarray(z["veh_check_last"], dtype=float))]
+    body = np.asarray(z["veh_particles_vehframe"], dtype=float)
+    R = np.asarray(z["R"], dtype=float)
+    t = np.asarray(z["t"], dtype=float)
+    scene0 = np.asarray(z["veh_particles_scene0"], dtype=float)
+    off = (body @ R[0].T + t[0] - scene0).mean(0)          # constant, solved once
+    return (body - off @ R[0]) @ R[f].T + t[f]
 
 
 def decompose(path):
@@ -77,10 +79,15 @@ def decompose(path):
     floor = float(z["floor"])
     nf = w.shape[0]
 
-    cps = checkpoint_frames(z)
-    fa, veh = cps[-1]              # last exact checkpoint: nearest to P-2's usual argmax
+    # TRUE argmax, reproducing the driver's max-over-frames exactly.
+    fracs = np.empty(nf)
+    for f in range(nf):
+        v = vehicle_at(z, f)
+        fracs[f] = ((w[f] >= v.min(0)) & (w[f] <= v.max(0))).all(axis=1).mean()
+    fa = int(np.argmax(fracs))
+    veh = vehicle_at(z, fa)
     ww = w[fa]
-    p2_here = float(((ww >= veh.min(0)) & (ww <= veh.max(0))).all(axis=1).mean())
+    p2_here = float(fracs[fa])
     # P-2's own value, from the driver's stored summary, for comparison.
     sj = os.path.join(os.path.dirname(path), "summary.json")
     p2_reported = float(json.load(open(sj))["passthrough_max_frac"]) if os.path.exists(sj) else float("nan")
@@ -97,6 +104,10 @@ def decompose(path):
     wlin = np.full(len(ww), -1, dtype=np.int64)
     wlin[inside] = np.ravel_multi_index((wk[inside] - base).T, span)
     in_hull = np.isin(wlin, np.unique(vlin)) & inside
+    # PARTITION. in_hull is defined on voxel cells which extend up to one cell past the
+    # exact bbox, so it is NOT a subset of inbox and the two did not sum to P-2. Review
+    # found in_hull_pp + box_void_pp != p2_pct in 17/17. Intersecting fixes it.
+    in_hull = in_hull & inbox
 
     # Transparent-box null: box footprint area over the water's own footprint area.
     a_box = float((hi[0] - lo[0]) * (hi[1] - lo[1]))
@@ -104,7 +115,7 @@ def decompose(path):
     return {
         "run": os.path.basename(os.path.dirname(path)),
         "velocity": float(z["velocity"]),
-        "checkpoint_frame": fa,
+        "argmax_frame": fa,
         "n_frames": nf,
         "p2_pct": 100.0 * p2_here,
         "p2_reported_max_pct": 100.0 * p2_reported,
@@ -121,11 +132,12 @@ def main():
     a = p.parse_args()
 
     rows = [r for r in (decompose(f) for f in sorted(glob.glob(RUNS))) if r]
-    print(f"N={len(rows)}. P-2 decomposed at each run's OWN argmax frame.\n")
+    print(f"N={len(rows)}. P-2 decomposed at each run's TRUE argmax frame "
+          f"(exact reconstruction).\n")
     print(f"{'run':<20} {'v':>4} {'frm':>4} {'P-2 %':>7} {'in hull':>8} {'void':>7} "
           f"{'hull/P2':>8} {'null %':>7}")
     for r in rows:
-        print(f"{r['run']:<20} {r['velocity']:4.1f} {r['checkpoint_frame']:4d} {r['p2_pct']:7.2f} "
+        print(f"{r['run']:<20} {r['velocity']:4.1f} {r['argmax_frame']:4d} {r['p2_pct']:7.2f} "
               f"{r['in_hull_pp']:8.2f} {r['box_void_pp']:7.2f} "
               f"{r['in_hull_share_of_p2']:7.1f}% {r['transparent_box_baseline_pct']:7.2f}")
 
@@ -136,7 +148,7 @@ def main():
     print()
     for k, lab in (("in_hull_share_of_p2", "share of P-2 actually INSIDE the hull"),
                    ("transparent_box_baseline_pct", "transparent-box null baseline"),
-                   ("p2_pct", "P-2 at the last exact checkpoint"),
+                   ("p2_pct", "P-2 at its true argmax"),
                    ("p2_reported_max_pct", "P-2 as the driver reports it (true max)")):
         m, lo, hi = st(k)
         print(f"  {lab:<38} median {m:7.2f}  range {lo:7.2f} to {hi:7.2f}")

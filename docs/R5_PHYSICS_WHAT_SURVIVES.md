@@ -21,7 +21,7 @@ independent of the one that produced it, or is true by construction from source.
 | **Zhao's outflow cannot be ported because warpmpm has no pressure field.** `grep -ci pressure` returns 0 across 3,181 lines at the pinned SHA. The BC's control variable does not exist. | primary source, `inflow_outflow.py:14-21` | `R5_PHYSICS_OPTION_A_FEASIBILITY.md` |
 | **A mass-sink hook DOES exist**, contradicting that file's own premise: `particle_selection` gates P2G at six sites and is writable at runtime, so deactivation removes mass at fixed allocation. That is the register's own B7 wording. | read live | same |
 | **The runs are not at their labelled depths.** Survived every control including vehicle-free: **+13% to +28%** of label. | measured, multiple stations | `R5_PHYSICS_DEPTH_CONFOUND.md` |
-| **P-2 does not measure passthrough.** 77-97% is bounding-box void; median share genuinely in-hull **6.50%**. | re-derived independently | `p2_decompose.py` |
+| **P-2 does not measure passthrough.** At each run's TRUE argmax, exact reconstruction: **79 to 98.5% is bounding-box void**, median in-hull share **6.26%**, range 1.46-21.16%. | re-derived, then survived a fourth review | `p2_decompose.py` |
 | **Kramer 2021 Table 1**, and the corrected constants: `rho_w` 998.2, `m` 7.056 kg, `g` 9.82, buoyancy **69.2180 N**. The engine's 9.81 is irreducible; equilibrium draft unaffected, period biased +0.051%. | read from the PDF | `R5_PHYSICS_KRAMER2021_TESTCASE.md` |
 | **The STUCK mechanism.** `sweepV_g64_v0p5` is STUCK because it decelerated: speed gate shuts frame 8, drift gate opens frame 37, **zero overlapping frames**. Confirmed digit-for-digit by review. | measured, then confirmed | `R5_PHYSICS_BRAKE_STATE.md` |
 | **Brake state cannot flip a SLIDE verdict**, on a bound: max friction-removal acceleration 0.578 g against 0.721 needed for the worst run's TOPPLE trigger. | review-supplied bound | same |
@@ -43,16 +43,36 @@ independent of the one that produced it, or is true by construction from source.
 | "the 0.140 g rounding is something real" | it is 54x inside Kramer's own +/-1 g uncertainty |
 | "group velocity is the right reflection speed" | Kramer section 3.5 uses **phase** celerity and says why; my domain bought 1.06 periods, not 2.12 |
 
-## 3. Unreviewed, and currently with a reviewer
+## 3. Reviewed and WITHDRAWN, fourth pass
 
-- The in-hull fraction rising **0.28 to 3.47 pp** across the velocity sweep, a factor of 12,
-  and the proposal to report it instead of P-2.
-- The null baseline **11.30-14.90%** and "exceeds the gate limit in 17/17".
-- "Most runs read below their own null, median -3.38 pp."
+All three of the items previously listed here as "unreviewed" were withdrawn on review:
 
-**These are percentages, so per the dispatch they stay UNREVIEWED until that pass lands.**
-Given that three of three prior passes found magnitude errors in my headlines, treat them
-as provisional.
+- **"Report the in-hull fraction instead of P-2"** is refuted four ways: 56-86% of its rise
+  is cells the hull did not occupy at frame 0 (hull moving into water, not water entering
+  hull); 84-100% of it sits in a one-cell skin at h = 0.0736 m, at or below the stencil
+  width; it correlates better with drift (0.916) than velocity (0.782); and it is
+  **non-monotone across g48/g64/g96 at two of three masses**, the same defect item 5
+  forbids quoting for displacement.
+- **"The null exceeds the gate limit in 17/17"** is withdrawn. My null was the loosest of
+  three: undisturbed-lattice gives **14/17**, empirical tiled gives **7/17**, and my
+  denominator co-varies with the treatment. A change that moves 14/17 to 17/17 is not a
+  sharpening.
+- **"Most runs read below their own null"** inverts under an empirical null: median
+  **+0.32 pp, 9/17 above**, six runs at the 100th percentile of all vehicle-free placements.
+
+Also withdrawn: **"~9 pp of near-constant void"**. Void rises +55% and carries **57%** of
+the P-2 trend, so the dilution framing was backwards.
+
+**Method error worth recording:** I declined to reconstruct the vehicle pose, citing a
+0.0613 m residual as too coarse, while calling it "constant across frames" in the same
+sentence. A constant residual is a rigid translation; removing it leaves 6e-7 m of scatter
+and reproduces the driver's own value to 0.00e+00 in 17/17. My stated reason refuted itself.
+
+## 3b. New, unreviewed, and nobody is gating it
+
+**5 to 21 percent of the water under the vehicle footprint sits BELOW the floor plane** at
+frame 89, already 4.8% at frame 0. No gate covers it, and it is a better candidate for the
+word "passthrough" than P-2 ever was.
 
 ## 4. Nothing on this branch has been run on a GPU
 
