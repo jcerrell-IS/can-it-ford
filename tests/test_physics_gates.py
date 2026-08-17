@@ -136,13 +136,29 @@ def compare_profile(sim: list[tuple[float, float]], H: float, G: float,
 
 
 def test_solver_profile_against_analytical():
-    """The locked regression case. SKIPS, loudly, until solver output exists.
+    """The Poiseuille comparison. SKIPS, loudly, until solver output exists.
 
-    To arm this, drop a two-column CSV of (y, u) samples from a converged
-    Poiseuille run at `tests/data/poiseuille_profile.csv` together with the
-    H, G and mu it was run at. Sun et al 2016 report MPM agreeing well with
-    theory on this case, so a large error here is a solver or setup defect, not
-    an expected discretisation cost.
+    LARGELY SUPERSEDED, and by a better answer. While preparing to build this
+    case on Vista it turned out the pinned engine ALREADY SHIPS an analytic
+    validation suite that this project had never run:
+    `$WORK/mpm-engine/tests/test_analytic_benchmarks.py`, following the CB-Geo
+    MPM benchmark suite.
+
+    Run on Vista node c642-032 (GH200 120GB) on 2026-08-18: **4 passed in
+    27.99s**, covering Coulomb friction on an incline (<15%), static hold
+    (<0.02 m/s), hydrostatic column basal force = rho V g (<8%), and free-free
+    elastic bar period (<3%). Friction and EOS pressure are exactly the
+    mechanisms the SLIDE verdicts rest on, so that suite is more relevant here
+    than Poiseuille. Reproduce with
+    `scripts/run_analytic_benchmarks_vista.sh <jobid>`.
+
+    Its own docstring cautions that two scenes are substitutions routing around
+    measured engine failure modes and are "characterizations to fix, not physics
+    gates passed", so a green run is not a clean bill of health.
+
+    This Poiseuille hook stays because it tests a FREE-SURFACE channel profile,
+    which none of the four upstream scenes does. To arm it, drop a two-column
+    CSV of (y, u) samples at `tests/data/poiseuille_profile.csv`.
     """
     p = os.path.join(REPO, "tests", "data", "poiseuille_profile.csv")
     if not os.path.isfile(p):
