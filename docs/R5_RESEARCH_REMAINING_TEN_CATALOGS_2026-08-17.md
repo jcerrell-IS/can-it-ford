@@ -4,8 +4,19 @@ Date 2026-08-17. Branch `claude/r5-research`. Unit 15 concluded the remaining te
 summaries were worth more than I assumed when I deprioritised them. This is that
 read. All 14 catalogs' summaries are now read.
 
-**The single most valuable thing found in this whole dispatch is in section 1,
-and it is favourable to the project.**
+**HEADER CORRECTED, unit 18.** This document originally opened by calling
+section 1 "the single most valuable thing found in this whole dispatch". **That
+claim is retired**: two of its three cited references have since been read in
+full, neither supports it, and one states that the aspect it rests on is not in
+the standard being interpreted. See
+`docs/R5_RESEARCH_ASYMMETRY_RETIRED_2026-08-17.md`.
+
+The durable findings in this document are **section 2** (independent support for
+the reconstruction-pipeline novelty axis), **section 3** (effective sample size is
+the conditions, not the frames), **section 4** (still-water depth must not be
+conflated with depth-velocity products) and **section 5** (a checked non-conflict
+with CLAUDE.md item 4a). Read those; treat section 1 as a worked example of a
+finding that did not survive verification.
 
 ---
 
