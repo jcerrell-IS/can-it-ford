@@ -350,3 +350,206 @@ published a novelty claim contradicted by four papers in its own corpus.
 **Finish by** updating this handoff, appending to
 `docs/CANONICAL_CORRECTIONS_REGISTER_2026-08-06.md` in its own style, and telling
 Josie plainly what you did not get to.
+
+---
+
+# PART 4: THE COMPLETE RESEARCH INVENTORY, WITH PATHS
+
+Everything below was located live on 2026-08-15 and is indexed in
+`data/research_corpus_index.json`. Query it rather than re-walking the disk.
+
+## Undermind deep-research reports, 8, 426 catalog rows, 323 abstracts
+
+All in `~/Downloads/` except the last:
+
+    Reliable_AI_Scientific_Software.md                       79 papers
+    MPM_Simulation_Verification_Provenance.md                68
+    Multi-resolution_MPM_for_Large-domain_Flooding.md        78
+    Settling_and_Force_Reporting_in_Free_Surface_Flow.md     68
+    Validated_MPM_Vehicle_Water_Coupling.md                  60  (+ divergent "(1)" copy)
+    Moving_Rigid_Body_Free_Surface_Validation.md             44
+    Quantitative_MPM_Wall_Penetration.md                     16
+    UNDERMIND_FINDINGS_DEPLOYMENT_ORDER_2026-08-08.md        synthesis, read first
+    ~/Claude/Projects/SCIPE UT Austin baby/REU_Knowledge/Trustworthy_AI_Assisted_Scientific_Simulation.md   13
+
+**Each report details only its TOP 50.** 103 of the 426 have no abstract
+anywhere on disk. Never describe those as read.
+
+## Claude.ai artifacts, 288 files collapsing to 37 distinct ids, 30 on-topic
+
+Roots: `~/Claude/reu` (73 files), `~/Documents/Claude/reu` (70),
+`~/Documents/Claude/Projects/SCIPE UT Austin baby/REU_Knowledge` (123 compass
+files), `~/Downloads` (37). The 6-to-9-copy spread is the macOS sync-cache
+signature; the index dedupes by content hash.
+
+Subject index at `<corpus>/00_COMPASS_ARTIFACT_SUBJECT_INDEX_v2_2026-08-14.tsv`.
+The three most relevant to configuring Claude itself are `62a7f8e6` (AI research
+tools and infrastructure), `2c1e05ae` (configuring Claude across five surfaces,
+ROI-ranked), `aae75abf` (Claude Code configuration and remediation plan).
+
+## Perplexity reports, 5
+
+`~/Downloads/perplexity research on claude gaps/`:
+`citation_verification_report.md`, `drift_threshold_citation_research.md`,
+`genesis-gh200-report.md`, `genesis-mpm-flood-sim-parameters.md`,
+`physgaussian_bridge_findings.md`. All dated 2026-07-07, so Genesis-era: treat
+engine-specific content as superseded, citation content as live.
+
+## Elicit, 2
+
+`citations/Elicit - extract-results-review-*.csv` and
+`citations/Elicit - Flood-Crossing Tire-Ground Friction and Speed Evidence.bib`.
+
+## The corpus
+
+`~/Desktop/CAN_IT_FORD_RESEARCH_CORPUS_2026-08-13/`, ~6,500 manifest rows,
+`00_CANONICAL_REPO` pointing at `~/can-it-ford`, and
+`MEMORY_UPDATE_PASTE_BLOCK.md` whose Snippet 2 is the only route into Claude chat.
+
+---
+
+# PART 5: WHAT IS NOT INSTALLED THAT THE RESEARCH CALLS FOR
+
+Measured 2026-08-18. **Correction to an earlier statement in this session:** I
+first reported "no render stack on this Mac" after checking only the SYSTEM
+interpreters. That was wrong. `~/can-it-ford-env/bin/python` has:
+
+    numpy 2.5.1    matplotlib 3.11.1    pandas 3.0.5
+    scipy ABSENT   trimesh ABSENT   pyvista ABSENT   skimage ABSENT   warp ABSENT
+
+`uv`, `pip3`, `brew` and `ffmpeg` are all present. The stale memory note "no Mac
+python has numpy" applies to the SYSTEM interpreters only and should be corrected.
+
+**To render locally you need:** `trimesh` (hull loading), `pyvista` (3D render,
+what `render_pv*.py` import), `scipy` and `scikit-image` (surface extraction).
+Install into `can-it-ford-env`, never into the shared Vista venv.
+
+**Called for by the research and entirely absent:**
+
+| Item | Why | Fixes |
+|---|---|---|
+| **NHTSA vPIC** client | class-specific geometry, not mass alone | the unsourced 1609 and 2337 kg masses |
+| **USGS / NOAA water APIs** | realistic depth-velocity parameterisation | the 3.0 m/s cap being administrative, L-2 |
+| **RO-Crate** | FAIR packaging for DesignSafe | register J10, DOI pending |
+| **Apptainer `.def`** committed | reproducibility, Apptainer is TACC's container system | no `.def` in the repo |
+| **Zenodo DOIs** | citable code and container beside the data DOI | nothing minted |
+| MLflow, Connected Papers, NotebookLM | lower priority, flagged as heaviest lifts | |
+
+---
+
+# PART 6: PERMISSIONS AND ACCESS STILL TO REVISE
+
+Done this session: `disableClaudeAiConnectors` true to false; user allow list 6
+to 80 read-only rules; `idev` deny to allow with `srun --overlap` and `scancel`;
+four dead or counterproductive deny rules dropped.
+
+**Still blocking:**
+
+1. **Connectors need a session restart plus OAuth.** A non-interactive session
+   cannot run the flow. W&B, HuggingFace, Gradio and the `plugin:engineering:*`
+   and `plugin:data:*` sets stay unavailable until Josie authorises them in
+   claude.ai connector settings, or via `claude mcp` or `/mcp` interactively.
+   **Do not ask her for tokens.**
+2. **`.claude/settings.json` and `.mcp.json` are uncommitted** and mix this
+   session's permission changes with another session's `commit_autoapprove` hook
+   and three MCP servers. Review and commit deliberately.
+3. **`pre-push` requires `PUSH_OK=1`**; eleven commits are unpushed.
+4. **Retained deliberately:** the bulk-staging deny family (`git` `add` with `-A`, `--all` or `.`), and the `*_DEPRECATED*`,
+   `*_SUPERSEDED*` and `data/track1_sweep_v2/**` read denials, which are
+   correctness guards rather than access limits.
+
+---
+
+# PART 7: MAKE THE REPO MATCH WHAT THE PAPERS ESTABLISH
+
+None of these is yet applied to the paper text or the scripts.
+
+1. **Grid refinement does not converge a transient quantity.** Syamlal, Celik &
+   Benyahia 2017, `10.1002/AIC.15868`. Stop presenting non-monotone
+   `final_disp_mag_m` as a defect. Report a time-averaged observable over a
+   demonstrated-stationary window with a GCI, or say it is not expected to
+   converge.
+2. **Report a movement probability, not a bare label.** Dancey et al 2002.
+   17 of 24 runs flip somewhere in p >= 0.01 to 0.50.
+3. **Never compute uncertainty from frame count.** N_eff is 2.9 to 11.0 of 91.
+4. **Added mass is not constant during acceleration.** Grift et al 2019,
+   `10.1017/jfm.2019.102`, define an entrainment rate, and measure steady drag
+   rising 45 percent at one-fifth-height submergence. The surge the SLIDE
+   verdicts live inside is exactly this regime.
+5. **AR&R rests on pre-1993 vehicles.** Shah et al 2019,
+   `10.1080/15715124.2019.1687487`.
+6. **Published stability thresholds disagree.** Bocanegra et al 2019,
+   `10.1111/jfr3.12551`.
+7. **No experimental basis for the 1.5 m/s rule** exists in the corpus. Say so.
+8. **Unsteady flow raises drag 40 to 50 percent** (Azhar 2026), unmodelled, and
+   a realistic environment makes it worse.
+9. **Order-dependent reductions can flip a discrete gate.** SLIDE / STUCK / FLOAT
+   is such a gate. Xu et al 2019 `10.1016/J.PARCO.2019.04.002`, Siklosi et al
+   2024 `10.3390/app14020639`.
+10. **Resolution is not the remedy for passthrough.** J18 and J19, measured.
+
+---
+
+# PART 8: EXPANDED PROMPT, SUPERSEDES PART 3 WHERE THEY CONFLICT
+
+Read Parts 1 to 7, then `CLAUDE.md`, then load the `research-corpus` skill.
+
+**PRIORITY: a photorealistic, physically accurate flooded-roadway simulation and
+render.** Everything else serves that. Work in dependency order; do not skip to
+rendering.
+
+**Phase A, read and index.** Read `UNDERMIND_FINDINGS_DEPLOYMENT_ORDER_2026-08-08.md`,
+then `10.1063/5.0276643` (tire-pavement hydroplaning in MPM, the closest prior
+art), then the 239 abstracts not yet read. Use
+`python3 analysis/research_index.py --method <tag> -v` rather than re-walking
+`~/Downloads`. Append findings to `docs/RESEARCH_TO_IMPLEMENTATION_2026-08-15.md`.
+Add every method paper you act on to the bib and **verify with Scholar Sidekick
+`auditBibliography` before committing**; that caught a real title error this
+session.
+
+**Phase B, install and enable.**
+`~/can-it-ford-env/bin/python -m pip install trimesh pyvista scipy scikit-image`.
+Never touch the shared Vista venv. Then tell Josie which connectors to authorise.
+
+**Phase C, unbound the domain. The physics unlock.**
+Implement outflow then inflow per **Zhao, Bolognin, Liang, Rohe & Vardon 2019**,
+`10.1016/J.COMPFLUID.2018.10.007`, which adds and removes material points with
+appropriate kinematic properties. Read `docs/OPTION_A_INFLOW_OUTFLOW_BC_PLAN.md`.
+The driver already reports `SCENARIO=STANDING_WATER_SUSTAINED_INFLOW` with a
+per-frame `inflow=` count, so establish what exists first. **Outflow is the
+missing half**, and it makes blocker B3 tractable: a bounded domain cannot
+measure a slope because conserving volume forces redistribution larger than the
+effect. **Do not edit `sim_standing.py` in place**; its sha256 stamps 40 D5 runs.
+Use a wrapper or a new driver and say which. Validate against Zhao's reported
+end-depth ratio and pressure distribution, not a screenshot.
+
+**Phase D, the road.** Only after outflow works. warpmpm forces a cubic grid
+(B2), so learn from `10.1063/5.0276643` how they expressed a pavement surface.
+Camber, crown and a gutter are the minimum for a road to read as a road; surface
+roughness is an explicit variable in that paper.
+
+**Phase E, the three vehicles.** `--vehicle` exists at `sim_standing.py:310`.
+**First check out `claude/fork-three-class`** and read
+`docs/THREE_CLASS_MATCHED_2026-08-14.md`: 14 unpushed commits, 40 runs. Do not
+redo it. Two traps: every number there used the inadequate 8-frame settle, and at
+fixed `n_grid` a different hull changes both `dx` and realized depth, so a
+cross-vehicle run is not "same resolution".
+
+**Phase F, fix passthrough properly.** Refinement makes it worse in all 11 g128
+cases and created a new failure at `d0p25`. Implement **image particles**,
+Schulz & Sutmann 2019, targeting the stress artefact that smears multiple grid
+lengths into the body. Re-measure `passthrough_max_frac` against the baselines in
+`data/g128_*`. Consider `10.1002/nme.7217` alongside.
+
+**Phase G, render.** Only now. The eight `renders/yaris_render_s1/render_*.py`
+are untracked; read before editing, commit what you keep. Render from g128 or
+finer: `water_layers` is 8 there against 4 at g64. Realism comes from the
+resolved surface, the real road and the correct hull, not from shading.
+
+**Throughout.** Apply `analysis/stationarity.py` to every new run; never quote a
+fixed settle length; never compute uncertainty from frame count. Report verdicts
+with `analysis/probabilistic_verdict.py` and state the probability cut. Run
+`python3 tests/test_physics_gates.py` and the three `.claude/checks/` scripts
+before every commit. Re-check `git status` immediately before each commit, stage
+explicit paths, never a bare directory. No push without Josie's explicit yes.
+Query the index before claiming anything is novel or untried.
