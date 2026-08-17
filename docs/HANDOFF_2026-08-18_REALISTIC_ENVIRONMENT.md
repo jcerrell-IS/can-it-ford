@@ -1,0 +1,352 @@
+# Handoff: session of 2026-08-15 to 08-18, and the prompt for the next session
+
+Written at the end of a long session. Part 1 is what exists now and how it was
+verified. Part 2 is everything asked for that is NOT done. Part 3 is a
+ready-to-paste prompt for a fresh Claude Code session.
+
+Every claim in Part 1 was measured live in this session unless marked otherwise.
+
+---
+
+# PART 1: WHAT NOW EXISTS
+
+## Ten commits, all local on `claude/add-ci-checks`, none pushed
+
+| SHA | What |
+|---|---|
+| `072e4f3` | `stationarity.py`, `settle_audit.py`, `probabilistic_verdict.py`, `docs/RESEARCH_TO_IMPLEMENTATION_2026-08-15.md` |
+| `46282bc` | 332-paper research index, `research-corpus` skill, `.gitignore` un-ignore |
+| `790d999` | Documents merged into index, SessionStart hardwiring, 2 CI steps, CLAUDE.md + register addendum |
+| `ffc05d9` | 15 citations added to `paper/can_it_ford_references_IEEE.bib`, all verified |
+| `50b70c0` | `tests/test_physics_gates.py`, the three physics gates |
+| `df52bee` | `scripts/run_analytic_benchmarks_vista.sh` + gate 1 rewrite |
+| `a677a59` | g128 canonical set, register J17 |
+| `4dac5f0` | g128 velocity sweep, register J18 |
+| `623360b` | g128 depth sweep, register J19 |
+
+`pre-commit` refuses more than 8 staged files. `pre-push` needs `PUSH_OK=1`.
+Bulk staging is blocked by a hook: stage explicit paths, and note that
+`git add <directory>` also trips it.
+
+## The research corpus is queryable from inside the repo
+
+`data/research_corpus_index.json`, built by `analysis/research_index.py`.
+**332 distinct papers** (222 with abstracts) merged from eight Undermind reports,
+plus **44 research documents** (39 on-topic) covering the Claude.ai artifacts,
+five Perplexity reports and the Elicit extracts. 25 method tags.
+
+```bash
+python3 analysis/research_index.py --stats
+python3 analysis/research_index.py --method added-mass -v
+python3 analysis/research_index.py --query hydroplaning -v
+python3 analysis/research_index.py --docs --query claude
+python3 analysis/research_index.py --gaps --method validation-dataset
+```
+
+Only **43 of 332 papers reach a reader-facing document**. 256 are cited nowhere.
+60 carry no DOI and are undiffable; 110 are metadata-only because each report
+details its top 50 only. **There are 323 abstracts on disk, not 426.**
+
+Two traps already hit and fixed, do not reintroduce:
+- Excluding `.claude/worktrees/` is mandatory when computing cited status. A
+  first version included it and reported 269 of 332 as cited, because another
+  session's `r5_citation_xref.tsv` holds 489 DOIs.
+- `data/*` is gitignored, so any new data directory needs an explicit
+  `!data/<name>/` un-ignore pair or it silently never travels.
+
+`orient_live.sh` announces the corpus at every SessionStart. The
+`research-corpus` skill routes queries before novelty or method claims.
+
+## The settle length is contradicted by the data
+
+`sim_standing.py:154` uses `settle_frames=8`. `analysis/settle_audit.py` over 25
+local runs: **all 25 need more than 8 frames discarded**, min 29, median 48, max
+80, of 91 total. **N_eff is 2.9 to 11.0**, so uncertainty from N=91 is overstated
+roughly three to five times. 12 of 25 windows are still non-stationary after
+trimming, which reads as the runs being too short and independently reaches D9's
+250-frame conclusion by a different route.
+
+`analysis/stationarity.py` implements MSER (Bergmann 2021), Chodera
+equilibration (2015), Flyvbjerg blocking (1989), the reverse-arrangement test
+(Pan & Patton 2017) and the Transient Scanning Technique with RUM (Brouwer 2019).
+Pure stdlib, 10 self-tests.
+
+**MSER minimises standard error, which is NOT stationarity.** A residual trend
+can survive inside the MSER-optimal window; only the reverse-arrangement test
+catches it. Both are reported for that reason.
+
+**Do not remove the transient before a SLIDE verdict.** Incipient motion is an
+event, not a steady state. Removing it drops SLIDE from 21 of 24 to 5 of 24 and
+would silently contradict the published 16 SLIDE / 1 STUCK. This was a real
+error made and corrected in this session.
+
+## The g128 result: 11 cases, verdict grid-invariant, passthrough worse
+
+Run on Vista node **c642-032** (GH200 120GB) inside idev job 917886, via the
+unmodified `run_s2.sh 128` and `run_sweep.sh 128`, both writing to new
+directories so the 2026-07-26 overwrite was not repeated.
+
+**All 11 verdicts are identical to their g64 counterparts** (3 masses, 5
+velocities, 3 depths), including the single STUCK at v=0.5. `margin_frames`
+does NOT converge (m1100 runs 22, 41, 15, 39 across g48/g64/g96/g128), which is
+what Syamlal 2017 predicts for a transient quantity.
+
+**Passthrough rose in all 11 cases.** At v=3.0, g64 0.1588 to g128 0.1771.
+`sweepD_d0p25` passed at g64 (0.0968) and **fails at g128** (0.1051), so
+refinement created a new P-2 failure. **Never offer resolution as the remedy for
+passthrough.** `water_layers` rises 4 to 8, retiring the L-3 four-layer
+limitation; that measures water-column sampling, passthrough measures the hull
+boundary, and only the second needs a boundary treatment.
+
+Artifacts: `data/g128_2026-08-18/` and `data/g128_sweeps_2026-08-18/`. The
+`sweepD_g128_*` **metrics.csv were not retrieved**, only summaries.
+
+## The solver's own analytic suite passes, and had never been run
+
+`$WORK/mpm-engine/tests/test_analytic_benchmarks.py`, following the CB-Geo MPM
+benchmark suite. **4 passed in 27.99s** on the GH200: Coulomb incline (<15%),
+static hold (<0.02 m/s), hydrostatic column basal force (<8%), free-free elastic
+bar period (<3%). Reproduce with `scripts/run_analytic_benchmarks_vista.sh <jobid>`.
+
+Its own docstring cautions that two scenes route around measured engine failure
+modes and are "characterizations to fix, not physics gates passed".
+
+**PROVENANCE DISCREPANCY, unresolved:** Vista's working copy reported HEAD
+`627367e`; this repo vendors `third_party/mpm-engine-544c93dd`. Confirm which
+produced any published number.
+
+## Vista operational facts, learned the hard way
+
+- `srun` into a live idev needs `--overlap`, or the step kills the session.
+- Vista's submit filter rejects a step missing `-p`, `-N` **or** `-t`, even an
+  `--overlap` attach. Full working form:
+  `srun --overlap --jobid=<J> -p gh-dev -N1 -n1 -t 00:25:00 bash -c '...'`
+- Interpreter is `$WORK/.venv/bin/python3.12`. Default `python3` is 3.9.
+- warpmpm imports in ~24 s on a compute node. It BLOCKS on login nodes.
+- A three-mass g128 sweep takes about 2 minutes. An 8-run velocity+depth sweep
+  takes about 10. These are cheap; do not assume otherwise.
+- `run_s2.sh <grid>` and `run_sweep.sh <grid>` both write to `g${GRID}_*` /
+  `sweep?_g${GRID}_*`, so a new grid never overwrites an old one.
+
+## Citations
+
+`paper/can_it_ford_references_IEEE.bib` went 21 to 36 entries. All 14
+DOI-bearing additions were verified through Scholar Sidekick before commit:
+**14 matched, high confidence, 0 mismatch, 0 retracted.** That caught one real
+error (Khapane's title uses a hyphen, not a colon). Pazouki has no DOI and is
+machine-unverifiable, flagged in its entry.
+
+The four prior fording works are now in the bib. **They are still not in the
+paper prose.**
+
+## Permissions and configuration changed
+
+- `disableClaudeAiConnectors` flipped **true to false**. This was the single
+  biggest self-inflicted blocker. Connectors still need a session restart plus
+  OAuth, which a non-interactive session cannot perform.
+- User-level allow list went **6 to 80 rules**, all read-only.
+- `Bash(idev:*)` **moved from deny to allow** at Josie's explicit override, with
+  `srun --overlap` and `scancel`. Always pass `-m 120`.
+- Dropped 4 dead or counterproductive deny rules, including
+  `Read(designsafe-staging/**)` which was blocking review of the
+  publication-bound tree.
+- **Retained:** the `git add -A` family (2026-08-07 incident, concurrent
+  sessions), and the `*_DEPRECATED*` / `*_SUPERSEDED*` / `track1_sweep_v2` read
+  denials, which are correctness guards.
+
+---
+
+# PART 2: ASKED FOR, NOT DONE
+
+Ordered by what the next session should do first.
+
+## 2.1 The realistic environment. This is the current headline ask.
+
+**There IS a published MPM paper doing nearly this**, and it is uncited where a
+reviewer would see it: **`10.1063/5.0276643`**, Zhou, Qing & Wang 2025, *Physics
+of Fluids*, "Analysis of tire–pavement viscous hydroplaning based on the material
+point method". A tire–water film–pavement FSI model in MPM with a rolling tire.
+It refutes any claim that MPM cannot host a real road. **Read it first.**
+
+`.claude/dispatch_prompts/REALISTIC_ENVIRONMENT_PLAN.md` (untracked) already
+documents five blockers:
+
+- **B1** The scene is one frictional plane inside a box. Floor at friction 0.55,
+  four slip walls at friction 0.0. No camber, crown, curb, gutter, gradient,
+  drain or embankment.
+- **B2** warpmpm forces a **cubic** domain. A road is long, thin and shallow, so
+  a cube spends most cells on empty air. `grid_lim` derives from the hull extent.
+- **B3, the deepest** A bounded domain physically cannot measure a slope.
+  Conserving volume in a closed box forces redistribution larger than the effect.
+  Water running downslope piles at the wall. **Tilting the floor does not work.**
+- **B4** The correct instrument is wired but never validated.
+- **B5** The literature has not solved it either, so this is a contribution.
+
+**Inlet/outlet is the unlock for B3.** The citation is **Zhao, Bolognin, Liang,
+Rohe & Vardon 2019**, `10.1016/J.COMPFLUID.2018.10.007`, "Development of
+in/outflow boundary conditions for MPM simulation of uniform and non-uniform open
+channel flows", implemented in Anura3D. It adds and removes material points with
+appropriate kinematic properties. **This is a translation into warpmpm, not a
+port.** It is NOT Kumar's work; that misattribution was corrected on 2026-08-07.
+`docs/OPTION_A_INFLOW_OUTFLOW_BC_PLAN.md` exists.
+
+Note the current driver already has a *sustained inflow* of sorts: g128 summaries
+report `SCENARIO=STANDING_WATER_SUSTAINED_INFLOW` and an `inflow=` count per
+frame that decays to near zero. Read `sim_standing.py` before assuming inflow is
+absent; what is missing is a true **outflow**, which is why the domain stays
+bounded.
+
+## 2.2 Three vehicle meshes
+
+`--vehicle` **now exists** at `sim_standing.py:310`, so the old blocker is gone.
+Rogue and Silverado meshes exist and are simulation-ready. The D5 three-class
+matched-dx work (40 runs, 8 arms) lives on branch **`claude/fork-three-class`,
+14 commits unpushed**, with `docs/THREE_CLASS_MATCHED_2026-08-14.md` and six CSVs
+that are NOT on the current branch.
+
+Traps: at fixed `n_grid`, a different hull changes both `dx` and realized depth,
+so a cross-vehicle run is not "same resolution". And every number in the D5 doc
+was measured at the 8-frame settle now known inadequate.
+
+## 2.3 Numerics that would improve physical realism, ranked
+
+None implemented. Verified absent from `analysis/` and `simulation/`: **CPDI**,
+**GIMP**, **moving-reference-frame MPM**.
+
+1. `10.1002/nme.7217` Baumgarten & Kamrin 2023, spatial-integration-error
+   mitigation. Targets particle ringing and solution-dependent integration error,
+   "without requiring significant augmentation of existing MPM frameworks".
+2. Schulz & Sutmann 2019, **image-particle boundaries**. Grid-momentum-zeroing
+   walls "distort the stress multiple grid lengths into the object". **This is
+   the candidate fix for the passthrough that refinement made worse.**
+3. `10.1016/j.jcp.2016.10.064` hourglass damping and incompressible MPM.
+4. `10.1016/j.cma.2022.114809` IFEMP, particle rearranging against numerical
+   cavities, sharp immersed interface for real two-way coupling.
+
+**Precondition:** fixed particles-per-cell can lose convergence under refinement.
+But note D9 **refuted PPC** as the non-monotone mechanism; band width dominates
+and `COLLIDER_FRICTION 0.4` is influential. Any AMR must control band width.
+
+## 2.4 Everything else outstanding
+
+- **239 of 323 abstracts unread.** Extracted per report under the session
+  scratchpad; rebuild with `research_index.py --build`.
+- **Paper prose.** The bib has the entries; the limitations paragraphs are
+  unwritten: AR&R rests on pre-1993 vehicles (`10.1080/15715124.2019.1687487`),
+  no experimental basis for the 1.5 m/s rule, published thresholds disagree
+  (`10.1111/jfr3.12551`), transient-vs-time-averaged convergence.
+- **Overleaf.** `overleaf/main` is `6466dfa` and shares **no ancestor** with
+  local `main`, so `git push overleaf main` from this repo **replaces the whole
+  project**. Use `~/can-it-ford-paper` (clean, at the Overleaf head, holds
+  `conference_101719_1.tex`, flat figure paths). **Rotate the Overleaf token
+  first**, it is off local disk but valid server-side.
+- **`can-it-ford-demo` `4d228d9`** is single-copy and unpushed; the public demo
+  still serves the superseded bare-hazard-product L1 rule.
+- **Analytical gate half-armed.** `tests/data/poiseuille_profile.csv` does not
+  exist, so the free-surface comparison skips.
+- **`sweepD_g128_*` metrics.csv** not retrieved from Vista.
+- **W&B, HuggingFace, Gradio** unblocked but unauthenticated.
+- **Claude chat receives nothing.** The Project syncs from
+  `jcerrell-IS/mpm-engine`, a fork of `kks32/mpm-engine`, **not** this repo.
+  Committing here never reaches it. Paste Snippet 2 from
+  `~/Desktop/CAN_IT_FORD_RESEARCH_CORPUS_2026-08-13/MEMORY_UPDATE_PASTE_BLOCK.md`.
+- **`claude-md-improver` and `cowork-plugin-customizer` never run**, deliberately:
+  CLAUDE.md is 800+ lines, dirty, with a concurrent session live.
+- **Photorealistic rendering untouched.** This Mac has **no render stack**:
+  numpy, scipy, matplotlib, trimesh, pyvista, skimage all absent. The eight
+  `renders/yaris_render_s1/render_*.py` are all untracked.
+- **vPIC, USGS/NOAA, RO-Crate, Apptainer `.def`, Zenodo** all absent. vPIC would
+  source the unsourced 1609 and 2337 kg masses; USGS would ground the 3.0 m/s cap
+  that is currently administrative.
+- **Nothing pushed.**
+
+---
+
+# PART 3: PROMPT FOR THE NEXT SESSION
+
+Paste everything below into a fresh Claude Code session in `~/can-it-ford`.
+
+---
+
+Read `docs/HANDOFF_2026-08-18_REALISTIC_ENVIRONMENT.md` in full before doing
+anything. It is the state of play. Then read `CLAUDE.md`, and load the
+`research-corpus` skill.
+
+**Your goal: make the simulation physically realistic and renderable as a real
+flooded roadway, by removing the bounded-box artifact and using all three
+vehicle meshes.** Work in dependency order, and verify each step before moving
+on.
+
+**Standing constraints, non-negotiable.** Another Claude Code session may be
+live in this tree: re-check `git status` immediately before every commit, stage
+explicit paths only, never `git add -A` or a bare directory. Any push, force
+push, delete or overwrite needs Josie's explicit confirmation; the repo is
+PUBLIC and six credentials are unrotated. Never quote a number you have not
+measured live this session. No em-dashes anywhere.
+
+**Order of work.**
+
+1. **Read `10.1063/5.0276643`** (Zhou, Qing & Wang 2025, tire–pavement viscous
+   hydroplaning in MPM). It is the closest published prior art to what you are
+   building and it is uncited in `paper/`. Find out specifically **how they
+   expressed a road surface inside an MPM grid**, because that is blocker B2.
+   Add it to the bib and verify it with Scholar Sidekick before committing.
+
+2. **Read `sim_standing.py` end to end** before changing anything. It already
+   reports `SCENARIO=STANDING_WATER_SUSTAINED_INFLOW` with a per-frame `inflow=`
+   count, so inflow partly exists. Establish exactly what exists and what does
+   not. **Do not edit `sim_standing.py` in place**: its sha256 stamps 40 D5 runs.
+   Use a wrapper or a new driver and say which.
+
+3. **Implement outflow, then inflow, per Zhao et al 2019**
+   (`10.1016/J.COMPFLUID.2018.10.007`), which adds and removes material points
+   with appropriate kinematic properties. Read
+   `docs/OPTION_A_INFLOW_OUTFLOW_BC_PLAN.md` first. This is the unlock for
+   blocker B3, that a bounded domain cannot measure a slope. Validate against
+   their reported end-depth ratio and pressure distribution for free overfall,
+   not against a screenshot.
+
+4. **Only once outflow works, attempt road geometry.** B2 says warpmpm forces a
+   cubic grid, so establish how the hydroplaning paper handled that before
+   designing. Camber, crown and a gutter are the minimum for a road to read as a
+   road.
+
+5. **Run all three meshes.** `--vehicle` exists at `sim_standing.py:310`. First
+   check out `claude/fork-three-class` and read
+   `docs/THREE_CLASS_MATCHED_2026-08-14.md`: 14 commits of matched-dx work are
+   unpushed there. Do not repeat it. Note every number in it was measured at the
+   inadequate 8-frame settle, and at fixed `n_grid` a different hull changes both
+   `dx` and realized depth.
+
+6. **Fix passthrough with a boundary treatment, not resolution.** Register J18
+   and J19 show refinement makes it worse in all 11 g128 cases and created a new
+   failure at `d0p25`. Implement image particles (Schulz & Sutmann 2019), then
+   re-measure `passthrough_max_frac` against the g64 and g128 baselines already
+   in `data/g128_*`.
+
+7. **Apply the settling protocol to every new run.** Use
+   `analysis/stationarity.py` and `analysis/settle_audit.py`. Never quote a fixed
+   settle length. Never compute uncertainty from frame count; use `N_eff`.
+   Report verdicts with `analysis/probabilistic_verdict.py` and state the
+   probability cut.
+
+8. **Then, and only then, photorealism.** Better shading on a flat plane in a box
+   is not realism. The rendering stack does not exist on the Mac, so this is a
+   Vista job.
+
+**Vista.** Node c642-032 may be gone; check `ssh vista squeue -u $USER`. Start a
+bounded node with `idev -m 120`. Attach with
+`srun --overlap --jobid=<J> -p gh-dev -N1 -n1 -t 00:25:00 bash -c '...'`; all
+four flags are required by the submit filter and `--overlap` is mandatory or the
+step kills the session. Interpreter is `$WORK/.venv/bin/python3.12`; do not
+mutate that shared venv. A three-mass g128 sweep costs about 2 minutes, so
+iterate freely, but check SUs first; the cached figure was 626 and is stale.
+
+**Before you claim anything is novel or untried**, run
+`python3 analysis/research_index.py --query <topic> -v`. 332 papers are indexed
+and only 43 reach a reader-facing document. This project has already almost
+published a novelty claim contradicted by four papers in its own corpus.
+
+**Finish by** updating this handoff, appending to
+`docs/CANONICAL_CORRECTIONS_REGISTER_2026-08-06.md` in its own style, and telling
+Josie plainly what you did not get to.
