@@ -117,8 +117,38 @@ class DepthKeyedOutflow:
             raise ValueError(
                 f"x_out={self.x_out} is at or past the closed downstream wall at "
                 f"{lim - wall}. Retirement there is behind the wall, not before it.")
+        # Constraint 2, made NON-VACUOUS. The selftest's "no vehicle particle deactivated"
+        # was true by construction, because the pushed array is zeros beyond n_water
+        # whatever n_water is. The real hazard is a WRONG n_water: then water indices are
+        # treated as vehicle or, far worse, vehicle indices as water, and deselecting a
+        # vehicle particle drops its momentum term while its mass stays in the rigid M
+        # (mpm_solver_warp.py:856, mpm_utils.py:1434), manufacturing unphysical drag on the
+        # published verdict variable. So verify the split against the SOLVER, not against
+        # our own arithmetic. Material 8 is rigid (mpm_utils.py:1366).
+        self._verify_split()
         self._retired = np.zeros(self.n_water, dtype=bool)   # monotone, never cleared
         self.history = []
+
+    def _verify_split(self):
+        """Check n_water against the solver's own material array. Skipped only if absent."""
+        sim = getattr(self.solver, "_sim", None)
+        fn = getattr(sim, "export_particle_material_to_torch", None)
+        if fn is None:
+            self.split_verified = False
+            return
+        mat = np.asarray(fn().cpu() if hasattr(fn(), "cpu") else fn()).ravel()
+        water, veh = mat[: self.n_water], mat[self.n_water:]
+        if veh.size and not np.all(veh == 8):
+            raise ValueError(
+                f"n_water={self.n_water} is wrong: {int((veh != 8).sum())} of "
+                f"{veh.size} particles past it are NOT material 8 (rigid). Retiring on "
+                f"this split would deactivate water as vehicle or vehicle as water.")
+        if water.size and np.any(water == 8):
+            raise ValueError(
+                f"n_water={self.n_water} is wrong: {int((water == 8).sum())} RIGID "
+                f"particles sit below it. Deactivating one drops its momentum term while "
+                f"its mass stays in the rigid M, which manufactures drag on the vehicle.")
+        self.split_verified = True
 
     # --- reporting ---------------------------------------------------------------------
     def retired_count(self):
@@ -206,13 +236,21 @@ def selftest():
     pushed = []
 
     class _Sim:
+        def __init__(self, mat):
+            self._mat = mat
+
         def import_particle_selection_from_torch(self, t, clone=True, device="cuda:0"):
             pushed.append(np.asarray(t.cpu() if hasattr(t, "cpu") else t).copy())
 
+        def export_particle_material_to_torch(self):
+            return self._mat
+
     class _Solver:
-        def __init__(self, pos):
+        def __init__(self, pos, n_water=1000):
             self._pos = pos
-            self._sim = _Sim()
+            mat = np.zeros(len(pos), dtype=np.int32)
+            mat[n_water:] = 8                    # material 8 is rigid
+            self._sim = _Sim(mat)
 
         def x(self):
             return self._pos
@@ -304,6 +342,16 @@ def selftest():
 
     check("retired_mask() is exposed so callers can filter ghosts from diagnostics",
           o.retired_mask().sum() == o.retired_count())
+    check("constraint 2 verified against the SOLVER, not by construction",
+          getattr(o, "split_verified", False))
+    for bad, why in ((n_water + 10, "n_water too HIGH: rigid particles fall below it"),
+                     (n_water - 10, "n_water too LOW: water is treated as vehicle")):
+        try:
+            DepthKeyedOutflow(_Solver(pos), n_water=bad, x_out=8.0, z_target=ZT,
+                              floor=FLOOR, lim=LIM, wall=WALL)
+            check(f"raises on {why}", False)
+        except ValueError:
+            check(f"raises on {why}", True)
 
     print(f"\n{'ALL PASS' if not fails else 'FAILURES: ' + ', '.join(fails)}")
     print("\nThis proves the driver RUNS and its bookkeeping is self-consistent.")
