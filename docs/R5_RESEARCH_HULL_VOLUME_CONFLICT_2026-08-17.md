@@ -126,6 +126,66 @@ the audit addresses only the first:**
 Nobody should read this document as "apply the flood fill and the band problem
 goes away". It goes away for one of three runs.
 
+## 4b. CLAUDE.md ALREADY contains a number that corroborates the audit
+
+I said in section 7 that I could verify none of the audit's measurements without
+trimesh. That was too pessimistic: one cross-check needs only arithmetic on
+figures the repo already holds, and it corroborates the audit **without relying on
+any of its own numbers**.
+
+From `WATERTIGHT_HULL_TOOL_FINDINGS.md:159`, the canonical hull's recorded extents
+are 4.283 x 1.746 x 1.518 m, giving a bounding box of **11.352 m3**. That matches
+the audit's stated "11.35 m3 bbox" exactly, so we are describing the same object.
+
+```
+hull bbox                       11.352 m3
+raw enclosed / bbox             31.2 %      <- CLAUDE.md item 4(b) says 33.2 %
+flood-filled / bbox             40.2 %
+a real sedan, 55 to 60 % (audit) 6.24 to 6.81 m3
+```
+
+**CLAUDE.md item 4(b) states, canonically, that "the hull fills only 33.2 percent
+of its own bounding box".** My independent arithmetic from the recorded extents
+gives 31.2%, consistent to within the difference between a mesh-extent bbox and a
+particle-cloud bbox. So the geometric fact the audit builds on is **already in
+CLAUDE.md**.
+
+The two entries then use that same fact for opposite purposes:
+
+- **Item 4(b)** treats the 33.2% fill as ground truth about the hull, and uses it
+  to argue the box inertia overstates every principal moment by 16.3 to 26.1%.
+- **The audit** says the 33.2% fill is *itself* the artifact, because a real sedan
+  displaces 55 to 60% of its bbox, so a hull at a third of its box is a shell.
+- **B5** meanwhile concludes from the resulting density that the plausibility band
+  is stale.
+
+**Note the shape of that: the canonical files contain both the evidence for the
+audit's thesis (item 4b) and a conclusion that sits against it (B5).**
+
+### A downstream consequence item 4(b) does not consider
+
+Item 4(b) recommends the solver's particle-cloud inertia over the box inertia,
+because it is "measured from the real hull particle cloud". Checked here:
+
+```
+particle cloud volume  = 8905 * 0.07360736^3 = 3.5514 m3
+hull enclosed volume   =                       3.5427 m3
+agreement              = 0.25 %
+cloud / bbox           = 31.3 %
+```
+
+So the rigid cloud occupies the **sheet-metal enclosed volume**, not a car-shaped
+solid. If the audit is right, the cloud's inertia is the inertia of a shell-shaped
+mass distribution, which is a different object from the vehicle, in the same way
+and for the same reason that its density is.
+
+**This is a question for D4, not a claim, and explicitly NOT a reason to relax the
+`check_inertia_wired()` guard.** Item 4(b)'s operative instruction, do not wire
+`vehicle_params`' box inertia, may well remain right regardless: its point (a),
+that no measured Yaris tensor exists, and its point (c), that the axes are
+transposed, are untouched by any of this. What is in question is only whether
+"the solver already computes a better one" is as clean as it reads.
+
 ## 5. Why this matters beyond the register
 
 **It bears on D4's P-2 work, and cuts against part of it.** The audit's section 3.2
