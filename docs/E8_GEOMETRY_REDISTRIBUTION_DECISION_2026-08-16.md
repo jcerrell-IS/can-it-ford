@@ -20,9 +20,50 @@ or **[inferred]**.
 
 ## 0. The headline, and why it changes the framing
 
-E8 as written governs **derived** geometry: "do not commit any derived NCAC/CCSA
-geometry to the public repo". The dispatch that commissioned this work scoped the
-exposure as four `.ply` files plus fifteen renders.
+E8 as written governs **derived** geometry. Its operative rule, quoted in full because
+an earlier revision of this line truncated it (see the correction immediately below):
+
+> "do not commit any derived NCAC/CCSA geometry to the public repo, and do not include
+> it in a DesignSafe DOI, **without written permission or a confirmed licence**."
+
+The dispatch that commissioned this work scoped the exposure as four `.ply` files plus
+fifteen renders.
+
+> **CORRECTED 2026-08-17, caught by D1 and it was my defect.** This line previously
+> quoted only "do not commit any derived NCAC/CCSA geometry to the public repo" and
+> stopped there, dropping both the DesignSafe clause and the whole conditions clause.
+> That made the prohibition read as **unconditional** in the most-read section of this
+> document, when the register makes it conditional. Section 4 quoted the sentence
+> correctly throughout, so the argument never depended on the short version, but the
+> headline is what gets read.
+>
+> **Note this is a different truncation from D1's own**, of the same sentence: D1 had
+> dropped "or a confirmed licence" and so presented permission as the only route,
+> whereas I dropped the conditions entirely. Two sessions truncated one sentence in two
+> different places, which is why the full text is now block-quoted rather than inlined.
+
+### The rule offers TWO routes to clearance, and my evidence closes one of them
+
+Written permission **or** a confirmed licence. They are alternatives, not a sequence.
+That is D1's substantive point and it is correct.
+
+**It changes nothing about the recommendation, but it changes the reason, which is
+worth having right.** The second route is not merely unexplored here; it is **closed by
+evidence**, on three independent sources:
+
+| Source | Finding | Origin |
+|---|---|---|
+| The upstream README bundled in the repo's own copy | No licence text, no copyright statement, no grant | Mine, `git show origin/main` |
+| Both `ccsa.gmu.edu` model download pages | No licence, copyright, terms-of-use or redistribution statement | Mine, fetched; **independently refetched by the coordinator** |
+| DOI 10.13021/G8JS5D metadata | `rightsList` is **empty**; the DOI points to a validation slide-deck PDF, and the GMU Dataverse CC0 default does not reach it | **D1**, separate method |
+
+**There is no licence to confirm.** So written permission is the only remaining route,
+for an evidentiary reason rather than because the rule was misquoted. A reader who only
+saw my truncated line would have reached the same destination by the wrong road.
+
+This also means E8's central question now rests on **three independent origins**, not
+one cited three times: a bundled file, two live web pages, and DOI metadata, gathered
+by two sessions using different methods.
 
 **That scope is wrong, and it understates the exposure by an order of magnitude in
 the direction that matters.** [read]

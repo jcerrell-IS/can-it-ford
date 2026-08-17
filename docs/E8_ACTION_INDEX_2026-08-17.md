@@ -60,7 +60,13 @@ writing to CCSA, so the repo attributes them properly at the moment they look.
 
 ### Tier 2, needs a decision from you
 
-**3. Choose the geometry remediation.** Options and consequences in
+**3. Choose the geometry remediation.** Note that E8 offers **two** routes to
+clearance, written permission **or a confirmed licence**, and that the second is
+**closed by evidence**: there is no licence to confirm, established on three
+independent sources (the bundled README, both CCSA download pages, and D1's read of
+the DOI's empty `rightsList`). Permission is the only route left, for an evidentiary
+reason.
+ Options and consequences in
 `E8_GEOMETRY_REDISTRIBUTION_DECISION_2026-08-16.md` §5. My recommendation: option 0
 (attribution), then option 4 (remove the verbatim 160.32 MB **across all 30
 branches**), then option 1 (ask CCSA). **Against option 3**, a history rewrite, because
@@ -147,6 +153,8 @@ current.
 
 | "Blocked on a human: does an NHTSA-hosted copy exist" | `aacf12e` | `bb8bc92` | **Not blocked.** Two web fetches and a checksum, which then produced the dispatch's strongest evidence |
 | Two of three `.zip` provenance claims marked `[inferred]` | `6e771b6` | `ea04f33` | **All four archives are byte-identical to upstream, by SHA384.** Verbatim redistribution is proven, not inferred |
+
+| E8's operative rule quoted as "do not commit any derived NCAC/CCSA geometry to the public repo" | `6e771b6` §0 | `1a6a...` (this round) | **Truncated.** The full rule ends "...without written permission **or a confirmed licence**". Caught by D1. My §4 was correct throughout, but §0 made the prohibition read as unconditional |
 
 **One count is not an error but is scope-sensitive, so never quote it bare:** the CCSA
 verbatim total is **160,322,098 B** including the 4 upstream READMEs, or
