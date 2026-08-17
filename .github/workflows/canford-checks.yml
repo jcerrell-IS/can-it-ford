@@ -27,3 +27,5 @@ jobs:
         run: python3 analysis/stationarity.py
       - name: research index is present and parseable
         run: python3 analysis/research_index.py --stats
+      - name: physics gates (analytical, conservation, metamorphic)
+        run: python3 tests/test_physics_gates.py
