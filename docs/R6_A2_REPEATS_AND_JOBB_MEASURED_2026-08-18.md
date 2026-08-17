@@ -204,7 +204,60 @@ residuals that an autocorrelated series does not have.) The handoff's 3.09 cm wa
 from a force deficit on a shorter run; the direct measurement is roughly double it and has not
 converged. **This confirms the handoff's call that more frames alone will not fix it.**
 
-### 4d. The caveat that must travel with this
+### 4d. The volume budget: compression is bounded, the fall is not
+
+The tank's plan area is not in the config, so derive it. `n_water` 598,505 particles at spacing
+`h_m` 0.009375 gives a particle volume of h^3 = 8.2397e-7 m3 and a water volume of
+**0.493153 m3**. Adding the 8,292 carved particles (0.006832 m3, against the sphere's analytic
+half-volume of 0.007069, a 3.4 percent discretisation shortfall as expected) and dividing by
+`depth_m` 0.5 gives a plan area of **0.999971 m2**, which closes on exactly 1.0 m2 to 0.003
+percent. So the tank is 1.0 x 1.0 m of water inside a 1.2 m grid. DERIVED, not read.
+
+Compression, computed independently from the sound speed rather than taken from the docstring:
+bulk modulus K = rho c^2 = 998.2 x 12.8568^2 = 165,000 Pa; mean hydrostatic pressure over the
+column rho g d / 2 = 2448.1 Pa; strain **1.4837 percent**, so the column shortens **0.7418 cm**.
+`sphere_heave.py`'s own docstring says 1.497 percent and 0.74 cm. Independent agreement, from a
+different starting point.
+
+| surface drop | source | volume lost | compression explains | UNEXPLAINED |
+|---|---|---|---|---|
+| 3.090 cm | 917909, back-derived from a force deficit | 6.27 % of the water | 24.0 % | 76.0 % |
+| **6.055 cm** | **918043, measured directly** | **12.28 % of the water** | **12.3 %** | **87.7 %** |
+
+The 24.0 percent reproduces the handoff's 23.9 percent, which is real corroboration because it
+was reached from the sound speed rather than copied.
+
+**The decisive point is the trend, not the level.** Compression is a ONE-TIME 0.7418 cm: once
+the column reaches hydrostatic equilibrium it contributes nothing further. The surface has
+fallen 6.055 cm and is still falling at 19.98 sigma at the last frame. So every additional
+centimetre beyond the first 0.74 is 100 percent unexplained, and the unexplained fraction has
+grown from 76.0 to 87.7 percent purely because the run got longer. **The mechanism is ongoing
+and it is not compression.** Roughly 0.0531 m3 is unaccounted for, about 64,500 particles' worth
+of volume.
+
+### 4e. One hypothesis tested and largely refuted, by reading the code
+
+The obvious unifying explanation for both anomalies, the +63 percent ratio and the missing
+volume, is that the surface estimator samples where the sphere depresses the surface, which
+would under-report the waterline and inflate the ratio while inventing a volume loss.
+
+**`sphere_heave.py:605-629` already guards against exactly that.** It excludes every particle
+within `2.0 * self.radius` of the sphere axis, on the stated grounds that the annulus carries
+the meniscus and any splash and is a local deformation rather than the tank's free surface, and
+it takes the 99th percentile rather than the max so a single ejected particle cannot define a
+surface. The simple version of the hypothesis is therefore refuted at source, and the mystery
+deepens rather than resolving. Name the mechanism, then check it fires; this one does not.
+
+What survives as candidates are the two named in `f5e2f30`: particles leaving through the floor
+or wall bands, and the jittered seed lattice settling denser than it was created. Both are
+volume questions, not mass questions, since the particle count is fixed at load.
+
+**The instrumentation that would settle it in one run:** record per frame the count of particles
+below the floor plane and outside the wall bands, and the mean local packing density. If the
+count is flat and the density rises, it is settling; if the count grows, it is leakage. Neither
+is currently recorded, and both are cheap.
+
+### 4f. The caveat that must travel with this
 
 The measured ratio is flat because numerator and denominator are falling together in proportion.
 That confirms the decay MECHANISM. It does NOT mean the system reached equilibrium, and the run
@@ -245,7 +298,11 @@ conflated a stale pre-purge copy with an open task.
 2. **Fix or retire `determinism_identical`.** It cannot be left reading `true` on every published
    run while every trajectory differs. Either rename it to what it measures, hull load
    reproducibility, or make it compare trajectories.
-3. **Job B's open question is where the water goes.** Candidates named in `f5e2f30`: particles
+3. **Job B's open question is where the water goes, and section 4d sharpens it.** Compression is
+   a bounded one-time 0.7418 cm against a 6.055 cm fall that is still going at 19.98 sigma, so
+   the mechanism is ongoing and cannot be compression. Add the two per-frame counters named in
+   4e (particles below the floor and outside the wall bands, plus mean packing density) and one
+   short run settles leakage against settling. Candidates named in `f5e2f30`: particles
    leaving through the floor or wall bands, or the jittered seed lattice settling denser than it
    was created. The particle count is fixed at load, so this is a volume question, not a mass one.
 4. **The grader short-circuits before the companion.** `grade_job_b.py` refuses on the nominal
