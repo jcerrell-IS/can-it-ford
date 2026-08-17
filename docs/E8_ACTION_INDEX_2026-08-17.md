@@ -47,6 +47,18 @@ figure cannot be cited from an early commit.
 > `docs/E8_PERMISSION_<body>_<date>` — a DesignSafe DOI is gated on written permission
 > (register item 10), and a reviewer will ask for the documents.
 >
+> **What changes when each artifact arrives**, so the record closes cleanly instead of
+> drifting:
+>
+> | On filing | Change the status line to | And check the artifact for |
+> |---|---|---|
+> | CCSA/GMU grant | `CONFIRMED, artifact at <path>` | Does it name **redistribution**, and is the granting body able to grant for **CCSA/GMU-authored** models? |
+> | Engineers Australia grant | same | Does it reach the **UNSW WRL figures**, or only the AR&R report? |
+> | Wiley/CIWEM grant | same | Does it cover **republication of the full 15-page article**, or only figure reuse? |
+>
+> Until a given artifact is filed, that grant stays `reported`. **Filing one does not
+> promote the other two.**
+>
 > **Consequence: every removal, untracking and rewrite recommendation in this dispatch
 > is WITHDRAWN.** They are marked superseded **in place** in each document, with the
 > reasoning preserved and explicitly flagged as not pending work. **Nothing is to be
