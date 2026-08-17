@@ -154,7 +154,7 @@ current.
 | "Blocked on a human: does an NHTSA-hosted copy exist" | `aacf12e` | `bb8bc92` | **Not blocked.** Two web fetches and a checksum, which then produced the dispatch's strongest evidence |
 | Two of three `.zip` provenance claims marked `[inferred]` | `6e771b6` | `ea04f33` | **All four archives are byte-identical to upstream, by SHA384.** Verbatim redistribution is proven, not inferred |
 
-| E8's operative rule quoted as "do not commit any derived NCAC/CCSA geometry to the public repo" | `6e771b6` §0 | `1a6a...` (this round) | **Truncated.** The full rule ends "...without written permission **or a confirmed licence**". Caught by D1. My §4 was correct throughout, but §0 made the prohibition read as unconditional |
+| E8's operative rule quoted as "do not commit any derived NCAC/CCSA geometry to the public repo" | `6e771b6` §0 | `141d239` | **Truncated.** The full rule ends "...without written permission **or a confirmed licence**". Caught by D1. My §4 was correct throughout, but §0 made the prohibition read as unconditional |
 
 **One count is not an error but is scope-sensitive, so never quote it bare:** the CCSA
 verbatim total is **160,322,098 B** including the 4 upstream READMEs, or
