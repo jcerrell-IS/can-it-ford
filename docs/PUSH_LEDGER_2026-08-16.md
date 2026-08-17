@@ -1112,6 +1112,26 @@ is still unpushed, and so is
 vehicle-fording works", now **5 at-risk commits**. Re-scanned: **0 risky paths, 0
 credential hits.** Verdict still OK.
 
+### Cross-checked against D2's independent re-derivation, 00:33
+
+D2 re-derived the growth finding rather than relaying it, so where we overlap
+this is **two origins, not one source cited twice**: 35 branches, 14 `.key` on
+35 of 35, and `FLAG_CREDENTIAL_EXPOSURE` on exactly 1 of 35, measured separately
+and agreeing. All 35 also carry exactly 4 `.zip`, which I measured and D2 did
+not report.
+
+D2 additionally tracked two files I had not: `token_setup_template.md` at 34/35
+and `secrets-and-env.md` at 32/35.
+
+**One correction, and it strengthens D2's own argument.** D2 attributed the
+34/35 to "one NEW branch" lacking the file. Measured: the branch lacking it is
+`worktree-reconcile-vehicle-master-ref`, which was **already public at 21:01**
+and appears in `public_branch_audit.tsv`. All five genuinely new branches carry
+it, checked individually. **So the deviation predates the growth**, D2's earlier
+"on all 30" was already false when written, and the re-derivation caught a
+pre-existing error rather than a new one. Re-deriving did not merely keep a
+number current; it exposed one that had never been right.
+
 ### The column D2 needs: what the public branches actually carry
 
 Measured with `git ls-tree -r` against each live remote tip. All 30 tips were
