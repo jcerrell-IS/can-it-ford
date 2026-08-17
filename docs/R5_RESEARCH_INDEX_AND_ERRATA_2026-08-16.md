@@ -50,7 +50,7 @@ rest is grouped by what it answers.
 | doc | what it establishes |
 |---|---|
 | `R5_RESEARCH_RESOLUTION_COMPARISON_2026-08-16.md` | the resolution claim an adversarial review killed, and the corrected version |
-| `R5_RESEARCH_ASYMMETRY_DOWNGRADED_2026-08-17.md` then `..._RETIRED_2026-08-17.md` | how my best finding was downgraded, then retired |
+| `R5_RESEARCH_ASYMMETRY_DOWNGRADED_2026-08-17.md` then `R5_RESEARCH_ASYMMETRY_RETIRED_2026-08-17.md` | how my best finding was downgraded, then retired |
 | `R5_RESEARCH_NIHEI_ROUTES_AND_AUTHOR_TRAP_2026-08-16.md` | ten routes to the corrigendum; the Bando author trap |
 | `R5_RESEARCH_FLAG_BLOCKED_2026-08-17.md` | **the 5 blocked items and exactly what unblocks each** |
 
@@ -77,10 +77,10 @@ rest is grouped by what it answers.
 | 17 | one wrong year, documented but left in the data file | erratum 16 | **two wrong years, both now CORRECTED in the TSV.** `10.26190/unsworks/27433` 2024→**2017** and `10.4225/53/58e1dfd63f1f4` 2017→**2015**. All 28 union rows re-checked against the registering agency: **0 errors in the 25 Crossref-registered DOIs, 2 errors in the 3 DataCite-registered ones** | unit 13 |
 | 18 | "never take titles, authors or years from aggregators" | unit 13 | **too broad.** Field-specific: titles 28/28 correct, years wrong only on DataCite deposits, author `display_name` unreliable because it is a disambiguation product | unit 14 |
 | 19 | the FORD/NO-FORD evidentiary asymmetry is "the single most valuable thing found in this whole dispatch" | unit 16 §1 | **RETIRED, superseding unit 17's downgrade.** Both readable references now read in FULL: Easterling 2001 has zero hits across 2,818 lines, and Eca/Dowding/Roache 2020 states the pass/fail accept-reject aspect "is not included in V&V20-2009". **Contradicted by one of its own cited sources.** Do not use it. Survivors: Easterling's "model validation is not binary", and a V&V 20 scope limit on extrapolation | units 17, 18 |
+| 20 | the Nihei corrigendum is "blocked on publisher access" | unit 3 §5a, §8 | **overstated, withdrawn.** It is **gold OA, CC-BY, publishedVersion**. The barrier is host-level bot filtering plus `tdm-reservation`, a **fetch** status, not a **licence** status. My own flag file already had this right; unit 3 was never brought into line | D4 `7acb95f`, corrected unit 3 |
 | 21 | "model-scale thresholds are non-conservative", unqualified | unit 12 §1b | **mode-dependent.** True for sliding, **false for floating**: Kramer finds prototype flotation depths *higher* than model. Our dominant mode is SLIDE, the unsafe-erring side | unit 20 §2 |
 | 22 | g64_m1100 "fails gate P-2", disclosed as a leakage defect | unit 8 §2 | **not leakage.** P-2 counts water in the vehicle's axis-aligned **bounding box**, and the hull fills only 33.2% of it. It is a pile-up test | D4 `26971c0`, unit 24 |
 | 23 | P-2's transparent-box null baseline is 10.3 to 11.0% | unit 24 | **11.30 to 14.90%**, so the null **exceeds** the 0.10 gate in **17 of 17** runs. D4 re-derived their own figure upward | D4 `5dbe04d`, unit 25 |
-| 20 | the Nihei corrigendum is "blocked on publisher access" | unit 3 §5a, §8 | **overstated, withdrawn.** It is **gold OA, CC-BY, publishedVersion**. The barrier is host-level bot filtering plus `tdm-reservation`, a **fetch** status, not a **licence** status. My own flag file already had this right; unit 3 was never brought into line | D4 `7acb95f`, corrected unit 3 |
 
 **EVERY ORIGINAL IS NOW MARKED IN PLACE, unit 23.** This index only helps a
 reader who opens *it*. D4 read unit 3 directly and picked up a stale claim
