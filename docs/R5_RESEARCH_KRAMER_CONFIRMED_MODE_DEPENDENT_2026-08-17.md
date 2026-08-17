@@ -54,6 +54,15 @@ errs unsafe.
 for floating.** Unit 12 stated it without the qualifier, and that is corrected
 there and here.
 
+**A boundary D4 drew, and it is worth keeping (`7acb95f`).** This mode-dependent
+finding is about **model-scale** experiments. Nihei's *other* 2025 paper, the
+`rineng` full-scale sliding study (`10.1016/j.rineng.2025.107189`) that supplies
+the 0.0250 / 0.0242 rolling-resistance figures, is **full-scale by its own
+title**, so the "model-scale sliding results err unsafe" finding **does not apply
+to it** and does not weaken it. D4 flagged that rather than leaving it as an
+unexamined adjacency, and they are right: two of my own findings sit next to each
+other and only one of them is about scale models.
+
 **Why this matters here specifically:** our dominant published mode is SLIDE, 16
 of 17 runs. That is the mode where model-derived thresholds err unsafe. The
 qualifier does not soften the concern for this project, it sharpens where the

@@ -34,11 +34,21 @@ with a number in an earlier unit, the number below wins.**
 | 17 | one wrong year, documented but left in the data file | erratum 16 | **two wrong years, both now CORRECTED in the TSV.** `10.26190/unsworks/27433` 2024→**2017** and `10.4225/53/58e1dfd63f1f4` 2017→**2015**. All 28 union rows re-checked against the registering agency: **0 errors in the 25 Crossref-registered DOIs, 2 errors in the 3 DataCite-registered ones** | unit 13 |
 | 18 | "never take titles, authors or years from aggregators" | unit 13 | **too broad.** Field-specific: titles 28/28 correct, years wrong only on DataCite deposits, author `display_name` unreliable because it is a disambiguation product | unit 14 |
 | 19 | the FORD/NO-FORD evidentiary asymmetry is "the single most valuable thing found in this whole dispatch" | unit 16 §1 | **RETIRED, superseding unit 17's downgrade.** Both readable references now read in FULL: Easterling 2001 has zero hits across 2,818 lines, and Eca/Dowding/Roache 2020 states the pass/fail accept-reject aspect "is not included in V&V20-2009". **Contradicted by one of its own cited sources.** Do not use it. Survivors: Easterling's "model validation is not binary", and a V&V 20 scope limit on extrapolation | units 17, 18 |
+| 20 | the Nihei corrigendum is "blocked on publisher access" | unit 3 §5a, §8 | **overstated, withdrawn.** It is **gold OA, CC-BY, publishedVersion**. The barrier is host-level bot filtering plus `tdm-reservation`, a **fetch** status, not a **licence** status. My own flag file already had this right; unit 3 was never brought into line | D4 `7acb95f`, corrected unit 3 |
 
 **Three of these matter most.** #3, because I proposed the L-2 amendment and my
 own test killed it. #8, because it means the paper does not cite its closest
 comparator at all. #11, because a contaminated percentage is exactly the kind of
 number that survives into a draft if nobody writes down that it was withdrawn.
+
+**A standing rule from #20, which D4 stated and I have adopted: a LICENCE status
+and a FETCH status are different things.** `oa_status` tells you what you are
+permitted to read; a 403 tells you what one client got from one host on one
+attempt. Recording the second as the first inflates a blocker and can send
+someone hunting for institutional access they do not need. Checked across my own
+flag file: FLAG-2 (He, Zhang, Lyu) and FLAG-3 (Nihei JSCE) are genuine **licence**
+blocks, `oa_status: closed`, so "institutional access" is correct there. FLAG-1
+was the only conflation.
 
 **A standing caution that came out of #16 and #17.** Four separate metadata
 defects in this dispatch all came from bibliographic aggregators rather than from

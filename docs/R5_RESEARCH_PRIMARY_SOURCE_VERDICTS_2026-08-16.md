@@ -176,9 +176,22 @@ corrupt the criterion. Full table as printed:
 "Corrigendum to ...". I could not obtain what it corrects: Crossref exposes no
 abstract, the article is gold OA but Unpaywall lists only the publisher DOI,
 DOAJ returns zero hits for the corrigendum, and the Elsevier routes returned 403.
-**Status: OPEN.** Do not treat the numbers below as final until someone with
-publisher access reads the corrigendum. I note that the current OpenAlex abstract
-record still carries 0.0250 and 0.0242.
+**Status: OPEN.** Do not treat the numbers below as final until the corrigendum
+is read. I note that the current OpenAlex abstract record still carries 0.0250 and
+0.0242.
+
+> **CORRECTED, 2026-08-17, after D4 checked this premise rather than inheriting
+> it (`7acb95f`).** The phrase this paragraph originally used, "someone with
+> publisher access", **overstates the barrier and is withdrawn.** The corrigendum
+> is **gold open access, CC-BY, publishedVersion**, re-confirmed live via
+> Unpaywall. No institutional access is required. What blocks automated retrieval
+> is host-level bot filtering plus the `tdm-reservation`, which is a **fetch**
+> status, not a **licence** status. D4's rule is correct and I have adopted it:
+> **a licence status and a fetch status are different things, and recording the
+> second as the first inflates the blocker.** My own later flag file already had
+> this right (`FLAG_BLOCKED_2026-08-17.md` FLAG-1 says "open it in a browser,
+> about one minute, CC-BY once open"); this earlier document was never brought
+> into line, and it is the one D4 read.
 
 **(b) My unit-1 inference is confirmed by the primary abstract.** I wrote, tagged
 INFERRED, that 0.0250 and 0.0242 are rolling resistance and must not be merged
@@ -267,9 +280,10 @@ number, and **zero DOIs were missed**. Caveat closed.
 ## 8. Status
 
 UNVERIFIED and still open:
-1. **The Nihei corrigendum content.** Blocked on publisher access, not on effort.
-   Four independent routes tried. This is the one thing in this document I could
-   not close.
+1. **The Nihei corrigendum content.** Blocked on **automated fetch**, not on
+   licence and not on effort: it is gold OA CC-BY (see the correction in section
+   5a). Ten routes tried across this dispatch. A browser closes it in about a
+   minute.
 2. **Zhang 2023's validation method** rests on a search-engine rendering of a
    closed-access abstract, corroborated only by a TLDR. MEDIUM confidence.
    Getting the PDF would settle it.
