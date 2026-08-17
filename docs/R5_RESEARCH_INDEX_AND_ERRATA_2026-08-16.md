@@ -81,6 +81,7 @@ rest is grouped by what it answers.
 | `R5_RESEARCH_BIB_DOI_SUPPLEMENT_2026-08-17.md` | **four verified DOIs the bibliography lacks**, and its year audit |
 | `R5_RESEARCH_UNCITED_AUDIT_2026-08-17.md` | audit of my own uncited method; it mostly holds |
 | `R5_RESEARCH_HULL_VOLUME_CONFLICT_2026-08-17.md` | **RETRACTED escalation.** Read section 0 only; the rest is kept as a worked error |
+| `R5_RESEARCH_MPM_METHOD_CITATION_GAP_2026-08-18.md` | **for the bibliography**: a corpus file built my unit-3 deliverable first; its 9 gaps are still open, and 4 are MPM METHOD papers incl. a free-surface/body benchmark |
 | `R5_RESEARCH_NOVELTY_GUARD_GAP_2026-08-17.md` | the novelty guard reports `cited` for four papers that never reached any `.tex`; an instrument gap, latent not live |
 | `R5_RESEARCH_QUOTE_AUDIT_2026-08-17.md` | **for D2**: audit of all 82 of my block quotes; found a third truncation, and E8 has TWO clearance routes not one |
 | `R5_RESEARCH_WHAT_SURVIVES_2026-08-17.md` | **START HERE.** Safe-to-cite / retired / unverified in one page. Supersedes this index |
