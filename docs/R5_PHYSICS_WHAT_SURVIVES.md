@@ -2,8 +2,27 @@
 
 > **Line-number convention, corrected 2026-08-17.** All `sim_standing.py` line numbers in this document refer to **`renders/yaris_render_s1/_incoming/sim_standing.py`**, the copy that produced the 17 canonical runs and which register D4a makes canonical. An earlier version cited the tracked top-level copy, which is a *different file* (md5 `5ca372e4...` against `a3f7a0f3...`) with substantially different numbering. CLAUDE.md item 2's own citations (`:156-162`, `:190-198`) are `_incoming` numbering, which is how the error was found.
 
-2026-08-17. Branch `claude/r5-physics`, **35 commits, unpushed and held**. Index current
-as of `0449091`.
+2026-08-17, 21:10 UTC. Branch `claude/r5-physics`, **35 commits authored, 36 ahead of
+`main`, unpushed and held**. **Index current as of `b82b335`, which is HEAD.**
+
+> **Two corrections to my own reporting, made here because I repeated both.** I said "41
+> commits" in several messages; the verified figure is **35 authored**
+> (`777567a..claude/r5-physics`) and 36 ahead of main. And this index sat four hours stale
+> at `1703a32`, missing `541faa0` and `b82b335` entirely, which is precisely the failure I
+> argued against in `01f7f91`. Making the argument is not the same as obeying it.
+
+## 0. The ratio, stated rather than inferred
+
+**15 distinct claims withdrawn against 10 that survived to the final list, and only 3 of
+those 10 came through the fifth pass unbroken.** Derivation, so it can be audited: 11 rows
+in the withdrawn table below, plus 4 more retired in section 3 (report-the-in-hull-fraction,
+the 17/17 null, most-runs-below-null, and the 9-pp-constant-void framing). The word
+"withdrawn", "retracted" or "refuted" appears 16 times in this file.
+
+**That ratio is the main evidence that the six review passes did real work**, and a reader
+should see it up front rather than reconstruct it. It is not a reason to distrust the
+survivors: they are what is left after being attacked, twice in the case of the P-2 result.
+It is a reason to distrust anything on this branch that has NOT been attacked.
 
 This branch's documents carry correction boxes stacked on correction boxes, because **five**
 adversarial review passes found real errors in almost every headline I produced. That is
@@ -237,6 +256,23 @@ failing:
 
 All three are now falsifiable. The lesson is narrower than "test more": **a check that
 cannot fail is worse than no check, because it is reported as evidence.**
+
+## 3f. Added after this index last went stale, both current as of HEAD
+
+**`541faa0` CLAUDE.md item 15 is half stale and its own close-out was already done.**
+`failure_modes.py:14` now reads `G = 9.81` (unified 2026-08-12), so item 15's citation of
+that site is stale; `analysis/viability_dashboard_scaffold.py:11` is still 9.80665, so "TWO
+sites" is now one. Item 15's prescribed close-out was performed by `e495b56`, with verdicts
+confirmed byte-identical (16 SLIDE / 1 STUCK, 3 of 33 columns moved) rather than asserted.
+Register A6 predicted no flip for a reason that was wrong: `g48_m2337`'s margin was 0.0244%,
+smaller than the 0.034% change, and `ratio >= 1` went 13 to 12. See
+`R5_PHYSICS_ITEM15_STATUS.md`.
+
+**`b82b335` the whole manifest re-costed against 629 SU.** The B3 phase-celerity correction
+moved Job C to `lim = 2.2` and 3.68 node-h, making it **86% of a 4.27 node-h queue**. No
+primary source exists for the SU rate, so the break-even is given instead: the queue
+exceeds 629 SU only above **147 SU per node-hour**, and 1,072 without Job C. Fire order
+A1, A2, B, C; drop C first and not for cost. See `R5_PHYSICS_SU_TRIAGE.md`.
 
 ## 4. Nothing on this branch has been run on a GPU
 
