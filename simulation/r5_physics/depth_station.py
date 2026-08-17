@@ -39,6 +39,40 @@ PCTL = 99.5          # identical to sim_standing.py:470,474
 MIN_SEL = 20         # identical guard
 
 
+# --------------------------------------------------------------------------------------
+# GHOST GUARD, added 2026-08-17 after review found the failure mode.
+# --------------------------------------------------------------------------------------
+def active_water(z, frame_water):
+    """Return (water, n_ghosts) with RETIRED particles removed.
+
+    Why this exists. `outflow_deactivate.py` retires water by setting
+    `particle_selection` non-zero. A retired particle does NOT leave: advection is inside
+    `g2p_particle` (`mpm_utils.py:1026`) behind the gate at `:1049`, so it **freezes in
+    place and stays in the array**. `sim_standing.py:451` dumps `w = x[:n_water]` with no
+    selection filter, so frozen ghosts land in `rollout.npz` looking exactly like water.
+
+    Every depth statistic here is a high percentile of water z, and the ghosts are by
+    construction the particles that were ABOVE the retirement target, frozen there
+    forever. Unfiltered, a retirement run reports a level that is flat to three decimals
+    and made of dead water. Review measured 0.7339-0.7347 over 60 ticks against a live
+    surface at 0.6609.
+
+    Contract: a run that used retirement MUST dump a boolean `retired` array. If the
+    archive carries one, it is applied. If it does not, this returns the water unchanged,
+    which is correct for all 17 canonical runs because none of them ever wrote
+    `particle_selection`; the repo-wide grep for it returns only prose.
+    """
+    if "retired" not in getattr(z, "files", []):
+        return frame_water, 0
+    mask = np.asarray(z["retired"], dtype=bool).ravel()
+    if mask.size != frame_water.shape[0]:
+        raise ValueError(
+            f"`retired` mask has {mask.size} entries against {frame_water.shape[0]} water "
+            f"particles. Refusing to guess the alignment: a mis-aligned ghost filter is "
+            f"worse than none, because it silently deletes live water instead.")
+    return frame_water[~mask], int(mask.sum())
+
+
 def measure(path, settle=8):
     z = np.load(path)
     w = z["water"]
@@ -49,8 +83,9 @@ def measure(path, settle=8):
     drift = float(np.linalg.norm(t[-1] - t[0]))
 
     fixed = []
+    n_ghost = 0
     for f in range(settle, w.shape[0]):
-        ww = w[f]
+        ww, n_ghost = active_water(z, w[f])          # ghost guard
         sel = ((ww[:, 0] >= lo[0]) & (ww[:, 0] <= hi[0]) &
                (ww[:, 1] >= lo[1]) & (ww[:, 1] <= hi[1]) & (ww[:, 2] >= floor))
         fixed.append(np.percentile(ww[sel, 2], PCTL) - floor
@@ -63,6 +98,7 @@ def measure(path, settle=8):
         "moving_median": float(np.nanmedian(moving)),
         "fixed_median": float(np.nanmedian(fixed)),
         "drift_m": drift,
+        "ghosts_filtered": n_ghost,
     }
 
 

@@ -173,6 +173,17 @@ class DepthKeyedOutflow:
         """
         return self._retired.copy()
 
+    def save_mask(self, path):
+        """Write the retirement mask as `retired` beside a rollout, per the guard contract.
+
+        `active_water()` in depth_station.py and spin_down.py reads exactly this key. A run
+        that retires particles and does NOT dump this is unanalysable: its ghosts are
+        indistinguishable from water in the archive, and every depth statistic silently
+        pins to them. Dump it or do not report a level.
+        """
+        np.save(str(path), self._retired)
+        return path
+
     def _push(self):
         """Write the selection array. NON-zero deactivates; zero is active (constraint 1)."""
         import torch
