@@ -228,6 +228,45 @@ node-h queue near 307 SU and C alone near 265 SU, comfortably inside 627. That i
 inference from the TRES billing field, **not** a confirmed rate, and it should be checked
 against the meter once accounting catches up.
 
+## 5c. Provenance audit, 2026-08-18: three defects found, all corrected here
+
+An independent provenance pass verified claims against primary sources. **Table 1 was
+re-read off the PDF itself** (sha256 matched), **Te0 was re-derived by a second method**
+over the raw txt files, and the CI95 figures were cross-checked against the paper's own
+prose (0.09 / 0.24 / 0.44 mm rounded, agreeing with the sharper 0.096 / 0.239 / 0.435).
+The vendored engine hashes matched exactly. Three things did not survive:
+
+**1. A citation to a path that is not readable from this worktree.** Section 2.1 cites
+`renders/yaris_render_s1/_incoming/sweepV_g64_v0p5/metrics.csv` for the published
+comparison values. **That path does not exist in this worktree** and is gitignored, so a
+reader here cannot check it. The numbers themselves are sound and are corroborated by a
+**tracked** file that is readable everywhere:
+`data/failure_modes_by_run_classified.csv:14`, carrying the identical
+`peak_surge_accel_g = 0.68203942` and `max_surge_drift_m = 0.05677891`. **Cite the
+tracked CSV.** This is the known worktree-visibility trap, not a fabricated path: a
+worktree is physically missing gitignored trees that the main checkout has, so "the file
+is not there" and "the file does not exist" are different statements.
+
+**2. A heave-stiffness fork nobody had cross-referenced.** Two numbers are in circulation
+across D4's own documents, and both are correctly derived from their own gravity:
+
+| value | gravity | where |
+|---|---|---|
+| **692.180 N/m** | 9.81, the engine's | `R5_PHYSICS_KRAMER2021_TESTCASE.md`, `sphere_heave.py` |
+| **692.885 N/m** | 9.82, the benchmark's | `R5_PHYSICS_BENCHMARK_UNBLOCKED.md`, `kramer_benchmark.py` |
+
+Neither is wrong. Neither document said the other existed. They differ by 0.7 N/m, about
+0.1%, and a reader citing "the heave stiffness" without naming the gravity gets whichever
+they happen to find. **This is a small echo of the project's own two-gravity fork**, and
+the rule is the same one the register already applies to the 0.05 literals: name the
+quantity AND its constant, never the value alone.
+
+**3. I overstated the missing manifest field.** Closing blocking issue 5 I wrote that "no
+manifest field records a `solver_git_sha`". The local gate reports it missing in **3 of
+47** manifests, so **the field exists and is populated in 44**. The correct, narrower
+statement is that **D4's own job scripts do not emit it**, which is a gap in what I wrote,
+not in the project's schema. Corrected in item 5 below.
+
 ## 6. Physics-skeptic review: REVIEWED-WITH-CORRECTIONS, verdict NOT CLEAN
 
 The review ran and returned **five blocking issues**. Its corrections are folded into the
@@ -277,8 +316,14 @@ reason than I gave**; claim 4 **CONFIRMED but not novel**.
    runtime engine**, and the caveat attached to every number in this document is lifted.
    State it precisely, though: **these three files did not change between the two SHAs**,
    which is not the same as the two engines being identical everywhere. The claim is
-   scoped to the files the register actually cites. A `solver_git_sha` manifest field is
-   still missing and would have made this a lookup rather than an investigation.
+   scoped to the files the register actually cites.
+
+   **CORRECTED 2026-08-18.** This previously read "a `solver_git_sha` manifest field is
+   still missing". **That was wrong.** The local `lit:manifest_provenance` gate reports it
+   missing in **3 of 47** manifests, so the field exists and is populated in **44**. The
+   true, narrower statement is that **D4's own job scripts do not emit it**, which is a
+   gap in what I produced rather than in the project's schema. Emitting it would have made
+   this a lookup instead of an investigation.
 
 ### 6.2 Non-blocking, but they change how things must be worded
 
