@@ -243,6 +243,81 @@ def parse_report(slug: str, path: str) -> dict[str, dict]:
     return recs
 
 
+# ---------------------------------------------------------------- documents
+# Beyond the Undermind paper catalogs, the project holds RESEARCH DOCUMENTS:
+# Claude.ai artifact exports, Perplexity reports and Elicit extracts. They are
+# not papers, so they do not belong in the paper table, but they carry findings
+# and they cite DOIs. Indexing them here is what lets a session ask "what have we
+# already investigated about X" rather than only "which paper covers X".
+ARTIFACT_ROOTS = [
+    os.path.expanduser("~/Claude/reu"),
+    os.path.expanduser("~/Documents/Claude/reu"),
+    os.path.expanduser("~/Downloads"),
+    os.path.expanduser("~/Downloads/perplexity research on claude gaps"),
+    os.path.join(REPO, "citations"),
+]
+DOI_PAT = re.compile(r"10\.\d{4,9}/[^\s\"'<>)\]},;]+")
+OFFTOPIC = re.compile(r"casio|fx-cg50|nightlife|course-prep|fall 2026|fren |phil ",
+                      re.I)
+
+
+def doc_type(path: str) -> str:
+    b = os.path.basename(path).lower()
+    if b.startswith("compass_artifact"):
+        return "claude-artifact"
+    if "perplexity" in path.lower():
+        return "perplexity-report"
+    if b.startswith("elicit"):
+        return "elicit-extract"
+    if b.endswith(".bib"):
+        return "bibliography"
+    return "document"
+
+
+def index_documents() -> list[dict]:
+    seen_hash: set[int] = set()
+    out: list[dict] = []
+    for root in ARTIFACT_ROOTS:
+        if not os.path.isdir(root):
+            continue
+        for fn in sorted(os.listdir(root)):
+            fp = os.path.join(root, fn)
+            if not os.path.isfile(fp):
+                continue
+            ext = os.path.splitext(fn)[1].lower()
+            if ext not in (".md", ".bib", ".csv"):
+                continue
+            dt = doc_type(fp)
+            if dt == "document" and not fn.startswith("compass_artifact"):
+                continue
+            try:
+                txt = open(fp, encoding="utf-8", errors="replace").read()
+            except OSError:
+                continue
+            h = hash(txt)
+            if h in seen_hash:
+                continue          # macOS sync duplicates, 6 to 9 copies each
+            seen_hash.add(h)
+            title = ""
+            for ln in txt.splitlines():
+                if ln.startswith("# "):
+                    title = collapse(ln[2:])
+                    break
+            if not title:
+                title = fn
+            dois = sorted({m.lower().rstrip(".,;)") for m in DOI_PAT.findall(txt)})
+            out.append({
+                "path": fp.replace(os.path.expanduser("~"), "~"),
+                "title": title,
+                "type": dt,
+                "on_topic": not bool(OFFTOPIC.search(title)),
+                "n_chars": len(txt),
+                "dois_referenced": dois,
+                "methods": tags_for(f"{title} {txt[:20000]}"),
+            })
+    return out
+
+
 def repo_cited_dois() -> tuple[set[str], set[str]]:
     """DOIs cited in the repo. Returns (anywhere, reader_facing).
 
@@ -313,6 +388,7 @@ def build() -> dict:
             else:
                 merged[key] = dict(r)
 
+    docs = index_documents()
     cited, reader = repo_cited_dois()
     for r in merged.values():
         r["methods"] = tags_for(f"{r['title']} {r['abstract']}")
@@ -332,6 +408,9 @@ def build() -> dict:
         "n_no_doi_undiffable": sum(1 for r in merged.values() if not r["doi"]),
         "method_tags": sorted(METHOD_TAGS),
         "papers": merged,
+        "documents": docs,
+        "n_documents": len(docs),
+        "n_documents_on_topic": sum(1 for d in docs if d["on_topic"]),
     }
 
 
@@ -371,6 +450,9 @@ def main() -> int:
     ap.add_argument("--gaps", action="store_true")
     ap.add_argument("--verbose", "-v", action="store_true")
     ap.add_argument("--limit", type=int, default=25)
+    ap.add_argument("--docs", action="store_true",
+                    help="search research DOCUMENTS (artifacts, Perplexity, "
+                         "Elicit) instead of papers")
     a = ap.parse_args()
 
     if a.build:
@@ -386,12 +468,34 @@ def main() -> int:
         print(f"  reader-facing      {idx['n_cited_reader_facing']}"
               "   (paper/ docs/ deliverables/ citations/)")
         print(f"  no DOI, undiffable {idx['n_no_doi_undiffable']}")
+        print(f"  documents          {idx.get('n_documents', 0)}"
+              f"  ({idx.get('n_documents_on_topic', 0)} on-topic)")
         for s, n in idx["papers_per_report"].items():
             print(f"    {s:22} {n}")
         return 0
 
     idx = load()
     papers = list(idx["papers"].values())
+
+    if a.docs:
+        ds = [d for d in idx.get("documents", []) if d["on_topic"]]
+        if a.method:
+            ds = [d for d in ds if a.method.lower()
+                  in [m.lower() for m in d["methods"]]]
+        if a.query:
+            q = a.query.lower()
+            ds = [d for d in ds if q in d["title"].lower()]
+        ds.sort(key=lambda d: -len(d["dois_referenced"]))
+        print(f"{len(ds)} document(s)\n")
+        for d in ds[:a.limit]:
+            print(f"  [{d['type']}] {d['title'][:86]}")
+            print(f"      {d['path']}")
+            if d["methods"]:
+                print(f"      methods: {', '.join(d['methods'][:8])}")
+            if d["dois_referenced"]:
+                print(f"      cites {len(d['dois_referenced'])} DOI(s)")
+            print()
+        return 0
 
     if a.stats:
         print(f"index built {idx['built']}   papers {idx['n_papers']}   "

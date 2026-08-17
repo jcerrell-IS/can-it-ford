@@ -30,3 +30,26 @@ for h in vista ls6; do
   fi
 done
 echo "Direct TACC access is wired: scripts/tacc.sh <host> '<cmd>' or --status. No tmux relay needed."
+
+# --- research corpus, hardwired 2026-08-15 -----------------------------------
+# The research is only useful if a session knows it exists before it asserts
+# something. Description-triggered skills are good but not guaranteed, so the
+# index announces itself here every session.
+IDX="${CLAUDE_PROJECT_DIR:-/Users/josie/can-it-ford}/data/research_corpus_index.json"
+if [ -f "$IDX" ]; then
+  /usr/bin/python3 - "$IDX" <<'PY'
+import json, sys
+try:
+    d = json.load(open(sys.argv[1]))
+except Exception:
+    sys.exit(0)
+print("--- research corpus, query it before asserting novelty or a method ---")
+print(f"{d.get('n_papers',0)} papers ({d.get('n_with_abstract',0)} with abstracts), "
+      f"{d.get('n_documents',0)} documents "
+      f"({d.get('n_documents_on_topic',0)} on-topic). "
+      f"Only {d.get('n_cited_reader_facing',0)} papers reach paper/ or docs/.")
+print("  python3 analysis/research_index.py --stats | --method X | --query X | --docs")
+print("  Skill: research-corpus. Four prior vehicle-fording works exist and")
+print("  paper/ cites NONE of them. settle_frames=8 is contradicted by all 25 runs.")
+PY
+fi

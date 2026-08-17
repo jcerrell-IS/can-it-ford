@@ -674,3 +674,150 @@ STILL OPEN, not closed
   fresh Overleaf Git authentication token is needed before the next push; and
   the old token stays valid server-side until rotated in Overleaf account
   settings.
+  **CORRECTED 2026-08-15, the deletion half of this item is STALE.**
+  `~/can-it-ford-paper` EXISTS. Directory birth 2026-08-08 05:13, 40 files,
+  HEAD `6466dfa` "Update on Overleaf." (2026-07-31), which is four commits
+  PAST the `92ce4de` recorded above. It is clean, 0 ahead and 0 behind its own
+  origin/main, and equals this repo's `overleaf/main` ref. The CREDENTIAL half
+  above still holds and was re-verified 2026-08-15: all five
+  `can-it-ford*/.git/config` files are free of any `olp_` string, tested for
+  presence only, no value read. See register L4.
+
+## AUGUST 15 2026, THE RESEARCH CORPUS IS NOW QUERYABLE FROM INSIDE THE REPO
+
+**Before asserting that a method is untried, that a result is novel, or that
+something needs a citation, QUERY THE INDEX.** Load the `research-corpus` skill
+(`.claude/skills/research-corpus/`) or run the tool directly:
+
+    python3 analysis/research_index.py --stats
+    python3 analysis/research_index.py --method added-mass -v
+    python3 analysis/research_index.py --gaps --method validation-dataset
+
+`data/research_corpus_index.json` holds **332 distinct external papers** merged
+from eight Undermind reports, tagged across 25 method axes, each marked for
+whether it reaches a reader-facing document. Built 2026-08-15 by
+`analysis/research_index.py`. It reads only the committed index, never
+`~/Downloads`, because a prior session lost a pass when Downloads returned EPERM
+and a recursive search silently reported zero hits.
+
+Headline numbers, measured not estimated: **43 of 332 papers reach `paper/`,
+`docs/`, `deliverables/` or `citations/`. 256 are cited nowhere.** 60 carry no
+DOI and are undiffable. 222 have an abstract; the other 110 are metadata-only
+because each report details its top 50 only, so never describe those as read.
+
+THE CITED-STATUS COUNT IS SCOPE-SENSITIVE, exactly like the DRIFT_THRESHOLD total
+in item 13. `.claude/worktrees/` MUST be excluded. A first version of the index
+included it and reported 269 of 332 as cited, because another session's
+`r5-research/data/r5_citation_xref.tsv` carries 489 DOIs. State the scope with
+any figure.
+
+THREE PRIOR-ART FACTS THAT CONSTRAIN THE PAPER. Four prior vehicle fording or
+wading simulations exist and `paper/` cites NONE of them: He et al 2026
+`10.1115/1.4071177`, Wasfy et al 2015 `10.1115/DETC2015-47142`, Pazouki et al
+(Semantic Scholar `61da26b6`), and Khapane & Ganeshwade 2014 `10.4271/2014-01-0936`,
+the last of which is cited nowhere in the repo at all. Al-Qadami et al 2022
+`10.1111/jfr3.12828` separately claim a first moving full-scale vehicle
+simulation, with critical depth 0.38 m and minimum D x V 0.39 m^2/s.
+
+## AUGUST 15 2026, THE FIXED SETTLE LENGTH IS CONTRADICTED BY OUR OWN DATA
+
+`sim_standing.py:154` uses `settle_frames=8`. `analysis/settle_audit.py` applied
+`analysis/stationarity.py` to all 25 local runs, no GPU needed since the
+15-column `metrics.csv` files are already on disk:
+
+- **25 of 25 runs need MORE than 8 frames discarded.** Min 29, median 48, max 80,
+  of 91 total frames.
+- **N_eff is 2.9 to 11.0.** A 91-frame record holds roughly 3 to 11 independent
+  samples, so any uncertainty computed from N=91 is overstated by about 3x to 5x.
+  Use `effective_sample_size`, never the frame count.
+- 12 of 25 retained windows are still non-stationary at 5 percent, which reads as
+  the run being too short. This reaches D9's 250-frame conclusion by a different
+  route: a stationarity statistic on one record, against D9's settle-length sweep
+  across arms. Separate origins, so it counts as corroboration.
+
+MSER MINIMISES STANDARD ERROR, WHICH IS NOT STATIONARITY. A settle length chosen
+to stabilise a mean is not evidence the record is stationary; a residual trend can
+survive inside the MSER-optimal window and only the reverse-arrangement test
+catches it. `stationarity.py` reports both and carries a self-test for this trap.
+
+DO NOT REMOVE THE TRANSIENT BEFORE A SLIDE VERDICT. Incipient motion is an EVENT,
+not a steady state, and the settling literature wants peak or event statistics for
+impact-type loading. Removing it drops SLIDE from 21 of 24 runs to 5 of 24 and
+would silently contradict the published 16 SLIDE / 1 STUCK. `probabilistic_verdict.py`
+defaults to the full record for that reason; `--stationary-window` is a robustness
+diagnostic only.
+
+VERDICT THRESHOLDS ARE A CHOICE. 17 of 24 runs flip verdict somewhere in
+p >= 0.01 to 0.50, per Dancey et al 2002's probability-of-movement criterion.
+`g96_m2337` returns margin_frames 1, independently matching register J15.
+
+GRID REFINEMENT DOES NOT CONVERGE A TRANSIENT QUANTITY. Syamlal, Celik & Benyahia
+2017 `10.1002/AIC.15868`. The non-monotone `final_disp_mag_m` across g48/g64/g96
+is the documented expected behaviour for an instantaneous value, not necessarily a
+solver defect. If grid convergence is the claim, report a time-averaged observable
+over a demonstrated-stationary window with a GCI.
+
+## AUGUST 15 2026, REPO-CLONE INVENTORY AND CORPUS GAP CLOSURE
+
+Measured live 2026-08-15 by a local Claude Code session. Full working in
+docs/CANONICAL_CORRECTIONS_REGISTER_2026-08-06.md addendum L1 to L7, and in
+`~/Desktop/CAN_IT_FORD_RESEARCH_CORPUS_2026-08-13/` files
+`05_Repo_Clone_Inventory_2026-08-15.tsv`,
+`06_Phase_C_Near_Duplicates_2026-08-15.tsv` and
+`07_Sprint6_REU_Knowledge_RepoLevel_2026-08-15.tsv`.
+Nothing was deleted, moved or renamed anywhere in this pass.
+
+1. THE SPRAWL IS 28 LOCATIONS AND 31.6 GB. 15.9 GB of that, almost exactly
+   half, is non-canonical. Split: 17 NON_GIT_COPY, 4 ORPHANED_CLONE, 3
+   STALE_BACKUP, 3 CANONICAL, 1 VENV_EXCLUDE. `~/can-it-ford` is canonical and
+   sits exactly at origin/main `1a868f3`. A self-documenting pointer now
+   exists at `<corpus>/00_CANONICAL_REPO`.
+   DO NOT test clone provenance by asking each clone whether HEAD is an
+   ancestor of origin/main. That reads the CLONE'S OWN cached remote ref,
+   which is stale by construction in a backup. Four clones answer "0 ahead, 0
+   behind" while sitting at four different commits. Resolve the canonical SHA
+   once from the live remote, then interrogate the canonical repo's object
+   database about the others.
+   "3 CANONICAL" is not three copies of one repo. `can-it-ford-demo` and
+   `can-it-ford-paper` are canonical for DIFFERENT remotes.
+
+2. THE CLAUDE.AI PROJECT'S GITHUB SYNC DOES NOT REACH THIS REPO. Its two
+   synced sources live under `jcerrell-IS/mpm-engine`, confirmed by
+   `gh repo view` to be a fork of `kks32/mpm-engine`. This repo is
+   `jcerrell-IS/can-it-ford`. Committing into `docs/` here will NOT appear in
+   the Project's knowledge base, so do not plan a handoff around that.
+
+3. TWO UNPUSHED COMMITS SIT OUTSIDE THIS REPO. `~/can-it-ford-demo` `4d228d9`
+   is SINGLE-COPY and not on GitHub, and by its own commit message it is the
+   joint-AR&R-rule fix, so the public demo repo still serves the superseded
+   bare-hazard-product rule. `~/can-it-ford-warpmpm-continue` `4924940` is one
+   ahead of its remote branch but is duplicated on a local branch here, so it
+   is not at risk.
+
+4. `make_phase_space.py` FORKS ON THE 0.60 BOUNDARY OPERATOR. Seven copies
+   including this repo carry `'FORD' if h <= 0.60`; two pre-history-purge
+   trees carry `h < 0.60`. `data/scenario_sweep.csv` has exactly 4 rows at
+   L1_haz == 0.60, so the operator decides 4 of 70. NOT CLAIMED that any
+   published verdict count turns on it: the live 10-column CSV reads NO-FORD
+   at all four, and its L1_verdict split is 14 FORD against 56 NO-FORD, which
+   is the joint AR&R rule and not this script's bare-product rule. The
+   exposure is that `designsafe-staging/` is the publication-bound tree. The
+   two files differ by ONE BYTE of length, 4267 against 4266, so no
+   size-delta pass can see this and a checksum pass says only "different".
+
+5. THE LONG-BLOCKED `CAN_IT_FORD_DUPLICATES_ARCHIVE_2026-07-07` WAS NEVER
+   BLOCKED, ONLY MISFILED. Real path is
+   `~/Archive/_ZZZ_DELETE_THESE_2026-07-17/CAN_IT_FORD_DUPLICATES_ARCHIVE_2026-07-07`.
+   6 files, 44 KB, 2 of them .DS_Store. Of the 4 real files exactly 1 is new
+   content. Do not re-open this as a gap.
+
+6. REU_Knowledge IS A VENDORED-CODE CACHE, NOT A RESEARCH STORE, so the
+   "1,296 unread items" gap is re-scoped rather than ground through. Live
+   count is 1,541 files and 30 MB across 15 subtrees, and the extension
+   profile is 817 .py, 172 .h, 73 .cc, 48 .rst, 35 .tcc against only 276 .md.
+   Upstream identity confirmed from LICENSE/README/pyproject, not from folder
+   names: `newton` is NVIDIA Newton, `mpm` is CB-Geo MPM, plus genesis-world,
+   gsplat, gns, diffmpm, lbm, x2sim and Kumar's own LearnMPM. The research
+   layer at its root was already fully indexed by the 2026-08-14 Round 3
+   provenance audit, 37 union artifact ids, zero unique to that location.
+   It is now indexed at repository level, 16 rows for 1,541 files.

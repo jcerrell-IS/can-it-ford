@@ -654,3 +654,107 @@ K2. gsplat_env has a slow first-import chain that reads as a hang. On LS6 node c
 K3. Diagnostic playbook for a job that seems hung on TACC. squeue -u jcerrell0629 from a second terminal confirms the job is alive. nvidia-smi and ps aux on the reported node show GPU and process state. ss -tnp checks for a stalled outbound connection. time python3 -c import X twice in a row isolates a slow import from a real hang.
 
 K4. Open as of this date. Whether the matplotlib import timing test was run, and whether simple_trainer.py completed a training run on drainA, were not confirmed in this session.
+
+## ADDENDUM 2026-08-15
+
+Every item below was measured live on 2026-08-15 by a local Claude Code session with a
+real shell. Nothing here is transcribed from a prior summary. Full working:
+`~/Desktop/CAN_IT_FORD_RESEARCH_CORPUS_2026-08-13/05_Repo_Clone_Inventory_2026-08-15.tsv`
+and `06_Phase_C_Near_Duplicates_2026-08-15.tsv`.
+
+L1. **THE REPO-CLONE SPRAWL IS 28 LOCATIONS AND 31.6 GB, OF WHICH 15.9 GB IS NON-CANONICAL.**
+    Verdict split: 17 `NON_GIT_COPY`, 4 `ORPHANED_CLONE`, 3 `STALE_BACKUP`, 3 `CANONICAL`,
+    1 `VENV_EXCLUDE`. `~/can-it-ford` is the canonical one and it is exactly at
+    `origin/main` `1a868f3`, confirmed against the GitHub default branch, not against a
+    cached ref. A pointer symlink now exists at
+    `~/Desktop/CAN_IT_FORD_RESEARCH_CORPUS_2026-08-13/00_CANONICAL_REPO`.
+    **METHOD WARNING, this is the trap.** Asking each clone whether its HEAD is an
+    ancestor of `origin/main` answers using THAT CLONE's own cached remote-tracking ref,
+    which is stale by construction in a backup. Four clones report "0 ahead, 0 behind"
+    while sitting at four different commits. The only sound test is to resolve the
+    canonical SHA once from the live remote and then ask the canonical repo's object
+    database about every other clone's HEAD.
+    The 3 `CANONICAL` rows are not three copies of one repo: `~/can-it-ford-demo` is
+    canonical for `jcerrell-IS/can-it-ford-demo` and `~/can-it-ford-paper` is canonical for
+    the Overleaf remote. Both are separate remotes.
+
+L2. **CLOSED: `CAN_IT_FORD_DUPLICATES_ARCHIVE_2026-07-07`, carried as blocked since Sprint 1,
+    was never blocked. The recorded path was wrong.** It is not at
+    `~/Archive/CAN_IT_FORD_DUPLICATES_ARCHIVE_2026-07-07`; it is one level deeper, at
+    `~/Archive/_ZZZ_DELETE_THESE_2026-07-17/CAN_IT_FORD_DUPLICATES_ARCHIVE_2026-07-07`,
+    inside the prior pass's own delete-staging folder. It holds 6 files and 44 KB, of which
+    2 are `.DS_Store`. Of the 4 real files, 3 are exact-checksum duplicates of content
+    Sprint 2 already catalogued and exactly 1 is new, `build_phase_space_v2.py`. A gap
+    carried for weeks was worth one file. Its `scenario_sweep.csv` is a 5-column, 70-row
+    copy, another instance of the snapshot the standing rules warn against.
+
+L3. **THE CLAUDE.AI PROJECT'S GITHUB SYNC IS NOT WIRED TO THIS REPO.** The two synced
+    sources are under `jcerrell-IS/mpm-engine`, which `gh repo view` confirms is a FORK of
+    `kks32/mpm-engine` carrying `docs/ src/ tests/ examples/ experiments/`. This repo is
+    `jcerrell-IS/can-it-ford`, a different remote with a different tree. Consequence, and it
+    is load-bearing for anyone planning to "just commit it so Claude chat picks it up":
+    **committing to `can-it-ford/docs/` does NOT reach the Project knowledge base.** The
+    solver this project actually runs is vendored in-tree at
+    `third_party/mpm-engine-544c93dd` with no `.git` of its own, so it is a vendored copy,
+    not a submodule of the fork.
+
+L4. **`~/can-it-ford-paper` EXISTS. The CLAUDE.md line saying it was deleted 2026-08-08 is
+    stale.** Directory birth time is 2026-08-08 05:13, it holds 40 files, and its HEAD is
+    `6466dfa` "Update on Overleaf." (2026-07-31), which is four commits past the `92ce4de`
+    that CLAUDE.md records as the state at deletion. It is clean, 0 ahead and 0 behind its
+    own `origin/main`, and matches this repo's `overleaf/main` ref. **The credential half of
+    that CLAUDE.md entry still holds and was re-verified:** all five `can-it-ford*/.git/config`
+    files are free of any `olp_` string. Presence was tested, no value was read or recorded.
+
+L5. **TWO UNPUSHED COMMITS EXIST OUTSIDE THE CANONICAL REPO, and they are not equally safe.**
+    (a) `~/can-it-ford-demo` HEAD `4d228d9` (2026-08-07) is **single-copy on disk and not on
+    GitHub**. The live tip of `jcerrell-IS/can-it-ford-demo` is still `a10b037` (2026-07-23).
+    That commit's own message says it fixes the L1 verdict to the joint AR&R rule and that
+    the previous behaviour "used bare hazard product only, which overstated FORD cases in
+    the 3.0-5.0 m/s range". So the **public demo repo currently serves the superseded rule**
+    and the fix exists in exactly one place.
+    (b) `~/can-it-ford-warpmpm-continue` HEAD `4924940` (2026-08-13,
+    `analysis/run_provenance.py`) is one commit ahead of `origin/warpmpm-continue`
+    `66912e3`. This one is NOT single-copy: the same commit is on local branch
+    `warpmpm-continue` inside the canonical repo.
+    **NOTE FOR `register_integrity.py`, which will flag `4d228d9` and `a10b037` as
+    unresolved hex: that is CORRECT and expected, not a fabrication.** Both are commits in
+    `jcerrell-IS/can-it-ford-demo`, a DIFFERENT remote, so neither object can exist in this
+    clone. Resolve them with `git -C ~/can-it-ford-demo show <sha>` or
+    `gh api repos/jcerrell-IS/can-it-ford-demo/commits/a10b037`. The checker searches this
+    clone, `third_party/*/PINNED_SHA.txt` and the research artifacts only, so a
+    cross-repository SHA is outside every one of its three resolution routes by
+    construction.
+
+L6. **PHASE C, CONTENT SIMILARITY: `make_phase_space.py` FORKS ON THE 0.60 BOUNDARY
+    OPERATOR, AND FOUR OF THE SEVENTY SCENARIOS SIT EXACTLY ON IT.** A MinHash pass over
+    6,090 in-scope text files found 6,540 pairs that are similar but NOT byte-identical.
+    The sharpest is a one-character divergence in
+    `designsafe-staging/scripts/make_phase_space.py`:
+    `'FORD' if h <= 0.60` in 7 copies including the canonical repo, against
+    `'FORD' if h < 0.60` in 2 copies, both of them pre-history-purge trees. The two files
+    are 4267 and 4266 bytes, so a size-delta pass cannot see this and a checksum pass sees
+    only "different" without saying why.
+    `data/scenario_sweep.csv` has exactly 4 rows at `L1_haz` == 0.60: (0.2, 3.0), (0.3, 2.0),
+    (0.4, 1.5) and (0.6, 1.0). So the operator is not academic.
+    **NOT CLAIMED, and this matters:** no currently published verdict count turns on it.
+    The live 10-column `scenario_sweep.csv` reads NO-FORD for all four boundary rows and
+    totals 14 FORD / 56 NO-FORD, which is the JOINT AR&R rule, not this script's bare
+    hazard-product rule. The exposure is forward-looking: `designsafe-staging/` is the
+    publication-bound tree, and regenerating a figure from that script would produce a
+    different answer than the canonical CSV for those four points.
+    Scale note for anyone re-running this: of the 722 pairs at Jaccard >= 0.999, a sample of
+    200 split 164 whitespace-or-CRLF-only against 36 with real content differences. Do not
+    report the raw pair count as "near-duplicates found" without that split.
+
+L7. **SKILL DRIFT, RE-VERIFIED, and the previously recorded drift is FIXED.** Five skills
+    exist in both `.claude/skills/` and `~/.claude/skills/`. Three are byte-identical
+    (`bug-triage-protocol`, `claude-code-prompt-install`, `mpm-render-pipeline`). The
+    `panel-audit-dispatch` copies still differ but only in wording: both now carry
+    310.494 kg/m^3 and both state `coup_friction` is genuine Coulomb friction, so the stale
+    density band and refuted friction claim recorded earlier are gone from both.
+    **The remaining divergence runs the other way from the historical case: the USER-LEVEL
+    copy is AHEAD.** `~/.claude/skills/connector-router/SKILL.md` carries a Scholar Sidekick
+    routing row that the repo copy lacks. Not applied here, deliberately: the repo had 27
+    uncommitted files at the time and this session did not add a 28th to a tree with a
+    documented concurrent-session hazard. One additive table row closes it.

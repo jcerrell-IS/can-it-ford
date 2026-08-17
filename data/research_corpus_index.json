@@ -1,5 +1,1071 @@
 {
  "built": "2026-08-15",
+ "documents": [
+  {
+   "dois_referenced": [
+    "10.1007/s11069-010-9639-x",
+    "10.1007/s11069-013-0889-2",
+    "10.1007/s11069-021-04949-6",
+    "10.1016/j.trd.2017.06.020",
+    "10.1080/00221686.2011.616318",
+    "10.1080/00221686.2019.1647887",
+    "10.1080/1573062x.2017.1301501",
+    "10.1111/jfr3.12657",
+    "10.1111/jfr3.12828",
+    "10.3390/su151713262",
+    "10.3390/w18010080"
+   ],
+   "methods": [
+    "stationarity-uq",
+    "drag-lift",
+    "vehicle-stability",
+    "vehicle-fording",
+    "validation-dataset",
+    "sph-comparison"
+   ],
+   "n_chars": 21754,
+   "on_topic": true,
+   "path": "~/Claude/reu/compass_artifact_wf-045982be-1f56-5c57-9f47-d78a05d7e156_text_markdown.md",
+   "title": "Safe Maximum Crossing Speed as a Function of Flood Depth and Flow Velocity: A Literature Assessment for AV Flood-Road Traversability",
+   "type": "claude-artifact"
+  },
+  {
+   "dois_referenced": [
+    "10.1007/s11069-010-9639-x:",
+    "10.1007/s11069-013-0889-2"
+   ],
+   "methods": [
+    "drag-lift",
+    "vehicle-stability",
+    "validation-dataset",
+    "ai-reliability"
+   ],
+   "n_chars": 12569,
+   "on_topic": true,
+   "path": "~/Claude/reu/compass_artifact_wf-0c02e2cf-0778-5a95-b824-10b0bfca1fe9_text_markdown.md",
+   "title": "FloodScene in kks32/mpm-engine: Does It Satisfy Kumar's 6-DOF + Failure-Mode Ask?",
+   "type": "claude-artifact"
+  },
+  {
+   "dois_referenced": [
+    "10.1029/2023wr036739"
+   ],
+   "methods": [
+    "particles-per-cell",
+    "boundary-treatment",
+    "wall-penetration",
+    "quadrature-error",
+    "drag-lift",
+    "vehicle-stability",
+    "vehicle-fording",
+    "validation-dataset",
+    "dam-break",
+    "shallow-water",
+    "sph-comparison"
+   ],
+   "n_chars": 21491,
+   "on_topic": true,
+   "path": "~/Claude/reu/compass_artifact_wf-211aad60-4684-50f5-b92d-12d94a9efb3c_text_markdown.md",
+   "title": "Particle Resolution and Force Convergence for Rigid Bodies in Flood-Type Flows: A Critical Review",
+   "type": "claude-artifact"
+  },
+  {
+   "dois_referenced": [],
+   "methods": [
+    "drag-lift",
+    "vehicle-stability",
+    "validation-dataset",
+    "shallow-water",
+    "provenance-gates"
+   ],
+   "n_chars": 14925,
+   "on_topic": true,
+   "path": "~/Claude/reu/compass_artifact_wf-266e9a8a-b19d-5275-9529-c093846a87b1_text_markdown.md",
+   "title": "Incipient-Velocity Equations for Flooded Vehicles: Xia et al. (2011) vs. Shu et al. (2011) \u2014 Verified Primary-Source Transcription",
+   "type": "claude-artifact"
+  },
+  {
+   "dois_referenced": [
+    "10.1061/9780784485347.034",
+    "10.1063/5.0182801",
+    "10.1145/3624062.3626082",
+    "10.13021/g8js5d",
+    "10.17603/ds2-0phb-dg64",
+    "10.17603/ds2-fzg7-1719",
+    "10.21105/joss.05025"
+   ],
+   "methods": [
+    "boundary-treatment",
+    "validation-dataset",
+    "sph-comparison",
+    "provenance-gates"
+   ],
+   "n_chars": 19030,
+   "on_topic": true,
+   "path": "~/Claude/reu/compass_artifact_wf-289743f7-dac6-511b-8eef-bbde9ec81d2a_text_markdown.md",
+   "title": "GNN Surrogates for Fluid\u2013Rigid Coupling & NCAC/CCSA Vehicle-Mesh Reuse: A Provenance-Disciplined Assessment",
+   "type": "claude-artifact"
+  },
+  {
+   "dois_referenced": [],
+   "methods": [
+    "particles-per-cell",
+    "stationarity-uq",
+    "reproducibility",
+    "ai-reliability",
+    "provenance-gates"
+   ],
+   "n_chars": 34290,
+   "on_topic": true,
+   "path": "~/Claude/reu/compass_artifact_wf-2c1e05ae-1664-5715-b1ab-d2dfe8e357a9_text_markdown (1).md",
+   "title": "Configuring Claude Across Five Surfaces to Kill Two Recurring Failure Classes: A ROI-Ranked Reference",
+   "type": "claude-artifact"
+  },
+  {
+   "dois_referenced": [],
+   "methods": [
+    "reproducibility",
+    "validation-dataset",
+    "sph-comparison",
+    "ai-reliability",
+    "provenance-gates"
+   ],
+   "n_chars": 27562,
+   "on_topic": true,
+   "path": "~/Claude/reu/compass_artifact_wf-35a13e3e-ac7b-5ef4-ba8b-459dc38a09db_text_markdown.md",
+   "title": "Claude Code, Used Correctly: Is It Actually Effective \u2014 and Is It the Right Tool for a Multi-Pane HPC Simulation Workflow?",
+   "type": "claude-artifact"
+  },
+  {
+   "dois_referenced": [
+    "10.1145/3528223.3530103"
+   ],
+   "methods": [
+    "validation-dataset"
+   ],
+   "n_chars": 18146,
+   "on_topic": true,
+   "path": "~/Claude/reu/compass_artifact_wf-3a3af269-559b-5c2e-ab8d-61d495641edb_text_markdown.md",
+   "title": "Genesis `watertighten_mesh` / `CoacdOptions` Pipeline: Can It Replace External CoACD/V-HACD for a Surface-Only Point Cloud?",
+   "type": "claude-artifact"
+  },
+  {
+   "dois_referenced": [],
+   "methods": [
+    "validation-dataset"
+   ],
+   "n_chars": 19421,
+   "on_topic": false,
+   "path": "~/Claude/reu/compass_artifact_wf-3c691f99-7d58-53ff-b44e-fc9cabcaeb55_text_markdown.md",
+   "title": "Fall 2026 Course-Prep Playbook for Josie Cerrell (Aug 10\u201331, 2026)",
+   "type": "claude-artifact"
+  },
+  {
+   "dois_referenced": [
+    "10.1111/jfr3.12885"
+   ],
+   "methods": [
+    "drag-lift",
+    "vehicle-stability",
+    "validation-dataset",
+    "sph-comparison"
+   ],
+   "n_chars": 16879,
+   "on_topic": true,
+   "path": "~/Claude/reu/compass_artifact_wf-5e706c91-aee2-56f9-892b-f9b8b56051b6_text_markdown.md",
+   "title": "Forensic Code Audit: `friction` in kks32/mpm-engine vs `jcerrell-IS/can-it-ford`",
+   "type": "claude-artifact"
+  },
+  {
+   "dois_referenced": [
+    "10.1061/(asce",
+    "10.1111/jfr3.12527",
+    "10.1111/jfr3.12885",
+    "10.17616/r30s94",
+    "10.3390/su151713262",
+    "10.5281/zenodo.14833532",
+    "10.5281/zenodo.17151262"
+   ],
+   "methods": [
+    "reproducibility",
+    "vehicle-stability",
+    "validation-dataset",
+    "sph-comparison",
+    "ai-reliability",
+    "provenance-gates"
+   ],
+   "n_chars": 26962,
+   "on_topic": true,
+   "path": "~/Claude/reu/compass_artifact_wf-62a7f8e6-d07d-5c14-b7f0-3400f917afbe_text_markdown.md",
+   "title": "AI Research Tools & Scientific-Computing Infrastructure to Accelerate \"Can It Ford\"",
+   "type": "claude-artifact"
+  },
+  {
+   "dois_referenced": [
+    "10.13021/g8js5d"
+   ],
+   "methods": [
+    "validation-dataset"
+   ],
+   "n_chars": 14643,
+   "on_topic": true,
+   "path": "~/Claude/reu/compass_artifact_wf-63a4b5d4-616e-59dc-a1ce-bd5e78af83e5_text_markdown.md",
+   "title": "Audit: Does `akaszynski/lsdyna-mesh-reader` Undercount a Parsed NCAC Vehicle Mesh?",
+   "type": "claude-artifact"
+  },
+  {
+   "dois_referenced": [
+    "10.1002/9781119719984",
+    "10.1111/jfr3.12527:",
+    "10.1111/jfr3.12885"
+   ],
+   "methods": [
+    "stationarity-uq",
+    "vehicle-stability",
+    "validation-dataset",
+    "shallow-water",
+    "sph-comparison",
+    "provenance-gates"
+   ],
+   "n_chars": 16476,
+   "on_topic": true,
+   "path": "~/Claude/reu/compass_artifact_wf-65474f37-43a9-5ab0-817a-2b78217ff50f_text_markdown.md",
+   "title": "Citation Provenance Audit: The \u03bc = 0.55 Friction Coefficient in Azhar, Pauwels & Bui (2023)",
+   "type": "claude-artifact"
+  },
+  {
+   "dois_referenced": [
+    "10.1680/jgeot.21.00399",
+    "10.17226/26894"
+   ],
+   "methods": [
+    "wall-penetration",
+    "vehicle-stability",
+    "vehicle-fording",
+    "validation-dataset",
+    "sph-comparison"
+   ],
+   "n_chars": 17477,
+   "on_topic": true,
+   "path": "~/Claude/reu/compass_artifact_wf-67209420-df85-5115-be80-712e8e741ad2_text_markdown.md",
+   "title": "Reconstruction-to-Decision Pipelines: Prior-Art Assessment for Sensor-Reconstruction \u2192 Physics-Simulation \u2192 Validated Feasibility/Safety Verdict",
+   "type": "claude-artifact"
+  },
+  {
+   "dois_referenced": [],
+   "methods": [
+    "validation-dataset"
+   ],
+   "n_chars": 15863,
+   "on_topic": true,
+   "path": "~/Claude/reu/compass_artifact_wf-72adbe17-e467-59e4-807f-a28fd9dccfba_text_markdown.md",
+   "title": "Genesis Mesh/Collision Tooling vs. External CoACD/V-HACD for Point-Cloud-to-Solid Conversion (Can It Ford / MPM Flood Traversability)",
+   "type": "claude-artifact"
+  },
+  {
+   "dois_referenced": [],
+   "methods": [
+    "wall-penetration",
+    "reproducibility",
+    "ai-reliability",
+    "provenance-gates"
+   ],
+   "n_chars": 30226,
+   "on_topic": true,
+   "path": "~/Claude/reu/compass_artifact_wf-7b8dbc33-41bb-4153-b117-919b6015ccf5_text_markdown 2.md",
+   "title": "Optimal Tooling Stack for \"Can It Ford\" \u2014 A Decision-Ready Review for a 3-Week Sprint",
+   "type": "claude-artifact"
+  },
+  {
+   "dois_referenced": [],
+   "methods": [
+    "bspline",
+    "stationarity-uq",
+    "vehicle-stability",
+    "provenance-gates"
+   ],
+   "n_chars": 15190,
+   "on_topic": true,
+   "path": "~/Claude/reu/compass_artifact_wf-82c51733-4a8b-559a-b300-fe37294b3009_text_markdown.md",
+   "title": "Code-Level Analysis: PLY Loading in kks32/mpm-engine (`splats` module & `load_vehicle`)",
+   "type": "claude-artifact"
+  },
+  {
+   "dois_referenced": [],
+   "methods": [
+    "validation-dataset"
+   ],
+   "n_chars": 15175,
+   "on_topic": true,
+   "path": "~/Claude/reu/compass_artifact_wf-86c0a734-7691-5c0c-aecd-ab47c88a4688_text_markdown.md",
+   "title": "InstantSplat for a Dense 267-Frame Outdoor MPM Capture: Technical Compatibility Assessment",
+   "type": "claude-artifact"
+  },
+  {
+   "dois_referenced": [
+    "10.1007/s40571-022-00511-8",
+    "10.1016/j.compfluid.2015.04.018",
+    "10.1016/j.jfluidstructs.2015.06.010",
+    "10.1016/j.jhydrol.2016.01.027",
+    "10.1029/2023wr036739",
+    "10.1111/jfr3.12527",
+    "10.1111/jfr3.12885",
+    "10.1111/jfr3.70181",
+    "10.1145/3197517.3201293",
+    "10.1177/09544070221135908",
+    "10.3390/su151713262"
+   ],
+   "methods": [
+    "stationarity-uq",
+    "grid-convergence",
+    "drag-lift",
+    "vehicle-stability",
+    "validation-dataset",
+    "dam-break",
+    "sph-comparison",
+    "ai-reliability"
+   ],
+   "n_chars": 16750,
+   "on_topic": true,
+   "path": "~/Claude/reu/compass_artifact_wf-8f2c67a9-358d-5257-b84f-0348b831f1d6_text_markdown.md",
+   "title": "Citation Verification: Mesh Resolution, SPH Bulk Modulus, and Dam-Break vs. Steady-Flow Sensitivity in Vehicle Flood-Stability Simulation",
+   "type": "claude-artifact"
+  },
+  {
+   "dois_referenced": [
+    "10.1093/bioinformatics/btu829"
+   ],
+   "methods": [
+    "reproducibility",
+    "validation-dataset",
+    "ai-reliability"
+   ],
+   "n_chars": 21689,
+   "on_topic": false,
+   "path": "~/Claude/reu/compass_artifact_wf-98b1f322-17d9-5497-a4ec-bf940706e818_text_markdown.md",
+   "title": "Optimizing Claude + External Resources for Fall 2026: FREN 033, PHIL 030, and SCI 031",
+   "type": "claude-artifact"
+  },
+  {
+   "dois_referenced": [],
+   "methods": [
+    "boundary-treatment",
+    "stationarity-uq",
+    "drag-lift",
+    "vehicle-stability",
+    "vehicle-fording",
+    "validation-dataset",
+    "dam-break",
+    "inflow-outflow",
+    "sph-comparison"
+   ],
+   "n_chars": 27805,
+   "on_topic": true,
+   "path": "~/Claude/reu/compass_artifact_wf-a1fd6fdc-a2d2-5606-bc53-448d9f737aab_text_markdown.md",
+   "title": "Coupled Rigid-Body/Fluid Simulation Engines vs. Genesis MPM on GH200: An Evidence-Based Comparison",
+   "type": "claude-artifact"
+  },
+  {
+   "dois_referenced": [
+    "10.1007/s40571-022-00511-8",
+    "10.1016/j.compfluid.2018.10.007",
+    "10.1111/jfr3.12527",
+    "10.1111/jfr3.70181"
+   ],
+   "methods": [
+    "inflow-outflow",
+    "ai-reliability",
+    "provenance-gates"
+   ],
+   "n_chars": 42709,
+   "on_topic": true,
+   "path": "~/Claude/reu/compass_artifact_wf-aae75abf-0f67-59aa-8289-cee140b44819_text_markdown (1).md",
+   "title": "Claude Code Configuration and Remediation Plan for \"Can It Ford?\"",
+   "type": "claude-artifact"
+  },
+  {
+   "dois_referenced": [],
+   "methods": [
+    "validation-dataset"
+   ],
+   "n_chars": 18533,
+   "on_topic": false,
+   "path": "~/Claude/reu/compass_artifact_wf-ab960913-c961-57fe-9c31-de6046911c1e_text_markdown.md",
+   "title": "More Sources: Expanded Study-Resource Research for Josie's Fall 2026 Courses",
+   "type": "claude-artifact"
+  },
+  {
+   "dois_referenced": [
+    "10.1029/2023wr036739",
+    "10.1111/jfr3.12527",
+    "10.1111/jfr3.12885",
+    "10.4121/c.5353691"
+   ],
+   "methods": [
+    "cpdi",
+    "gimp",
+    "bspline",
+    "boundary-treatment",
+    "wall-penetration",
+    "quadrature-error",
+    "grid-convergence",
+    "drag-lift",
+    "vehicle-stability",
+    "vehicle-fording",
+    "validation-dataset",
+    "dam-break",
+    "inflow-outflow",
+    "sph-comparison",
+    "provenance-gates"
+   ],
+   "n_chars": 30022,
+   "on_topic": true,
+   "path": "~/Claude/reu/compass_artifact_wf-b0d2664f-3b65-5bfe-8e3f-f06e77a59f79_text_markdown.md",
+   "title": "Can It Ford: Research Findings on Vehicle Geometry, MPM Physics, Rendering, and Deliverable Triage",
+   "type": "claude-artifact"
+  },
+  {
+   "dois_referenced": [],
+   "methods": [
+    "boundary-treatment",
+    "stationarity-uq",
+    "drag-lift",
+    "vehicle-stability",
+    "validation-dataset",
+    "sloshing",
+    "inflow-outflow",
+    "sph-comparison"
+   ],
+   "n_chars": 17701,
+   "on_topic": true,
+   "path": "~/Claude/reu/compass_artifact_wf-b2d7fede-ef3e-56b0-b700-48e4380c119c_text_markdown.md",
+   "title": "Can Genesis (genesis-world) v1.2.0 Natively Simulate Sustained Open-Channel Flow Past a Vehicle? A Source-Level Verdict",
+   "type": "claude-artifact"
+  },
+  {
+   "dois_referenced": [],
+   "methods": [
+    "stationarity-uq",
+    "drag-lift",
+    "vehicle-stability",
+    "vehicle-fording",
+    "validation-dataset",
+    "dam-break",
+    "sph-comparison"
+   ],
+   "n_chars": 20045,
+   "on_topic": true,
+   "path": "~/Claude/reu/compass_artifact_wf-baa355db-b063-568a-8fcc-4eae3411ff1c_text_markdown.md",
+   "title": "Experimental Configuration of the Flood-Vehicle Stability Literature: What Was Physically Done",
+   "type": "claude-artifact"
+  },
+  {
+   "dois_referenced": [],
+   "methods": [],
+   "n_chars": 13303,
+   "on_topic": false,
+   "path": "~/Claude/reu/compass_artifact_wf-c62889de-a7ed-53c9-a899-ad20925642ec_text_markdown 2.md",
+   "title": "Best Austin Nightlife for a 20-Year-Old Woman \u2014 Saturday, July 11, 2026 (9:30 PM)",
+   "type": "claude-artifact"
+  },
+  {
+   "dois_referenced": [
+    "10.1137/16m1082469"
+   ],
+   "methods": [
+    "added-mass",
+    "vehicle-stability",
+    "validation-dataset"
+   ],
+   "n_chars": 20855,
+   "on_topic": true,
+   "path": "~/Claude/reu/compass_artifact_wf-c92f9ad4-0373-5ab2-a7f5-1789460b094e_text_markdown.md",
+   "title": "Task-Conditioned Model Fidelity Selection: Is There Established Prior Art?",
+   "type": "claude-artifact"
+  },
+  {
+   "dois_referenced": [
+    "10.1007/s11069-010-9639-x",
+    "10.1007/s11069-013-0889-2",
+    "10.1016/j.ijdrr.2016.04.003",
+    "10.1016/j.jfluidstructs.2015.06.010",
+    "10.1029/2023wr036739",
+    "10.1051/matecconf/201820307003",
+    "10.1080/00221686.2011.616318",
+    "10.1080/00221686.2019.1647887",
+    "10.1111/jfr3.12527",
+    "10.1111/jfr3.12828",
+    "10.1111/jfr3.12885"
+   ],
+   "methods": [
+    "stationarity-uq",
+    "added-mass",
+    "drag-lift",
+    "vehicle-stability",
+    "validation-dataset",
+    "sph-comparison"
+   ],
+   "n_chars": 16234,
+   "on_topic": true,
+   "path": "~/Claude/reu/compass_artifact_wf-c963203d-5ae0-5cf4-8151-c1cfb56d4a88_text_markdown.md",
+   "title": "Forensic Citation Check: Buoyancy-Reduced Traction and Propulsive Force in Flood-Vehicle Simulations",
+   "type": "claude-artifact"
+  },
+  {
+   "dois_referenced": [],
+   "methods": [
+    "bspline",
+    "wall-penetration",
+    "drag-lift",
+    "validation-dataset",
+    "sph-comparison"
+   ],
+   "n_chars": 17889,
+   "on_topic": true,
+   "path": "~/Claude/reu/compass_artifact_wf-d0ce5e82-8130-583b-b518-5818c9b6fd62_text_markdown.md",
+   "title": "MPM\u2013Rigid Coupling in Genesis: A Source-Level Audit",
+   "type": "claude-artifact"
+  },
+  {
+   "dois_referenced": [],
+   "methods": [
+    "boundary-treatment",
+    "stationarity-uq",
+    "added-mass",
+    "drag-lift",
+    "vehicle-stability",
+    "validation-dataset",
+    "dam-break",
+    "shallow-water",
+    "inflow-outflow",
+    "sph-comparison"
+   ],
+   "n_chars": 23787,
+   "on_topic": true,
+   "path": "~/Claude/reu/compass_artifact_wf-d50d614c-2fbf-5ca7-a6fe-194a9360db5f_text_markdown.md",
+   "title": "Can It Ford? \u2014 Comparative Engine, Model, and GH200 Build-Feasibility Sweep for Vehicle-in-Floodwater Simulation",
+   "type": "claude-artifact"
+  },
+  {
+   "dois_referenced": [
+    "10.1016/j.jfluidstructs.2015.06.010",
+    "10.1111/jfr3.12885"
+   ],
+   "methods": [
+    "reproducibility",
+    "drag-lift",
+    "vehicle-stability",
+    "vehicle-fording",
+    "validation-dataset",
+    "sloshing",
+    "inflow-outflow",
+    "sph-comparison",
+    "provenance-gates"
+   ],
+   "n_chars": 29245,
+   "on_topic": true,
+   "path": "~/Claude/reu/compass_artifact_wf-e31ed559-fb8c-40e1-80c0-be583cb572b2_text_markdown 2.md",
+   "title": "\"Can It Ford?\" \u2014 Technical Feasibility & Validity Review of the Genesis SPH Fording Pipeline",
+   "type": "claude-artifact"
+  },
+  {
+   "dois_referenced": [],
+   "methods": [
+    "wall-penetration",
+    "stationarity-uq",
+    "reproducibility",
+    "vehicle-stability",
+    "validation-dataset",
+    "provenance-gates"
+   ],
+   "n_chars": 15128,
+   "on_topic": true,
+   "path": "~/Claude/reu/compass_artifact_wf-e7616dc5-ed90-54c2-8570-aa9ba43e62fc_text_markdown.md",
+   "title": "Genesis MPM Solver p2g Crash Root-Cause Investigation: CUDA_ERROR_ILLEGAL_ADDRESS in substep_pre_coupling",
+   "type": "claude-artifact"
+  },
+  {
+   "dois_referenced": [],
+   "methods": [
+    "ai-reliability"
+   ],
+   "n_chars": 11367,
+   "on_topic": false,
+   "path": "~/Claude/reu/compass_artifact_wf-f86dc4b4-1701-4ffd-b01f-61ebaec981a7_text_markdown.md",
+   "title": "Casio fx-CG50 note storage: every method explained",
+   "type": "claude-artifact"
+  },
+  {
+   "dois_referenced": [
+    "10.1007/978-3-031-73007-8_21",
+    "10.1109/3dv62453.2024.00044",
+    "10.1109/cvpr52729.2023.00021",
+    "10.1109/cvpr52729.2023.01201",
+    "10.1109/cvpr52733.2024.00404",
+    "10.1109/cvpr52733.2024.00420",
+    "10.1109/cvpr52733.2024.00426",
+    "10.1109/cvpr52733.2024.00512",
+    "10.1109/cvpr52733.2024.00523",
+    "10.1109/cvpr52733.2024.00813",
+    "10.1109/cvpr52733.2024.01019",
+    "10.1109/cvpr52733.2024.01920",
+    "10.1109/cvpr52733.2024.01922",
+    "10.1109/cvpr52733.2024.01954",
+    "10.1109/cvpr52733.2024.01975",
+    "10.1109/cvpr52733.2024.01997",
+    "10.1109/cvpr52733.2024.02029",
+    "10.1109/cvpr52734.2025.00057",
+    "10.1109/cvpr52734.2025.00579",
+    "10.1109/iccv51701.2025.00678",
+    "10.1109/iccv51701.2025.00849",
+    "10.1109/tvcg.2025.3555404",
+    "10.1109/wacv61041.2025.00262",
+    "10.1109/wacv61042.2026.00479",
+    "10.1145/3641519.3657448",
+    "10.1145/3641519.3657463",
+    "10.48550/arxiv.2303.05512",
+    "10.48550/arxiv.2310.10642",
+    "10.48550/arxiv.2312.00112",
+    "10.48550/arxiv.2312.00732",
+    "10.48550/arxiv.2312.17142",
+    "10.48550/arxiv.2401.15318",
+    "10.48550/arxiv.2402.04796",
+    "10.48550/arxiv.2403.09434",
+    "10.48550/arxiv.2404.01223",
+    "10.48550/arxiv.2404.13026",
+    "10.48550/arxiv.2406.01476",
+    "10.48550/arxiv.2406.04338",
+    "10.48550/arxiv.2406.05897",
+    "10.48550/arxiv.2406.14927",
+    "10.48550/arxiv.2604.07882"
+   ],
+   "methods": [
+    "stationarity-uq"
+   ],
+   "n_chars": 72595,
+   "on_topic": true,
+   "path": "~/Downloads/ConnectedPapers-for-PhysGaussian%3A-Physics%20Integrated-3D-Gaussians-for-Generative-Dynamics.bib",
+   "title": "ConnectedPapers-for-PhysGaussian%3A-Physics%20Integrated-3D-Gaussians-for-Generative-Dynamics.bib",
+   "type": "bibliography"
+  },
+  {
+   "dois_referenced": [
+    "10.1002/aic.15868",
+    "10.1002/hyp.1198",
+    "10.1002/hyp.14703",
+    "10.1002/nag.2321",
+    "10.1002/nme.70210",
+    "10.1002/nme.7217",
+    "10.1002/wat2.1338",
+    "10.1007/s00466-019-01783-3",
+    "10.1007/s11069-022-05251-9",
+    "10.1007/s11831-020-09473-7",
+    "10.1007/s11831-020-09474-6",
+    "10.1007/s44212-024-00040-0",
+    "10.1016/bs.aams.2019.11.001",
+    "10.1016/j.aap.2025.108366",
+    "10.1016/j.aei.2026.104432",
+    "10.1016/j.chemolab.2021.104439",
+    "10.1016/j.cma.2011.03.016",
+    "10.1016/j.cma.2018.01.010",
+    "10.1016/j.cma.2018.04.041",
+    "10.1016/j.cma.2020.112947",
+    "10.1016/j.compfluid.2014.07.025",
+    "10.1016/j.compfluid.2015.04.018",
+    "10.1016/j.compfluid.2015.10.004",
+    "10.1016/j.compfluid.2018.07.021",
+    "10.1016/j.compgeo.2020.103859",
+    "10.1016/j.compgeo.2021.104112",
+    "10.1016/j.enggeo.2024.107614",
+    "10.1016/j.envsoft.2011.02.017",
+    "10.1016/j.hydroa.2020.100067",
+    "10.1016/j.ijdrr.2016.04.003",
+    "10.1016/j.ijdrr.2018.07.007",
+    "10.1016/j.ijdrr.2018.10.022",
+    "10.1016/j.jcp.2019.07.053",
+    "10.1016/j.jcp.2024.113457",
+    "10.1016/j.jcp.2025.113726",
+    "10.1016/j.jenvman.2024.121209",
+    "10.1016/j.jhydrol.2016.03.037",
+    "10.1016/j.jhydrol.2018.05.002",
+    "10.1016/j.jhydrol.2019.124231",
+    "10.1016/j.jhydrol.2022.127502",
+    "10.1016/j.nucengdes.2021.111423",
+    "10.1016/j.proeng.2017.01.041",
+    "10.1016/j.ress.2018.01.015",
+    "10.1016/j.ress.2019.106567",
+    "10.1016/j.ress.2020.107105",
+    "10.1016/j.ress.2021.107564",
+    "10.1016/j.ress.2021.107624",
+    "10.1016/j.ress.2021.108202",
+    "10.1016/j.ress.2024.110368",
+    "10.1016/j.ress.2024.110452",
+    "10.1016/j.scitotenv.2018.11.191",
+    "10.1016/j.scitotenv.2023.168237",
+    "10.1016/j.strusafe.2017.10.008",
+    "10.1016/j.trd.2017.06.020",
+    "10.1016/j.trd.2019.09.024",
+    "10.1016/j.trd.2024.104354",
+    "10.1016/j.trgeo.2020.100431",
+    "10.1016/j.tws.2018.05.014",
+    "10.1017/jfm.2023.327",
+    "10.1017/s089006041900026x",
+    "10.1029/2020wr028616",
+    "10.1029/2023wr034545",
+    "10.1038/s41598-025-25267-y",
+    "10.1061/(asce",
+    "10.1061/9780784412312.122",
+    "10.1061/ajrua6.0001088",
+    "10.1080/00221686.2019.1647887",
+    "10.1080/00224065.2019.1611351",
+    "10.1080/00423114.2020.1854317",
+    "10.1080/00949655.2024.2439488",
+    "10.1080/01621459.1991.10475138",
+    "10.1080/02626667.2023.2174026",
+    "10.1080/13588265.2024.2301816",
+    "10.1080/15715124.2019.1566240",
+    "10.1080/15732479.2020.1815226",
+    "10.1080/23789689.2022.2149184",
+    "10.1093/biomet/87.1.1",
+    "10.1098/rsos.160023",
+    "10.1109/access.2021.3136585",
+    "10.1109/access.2022.3157904",
+    "10.1109/access.2023.3242127",
+    "10.1109/access.2025.3567868",
+    "10.1109/aixvr67263.2026.00075",
+    "10.1109/case56687.2023.10260554",
+    "10.1109/csci62032.2023.00251",
+    "10.1109/csecs69124.2026.11541955",
+    "10.1109/cvpr52733.2024.00420",
+    "10.1109/cvpr52733.2024.00512",
+    "10.1109/dsn-w50199.2020.00026",
+    "10.1109/icmla66185.2025.00052",
+    "10.1109/iros60139.2025.11246653",
+    "10.1109/issrew63542.2024.00040",
+    "10.1109/itsc48978.2021.9564879",
+    "10.1109/itsc58415.2024.10919733",
+    "10.1109/iv47402.2020.9304552",
+    "10.1109/iv47402.2020.9304823",
+    "10.1109/iv51971.2022.9827061",
+    "10.1109/iv55152.2023.10186765",
+    "10.1109/iv55152.2023.10186795",
+    "10.1109/ivs.2018.8500530",
+    "10.1109/lra.2025.3546126",
+    "10.1109/mc.2023.3236171",
+    "10.1109/qrs-c63300.2024.00131",
+    "10.1109/smc52423.2021.9658751",
+    "10.1109/smc52423.2021.9658812",
+    "10.1109/tits.2024.3416368",
+    "10.1109/tits.2025.3532684",
+    "10.1109/tiv.2024.3370836",
+    "10.1109/vtc2021-spring51267.2021.9448759",
+    "10.1111/j.1752-1688.1989.tb05404.x",
+    "10.1111/j.1752-1688.2008.00217.x",
+    "10.1111/jfr3.12486",
+    "10.1111/jfr3.12527",
+    "10.1111/jfr3.12551",
+    "10.1111/jfr3.12737",
+    "10.1111/jfr3.12855",
+    "10.1111/jfr3.12885",
+    "10.1111/jfr3.70154",
+    "10.1111/jfr3.70181",
+    "10.1111/risa.13370",
+    "10.1111/risa.14317",
+    "10.11113/jt.v80.11198",
+    "10.1115/1.1412235",
+    "10.1115/1.1767847",
+    "10.1115/1.2819500",
+    "10.1115/1.2910291",
+    "10.1115/1.2960953",
+    "10.1115/1.2988476",
+    "10.1115/1.4001771",
+    "10.1115/1.4001873",
+    "10.1115/1.4004223",
+    "10.1115/1.4032369",
+    "10.1115/1.4032371",
+    "10.1115/1.4046787",
+    "10.1115/1.4051069",
+    "10.1115/1.4056285",
+    "10.1115/1.4071177",
+    "10.1115/detc2014-34300",
+    "10.1115/omae2009-79398",
+    "10.1115/omae2018-78598",
+    "10.1115/vvs2020-8826",
+    "10.1126/sciadv.aba2423",
+    "10.1137/17m1131210",
+    "10.1145/3480146",
+    "10.1145/3528223.3530093",
+    "10.1145/3528223.3530103",
+    "10.1145/3592433",
+    "10.1155/2016/8092824",
+    "10.1155/2018/2850546",
+    "10.1155/2020/4392581",
+    "10.1177/0361198119855975",
+    "10.1177/1687814017696415",
+    "10.1177/2399808320971304",
+    "10.1186/s13047-023-00634-y",
+    "10.1198/tech.2009.08040",
+    "10.12688/openreseurope.16036.1",
+    "10.1287/ijoc.2021.1072",
+    "10.12989/sss.2016.17.1.149",
+    "10.1504/pcfd.2016.10001222",
+    "10.1504/pcfd.2019.10018820",
+    "10.1615/int.j.uncertaintyquantification.2014006914",
+    "10.17265/1934-7359/2012.05.001",
+    "10.2172/1096465",
+    "10.2172/1214246",
+    "10.2172/780290",
+    "10.2514/1.34321",
+    "10.2514/1.46358",
+    "10.2514/1.8650",
+    "10.2514/1.j050327",
+    "10.2514/1.j050384",
+    "10.2514/1.j051243",
+    "10.2514/1.j052008",
+    "10.2514/1.j056640",
+    "10.2514/2.1185",
+    "10.2514/2.1538",
+    "10.2514/2.457",
+    "10.2514/6.2007-1928",
+    "10.2514/6.2008-1716",
+    "10.2514/6.2011-1171",
+    "10.2514/6.2014-0205",
+    "10.2514/6.2015-0502",
+    "10.2514/6.2026-0686",
+    "10.3389/frwa.2023.1278205",
+    "10.3390/app11051983",
+    "10.3390/app12063076",
+    "10.3390/computation12100207",
+    "10.3390/su12062330",
+    "10.3390/w13141968",
+    "10.3390/w15061229",
+    "10.3390/wevj15060266",
+    "10.3850/38wc092019-1786",
+    "10.3970/cmes.2008.031.107",
+    "10.4271/1999-01-1336",
+    "10.4271/2003-01-0966",
+    "10.4271/2013-01-0784",
+    "10.4271/2019-01-0140",
+    "10.4271/2024-01-3375",
+    "10.4271/970951",
+    "10.48550/arxiv.2406.03520",
+    "10.48550/arxiv.2409.05819",
+    "10.48550/arxiv.2506.04120",
+    "10.48550/arxiv.2507.09005",
+    "10.48550/arxiv.2509.06154",
+    "10.48550/arxiv.2602.07369",
+    "10.48550/arxiv.2603.21356",
+    "10.48550/arxiv.2603.26638",
+    "10.48550/arxiv.2604.07337",
+    "10.5194/nhess-16-2455-2016",
+    "10.5194/nhess-2020-375",
+    "10.5194/nhess-2020-40",
+    "10.5194/nhess-21-1011-2021",
+    "10.5194/nhess-24-4015-2024",
+    "10.59972/grz5jq8h",
+    "10.7712/120215.4301.806"
+   ],
+   "methods": [
+    "quadrature-error",
+    "stationarity-uq",
+    "reproducibility",
+    "vehicle-stability",
+    "dam-break",
+    "sph-comparison"
+   ],
+   "n_chars": 71338,
+   "on_topic": true,
+   "path": "~/Downloads/all-papers.bib",
+   "title": "all-papers.bib",
+   "type": "bibliography"
+  },
+  {
+   "dois_referenced": [
+    "10.1007/s10409-022-22053-x",
+    "10.1016/j.cpc.2022.108581",
+    "10.1145/2185520.2185558",
+    "10.1145/3618318",
+    "10.2312/vmv.20231244"
+   ],
+   "methods": [
+    "boundary-treatment",
+    "vehicle-fording",
+    "validation-dataset",
+    "dam-break",
+    "sph-comparison"
+   ],
+   "n_chars": 26332,
+   "on_topic": true,
+   "path": "~/Downloads/compass_artifact_wf-18992794-dc6e-5c87-a126-ab40eecbdb64_text_markdown.md",
+   "title": "Two-Way, Actively-Driven Rigid-Body Fluid Coupling for \"Can It Ford\": FOSS Engine Assessment",
+   "type": "claude-artifact"
+  },
+  {
+   "dois_referenced": [
+    "10.1111/jfr3.12527",
+    "10.1111/jfr3.12527**",
+    "10.1177/02783649231221580",
+    "10.1177/02783649231221580**",
+    "10.1177/02783649231221580\u201d"
+   ],
+   "methods": [
+    "stationarity-uq",
+    "drag-lift",
+    "vehicle-stability"
+   ],
+   "n_chars": 19764,
+   "on_topic": true,
+   "path": "~/Downloads/perplexity research on claude gaps/citation_verification_report.md",
+   "title": "Citation Verification Report \u2014 Can It Ford? NSF REU",
+   "type": "perplexity-report"
+  },
+  {
+   "dois_referenced": [
+    "10.1007/s11069-013-0889-2",
+    "10.1016/j.rineng.2025.107189",
+    "10.1029/2023wr036739",
+    "10.1051/matecconf/201820307003",
+    "10.1080/00221686.2011.616318",
+    "10.1080/00221686.2019.1647887",
+    "10.1080/1573062x.2017.1301501",
+    "10.1111/jfr3.12262",
+    "10.5194/piahs-373-143-2016"
+   ],
+   "methods": [
+    "wall-penetration",
+    "stationarity-uq",
+    "added-mass",
+    "drag-lift",
+    "vehicle-stability",
+    "validation-dataset",
+    "shallow-water",
+    "sph-comparison"
+   ],
+   "n_chars": 18499,
+   "on_topic": true,
+   "path": "~/Downloads/perplexity research on claude gaps/drift_threshold_citation_research.md",
+   "title": "Drift Threshold Citation Research",
+   "type": "perplexity-report"
+  },
+  {
+   "dois_referenced": [],
+   "methods": [
+    "particles-per-cell",
+    "wall-penetration",
+    "vehicle-fording",
+    "sph-comparison"
+   ],
+   "n_chars": 42081,
+   "on_topic": true,
+   "path": "~/Downloads/perplexity research on claude gaps/genesis-gh200-report.md",
+   "title": "Genesis World v1.2.0 on TACC Vista GH200 via Apptainer: Issues, Limits, and Best Practices",
+   "type": "perplexity-report"
+  },
+  {
+   "dois_referenced": [
+    "10.1029/2023wr036739",
+    "10.1111/cgf.13523",
+    "10.3390/w9090731"
+   ],
+   "methods": [
+    "particles-per-cell",
+    "vehicle-stability",
+    "validation-dataset",
+    "dam-break",
+    "sph-comparison"
+   ],
+   "n_chars": 29096,
+   "on_topic": true,
+   "path": "~/Downloads/perplexity research on claude gaps/genesis-mpm-flood-sim-parameters.md",
+   "title": "Genesis MPM Flood Simulation Parameters for \u201cCan It Ford?\u201d",
+   "type": "perplexity-report"
+  },
+  {
+   "dois_referenced": [
+    "10.48550/arxiv.2507.09005`"
+   ],
+   "methods": [
+    "boundary-treatment",
+    "vehicle-stability"
+   ],
+   "n_chars": 46628,
+   "on_topic": true,
+   "path": "~/Downloads/perplexity research on claude gaps/physgaussian_bridge_findings.md",
+   "title": "PhysGaussian to Genesis MPM Bridge Findings",
+   "type": "perplexity-report"
+  },
+  {
+   "dois_referenced": [
+    "10.1016/j.rineng.2025.107189",
+    "10.1111/jfr3.12657",
+    "10.1111/jfr3.12828",
+    "10.1115/detc2015-47142",
+    "10.26190/unsworks/27416",
+    "10.4271/2021-01-0205",
+    "10.4271/961000"
+   ],
+   "methods": [
+    "stationarity-uq",
+    "vehicle-stability",
+    "vehicle-fording",
+    "sph-comparison"
+   ],
+   "n_chars": 2613,
+   "on_topic": true,
+   "path": "~/can-it-ford/citations/Elicit - Flood-Crossing Tire\u2013Ground Friction and Speed Evidence.bib",
+   "title": "Elicit - Flood-Crossing Tire\u2013Ground Friction and Speed Evidence.bib",
+   "type": "elicit-extract"
+  },
+  {
+   "dois_referenced": [
+    "10.1002/hyp.11082",
+    "10.1007/978-3-030-37425-9_1",
+    "10.1007/978-981-10-7218-5_42",
+    "10.1007/s11069-013-0889-2",
+    "10.1016/j.jhydrol.2023.129525",
+    "10.1016/j.rineng.2019.100032",
+    "10.1016/j.rineng.2024.102540",
+    "10.1016/j.rineng.2025.107189",
+    "10.1016/j.ssci.2016.07.004",
+    "10.1016/j.uclim.2021.101069",
+    "10.1017/dmp.2024.116",
+    "10.1017/s1049023x19001468",
+    "10.1080/15715124.2012.674040",
+    "10.1080/15715124.2019.1566240",
+    "10.1080/15715124.2019.1687487",
+    "10.1080/1573062x.2017.1301501",
+    "10.1080/17477891.2013.832651",
+    "10.1080/19439962.2010.506596",
+    "10.1111/j.1753-318x.2012.01136.x",
+    "10.1111/jfr3.12262",
+    "10.1111/jfr3.12527",
+    "10.1111/jfr3.12551",
+    "10.1111/jfr3.12645",
+    "10.1111/jfr3.12737",
+    "10.1111/jfr3.12828",
+    "10.1111/jfr3.12885",
+    "10.1111/jfr3.70181",
+    "10.11113/jt.v80.11198",
+    "10.1115/detc2015-47142",
+    "10.3390/su151713262",
+    "10.4271/2021-01-0205",
+    "10.4271/961000",
+    "10.5194/egusphere-egu2020-12405",
+    "10.5194/piahs-373-143-2016"
+   ],
+   "methods": [
+    "stationarity-uq",
+    "vehicle-stability",
+    "vehicle-fording",
+    "validation-dataset"
+   ],
+   "n_chars": 345795,
+   "on_topic": true,
+   "path": "~/can-it-ford/citations/Elicit - extract-results-review-5e368aae-95c3-4774-a804-2dcc8899299e.csv",
+   "title": "Elicit - extract-results-review-5e368aae-95c3-4774-a804-2dcc8899299e.csv",
+   "type": "elicit-extract"
+  }
+ ],
  "method_tags": [
   "added-mass",
   "ai-reliability",
@@ -29,6 +1095,8 @@
  ],
  "n_cited_in_repo": 76,
  "n_cited_reader_facing": 43,
+ "n_documents": 44,
+ "n_documents_on_topic": 39,
  "n_no_doi_undiffable": 60,
  "n_papers": 332,
  "n_with_abstract": 222,

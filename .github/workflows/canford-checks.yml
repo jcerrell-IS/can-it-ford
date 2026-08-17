@@ -23,3 +23,7 @@ jobs:
       - name: count_claims
         run: python .claude/checks/count_claims_check.py
         continue-on-error: true   # accepts 22/23/24 by scope, see CLAUDE.md item 13
+      - name: stationarity self-test
+        run: python3 analysis/stationarity.py
+      - name: research index is present and parseable
+        run: python3 analysis/research_index.py --stats
