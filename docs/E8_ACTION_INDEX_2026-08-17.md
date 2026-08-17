@@ -93,14 +93,36 @@ place, not their home.
 
 ---
 
-## 3. Two things blocked on a human, both tiny
+## 3. ONE thing blocked on a human, and it is tiny
 
 | Blocked | Why | The unblock |
 |---|---|---|
 | Whether the AR&R report has a rights notice on an **image-only page** | My extractor reads the text layer only; the PDF has 83 non-text streams and 10 JPEGs | **Open it and look at pages 1 to 3.** Ten seconds |
-| Whether an **NHTSA-hosted** copy of this exact Yaris model exists | Would move it from licence-silent to the safe set | Check the NHTSA and CCSA download pages |
 
-Neither blocks tier 1 or tier 2.
+It does not block tier 1 or tier 2.
+
+**The second item listed here was my own mis-classification and is now closed.** I had
+written "whether an NHTSA-hosted copy of this exact Yaris exists" as human-blocked. It
+was not blocked at all: it was two web fetches and a checksum, and I should have tried
+before filing it. Doing so produced the strongest evidence in the whole dispatch:
+
+- **All four CCSA archives are byte-identical to the published upstream releases**,
+  confirmed against CCSA's own SHA384 values. 4 of 4, 88,592,238 B. Verbatim
+  redistribution is now **proven**, not inferred, and an exact-hash match leaves no
+  transformation or derived-work defence.
+- **Both CCSA model pages carry no licence, copyright or redistribution statement**,
+  which makes the licence silence a genuine second source rather than the bundled
+  README read twice.
+- **Downloads are served from `media.ccsa.gmu.edu`**, so these are CCSA-hosted and the
+  NHTSA safe-set hypothesis is refuted for these models.
+
+`nhtsa.gov` returned 403 to an automated fetch, so whether NHTSA hosts *some other*
+copy of *some other* Yaris is still unknown. It no longer matters here, because the
+origin of the artifacts in this repo is now positively identified rather than inferred.
+
+**The lesson, and it is the fourth instance tonight:** I filed something as blocked
+without attempting it. Two of my three "blocked" items this round turned out to be one
+untried approach away, the AR&R text layer being the other. **Attempt before filing.**
 
 ---
 
