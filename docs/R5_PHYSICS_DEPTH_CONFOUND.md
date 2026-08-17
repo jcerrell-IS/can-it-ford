@@ -174,6 +174,55 @@ that is the first thing to check before this is promoted anywhere.
   kinematics, not on depth, so I do not believe it moves; but the run is not at the depth
   its label claims and that should travel with it.
 
+## 6b. I tested the P-2 attribution and it largely SURVIVES. My caution was too strong.
+
+Section 4 said "the velocity attribution is not established by these runs". That was
+correct about the *velocity sweep alone*, where velocity and fixed-station depth correlate
+at **+0.971** and cannot be separated. But the project has a **depth sweep at fixed
+velocity**, and that is the lever I did not use.
+
+Four runs at v = 1.5, `passthrough_max_frac` (the P-2 quantity; its 7.99% at v = 0.5
+reproduces CLAUDE.md item 7 exactly) against fixed-station depth **[measured]**:
+
+| nominal | fixed-station depth | P-2 |
+|---|---|---|
+| 0.25 | 0.2956 | 9.68% |
+| 0.30 | 0.3581 | 10.67% |
+| 0.35 | 0.4055 | 10.44% |
+| 0.45 | 0.4602 | 10.80% |
+
+Depth-only fit at fixed velocity: `P2 = 5.97*depth + 8.13`, corr **+0.836**, **N = 4**.
+P-2 moves only **1.12 pp** across a 0.16 m depth range.
+
+Applying that relation to the velocity sweep's fixed-station depths:
+
+| | value |
+|---|---|
+| observed P-2 span across the velocity sweep | **7.89 pp** (7.99 to 15.88) |
+| span predicted by depth alone | **1.17 pp** |
+| **fraction of the trend depth explains** | **15%** |
+| residual span after removing depth | 6.72 pp |
+
+**So the depth confound does not account for the P-2 trend.** Depth explains about a
+seventh of it; the residual is 6.72 pp, still monotone in velocity and accelerating at the
+top end (+5.15 pp at v = 3.0). **The velocity attribution in CLAUDE.md item 7 largely
+survives, and my section 4 caution was too strong.** I am correcting it in the direction of
+reinstating the project's claim, which is the direction I was least looking for.
+
+Three caveats that must travel with this, because they are what a reviewer will reach for:
+
+1. **N = 4** for the depth-only fit, corr +0.836. That is a thin lever.
+2. It assumes the depth effect is **linear and velocity-independent**. With velocity fixed
+   at 1.5 in the depth sweep I cannot test an interaction term, and an interaction is
+   exactly what a pile-up mechanism would produce.
+3. The two depth ranges overlap well (0.296 to 0.460 against 0.240 to 0.436), so this is
+   interpolation rather than extrapolation. That part is sound.
+
+What stands from section 4 unchanged: the runs are not at their labelled depths, the
+velocity sweep does vary fixed-station depth by 1.81x, and any caption presenting it as
+isolating velocity is still overstating what was *controlled*. What changes is the
+consequence: for P-2 specifically, the uncontrolled variable turns out to matter little.
+
 ## 7. Status
 
 **[unreviewed]**: no physics-skeptic pass on this document. The two claims I would attack
