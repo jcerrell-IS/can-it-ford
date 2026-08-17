@@ -56,10 +56,14 @@ below should be brought up to that standard rather than to some new one.
 
 ## 2. Draft `THIRD_PARTY_NOTICES.md`, for the repo root
 
-Everything in fenced blocks is proposed file content. Fields marked **[CONFIRM]** are
-inferred from filename convention and **must be verified against the download page
-before this file is published**, because a notices file that misattributes is worse
-than none.
+Everything in fenced blocks is proposed file content.
+
+**All source attributions are now verified against the publishers' own pages, fetched
+2026-08-17. Nothing below is inferred from a filename.** The earlier draft carried two
+`[CONFIRM]` markers on the ambientCG and Poly Haven components; both are cleared, and
+the filename-convention inference proved correct in all three cases. It was still an
+inference until fetched, which is why it was marked. A notices file that misattributes
+is worse than none.
 
 ```markdown
 # Third-party notices
@@ -110,24 +114,32 @@ The status note in component 1 applies equally here.
 Renders depicting this geometry are derived works of it. See
 `docs/E8_GEOMETRY_REDISTRIBUTION_DECISION_2026-08-16.md`.
 
-## 3. Surface textures, ambientCG **[CONFIRM]**
+## 3. Surface textures, ambientCG **[CONFIRMED 2026-08-17]**
 
 Location: `assets/`
 - `Asphalt015_1K-JPG_Color.jpg`, `Asphalt015_1K-JPG_NormalGL.jpg`,
   `Asphalt015_1K-JPG_Roughness.jpg`, `Asphalt015.png`
 - `DaySkyHDRI002A_1K_HDR.exr`
 
-Source: ambientCG (ambientcg.com). Released under **CC0 1.0 Universal**
-(public domain dedication). No attribution is legally required. It is recorded here
-because ambientCG requests it and because an unattributed asset is indistinguishable
-from an unlicensed one.
+Source: **ambientCG** (ambientcg.com). Both asset pages were fetched on 2026-08-17
+and both are released under **Creative Commons CC0**. ambientCG states its assets are
+"free to use without attribution, even in commercial circumstances", so **attribution
+is neither required nor requested**. It is recorded here anyway, because an
+unattributed asset is indistinguishable from an unlicensed one to anyone auditing the
+repo.
 
-## 4. Environment HDRI, Poly Haven **[CONFIRM]**
+Precision note: the ambientCG pages state "CC0" without a version number, so this
+notice says CC0 rather than CC0 1.0 Universal. An earlier draft asserted the version;
+that was not on the page.
+
+## 4. Environment HDRI, Poly Haven **[CONFIRMED 2026-08-17]**
 
 Location: `assets/hdri/kloofendal_43d_clear_puresky_2k.hdr` (4,624,289 bytes)
 
-Source: Poly Haven (polyhaven.com). Released under **CC0 1.0 Universal**. No
-attribution required; recorded for the same reason as component 3.
+Source: **Poly Haven** (polyhaven.com). **Author: Greg Zaal.** Released under
+**CC0**, page fetched 2026-08-17. No attribution required or requested; the author is
+named here as a courtesy and because it is the one piece of provenance the filename
+does not carry.
 
 ## 5. kks32/mpm-engine
 
@@ -190,7 +202,7 @@ ownership claim, which is the part most likely to be read as bad faith.
 
 ## 4. Recommendation
 
-**Adopt sections 2 and 3, after clearing the two [CONFIRM] items.** This is the most
+**Adopt sections 2 and 3. Both [CONFIRM] items are now cleared** (section 5). This is the most
 actionable item in D2's scope precisely because, unlike the geometry question, **it
 requires permission from nobody**. It is a strict improvement under every outcome of
 the CCSA conversation, and it is the right thing to have in place *before* writing to
@@ -205,15 +217,16 @@ are changes to the repo's legal surface, so they are Josie's call, not mine.
 
 ## 5. What is unverified here
 
-- **The ambientCG and Poly Haven attributions are [CONFIRM] items.** Both are
-  **inferred from filename convention only**: `Asphalt015_1K-JPG_Color.jpg` and
-  `DaySkyHDRI002A_1K_HDR.exr` match ambientCG's scheme, and
-  `kloofendal_43d_clear_puresky_2k.hdr` matches Poly Haven's. Neither download page
-  was fetched, and **no licence file for either ships in the repo**. A repo-wide
-  search for "ambientcg" returns zero hits, which is the finding, not a
-  contradiction: the assets are present and the attribution is absent. Because both
-  are CC0, a wrong guess here costs attribution accuracy rather than compliance, but
-  it must still be checked before publishing.
+- **The ambientCG and Poly Haven attributions are now CONFIRMED, 2026-08-17**, and
+  are no longer inferred from filename convention. All three source pages were
+  fetched: `Asphalt015` and `DaySkyHDRI002A` on ambientCG, both **CC0, attribution
+  not required**; `kloofendal_43d_clear_puresky` on Poly Haven, **CC0, author Greg
+  Zaal**. The filename-convention inference turned out to be correct in all three
+  cases, but it was still an inference until fetched.
+  The related finding stands unchanged: **no licence file for any of them ships in
+  the repo**, and a repo-wide search for "ambientcg" returns zero hits. The assets are
+  present and the attribution is absent. Because all three are CC0 this was never a
+  compliance problem, only an accuracy one, which is why it ranked last.
 - **The four CCSA DOIs are transcribed from the upstream READMEs in the repo**, read
   live. They were not resolved against doi.org this session.
 - **`citations/` is covered by reference**, not re-audited here.
