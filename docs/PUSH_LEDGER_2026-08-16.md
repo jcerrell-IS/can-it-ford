@@ -1068,7 +1068,42 @@ Commit sums exceed the deduplicated 248 in every split, because branches share
 commits. Only `git rev-list --count --branches --not --remotes` gives the
 deduplicated figure.
 
-### The column D2 needs: what the 30 public branches actually carry
+### UPDATED 00:20: origin is now 35 branches, not 30. The 5 new ones are clean
+
+**read.** `git ls-remote --heads origin` returns **35**, against the **30**
+recorded at 21:01 and stored in `public_branch_audit.tsv`. Diffed against that
+file rather than against the local remote-tracking cache, which is not
+authoritative for this and briefly gave me a wrong answer of "no change":
+
+    NEW on origin   claude/fix-hf-sync-exclude        claude/review-workflow-auth
+                    claude/hf-space-l1-joint-rule     claude/vercel-landing-page
+                    claude/scholar-sidekick-auth-e92679
+    GONE            none
+
+**Audited all five at their live remote tips**, every tip already present in the
+local object store so nothing was inferred from a stale cache:
+
+| | result |
+|---|---|
+| files matching a credential pattern | **0 across all five** |
+| files with "credential" in the path | **0** |
+| NCAC/CCSA `.key` decks | 14 each, the same set already on every public branch |
+| upstream `.zip` archives | 4 each, likewise |
+
+**No new exposure.** The geometry is the material already covered by the reported
+permission, and none of the five carries a credential. The 30-of-30 finding in
+this section becomes **35 of 35** without changing its meaning.
+
+**What did NOT happen**, checked because it would matter more: **no `r5-*` branch
+and no credential branch is on origin.** `claude/r5-exposure`, my one BLOCK_PATH,
+is still unpushed, and so is
+`claude/credential-exposure-2026-08-13-DO-NOT-PUSH`.
+
+**`claude/add-ci-checks` moved again**, 790d999 to `ffc05d9` "Cite the four prior
+vehicle-fording works", now **5 at-risk commits**. Re-scanned: **0 risky paths, 0
+credential hits.** Verdict still OK.
+
+### The column D2 needs: what the public branches actually carry
 
 Measured with `git ls-tree -r` against each live remote tip. All 30 tips were
 present in the local object store, so no fetch was required and nothing was
