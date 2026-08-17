@@ -1,8 +1,9 @@
 # D4: what survives, what was withdrawn, and what is still unreviewed
 
-2026-08-17. Branch `claude/r5-physics`, 20 commits, **unpushed and held**.
+2026-08-17. Branch `claude/r5-physics`, **35 commits, unpushed and held**. Index current
+as of `0449091`.
 
-This branch's documents carry correction boxes stacked on correction boxes, because three
+This branch's documents carry correction boxes stacked on correction boxes, because **five**
 adversarial review passes found real errors in almost every headline I produced. That is
 the process working, but it has made the branch hard to read. **This file is the index: it
 states what a reader may rely on, what is retracted, and what has not been checked.**
@@ -164,17 +165,69 @@ it does not say so. That matters because g48 is one of the three rungs in item 5
 grid-convergence study, so **the coarsest rung of the project's most durable physics result
 is resolved more thinly than the limitation the project already flags as a concern.**
 
+## 3d. Code delivered, all dry-run tested, none GPU-validated
+
+| module | what it is | state |
+|---|---|---|
+| `sphere_heave.py` | the Kramer 2021 sphere scene, Option B | geometry-tested and **dry-run tested against a stub solver**: trap contract T1/T2 and call ordering verified at runtime, integrator checked against a hand computation |
+| `outflow_deactivate.py` | depth-keyed retirement, Option A | **NOT an outflow**, see below. Six constraints, each asserted with a deliberately constructed failure |
+| `blocking.py` | transient exclusion, stationarity, blocked SE | selftest passes the controls that refuted its own predecessor |
+| `spin_down.py`, `depth_station.py`, `p2_decompose.py` | analysis on existing artifacts | run provenance fixed; **ghost guard added and verified to fire** |
+| `prestage_jobs.sh` + `R5_PHYSICS_BATCH_MANIFEST.md` | the GPU queue | criteria fixed in advance, including one arm logged INDETERMINATE beforehand |
+
+**Three things a reader must know about `outflow_deactivate.py` before running it:**
+
+1. **Deactivation FREEZES a particle in place; it does not remove it.** Advection is inside
+   `g2p_particle` behind the gate. I claimed "its mass leaves the simulation" and that was
+   wrong, against a primary-source finding I had already made myself.
+2. **It is a mass sink upstream of a closed wall, not an outflow.** The +x face is closed
+   twice and my own F-7 says an outflow must skip that.
+3. **Frozen ghosts pin every depth statistic.** Nothing in the driver filters them. My
+   analysis scripts now do, verified: on a synthetic archive the ghosts pinned a reading
+   0.1992 m high and the guard removes exactly that. A retirement run that does not dump a
+   `retired` mask is **unanalysable**.
+
+## 3e. Three assertions I shipped that could not fail
+
+Recorded together because the pattern matters more than any one of them. In each case a
+check passed, I reported it as evidence in a commit message, and it was incapable of
+failing:
+
+- the SDF margin guard, fed inputs it was right to accept;
+- "the smallest planned domain buys two clean periods", which passed only on my own
+  wave-speed convention;
+- the retirement drift-back check, whose guard was False so **it never executed at all**
+  while the commit message said it was asserted.
+
+All three are now falsifiable. The lesson is narrower than "test more": **a check that
+cannot fail is worse than no check, because it is reported as evidence.**
+
 ## 4. Nothing on this branch has been run on a GPU
 
-TACC has been cold the entire session. `R5_PHYSICS_BATCH_MANIFEST.md` and
+TACC has been cold the entire session, re-checked live at 17:04 BST and still
+`Permission denied (keyboard-interactive)`. `R5_PHYSICS_BATCH_MANIFEST.md` and
 `prestage_jobs.sh` are ready to fire, with pass criteria fixed in advance. Job A (brake
 sweep, ~45 s of compute) is the one item that converts an INFERRED claim into a
 measurement, and it is never the one to drop.
 
 ## 5. The pattern, stated plainly because it is the useful part
 
-Every headline number I produced without review was wrong in magnitude, and twice the error
-was structural rather than noise: a lever that could not measure what I pointed it at, and
-an explanation for an event that never occurred. The corrections came from adversarial
-review and from checking my own load-bearing quantities against source, not from more
-measurement. **The measurements were rarely wrong; the framing around them usually was.**
+Every headline number I produced without review was wrong in magnitude, and **three times
+the error was structural rather than noise**: a lever that could not measure what I pointed
+it at, an explanation for an event that never occurred, and a module that would have
+reported a held level made entirely of dead water.
+
+The corrections came from adversarial review and from checking my own load-bearing
+quantities against source, not from more measurement. **The measurements were rarely wrong;
+the framing around them usually was.**
+
+Two sharper sub-patterns, both of which cost real time:
+
+- **I regressed against my own prior findings twice.** The freeze-not-delete semantics and
+  the closed +x face were both already written down, by me, in
+  `OPTION_A_SESSION1_FINDINGS.md`. Re-deriving beats recalling, but *checking the project's
+  own record first* beats both.
+- **A licence status and a fetch status are different things.** Three documents were
+  recorded or assumed to be behind an access barrier when all were openly licensed and
+  merely bot-blocked, and one was served by the publisher's backend while its front end
+  refused.
