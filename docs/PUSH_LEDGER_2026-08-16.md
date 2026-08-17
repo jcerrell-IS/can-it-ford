@@ -208,9 +208,28 @@ from Josie.**
 - **160,308,908 B (160.31 MB, 152.88 MiB) of NCAC/CCSA material** on `main`
   alone: 4 upstream `.zip` distribution archives plus 14 LS-DYNA `.key` decks,
   including `yaris-coarse-v1l.key` at 42,846,753 B and
-  `2010-toyota-yaris-detailed-v2j.zip` at 42,113,905 B (section 9), whose licence
-  question is unresolved. An earlier draft said "83.5 MB across 18 files"; that
-  was wrong in both set and unit, see section 9.
+  `2010-toyota-yaris-detailed-v2j.zip` at 42,113,905 B (section 9). An earlier
+  draft said "83.5 MB across 18 files"; that was wrong in both set and unit, see
+  section 9.
+
+**UPDATED 2026-08-17, and it narrows the reason without removing it.** D2 records
+(`b63201e`) that **Josie reports she has obtained confirmation to use the
+NCAC/CCSA meshes**, with the written artifact pending. D2 recorded that as her
+report rather than as something it verified, and so do I: **I have not seen the
+artifact.** On that basis the CCSA material is no longer the open licence
+question it was when this plan was written.
+
+**The destination must still be private and encrypted**, and the reason is now
+almost entirely the credentials rather than the geometry:
+
+- `docs/CREDENTIAL_EXPOSURE_2026-08-13.md` has never been published, and D2
+  records that **the credentials themselves are entirely unaffected by the
+  permission and none has been rotated**;
+- D2 also warns that a permission covering CCSA and AR&R **must not be read as
+  covering the Wiley/CIWEM material**, which is a different rights holder.
+
+So: fewer reasons than before, and still enough. Use
+`ALL-refs-MINUS-credentials-*.bundle` for any destination you are less sure of.
 
 So the destination must be **private and encrypted**. A plain cloud sync is
 disqualified: this project has already had a 0644 iCloud-synced token as part of
@@ -1023,11 +1042,31 @@ that is the audience that will read it.
 
 Per-branch detail: `can-it-ford-bundles/2026-08-16/public_branch_audit.tsv`.
 
-**Consequence for E8, stated plainly:** the licence question is not about a
+**Consequence for E8, as originally stated:** the question was never about a
 derived hull on one branch. It is about the upstream crash-model decks
 themselves, published 30 times over. Deleting them from `main` would leave 29
 other public branches serving the same bytes, and would still not unpublish
-them. This is D2's call to act on, not mine; I have not touched any of it.
+them.
+
+**RESOLVED 2026-08-17, and recorded with its provenance rather than as a fact I
+checked.** D2's `b63201e` records that **Josie reports she has obtained
+confirmation to use the NCAC/CCSA meshes**, artifact pending. D2 filed it as her
+report, not as something D2 verified, and I am carrying it the same way: **I have
+not seen the artifact, so this is a report, not a confirmation.** If it holds, the
+30-branch spread stops being an exposure and becomes merely an inventory, and the
+removal options in D2's analysis never have to be exercised.
+
+**Two things this does not touch**, both from D2 and both worth repeating here so
+nobody reads my 30-of-30 table as fully cleared:
+
+- the **Wiley/CIWEM** material has a different rights holder and **no permission
+  has been reported for it**;
+- the **credentials are entirely unaffected and none has been rotated**, which is
+  why section 1's destination requirement stands.
+
+The measurement in this section is unchanged either way: 30 of 30 public branches
+carry all 4 `.zip` and all 14 `.key`. What changed is whether that is a problem,
+and that is D2's and Josie's call, not mine. I have touched none of it.
 
 ---
 
