@@ -869,6 +869,15 @@ It also alerts if either branch disappears, naming `ALL-refs-*.bundle` as the
 recovery path. Its arming event confirms the current state: **side B still 1455,
 merge has not happened.**
 
+**TUNED 00:25, after it alarmed three times on a non-event.** Side A's *tip*
+was in the signature, and that branch is being actively worked on, so the
+watcher fired repeatedly carrying "merge has not happened yet". **An alarm
+that mostly reports non-events trains itself into noise**, and the next one
+might be the 760 case. A-tip is dropped; A's *register length* is kept, because
+if it leaves 760 the arithmetic stops holding and the watcher now says so.
+The general form is worth keeping: **when an alarm fires repeatedly on the same
+non-event, the fault is in its signature, not in the reader's patience.**
+
 **Its remaining value is smaller than the first watcher's, and worth stating
 honestly:** a bad merge leaves both branches intact in the reflog, so this is a
 convenience alarm on an ordinary git operation, not the last line of defence the
