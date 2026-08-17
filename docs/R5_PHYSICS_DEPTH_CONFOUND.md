@@ -67,8 +67,36 @@
 
 ## 0. The finding that outranks everything I claimed: P-2 does not measure passthrough
 
-This came out of the review and it is worth more than the confound I was chasing
-**[measured, and I have not independently re-derived it]**.
+> **RE-DERIVED INDEPENDENTLY 2026-08-17.** I first carried this on the reviewer's word,
+> which is one source cited twice. `simulation/r5_physics/p2_decompose.py` now derives it
+> from the rollout artifacts with no shared code path. **It confirms the core finding and
+> sharpens it in two ways, and corrects one number in the reviewer's favour and one
+> against.** N = 17, at the last frame where the vehicle cloud is stored **exactly**
+> (frame 89; the checkpoint-to-true-max gap is median +0.13 pp, max +0.67 pp, so this is
+> essentially the argmax):
+>
+> | | median | range |
+> |---|---|---|
+> | share of P-2 actually **inside the hull** | **6.50%** | 3.27% to 22.84% |
+> | transparent-box **null baseline** | **12.75%** | 11.30% to 14.90% |
+> | **P-2 minus its own null** | **-3.38 pp** | -5.67 to +1.36 pp |
+>
+> **Confirmed:** 77 to 97 percent of P-2 is bounding-box void, against the reviewer's 78 to
+> 97. **Sharpened, and worse than reported:** the null baseline is **11.3 to 14.9%**, not
+> 10.3 to 11.0%, so it **exceeds the 0.10 gate limit in 17 of 17 runs**, not merely
+> straddles it. **Sharpened the other way:** most runs read **BELOW** their own null, median
+> -3.38 pp, which is exactly what displacement should do. So the P-2 "failures" are not runs
+> where water leaks in; they are runs whose bounding prism happens to enclose more water
+> than an equal prism of undisturbed water, judged against a threshold set below the
+> geometric null.
+>
+> **And there IS a real signal buried in it, which neither I nor the reviewer said.** The
+> genuinely in-hull fraction rises **0.28 to 3.47 pp across the velocity sweep**, a factor
+> of **12**, and 0.35 to 2.36 pp across the depth sweep. Actual passthrough is increasing
+> sharply. P-2 dilutes that signal with roughly 9 pp of near-constant void, which is why it
+> only moves from 7.84 to 15.21. **The quantity to report is the in-hull fraction, not P-2.**
+
+This came out of the review and is now independently confirmed **[measured, re-derived]**.
 
 `passthrough_max_frac` is `((w >= veh.min(0)) & (w <= veh.max(0))).all(axis=1).mean()`,
 maximised over frames (`sim_standing.py:463-465`). It counts water inside the vehicle's
