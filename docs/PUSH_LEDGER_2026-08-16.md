@@ -465,6 +465,22 @@ added path, `docs/CREDENTIAL_ROTATION_CHECKLIST_2026-08-16.md`. It did not grow
 despite that branch tripling in size, so D2's later six commits added nothing
 further of that kind.
 
+**FINAL, re-verified when D2 declared its scope complete.** That branch has since
+grown to **14 at-risk commits** and adds **8 files** in total. Re-scanned at that
+point:
+
+- paths added matching the risk rule: **still exactly one**,
+  `docs/CREDENTIAL_ROTATION_CHECKLIST_2026-08-16.md`
+- credential-pattern hits in added lines across the whole unpushed range: **0**
+
+So the verdict is settled and its basis is worth stating precisely, because
+"BLOCK" reads worse than the facts warrant: **no credential value appears
+anywhere on that branch.** It is blocked on the filename rule alone, because a
+rotation checklist naming services and machines is a targeting document on a
+public repo, which is the same reasoning that applied to
+`FLAG_CREDENTIAL_EXPOSURE` in section 5. Read the file before authorising the
+branch; do not read the verdict as "a secret was found".
+
 **Standing watch on the orphaned register, same timestamp:** main-tree
 `CANONICAL_CORRECTIONS_REGISTER_2026-08-06.md` still reads **760 lines**,
 `CLAUDE.md` still **749**, and `git status` still shows the same four modified
