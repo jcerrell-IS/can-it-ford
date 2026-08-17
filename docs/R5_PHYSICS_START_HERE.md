@@ -9,33 +9,45 @@ mid-session, so local labels either side of that are an hour inconsistent.
 
 ---
 
-## 1. Two human blockers. Nothing runs until one of them clears.
+## 1. The two blockers are CLOSED. One was never open.
 
-| blocker | one-line fix | unblocks |
-|---|---|---|
-| **TACC socket cold**, all session, `Permission denied (keyboard-interactive)` | `ssh vista`, password + 6-digit token | **every GPU job** |
-| **Kramer `/s1` supplementary** unfetchable (bot-blocked, not paywalled) | open `https://www.mdpi.com/article/10.3390/en14020269/s1` in a browser, save to `can-it-ford-refs/` **outside the repo** | **half of Option B's definition of done** |
+**Updated 2026-08-17 ~21:30 UTC. Full account: `R5_PHYSICS_BENCHMARK_UNBLOCKED.md`.**
 
-A third, smaller: the Nihei corrigendum `10.1016/j.rineng.2025.107527` is **gold OA** and
-gates the brake-state numbers. One browser fetch. It is not an access problem; earlier
-records saying "publisher access" overstate it.
+| was blocking | state now |
+|---|---|
+| **TACC socket cold**, `Permission denied (keyboard-interactive)` | **CLEAR, and already was.** Live typed command returns `login1.vista.tacc.utexas.edu`, 627 SU, queue empty. Nobody ran `ssh vista`; it warmed and no one re-tested. A blocker recorded once is not a blocker now |
+| **Kramer `/s1` supplementary** unfetchable | **CLOSED.** `can-it-ford-refs/2026-08-16/energies-14-00269-s001.zip`, sha256 `04c4d78d...7623f`. Fetched by driving a **real browser**; curl, WebFetch and the scite resolver all get 403 from MDPI |
 
-Detail: `R5_PHYSICS_BLOCKED_FLAGS.md`.
+**Still open, the only one:** the Nihei corrigendum `10.1016/j.rineng.2025.107527`, gold
+OA, gates the brake-state numbers. The browser route that worked for Kramer has not been
+tried on it.
 
-## 2. Preflight, costs nothing, do it first
+**Clearing them was not sufficient.** Two run-blocking defects sat behind the flags; both
+are fixed, see section 2.
 
-```
-ls -l     /work/11603/jcerrell0629/vista/can-it-ford/renders/yaris_render_s1/sim_standing.py
-sha256sum /work/11603/jcerrell0629/vista/can-it-ford/renders/yaris_render_s1/sim_standing.py
-```
-
-**Expect `4696c3b2d39f4e28f9c49c9f96c5c28a786c237f19204cc32036f703277d10d9`.** If it differs,
-**stop and report** rather than run: Vista's driver would not be the one that stamped the
-published runs. Or just:
+## 2. Preflight. It now actually runs, and it used to not.
 
 ```
-bash simulation/r5_physics/prestage_jobs.sh --preflight
+bash simulation/r5_physics/prestage_jobs.sh --preflight     # exits non-zero on failure
+bash simulation/r5_physics/prestage_jobs.sh --stage         # only if the scene check fails
 ```
+
+`preflight()` previously **echoed** its checks as strings for a human to paste, while this
+section and the script's own usage text both described it as performing them. It always
+exited 0. **A check that cannot fail is not a check.** Run against the original paths it
+now reports two failures, both real and both fixed:
+
+1. **Job A's driver path did not exist.** The engine and the driver live in **different
+   roots**: `can-it-ford/` has `mpm-engine` and the hull but no driver; the expected
+   `4696c3b2...` is in **`can-it-ford-track1-6dof/`**. `cd $REPO` stays `can-it-ford`,
+   which is correct, because `sim_standing.py:14` hardcodes `VEHICLE_DIR` absolutely.
+2. **Jobs B and C ran a file that was never staged.** `find $WORK -name sphere_heave.py`
+   returned nothing; this branch is unpushed and Vista sits on `main`. The scene now lives
+   at `$WORK/d4_scene` and is referenced **absolutely**, not relative to a `cd`.
+
+Current state: **rc=0.** Driver sha matched, scene staged and sha-verified byte-identical,
+engine imports, and `test_sphere_geometry.py` runs on **Vista's own interpreter** with
+ALL PASS. `nvidia-smi: command not found` on the login node is expected, not a gate.
 
 ## 3. Fire order, and the drop rule
 
@@ -47,7 +59,7 @@ Batch via `tacc_submit`. **Never idev** (interactive burned 98.5-99.1% of Vista 
 | 1 | **A1** brake sweep, mu = 0.55 / 0.30 / 0.0250 on `sweepV_g64_v0p5`, 250 frames | **0.012** | mu = 0.55 **must** reproduce STUCK or the whole job is void. mu = 0.0250 tests the INFERRED flip. **mu = 0.30 is logged INDETERMINATE in advance**, because the bracket (0.369, 0.739] straddles the run's 0.5 m/s, so neither outcome confirms anything | **never drop** |
 | 2 | **A2** repeats n=10 on `g96_m2337` and `sweepV_g64_v0p5`, 250 frames | 0.265 | report **divergence-onset frame**, spread of `max_surge_drift_m` with N and range, and **gate-pass frequency out of 10, never pass/fail** | n=10 to n=5 |
 | 3 | **B** sphere `--fixed`, lim 1.2, 200 frames | 0.309 | steady reaction vs **69.2180 N** with a **blocked** SE, not a raw std. **Within 10% PASS, 10-25% REPORTABLE PARTIAL, beyond 25% FAIL.** Bands set now and not to be moved | 200 to 120 frames |
-| 4 | **C** sphere free decay x3, lim 2.2, 200 frames | **3.679** | **not gradeable until `/s1` exists.** Self-consistency only: reflection window respected, period rising with drop height, Mach reported per drop | **drop first** |
+| 4 | **C** sphere free decay x3, lim 2.2, 200 frames | **3.679** | **NOW QUANTITATIVELY GRADEABLE**, `/s1` is on disk. Measured first damped periods, N=4 each: **0.7869 / 0.8093 / 0.8671 s** for 0.1D / 0.3D / 0.5D, spreads 0.0010 / 0.0012 / 0.0029 s. Published tolerance is per drop, **0.096 / 0.239 / 0.435 mm**, not a flat 0.3%. Reduce with `kramer_benchmark.py` | **drop first** |
 
 `bash simulation/r5_physics/prestage_jobs.sh --go A` (then `B`, `C`) emits each job script
 and its `tacc_submit` line.
@@ -99,7 +111,20 @@ never happened).
 
 ## 7. Status
 
-**Scope complete pending the socket.** Both dispatch options have runnable, dry-run-tested
-code with guards that can fire. Everything remaining needs a human, not more analysis.
-Docs are **REVIEWED-WITH-CORRECTIONS**; the STUCK flip stays **INFERRED** until A1 measures
-it.
+**Superseded 2026-08-17 ~21:30 UTC.** The old text read "scope complete pending the
+socket", and that was wrong in both directions: the socket was **already clear**, and
+clearing it would not have been enough, because job A pointed at a nonexistent driver and
+jobs B and C ran an unstaged file.
+
+**State now: the queue is fireable and verified.** `--preflight` exits 0, the scene is
+staged and sha-verified on Vista, and the geometry suite passes on Vista's own
+interpreter. The Kramer series is on disk, so **job C is quantitatively gradeable** and
+`sphere_heave.py`'s `a33/m = 0.5` sizing assumption is now measured against data: the
+implied ratios are **0.540 / 0.629 / 0.870**, so 0.5 is low everywhere and 42% low at the
+nonlinear drop.
+
+**Nothing has run on a GPU, and nothing has been submitted.** That is a live 627 SU
+allocation and the call to spend it is Josie's. Docs remain
+**REVIEWED-WITH-CORRECTIONS**; the STUCK flip stays **INFERRED** until A1 measures it; the
+benchmark reduction in section 3 of `R5_PHYSICS_BENCHMARK_UNBLOCKED.md` is
+**UNREVIEWED** by the physics-skeptic.

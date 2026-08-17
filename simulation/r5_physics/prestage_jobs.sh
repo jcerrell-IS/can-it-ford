@@ -8,8 +8,10 @@
 # because the whole point is that it is inspectable before it costs anything.
 #
 # Usage:
-#   bash prestage_jobs.sh                 print the plan and the preflight
-#   bash prestage_jobs.sh --preflight     run ONLY the path/sha checks on Vista
+#   bash prestage_jobs.sh                 print the plan and run the preflight
+#   bash prestage_jobs.sh --preflight     EXECUTE the path/sha/engine checks on Vista,
+#                                         exit non-zero if any fails
+#   bash prestage_jobs.sh --stage         copy the sphere scene to Vista (jobs B and C)
 #   bash prestage_jobs.sh --go A          emit job A's script and submit line
 #   bash prestage_jobs.sh --go B          ... job B
 #   bash prestage_jobs.sh --go C          ... job C (only after B passes)
@@ -24,11 +26,44 @@
 set -uo pipefail
 
 VISTA_ROOT=/work/11603/jcerrell0629/vista
+
+# THE ENGINE AND THE DRIVER LIVE IN DIFFERENT ROOTS ON VISTA. Verified live
+# 2026-08-17 by find + sha256sum over the whole of $WORK:
+#   can-it-ford/            has mpm-engine/.venv and mpm-engine/src, and the hull,
+#                           but renders/ holds only mpm-engine-out and
+#                           multigeom_2026-08-12_render. THERE IS NO DRIVER HERE.
+#   can-it-ford-track1-6dof/ has renders/yaris_render_s1/sim_standing.py at exactly
+#                           DRIVER_SHA below, but NO mpm-engine.
+# The original DRIVER line pointed at can-it-ford/renders/yaris_render_s1/ and
+# resolved to "No such file or directory", so every job A run would have died at
+# launch. Four other copies carry the same sha (render_s2/multigeom_2026-08-08,
+# d5_settle, d5_seedpolicy, can-it-ford-track2-realism); track1-6dof is chosen
+# because it is the canonical track-1 tree. Two other hashes exist under $WORK
+# (5215c38b in the as_ran_local_copies trees, 7236e474 in class_specific) and
+# neither is the published driver.
+#
+# cd $REPO stays can-it-ford even though the driver is elsewhere, and that is
+# correct, not an oversight: sim_standing.py:14 hardcodes
+# VEHICLE_DIR = Path("/work/.../vista/can-it-ford/vehicle_geometry_research")
+# as an ABSOLUTE path, so the driver is cwd-independent for the hull. Confirmed
+# live: the hull is present under both roots.
 PY=$VISTA_ROOT/can-it-ford/mpm-engine/.venv/bin/python
 ENGINE=$VISTA_ROOT/can-it-ford/mpm-engine/src
-DRIVER=$VISTA_ROOT/can-it-ford/renders/yaris_render_s1/sim_standing.py
+DRIVER=$VISTA_ROOT/can-it-ford-track1-6dof/renders/yaris_render_s1/sim_standing.py
 REPO=$VISTA_ROOT/can-it-ford
+# Jobs B and C originally ran the sphere scene by a path RELATIVE to $REPO, which had
+# never been staged: `find $WORK -name sphere_heave.py` returned NOTHING on 2026-08-17.
+# This branch is 36 commits ahead of main and unpushed, while Vista's can-it-ford
+# checkout sits on main at 15275f2, so the file could not have arrived by any route.
+# The scene now lives in its OWN directory and is referenced absolutely, for two
+# reasons: writing into Vista's git checkout would leave untracked files in a tree
+# other machines and sessions share, and an absolute path cannot be broken by a cd.
+# Stage it with --stage.
+SCENE_DIR=$VISTA_ROOT/d4_scene
 DRIVER_SHA=4696c3b2d39f4e28f9c49c9f96c5c28a786c237f19204cc32036f703277d10d9
+
+# Local helper that owns the pooled SSH ControlMaster. Override with TACC=...
+TACC=${TACC:-/Users/josie/can-it-ford/scripts/tacc.sh}
 
 # Repeat count for job A2. Drop to 5 first if the allocation is short.
 NREP=${NREP:-10}
@@ -37,16 +72,61 @@ NREP=${NREP:-10}
 FRAMES_CANON=250
 FRAMES_SPHERE=200
 
+# PREFLIGHT NOW EXECUTES. It used to `echo` these four lines as strings for a human to
+# run, while both this script's usage text ("run ONLY the path/sha checks on Vista") and
+# START_HERE section 2 ("Or just: prestage_jobs.sh --preflight") described it as a check.
+# It could not fail, so it never reported that DRIVER did not exist. A check that cannot
+# fail is not a check. This one exits non-zero.
 preflight() {
-  cat <<'EOF'
-# --- PREFLIGHT, run this first, it costs nothing -----------------------------
-# If the driver sha256 is not 4696c3b2..., STOP and report it: Vista's driver
-# would differ from the one that stamped every published run.
-EOF
-  echo "ls -l $DRIVER"
-  echo "sha256sum $DRIVER   # expect $DRIVER_SHA"
-  echo "$PY -c 'import warpmpm, warpmpm.geometry as g; print(warpmpm.__file__); print(sorted(dir(g))[:5])'"
-  echo "nvidia-smi --query-gpu=name,memory.total --format=csv,noheader"
+  echo "# --- PREFLIGHT, executed against Vista, costs nothing ---"
+  local rc=0
+
+  echo "== driver identity =="
+  local got
+  got=$("$TACC" vista "sha256sum $DRIVER 2>&1 | awk '{print \$1}'" 2>/dev/null | tr -d '[:space:]')
+  if [ "$got" = "$DRIVER_SHA" ]; then
+    echo "  OK   $DRIVER"
+    echo "       sha256 $got"
+  else
+    echo "  FAIL $DRIVER"
+    echo "       expected $DRIVER_SHA"
+    echo "       got      ${got:-<missing or unreadable>}"
+    echo "       STOP: Vista's driver would not be the one that stamped every published run."
+    rc=1
+  fi
+
+  echo "== scene staged for jobs B and C =="
+  if "$TACC" vista "test -f $SCENE_DIR/sphere_heave.py" >/dev/null 2>&1; then
+    echo "  OK   $SCENE_DIR/sphere_heave.py"
+  else
+    echo "  FAIL $SCENE_DIR/sphere_heave.py is absent. Jobs B and C cd to \$REPO and run"
+    echo "       it by a RELATIVE path, so they would die at launch. Run: $0 --stage"
+    rc=1
+  fi
+
+  echo "== engine =="
+  "$TACC" vista "$PY -c 'import warpmpm, warpmpm.geometry as g; print(\"  OK   \"+warpmpm.__file__); print(\"       geometry: \"+\", \".join([s for s in sorted(dir(g)) if not s.startswith(\"_\")][:6]))'" 2>&1 | tail -3 || rc=1
+
+  echo "== gpu (login node reports none; this is informational, not a gate) =="
+  "$TACC" vista "nvidia-smi --query-gpu=name,memory.total --format=csv,noheader 2>&1 | head -2" 2>&1 | tail -2
+
+  echo "# preflight rc=$rc"
+  return $rc
+}
+
+# Stage the scene jobs B and C need. Copies only D4's own files, into a directory this
+# branch owns, and never touches sim_standing.py or anything else in the Vista tree.
+stage() {
+  local here
+  here=$(cd "$(dirname "$0")" && pwd)
+  echo "# staging $here -> vista:$SCENE_DIR"
+  "$TACC" vista "mkdir -p $SCENE_DIR" || return 1
+  for f in sphere_heave.py kramer_benchmark.py test_sphere_geometry.py test_sphere_dryrun.py; do
+    [ -f "$here/$f" ] || { echo "  skip (absent locally) $f"; continue; }
+    scp -q "$here/$f" "vista:$SCENE_DIR/$f" && echo "  sent $f" || echo "  FAILED $f"
+  done
+  echo "# verify"
+  "$TACC" vista "ls -l $SCENE_DIR" 2>&1 | tail -8
 }
 
 job_a() {
@@ -104,9 +184,8 @@ set -uo pipefail
 export PYTHONPATH=$ENGINE:\${PYTHONPATH:-}
 OUT=$VISTA_ROOT/d4_jobB
 mkdir -p \$OUT
-cd $REPO
 echo "TIMING_ANCHOR_START=\$(date +%s)"
-$PY simulation/r5_physics/sphere_heave.py --fixed \\
+$PY $SCENE_DIR/sphere_heave.py --fixed \\
     --n-grid 64 --lim 1.2 --depth 0.5 --h0-over-d 0.0 \\
     --frames $FRAMES_SPHERE --sdf-res 96 --verbose \\
     --out \$OUT/sphere_fixed_g64.json
@@ -128,11 +207,10 @@ set -uo pipefail
 export PYTHONPATH=$ENGINE:\${PYTHONPATH:-}
 OUT=$VISTA_ROOT/d4_jobC
 mkdir -p \$OUT
-cd $REPO
 echo "TIMING_ANCHOR_START=\$(date +%s)"
 for H0D in 0.1 0.3 0.5; do
   echo "=== C h0/D=\$H0D ==="
-  $PY simulation/r5_physics/sphere_heave.py \\
+  $PY $SCENE_DIR/sphere_heave.py \\
       --n-grid 117 --lim 2.2 --depth 0.5 --h0-over-d \$H0D \\
       --frames $FRAMES_SPHERE --sdf-res 96 --verbose \\
       --out \$OUT/sphere_h0_\${H0D}.json
@@ -160,6 +238,7 @@ EOF
 
 case "${1:-}" in
   --preflight) preflight ;;
+  --stage) stage ;;
   --go)
     case "${2:-}" in
       A) job_a; submit_line A "00:45:00" ;;

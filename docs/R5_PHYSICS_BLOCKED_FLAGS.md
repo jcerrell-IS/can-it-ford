@@ -1,5 +1,26 @@
 # D4 BLOCKED FLAGS: two blockers, both needing a human, both about one minute of work
 
+> **SUPERSEDED 2026-08-17 ~21:30 UTC. BOTH FLAGS ARE CLOSED. Do not act on this file
+> without reading `R5_PHYSICS_BENCHMARK_UNBLOCKED.md` first.**
+>
+> - **FLAG-1 was already clear when it was written up as blocking.** A live typed command
+>   returns `login1.vista.tacc.utexas.edu`, 627 SU, queue empty. No human ran `ssh vista`;
+>   the socket simply warmed and nobody re-tested. **A blocker recorded once is not a
+>   blocker now**, and the re-test costs one command.
+> - **FLAG-2a is closed.** The supplementary archive is at
+>   `/Users/josie/can-it-ford-refs/2026-08-16/energies-14-00269-s001.zip`, sha256
+>   `04c4d78d...7623f`. It was fetched by driving a **real browser**, which the publisher
+>   serves normally. Every earlier attempt used curl, WebFetch or a resolver, and MDPI
+>   answers all three with 403. This file's own lesson needs the extra clause: **a fetch
+>   status from an automated client is not a fetch status from a browser.**
+> - FLAG-2b (the Nihei corrigendum) is **still open** and is the only one left. The same
+>   browser route is the obvious next thing to try, and has not been.
+>
+> Clearing the flags was **not sufficient**. Two run-blocking defects sat behind them and
+> are fixed in the same commit: job A pointed at a driver path that does not exist, and
+> jobs B and C ran a file that had never been staged to Vista. Neither was caught because
+> `--preflight` echoed its checks instead of running them.
+
 2026-08-17. Branch `claude/r5-physics`. Written per the dispatch protocol, which says to
 try a genuinely different second approach, then a connector, and **only then** write a
 named flag file and keep working on the rest of scope. All three steps are done for both
