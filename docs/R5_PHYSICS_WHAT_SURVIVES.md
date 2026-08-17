@@ -68,11 +68,37 @@ the P-2 trend, so the dilution framing was backwards.
 sentence. A constant residual is a rigid translation; removing it leaves 6e-7 m of scatter
 and reproduces the driver's own value to 0.00e+00 in 17/17. My stated reason refuted itself.
 
-## 3b. New, unreviewed, and nobody is gating it
+## 3b. WITHDRAWN by my own check, and replaced by something stranger
 
-**5 to 21 percent of the water under the vehicle footprint sits BELOW the floor plane** at
-frame 89, already 4.8% at frame 0. No gate covers it, and it is a better candidate for the
-word "passthrough" than P-2 ever was.
+I put "5-21% of water sits below the floor plane, an ungated leakage channel" on the board
+after a reviewer raised it. **I then derived it myself and it is wrong.**
+
+`_project_water` (`sim_standing.py:250-267`) clamps water to `floor - 0.25*dx` **by design**
+and counts anything beyond as `leaked`. So "below the floor plane" is mostly the designed
+tolerance band. Measured at frame 89, N=17:
+
+| | median | range |
+|---|---|---|
+| below the floor plane | 10.73% | 0.00 to 19.47% |
+| **below the clamp band** (`floor - dx/4`) | **0.38%** | 0.00 to 2.18% |
+
+The minimum z sits at **-0.258 dx** below the floor in every g64 run, i.e. essentially
+exactly at the clamp limit. **It is the containment working, not a leak**, and the driver
+already stores an escape counter (`leaked_particle_frames`, 6,345 to 207,415 across runs).
+"Ungated" was wrong too.
+
+**What is real, and I did not expect it: the below-floor population is a g64 phenomenon
+only.**
+
+| grid | dx | below floor | min z minus floor, in dx |
+|---|---|---|---|
+| g48 | 0.1963 | **0.00%** | **+0.113** (above the floor) |
+| g64 | 0.1472 | **10.0 to 19.5%** | **-0.258** (at the clamp limit) |
+| g96 | 0.0981 | **0.00%** | **+0.031 to +0.047** (above the floor) |
+
+g48 and g96 keep every water particle above the floor. g64 drives 10-19% of it down to the
+clamp. That is resolution-specific and non-monotone, on **the grid 13 of the 17 canonical
+runs use**. I have no verified mechanism for it and am not proposing one. **[unreviewed]**
 
 ## 4. Nothing on this branch has been run on a GPU
 
