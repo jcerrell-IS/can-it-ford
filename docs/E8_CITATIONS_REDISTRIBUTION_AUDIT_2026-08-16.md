@@ -23,7 +23,7 @@ Scope note: D1 mines the **content** of these files. This assesses their
 >
 > | # | Exposure | Scale | Rights position | Public surface |
 > |---|---|---|---|---|
-> | 1 | **CCSA/NCAC geometry.** 4 original distribution archives (88,592,238 B) + 14 extracted decks (71,716,670 B), redistributed **intact**, not derived | 160,322,098 B | Licence **silent**: no grant, no licence name, no copyright statement | **30 of 30 branches** |
+> | 1 | **CCSA/NCAC geometry.** 4 original distribution archives (88,592,238 B) + 14 extracted decks (71,716,670 B), redistributed **intact**, not derived | 160,322,098 B | Licence **silent**: no grant, no licence name, no copyright statement | **35 of 35 branches** |
 > | 2 | **Smith 2019 reproduction.** The complete 15-page article, page by page | 6,215,623 B | Licence **asserted**: "© 2019 CIWEM and John Wiley & Sons Ltd" legible in the copy itself | 1 tree, `main` |
 > | 3 | The two CC-licensed PDFs | 10,884,441 B | **Licensed.** Housekeeping, not a problem | 1 tree, `main` |
 >
@@ -33,8 +33,8 @@ Scope note: D1 mines the **content** of these files. This assesses their
 > The four `.ply` files that originally framed this whole thread are 15,823,688 B,
 > **under 9% of the geometry tree**, and should stop being the headline.
 >
-> Separately, the credential FLAG document is public on **1 of 30** branches while the
-> geometry is on **30 of 30**. Same reason: one remediation shape does not fit both.
+> Separately, the credential FLAG document is public on **1 of 35** branches while the
+> geometry is on **35 of 35** (re-measured 2026-08-18; the surface grew from 30). Same reason: one remediation shape does not fit both.
 
 ---
 
@@ -397,7 +397,7 @@ some of the better provenance records in the repo.
   be something else.
 - **Elicit's terms were not read.**
 - **I did not check the other 29 public branches** for `citations/` variants. The
-  geometry sweep showed the public surface is 30 branches, not one tree, and this
+  geometry sweep showed the public surface is 35 branches, not one tree, and this
   audit covers `origin/main` only. A stale copy on another branch would not appear
   here.
 - **physics-skeptic not run:** no physical claim in scope. Byte counts are arithmetic

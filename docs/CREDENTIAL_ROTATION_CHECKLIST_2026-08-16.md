@@ -5,8 +5,8 @@ Dispatch R5-D2, 2026-08-16. Branch `claude/r5-exposure`.
 
 > ### Three things to carry into every row below
 >
-> **1. The public surface is 30 BRANCHES, not one tree.** `origin` has 30 public
-> branches. Any statement of the form "the repo is clean" that was established by
+> **1. The public surface is 35 BRANCHES, not one tree, and it GREW from 30 while
+> this dispatch ran.** `origin` has 35 public branches (re-measured 2026-08-18). Any statement of the form "the repo is clean" that was established by
 > scanning one tree does not cover it. Verified live 2026-08-16; this is what the
 > correction in `5f01dd2` turned on, and it is the reason the "nothing is public"
 > claim failed the first time.
@@ -48,7 +48,7 @@ Dispatch R5-D2, 2026-08-16. Branch `claude/r5-exposure`.
 > answers directly in its row 12.
 >
 > **What this file still adds, and it is narrower than first claimed:** the public-surface
-> findings (30 branches; the FLAG document public on one of them), the two-part public
+> findings (35 branches; the FLAG document public on one of them), the two-part public
 > status, the divergent-copies hazard in section 0.1 below, and the three defects in
 > section 0.2. **For the rotation itself, use the source document's own list**, with the
 > corrections below applied to it.
@@ -77,9 +77,15 @@ hits; `.env` is gitignored with 0 commits adding it. [read, source doc §2.36]
 Re-verified independently this session, and extended: **the repo has 30 public
 branches**, so a scan of one tree is not a scan of the public surface. The two
 credential-named files that appear on effectively every branch were value-scanned
-directly off `origin/main` blob `1a868f3`: `token_setup_template.md` (969 B, on all 30
-branches) and `HANDOFF_AUDIT_2026-07-24/topics/security/secrets-and-env.md` (1,936 B,
-on 28). **Both contain zero token-shaped strings.** Part 1 survives. [read]
+directly off `origin/main` blob `1a868f3`: `token_setup_template.md` (969 B) and
+`HANDOFF_AUDIT_2026-07-24/topics/security/secrets-and-env.md` (1,936 B). **Both contain
+zero token-shaped strings.** Part 1 survives. [read]
+
+**Per-branch presence re-derived 2026-08-18 rather than renumbered**, because these are
+measurements and not just a count: `token_setup_template.md` is on **34 of 35** branches
+(it was on all 30, so one of the five new branches lacks it),
+`secrets-and-env.md` on **32 of 35**, and the FLAG document on **1 of 35**. The value
+scan is unchanged: still zero token-shaped strings in either file.
 
 **Part 2, a document enumerating the HOLDERS is public.**
 `docs/FLAG_CREDENTIAL_EXPOSURE_2026-08-13.md`, blob `a7ad33e5`, 5,517 bytes, is on the
@@ -92,7 +98,8 @@ it leaks no value. [read]
 What it does publish is the **targeting map**: host names (Vista, LS6, Mac), the
 holding file (`~/.bashrc`), its mode, **the exact line numbers of the export
 statements** (`:112`, `:122`, `:123`, `:124`), token fingerprints, and which of the
-duplicate exports actually wins. It is on exactly one of the 30 branches. [read]
+duplicate exports actually wins. It is on exactly **one of the 35** branches. [read,
+re-measured 2026-08-18]
 
 **Therefore the correct conclusion is the opposite of the one the old sentence
 supported.** An attacker reading that file knows precisely which machines to aim at,
@@ -214,7 +221,7 @@ lowercase, 12 distinct characters, Shannon entropy **3.51 bits/char** against ro
 131 reads: *"**Nothing here is public.** Every item below is local or on TACC."* The
 correction in `5f01dd2` applies to the source document too, not only to this file: no
 credential **value** is public, **and** a document enumerating the holders is public on
-one of 30 branches. Whoever owns the source should carry that correction across.
+one of 35 branches. Whoever owns the source should carry that correction across.
 
 ---
 
