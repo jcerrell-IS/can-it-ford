@@ -760,7 +760,45 @@ session's commit in this repo on 2026-08-13.
 CLAUDE.md needs no merge at all: blob `37983d2` at base, main HEAD and the fork
 tip alike, so the only thing that can happen to it is loss.
 
-### A third protection, armed 00:53: something is now watching
+### THE WATCHDOG FIRED, and side A has GROWN. Numbers below are updated
+
+**read, 23:10.** The watcher caught a real change and it justified its existence
+on the first event. **Side A is bigger than this section originally described:**
+
+| file | at HEAD | when I first measured | **now** |
+|---|---|---|---|
+| `CLAUDE.md` | 676 | 749 (+73) | **823 (+147)** |
+| register | 656 | 760 (+104) | 760 (+104), **untouched**, sha still `ed96e72e` |
+| `.gitignore` | | not modified | **now modified (+5)** |
+
+So the uncommitted, unowned work in the main checkout has gone from **177 lines
+to 251**, and a fifth file joined it. The register itself has not moved, which
+is why the merge arithmetic in this section still holds: **1559 = 1455 + 104**.
+
+**Re-snapshotted immediately**, because the 15:08 restore point was now stale
+for CLAUDE.md: `can-it-ford-bundles/2026-08-17/maintree-snapshot-2310/` (0700),
+five raw files plus the patch, sha256 MANIFEST, and the patch **verified to
+reapply cleanly onto 777567a** in a throwaway clone.
+
+**Step 1's abort condition is unchanged and still correct:** the register must
+read **760**. It does. If you are committing side A, note you are now committing
+147 lines of CLAUDE.md, not 73.
+
+#### A defect in my own watcher, found by its own first alert
+
+The event read `[side-A CHANGED] unchanged: register 760 lines, still
+uncommitted, sha matches`, which is self-contradictory. The signature correctly
+included CLAUDE.md's line count, so the change was detected, but `classify()`
+only branched on the **register**, so it printed "unchanged" for a real CLAUDE.md
+edit. **An alert that fires correctly and then describes itself as "unchanged" is
+worse than no alert**, because the natural response is to ignore it.
+
+Fixed: `classify()` now takes the previous signature as well and prints an
+explicit `MOVED: register X->Y; CLAUDE.md X->Y; dirty-count X->Y` line before its
+verdict, and the register-intact branch now says so rather than saying
+"unchanged". The watcher was restarted on the corrected script.
+
+### The original protection, armed 00:53
 
 The blockquote at the top of this section says the abort condition and the
 survival test are the only protection those 177 lines have, because nobody is
