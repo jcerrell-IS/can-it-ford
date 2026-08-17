@@ -119,14 +119,53 @@ Reported as the manifest requires: N and range, never a single draw, and **frequ
 pass/fail**. Against `slide_m = 0.05 m`, max drift falls below it in **0/10** repeats for
 both cases.
 
-**CORRECTED after review, and this is a real understatement in my own numbers.** A1's
-`brake_mu0.55` is the *same configuration* as the `v0p5` repeats, so it is an eleventh
-sample of that ensemble. Its 250-frame max drift is **0.056934**, which lands **0.87 mm
-below the observed minimum of 0.057807** **[derived]**. The true spread across N=11 is
-therefore at least **2.926e-03 m, about 43% wider than the 2.052e-03 m I reported**. Do
-not quote 2.052e-03 without noting that a further sample of the same configuration fell
-outside it. This is precisely the failure the "report N and spread, never a single draw"
-rule exists to prevent, and reporting a range from 10 draws still understated it.
+### 3.1 A correction that was itself wrong, and is now withdrawn
+
+The review reported that A1's `brake_mu0.55` (an eleventh sample of the `v0p5`
+configuration) lands 0.87 mm **below** the ensemble minimum, making the spread understated
+by about 43%. **I accepted that and published it. It is wrong, and both it and my
+restatement of it are withdrawn.**
+
+It compared the review's **`max|dx|` = 0.056934** against **my `dmag`-based range
+[0.057807, 0.059860]**. Those are different quantities: `max|dx|` is the classifier's
+single-axis surge drift, `dmag` is the full 3D displacement magnitude. Re-derived
+consistently, the A1 sample is **inside** the ensemble on both measures in both windows
+**[derived]**:
+
+| window | measure | A2 N=10 range | A1 sample | |
+|---|---|---|---|---|
+| 250-frame | `max|dx|` | [0.056337, 0.058447] | 0.056934 | **inside** |
+| 250-frame | `max dmag` | [0.057807, 0.059860] | 0.058404 | **inside** |
+| 91-frame | `max|dx|` | [0.055886, 0.057868] | 0.055907 | **inside**, barely (21 um above the minimum) |
+| 91-frame | `max dmag` | [0.057589, 0.059447] | 0.057589 | **inside**, at the minimum |
+
+So the reported spread does **not** understate the ensemble, and no eleventh sample fell
+outside it. The one honest caveat is that on the 91-frame window the A1 sample sits at or
+within 21 um of the minimum on both measures, so it is at the edge, not comfortably
+central.
+
+**This is the project's own rule biting the reviewer and then me: deduplicate by NAME and
+UNIT, never by value.** Two quantities that are both "max drift in metres" for the same
+run are not the same number, and 0.056934 against 0.057807 looks like a discrepancy only
+until you notice one is a projection of the other. I should have re-derived before
+publishing the correction, which is exactly what I demanded of the reviewer's inputs.
+
+### 3.2 Reflection-clean spreads, which is what should be quoted
+
+Recomputed inside the pre-reflection window **[derived]**. The reflection arrival is
+re-derived here rather than quoted: wall distance 3.1798 m, `c = sqrt(g*0.29443) =
+1.6995 m/s`, round trip 3.7420 s = **112.3 frames**, so a 91-frame window (the canonical
+run length) is clean.
+
+| case | 250-frame spread | 91-frame spread | max occurs before frame 91? |
+|---|---|---|---|
+| `g96_m2337` | 2.203e-03 m | **2.203e-03 m** | **yes**, identical, so not contaminated |
+| `sweepV_g64_v0p5` | 2.052e-03 m | **1.858e-03 m** | no, its 250-frame max is post-reflection |
+
+**Blocking issue 1 therefore applies to `v0p5` and not to `g96_m2337`.** `g96_m2337`'s
+max-drift spread is reached before the reflection arrives and is unaffected; `v0p5`'s
+250-frame figure is contaminated and **1.858e-03 m is the number to quote**, with N = 10
+and range [0.057589, 0.059447].
 
 **Divergence begins at frame 1 in both cases**, growing from 2.6e-05 m to 3.1e-03 m
 (`g96_m2337`) and from 4.9e-07 m to 2.8e-03 m (`v0p5`). So the runs are reproducible to
@@ -199,8 +238,11 @@ reason than I gave**; claim 4 **CONFIRMED but not novel**.
 
 ### 6.1 Blocking
 
-1. **Reflection contamination**, section 2.3. Every 250-frame drift magnitude is measured
-   at or after the first wall reflection. Truncate to <= 91 frames or caveat every figure.
+1. **Reflection contamination**, sections 2.3 and 3.2. **Partly discharged**: the
+   pre-reflection recomputation is done. It bites `sweepV_g64_v0p5` (spread 2.052e-03
+   contaminated, **1.858e-03 clean**) and does **not** bite `g96_m2337`, whose max-drift
+   spread is identical in both windows because its maximum occurs before frame 91. Quote
+   the 91-frame figures. The A1 *verdicts* were already shown frame-count invariant.
 2. **Upstream slosh scores as SLIDE**, section 2.2. Fix or caveat `failure_modes.py:170`
    before publishing any SLIDE onset or duration.
 3. **`peak_surge_accel_g = 0.682 g` is a frame-0 artifact, in this job AND in the
@@ -209,8 +251,12 @@ reason than I gave**; claim 4 **CONFIRMED but not novel**.
    frame 0 gives 0.3954 g; from frame 20 on, 0.0285 g, a **23.9x** overstatement. The real
    hydrodynamic margin to SSF is **49.8x**, not the 2.08x that quoting 0.682 g implies.
    **Never quote 0.682 g as a hydrodynamic load.**
-4. **A1's control lands outside this job's own A2 range**, section 3. Spread understated
-   by at least 43%.
+4. ~~**A1's control lands outside this job's own A2 range.** Spread understated by at
+   least 43%.~~ **REFUTED 2026-08-17, see section 3.1.** The review compared its
+   `max|dx|` against a `dmag` ensemble. Re-derived consistently, the A1 sample is inside
+   the range on both measures in both windows. **This blocking issue is withdrawn**, and
+   so is my published restatement of it. Reduced to a caveat: on the 91-frame window the
+   A1 sample sits at or within 21 um of the ensemble minimum, so it is at the edge.
 5. **Engine `627367e` is unvalidated against the register.** Every gravity and material-8
    fact in the register was verified against the vendored **`544c93dd`**
    (`third_party/mpm-engine-544c93dd-solver-core/core/solver.py:167-169`). No local
