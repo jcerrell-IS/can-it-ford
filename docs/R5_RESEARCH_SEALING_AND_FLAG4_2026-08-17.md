@@ -43,7 +43,7 @@ which I split into two):
 |---|---|---|
 | Bonham & Hattersley 1967 | Rigid model; results scaled to 7 car categories | yes |
 | Gordon & Stone 1973 | Rigid model, front-wheel-drive weight distribution | yes |
-| Keller & Mitsch 1993 | Sealed **assumption**; not validated | **NO, desk study** |
+| Keller & Mitsch 1993 [**YEAR DISPUTED: OpenAlex gives 1992 on an exact title match, unit 57**] | Sealed **assumption**; not validated | **NO, desk study** |
 | Teo 2010 / 2012 | Die-cast; some scaled fully submerged | yes |
 | **Xia et al. 2011** | **Water-filled models** (submerge before moving) | yes |
 | **Shu et al. 2011** | **Foam-filled watertight** | yes |

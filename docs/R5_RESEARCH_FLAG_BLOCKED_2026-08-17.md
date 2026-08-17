@@ -81,6 +81,37 @@ match closely enough to assert it.
 
 ---
 
+### FLAG-5 UPDATE, 2026-08-19 (unit 57): the count was wrong, and one row is now resolved
+
+**FLAG-5 said five Elicit rows carry no resolvable DOI. Re-derived from the CSV, it
+is EIGHT**: rows 6, 14, 18, 21, 24, 28, 29, 36. Row 6 is the Martinez-Gomariz
+duplicate whose twin (row 16) does carry `10.1111/jfr3.12262`, so **seven distinct
+papers are genuinely unresolved**, not five. I do not know how the original five was
+arrived at; it is superseded either way.
+
+**Row 14 is now RESOLVED, and the answer is that it has no DOI to find.**
+`verifyCitation` returns `matched`, high confidence, **score 1**:
+
+```
+Stability of Cars and Children in Flooded Streets
+RJ Keller and BF Mitsch          issued year 1992      identifiers: []
+registries searched: crossref 10 results, openalex 4, pubmed 0
+```
+
+**`identifiers: []` is the finding.** This is a genuine absence, not a lookup
+failure, so no amount of further searching will produce a DOI for it.
+
+**And the year is 1992, not 1993.** The corpus document
+`Experimental Configuration of the Flood-Vehicle Stability Literature` says 1993,
+and **I copied that into my own unit 40 table** at `SEALING_AND_FLAG4:46` and `:61`.
+OpenAlex gives 1992 on an exact title match; 1993 has no registry support I have
+found. **Stated as a discrepancy rather than a correction**, because I have not seen
+the primary source and this project has been bitten before by a confidently-asserted
+year (memory: "Xia is 2014, not 2013", where a bolded instruction was itself wrong).
+
+Keller & Mitsch is cited in **0** `.tex` or `.bib` files, so nothing downstream
+depends on the year today.
+
 ## FLAG-6. The Overleaf head is unverifiable, and it blocks more than one claim
 
 **Added 2026-08-18, unit 46. This is the highest-value flag in this file, because it
