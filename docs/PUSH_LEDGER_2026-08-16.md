@@ -745,6 +745,8 @@ The register is the real two-sided case:
     exit status 0        (0 = clean; a positive value would be the conflict count)
     conflict markers     0
     result               1559 lines = 1455 + 104 exactly
+    SUPERSEDED 00:36     side A grew to 803; the live target is now 1602.
+                         This line is kept as the original derivation, not as current.
 
 The reason is measurable, not a guess. A's entire change is one hunk,
 `@@ -656,0 +657,104 @@`: a pure append past the end of the base file. B's 17
@@ -797,9 +799,9 @@ stronger measurement, and **it holds identically**:
     A  claude/add-ci-checks                                    register  760
     B  claude/fork-register-reconcile                          register 1455
 
-    git merge-file -p A base B   ->  exit 0, 0 conflict markers, 1559 lines
+    git merge-file -p A base B   ->  exit 0, 0 conflict markers, 1602 lines
 
-**1559 = 1455 + 104, from committed objects.** The earlier working-tree result was
+**1602 = 1455 + 147, from committed objects.** The earlier working-tree result was
 not wrong, and it is no longer the basis for the claim.
 
 **CLAUDE.md now differs between the sides, and still does not collide.** Blob
@@ -834,11 +836,11 @@ session's commit in this repo on 2026-08-13.
 
 **Step 3. Owner: `D4 REGISTER-RECONCILE`. Confirm by content, not by exit code.**
 
-    wc -l docs/CANONICAL_CORRECTIONS_REGISTER_2026-08-06.md   # MUST be 1559
+    wc -l docs/CANONICAL_CORRECTIONS_REGISTER_2026-08-06.md   # MUST be 1602
     grep -c "^K4\." docs/CANONICAL_CORRECTIONS_REGISTER_2026-08-06.md   # A's block follows K4
     grep -n "9.80665" docs/CANONICAL_CORRECTIONS_REGISTER_2026-08-06.md | head   # B's early hunks
 
-  **1559 = 1455 + 104.** If it reads **1455, side A vanished**. If it reads
+  **1602 = 1455 + 147.** If it reads **1455, side A vanished**. If it reads
   **760, side B vanished**. Neither loss produces a conflict marker, which is
   precisely why the line count is the test and `git merge` exiting 0 is not.
 
@@ -861,7 +863,7 @@ working file, so it needs no worktree, and it reads:
 | side B's register | meaning |
 |---|---|
 | **1455** | merge has not happened yet, the current state |
-| **1559** | correct, 1455 + 104. Then confirm by content, not by the count |
+| **1602** | correct, 1455 + 104. Then confirm by content, not by the count |
 | **760** | **side B vanished**, overwritten by side A's length, and no conflict marker will have appeared |
 | anything else | inspect before writing to it again |
 
@@ -896,7 +898,7 @@ on the first event. **Side A is bigger than this section originally described:**
 
 So the uncommitted, unowned work in the main checkout has gone from **177 lines
 to 251**, and a fifth file joined it. The register itself has not moved, which
-is why the merge arithmetic in this section still holds: **1559 = 1455 + 104**.
+is why the merge arithmetic in this section still holds: **1602 = 1455 + 147**.
 
 **Re-snapshotted immediately**, because the 15:08 restore point was now stale
 for CLAUDE.md: `can-it-ford-bundles/2026-08-17/maintree-snapshot-2310/` (0700),
@@ -1726,5 +1728,9 @@ mtimes without knowing what else was running.
 - **Did not copy any bundle off this machine.** See section 1.
 - **Ran no physics-skeptic review.** Nothing here is a percentage, force,
   verdict count or distance; every number is a commit count, a line count, a byte
-  count or a SHA, each with its command printed. The register merge result (1559
-  lines) is the one number a reviewer should re-run rather than trust.
+  count or a SHA, each with its command printed. The register merge result
+  (**1602** lines as of 00:36, recomputed after side A grew from 760 to 803) is
+  the one number a reviewer should re-run rather than trust, **and it moves every
+  time side A gains lines**. The live formula is `B + (A - 656)`; the watcher
+  computes it rather than storing it, precisely because a hardcoded 1559 would
+  have blessed a wrong merge an hour after it was written.

@@ -86,7 +86,7 @@ restored, and a real checkout produced a byte-identical `sim_standing.py`
 
 **Step 1 is DONE.** Side A was committed as `790d999` on `claude/add-ci-checks`, carrying both `CLAUDE.md` and the register. Verified: register 760 with zero uncommitted delta, `CLAUDE.md` 823 with zero delta. Side B is untouched at 1455 on `claude/fork-register-reconcile`.
 
-**Both sides are now in git history on separate branches, so neither can silently disappear.** What is left is an ordinary two-branch merge. Re-derived from committed objects: `git merge-file` exit 0, 0 conflict markers, **1559 = 1455 + 104**.
+**Both sides are now in git history on separate branches, so neither can silently disappear.** What is left is an ordinary two-branch merge. Re-derived from committed objects: `git merge-file` exit 0, 0 conflict markers, **1602 = 1455 + 147**.
 
 **Step 2a, re-create side B's tree BEFORE asking pid 10363 to act.** Its working directory was deleted; the branch is fine.
 
@@ -98,11 +98,13 @@ Never `--force` a branch checked out elsewhere.
 **Step 2b, merge the SHA `790d999`, never the branch name. Then confirm by count and by content:**
 
     git show claude/fork-register-reconcile:docs/CANONICAL_CORRECTIONS_REGISTER_2026-08-06.md | wc -l
-    # MUST be 1559.  1455 = side A vanished.  760 = side B vanished.
+    # MUST be 1602.  1455 = side A vanished.  803 = side B vanished.
     # Neither raises a conflict marker, which is why the count is the test.
 
 A watchdog now guards the **merge** rather than side A: it alerts if side B's
-register leaves 1455 and says whether it landed on 1559 or on a loss. It dies
+register leaves 1455 and says whether it landed on its computed target or on a
+loss. The target is B + (A - 656), currently 1602, and it MOVES whenever side A
+gains lines. It dies
 with its session.
 
 ## 6. The off-machine decision, Josie's
@@ -147,7 +149,7 @@ and redo (section 1).
 1. **Off-machine copy.** Needs a destination. Nothing else closes the
    one-disk exposure above.
 2. **Register step 2a/2b.** Step 1 is DONE (`790d999`). What remains is
-   re-creating side B's worktree and doing an ordinary merge, expecting 1559.
+   re-creating side B's worktree and doing an ordinary merge, expecting 1602.
 3. **TACC: DONE for the capture, still open for anything else.** The socket came
    back and Vista held 2 unprotected commits plus the uncommitted
    `G = 9.80665 -> 9.81` fix, all captured (section 11). Note `scripts/tacc.sh`
