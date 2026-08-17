@@ -136,6 +136,43 @@ def grade(path: Path, drop_frac: float | None = None) -> dict:
 
     # The arbiter runs on what is RETAINED. Judging the full series would fail any run
     # with a normal startup transient, which is not what the gate is for.
+    # --- the measured-surface criterion, FIXED BEFORE ANY DATA FOR IT EXISTS ----------
+    # Job 917909 was graded against the closed form at the SEEDED surface height, and its
+    # free surface fell 3.09 cm during the run, so that target stopped being true and the
+    # reaction decayed toward it. sphere_heave.py now records
+    # fz_over_analytic_measured = fz / (closed form AT THE SURFACE THAT EXISTS).
+    #
+    # This criterion is written while NO RUN HAS EVER PRODUCED THAT FIELD: 917909 predates
+    # the instrumentation. So it cannot have been tuned to a result, which is the strongest
+    # form of the pre-registration the manifest is for. The bands are deliberately the SAME
+    # 10 / 25 percent as the nominal criterion, so the change is the target, not the
+    # tolerance.
+    #
+    # It is reported ALONGSIDE the nominal grade, never instead of it. If the two disagree,
+    # that disagreement IS the finding: it separates "the coupling is wrong" from "the tank
+    # drained", which is exactly what job 917909 could not distinguish.
+    ratio_key = "fz_over_analytic_measured"
+    have_measured = ratio_key in rows[0]
+    measured = None
+    if have_measured:
+        rr = np.array([r[ratio_key] for r in rows], dtype=float)[start:]
+        rr = rr[np.isfinite(rr)]
+        if len(rr) >= 16:
+            r_mean = float(np.mean(rr))
+            r_se = blocking.blocked_se(rr)
+            r_rel = abs(r_mean - 1.0)
+            measured = {
+                "mean_ratio": r_mean,
+                "rel_error": r_rel,
+                "rel_error_pct_signed": (r_mean - 1.0) * 100.0,
+                "se_blocked": r_se["se_blocked"],
+                "se_is_lower_bound": r_se["se_is_lower_bound"],
+                "band": ("PASS" if r_rel <= BAND_PASS else
+                         "REPORTABLE PARTIAL" if r_rel <= BAND_PARTIAL else "FAIL"),
+                "mean_surface_drop_m": float(np.mean(
+                    [r.get("surface_drop_m", float("nan")) for r in rows][start:])),
+            }
+
     st = blocking.stationarity(steady, n_sigma=STATIONARITY_N_SIGMA)
     se = blocking.blocked_se(steady)
     mean = float(np.mean(steady))
@@ -195,6 +232,8 @@ def grade(path: Path, drop_frac: float | None = None) -> dict:
         "rel_error_pct_signed": (err / TARGET_N) * 100.0,
         "direction": "over" if err > 0 else "under",
         "band": band,
+        "measured_surface_criterion": measured,
+        "measured_surface_available": have_measured,
         "se_blocked_N": se["se_blocked"],
         "se_naive_N": se["se_naive"],
         "se_is_lower_bound": se["se_is_lower_bound"],
@@ -256,6 +295,23 @@ def main():
     print(f"\n  BAND: {g['band']}")
     if g["se_is_lower_bound"]:
         print("  WARNING: the blocked SE is a lower bound, so this band is optimistic.")
+
+    m = g.get("measured_surface_criterion")
+    if m:
+        print(f"\n  MEASURED-SURFACE CRITERION (fz / closed form at the surface that exists)")
+        print(f"    mean ratio          {m['mean_ratio']:.4f}  "
+              f"({m['rel_error_pct_signed']:+.3f}% from 1.0)")
+        print(f"    blocked SE          {m['se_blocked']:.4f}"
+              f"{'  (LOWER BOUND)' if m['se_is_lower_bound'] else ''}")
+        print(f"    mean surface drop   {m['mean_surface_drop_m']*100:.3f} cm")
+        print(f"    BAND: {m['band']}")
+        if m["band"] != g["band"]:
+            print(f"    NOTE: this DISAGREES with the nominal band ({g['band']}). The "
+                  f"disagreement is the finding:\n          it separates a coupling error "
+                  f"from a falling free surface, which job 917909 could not.")
+    elif not g.get("measured_surface_available"):
+        print("\n  measured-surface criterion: NOT AVAILABLE in this run "
+              "(predates the instrumentation)")
 
 
 if __name__ == "__main__":
