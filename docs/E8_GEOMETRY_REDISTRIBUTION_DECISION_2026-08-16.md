@@ -84,6 +84,45 @@ The coordinator's finer split reproduces exactly against my own measurement:
 **4 original distribution archives = 88,592,238 B**, **14 extracted decks =
 71,716,670 B**. [read, recomputed this session]
 
+### CLOSED 2026-08-17: verbatim redistribution is now PROVEN, and the licence silence is confirmed at the source
+
+Two items this document previously listed as unestablished are now established. Both
+CCSA download pages were fetched, and the archives were checksummed against them.
+
+**(1) All four archives are byte-identical to the CCSA published releases.** CCSA
+publishes a SHA384 per download. Computed locally and compared: [read]
+
+| Archive | Bytes | SHA384 vs CCSA |
+|---|---|---|
+| `2010-toyota-yaris-coarse-v1l.zip` | 11,228,299 | **IDENTICAL** |
+| `2010-toyota-yaris-detailed-v2j.zip` | 42,113,905 | **IDENTICAL** |
+| `2007-chevrolet-silverado-coarse-v3a.zip` | 7,384,870 | **IDENTICAL** |
+| `2007-chevrolet-silverado-detailed-v3e.zip` | 27,865,164 | **IDENTICAL** |
+
+**4 of 4, 88,592,238 bytes.** Section 7 previously recorded this as `[inferred]` from
+filenames and contents. It is now **cryptographically established**. The repo does not
+merely host things that resemble the upstream releases; it hosts **the upstream
+releases, bit for bit**.
+
+This closes the last route by which the verbatim half could have been argued down. A
+transformation or derived-work defence is unavailable against an exact-hash match.
+
+**(2) The licence silence is confirmed on the download pages themselves, which is a
+genuine second source.** Section 1 established it from the README bundled inside the
+repo's own copy. That could be called one source read twice. It is not: both
+`ccsa.gmu.edu` model pages were fetched independently and **neither contains any
+licence, copyright, terms-of-use or redistribution statement**. [read]
+
+**(3) The NHTSA hypothesis is refuted for these models.** Downloads are served from
+**`media.ccsa.gmu.edu`**. These are **CCSA-hosted**, so they fall on the licence-silent
+side of `b0d2664f`'s distinction and not in the NHTSA "public information and may be
+distributed or copied" safe set. Section 1's qualification 1 is discharged.
+
+Both pages also state the models were developed **"under a contract with the Federal
+Highway Administration"**, which independently confirms the contractor relationship
+that makes 17 U.S.C. 105 inapplicable. Funding is not a grant, and now neither the
+distributor's page nor the bundled README says otherwise.
+
 **Severity therefore follows bytes and rights-holder clarity, not file type:**
 
 | Rank | What | Bytes | Rights holder | Why it ranks here |
@@ -332,12 +371,15 @@ other sessions hold unpushed commits touching those paths. Check first.
 
 Stated so the gaps are not read as covered.
 
-- **Whether an NHTSA-hosted copy of this exact model exists.** Section 1 qualification
-  1. Closing it requires the CCSA and NHTSA download pages, which were not fetched
-  this session.
-- **Whether the four `.zip` are byte-identical to the upstream releases.** They are
-  named as upstream releases and contain upstream READMEs and decks, but no checksum
-  was compared against a fresh download. **[inferred]**
+- ~~Whether an NHTSA-hosted copy of this exact model exists.~~ **CLOSED 2026-08-17.**
+  The CCSA pages were fetched: downloads are served from `media.ccsa.gmu.edu`, so these
+  are CCSA-hosted and licence-silent. `nhtsa.gov` itself returned 403 to an automated
+  fetch, so the narrower question of whether NHTSA hosts *some other* copy of *some
+  other* Yaris model is still open, but it no longer bears on the artifacts in this
+  repo, whose origin is now positively identified rather than inferred.
+- ~~Whether the four `.zip` are byte-identical to the upstream releases.~~
+  **CLOSED 2026-08-17, and it went the worse way.** All four match CCSA's published
+  SHA384 exactly. **[read, computed locally and compared]** No longer inferred.
 - **The 6-of-15 render classification** rests on commit date and filename, not on
   reading each generating script. Section 3.
 - **The source point cloud behind `car_mesh.ply`.** "Likely a small tutorial demo
