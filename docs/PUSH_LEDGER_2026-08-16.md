@@ -569,6 +569,27 @@ public repo, which is the same reasoning that applied to
 `FLAG_CREDENTIAL_EXPOSURE` in section 5. Read the file before authorising the
 branch; do not read the verdict as "a secret was found".
 
+### `claude/add-ci-checks` re-scanned 23:50, because it now carries side A
+
+This branch was one line in the table above at **1 at-risk commit**. It is now
+the most consequential branch in the repo for push purposes: the main checkout
+sits on it, and it carries the register work, `CLAUDE.md`, a research corpus
+index and a settling criterion.
+
+    at-risk commits          1 -> 4
+    files added by them      9
+    paths matching the risk rule   0
+    credential-pattern hits in added lines   0
+    VERDICT                  OK, unchanged
+
+    790d999  Hardwire the research corpus into every session and into CI
+    46282bc  Index the external research corpus and make it queryable in-repo
+    072e4f3  Add a data-driven settling criterion and probabilistic verdicts
+    777567a  Add CI running the three existing checks
+
+**Clean on all four columns**, so if any branch is authorised first, the evidence
+supports this one. That remains Josie's call, not a recommendation to push.
+
 **Standing watch on the orphaned register, same timestamp:** main-tree
 `CANONICAL_CORRECTIONS_REGISTER_2026-08-06.md` still reads **760 lines**,
 `CLAUDE.md` still **749**, and `git status` still shows the same four modified
