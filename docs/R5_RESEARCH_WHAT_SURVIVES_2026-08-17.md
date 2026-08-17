@@ -26,12 +26,44 @@ adversarial review or was never challenged.
 | A4 | **The citation-graph fixpoint is NOT achievable.** Topic-bounded traversal from 32 seeds grew 32 -> 92 -> 174 and touched 3,575 works by hop 2. Independently re-confirmed 2026-08-17: mean branching **82.2**, hop-3 upper bound **3.3M** nodes. **Any count from this literature is a floor, and that is now measured rather than assumed** | `CENSUS_ATTEMPT`, section D below |
 | A5 | **Scale reporting needs two labels, not one.** "State the model scale" is insufficient; a `value_basis` label is required or model-scale values get read as full-scale. Row 7 is **1:24**, and its threshold is **~118x** below the others under Froude | `THRESHOLD_TABLE`, erratum 2, 14 |
 | A6 | **Four bibliography DOIs verified and supplied**, plus one year error (`ccsa2010yaris`, bib 2010 vs DataCite 2016). The year audit found the error **isolated**, 8 of 9 correct | `BIB_DOI_SUPPLEMENT` |
-| A7 | **All four shipped NCAC/CCSA packages are TRACKED in the public repo**, all four carry an acknowledgement request and a liability disclaimer, **none carries any licence word**. The paper names CCSA/GMU but not FHWA; the README asks for both. **One-word fix** | `NCAC_README_TERMS` |
+| A7 | **All four shipped NCAC/CCSA packages are TRACKED in the public repo**, all four carry an acknowledgement request and a liability disclaimer, **none carries any licence word**. **E8 is now CLEARED** (D2, `a386704`, permission granted) and this finding is *not* superseded: it is part of the evidence chain, because "no licence exists to confirm" is what made permission the necessary route. **The FHWA acknowledgement SURVIVES the clearance and is still unmet**, re-verified 2026-08-18: `FHWA` and `Federal Highway` appear in **0** `.tex` files while `CCSA` appears in 3. Acknowledgement is a separate obligation from redistribution rights | `NCAC_README_TERMS`, §A7a |
 | A8 | **DOI `10.1111/jfr3.12262` is confirmed** for the Martinez-Gomariz state-of-the-art review (title match score 1; Crossref `issued` 2016-08-03, `published-print` 2018-02). **The `martinezgomariz2018` bib REFERENT is NOT settled**: a rival 2017 paper fits the entry's `note` equally well. See B-list | `SEALING_AND_FLAG4` §3 |
 | A9 | **The experimental literature does not agree on vehicle sealing.** Across twelve studies: water-filled, foam-filled watertight, ingress-permitted and solid-rigid all appear, and two of the "sealed" entries are not physical experiments. **Sealing is NOT the cause of any headline disagreement** (see B-list) | `SEALING_AND_FLAG4` §1, §1a |
 | A10 | **Hull geometry, measured directly:** volume **3.5427387900160743 m3**, watertight, `body_count` 1, euler -442 so **genus 222**. `1100/3.542739 = 310.4942`, reproducing CLAUDE.md's canonical 310.494 | `FLOODFILL_MEASURED` |
 | A11 | **The audit's flood-fill volumes are not reproducible as values.** 4.5628 does not reproduce; the comparable quantity is the **sealed cavity**, where two implementations disagree **2.1x** (1.020 vs 2.161 m3); the operation is **bistable and grid-phase fragile** near 22.2 mm | `FLOODFILL_MEASURED` |
 | A12 | **L-2 stands as written.** I proposed amending it and then **refuted my own amendment** from the AR&R primary source: the 3.0 m/s cap exists for human stability and occupant egress, so it is administrative, not vehicle-derived | `PROPOSED_AMENDMENTS`, erratum 3 |
+
+### A7a. E8 is CLEARED, and exactly one item of mine survives it
+
+**Verified 2026-08-18 by reading D2's commit `a386704`, not by trusting the board.**
+Josie granted permission; it applies globally and permits republication. D2's
+reasoning turns on the rule clearing on **"written permission OR a confirmed
+licence"** and on this dispatch having established across three independent sources
+that no licence exists to confirm, leaving permission as the other route.
+
+**That is the two-route clause I had truncated.** Unit 43 found and fixed it, D2
+picked it up in `141d239`, and it is the pivot of the clearance argument. Worth
+recording as the one case where an error of mine, once corrected, changed a
+sibling's reasoning rather than only my own.
+
+**What is now settled and must not be re-litigated:** the archives, both derived
+hulls, the six renders and the AR&R report are cleared. Every remediation option is
+**withdrawn**, not pending. Nothing is to be removed, untracked or history-rewritten
+on E8 grounds.
+
+**What survives, and it is easy to lose:** **the FHWA acknowledgement is still
+unmet.** Re-measured today, `FHWA` and `Federal Highway` appear in **0** `.tex`
+files, while the control string `CCSA` appears in **3**. The README asks for both,
+verbatim at line 16: "We ask that the CCSA at GMU and the FHWA be acknowledged for
+any use of this FE model resulting in papers and publications."
+
+**Permission to redistribute is not acknowledgement.** They are different
+obligations from different sentences, and clearing the first does nothing to the
+second. The risk here is that "E8 cleared" reads as "the geometry paperwork is
+done" and a one-word fix gets dropped at the finish line.
+
+*(Carries FLAG-6: the `.tex` counts are for local copies only; the live Overleaf
+head is unreachable, so the paper may already say FHWA and I could not see it.)*
 
 ## B. RETIRED. Do not cite these, including from my own earlier documents
 
