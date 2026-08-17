@@ -43,6 +43,14 @@ experiment results, the water depth and flow velocity at which drifting occurred
 were **somewhat smaller**, showing there is a danger of being washed away even in
 gentler flow conditions.
 
+**QUALIFIER ADDED, unit 20.** The sentence below is true for SLIDING and
+DRIFTING, and FALSE for FLOATING. Kramer 2016 finds the opposite sign for the
+flotation mode: "floating water depths are higher in prototype than in model
+scale", because a sealed scale model floats too readily. So model-scale
+thresholds err UNSAFE for sliding and err SAFE for floating. I stated it here
+without the qualifier. See `docs/R5_RESEARCH_KRAMER_CONFIRMED_MODE_DEPENDENT_2026-08-17.md`.
+Our dominant published mode is SLIDE, 16 of 17, which is the unsafe-erring side.
+
 So a real car at full scale drifts at **lower** depth and velocity than
 model-derived thresholds predict. That is a direction that matters:
 
