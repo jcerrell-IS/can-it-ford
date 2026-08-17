@@ -109,6 +109,30 @@ CLAUDE.md item 6 already says no gate is a physics validation and that
 0.10 belongs in that same sentence and currently is not there.** That is the one
 concrete, new, actionable item in this unit.
 
+**STRENGTHENED by D4's `26971c0`, and considerably.** I argued that P-2's 0.10
+has no external source. D4 then established what P-2 actually measures, and I
+verified it at source: `sim_standing.py:463-465` takes the vehicle's
+axis-aligned bounding box and counts the fraction of water particles inside
+**that box**, not inside the hull. Since CLAUDE.md item 4b records the hull
+filling only 33.2% of its own bbox, most of the box is void by construction. D4
+measured the transparent-box null baseline at **10.3 to 11.0%** against a gate of
+**0.10**.
+
+So P-2 is not merely an unsourced threshold, which is what I claimed. **It is a
+threshold sitting on its own null baseline, measuring pile-up rather than
+leakage.** That is a stronger statement than mine and it came from D4 measuring
+the quantity rather than, as I did, reasoning about the threshold. The
+recommendation is unchanged and now better supported: P-2 belongs in CLAUDE.md
+item 6's sentence alongside DRIFT_THRESHOLD.
+
+**One precision, checked so nobody over-corrects.** CLAUDE.md item 7 already
+describes P-2 accurately as "max water fraction inside the vehicle **bounding
+box**", verified live at `CLAUDE.md:218-219`. So item 7 does **not** need
+rewriting on the bounding-box point; it was right. What item 7 does carry, as D4
+notes, is a different mislabel: it calls 7.99 percent a "**failure rate**", when
+7.99 percent is a metric value, not a rate of anything. Two separate issues, and
+only the second is item 7's.
+
 It also confirms the known negative that no wall-penetration plateau exists in
 the literature, which project memory already records; I am not re-deriving that.
 

@@ -117,9 +117,23 @@ that leads with resolution implies otherwise and would be misleading.
 Two further disclosures the review required, both verified live in
 `data/all_runs_inventory.csv`: the very run I am citing, g64_m1100, has
 `passthrough_max_frac = 0.10670498480368847` and therefore **fails** gate P-2's
-0.10 limit at `gates.py:147-148`; and their vehicle mass is never published, so
+0.10 limit at `gates.py:147-148`
+(**but see the qualifier below: that "failure" is not evidence of hull leakage**); and their vehicle mass is never published, so
 no mass normalisation against our 1100 kg is possible. Do not infer their mass
 from the 2021 companion's 9.2 kN buoyancy figure.
+
+> **QUALIFIER on the P-2 disclosure, added after D4's `26971c0`, verified by me at
+> source.** I disclosed the P-2 failure as if it were a leakage defect. It is not.
+> `sim_standing.py:463-465` computes `lo_v, hi_v = veh.min(0), veh.max(0)` and then
+> the fraction of water particles inside that **axis-aligned bounding box**, so
+> `passthrough_max_frac` counts water in the *box*, not water inside the *hull*.
+> CLAUDE.md item 4b independently records that the hull fills only **33.2%** of its
+> own bounding box, so most of the box is void by construction. D4 measured the
+> transparent-box null baseline, what P-2 reads if the vehicle displaced nothing at
+> all, at **10.3 to 11.0%** for every run, against a gate set at 0.10. **The gate
+> therefore sits essentially on its own null baseline and behaves as a pile-up
+> test, not a leakage test.** The disclosure above stands as a fact about the gate;
+> it should not be read as evidence that water passes through the hull.
 
 ## 3. The result worth leading with instead
 
