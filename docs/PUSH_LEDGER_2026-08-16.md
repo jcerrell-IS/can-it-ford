@@ -216,6 +216,46 @@ So the destination must be **private and encrypted**. A plain cloud sync is
 disqualified: this project has already had a 0644 iCloud-synced token as part of
 its credential exposure.
 
+#### Two facts that make option 1 concrete, measured 22:29
+
+**read.** **No external volume is attached.** `/Volumes/` holds only
+`Macintosh HD` (`Removable Media: Fixed`) and two Xcode iOS simulator images,
+both 98 percent full. So option 1 is not only a decision, it has a prerequisite:
+**a disk has to be plugged in first.** Worth knowing before setting aside time
+for it.
+
+**read, and it corrects a wrong impression I nearly recorded.** The source disk
+**is** encrypted at rest: `fdesetup status` returns **`FileVault is On.`**
+`diskutil info /Volumes/Macintosh HD` reports `Encrypted: No`, which is the
+wrong tool for this question and would have supported an alarming and false
+claim. **Use `fdesetup status` for FileVault, never `diskutil`'s per-volume
+flag.** Same class of error as `git cat-file -e` in section 3.
+
+#### Permissions, fixed at the source rather than just on the artifacts
+
+**read.** The bundle directory is `drwxr-xr-x` and every bundle was created
+`-rw-r--r--`. `ALL-refs*.bundle` and every incremental **carry the DO-NOT-PUSH
+branch**, and therefore the never-published
+`docs/CREDENTIAL_EXPOSURE_2026-08-13.md`. On a FileVault-on single-user machine
+this is a modest exposure at rest, but 0644 means any process running as any
+user could read it, and it would follow the file into any copy.
+
+Confirmed which bundles are affected rather than assuming, by
+`bundle list-heads | grep credential-exposure`:
+
+    CARRIES IT   ALL-refs-2207.bundle
+    clean        ALL-refs-MINUS-credentials-2207.bundle
+
+**Ten credential-bearing bundles are now `0600`**, and the credential-free
+variants deliberately stay `0644` because they carry nothing sensitive and are
+the ones intended for the cheaper destinations. Verified the change broke
+nothing: `ALL-refs-2207.bundle` still verifies exit 0 with 138 refs readable.
+
+**The generator is fixed too, which is the part that matters.** Tightening the
+existing files alone would have been undone by the next refresh.
+`refresh_bundle.sh` now chmods 600 at creation time for any bundle whose
+`list-heads` includes the credential branch.
+
 #### To make the choice cheap, a credential-free variant already exists
 
 **read.** `ALL-refs-MINUS-credentials.bundle`, 507,228,906 bytes, verify exit 0,
