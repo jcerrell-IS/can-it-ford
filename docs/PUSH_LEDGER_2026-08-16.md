@@ -238,24 +238,41 @@ deliberate: it is already public, and excluding it would mean dropping
 
 #### Exact commands, option 1
 
+**USE THE 00:58 ARTIFACTS. The 15:02 ones are superseded.** The refresh
+mechanism is why the worktree removal in section 13 was a non-event rather than
+a loss, and it is also why these filenames changed. Coverage went from **241
+at-risk commits (15:02) to 292 (00:58)**, so copying the older bundle would
+silently omit 51 commits of work.
+
     # 1. copy, with the destination named explicitly
-    cp /Users/josie/can-it-ford-bundles/2026-08-16/ALL-refs.bundle \
-       /Volumes/<NAME>/canford-2026-08-16/ALL-refs.bundle
+    cp /Users/josie/can-it-ford-bundles/2026-08-17/ALL-refs-0058.bundle \
+       /Volumes/<NAME>/canford-2026-08-17/ALL-refs-0058.bundle
 
     # 2. verify the bytes survived the copy. Must print exactly:
-    #    7356713c619fcacf827740cbbecb3e5e5f6b359da4abffb28478c1de5ca0f897
-    shasum -a 256 /Volumes/<NAME>/canford-2026-08-16/ALL-refs.bundle
+    #    f205159510c889919c823977503bdbb904c7a89d4f303f190b08a2c3815ed83a
+    shasum -a 256 /Volumes/<NAME>/canford-2026-08-17/ALL-refs-0058.bundle
 
     # 3. restore test AT THE DESTINATION, not here. Must print 77.
-    git clone --mirror /Volumes/<NAME>/canford-2026-08-16/ALL-refs.bundle /tmp/restore-check
+    git clone --mirror /Volumes/<NAME>/canford-2026-08-17/ALL-refs-0058.bundle /tmp/restore-check
     git -C /tmp/restore-check for-each-ref refs/heads | wc -l
 
-    # 4. spot-check a tip. Must print 9778aa1... (or later, if D3 committed again)
+    # 4. spot-check a tip against this branch's head at bundle time
     git -C /tmp/restore-check rev-parse claude/r5-safekeeping
 
-For option 2, substitute `ALL-refs-MINUS-credentials.bundle` and sha256
-`9144eca1ea3ce789e532498222e98fbef584d828763cd0ea8a1c0697650e6698`; step 3 must
-print **76**, not 77, and that difference is the check that the sanitisation held.
+For option 2, substitute `ALL-refs-MINUS-credentials-0058.bundle`, 507,477,822 B,
+sha256 `879d800c9c7c816d81e563414714a267934b86c2bf26025b88c4a4ad43238a38`; step 3
+must print **76**, not 77, and that difference is the check that the sanitisation
+held.
+
+| artifact | 15:02, superseded | **00:58, use this** |
+|---|---|---|
+| standalone | `ALL-refs.bundle`, 147 refs, 241 commits | **`ALL-refs-0058.bundle`, 137 refs, 292 commits** |
+| credential-free | `ALL-refs-MINUS-credentials.bundle` | **`ALL-refs-MINUS-credentials-0058.bundle`** |
+| incremental | `INCREMENTAL-...-1540` | **`INCREMENTAL-all-branches-0058.bundle`** |
+
+The ref count falling 147 to 137 is **not** a loss: all 10 are
+`worktrees/*/HEAD` pseudo-refs for the removed trees, and all 77 branches, 34
+remotes and 8 tags are intact. Section 13 has the proof.
 
 **Abort condition:** if step 2's sha256 differs, delete the copy and redo it. A
 `cp` exit code of 0 is not evidence the bytes landed intact.
@@ -648,15 +665,28 @@ because it has no owner and side B does.**
 
 **Step 2. AMENDED, see section 13. The named owner no longer has a working
 tree.** `.claude/worktrees/fork-register-reconcile` was removed. The branch and
-all 23 of its commits are intact, and the register is still 1455 lines on it, so
-**nothing is lost**, but step 2 can no longer be done in place. Re-create a tree
-first:
+all 23 of its commits are intact and the register is still 1455 lines on it, so
+**nothing is lost**, but step 2 cannot be done in place.
+
+**Step 2a, and it comes BEFORE anyone asks pid 10363 to do anything.** That
+process is alive with a deleted working directory: every `git` command it issues
+will fail until it has a tree. Re-create one first, then tell it:
 
     git -C /Users/josie/can-it-ford worktree add \
       /Users/josie/can-it-ford/.claude/worktrees/fork-register-reconcile claude/fork-register-reconcile
 
-Then, and only after step 1 lands, merge the **commit SHA from step 1, never the
-branch name**: `git merge <branch>` silently picked up an unrelated live
+**Do not check out a branch that is already checked out in another tree.** Git
+refuses this by default, verified live:
+
+    $ git worktree add /tmp/x claude/r5-safekeeping
+    fatal: 'claude/r5-safekeeping' is already used by worktree at '...r5-safekeeping'
+
+`--force` overrides that refusal. **Do not use it here.** Two trees on one
+branch means two sessions committing to the same ref, which is the collision
+this whole document is about.
+
+**Step 2b.** Only after step 1 lands, merge the **commit SHA from step 1, never
+the branch name**: `git merge <branch>` silently picked up an unrelated live
 session's commit in this repo on 2026-08-13.
 
 **Step 3. Owner: `D4 REGISTER-RECONCILE`. Confirm by content, not by exit code.**
@@ -1164,6 +1194,52 @@ carried 0 at-risk commits, so that costs nothing.
    clean removal is itself independent evidence there was nothing uncommitted in
    them.
 
+### 25 branches now have commits but no tree. Which of them a plan depends on
+
+**read.** The removal made `fork-register-reconcile` the visible case, but it is
+not special. Across all 33 at-risk branches:
+
+| | branches | at-risk commits |
+|---|---|---|
+| has a working tree | 8 | 132 |
+| **no working tree** | **25** | **222** |
+
+So **two thirds of the unpushed work has no checkout**. That is not a danger to
+the commits, which live in refs and are bundled, but it strands any plan that
+assumes someone can just start working. Each needs a `git worktree add` first,
+and the removal above stranded one mid-plan.
+
+**The one an active plan in this document depends on:**
+
+- **`claude/fork-register-reconcile` (23)** is step 2 of section 6. Stranded.
+  Command in step 2a.
+
+**The rest, largest first, so a future step does not get stranded silently.**
+None currently blocks anything written down, but several carry the round-4 work
+most likely to be resumed:
+
+    claude/fork-moving-driver          30      claude/fork-chrono-eval          12
+    claude/fork-protocol               23      claude/fork-vista-triage         11
+    claude/fork-three-class            19      claude/credential-exposure-...    8  <- E8, D2's
+    claude/fork-render-3class          19      claude/fork-s3-rescue-2026-08-14  8
+    claude/fork-scene                  16      paper/submission-close            7
+    claude/fork-validation             15      paper/close-for-submission        5
+
+plus 11 smaller ones (`push-ready-2026-08-04` 4, `analysis/failure-modes` 3,
+`claude/reverent-heisenberg-fe731c` 3, `reconcile/overleaf-base` 2,
+`claude/figure-validation-sources-826ba6` 2, `claude/festive-goodall-e08861` 2,
+and five at 1 each).
+
+Two worth flagging by name rather than by size:
+
+- **`claude/credential-exposure-2026-08-13-DO-NOT-PUSH` (8)** is the E8 and
+  rotation work, and it is the one branch whose tree must **not** be casually
+  re-created in a shared location: it holds the never-published
+  `docs/CREDENTIAL_EXPOSURE_2026-08-13.md`.
+- **`claude/fork-three-class` (19)** carries the three-class matched-dx
+  deliverable whose own handoff lists unfinished follow-ups, so it is the most
+  likely of these to be picked up next.
+
 ### The consequence that does need action
 
 **`D4 REGISTER-RECONCILE` (pid 10363) is still running, and its working
@@ -1172,20 +1248,43 @@ branch is intact, so its work is safe, but it cannot run a `git` command from a
 deleted cwd. Section 6 step 2 is amended with the `git worktree add` needed to
 give it a tree back.
 
-### I cannot date the removal, and I am not going to guess
+### RESOLVED: there was no clock anomaly. Do not inherit "the clock is unreliable"
 
-The system clock is inconsistent with this session's own timestamps. `date`
-reports **2026-08-17 21:58 BST**, while the session hook reported **00:58 BST**
-and my own commit minutes earlier is stamped **2026-08-17 00:53:02 +0100**. A
-control confirms the discrepancy is real rather than a formatting artefact:
-`touch` followed by `stat` returns 21:58, agreeing with `date` and not with the
-commit stamps, a gap of roughly 21 hours.
+**CORRECTED, and the correction matters more than the original claim.** An
+earlier version of this section said "the system clock is inconsistent with this
+session's own timestamps" and refused to date the removal on that basis. **The
+machine's clock is fine and always was.**
 
-So directory mtimes cannot be converted into a session timeline, and **no
-removal time is stated here**. The event is bounded only by my own observations:
-28 worktrees when I audited them in section 1, 17 when I re-took the standalone.
-This is the same rule that already applies to elapsed time in this project:
-read it from an authoritative source or do not report it.
+The coordinator supplied the fact I could not see from inside the session: I was
+**parked at a `gate_destructive` Yes/No prompt for 21 hours**, and nothing
+cleared it until 21:52 BST. From inside a session, no time passes while a prompt
+is pending, so a commit made a day ago feels like it was made minutes ago.
+
+Verified from my own commit stamps rather than taken on trust:
+
+    01b5ec6  2026-08-17 00:53:02 +0100
+    9bff60e  2026-08-17 21:59:44 +0100     -> 21 h 06 m apart
+    date now 2026-08-17 22:01:55 BST       -> 9bff60e is 2 minutes old
+
+`date`, `stat` and the commit stamps **agree with each other and always did**.
+The `touch`-then-`stat` control was correct, the commit stamps were correct, and
+they never disagreed. The missing variable was the block.
+
+**Record the right lesson.** A future reader who inherits "this machine's clock
+is unreliable" will distrust good evidence, which is worse than the original
+error. The correct statement is narrower:
+
+> **Session-relative time is unreliable, and only when a session has been parked
+> at a permission prompt.** Wall-clock sources on this machine (`date`, `stat`,
+> git author stamps) are reliable and mutually consistent. When a session's
+> sense of elapsed time conflicts with them, **the session is wrong**, not the
+> clock.
+
+**The removal window, now stateable.** Bounded, still not a point time: after
+**2026-08-16 15:37:30 +0200**, when commit 9778aa1 recorded the audit that found
+28 worktrees, and before **2026-08-17 21:52 BST**, when the prompt was cleared
+and I re-took the standalone. Nobody should narrow that further from directory
+mtimes without knowing what else was running.
 
 ---
 
