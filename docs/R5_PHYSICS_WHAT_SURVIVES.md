@@ -13,20 +13,34 @@ independent of the one that produced it, or is true by construction from source.
 
 ---
 
-## 1. Survives, and I would defend it
+## 1. Survives, CORRECTED 2026-08-17 by a fifth review that attacked this list
 
-| claim | basis | where |
+**A fifth pass targeted the survivors rather than the withdrawals, on the reasoning that
+the dead claims cannot mislead anyone and these are what propagate. It broke seven of
+ten.** All are corrected in place below; none is deleted, because the direction of most
+survived and only the wording or the warrant failed.
+
+Every row is **WARPMPM** (`renders/yaris_render_s1/_incoming/sim_standing.py`, solver
+`third_party/mpm-engine-544c93dd-solver-core`). No Genesis path appears anywhere in this
+branch's evidence chain. The engine tag was missing from every row and is added here.
+
+**Citation hazard affecting five earlier references, found by the same pass:** my scripts
+and docs cite line numbers in the **tracked top-level** `sim_standing.py`, but the 17 runs
+were produced by `_incoming/sim_standing.py`, which register D4a makes canonical and which
+has a different md5. Line numbers below are the `_incoming/` copy.
+
+| claim, as corrected | what changed | basis |
 |---|---|---|
-| **The canonical scene has no outflow BC.** Domain closed by floor + 4 slip walls + `add_domain_walls`; `_sustain_inflow` clamps velocity on a band of EXISTING particles; nothing creates, deletes or recycles. `SCENARIO=STANDING_WATER_SUSTAINED_INFLOW` names a BC the code does not implement. | read live from `sim_standing.py` | `R5_PHYSICS_OPTION_A_FEASIBILITY.md` |
-| **The water spins down hard and never reaches a steady state.** N=17, settle 8: bulk mean speed falls median **-66.3%**, range -87.4 to -41.3. **0 of 17 gain.** | measured, script committed | `spin_down.py` |
-| **Zhao's outflow cannot be ported because warpmpm has no pressure field.** `grep -ci pressure` returns 0 across 3,181 lines at the pinned SHA. The BC's control variable does not exist. | primary source, `inflow_outflow.py:14-21` | `R5_PHYSICS_OPTION_A_FEASIBILITY.md` |
-| **A mass-sink hook DOES exist**, contradicting that file's own premise: `particle_selection` gates P2G at six sites and is writable at runtime, so deactivation removes mass at fixed allocation. That is the register's own B7 wording. | read live | same |
-| **The runs are not at their labelled depths.** Survived every control including vehicle-free: **+13% to +28%** of label. | measured, multiple stations | `R5_PHYSICS_DEPTH_CONFOUND.md` |
-| **P-2 does not measure passthrough.** At each run's TRUE argmax, exact reconstruction: **79 to 98.5% is bounding-box void**, median in-hull share **6.26%**, range 1.46-21.16%. | re-derived, then survived a fourth review | `p2_decompose.py` |
-| **Kramer 2021 Table 1**, and the corrected constants: `rho_w` 998.2, `m` 7.056 kg, `g` 9.82, buoyancy **69.2180 N**. The engine's 9.81 is irreducible; equilibrium draft unaffected, period biased +0.051%. | read from the PDF | `R5_PHYSICS_KRAMER2021_TESTCASE.md` |
-| **The STUCK mechanism.** `sweepV_g64_v0p5` is STUCK because it decelerated: speed gate shuts frame 8, drift gate opens frame 37, **zero overlapping frames**. Confirmed digit-for-digit by review. | measured, then confirmed | `R5_PHYSICS_BRAKE_STATE.md` |
-| **Brake state cannot flip a SLIDE verdict**, on a bound: max friction-removal acceleration 0.578 g against 0.721 needed for the worst run's TOPPLE trigger. | review-supplied bound | same |
-| **The two-Steffen distinction**, and that neither DOI appears in any `.bib` or `.tex`. | measured | `R5_PHYSICS_SETTLE_AND_UNCERTAINTY.md` |
+| **The canonical scene has no outflow BC.** `n_water` fixed at `:123`, floor plus four slip walls `:132-137`, `add_domain_walls()` `:137`, `_sustain_inflow` `:190-198` writes velocity onto EXISTING particles, and `:264` prints `SCENARIO=STANDING_WATER_SUSTAINED_INFLOW`. | **unchanged, could not be broken** | read live |
+| **The water is still spinning down at the end of every run.** Bulk mean speed falls median **-66.3%** from frame 8 to 89, range -87.4 to -41.3, **0 of 17 gain**. | **"never reaches a steady state" WITHDRAWN.** That restates the stationarity claim I already retired as "17/17 undecidable at this length"; a monotone decay is consistent with asymptotic approach. Magnitude is window-specific: -73.0% at settle 0, -34.4% at settle 45. **Always state the window.** | `spin_down.py` |
+| **A near-vehicle shell falls HARDER than the bulk**, median -78.5%, 17/17 negative, still falling frames 30-89. And the clamped inflow band empties: **7 particles left at v3p0**, against 1846 at v0p5. | **NEW, from the review.** Kills the obvious alternative that a steady near-vehicle shear hides under a decaying bulk mean, and independently corroborates the no-recycling row from rollout data rather than source. | review-measured |
+| **`particle_selection` is writable at runtime (`mpm_solver_warp.py:1679`) and gates six kernels, TWO of them P2G**, so a deactivated particle stops depositing mass to the grid while remaining in the array, frozen. **A grid-transfer sink, not a deletion.** | **"gates P2G at six sites" was still wrong here** after I corrected it elsewhere, and **"the register's own B7 wording" is a MIS-ATTRIBUTION**: B7 is about the pressure field. The real source is my own `OPTION_A_SESSION1_FINDINGS.md` F-6, which tabulates four sites correctly. | read live |
+| **There is no grid-level pressure array and no Poisson solve, so a Dirichlet pressure BC is not expressible.** Per-particle pressure IS computed inside the EOS (`mpm_utils.py:22,43,68`) and is exported (`:1794`, `:1799`). | **"no pressure field, 0 across 3,181 lines" WITHDRAWN as worded.** 3,181 is ONE file of four; `mpm_utils.py` has 19 hits including the EOS. My own source file `inflow_outflow.py:18-19` states the qualifier and my survivors row compressed it away. **The control variable is readable but not settable.** | read live |
+| **No run holds its labelled depth.** At a spanwise vehicle-free station the deviation is **+8.8% to +30.0%**; at an upstream vehicle-free station it is **-58.2% to +28.8%**. | **"+13% to +28%" WITHDRAWN: it has no derivation in any committed script**, which is the exact provenance defect that made me write `spin_down.py`. **The sign is station-dependent**; only the mislabelling itself is robust. | review-measured |
+| **P-2 is overwhelmingly bounding-box void, not passthrough.** Under the driver's own carve test, void is **78.8 to 98.5%**, median in-hull share 6.26%. | Direction unthreatened. But the figures are **convention-dependent**: a centred rather than floor-anchored cell moves the median in-hull share to **9.79%** (+56% relative) and void to 74.9-98.6%. Quote the convention. "79" was 78.84 rounded up. | `p2_decompose.py` |
+| **Kramer 2021 Table 1** and the corrected constants: `rho_w` 998.2, `m` 7.056 kg, `g` 9.82, buoyancy **69.2180 N**. | unchanged | read from the PDF |
+| **The STUCK mechanism.** Speed gate shuts frame 8, drift gate opens frame 37, **zero overlapping frames**. | **unchanged, not re-attacked and previously confirmed digit-for-digit** | measured |
+| **Brake state cannot flip a SLIDE verdict.** Worst run needs T3 + delta >= ssf = 1.42; T3 = 0.721 and the buoyancy-corrected friction ceiling is **0.215 g**, giving 0.935 against 1.42. | **"on a bound: 0.578 g" WITHDRAWN.** It is not a bound (removing friction changes the trajectory, so it is a linearised ceteris-paribus ESTIMATE) and `mu*(1+e)` assumed **zero buoyancy**. Corrected, the margin is 52% headroom rather than 9.4%, so **the conclusion strengthens**. **Carry the caveat that `vehicle_params.py:150` says `ssf: 1.42 # estimate ... CONFIRM before use`.** | re-derived by review |
 
 ## 2. Withdrawn. Do not cite these.
 
@@ -146,10 +160,25 @@ g48 runs are thinner than the limitation as stated, and g48 is one of the three 
 item 5's grid-convergence study.** Anyone quoting L-3 alongside item 5 should say which
 rung they mean.
 
-**VERIFIED 2026-08-17 by a second, independent route.** The counts above came from
-re-deriving the driver's `arange`. I then counted layers **directly from particle z** at
-frame 0, histogramming in h-wide bins (jitter is only +/-0.2h, so the rows are separable).
-**The two methods agree in 17 of 17 runs:**
+**CORRECTED 2026-08-17. Both of my verification claims here were wrong, and the counts
+were never new.**
+
+**(a) `water_layers` is already column 6 of `data/all_runs_inventory.csv`**, the very file
+L-3 cites, reading 3/3/3, 4/4/4, 6/6/6, 3/5/6. And route 1 was not independent:
+`_incoming/sim_standing.py:260` computes `layers` with that same `arange` and writes it to
+`summary.json`. I re-derived the driver's own stored output and called it a new precision.
+
+**(b) "The two methods agree in 17 of 17" is false.** Counting non-empty h-wide bins
+agrees in **3 of 17**; the counts recover only under mode-counting or an unstated
+"row population >= 50% of median" filter. **The bin choice was load-bearing and unstated.**
+
+**(c) "jitter is only +/-0.2h so the rows are separable" is false at g64**, and section 3b
+of this same document already said so: 4.8% of water sits a full row below the bottom
+lattice row at recorded frame 0, inter-row minima are 300-500 against peaks of 2500. I
+justified a frame-0 measurement with a property of the unrecorded initial condition that my
+own section 3b says does not hold there.
+
+The counts themselves stand:
 
 | grid | layers | **cells = layers*h/dx** |
 |---|---|---|
@@ -158,12 +187,17 @@ frame 0, histogramming in h-wide bins (jitter is only +/-0.2h, so the rows are s
 | g96 | 6 | 3.000 |
 | sweepD 0.25 / 0.35 / 0.45 | 3 / 5 / 6 | **1.500** / 2.500 / 3.000 |
 
-**So four of the seventeen canonical runs sit below L-3's stated resolution floor**: the
-three g48 runs and `sweepD_g64_d0p25`, all at 3 layers and 1.5 cells against L-3's 4 and 2.
-L-3 is correct for the canonical grid; it is not a universal statement about the set, and
-it does not say so. That matters because g48 is one of the three rungs in item 5's
-grid-convergence study, so **the coarsest rung of the project's most durable physics result
-is resolved more thinly than the limitation the project already flags as a concern.**
+**"L-3's stated resolution floor" was my misquote.** `CLAUDE.md:431-433` gives the floor as
+**"roughly 10 particles per flow depth"**; the "4 particle layers and 2 grid cells" is
+L-3's *description of the g64 baseline*, offered as the limitation. **Against L-3's actual
+stated floor, 17 of 17 runs fail, not 4 of 17.**
+
+Corrected: four of the seventeen are resolved more thinly than the g64 baseline L-3 quotes,
+and **all seventeen are far below the ~10-particles-per-depth rule of thumb L-3 states**.
+That still matters for item 5, because g48 is one of its three rungs, but the honest
+framing is that the whole set is under-resolved by L-3's own criterion rather than that
+four runs are exceptional. Note also the water is the **same physical depth**, 0.2944294 m,
+on every grid: it is the resolution that is coarser, not the water that is thinner.
 
 ## 3d. Code delivered, all dry-run tested, none GPU-validated
 

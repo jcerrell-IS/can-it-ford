@@ -16,9 +16,13 @@ It also corrects three defects the same review found in the numbers themselves:
      at 3*dx. A level must be referenced to the floor. On the absolute origin the level
      proxy looked ~17x stiffer than the flow; on the floor datum it is ~3.8x.
 
-  3. SPRAY. The centroid rise is dominated by particles thrown above the initial free
-     surface. Excluding them, the bulk centroid FALLS in a substantial fraction of runs, so
-     the rise is not "sustained redistribution" of the bulk.
+  3. SPRAY. The centroid rise is partly particles thrown above the initial free surface.
+     CORRECTED 2026-08-17: an earlier version of this docstring said "excluding them, the
+     bulk centroid FALLS in a substantial fraction of runs". THE SCRIPT'S OWN OUTPUT SAYS
+     0/17 at the 99th-percentile cutoff. A prior review, using a different cutoff (each
+     run's frame-0 free surface), got 7/17. The two disagree because the cutoff differs and
+     neither is privileged; the docstring asserted one of them against this script's own
+     printed result. Read the `bulk centroid FALLS` line the script prints, not this text.
 
 Run:
   python simulation/r5_physics/spin_down.py [--settle 8] [--json out.json]
