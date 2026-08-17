@@ -1,0 +1,18 @@
+ref	year	doi	title	authors	source
+1	2016	10.1504/PCFD.2016.10001222	Material point method and smoothed particle hydrodynamics simulations of fluid flow problems: a comparative study ([link]	Zheng Sun et al.	catalog:QuantitativeMPMWallPenetration
+2	2008	10.3970/CMES.2008.031.107	Examination and Analysis of Implementation Choices within the Material Point Method (MPM) ([link]	Michael Steffen, P. Wallstedt, J. Guilkey, R. Kirby, and M. Berzins	catalog:QuantitativeMPMWallPenetration
+3	2019		A Consistent Boundary Method for the Material Point Method – Using Image Particles to Reduce Boundary Artefacts ([link]	Stephan Schulz and G. Sutmann	catalog:QuantitativeMPMWallPenetration
+4	2016	10.1061/(ASCE%29EM.1943-7889.0000981	Modeling of Free Surface Flows Using Improved Material Point Method and Dynamic Adaptive Mesh Refinement ([link]	S. Mao, Qin Chen, Deyu Li, and Zhi-Gang Feng	catalog:QuantitativeMPMWallPenetration
+5	2021	10.1016/j.jnnfm.2021.104678	Numerical investigation of non-Newtonian power law flows using B-spline material point method ([link]	Xiaomin Zhou and Zheng Sun	catalog:QuantitativeMPMWallPenetration
+6	2019	10.1016/J.COMPFLUID.2018.10.007	Development of in/outflow boundary conditions for MPM simulation of uniform and non-uniform open channel flows ([link]	Xuanyu Zhao, M. Bolognin, D. Liang, A. Rohe, and P. Vardon	catalog:QuantitativeMPMWallPenetration
+7	2022	10.1016/j.cma.2022.114809	An immersed finite element material point (IFEMP) method for free surface fluid–structure interaction problems ([link]	Ming-Jian Li, Yanping Lian, and Xiong Zhang	catalog:QuantitativeMPMWallPenetration
+8	2017	10.1016/j.jcp.2016.10.064	Incompressible material point method for free surface flow ([link]	Fan Zhang, Xiong Zhang, K. Sze, Yanping Lian, and Yan Liu	catalog:QuantitativeMPMWallPenetration
+9	2023	10.1002/nme.7217	Analysis and mitigation of spatial integration errors for the material point method ([link]	Aaron S. Baumgarten and Ken Kamrin	catalog:QuantitativeMPMWallPenetration
+10	2024	10.1007/s00466-024-02510-3	A displacement-based material point method for weakly compressible free-surface flows ([link]	Ram Mohan Telikicherla and G. Moutsanidis	catalog:QuantitativeMPMWallPenetration
+11	2019	10.1504/PCFD.2019.10018820	Benchmarking the material point method for interaction problems between the free surface flow and elastic structure ([link]	Zheng Sun, Zhilong Huang, and Xiaomin Zhou	catalog:QuantitativeMPMWallPenetration
+12	2024	10.1016/j.jcp.2024.113457	Mixed material point method formulation, stabilization, and validation for a unified analysis of free-surface and seepage flow ([link]	B. Chandra, Ryota Hashimoto, Ken Kamrin, and Kenichi Soga	catalog:QuantitativeMPMWallPenetration
+13	2025	10.1016/j.cma.2025.118264	An improved MPM formulation for free surface flow problems based on finite volume method ([link]	Kai-Yuan He, Yin‐Fu Jin, Xi-Wen Zhou, Zhen-Yu Yin, and Xiangsheng Chen	catalog:QuantitativeMPMWallPenetration
+14	2020	10.1016/bs.aams.2019.11.001	Material point method after 25 years: Theory, implementation, and applications ([link]	A. Vaucorbeil, A. Vaucorbeil, Vinh Phu Nguyen, Sina Sinaie, and Jian-Ying Wu	catalog:QuantitativeMPMWallPenetration
+15	2019		Implementation of non-trivial boundary conditions in MPM for geotechnical applications ([link]	G. Remmerswaal, M. Bolognin, P. Vardon, Hicks, and A. Rohe	catalog:QuantitativeMPMWallPenetration
+16	2017	10.1016/J.PROENG.2017.01.041	Numerical Simulations of Dam-break Floods with MPM☆ ([link]	Xuanyu Zhao, D. Liang, and M. Martinelli	catalog:QuantitativeMPMWallPenetration
+17	2024	10.1016/j.compgeo.2024.106494	Inhomogeneous Neumann boundary conditions for MPM and GIMP	Guido Remmerswaal, Philip J. Vardon, Michael A. Hicks	FOUND BY D1, not in the catalog
