@@ -47,6 +47,22 @@ import blocking  # noqa: E402
 TARGET_N = 69.2180
 BAND_PASS = 0.10
 BAND_PARTIAL = 0.25
+# Used only when find_stationary_window cannot decide. Stated rather than tuned: half the
+# run is the coarsest defensible transient exclusion, and the stationarity test still has
+# to pass on what remains.
+DEFAULT_DROP_FRAC = 0.5
+# Stationarity threshold, in sigma. blocking.stationarity defaults to 2.0, which runs two
+# tests (halves and trend) and therefore falsely refuses a genuinely stationary but
+# CORRELATED series about 10 percent of the time; one of three self-test series was
+# refused that way. Measured separation on the tail half of each series:
+#   real job B  slope 8.47 sigma, halves 8.70   refused at 2.0, 2.5, 3.0 AND 4.0
+#   synth_pass  slope 0.27, halves 1.19         accepted at every threshold
+#   synth_part  slope 0.36, halves 1.54         accepted at every threshold
+#   synth_fail  slope 2.13, halves 1.65         FALSELY refused at 2.0 only
+# 3.0 is chosen for that separation. It CANNOT change the real verdict, which fails by
+# 8.47 sigma, so this is not a threshold tuned to make an answer come out; it removes a
+# false refusal without touching a true one.
+STATIONARITY_N_SIGMA = 3.0
 
 PROVENANCE = {
     "target_source": "rho_w*g*V/2 at Kramer 2021 Table 1 rho_w=998.2 and engine g=9.81",
@@ -69,25 +85,90 @@ def grade(path: Path, drop_frac: float | None = None) -> dict:
     # Transient exclusion. find_stationary_window scans candidate truncations rather than
     # assuming a settle length, which is the whole point: the run's own settle is a
     # constructor constant and cannot be trusted to have converged.
-    try:
-        win = blocking.find_stationary_window(fz)
-        start = int(win.get("start", 0)) if isinstance(win, dict) else 0
-        win_info = win if isinstance(win, dict) else {"raw": str(win)}
-    except Exception as e:                      # noqa: BLE001
-        start = int(round((drop_frac if drop_frac is not None else 0.5) * n_total))
-        win_info = {"error": f"{type(e).__name__}: {e}", "fallback_start": start}
+    #
+    # IT RETURNS A TUPLE (drop, status, detail), NOT A DICT. The first version of this
+    # function read `win.get("start", 0) if isinstance(win, dict) else 0`, so on the real
+    # data it silently fell through to frame 0 and DISCARDED an explicit
+    # (None, 'undecidable_too_short', ...) verdict. It then graded a series that decays
+    # from 343 N to 48 N as a steady value of 62.43 N and reported PASS at -9.8%.
+    # The self-test did not catch it because every synthetic series had a genuinely
+    # stationary tail, where a start of 0 is nearly harmless. A grader that cannot
+    # refuse is not a grader.
+    win = blocking.find_stationary_window(fz)
+    if isinstance(win, tuple):
+        drop, status, detail = (list(win) + [None, None, None])[:3]
+        win_info: dict = {"drop": drop, "status": status, "detail": detail}
+        start = int(drop) if drop is not None else None
+    elif isinstance(win, dict):
+        win_info = dict(win)
+        start = int(win.get("drop", win.get("start", 0)) or 0)
+    else:
+        win_info = {"raw": str(win)}
+        start = None
+
+    # Independent stationarity verdict on the FULL series, so the refusal below does not
+    # depend on the window search alone.
+    st_full = blocking.stationarity(fz, n_sigma=STATIONARITY_N_SIGMA)   # full series, for the record only
 
     if drop_frac is not None:
         start = int(round(drop_frac * n_total))
+        win_info["overridden_by_drop_frac"] = drop_frac
+
+    # AN UNDECIDABLE WINDOW SEARCH IS NOT A VERDICT OF NON-STATIONARITY. At 200 frames
+    # find_stationary_window reports 'undecidable_too_short' (its reference tail is too
+    # short to correct the trend SE for autocorrelation) for BOTH a genuinely settled
+    # series and a decaying one. Refusing on that alone would make this gate refuse
+    # everything, which is as useless as refusing nothing. So when the search cannot
+    # decide, fall back to a STATED truncation and let the stationarity test below be the
+    # arbiter, with the fallback recorded in the output.
+    fallback_used = None
+    if start is None:
+        start = int(round(DEFAULT_DROP_FRAC * n_total))
+        fallback_used = DEFAULT_DROP_FRAC
+        win_info["fallback_drop_frac"] = DEFAULT_DROP_FRAC
+        win_info["fallback_reason"] = (
+            "window search undecidable at this run length; truncation set by "
+            "DEFAULT_DROP_FRAC and the stationarity test is the arbiter")
 
     steady = fz[start:]
     if len(steady) < 16:
         raise SystemExit(f"stationary window too short: {len(steady)} frames from {n_total}")
 
+    # The arbiter runs on what is RETAINED. Judging the full series would fail any run
+    # with a normal startup transient, which is not what the gate is for.
+    st = blocking.stationarity(steady, n_sigma=STATIONARITY_N_SIGMA)
     se = blocking.blocked_se(steady)
     mean = float(np.mean(steady))
     err = mean - TARGET_N
     rel = abs(err) / TARGET_N
+
+    # Second refusal gate. Even with a window in hand, a series the stationarity test
+    # rejects has no steady value, and a band computed from it would be an average of a
+    # trend rather than a measurement.
+    if not st.get("stationary", False):
+        return {
+            "file": str(path),
+            "n_frames_total": n_total,
+            "stationary_start_frame": start,
+            "n_frames_used": int(len(steady)),
+            "band": "NOT GRADEABLE",
+            "refusal_reason": (
+                "blocking.stationarity rejects this series "
+                f"(halves_stationary={st.get('halves_stationary')}, "
+                f"trend_stationary={st.get('trend_stationary')}, "
+                f"slope={st.get('slope_per_frame'):+.5f} N/frame at "
+                f"{st.get('slope_n_sigma'):.2f} sigma). A mean over a trend is not a "
+                "steady value."),
+            "stationarity_window": {k: v for k, v in st.items()
+                                   if not isinstance(v, (list, tuple))},
+            "stationarity_full_series": {k: v for k, v in st_full.items()
+                             if not isinstance(v, (list, tuple))},
+            "window_detection": win_info,
+            "mean_over_window_N": mean,
+            "late_window_mean_N": float(np.mean(fz[int(0.9 * n_total):])),
+            "provenance": PROVENANCE,
+            "config": {k: cfg.get(k) for k in ("n_grid", "lim_m", "frames", "mode")},
+        }
 
     if rel <= BAND_PASS:
         band = "PASS"
@@ -148,6 +229,17 @@ def main():
           f"<={BAND_PASS*100:.0f}% PASS, {BAND_PASS*100:.0f}-{BAND_PARTIAL*100:.0f}% "
           f"REPORTABLE PARTIAL, >{BAND_PARTIAL*100:.0f}% FAIL\n")
     print(f"  frames total          {g['n_frames_total']}")
+
+    # A refusal carries no mean, no SE and no band. Printing the full report would crash
+    # on the missing keys, which is how the first version of main() behaved.
+    if g["band"] == "NOT GRADEABLE":
+        print(f"  window start          {g.get('stationary_start_frame', 'n/a')}")
+        print(f"  late-window mean      {g.get('late_window_mean_N', float('nan')):.4f} N")
+        print(f"  target                {TARGET_N:.4f} N")
+        print(f"\n  BAND: NOT GRADEABLE")
+        print(f"  reason: {g['refusal_reason']}")
+        return
+
     print(f"  stationary window     from frame {g['stationary_start_frame']} "
           f"({g['n_frames_used']} frames used)")
     print(f"  mean steady reaction  {g['mean_fz_N']:.4f} N")
