@@ -20,7 +20,7 @@ adversarial review or was never challenged.
 
 | # | Result | Detail in |
 |---|---|---|
-| A1 | **The Elicit CSV holds 41 unique papers across 42 rows.** Yields: **10/41** report a depth-velocity threshold, **9/41** a friction coefficient. Always give the denominator | `ELICIT_AND_CATALOG_MINE` |
+| A1 | **The Elicit CSV holds 41 unique papers across 42 rows** (re-derived 2026-08-18, both reproduce). Yields **CORRECTED**: **9/41** report a depth-velocity threshold (was 10, wrong), **9/41** a friction coefficient (confirmed). The 9 threshold rows are enumerated in §A1a so the count can be audited, not trusted. Always give the denominator | `ELICIT_AND_CATALOG_MINE`, §A1a |
 | A2 | **CORRECTED 2026-08-18, this row was WRONG.** It read "only 3 are actually `\cite`d". True figures: **11 distinct keys** cited in `paper/conference_101719.tex`, **14** in `canonical_2026-08-02/conference_101719_1.tex`, and the **compiled PDF renders 14 references with 51 inline citations**. The "3" belonged to erratum 4, which was scoped to the **8 catalogued DOIs**; I dropped the qualifier when consolidating. See §A2a | `MPM_FOUNDATIONS_UNCITED` §A2a |
 | A3 | **Catalog recall is roughly 50%**, measured three independent ways. This is the dispatch's most robust quantitative finding | `ELICIT_AND_CATALOG_MINE`, `CENSUS_ATTEMPT` |
 | A4 | **The citation-graph fixpoint is NOT achievable.** Topic-bounded traversal from 32 seeds grew 32 -> 92 -> 174 and touched 3,575 works by hop 2. Independently re-confirmed 2026-08-17: mean branching **82.2**, hop-3 upper bound **3.3M** nodes. **Any count from this literature is a floor, and that is now measured rather than assumed** | `CENSUS_ATTEMPT`, section D below |
@@ -32,6 +32,33 @@ adversarial review or was never challenged.
 | A10 | **Hull geometry, measured directly:** volume **3.5427387900160743 m3**, watertight, `body_count` 1, euler -442 so **genus 222**. `1100/3.542739 = 310.4942`, reproducing CLAUDE.md's canonical 310.494 | `FLOODFILL_MEASURED` |
 | A11 | **The audit's flood-fill volumes are not reproducible as values.** 4.5628 does not reproduce; the comparable quantity is the **sealed cavity**, where two implementations disagree **2.1x** (1.020 vs 2.161 m3); the operation is **bistable and grid-phase fragile** near 22.2 mm | `FLOODFILL_MEASURED` |
 | A12 | **L-2 stands as written.** I proposed amending it and then **refuted my own amendment** from the AR&R primary source: the 3.0 m/s cap exists for human stability and occupant egress, so it is administrative, not vehicle-derived | `PROPOSED_AMENDMENTS`, erratum 3 |
+
+### A1a. The threshold count, enumerated
+
+**Unit 51.** Auditing my own safe-to-cite rows after unit 50 found A2 was false.
+A1's threshold yield was **10**; it is **9**. Two independent tests agree, and the
+rows are listed so nobody has to trust the number:
+
+```
+substantive THRESHOLD cells: rows 2, 5, 7, 16, 26, 35, 37, 38, 39   = 9
+test A (number outside any "units not specified" clause) : 9
+test B ("Not mentioned..." prefix -> 33 negative, 9 other): 9
+FRICTION by both tests                                    : 9   CONFIRMED, A1 was right
+```
+
+**I got this wrong twice before getting it right, and that is the point.** My first
+test called both columns 42/42, because Elicit fills every cell with prose. My
+second called friction **8**, because the regex caught "units **not specif**ied" in
+row 40, a cell reading "friction coefficient = up to 1.89" - a substantive value I
+nearly deleted from a correct row. Only enumeration settled it.
+
+That is CLAUDE.md's own rule for contested counts: enumerate every site and print
+it, so the number can be audited instead of trusted. I had applied that rule to
+`DRIFT_THRESHOLD` and not to my own deliverable.
+
+**Denominator check:** the 9 rows are 9 distinct papers. Row 16 is in the list and
+its duplicate row 6 is not (row 6's cell reads "Not mentioned"), so 9/41 does not
+double-count the known duplicate pair.
 
 ### A7a. E8 is CLEARED, and exactly one item of mine survives it
 
