@@ -50,7 +50,8 @@ jobs:
           fi
           hf upload josiecerrell/can-it-ford ./hf_space . \
             --repo-type space \
-            --exclude "__pycache__/*" "*.pyc" \
+            --exclude "__pycache__/*" \
+            --exclude "*.pyc" \
             --commit-message "Sync from ${GITHUB_SHA:0:7}"
 
       - name: Report
