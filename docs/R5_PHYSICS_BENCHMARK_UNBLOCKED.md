@@ -22,14 +22,29 @@ login1.vista.tacc.utexas.edu
 Mon Aug 17 21:19:44 UTC 2026
 ```
 
-`tacc_alloc_status` returns **627 SU**, queue empty. The socket warmed at some point
-between the last flag check and now; nobody recorded it, so the branch parked against a
-blocker that no longer existed.
+`tacc_alloc_status` returns **627 SU** (not the manifest's 629; that is the figure used
+throughout this document), queue empty.
 
-**The lesson is the flag's own lesson turned on itself.** FLAG-2 already says a licence
-status is not a fetch status. The same applies here: **a blocker recorded once is not a
-blocker now.** A flag file needs a re-test before it is used to stop work, and the
-re-test costs one command.
+**CORRECTED 2026-08-17, and the correction is the point.** An earlier version of this
+section read "Nobody ran `ssh vista`; the socket warmed and no one re-tested." **I could
+not observe that, and it is very probably false.** The real ControlPath is
+`~/.ssh/sockets/%C`, which holds exactly two sockets created 2026-08-17 21:52:50 and
+21:53:27, **thirty-seven seconds apart**. Both hosts need an interactive password plus a
+6-digit token and no automated client in this fleet can answer an MFA prompt, so two
+authentications thirty-seven seconds apart is a **human** typing `ssh vista`, then
+`ssh ls6`. A human almost certainly did warm them, roughly forty minutes before anyone
+noticed.
+
+I asserted a cause for an observation when I had only the observation. The mirror-image
+error was made in the other direction the same evening (asserting the human *had* run it,
+with no evidence at that moment), and the original "sockets are cold" check globbed
+`~/.ssh/cm-*`, which is **not** this machine's ControlPath, so that evidence was
+worthless; only the raw ssh probe returning the MFA banner ever measured anything.
+
+**The lesson survives the correction intact, and is what to keep:** FLAG-2 already says a
+licence status is not a fetch status. The same applies here: **a blocker recorded once is
+not a blocker now.** A flag file needs a re-test before it is used to stop work, and the
+re-test costs one command. What changes is only the causal story underneath it.
 
 ## 2. FLAG-2a (the Kramer time series) is CLOSED. The file is on disk.
 

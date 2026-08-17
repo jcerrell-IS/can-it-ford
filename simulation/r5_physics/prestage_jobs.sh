@@ -47,8 +47,37 @@ VISTA_ROOT=/work/11603/jcerrell0629/vista
 # VEHICLE_DIR = Path("/work/.../vista/can-it-ford/vehicle_geometry_research")
 # as an ABSOLUTE path, so the driver is cwd-independent for the hull. Confirmed
 # live: the hull is present under both roots.
+# THE ENGINE VENV SUPPLIES warpmpm, NOT trimesh. sim_standing.py:8 imports trimesh at
+# module scope, and can-it-ford/mpm-engine/.venv does not have it. Job 917786 was
+# submitted against exactly this and all 23 runs died with ModuleNotFoundError in three
+# seconds of wall clock. trimesh lives in the SHARED venv's site-packages, which is
+# APPENDED to PYTHONPATH here rather than installed into anything: that venv is shared
+# and other sessions are live on it.
+#
+# Two routes reach the same place and I measured the difference rather than preferring
+# one. Appending the shared site-packages to the engine venv (this file) and switching
+# wholesale to $WORK/.venv/bin/python both give python 3.12.13, numpy 2.5.1,
+# warp-lang 1.15.0, trimesh 4.12.2, warpmpm OK. The versions are IDENTICAL, so there is
+# no physics difference; this route is chosen because it changes exactly one thing, and
+# A1/A2 are graded against published verdicts.
+#
+# trimesh 4.12.2 matters beyond "it imports": np.random.seed still controls sampling on
+# 4.x and is a SILENT no-op on 5.x. Seeding works today and would break WITHOUT ERROR on
+# an upgrade, so state the trimesh version beside any A2 spread, as you would the settle
+# length.
+# THE ENGINE UNDER can-it-ford/ IS A STALE BUILD. Job 917796 got past trimesh and then
+# died at sim_standing.py:12 on
+#   ImportError: cannot import name 'solidify_watertight' from 'warpmpm.vehicle'
+# in all 23 runs. Of the two warpmpm/vehicle.py under $WORK, only
+# $WORK/mpm-engine/src/warpmpm/vehicle.py defines it; can-it-ford/mpm-engine/src does not.
+# The correct engine tree is $WORK/mpm-engine/src, git HEAD 627367e, and it satisfies
+# every name the driver imports (FloodHistory, load_vehicle, solidify_watertight) and
+# every module both scripts need. NOTE 627367e is NOT the vendored pinned 544c93dd;
+# state the runtime engine SHA beside any result from these jobs.
 PY=$VISTA_ROOT/can-it-ford/mpm-engine/.venv/bin/python
-ENGINE=$VISTA_ROOT/can-it-ford/mpm-engine/src
+ENGINE=$VISTA_ROOT/mpm-engine/src
+SHARED=$VISTA_ROOT/.venv/lib/python3.12/site-packages
+PYPATH=$ENGINE:$SHARED
 DRIVER=$VISTA_ROOT/can-it-ford-track1-6dof/renders/yaris_render_s1/sim_standing.py
 REPO=$VISTA_ROOT/can-it-ford
 # Jobs B and C originally ran the sphere scene by a path RELATIVE to $REPO, which had
@@ -104,8 +133,31 @@ preflight() {
     rc=1
   fi
 
-  echo "== engine =="
-  "$TACC" vista "$PY -c 'import warpmpm, warpmpm.geometry as g; print(\"  OK   \"+warpmpm.__file__); print(\"       geometry: \"+\", \".join([s for s in sorted(dir(g)) if not s.startswith(\"_\")][:6]))'" 2>&1 | tail -3 || rc=1
+  # The driver's own module-scope imports, checked with the interpreter that will run it.
+  # This is the check that job 917786 needed and did not have: the engine importing does
+  # NOT imply the driver's dependencies are present, and trimesh was the one missing.
+  echo "== driver imports, against the RUN interpreter =="
+  if "$TACC" vista "PYTHONPATH=$PYPATH $PY -c 'import trimesh,numpy; import importlib.util as u; assert u.find_spec(\"warp\") and u.find_spec(\"warpmpm\"); print(\"  OK   trimesh \"+trimesh.__version__+\", numpy \"+numpy.__version__+\", warp+warpmpm resolve\")'" 2>&1 | tail -1 | grep -q OK; then
+    "$TACC" vista "PYTHONPATH=$PYPATH $PY -c 'import trimesh,numpy; print(\"  OK   trimesh \"+trimesh.__version__+\", numpy \"+numpy.__version__)'" 2>&1 | tail -1
+  else
+    echo "  FAIL $PY cannot import what sim_standing.py:8 needs (trimesh is the usual one)"
+    rc=1
+  fi
+
+  # The engine check used to run `$PY -c 'import warpmpm'` with NO PYTHONPATH, so it
+  # resolved whatever the venv happened to find and reported OK while the driver failed
+  # on a name that engine does not define. It now resolves through the job's real PYPATH
+  # and checks the SPECIFIC names sim_standing.py:12 imports, which is the failure that
+  # actually happened (solidify_watertight, job 917796).
+  echo "== engine, through the job's PYPATH, checking the driver's actual names =="
+  if "$TACC" vista "PYTHONPATH=$PYPATH $PY -c 'import importlib.util as u,sys; sys.exit(0 if all(u.find_spec(m) for m in (\"warpmpm\",\"warpmpm.vehicle\",\"warpmpm.core.solver\",\"warpmpm.materials\",\"warpmpm.geometry\")) else 1)' && grep -qE '^(def|class) solidify_watertight' $ENGINE/warpmpm/vehicle.py && grep -qE '^(def|class) load_vehicle' $ENGINE/warpmpm/vehicle.py" >/dev/null 2>&1; then
+    echo "  OK   $ENGINE"
+    "$TACC" vista "cd $ENGINE/.. && git rev-parse --short HEAD 2>/dev/null | sed 's/^/       engine git HEAD /'" 2>&1 | tail -1
+  else
+    echo "  FAIL $ENGINE does not satisfy the driver. The usual miss is"
+    echo "       solidify_watertight, absent from can-it-ford/mpm-engine/src."
+    rc=1
+  fi
 
   echo "== gpu (login node reports none; this is informational, not a gate) =="
   "$TACC" vista "nvidia-smi --query-gpu=name,memory.total --format=csv,noheader 2>&1 | head -2" 2>&1 | tail -2
@@ -136,10 +188,16 @@ job_a() {
 # Fused deliberately: A1 is ~45 s of compute against ~80-120 s of warpmpm
 # import startup, so its own job would spend more on startup than on physics.
 set -uo pipefail
-export PYTHONPATH=$ENGINE:\${PYTHONPATH:-}
+export PYTHONPATH=$PYPATH:\${PYTHONPATH:-}
 OUT=$VISTA_ROOT/d4_jobA
 mkdir -p \$OUT
 cd $REPO
+# Job 917786 reported COMPLETED with ExitCode 0:0 while all 23 of its runs failed,
+# because the script's last statement was \`echo ALLDONE\` and that succeeded. Slurm
+# faithfully reported the exit status of an echo. FAILS makes the job's own status
+# mean something; without it the queue is a fifth check that cannot fail.
+FAILS=0
+RUNS=0
 
 echo "TIMING_ANCHOR_START=\$(date +%s)"   # re-costs the whole manifest on contact
 sha256sum $DRIVER
@@ -149,12 +207,19 @@ sha256sum $DRIVER
 # mu=0.0250 tests the INFERRED STUCK->SLIDE flip.
 # mu=0.30 is logged INDETERMINATE IN ADVANCE: the bracket (0.369, 0.739]
 #         straddles this run's 0.5 m/s, so neither outcome confirms anything.
+# Timing is date-based, NOT \`\$(which time) -p\`. Verified live 2026-08-17: \`which time\`
+# returns EMPTY on Vista and /usr/bin/time does not exist, so that construct expanded to
+# a bare \`-p <python> ...\`, i.e. it tried to execute "-p". All three A1 arms would have
+# died with command-not-found, and A1 is the one item that must never be dropped.
 for MU in 0.55 0.30 0.0250; do
   echo "=== A1 mu=\$MU ==="
-  \$( which time ) -p $PY $DRIVER --label brake_mu\${MU} --out \$OUT/brake_mu\${MU} \\
+  T0=\$(date +%s)
+  $PY $DRIVER --label brake_mu\${MU} --out \$OUT/brake_mu\${MU} \\
       --depth 0.30 --velocity 0.5 --grid 64 --mass 1100 --eta 1.0e-3 \\
       --frames $FRAMES_CANON --floor-friction \$MU --vehicle yaris
-  echo "RC_A1_mu\${MU}=\$?"
+  RC=\$?
+  RUNS=\$((RUNS+1)); [ \$RC -eq 0 ] || FAILS=\$((FAILS+1))
+  echo "RC_A1_mu\${MU}=\$RC wall_s=\$(( \$(date +%s) - T0 ))"
 done
 
 # --- A2: repeats at FIXED config, no seed change (there is no seed flag) -----
@@ -164,13 +229,20 @@ for i in \$(seq 1 $NREP); do
   $PY $DRIVER --label rep_g96m2337_\$i --out \$OUT/rep_g96m2337_\$i \\
       --depth 0.30 --velocity 1.5 --grid 96 --mass 2337 --eta 1.0e-3 \\
       --frames $FRAMES_CANON --floor-friction 0.55 --vehicle yaris
-  echo "RC_A2_g96m2337_\$i=\$?"
+  RC=\$?; RUNS=\$((RUNS+1)); [ \$RC -eq 0 ] || FAILS=\$((FAILS+1))
+  echo "RC_A2_g96m2337_\$i=\$RC"
   $PY $DRIVER --label rep_v0p5_\$i --out \$OUT/rep_v0p5_\$i \\
       --depth 0.30 --velocity 0.5 --grid 64 --mass 1100 --eta 1.0e-3 \\
       --frames $FRAMES_CANON --floor-friction 0.55 --vehicle yaris
-  echo "RC_A2_v0p5_\$i=\$?"
+  RC=\$?; RUNS=\$((RUNS+1)); [ \$RC -eq 0 ] || FAILS=\$((FAILS+1))
+  echo "RC_A2_v0p5_\$i=\$RC"
 done
 echo "TIMING_ANCHOR_END=\$(date +%s)"
+echo "SUMMARY runs=\$RUNS failed=\$FAILS"
+if [ \$FAILS -ne 0 ]; then
+  echo "ALLDONE_WITH_FAILURES"
+  exit 1
+fi
 echo ALLDONE
 EOF
 }
@@ -181,7 +253,7 @@ job_b() {
 # JOB B: Kramer sphere hydrostatic pilot. Compare against 69.2180 N, which is
 # rho_w=998.2 (Table 1) and g=9.81 (engine). NOT 69.3428, the superseded value.
 set -uo pipefail
-export PYTHONPATH=$ENGINE:\${PYTHONPATH:-}
+export PYTHONPATH=$PYPATH:\${PYTHONPATH:-}
 OUT=$VISTA_ROOT/d4_jobB
 mkdir -p \$OUT
 echo "TIMING_ANCHOR_START=\$(date +%s)"
@@ -189,8 +261,13 @@ $PY $SCENE_DIR/sphere_heave.py --fixed \\
     --n-grid 64 --lim 1.2 --depth 0.5 --h0-over-d 0.0 \\
     --frames $FRAMES_SPHERE --sdf-res 96 --verbose \\
     --out \$OUT/sphere_fixed_g64.json
-echo "RC_B=\$?"
+RC=\$?
+echo "RC_B=\$RC"
 echo "TIMING_ANCHOR_END=\$(date +%s)"
+if [ \$RC -ne 0 ]; then
+  echo "ALLDONE_WITH_FAILURES"
+  exit 1
+fi
 echo ALLDONE
 EOF
 }
@@ -204,7 +281,7 @@ job_c() {
 # NOTE: the published time series is still blocked (MDPI /s1, 403), so only the
 # self-consistency criteria in the manifest can be graded on arrival.
 set -uo pipefail
-export PYTHONPATH=$ENGINE:\${PYTHONPATH:-}
+export PYTHONPATH=$PYPATH:\${PYTHONPATH:-}
 OUT=$VISTA_ROOT/d4_jobC
 mkdir -p \$OUT
 echo "TIMING_ANCHOR_START=\$(date +%s)"

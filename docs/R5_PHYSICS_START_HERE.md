@@ -102,6 +102,33 @@ never happened).
 5. **L-3's floor is ~10 particles per flow depth**, not "4 layers / 2 cells". Against the
    actual floor, 17 of 17 runs fail.
 
+## 5b. A CHECK THAT CANNOT FAIL IS NOT A CHECK. Five instances, all on this one branch.
+
+**This is the most transferable thing on the branch. Read it before writing any gate,
+test, assertion or job script.** Every one of these passed, or reported success, while
+the thing it claimed to verify was broken:
+
+1. **The tunable at-rest gate.** Every resolution contains a band width that passes it,
+   so a PASS carries no information about the physics.
+2. **The vacuous margin assertion.** It fed the SDF margin guard inputs the guard was
+   correct to accept, so it passed for the wrong reason and could never have failed.
+3. **`--preflight` echoed its checks as strings.** Both the script's usage text and
+   section 2 of this file described it as running them. It always exited 0, so it never
+   reported that the driver path did not exist. The coordinator had told Josie to run it.
+4. **The preflight checked the ENGINE, not the DRIVER's dependencies.** After it was made
+   to execute, it still verified only that `warpmpm` imported. Job **917786** then died on
+   `import trimesh` at `sim_standing.py:8`, in all 23 runs, in three seconds. An import
+   probe through the job's real `PYTHONPATH` with the job's real interpreter would have
+   caught it in one second at zero SU.
+5. **Slurm itself reported `COMPLETED`, `ExitCode 0:0` for job 917786** while every run in
+   it failed, because the script's last statement was `echo ALLDONE` and the echo
+   succeeded. The queue status was measuring the wrong thing.
+
+The pattern is one thing each time: **the check and the failure mode were never connected,
+so the check verified something adjacent to what it claimed.** Name the mechanism that
+would refute you, then show it does not fire. That is section 6's first rule, and these
+five are what it costs when it is skipped.
+
 ## 6. Two standing rules earned this round
 
 - **An argument that reaches the right answer without engaging the refuting mechanism is
