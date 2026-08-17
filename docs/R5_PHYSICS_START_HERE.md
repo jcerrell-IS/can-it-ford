@@ -63,7 +63,7 @@ multiply. Detail: `R5_PHYSICS_SU_TRIAGE.md`.
 ## 4. Safe to cite
 
 Only what is in section 1 of `R5_PHYSICS_WHAT_SURVIVES.md`, **and read the corrections
-attached to each row** — a fifth review broke 7 of those 10 and they are corrected in place,
+attached to each row**, because a fifth review broke 7 of those 10 and they are corrected in place,
 not deleted. The three that came through unbroken: **no outflow BC in the canonical scene**,
 **the STUCK deceleration mechanism**, and **the layer counts**.
 
