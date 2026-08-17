@@ -14,39 +14,56 @@ figure cannot be cited from an early commit.
 
 ---
 
-> ## E8 IS CLEARED, 2026-08-18. READ THIS FIRST.
+> # ONE THING IS STILL OPEN: 12 CREDENTIALS, ZERO ROTATED.
 >
-> **Permission has been obtained for the NCAC/CCSA meshes and the AR&R paper. It
-> applies globally and permits republication.** [confirmed by Josie in session]
+> Every licence question in this dispatch is now closed on reported permission. **The
+> credentials are not a licence question and were never covered by any of it.** If you
+> read nothing else here, read tier 1 item 1.
 >
-> **E8's rule clears on "written permission or a confirmed licence".** This dispatch
-> established on three independent sources that no licence exists to confirm, so
-> permission was always the route. It has been obtained.
+> ---
 >
-> **Everything in tier 2 below about removing, untracking or rewriting geometry or
-> AR&R material is MOOT. Do not do any of it.** No file is to be deleted on E8 grounds.
+> ## Licence status, 2026-08-18: all closed on REPORTED permission, artifacts pending
 >
-> **One item is NOT covered, and it is the only licence work left in this dispatch:**
-> the **16 Smith-Modra-Felder files** are a *Wiley / CIWEM* article with an explicit
-> "© 2019" notice legible in the reproduction. **A permission from the mesh rights
-> holders does not reach a different publisher's article.** The fix costs nothing and
-> needs nobody: keep the four scalars, cite the DOI (the article is free to read),
-> untrack the images. Tier 2 item 4.
+> Josie reports three separate grants, each global and each permitting republication:
 >
-> **The 12 credentials are entirely unaffected. Still zero rotated. Tier 1 item 1 is
-> now the single most important thing in this document.**
+> | Grant | Covers | Rights holder | Status |
+> |---|---|---|---|
+> | 1 | CCSA/NCAC meshes, decks, hulls, renders | CCSA/GMU (reported via NHTSA) | **Reported 2026-08-18** |
+> | 2 | AR&R paper | Engineers Australia | **Reported 2026-08-18** |
+> | 3 | The 16 Smith-Modra-Felder files | Wiley / CIWEM | **Reported 2026-08-18** |
 >
-> **Two housekeeping items, neither a doubt:** file the permission artifact at
-> `docs/E8_PERMISSION_<body>_<date>` because a DesignSafe DOI is gated on it (register
-> item 10) and a reviewer will ask for the document; and record the granting body and
-> date in `THIRD_PARTY_NOTICES.md`, which is now the place a reader looks to learn that
-> permission exists.
+> **These are three reports, from three rights holders, and no artifact has been filed
+> or read by me or by the coordinator.** That is not a doubt about any of them; it is
+> what a licence record on a public repo is for. **A second or third report arriving
+> does not upgrade the earlier ones.** File all three at
+> `docs/E8_PERMISSION_<body>_<date>` — a DesignSafe DOI is gated on written permission
+> (register item 10), and a reviewer will ask for the documents.
 >
-> **What the geometry analysis is still for:** it is no longer a case for removal, it
-> is the provenance record behind the permission. That the archives are byte-identical
-> to upstream by SHA384, that the models are CCSA-authored and CCSA-hosted, and that
-> the material carries no licence of its own, are exactly what a reviewer will want to
-> see *behind* a permission. None of it is wasted.
+> **Consequence: every removal, untracking and rewrite recommendation in this dispatch
+> is WITHDRAWN.** They are marked superseded **in place** in each document, with the
+> reasoning preserved and explicitly flagged as not pending work. **Nothing is to be
+> deleted or untracked on licence grounds.** The reason for marking rather than
+> deleting: a stale "recommend removal" line is how someone deletes something in six
+> months for a reason that stopped applying tonight.
+>
+> ### The three WRL images: NOT covered by the AR&R grant, on positive evidence
+>
+> I flagged that `citations/WRL reports technical and Research/` might have a different
+> rights holder from the AR&R report. **Checked, and they are a different document.**
+>
+> The AR&R report P10/S2/020 uses **flat numbering throughout: Figure 1 to Figure 11,
+> Table 1 to Table 3**, with no section-prefixed labels anywhere. The three WRL images
+> are **"Figure 5-5", "Table 5-1" and "Table 5-2"** — a chapter-section scheme the
+> report does not use. Probe validated first: it sees 27 `Figure N` and 7 `Table N`
+> references in the AR&R text, so the absence is real, not blindness. [read]
+>
+> **So do not fold these three into the AR&R grant.** They are 760,091 B from an
+> unidentified WRL document. **One question to Josie settles it:** does the Engineers
+> Australia permission extend to WRL-authored figures from other reports, or is UNSW
+> WRL a fourth rights holder?
+>
+> By contrast `ARR table 1 - ...png` **is** plausibly covered: the AR&R report does have
+> a Table 1.
 
 ## 1. The three exposures, and why they need different remedies
 
@@ -55,11 +72,12 @@ They are **not equally serious, and they differ in kind, not just size.**
 | # | Exposure | Size | Rights position | Public surface | Remedy shape |
 |---|---|---|---|---|---|
 | 1 | **CCSA/NCAC geometry.** 4 original distribution archives (88,592,238 B) + 14 LS-DYNA decks (71,716,670 B), **byte-identical to upstream, proven by SHA384** | 160,322,098 B | **Silent.** Confirmed on both CCSA download pages, not just the bundled README | **30 of 30 branches** | Ask permission; removal must cover every branch or it is cosmetic |
-| 2 | **Smith 2019.** The complete 15-page article, page by page | 6,215,623 B | **Asserted.** "© 2019 CIWEM and John Wiley & Sons Ltd" legible in the copy | 1 tree | Untrack, keep 4 scalars, cite the DOI. Free |
-| 3 | **AR&R report + 4 images** | 2,113,057 B | **Silent.** No copyright, licence or permission text | 1 tree | Ask permission. **Do not delete: load-bearing evidence** |
+| 2 | **Smith 2019.** The complete 15-page article, page by page | 6,215,623 B | **Asserted** "© 2019 CIWEM and John Wiley & Sons Ltd", **and permission reported 2026-08-18** | 1 tree | **CLEARED.** No action |
+| 3 | **AR&R report + 1 AR&R table image** | 1,352,966 B | **Silent**, permission reported 2026-08-18 | 1 tree | **CLEARED.** No action |
+| 3b | **3 WRL images** | 760,091 B | **Silent**, different document from the AR&R report | 1 tree | **One question:** does the AR&R grant reach UNSW WRL figures? |
 | 4 | Two CC-licensed PDFs | 10,884,441 B | **Licensed** (CC BY; CC BY-NC-ND) | 1 tree | Keep, add attribution |
 | 5 | CC0 assets (ambientCG ×2, Poly Haven) | 11,205,063 B | **CC0.** No violation, ever | 1 tree | Courtesy attribution only |
-| 6 | **Credentials.** 12, across Vista, LS6, Mac | n/a | n/a | **No value public.** A holder-enumerating doc is public on 1 of 30 branches | **Revoke.** Deletion cannot win |
+| 6 | **Credentials.** 12, across Vista, LS6, Mac | n/a | **THE ONLY OPEN EXPOSURE** | **No value public.** A holder-enumerating doc is public on 1 of 30 branches | **REVOKE.** Deletion cannot win |
 
 **1 is largest and most widespread. 2 is smallest of the licence problems but the
 least ambiguous**, because silence leaves an open question and an explicit © does not.
@@ -112,9 +130,11 @@ branches**), then option 1 (ask CCSA). **Against option 3**, a history rewrite, 
 it invalidates every commit SHA the register cites as provenance in exchange for a
 removal GitHub does not guarantee.
 
-**4. Untrack the 16 Smith-Modra-Felder files** (6,215,623 B) after extracting four
-scalars: `C_D = 1.38`, `μ = 0.78`, `μ = 0.3`, and the Equation 6 reference. Facts are
-not copyrightable and the article is free to read at its DOI, so **nothing is lost**.
+**4. ~~Untrack the 16 Smith-Modra-Felder files.~~ WITHDRAWN 2026-08-18**, permission
+reported for the Wiley/CIWEM article. **Do not untrack them.** Extracting the four
+scalars (`C_D = 1.38`, `μ = 0.78`, `μ = 0.3`, Equation 6) into a grounding note is
+still worth doing as citation practice, but it is no longer required by any licence
+position.
 
 **5. Two permission emails, and they can go out the same day.** Both bodies publish a
 contact in the very documents concerned:

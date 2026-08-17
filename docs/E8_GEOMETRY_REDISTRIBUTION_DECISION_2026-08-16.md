@@ -18,11 +18,13 @@ or **[inferred]**.
 
 ---
 
-## 0.0 E8 IS CLEARED. Permission granted, global, includes republication.
+## 0.0 E8 CLEARED on reported permission, 2026-08-18. Artifacts pending.
 
-**Josie confirms, 2026-08-18: permission to use the NCAC/CCSA meshes has been
-obtained, it applies globally, and it permits republication. Rights are likewise
-permitted on the AR&R paper.** [confirmed by Josie in session, 2026-08-18]
+**Josie reports, 2026-08-18: permission for the NCAC/CCSA meshes has been obtained, it
+applies globally, and it permits republication. Rights are likewise permitted on the
+AR&R paper.** [**her report**, in session. **Artifact not yet filed, and not read by me
+or by the coordinator.** A second report arriving later does not upgrade this one:
+**two reports are still two reports.**]
 
 **E8's operative rule is satisfied by its own terms.** The rule clears on "written
 permission **or** a confirmed licence". This document establishes on three independent

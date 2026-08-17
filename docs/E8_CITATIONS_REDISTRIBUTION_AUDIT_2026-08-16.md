@@ -39,8 +39,9 @@ Scope note: D1 mines the **content** of these files. This assesses their
 ---
 
 > ### CLEARED 2026-08-18: AR&R rights are permitted, globally, including republication
-> **Josie confirms rights are permitted on the AR&R paper, globally, including
-> republication.** [confirmed by Josie in session, 2026-08-18]
+> **Josie reports rights are permitted on the AR&R paper, globally, including
+> republication.** [**her report**, in session, 2026-08-18. **Artifact not yet filed or
+> read by me or by the coordinator.** Two reports are still two reports.]
 >
 > This **supersedes** this document's finding that the report is licence-silent. That
 > finding stands as a description of the *document*: I verified by validated text
@@ -256,7 +257,28 @@ changes the kind of problem, not just the size:**
 prints the title as **"Full-scale testing of stability curves for vehicles in flood
 waters"**, and the DOI on the same page is 10.1111/jfr3.12527.
 
-### 3.2 The remediation is easy, and nothing is lost
+### 3.2 SUPERSEDED 2026-08-18. Permission reported for this article too.
+
+> **Josie reports that the Wiley/CIWEM permission is also granted**, covering these 16
+> files. [**her report**, relayed by the coordinator, 2026-08-18. **Artifact not yet
+> filed or read by me or by the coordinator.**]
+>
+> **Everything in this subsection is therefore WITHDRAWN as a recommendation and is NOT
+> pending work.** No file here is to be untracked or deleted.
+>
+> **Why it is marked superseded in place rather than deleted, and this is worth stating
+> because it is a real failure mode:** a stale "recommend removal" line is exactly how
+> someone deletes something in six months for a reason that stopped applying tonight.
+> The reasoning is preserved below so that if the permission's scope is ever narrowed,
+> the analysis does not have to be redone from scratch. **It is a record, not a task.**
+>
+> Note the scope carefully: this grant covers a **Wiley / CIWEM** article and is
+> separate from the CCSA mesh grant and the AR&R grant. Three reports, three rights
+> holders, three artifacts to file.
+
+**Retained below as the superseded analysis:**
+
+### 3.2 (superseded) The remediation would have been easy, and nothing would have been lost
 
 The regeneration idea is right in principle and turns out not to be needed, because
 **the project does not use the pages. It uses four scalars.** Measured by searching
@@ -274,12 +296,12 @@ is.** So the project can keep every number it relies on, cite them, and carry no
 the images. And because the article is **bronze OA, it is free to read at the DOI**,
 so a reader following the citation gets exactly the access the screenshots provided.
 
-**Recommended, and it requires no permission from anyone:**
+**~~Recommended~~ SUPERSEDED, retained as the reasoning only. Do not execute:**
 
-1. Write the four values, with page or figure references, into a short grounding note
-   beside the existing `citations/smith_modra_felder_2019_velocity_grounding.md`.
-2. Untrack all 16 files (6,215,623 B).
-3. Cite the DOI, which is free to read.
+1. ~~Write the four values into a short grounding note.~~ Still *worth doing on its own
+   merits* as good citation practice, but no longer required by any licence position.
+2. ~~Untrack all 16 files (6,215,623 B).~~ **Withdrawn. Do not untrack them.**
+3. ~~Cite the DOI.~~ Worth doing anyway; the article is free to read.
 
 That removes the single least defensible item in `citations/` at **zero research
 cost**. If a figure is ever genuinely needed in the paper, regenerate it from cited
