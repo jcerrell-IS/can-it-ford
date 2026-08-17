@@ -107,3 +107,8 @@ render_s2/
 # MUST travel with the repo: every session queries it instead of ~/Downloads,
 # which has returned EPERM and silently produced zero-hit searches.
 !data/research_corpus_index.json
+
+# g128 canonical set, register J17. data/* is ignored, so these must be
+# un-ignored or J15 becomes unreproducible again.
+!data/g128_2026-08-18/
+!data/g128_2026-08-18/**

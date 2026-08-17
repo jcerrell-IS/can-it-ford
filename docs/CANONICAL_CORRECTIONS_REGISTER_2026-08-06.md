@@ -758,3 +758,46 @@ L7. **SKILL DRIFT, RE-VERIFIED, and the previously recorded drift is FIXED.** Fi
     routing row that the repo copy lacks. Not applied here, deliberately: the repo had 27
     uncommitted files at the time and this session did not add a 28th to a tree with a
     documented concurrent-session hazard. One additive table row closes it.
+
+## ADDENDUM 2026-08-18
+
+J17. **THE g128 CANONICAL SET NOW EXISTS, AND THE VERDICT SURVIVES REFINEMENT.**
+     J15 called running it "the single highest-value open item". Run 2026-08-18 on
+     Vista node c642-032 (GH200 120GB) inside idev job 917886, via the unmodified
+     `run_s2.sh 128`, which writes to new `g128_m*` directories and therefore did
+     NOT repeat the 2026-07-26 overwrite that destroyed six margins. Three masses,
+     all rc=0, 90 frames, depth 0.30 m, velocity 1.5 m/s, floor_friction 0.55.
+
+     `margin_frames` across all four grids, joint drift-and-speed condition:
+
+     | grid | m1100 | m1609 | m2337 | verdicts |
+     |------|------:|------:|------:|----------|
+     | g48  |    22 |    25 |    19 | SLIDE x3 |
+     | g64  |    41 |    28 |     8 | SLIDE x3 |
+     | g96  |    15 |     7 |     1 | SLIDE x3 |
+     | g128 |    39 |    11 |     1 | SLIDE x3 |
+
+     **All three remain SLIDE at g128. The verdict does not flip.** `g96_m2337`'s
+     one-frame margin does NOT collapse to STUCK at g128; it stays at 1. The
+     16 SLIDE / 1 STUCK headline is therefore not overturned by refinement to g128
+     for the three canonical masses.
+
+     **BUT `margin_frames` ITSELF IS NOT CONVERGING.** m1100 runs 22, 41, 15, 39
+     and m1609 runs 25, 28, 7, 11. Only the BINARY verdict is stable. That is the
+     behaviour Syamlal, Celik and Benyahia 2017 (`10.1002/AIC.15868`) predict for a
+     transient quantity. Quote the margin as a fragility indicator at a stated
+     grid, never as a converged number.
+
+     Three independent resolution gains at g128, read from the summaries:
+     `water_layers` rises 4 to **8**, retiring the L-3 limitation of only 4
+     particle layers per flow depth; `C2_veh_zmin_rise` is **0.0** on all three, so
+     the g48 floor-penetration defect is absent; `determinism_identical` is **true**
+     on all three.
+
+     **P-2 IS IMPROVED BUT NOT CLEARED.** Max water fraction inside the vehicle
+     bbox against the 0.10 limit: m2337 **0.0794** passes, m1609 **0.0945** passes,
+     m1100 **0.1116** STILL FAILS. Do not write that g128 fixes passthrough; it
+     clears it for the two heavier masses only.
+
+     Artifacts at `data/g128_2026-08-18/`, three `summary.json` and three
+     `metrics.csv`, so this is re-derivable without the cluster.
