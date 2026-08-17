@@ -257,12 +257,28 @@ reason than I gave**; claim 4 **CONFIRMED but not novel**.
    the range on both measures in both windows. **This blocking issue is withdrawn**, and
    so is my published restatement of it. Reduced to a caveat: on the 91-frame window the
    A1 sample sits at or within 21 um of the ensemble minimum, so it is at the edge.
-5. **Engine `627367e` is unvalidated against the register.** Every gravity and material-8
-   fact in the register was verified against the vendored **`544c93dd`**
-   (`third_party/mpm-engine-544c93dd-solver-core/core/solver.py:167-169`). No local
-   artifact records `627367e`'s gravity line, and no manifest field records a
-   `solver_git_sha`. This is an open provenance gap of the same class as the missing
-   manifest field, and it applies to every number in this document.
+5. ~~**Engine `627367e` is unvalidated against the register.**~~ **CLOSED 2026-08-17 by
+   direct hash comparison.** The three engine files the register's facts rest on are
+   **byte-identical** between the vendored `544c93dd` and the runtime `627367e`
+   **[read]**:
+
+   | file | sha256, both sides |
+   |---|---|
+   | `core/solver.py` | `57810f1b56de04eec1694711ca1c72d880faf237a2cc63bb42af505f53bf9b9f` |
+   | `kernels/mpm_utils.py` | `dd39397486d446010336a3237dfac0088e831a61f3954ff086741e95c18e4c61` |
+   | `kernels/mpm_solver_warp.py` | `285139395097a914b883fe114e8633cf8c8cf8ccc3a3afbbb57c7e3aa1f12128` |
+
+   The register's cited lines also land at the **same line numbers** on both: gravity
+   `{"material": name, "g": [0.0, 0.0, -9.81], ...}` at `core/solver.py:168`; material 8
+   at `mpm_utils.py:1090` and `:1366`; the rigid mass sum at `mpm_solver_warp.py:856`,
+   which is the corrected line from the CLOSED `:851-853 -> :856` item.
+
+   **So every gravity and material-8 fact verified on `544c93dd` applies verbatim to the
+   runtime engine**, and the caveat attached to every number in this document is lifted.
+   State it precisely, though: **these three files did not change between the two SHAs**,
+   which is not the same as the two engines being identical everywhere. The claim is
+   scoped to the files the register actually cites. A `solver_git_sha` manifest field is
+   still missing and would have made this a lookup rather than an investigation.
 
 ### 6.2 Non-blocking, but they change how things must be worded
 
