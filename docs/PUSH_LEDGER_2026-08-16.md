@@ -669,20 +669,27 @@ Three consequences:
 
 ## 6. Register sequencing plan, with the merge measured rather than assumed
 
-> **READ THIS FIRST. Side A of this collision is ORPHANED, and that changes what
-> the plan is for.** 104 lines of register and 73 of CLAUDE.md exist only as
-> uncommitted text in the main checkout. **No process owns them**: measured at
-> 21:03, no `claude` session anywhere holds the main tree as its working
-> directory, and the file has not changed since 15:07. Side B, by contrast, has a
-> live owner still running.
+> **STEP 1 IS DONE, 23:38. The collision has changed shape and this plan is
+> re-stated for it, not deleted.**
 >
-> **An orphaned side cannot be defended by "its owner will commit it."** There is
-> no owner to do so. Nobody is watching that file, nobody will notice if it
-> reverts, and there is no reflog entry to recover it from if it does, because it
-> was never committed. **The abort condition in step 1 and the survival test in
-> step 3 below are therefore the only protection those 177 lines have.** They are
-> not belt-and-braces on top of an owner's vigilance. They are the whole of it.
-> If they are skipped, the loss is silent and permanent.
+> Side A was committed as **`790d999`** "Hardwire the research corpus into every
+> session and into CI" on `claude/add-ci-checks`, carrying **both** `CLAUDE.md`
+> and the register. Verified independently by me and by the coordinator: register
+> **760 lines with zero uncommitted delta**, `CLAUDE.md` **823 with zero delta**,
+> and only `.claude/settings.json` and `.mcp.json` still modified in that tree.
+> Side B is untouched at 1455 on `claude/fork-register-reconcile`.
+>
+> **The danger this plan was built around is gone.** It existed because side A
+> was uncommitted, unowned and had no reflog entry, so a stray `checkout` would
+> have erased it silently. **Both sides are now in git history on separate
+> branches, so neither can silently disappear.** What remains is an ordinary
+> two-branch merge, which is a much smaller problem.
+>
+> **What the numbers now mean, because one of them is unchanged for a different
+> reason.** The old abort condition was "the register must read 760 before step
+> 1". It still reads 760, but that now means **760 and committed** rather than
+> **760 and pending**. Do not read the unchanged number as an unchanged
+> situation.
 
 ### The live state
 
@@ -754,18 +761,29 @@ re-applies cleanly onto 777567a in a throwaway clone. **Insurance only. It does
 not replace step 1**, and a snapshot outside git is not something anyone will
 find in a year.
 
-**Step 1. Owner: Josie, or the coordinator on her say-so. Side A goes first,
-because it has no owner and side B does.**
+**Step 1. DONE, `790d999`, 2026-08-17 23:38.** Side A is committed on
+`claude/add-ci-checks` with both files. `.claude/settings.json` and `.mcp.json`
+remain uncommitted there and are a separate unit of work, unrelated to this
+collision.
 
-    cd /Users/josie/can-it-ford
-    git status --porcelain                       # expect exactly the 4 M lines
-    wc -l docs/CANONICAL_CORRECTIONS_REGISTER_2026-08-06.md   # expect 760
-    git commit -m "<msg>" -- CLAUDE.md docs/CANONICAL_CORRECTIONS_REGISTER_2026-08-06.md
+### Merge arithmetic RE-DERIVED from committed objects, 23:40
 
-  `.claude/settings.json` and `.mcp.json` are a different unit of work; commit
-  them separately. Two files is well under the pre-commit hook's 8-file ceiling.
-  **Abort if** `wc -l` is not 760: someone edited it since 15:07 and the merge
-  arithmetic below no longer holds, so re-measure before proceeding.
+The original figure was computed with side A read from a **working tree**. It has
+been recomputed with all three inputs read from **committed blobs**, which is the
+stronger measurement, and **it holds identically**:
+
+    merge-base                          1a868f3  (unchanged)   register  656
+    A  claude/add-ci-checks                                    register  760
+    B  claude/fork-register-reconcile                          register 1455
+
+    git merge-file -p A base B   ->  exit 0, 0 conflict markers, 1559 lines
+
+**1559 = 1455 + 104, from committed objects.** The earlier working-tree result was
+not wrong, and it is no longer the basis for the claim.
+
+**CLAUDE.md now differs between the sides, and still does not collide.** Blob
+`37983d2` at both the base and B, `68ce06e2` on A. Only A changed it, so the
+merge takes A's version outright. There is still nothing to reconcile.
 
 **Step 2. AMENDED, see section 13. The named owner no longer has a working
 tree.** `.claude/worktrees/fork-register-reconcile` was removed. The branch and
@@ -808,7 +826,34 @@ session's commit in this repo on 2026-08-13.
 CLAUDE.md needs no merge at all: blob `37983d2` at base, main HEAD and the fork
 tip alike, so the only thing that can happen to it is loss.
 
-### THE WATCHDOG FIRED, and side A has GROWN. Numbers below are updated
+### The watchdog is RETIRED and REPOINTED, 23:40
+
+It was armed to guard something that could vanish without trace. That thing is
+now committed, so **leaving it firing on a file that can no longer be lost would
+train a real alarm into noise**, which is a failure this project has already had.
+`watch_side_a.sh` was stopped.
+
+**Replaced by `can-it-ford-bundles/watch_register_merge.sh`**, which guards what
+is actually still at risk: the merge itself. It watches the **branches**, not a
+working file, so it needs no worktree, and it reads:
+
+| side B's register | meaning |
+|---|---|
+| **1455** | merge has not happened yet, the current state |
+| **1559** | correct, 1455 + 104. Then confirm by content, not by the count |
+| **760** | **side B vanished**, overwritten by side A's length, and no conflict marker will have appeared |
+| anything else | inspect before writing to it again |
+
+It also alerts if either branch disappears, naming `ALL-refs-*.bundle` as the
+recovery path. Its arming event confirms the current state: **side B still 1455,
+merge has not happened.**
+
+**Its remaining value is smaller than the first watcher's, and worth stating
+honestly:** a bad merge leaves both branches intact in the reflog, so this is a
+convenience alarm on an ordinary git operation, not the last line of defence the
+first one was.
+
+### HISTORICAL: the first watchdog firing, when side A was still uncommitted
 
 **read, 23:10.** The watcher caught a real change and it justified its existence
 on the first event. **Side A is bigger than this section originally described:**
@@ -1514,6 +1559,29 @@ Two worth flagging by name rather than by size:
 - **`claude/fork-three-class` (19)** carries the three-class matched-dx
   deliverable whose own handoff lists unfinished follow-ups, so it is the most
   likely of these to be picked up next.
+
+### LOOP CLOSED: nothing the stranded sessions wrote was lost
+
+I flagged that ten worktrees were removed while sessions wrote into the main
+checkout all evening, and that the uncommitted work there had no owner. **The
+outcome is now known and it is clean.** Two of those files,
+`analysis/research_index.py` and `data/research_corpus_index.json`, are committed
+in `790d999` and `46282bc`, and `790d999` also carried `CLAUDE.md` and the
+register. **Nothing that landed in that tree has been lost.**
+
+**One concrete instance where this document's insurance covered a gap in the
+coordinator's**, recorded because it is the only way to tell whether either net
+was worth having. The coordinator's stray capture holds 9 **untracked** files but
+does **not** cover modified **tracked** files. `CLAUDE.md` and the register were
+modified tracked files throughout that window. What actually covered them was
+`can-it-ford-bundles/2026-08-17/maintree-snapshot-2310/`, whose patch was
+verified to reapply cleanly onto 777567a.
+
+That is a gap in the coordinator's net rather than a failure of it, and it cost
+nothing in the end because the work was committed. It is worth recording only
+because the two nets turn out to be complementary: **untracked files and modified
+tracked files are different exposures and need different captures**, and a future
+session should take both rather than assume either is sufficient.
 
 ### The consequence that does need action
 

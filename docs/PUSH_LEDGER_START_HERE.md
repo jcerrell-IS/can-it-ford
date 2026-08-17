@@ -27,17 +27,20 @@ Work on Vista and LS6 that was never fetched here is also outside all of this
 
     /Users/josie/can-it-ford-bundles/          <- outside the repo, on the same disk
       refresh_bundle.sh                        <- re-take the snapshot
-      watch_side_a.sh                          <- guards the orphaned register
+      watch_register_merge.sh                  <- guards the merge (watch_side_a.sh retired)
       refresh_log.tsv                          <- every artifact, bytes + sha256 + verdict
       2026-08-17/
-        ALL-refs-2207.bundle                   507,790,278 B  138 refs  self-contained
-        ALL-refs-MINUS-credentials-2207.bundle 507,748,793 B  119 refs  no credential branch
-        INCREMENTAL-all-branches-2207.bundle     8,079,152 B   33 refs  needs origin
-        uncommitted-2207/                      dirty worktrees, patches + tarballs, mode 0700
+        ALL-refs-2251.bundle                   507,891,648 B  142 refs  self-contained
+        ALL-refs-MINUS-credentials-2251.bundle 507,831,989 B  123 refs  no credential branch
+        INCREMENTAL-all-branches-2341.bundle     8,372,242 B   33 refs  needs origin, NEWEST
+        uncommitted-2341/                      dirty worktrees, patches + tarballs, mode 0700
+        incoming/                              captured from Vista, mode 0700
 
-Current at **349 at-risk commits** (commits that exist on no remote), across 33
-branches. **`ALL-refs-2207.bundle` is the only one that stands alone**; the
-incremental restores only alongside a copy of `origin` (section 1).
+Current at **391 at-risk commits** (commits that exist on no remote) across 33
+branches, as of the 23:41 refresh. That number climbs all evening; re-run the
+refresh rather than trusting it. **`ALL-refs-2251.bundle` is the only one that
+stands alone**; the incremental restores only alongside a copy of `origin`, and
+the pair together reconstructs current state (section 1).
 
 Older dated artifacts are superseded, not deleted. Always use the newest.
 
@@ -64,7 +67,9 @@ verifying a **transfer** (section 1).
 
     git init --bare /path/to/recovered.git
     git -C /path/to/recovered.git fetch \
-        /Users/josie/can-it-ford-bundles/2026-08-17/ALL-refs-2207.bundle 'refs/heads/*:refs/heads/*'
+        /Users/josie/can-it-ford-bundles/2026-08-17/ALL-refs-2251.bundle 'refs/heads/*:refs/heads/*'
+    git -C /path/to/recovered.git fetch \
+        /Users/josie/can-it-ford-bundles/2026-08-17/INCREMENTAL-all-branches-2341.bundle 'refs/heads/*:refs/heads/*'
     git clone /path/to/recovered.git /path/to/work -b <branch>
 
 Lost uncommitted work instead? Snapshots are in `uncommitted-<HHMM>/<worktree>/`:
@@ -79,46 +84,33 @@ restored, and a real checkout produced a byte-identical `sim_standing.py`
 
 ## 5. The register collision: 2a, then 2b
 
-Two additive edits to one file in two places. **Side A is orphaned**: 104
-register lines and 73 CLAUDE.md lines sit uncommitted in the main checkout with
-no session owning them. **Side B's branch is intact but its worktree was
-deleted**, and its process (pid 10363) is still alive with a dead working
-directory (section 13).
+**Step 1 is DONE.** Side A was committed as `790d999` on `claude/add-ci-checks`, carrying both `CLAUDE.md` and the register. Verified: register 760 with zero uncommitted delta, `CLAUDE.md` 823 with zero delta. Side B is untouched at 1455 on `claude/fork-register-reconcile`.
 
-The merge itself is measured clean: `git merge-file` exit 0, zero conflict
-markers, **1559 = 1455 + 104**. CLAUDE.md has no collision at all.
+**Both sides are now in git history on separate branches, so neither can silently disappear.** What is left is an ordinary two-branch merge. Re-derived from committed objects: `git merge-file` exit 0, 0 conflict markers, **1559 = 1455 + 104**.
 
-**Step 1, side A, needs a human.** Abort if the count is not 760.
-
-    cd /Users/josie/can-it-ford
-    wc -l docs/CANONICAL_CORRECTIONS_REGISTER_2026-08-06.md      # MUST be 760
-    git commit -m "<msg>" -- CLAUDE.md docs/CANONICAL_CORRECTIONS_REGISTER_2026-08-06.md
-
-**Step 2a, re-create the tree BEFORE asking pid 10363 to do anything.**
+**Step 2a, re-create side B's tree BEFORE asking pid 10363 to act.** Its working directory was deleted; the branch is fine.
 
     git -C /Users/josie/can-it-ford worktree add \
       .claude/worktrees/fork-register-reconcile claude/fork-register-reconcile
 
-Never `--force` a branch that is checked out elsewhere.
+Never `--force` a branch checked out elsewhere.
 
-**Step 2b, merge the SHA from step 1, never the branch name. Then confirm:**
+**Step 2b, merge the SHA `790d999`, never the branch name. Then confirm by count and by content:**
 
-    wc -l docs/CANONICAL_CORRECTIONS_REGISTER_2026-08-06.md      # MUST be 1559
+    git show claude/fork-register-reconcile:docs/CANONICAL_CORRECTIONS_REGISTER_2026-08-06.md | wc -l
+    # MUST be 1559.  1455 = side A vanished.  760 = side B vanished.
+    # Neither raises a conflict marker, which is why the count is the test.
 
-**1455 means side A vanished. 760 means side B did. Neither raises a conflict
-marker**, which is why the line count is the test and `git merge` exiting 0 is
-not (section 6).
-
-A watchdog is running on side A and alerts on any change with a restore command
-attached. **It is a watchdog, not an owner: it cannot commit, and it dies with
-its session.**
+A watchdog now guards the **merge** rather than side A: it alerts if side B's
+register leaves 1455 and says whether it landed on 1559 or on a loss. It dies
+with its session.
 
 ## 6. The off-machine decision, Josie's
 
 | # | destination | consequence |
 |---|---|---|
 | **1 (recommended)** | encrypted external volume | offline, no third party |
-| 2 | private GitHub repo | quick, but hands 508 MB incl. unresolved CCSA material to a third party |
+| 2 | private GitHub repo | quick; the licence objection is gone, so the only question left is the credential content |
 | 3 | TACC `$WORK` | blocked on MFA, and those machines already hold the unrotated tokens |
 | 4 | plain cloud sync | **disqualified**: this project has already had an iCloud-synced token exposed |
 
@@ -139,9 +131,9 @@ That leaves the credential axis alone, and it splits cleanly:
   encrypted destination, or the credentials dead first** (none rotated). Restore
   test must print **77**.
 
-    cp .../ALL-refs-2207.bundle /Volumes/<NAME>/canford-2026-08-17/
-    shasum -a 256 /Volumes/<NAME>/canford-2026-08-17/ALL-refs-2207.bundle
-    # MUST print 50596650be7efd516e0039237ba1e1385fdb33d61e519b7c7827bb60be714083
+    cp .../ALL-refs-2251.bundle /Volumes/<NAME>/canford-2026-08-17/
+    shasum -a 256 /Volumes/<NAME>/canford-2026-08-17/ALL-refs-2251.bundle
+    # MUST print 655aca8e583e75e8935bc1963f177358fbda83f54737b88240ee579487231d9e
     git clone --mirror <copied bundle> /tmp/restore-check
     git -C /tmp/restore-check for-each-ref refs/heads | wc -l     # MUST print 77
 
@@ -154,11 +146,12 @@ and redo (section 1).
 
 1. **Off-machine copy.** Needs a destination. Nothing else closes the
    one-disk exposure above.
-2. **Register step 1.** Orphaned side, no owner, unchanged since it was written.
-3. **TACC.** `ssh vista` and `ssh ls6`, once each with the 6-digit token; both
-   hosts are reachable and only MFA is blocking. Note `scripts/tacc.sh`
-   **returns exit 0 even when SSH fails**, so parse its output, never `$?`
-   (section 11).
+2. **Register step 2a/2b.** Step 1 is DONE (`790d999`). What remains is
+   re-creating side B's worktree and doing an ordinary merge, expecting 1559.
+3. **TACC: DONE for the capture, still open for anything else.** The socket came
+   back and Vista held 2 unprotected commits plus the uncommitted
+   `G = 9.80665 -> 9.81` fix, all captured (section 11). Note `scripts/tacc.sh`
+   **returns exit 0 even when SSH fails**, so parse its output, never `$?`.
 
 Also unhandled, and not mine to do: `scripts/canford_monitor.sh` is still
 uncommitted in `concurrent-session-safety-570b39`, and it is the only copy of
