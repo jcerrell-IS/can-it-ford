@@ -142,3 +142,43 @@ UNVERIFIED:
 4. Neither test catches a quotation that is accurate at both ends but **omits an
    interior clause** with an ellipsis. Several of my quotes do that legitimately;
    verifying them would require reading each source passage in full.
+
+---
+
+## 7. Unit 53: em-dash compliance, and a broken test that printed a clean pass
+
+D2 found four em-dashes in its own entry-point document, against the standing global
+rule ("No em-dashes, anywhere, in any response, in any file written"). I had never
+run that check on my own files.
+
+**Result, across all 43 of my files (37 documents plus the data TSVs):**
+
+```
+em-dash U+2014 : 0      CLEAN, the rule holds
+en-dash U+2013 : 13     all in data TSVs, all verbatim source data
+detector sanity check on a known em-dash string: 1   (proves the test fires)
+```
+
+**The 13 en-dashes stay, and changing them would be an error.** They are:
+paper titles (`Vehicle-Water Interaction`, `fluid-structure interaction problems`,
+`Fluid-Rigid Coupling`), year ranges from reference records (`2001-2017`,
+`1950-2004`), and **six occurrences inside a real filename on disk**. Editing a
+title corrupts a citation; editing the filename breaks the path. The standing rule
+governs prose I write, not metadata I transcribe.
+
+### 7a. The near-miss, which is the part worth keeping
+
+**My first attempt printed `TOTAL em-dash lines: 0` and was completely broken.**
+`/usr/bin/grep -c` exits **1** when the count is zero, so my `|| echo 0` fallback
+appended a second zero, every `[ "$n" -gt 0 ]` comparison failed with
+`integer expression expected: 0\n0`, and **no file could ever have been reported**.
+The totals were structurally incapable of being non-zero.
+
+It looked exactly like a clean pass.
+
+**This is the third false-zero-shaped event in this dispatch**: unit 36's was real
+and cost five retracted claims, unit 43's grep-vs-source check needed a control to
+trust, and this one was caught only because the error text scrolled past above the
+reassuring total. The rule I keep re-learning: **a zero is worth nothing without a
+positive control proving the detector fires.** The re-run includes one, which is why
+its zero is reportable and the first one is not.
