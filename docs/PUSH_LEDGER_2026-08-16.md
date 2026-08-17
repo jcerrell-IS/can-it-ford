@@ -607,7 +607,7 @@ hunks all fall inside lines 19 to ~650 of the base. They cannot overlap.
 
 | side | tree | owner | evidence |
 |---|---|---|---|
-| **B**, the 1455-line register | `.claude/worktrees/fork-register-reconcile` | **`D4 REGISTER-RECONCILE`, live** | pid 10363, `claude --model opus --effort max --name "D4 REGISTER-RECONCILE"`, cwd is that worktree, pane `canford:4` |
+| **B**, the 1455-line register | `.claude/worktrees/fork-register-reconcile` **(SINCE DELETED, see section 13)** | **`D4 REGISTER-RECONCILE`, process still alive, working tree gone** | pid 10363, `claude --model opus --effort max --name "D4 REGISTER-RECONCILE"`, pane `canford:4`. Its cwd no longer exists |
 | **A**, the +104 uncommitted | main checkout `/Users/josie/can-it-ford` | **NOBODY** | no `claude` process anywhere has the main tree as cwd. The only process there is pid 98633, `bash .../canford_monitor.sh`, the round-3/4 monitor |
 
 **This is the finding that makes the plan necessary. Side A is orphaned.** The
@@ -646,10 +646,18 @@ because it has no owner and side B does.**
   **Abort if** `wc -l` is not 760: someone edited it since 15:07 and the merge
   arithmetic below no longer holds, so re-measure before proceeding.
 
-**Step 2. Owner: `D4 REGISTER-RECONCILE`, and only after step 1 lands.** Merge
-the **commit SHA from step 1, never the branch name**: `git merge <branch>`
-silently picked up an unrelated live session's commit in this repo on
-2026-08-13.
+**Step 2. AMENDED, see section 13. The named owner no longer has a working
+tree.** `.claude/worktrees/fork-register-reconcile` was removed. The branch and
+all 23 of its commits are intact, and the register is still 1455 lines on it, so
+**nothing is lost**, but step 2 can no longer be done in place. Re-create a tree
+first:
+
+    git -C /Users/josie/can-it-ford worktree add \
+      /Users/josie/can-it-ford/.claude/worktrees/fork-register-reconcile claude/fork-register-reconcile
+
+Then, and only after step 1 lands, merge the **commit SHA from step 1, never the
+branch name**: `git merge <branch>` silently picked up an unrelated live
+session's commit in this repo on 2026-08-13.
 
 **Step 3. Owner: `D4 REGISTER-RECONCILE`. Confirm by content, not by exit code.**
 
@@ -1106,6 +1114,78 @@ without the pipe, fsck genuinely exits 0 with zero output lines. **Any
 byte-compared on-disk file content for one branch (section 12 above) rather than
 all 77; for the other 76 the guarantee rests on git's content addressing plus a
 clean `fsck`, which is strong but is not the same measurement.
+
+---
+
+## 13. EVENT: ten worktrees were removed mid-session. Nothing was lost
+
+Caught by re-taking the standalone bundle and noticing its ref count had fallen
+from **147 to 137**. That is the kind of number it would have been easy to shrug
+at, so it was chased down.
+
+### What happened
+
+**read.** The worktree count went from **28 to 17**. Ten were removed:
+
+    fork-chrono-eval          fork-render-3class     fork-three-class
+    fork-credentials-DO-NOT-PUSH   fork-s3-rescue-2026-08-14   fork-validation
+    fork-protocol             fork-scene             fork-vista-triage
+    fork-register-reconcile
+
+These are exactly the round-3/4 dispatch trees. Two further worktrees
+(`render-realism-vehicle-water-f9127a`, `retire-coupling-module-f20ad4`) are now
+on a detached HEAD at 1a868f3 rather than on their old branches; both branches
+carried 0 at-risk commits, so that costs nothing.
+
+### Nothing was lost, and here is why that is a measurement and not a hope
+
+1. **Every branch survives with its commit count unchanged**, verified
+   individually: `fork-register-reconcile` 23, `fork-moving-driver` 30,
+   `fork-protocol` 23, `fork-three-class` 19, `fork-render-3class` 19,
+   `fork-scene` 16, `fork-validation` 15, `fork-chrono-eval` 12,
+   `fork-vista-triage` 11, `fork-s3-rescue` 8,
+   `credential-exposure-...-DO-NOT-PUSH` 8. Side B's register is still
+   **1455 lines** on its branch.
+2. **The 10 lost refs were all `worktrees/<name>/HEAD` pseudo-refs**, never
+   branches. The new standalone still carries 77 `refs/heads`, 34
+   `refs/remotes`, 8 `refs/tags`, identical to the old one.
+3. **Every commit those pseudo-refs pointed at is present in the new bundle.**
+   Checked by fetching the new standalone into a virgin bare repo and testing
+   each of the 27 old worktree-HEAD SHAs: **absent 0**.
+4. **None of the 10 ever held uncommitted work.** Across six snapshots spanning
+   the session, the only dirty trees were ever the main checkout,
+   `concurrent-session-safety-570b39`, `ctx-census`,
+   `orphan-rescue-token-rotate-d72f90`,
+   `warpmpm-flood-vehicle-investigation-1b62fa`, and later `r5-exposure` and
+   `r5-research`. **No deleted worktree appears in any snapshot index.**
+5. **The removal was clean.** `.git/worktrees/` holds **no stale metadata** for
+   any of the ten, so they were pruned rather than `rm -rf`d. That matters
+   because `git worktree remove` **refuses a dirty tree** without `--force`, so a
+   clean removal is itself independent evidence there was nothing uncommitted in
+   them.
+
+### The consequence that does need action
+
+**`D4 REGISTER-RECONCILE` (pid 10363) is still running, and its working
+directory no longer exists.** It is the named owner of step 2 in section 6. Its
+branch is intact, so its work is safe, but it cannot run a `git` command from a
+deleted cwd. Section 6 step 2 is amended with the `git worktree add` needed to
+give it a tree back.
+
+### I cannot date the removal, and I am not going to guess
+
+The system clock is inconsistent with this session's own timestamps. `date`
+reports **2026-08-17 21:58 BST**, while the session hook reported **00:58 BST**
+and my own commit minutes earlier is stamped **2026-08-17 00:53:02 +0100**. A
+control confirms the discrepancy is real rather than a formatting artefact:
+`touch` followed by `stat` returns 21:58, agreeing with `date` and not with the
+commit stamps, a gap of roughly 21 hours.
+
+So directory mtimes cannot be converted into a session timeline, and **no
+removal time is stated here**. The event is bounded only by my own observations:
+28 worktrees when I audited them in section 1, 17 when I re-took the standalone.
+This is the same rule that already applies to elapsed time in this project:
+read it from an authoritative source or do not report it.
 
 ---
 
