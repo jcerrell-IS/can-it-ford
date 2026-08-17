@@ -24,20 +24,27 @@ third-party carve-out.
    licence-silent" is an accurate description of an unpermitted redistribution. It is
    honest, it is better than the current state, and it is **not permission**.
 
-So adopt this **and** keep the geometry decision open. The correct reading is
-"attribution corrected, redistribution still unresolved", never "licensing handled".
+**UPDATED 2026-08-18: Josie reports permission obtained for the CCSA meshes and
+rights permitted on the AR&R paper.** That changes point 3 for those components from
+"an honest description of an unpermitted redistribution" to "a record of the authority
+the redistribution rests on", which is a better notices file and an easier one to
+write. It makes adopting this **more** worthwhile, not less: with permission in hand,
+this file is where a reader finds out that permission exists.
 
-**Severity is not uniform across the components below and should not be flattened:**
+**Severity, updated:**
 
 | Component | Actual violation today? |
 |---|---|
 | ambientCG textures, Poly Haven HDRI | **No.** CC0. Attribution is courtesy, not obligation |
 | `third_party/mpm-engine`, MIT | **No.** Already fully compliant |
-| CCSA decks and derived hulls | **Unresolved**, and the notice does not resolve it |
-| `citations/` PDFs and screenshots | **Probable**, see the citations audit |
+| CCSA decks and derived hulls | **Permission reported 2026-08-18.** Record the body, date and scope here; file the artifact |
+| AR&R report + WRL images | **Permission reported 2026-08-18.** Same |
+| Two CC-licensed `citations/` PDFs | **No.** CC BY and CC BY-NC-ND. Attribute; note NC-ND is narrower than the repo's BSD grant |
+| **16 Smith-Modra-Felder reproductions** | **STILL UNRESOLVED.** Wiley/CIWEM, explicit "© 2019", **no permission reported**. See the citations audit §3 |
 
-Two of the four components need nothing but a courtesy line. Do not let the notices
-file imply the repo was broadly non-compliant; it was not.
+**Only one component is now unresolved, and it is the one nobody has asked about.**
+Do not let a permission covering CCSA and AR&R be read as covering Wiley. Different
+rights holder, different article, no permission reported.
 
 ---
 
@@ -94,12 +101,14 @@ Steve Kan, Rudolf Reichert (George Mason University).
 As the upstream READMEs request: **the CCSA at GMU and the FHWA are acknowledged for
 use of these FE models in this work.**
 
-**Licence status: UNRESOLVED.** The upstream READMEs grant no redistribution right,
-state no licence, and carry no copyright statement. They request acknowledgement and
-disclaim warranty. The CCSA-hosted distribution is licence-silent, and DOI
-10.13021/G8JS5D has an empty rights field. Sponsorship by a federal agency does not
-place contractor-authored work in the public domain. Redistribution permission has
-been neither granted nor refused; it has not been sought.
+**Licence status: permission obtained 2026-08-18, artifact to be filed.** The
+upstream READMEs grant no redistribution right, state no licence, and carry no
+copyright statement; the CCSA-hosted distribution is licence-silent and DOI
+10.13021/G8JS5D has an empty rights field. **Redistribution here therefore rests on
+permission obtained separately, not on any licence in the material.** Record the
+granting body, the date and the scope of that permission in this section, and keep the
+artifact at `docs/E8_PERMISSION_<body>_<date>`, because this notice is the place a
+reader will look for the authority.
 
 ## 2. Geometry derived from component 1
 

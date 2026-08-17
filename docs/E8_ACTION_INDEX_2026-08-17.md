@@ -14,6 +14,43 @@ figure cannot be cited from an early commit.
 
 ---
 
+> ## PERMISSION REPORTED, 2026-08-18. READ THIS FIRST.
+>
+> **Josie reports she has obtained confirmation to use the NCAC/CCSA meshes, and that
+> rights are permitted on the AR&R paper.** [reported in session; **not an artifact I
+> have read**]
+>
+> **This is the outcome E8 was aiming at.** Its rule clears on "written permission **or**
+> a confirmed licence"; this dispatch established there is no licence to confirm, so
+> permission was always the route, and Josie is the only person who could obtain it.
+>
+> **What changes:** the removal recommendations are **suspended**, not executed.
+> Nothing in tier 2 below should be deleted or untracked for the CCSA geometry or the
+> AR&R material.
+>
+> **What does NOT change, and this is the part to be careful about:**
+>
+> | Item | Covered by the reported permission? |
+> |---|---|
+> | CCSA geometry, 4 archives + 14 decks | **Yes, reported.** Pin the scope, see below |
+> | AR&R report + 4 AR&R/WRL images | **Yes, reported.** WRL figures have a different rights holder from the report; worth one line |
+> | **16 Smith-Modra-Felder files** | **NO. Wiley/CIWEM, explicit "© 2019", no permission reported.** Tier 2 item 4 stands unchanged |
+> | Two CC-licensed PDFs | N/A, already licensed |
+> | The 12 credentials | **Entirely unaffected.** Tier 1 item 1 stands unchanged |
+>
+> **Two things still worth doing, and they take minutes:**
+> 1. **File the artifact.** E8 clears on *written* permission, and a DesignSafe DOI is
+>    gated on it (register item 10). Save it as `docs/E8_PERMISSION_<body>_<date>` and
+>    commit. This project has already lost a verified fact because a later audit could
+>    not find its source.
+> 2. **Pin the scope: use, or redistribution?** "Confirmation to use" and "permission to
+>    republish on a public GitHub repo" are different permissions and only the second
+>    clears E8. Use was never in question; redistribution is the whole finding.
+>
+> Nothing has been deleted or reversed on the strength of a verbal report. The analysis
+> costs nothing to keep, and if the permission covers redistribution then the removal
+> options simply never have to be exercised.
+
 ## 1. The three exposures, and why they need different remedies
 
 They are **not equally serious, and they differ in kind, not just size.**
@@ -60,7 +97,9 @@ writing to CCSA, so the repo attributes them properly at the moment they look.
 
 ### Tier 2, needs a decision from you
 
-**3. Choose the geometry remediation.** Note that E8 offers **two** routes to
+**3. Choose the geometry remediation. LARGELY SUPERSEDED 2026-08-18** by the reported
+permission: if it covers redistribution, this decision does not need making at all and
+options 2, 3 and 4 are moot. Read the banner at the top first. Note that E8 offers **two** routes to
 clearance, written permission **or a confirmed licence**, and that the second is
 **closed by evidence**: there is no licence to confirm, established on three
 independent sources (the bundled README, both CCSA download pages, and D1's read of

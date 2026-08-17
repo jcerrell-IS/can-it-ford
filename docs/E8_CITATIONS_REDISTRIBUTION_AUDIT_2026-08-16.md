@@ -38,6 +38,30 @@ Scope note: D1 mines the **content** of these files. This assesses their
 
 ---
 
+> ### PERMISSION REPORTED, 2026-08-18: AR&R rights are permitted
+> **Josie reports that rights are permitted on the AR&R paper.** [reported by Josie in
+> session; **not an artifact I have read**]
+>
+> This **supersedes** this document's finding that the report is licence-silent. That
+> finding stands as a description of the *document*: I verified by validated text
+> extraction that it carries no copyright, licence or permission text of its own.
+> Permission obtained **separately** is a different and better thing, and it is exactly
+> what a licence-silent work requires.
+>
+> **Consequence: the AR&R PDF and the 4 AR&R/WRL images stay. No untracking, no
+> deletion.** That was already the recommendation while terms were unread; it is now
+> the recommendation because rights are confirmed.
+>
+> **Worth pinning, because the same word covers two things:** the AR&R report and the
+> WRL images have **different rights holders on their face** (Engineers Australia
+> published the report; the WRL figures are credited to the UNSW Water Research
+> Laboratory). If the permission is from Engineers Australia it plainly covers the
+> report; whether it reaches the WRL figures is worth one line of confirmation.
+>
+> **Unaffected by this:** the 16 Smith-Modra-Felder files. That is a *Wiley/CIWEM*
+> article with an explicit "© 2019" notice, a different rights holder entirely, and no
+> permission has been reported for it. Section 3 stands unchanged.
+
 ## 1. The finding
 
 > **UNITS. 1 MB = 1,000,000 bytes (decimal SI) throughout this document.**
@@ -84,7 +108,7 @@ answers**, and none matches what my earlier probe suggested.
 |---|---|---|---|---|---|
 | `J Flood Risk Management - 2025 - Dasallas - ...pdf` | 3,484,612 | **10.1111/jfr3.70154** | **gold** | **CC BY** | **PERMITTED** with attribution |
 | `Water Resources Research - 2021 - Wang and Marsooli - ...pdf` | 7,399,829 | **10.1029/2020WR028616** | **hybrid** | **CC BY-NC-ND** | **PERMITTED** with attribution, **non-commercial, no derivatives** |
-| `ARR_Project_10_Stage2_Report_Final.pdf` | 1,115,134 | n/a, report P10/S2/020, ISBN 978-0-85825-948-5 | n/a | **LICENCE-SILENT**, resolved 2026-08-16 | **NOT permitted.** No copyright, licence or permission text anywhere in the extractable text layer. Same category as the CCSA decks |
+| `ARR_Project_10_Stage2_Report_Final.pdf` | 1,115,134 | n/a, report P10/S2/020, ISBN 978-0-85825-948-5 | n/a | **PERMITTED, 2026-08-18** | Josie reports rights are permitted. The document itself carries no licence text, so **the permission is the authority here, not the file**: file the artifact. See the banner below |
 
 **Two of the three PDFs are cleared outright.** 10.88 MB of the 12.00 MB is licensed
 for redistribution. The third, AR&R, was resolved on 2026-08-16 by a purpose-built

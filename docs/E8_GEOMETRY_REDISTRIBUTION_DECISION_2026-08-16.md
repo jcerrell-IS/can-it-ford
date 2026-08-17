@@ -18,6 +18,78 @@ or **[inferred]**.
 
 ---
 
+## 0.0 PERMISSION REPORTED, 2026-08-18. This supersedes the recommendation below.
+
+**Josie reports that she has obtained confirmation to use the NCAC/CCSA meshes, and
+that rights are permitted on the AR&R paper.** [reported by Josie, 2026-08-18, in
+session. **Not an artifact I have read.**]
+
+**This is the route E8 always named, and it is the good outcome.** E8's operative rule
+clears on "written permission **or** a confirmed licence". Everything below establishes
+that no *licence* exists to confirm; **permission is the other route, and Josie is the
+only person who could obtain it.** Her report is the primary source for that fact in a
+way no file read could be, and it is recorded here as such.
+
+**What is now true, and what is still open, stated separately so neither is overstated:**
+
+| | Status |
+|---|---|
+| Permission obtained | **Reported by Josie, 2026-08-18** |
+| The permission artifact (email, letter, licence text) | **Not yet filed in the repo.** See "what to file" below |
+| Whether it covers **public redistribution** or **use** | **NOT YET ESTABLISHED. This is the load-bearing question.** See 0.0.1 |
+| Which body granted it | Reported as NHTSA. See 0.0.2 |
+
+### 0.0.1 The distinction that decides how much this clears
+
+**"Confirmation to use the meshes" and "permission to redistribute them on a public
+GitHub repository" are different permissions, and only the second clears E8.**
+
+This is not pedantry: **use was never in question.** CCSA distributes these models
+precisely so researchers will use them, and nothing in this dispatch ever suggested
+otherwise. The entire E8 finding is about **redistribution**: this repo publishes the
+four upstream archives byte-for-byte, on all 30 public branches, under a BSD 3-Clause
+notice that sublicenses them onward.
+
+So the question that settles it is narrow: **does the confirmation say the models may
+be redistributed or republished, or does it say they may be used?** If the former, E8
+closes and the removal recommendation in section 5 is withdrawn entirely. If the
+latter, E8 stays open exactly as written, and nothing below changes.
+
+### 0.0.2 One thing worth checking, offered as a question rather than an objection
+
+The confirmation is reported as coming from **NHTSA**. The evidence in this document is
+that these specific models are **CCSA/GMU-authored and CCSA-hosted**: both download
+pages are on `ccsa.gmu.edu`, the archives serve from `media.ccsa.gmu.edu`, and the
+bundled READMEs name GMU staff as the contacts. GMU developed them **under contract to
+the FHWA**, and contractor-authored work does not automatically vest in the sponsoring
+agency.
+
+**So it is worth confirming that NHTSA is the body able to grant redistribution of
+CCSA's models**, rather than a body that hosts copies of some of them. It may well be:
+`b0d2664f` records that NHTSA-hosted copies carry an explicit "public information and
+may be distributed or copied" statement, and if the confirmation points at that, **it is
+exactly what is needed and it settles the whole item.** This is a question about scope,
+not a doubt about Josie's word.
+
+### What to file, and why it is worth two minutes
+
+E8 clears on **written** permission. Whatever the confirmation is, save it to
+`docs/E8_PERMISSION_<body>_<date>.<ext>` (email export, letter, screenshot of the terms
+page) and commit it. Two reasons, both practical:
+
+1. **A DesignSafe DOI is gated on this** (register item 10). A reviewer will ask for the
+   artifact, not for a recollection of it.
+2. This project has already had a verified fact deleted because a later audit could not
+   find its source, which is why the AR&R ISBN had to be re-established from the PDF.
+   **Filing the artifact now is what stops that happening to this permission.**
+
+Until the artifact is filed and its scope read, this document keeps its analysis intact
+below. **Nothing has been deleted or reversed on the strength of a verbal report**, and
+nothing needs to be: the analysis costs nothing to keep, and if the permission covers
+redistribution then section 5's options simply never have to be exercised.
+
+---
+
 ## 0. The headline, and why it changes the framing
 
 E8 as written governs **derived** geometry. Its operative rule, quoted in full because
