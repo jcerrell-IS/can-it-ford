@@ -35,6 +35,19 @@ issuable under uncertainty. The project's existing "necessary not sufficient"
 framing is compatible with it and should probably be stated in these terms.
 That framing choice is not mine to make, so I am flagging it, not asserting it.
 
+> **DOWNGRADED, unit 17, same session. I resolved this sentence's three
+> references and checked the one I could read. It does NOT support the
+> asymmetry.** Reference [17] is Easterling 2001 (`10.2172/780290`), whose
+> abstract I read verbatim: it does not address any asymmetry between accepting
+> and rejecting a prediction, and does not give a decision rule for uncertainty
+> spanning a threshold. References [2] (Oberkampf, Trucano and Hirsch 2004) and
+> [3] (Eca, Dowding and Roache 2020) remain unchecked, one closed-access and one
+> with no abstract exposed. **So the asymmetry is 0 of 3 supported, 1 of 3
+> checked and not supporting. Treat it as the catalog's own synthesis, not a
+> literature finding, and do not put it in the paper on this evidence.** Full
+> working, and the genuinely citable result that came out of the same read, in
+> `docs/R5_RESEARCH_ASYMMETRY_DOWNGRADED_2026-08-17.md`.
+
 The same summary also prescribes the component chain: test the reconstruction
 against surveyed road geometry, test MPM separately on analytical flow,
 dam-break, contact and rigid-obstacle cases, and "report conservation residuals,
