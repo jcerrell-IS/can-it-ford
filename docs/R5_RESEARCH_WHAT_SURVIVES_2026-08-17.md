@@ -1,0 +1,112 @@
+# R5-D1: WHAT SURVIVES
+
+Date 2026-08-17. Branch `claude/r5-research`, 50 commits, 31 documents, 7 data files.
+
+**This is the only document you need to read before citing anything I produced.**
+The errata index lists corrections; this lists conclusions. If the two disagree,
+this file is newer and wins.
+
+**Why it exists:** this dispatch has a high withdrawal rate. Thirty errata, four
+outright retractions, and two of my units were largely dismantled by adversarial
+review after I published them. The surviving results are good, but they sit beside
+superseded ones, and that layer is the main obstacle to using this work.
+
+---
+
+## A. SAFE TO CITE
+
+Each of these was verified by primary source or by measurement, and each survived
+adversarial review or was never challenged.
+
+| # | Result | Detail in |
+|---|---|---|
+| A1 | **The Elicit CSV holds 41 unique papers across 42 rows.** Yields: **10/41** report a depth-velocity threshold, **9/41** a friction coefficient. Always give the denominator | `ELICIT_AND_CATALOG_MINE` |
+| A2 | **The paper's bibliography has 21 entries; only 3 are actually `\cite`d** in any `.tex`. Those 3 were verified clean against Crossref | `ELICIT_AND_CATALOG_MINE`, `BIB_DOI_SUPPLEMENT` |
+| A3 | **Catalog recall is roughly 50%**, measured three independent ways. This is the dispatch's most robust quantitative finding | `ELICIT_AND_CATALOG_MINE`, `CENSUS_ATTEMPT` |
+| A4 | **The citation-graph fixpoint is NOT achievable.** Topic-bounded traversal from 32 seeds grew 32 -> 92 -> 174 and touched 3,575 works by hop 2. Independently re-confirmed 2026-08-17: mean branching **82.2**, hop-3 upper bound **3.3M** nodes. **Any count from this literature is a floor, and that is now measured rather than assumed** | `CENSUS_ATTEMPT`, section D below |
+| A5 | **Scale reporting needs two labels, not one.** "State the model scale" is insufficient; a `value_basis` label is required or model-scale values get read as full-scale. Row 7 is **1:24**, and its threshold is **~118x** below the others under Froude | `THRESHOLD_TABLE`, erratum 2, 14 |
+| A6 | **Four bibliography DOIs verified and supplied**, plus one year error (`ccsa2010yaris`, bib 2010 vs DataCite 2016). The year audit found the error **isolated**, 8 of 9 correct | `BIB_DOI_SUPPLEMENT` |
+| A7 | **All four shipped NCAC/CCSA packages are TRACKED in the public repo**, all four carry an acknowledgement request and a liability disclaimer, **none carries any licence word**. The paper names CCSA/GMU but not FHWA; the README asks for both. **One-word fix** | `NCAC_README_TERMS` |
+| A8 | **`martinezgomariz2018` resolves to `10.1111/jfr3.12262`** (title match, score 1). Crossref `issued` 2016 online-first, print issue 2018. Confirmed independently by the Elicit CSV holding both versions as rows 6 and 16 | `SEALING_AND_FLAG4` |
+| A9 | **The experimental literature does not agree on vehicle sealing.** Across twelve studies: water-filled, foam-filled watertight, ingress-permitted and solid-rigid all appear. Per the source, Xia 2011 differed from others by up to an order of magnitude and Shu 2011 corrected it | `SEALING_AND_FLAG4` |
+| A10 | **Hull geometry, measured directly:** volume **3.5427387900160743 m3**, watertight, `body_count` 1, euler -442 so **genus 222**. `1100/3.542739 = 310.4942`, reproducing CLAUDE.md's canonical 310.494 | `FLOODFILL_MEASURED` |
+| A11 | **The audit's flood-fill volumes are not reproducible as values.** 4.5628 does not reproduce; the comparable quantity is the **sealed cavity**, where two implementations disagree **2.1x** (1.020 vs 2.161 m3); the operation is **bistable and grid-phase fragile** near 22.2 mm | `FLOODFILL_MEASURED` |
+| A12 | **L-2 stands as written.** I proposed amending it and then **refuted my own amendment** from the AR&R primary source: the 3.0 m/s cap exists for human stability and occupant egress, so it is administrative, not vehicle-derived | `PROPOSED_AMENDMENTS`, erratum 3 |
+
+## B. RETIRED. Do not cite these, including from my own earlier documents
+
+Every one of these appears somewhere in my committed work as a positive claim.
+
+| Retired claim | Correct position |
+|---|---|
+| "42 unique papers"; yields /42 | **41 unique**; yields **/41** |
+| "8 catalogued DOIs are cited in the paper" | **3** are `\cite`d |
+| "85 simulations, catalog recall 27.1%" | **WITHDRAWN**, contaminated with aircraft, water-exit and deep-sea papers |
+| "137 catalog-absent DOIs, 101 uncited" | **109** and **88** |
+| "strict class: 15 found, 8 missed" | **14** and **7** |
+| "jfr3.12885 appears in 27 files" | **25** by the stated method |
+| "row 7 is roughly twenty times below the others" | **~118x** under Froude, and it is **1:24**, not 1:10 |
+| "model-scale thresholds are non-conservative" (unqualified) | **mode-dependent**: true for sliding, false for floating |
+| "we already cite Al-Qadami 2023" | **WITHDRAWN**; it is a `note` on a `{{VERIFY}}` stub |
+| "three novelty axes survive" | **two**: MPM-vs-SPH and geometry provenance |
+| "the FORD/NO-FORD evidentiary asymmetry" | **RETIRED**; both readable references failed to support it |
+| "the draft resolution claim, 3.8x better resolved" | **NOT CLEAN**, 6 blocking issues; rewritten to cell size only |
+| "`10.26190/unsworks/27433` is dated 2024" | **2017**; DataCite is the registering agency, not OpenAlex |
+| "g64_m1100 fails P-2, a leakage defect" | **not leakage**; P-2 counts water in the axis-aligned bbox |
+| "P-2's null baseline is 10.3 to 11.0%" | **11.30 to 14.90%**, so the null exceeds the 0.10 gate in 17 of 17 |
+| The **hull-density escalation** (unit 34/35) | **RETRACTED**, 5 of 8 claims wrong. Only genus 222 survives |
+| The **flood-fill interpretation** (unit 39 draft) | **FOUR WITHDRAWN**: the ~6.8 agreement, the "35%" step, the cabin/window mechanism, and "density falls 11-52%" |
+| "Nihei brake state bears on our 16 SLIDE verdicts" | **direction wrong**; lower friction increases sliding, so SLIDEs get more room |
+
+## C. UNVERIFIED, and why
+
+1. **I have read none of the twelve primary flood-stability studies.** A9 is a
+   transcription of one corpus document's table, not my reading of Xia or Shu.
+2. **The corpus is only partly readable.** `corpus_inventory` reports the main root
+   **TCC-denied in part, 308 of 387 files**. **79 files, 20.4%, are invisible to
+   every search in this dispatch.** No absence claim from corpus search is complete.
+3. **`solidify_watertight` n=8890 is inherited, not mine**, and disagrees with the
+   inventory's 8905 (register E3) by -0.168%. The reviewer who produced it could
+   not close the gap.
+4. **The shell correction `filled - 0.5*surf`** behind A11's 2.161 is a first-order
+   heuristic, validated on an icosphere and on the open branch only.
+5. **Five Elicit rows carry no DOI** and were not resolved.
+6. **Three full texts remain closed-access** (He 2026, Zhang 2023, Lyu 2023) and the
+   **Nihei corrigendum** needs one browser-minute; it is gold OA but bot-filtered.
+
+## D. The judgement call, recorded
+
+The coordinator offered a fixpoint citation traversal or this consolidation, and
+asked for a reason rather than momentum. **I chose consolidation, because option
+one is not untried: it was run in unit 5 and recorded as not achievable in erratum
+9.** The coordinator's framing that I "ran only ONE HOP of it" is not what happened;
+unit 5 ran a topic-bounded bidirectional traversal for two complete rounds and I
+stopped a third in progress. Read directly from that run log:
+
+```
+round 1:  expanded 32   nodes 1092   vehicle+water 124   next frontier  92
+round 2:  expanded 124  nodes 3575   vehicle+water 298   next frontier 174
+round 3:  stopped by me, in progress
+```
+
+**The frontier grew at every round with the topic filter already applied.** I
+re-measured from the raw-graph side on 2026-08-17 as an independent check: mean
+out-degree 35.2, in-degree 47.0, **branching 82.2**, giving hop-1 493, hop-2 40,508
+and hop-3 **3,328,421** nodes.
+
+Two independent measurements, one filtered and one raw, agree it does not converge.
+And the filtered variant cannot deliver the property that made it attractive: a
+relevance test applied at every node is not a closed operation, so its recall is
+exactly as unmeasurable as the keyword catalogs it was meant to replace.
+
+**What that buys, and it is not nothing:** "N fording simulations exist and N is a
+floor" is now a **measured** limitation with a growth curve behind it, rather than
+an assumption. That is a citable statement about the literature's structure.
+
+## E. Handed off, not mine to close
+
+- **D4**: the sealing axis at `warpmpm/vehicle.py:175` (2.165x in `solid_volume`);
+  the P-2 null baseline of 11.30-14.90%; the MPM boundary-condition cluster.
+- **D2 / E8**: the NCAC README terms and the DataCite rights evidence.
+- **Paper owner**: the FHWA acknowledgement one-word fix; four verified DOIs; the
+  `xie2023physgaussian` 2023-vs-2024 decision.

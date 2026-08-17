@@ -1,8 +1,15 @@
 # R5-D1 index and errata: read this before using any number I produced
 
-Date 2026-08-16, **last updated 2026-08-17 (unit 38)**. Branch
-`claude/r5-research`, **47 commits** ahead of `origin/main` (`1a868f3`), HEAD
-`4a0c374`. **29 documents, 7 data files.** Note that `777567a`, the base my work
+> ## READ `R5_RESEARCH_WHAT_SURVIVES_2026-08-17.md` FIRST
+>
+> **That file supersedes this one as the entry point.** This document is an errata
+> table: it lists *corrections*. `WHAT_SURVIVES` lists *conclusions*, split into
+> safe-to-cite, retired-never-cite, and unverified. If the two disagree,
+> `WHAT_SURVIVES` is newer and wins. Come here for the working behind a correction.
+
+Date 2026-08-16, **last updated 2026-08-17 (unit 41)**. Branch
+`claude/r5-research`, **51 commits** ahead of `origin/main` (`1a868f3`).
+**32 documents, 7 data files.** Note that `777567a`, the base my work
 sits on, is itself unpushed.
 
 ---
@@ -74,6 +81,8 @@ rest is grouped by what it answers.
 | `R5_RESEARCH_BIB_DOI_SUPPLEMENT_2026-08-17.md` | **four verified DOIs the bibliography lacks**, and its year audit |
 | `R5_RESEARCH_UNCITED_AUDIT_2026-08-17.md` | audit of my own uncited method; it mostly holds |
 | `R5_RESEARCH_HULL_VOLUME_CONFLICT_2026-08-17.md` | **RETRACTED escalation.** Read section 0 only; the rest is kept as a worked error |
+| `R5_RESEARCH_WHAT_SURVIVES_2026-08-17.md` | **START HERE.** Safe-to-cite / retired / unverified in one page. Supersedes this index |
+| `R5_RESEARCH_SEALING_AND_FLAG4_2026-08-17.md` | **for D4**: the literature's vehicle-sealing split; and FLAG-4 closed (`martinezgomariz2018` = `10.1111/jfr3.12262`) |
 | `R5_RESEARCH_FLOODFILL_MEASURED_2026-08-17.md` | **the measurement that closes the above.** The audit's 4.5628 does not reproduce; sealed cavity disagrees **2.1x**; operation is bistable near **22.2 mm**. Ships its script |
 | `R5_RESEARCH_NCAC_README_TERMS_2026-08-17.md` | **for D2**: the NCAC READMEs are tracked, carry an acknowledgement request, and no licence |
 | `R5_RESEARCH_MPM_BOUNDARY_CLUSTER_2026-08-17.md` | **for D4**: the BC anchor and a 2024 paper on the open BC question |
