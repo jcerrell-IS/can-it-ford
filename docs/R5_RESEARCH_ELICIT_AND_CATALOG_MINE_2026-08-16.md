@@ -97,8 +97,15 @@ Counting rows that carry an actual numeral and are not a "not mentioned" string:
 | `[09]` driving force or rolling friction coefficient | 9 | 42 |
 | union of the two | **11** | **42** |
 
-So the mineable corpus is 11 papers, not 42, and certainly not 1,345. Anyone
-quoting this CSV must give the denominator 42 and the yield 11.
+> **DENOMINATOR CORRECTED, unit 12.** The CSV holds **41 unique papers** across 42
+> rows: rows 6 and 16 are the same article (`10.1111/jfr3.12262`, online-first
+> 2016 vs print 2018). Read these as **/41**. Numerators unchanged. They are also
+> **lower bounds**: that duplicated paper was extracted twice and returned a full
+> threshold set in one row and "Not mentioned" in the other.
+
+So the mineable corpus is 11 papers, and certainly not 1,345. Anyone quoting this
+CSV must give the denominator (**41 unique papers**, see the correction above) and
+the yield, and must say both are lower bounds.
 
 ## 3. Every threshold the CSV actually reports
 
@@ -227,6 +234,12 @@ the two catalog files themselves so a catalog cannot count as its own citation.
 unique DOIs across 14 catalogs plus both Elicit outputs : 489
   cited anywhere in the repo                            :  37   ( 7.6%)
   cited in paper/ overleaf_sync/ deliverables/          :   8   ( 1.6%)
+```
+> **CORRECTED, unit 7 section 5.** That 8 is **string presence anywhere under
+> those directories**, including notes and superseded copies. Against bibliography
+> structure and real `\cite` keys: **7** DOIs sit in a genuine `doi =` field and
+> only **3** are actually cited in any `.tex`. Use **3** for "reaches the paper".
+```
   uncited anywhere                                      : 452   (92.4%)
 ```
 
@@ -291,8 +304,10 @@ UNVERIFIED, and each needs a primary-source read:
    the contribution, which needs the full text of both.
 4. How many of the 14 self-propelled rows are experiments rather than reviews.
 5. The remaining 452 uncited DOIs are catalogued and cross-referenced, not read.
-6. The five catalogs with two divergent sha256 copies: I used one copy per
-   catalog, so a DOI present only in the other copy is not in the 472.
+6. ~~The five catalogs with two divergent sha256 copies: I used one copy per
+   catalog, so a DOI present only in the other copy is not in the 472.~~
+   **CLOSED AT ZERO, unit 3 section 7.** All five pairs have identical DOI sets,
+   so 472 is already the union and no DOI was missed.
 
 No physics number, force, distance or verdict count is asserted in this document,
 so the physics-skeptic gate does not apply to it. Every simulation-derived

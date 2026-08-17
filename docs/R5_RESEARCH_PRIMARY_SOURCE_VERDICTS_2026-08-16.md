@@ -215,7 +215,15 @@ This is a full-scale experimental finding that the **brake state**, not the
 vehicle, sets the effective friction, and that it moves the critical sliding
 velocity by roughly a factor of three. Our runs carry a single `floor_friction`
 of 0.55 with no representation of brake state, and 16 of our 17 canonical
-verdicts are SLIDE. So our SLIDE verdicts implicitly assume a braked vehicle, and
+verdicts are SLIDE.
+
+> **DIRECTION CORRECTED by D4 `cf9e85c`.** Releasing the brake *lowers* friction,
+> which *increases* sliding, so a SLIDE verdict cannot be undone by it and the 16
+> become **more** robust. The run actually at risk is the single STUCK one,
+> `sweepV_g64_v0p5`, which goes STUCK to SLIDE. My inference below is
+> directionally right and consequentially wrong.
+
+So our SLIDE verdicts implicitly assume a braked vehicle, and
 Nihei 2025 is direct experimental evidence that an unbraked one slides at
 substantially lower velocity. Tagged INFERRED as to the consequence for our runs;
 the experimental result itself is READ DIRECTLY.

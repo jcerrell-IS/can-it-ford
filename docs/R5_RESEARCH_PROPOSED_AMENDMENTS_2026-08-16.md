@@ -99,6 +99,13 @@ And this DOI is **already cited in `paper/can_it_ford_references_IEEE.bib`**, on
 of only 8 catalogued DOIs that reach the paper at all. So the project already
 cites the work that occupies two of the three axes I proposed as its novelty.
 
+> **WITHDRAWN, unit 7 section 4. This paragraph is wrong.** We do **not** cite
+> Al-Qadami 2023. The DOI appears only inside the `note` field of a *different*
+> entry, `alqadami2022`, whose title is the literal placeholder
+> `{{VERIFY: exact title}}`, and that entry is cited in **zero** `.tex` files. The
+> true position is worse than written here: the paper does not cite its closest
+> comparator at all.
+
 **Revised recommendation for L-7.** Do not claim full scale or a stability
 verdict as novel. What survives is narrower and should be stated as such: the
 **method** (a GPU particle method, MPM, rather than mesh CFD or CFD plus MBD) and
@@ -217,6 +224,9 @@ regardless of how a title is worded. Concretely, and all free and scriptable:
 
 1. **Seed** with the 32 papers now known, not with a query.
 2. **Iterate to fixpoint** on OpenAlex `cites:` and `referenced_works`, not one
+   *(**CORRECTED, unit 5**: not achievable at acceptable precision. The frontier
+   grew 32 to 92 to 174 and two hops already touch 3,575 works. The bounded route
+   is step 3, the author-cluster sweep.)*
    hop. Stop when a round adds nothing new, which is the same loop-until-dry
    stopping rule unit 2 recommends for settling.
 3. **Cluster by author**, because this field is a handful of groups: Iowa plus

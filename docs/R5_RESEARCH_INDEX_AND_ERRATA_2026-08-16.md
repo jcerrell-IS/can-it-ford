@@ -36,6 +36,17 @@ with a number in an earlier unit, the number below wins.**
 | 19 | the FORD/NO-FORD evidentiary asymmetry is "the single most valuable thing found in this whole dispatch" | unit 16 §1 | **RETIRED, superseding unit 17's downgrade.** Both readable references now read in FULL: Easterling 2001 has zero hits across 2,818 lines, and Eca/Dowding/Roache 2020 states the pass/fail accept-reject aspect "is not included in V&V20-2009". **Contradicted by one of its own cited sources.** Do not use it. Survivors: Easterling's "model validation is not binary", and a V&V 20 scope limit on extrapolation | units 17, 18 |
 | 20 | the Nihei corrigendum is "blocked on publisher access" | unit 3 §5a, §8 | **overstated, withdrawn.** It is **gold OA, CC-BY, publishedVersion**. The barrier is host-level bot filtering plus `tdm-reservation`, a **fetch** status, not a **licence** status. My own flag file already had this right; unit 3 was never brought into line | D4 `7acb95f`, corrected unit 3 |
 
+**EVERY ORIGINAL IS NOW MARKED IN PLACE, unit 23.** This index only helps a
+reader who opens *it*. D4 read unit 3 directly and picked up a stale claim
+(erratum 20), which proved the index alone is not enough. I audited all twenty
+errata against their original locations and found **seven** that had been
+corrected here but never marked at the source: the /42 denominators, the
+divergent-copy caveat, the "8 cited in the paper" count, the "we already cite
+Al-Qadami" paragraph, the iterate-to-fixpoint recommendation, the strict 15/8
+counts, and the brake-state direction. All seven now carry an in-place
+correction block pointing at the unit that superseded them. **A reader landing on
+any single document now gets the correction without needing this file.**
+
 **Three of these matter most.** #3, because I proposed the L-2 amendment and my
 own test killed it. #8, because it means the paper does not cite its closest
 comparator at all. #11, because a contaminated percentage is exactly the kind of

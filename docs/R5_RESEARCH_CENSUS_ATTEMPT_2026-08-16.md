@@ -74,7 +74,7 @@ Over the 3,575-node two-hop neighbourhood, data in
 ```
 road-vehicle-in-floodwater simulations found : 15
   present in the 489-DOI corpus              :  7
-  MISSED by all 14 catalogs                  :  8
+  MISSED by all 14 catalogs                  :  8      <- CORRECTED to 7, unit 6 s4
 ```
 
 **The eight the catalogs missed**, all hand-checked against their titles:
