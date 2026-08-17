@@ -24,12 +24,13 @@ third-party carve-out.
    licence-silent" is an accurate description of an unpermitted redistribution. It is
    honest, it is better than the current state, and it is **not permission**.
 
-**UPDATED 2026-08-18: Josie reports permission obtained for the CCSA meshes and
-rights permitted on the AR&R paper.** That changes point 3 for those components from
-"an honest description of an unpermitted redistribution" to "a record of the authority
-the redistribution rests on", which is a better notices file and an easier one to
-write. It makes adopting this **more** worthwhile, not less: with permission in hand,
-this file is where a reader finds out that permission exists.
+**UPDATED 2026-08-18: permission has been obtained for the CCSA meshes and the AR&R
+paper. It applies globally and permits republication.** That changes point 3 for those
+components from "an honest description of an unpermitted redistribution" into **a
+record of the authority the redistribution rests on**, which is a better notices file
+and an easier one to write. **It makes adopting this more worthwhile, not less:** with
+permission in hand, this file is where a reader finds out that permission exists, and
+it is where a DesignSafe reviewer will look for it.
 
 **Severity, updated:**
 
@@ -37,8 +38,8 @@ this file is where a reader finds out that permission exists.
 |---|---|
 | ambientCG textures, Poly Haven HDRI | **No.** CC0. Attribution is courtesy, not obligation |
 | `third_party/mpm-engine`, MIT | **No.** Already fully compliant |
-| CCSA decks and derived hulls | **Permission reported 2026-08-18.** Record the body, date and scope here; file the artifact |
-| AR&R report + WRL images | **Permission reported 2026-08-18.** Same |
+| CCSA decks and derived hulls | **CLEARED 2026-08-18.** Permission granted, global, permits republication. Record body + date here; file the artifact |
+| AR&R report + WRL images | **CLEARED 2026-08-18.** Same |
 | Two CC-licensed `citations/` PDFs | **No.** CC BY and CC BY-NC-ND. Attribute; note NC-ND is narrower than the repo's BSD grant |
 | **16 Smith-Modra-Felder reproductions** | **STILL UNRESOLVED.** Wiley/CIWEM, explicit "© 2019", **no permission reported**. See the citations audit §3 |
 
@@ -101,7 +102,8 @@ Steve Kan, Rudolf Reichert (George Mason University).
 As the upstream READMEs request: **the CCSA at GMU and the FHWA are acknowledged for
 use of these FE models in this work.**
 
-**Licence status: permission obtained 2026-08-18, artifact to be filed.** The
+**Licence status: PERMITTED. Permission obtained 2026-08-18, global, permits
+republication. Artifact to be filed.** The
 upstream READMEs grant no redistribution right, state no licence, and carry no
 copyright statement; the CCSA-hosted distribution is licence-silent and DOI
 10.13021/G8JS5D has an empty rights field. **Redistribution here therefore rests on

@@ -38,9 +38,9 @@ Scope note: D1 mines the **content** of these files. This assesses their
 
 ---
 
-> ### PERMISSION REPORTED, 2026-08-18: AR&R rights are permitted
-> **Josie reports that rights are permitted on the AR&R paper.** [reported by Josie in
-> session; **not an artifact I have read**]
+> ### CLEARED 2026-08-18: AR&R rights are permitted, globally, including republication
+> **Josie confirms rights are permitted on the AR&R paper, globally, including
+> republication.** [confirmed by Josie in session, 2026-08-18]
 >
 > This **supersedes** this document's finding that the report is licence-silent. That
 > finding stands as a description of the *document*: I verified by validated text
@@ -108,7 +108,7 @@ answers**, and none matches what my earlier probe suggested.
 |---|---|---|---|---|---|
 | `J Flood Risk Management - 2025 - Dasallas - ...pdf` | 3,484,612 | **10.1111/jfr3.70154** | **gold** | **CC BY** | **PERMITTED** with attribution |
 | `Water Resources Research - 2021 - Wang and Marsooli - ...pdf` | 7,399,829 | **10.1029/2020WR028616** | **hybrid** | **CC BY-NC-ND** | **PERMITTED** with attribution, **non-commercial, no derivatives** |
-| `ARR_Project_10_Stage2_Report_Final.pdf` | 1,115,134 | n/a, report P10/S2/020, ISBN 978-0-85825-948-5 | n/a | **PERMITTED, 2026-08-18** | Josie reports rights are permitted. The document itself carries no licence text, so **the permission is the authority here, not the file**: file the artifact. See the banner below |
+| `ARR_Project_10_Stage2_Report_Final.pdf` | 1,115,134 | n/a, report P10/S2/020, ISBN 978-0-85825-948-5 | n/a | **CLEARED, 2026-08-18** | Rights permitted, global, includes republication. The document itself carries no licence text, so **the permission is the authority here, not the file**: file the artifact. See the banner below |
 
 **Two of the three PDFs are cleared outright.** 10.88 MB of the 12.00 MB is licensed
 for redistribution. The third, AR&R, was resolved on 2026-08-16 by a purpose-built

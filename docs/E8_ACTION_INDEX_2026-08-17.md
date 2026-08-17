@@ -14,42 +14,39 @@ figure cannot be cited from an early commit.
 
 ---
 
-> ## PERMISSION REPORTED, 2026-08-18. READ THIS FIRST.
+> ## E8 IS CLEARED, 2026-08-18. READ THIS FIRST.
 >
-> **Josie reports she has obtained confirmation to use the NCAC/CCSA meshes, and that
-> rights are permitted on the AR&R paper.** [reported in session; **not an artifact I
-> have read**]
+> **Permission has been obtained for the NCAC/CCSA meshes and the AR&R paper. It
+> applies globally and permits republication.** [confirmed by Josie in session]
 >
-> **This is the outcome E8 was aiming at.** Its rule clears on "written permission **or**
-> a confirmed licence"; this dispatch established there is no licence to confirm, so
-> permission was always the route, and Josie is the only person who could obtain it.
+> **E8's rule clears on "written permission or a confirmed licence".** This dispatch
+> established on three independent sources that no licence exists to confirm, so
+> permission was always the route. It has been obtained.
 >
-> **What changes:** the removal recommendations are **suspended**, not executed.
-> Nothing in tier 2 below should be deleted or untracked for the CCSA geometry or the
-> AR&R material.
+> **Everything in tier 2 below about removing, untracking or rewriting geometry or
+> AR&R material is MOOT. Do not do any of it.** No file is to be deleted on E8 grounds.
 >
-> **What does NOT change, and this is the part to be careful about:**
+> **One item is NOT covered, and it is the only licence work left in this dispatch:**
+> the **16 Smith-Modra-Felder files** are a *Wiley / CIWEM* article with an explicit
+> "© 2019" notice legible in the reproduction. **A permission from the mesh rights
+> holders does not reach a different publisher's article.** The fix costs nothing and
+> needs nobody: keep the four scalars, cite the DOI (the article is free to read),
+> untrack the images. Tier 2 item 4.
 >
-> | Item | Covered by the reported permission? |
-> |---|---|
-> | CCSA geometry, 4 archives + 14 decks | **Yes, reported.** Pin the scope, see below |
-> | AR&R report + 4 AR&R/WRL images | **Yes, reported.** WRL figures have a different rights holder from the report; worth one line |
-> | **16 Smith-Modra-Felder files** | **NO. Wiley/CIWEM, explicit "© 2019", no permission reported.** Tier 2 item 4 stands unchanged |
-> | Two CC-licensed PDFs | N/A, already licensed |
-> | The 12 credentials | **Entirely unaffected.** Tier 1 item 1 stands unchanged |
+> **The 12 credentials are entirely unaffected. Still zero rotated. Tier 1 item 1 is
+> now the single most important thing in this document.**
 >
-> **Two things still worth doing, and they take minutes:**
-> 1. **File the artifact.** E8 clears on *written* permission, and a DesignSafe DOI is
->    gated on it (register item 10). Save it as `docs/E8_PERMISSION_<body>_<date>` and
->    commit. This project has already lost a verified fact because a later audit could
->    not find its source.
-> 2. **Pin the scope: use, or redistribution?** "Confirmation to use" and "permission to
->    republish on a public GitHub repo" are different permissions and only the second
->    clears E8. Use was never in question; redistribution is the whole finding.
+> **Two housekeeping items, neither a doubt:** file the permission artifact at
+> `docs/E8_PERMISSION_<body>_<date>` because a DesignSafe DOI is gated on it (register
+> item 10) and a reviewer will ask for the document; and record the granting body and
+> date in `THIRD_PARTY_NOTICES.md`, which is now the place a reader looks to learn that
+> permission exists.
 >
-> Nothing has been deleted or reversed on the strength of a verbal report. The analysis
-> costs nothing to keep, and if the permission covers redistribution then the removal
-> options simply never have to be exercised.
+> **What the geometry analysis is still for:** it is no longer a case for removal, it
+> is the provenance record behind the permission. That the archives are byte-identical
+> to upstream by SHA384, that the models are CCSA-authored and CCSA-hosted, and that
+> the material carries no licence of its own, are exactly what a reviewer will want to
+> see *behind* a permission. None of it is wasted.
 
 ## 1. The three exposures, and why they need different remedies
 
@@ -89,7 +86,9 @@ Corrections to apply to it are in `CREDENTIAL_ROTATION_CHECKLIST_2026-08-16.md` 
   every minute or two. **You cannot win a deletion race; revocation ends it in one
   action.**
 
-**2. Adopt the LICENSE carve-out and `THIRD_PARTY_NOTICES.md`.**
+**2. Adopt the LICENSE carve-out and `THIRD_PARTY_NOTICES.md`, and record the
+permission in it.** Now more worthwhile than before, not less: with permission granted,
+this file is where a reader and a DesignSafe reviewer find out that it exists.
 `E8_THIRD_PARTY_NOTICES_DRAFT_2026-08-16.md`, sections 2 and 3, ready to paste. All
 attributions are verified at source; no `[CONFIRM]` items remain. **This needs nobody's
 permission and is a strict improvement under every other outcome.** Do it *before*
@@ -97,9 +96,10 @@ writing to CCSA, so the repo attributes them properly at the moment they look.
 
 ### Tier 2, needs a decision from you
 
-**3. Choose the geometry remediation. LARGELY SUPERSEDED 2026-08-18** by the reported
-permission: if it covers redistribution, this decision does not need making at all and
-options 2, 3 and 4 are moot. Read the banner at the top first. Note that E8 offers **two** routes to
+**3. ~~Choose the geometry remediation.~~ MOOT 2026-08-18.** Permission is granted and
+permits republication, so there is no remediation to choose. Options 1 to 4 in
+`E8_GEOMETRY_REDISTRIBUTION_DECISION_2026-08-16.md` §5 are withdrawn and marked
+superseded in place. **Nothing to do.** Note that E8 offers **two** routes to
 clearance, written permission **or a confirmed licence**, and that the second is
 **closed by evidence**: there is no licence to confirm, established on three
 independent sources (the bundled README, both CCSA download pages, and D1's read of

@@ -18,75 +18,65 @@ or **[inferred]**.
 
 ---
 
-## 0.0 PERMISSION REPORTED, 2026-08-18. This supersedes the recommendation below.
+## 0.0 E8 IS CLEARED. Permission granted, global, includes republication.
 
-**Josie reports that she has obtained confirmation to use the NCAC/CCSA meshes, and
-that rights are permitted on the AR&R paper.** [reported by Josie, 2026-08-18, in
-session. **Not an artifact I have read.**]
+**Josie confirms, 2026-08-18: permission to use the NCAC/CCSA meshes has been
+obtained, it applies globally, and it permits republication. Rights are likewise
+permitted on the AR&R paper.** [confirmed by Josie in session, 2026-08-18]
 
-**This is the route E8 always named, and it is the good outcome.** E8's operative rule
-clears on "written permission **or** a confirmed licence". Everything below establishes
-that no *licence* exists to confirm; **permission is the other route, and Josie is the
-only person who could obtain it.** Her report is the primary source for that fact in a
-way no file read could be, and it is recorded here as such.
+**E8's operative rule is satisfied by its own terms.** The rule clears on "written
+permission **or** a confirmed licence". This document establishes on three independent
+sources that no licence exists to confirm. **Permission is the other route, and it has
+been obtained.** Josie is the only person who could have obtained it, and her
+confirmation is the primary source for it.
 
-**What is now true, and what is still open, stated separately so neither is overstated:**
+### What this closes
 
-| | Status |
+| Item | Status |
 |---|---|
-| Permission obtained | **Reported by Josie, 2026-08-18** |
-| The permission artifact (email, letter, licence text) | **Not yet filed in the repo.** See "what to file" below |
-| Whether it covers **public redistribution** or **use** | **NOT YET ESTABLISHED. This is the load-bearing question.** See 0.0.1 |
-| Which body granted it | Reported as NHTSA. See 0.0.2 |
+| CCSA/NCAC archives and decks, 160,322,098 B, on 30 branches | **CLEARED for republication** |
+| Derived hulls, 2 `.ply` | **CLEARED**, they inherit component 1's position |
+| The 6 renders depicting the hull | **CLEARED**, same |
+| AR&R report + 4 AR&R/WRL images | **CLEARED**, rights permitted |
+| **Section 5's remediation options** | **MOOT. Withdrawn. Do not execute any of them.** |
 
-### 0.0.1 The distinction that decides how much this clears
+**No file is to be removed, untracked or history-rewritten on E8 grounds.** Options 1
+through 4 in section 5 existed only for the no-permission case, which no longer
+obtains. They are retained below as a record of what was considered, clearly marked as
+superseded, not as pending work.
 
-**"Confirmation to use the meshes" and "permission to redistribute them on a public
-GitHub repository" are different permissions, and only the second clears E8.**
+### What this does NOT close, and it is one item
 
-This is not pedantry: **use was never in question.** CCSA distributes these models
-precisely so researchers will use them, and nothing in this dispatch ever suggested
-otherwise. The entire E8 finding is about **redistribution**: this repo publishes the
-four upstream archives byte-for-byte, on all 30 public branches, under a BSD 3-Clause
-notice that sublicenses them onward.
+**The 16 Smith-Modra-Felder files remain unresolved.** That is a *Wiley / CIWEM*
+article carrying an explicit "© 2019 The Chartered Institution of Water and
+Environmental Management (CIWEM) and John Wiley & Sons Ltd", legible inside the
+reproduction. **A permission from the mesh rights holders does not reach a different
+publisher's article.** See `E8_CITATIONS_REDISTRIBUTION_AUDIT_2026-08-16.md` §3, where
+the recommendation is unchanged and costs nothing: keep four scalars, cite the DOI,
+untrack the images.
 
-So the question that settles it is narrow: **does the confirmation say the models may
-be redistributed or republished, or does it say they may be used?** If the former, E8
-closes and the removal recommendation in section 5 is withdrawn entirely. If the
-latter, E8 stays open exactly as written, and nothing below changes.
+### Two housekeeping items, neither of them a doubt
 
-### 0.0.2 One thing worth checking, offered as a question rather than an objection
+1. **File the permission artifact** at `docs/E8_PERMISSION_<body>_<date>`. Not because
+   the permission is in question, but because **a DesignSafe DOI is gated on it**
+   (register item 10) and a reviewer will ask for the document. Filing it also means
+   the next audit finds the authority in the repo rather than having to re-derive it,
+   which is exactly the failure that forced the AR&R ISBN to be re-established this
+   round.
+2. **Record the granting body and date in `THIRD_PARTY_NOTICES.md`**, which is now the
+   place a reader looks to find out that permission exists. That file changes from a
+   description of an unpermitted redistribution into a record of the authority the
+   redistribution rests on, which is a better document and an easier one to write.
 
-The confirmation is reported as coming from **NHTSA**. The evidence in this document is
-that these specific models are **CCSA/GMU-authored and CCSA-hosted**: both download
-pages are on `ccsa.gmu.edu`, the archives serve from `media.ccsa.gmu.edu`, and the
-bundled READMEs name GMU staff as the contacts. GMU developed them **under contract to
-the FHWA**, and contractor-authored work does not automatically vest in the sponsoring
-agency.
+### What the analysis below is still for
 
-**So it is worth confirming that NHTSA is the body able to grant redistribution of
-CCSA's models**, rather than a body that hosts copies of some of them. It may well be:
-`b0d2664f` records that NHTSA-hosted copies carry an explicit "public information and
-may be distributed or copied" statement, and if the confirmation points at that, **it is
-exactly what is needed and it settles the whole item.** This is a question about scope,
-not a doubt about Josie's word.
-
-### What to file, and why it is worth two minutes
-
-E8 clears on **written** permission. Whatever the confirmation is, save it to
-`docs/E8_PERMISSION_<body>_<date>.<ext>` (email export, letter, screenshot of the terms
-page) and commit it. Two reasons, both practical:
-
-1. **A DesignSafe DOI is gated on this** (register item 10). A reviewer will ask for the
-   artifact, not for a recollection of it.
-2. This project has already had a verified fact deleted because a later audit could not
-   find its source, which is why the AR&R ISBN had to be re-established from the PDF.
-   **Filing the artifact now is what stops that happening to this permission.**
-
-Until the artifact is filed and its scope read, this document keeps its analysis intact
-below. **Nothing has been deleted or reversed on the strength of a verbal report**, and
-nothing needs to be: the analysis costs nothing to keep, and if the permission covers
-redistribution then section 5's options simply never have to be exercised.
+It is no longer a case for removal. It remains the **provenance record**: what the
+material is, where it came from, that the archives are byte-identical to the upstream
+releases by SHA384, that the models are CCSA-authored and CCSA-hosted, and that the
+material carries no licence of its own. **That last point is precisely why permission
+was the right thing to obtain**, and it is what a reviewer will want to see behind the
+permission. None of it is wasted by the clearance; it is the evidence the clearance
+rests on.
 
 ---
 
@@ -137,8 +127,10 @@ This also means E8's central question now rests on **three independent origins**
 one cited three times: a bundled file, two live web pages, and DOI metadata, gathered
 by two sessions using different methods.
 
-**That scope is wrong, and it understates the exposure by an order of magnitude in
-the direction that matters.** [read]
+### The commissioned scope understated the exposure by an order of magnitude
+
+The dispatch scoped this as four `.ply` files plus fifteen renders (see the top of this
+section). **That scope is wrong, and it is wrong in the direction that matters.** [read]
 
 `vehicle_geometry_research/` on `origin/main` holds **176,252,809 bytes across 30
 files (176.25 MB)**. Of that:
@@ -402,7 +394,13 @@ which is the mechanism that would put this permanently beyond reach.
 
 ## 5. Remediation options, with consequences
 
-Ordered by increasing cost. **None has been executed.**
+> **SUPERSEDED 2026-08-18. Do not execute any option below.** Permission has been
+> obtained and it permits republication, so the no-permission case these options were
+> written for no longer obtains. They are kept as a record of what was considered and
+> why, which is useful if the scope of the permission is ever narrowed. **Nothing here
+> is pending work.**
+
+Ordered by increasing cost. **None has been executed, and none is now to be.**
 
 **Option 0. Fix the LICENSE misstatement. (Independent of everything else.)**
 Add a third-party notice excluding `vehicle_geometry_research/` from the BSD grant,
