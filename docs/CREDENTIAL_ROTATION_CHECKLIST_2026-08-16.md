@@ -3,6 +3,16 @@
 Dispatch R5-D2, 2026-08-16. Branch `claude/r5-exposure`.
 **No credential value appears in this file. Fingerprints only.**
 
+> ### DEFERRED by Josie, 2026-08-18. This file stays runnable.
+>
+> Josie has deprioritised the credential rotation. **That is her call and this document
+> does not argue with it.** It is marked **deferred, not resolved**, because a future
+> reader needs to know which happened: **12 credentials named, 0 rotated**, and every
+> row below is still accurate and still executable whenever she wants it.
+>
+> Nothing here is deleted on the strength of the deferral. The cost of keeping a
+> finished diagnosis on disk is zero; the cost of having to rebuild it later is not.
+>
 > ### Three things to carry into every row below
 >
 > **1. The public surface is 35 BRANCHES, not one tree, and it GREW from 30 while

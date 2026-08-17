@@ -22,7 +22,16 @@ or **[inferred]**.
 
 **Josie reports, 2026-08-18: permission for the NCAC/CCSA meshes has been obtained, it
 applies globally, and it permits republication. Rights are likewise permitted on the
-AR&R paper.** [**her report**, in session. **Artifact not yet filed, and not read by me
+AR&R paper. She further reports, later the same day, that permission is BLANKET:
+"everything is permitted and nothing prohibited", which she confirms extends to the
+Wiley/CIWEM article and to the UNSW WRL figures.**
+
+**How to state that outside this repo, and it matters.** The accurate form is *"the
+project reports permission from each rights holder"*, **not** *"this material is
+unrestricted"*. The four bodies (CCSA/GMU, Engineers Australia, Wiley/CIWEM, UNSW WRL)
+granted separately; a blanket summary is a convenience for internal reading, and a
+third party who redistributes CCSA material on the strength of a sentence in this repo
+would be relying on something no licence file supports. Record the grants per body.** [**her report**, in session. **Artifact not yet filed, and not read by me
 or by the coordinator.** A second report arriving later does not upgrade this one:
 **two reports are still two reports.**]
 

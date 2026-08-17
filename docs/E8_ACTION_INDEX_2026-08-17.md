@@ -14,11 +14,28 @@ figure cannot be cited from an early commit.
 
 ---
 
-> # ONE THING IS STILL OPEN: 12 CREDENTIALS, ZERO ROTATED.
+> # STATUS, 2026-08-18
 >
-> Every licence question in this dispatch is now closed on reported permission. **The
-> credentials are not a licence question and were never covered by any of it.** If you
-> read nothing else here, read tier 1 item 1.
+> **Licence: closed.** Josie reports blanket permission across all rights holders,
+> including WRL. Nothing in this repository is held back on licence grounds.
+>
+> **Credentials: DEFERRED by Josie, not resolved.** 12 named, 0 rotated. She has
+> deprioritised them and that is her call to make. Recorded as **deferred rather than
+> closed**, because the two are different and a future reader will need to know which
+> this was. **The diagnosis is complete and runnable whenever she wants it**, in
+> `CREDENTIAL_ROTATION_CHECKLIST_2026-08-16.md` and the source document's own
+> `ROTATION LIST, START HERE`.
+>
+> Stated once, factually, and not repeated anywhere else in this document set:
+> credentials are not a licence question, so a permission grant does not reach them.
+> The live items are a GitHub fine-grained PAT with write access to this **public**
+> repo exported into every Mac shell, three Anthropic OAuth tokens (one in iCloud and
+> in TACC backups), two Hugging Face tokens, a W&B key, and an unidentified secret.
+> A document enumerating which machines hold which unrotated tokens is public on 1 of
+> 35 branches. Measured, not asserted: 5 of 5 backup files in `~/.claude/backups/`
+> carried a live token format, newest 57 s old, spanning 6 minutes, so the copies
+> self-clone faster than deletion can remove them. **Revocation at the issuer is the
+> only remedy that reaches any of it, and it stays available at any time.**
 >
 > ---
 >
