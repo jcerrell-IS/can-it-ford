@@ -134,3 +134,76 @@ UNVERIFIED:
 4. Whether any given paper belongs in the bibliography is an editorial judgement.
 5. Their TSV inherits its own README's blind spot: 37 catalog rows carry no DOI and
    are not diffable, so the uncited set is a floor, not a census.
+
+---
+
+## 6. Unit 50: confirmed on the compiled PDF, and it caught an error in my own entry point
+
+FLAG-6 blocks reading the live Overleaf head. But a **compiled PDF** is a different
+artifact needing no authentication, and `public_release/Cerrell_CanItFord_paper.pdf`
+is dated **2026-08-04**, later than every `.tex` copy I had.
+
+### 6a. The finding holds on the rendered artifact
+
+Extracted with `pdftotext`. **Positive controls first**, because a zero without them
+is worthless:
+
+```
+CONTROLS   Yaris 16   MPM 19   "material point" 6   Shand 4
+PROBES     Sulsky 0   Bardenhagen 0   "Generalized Interpolation" 0   GIMP 0
+           "history-dependent" 0   "volumetric locking" 0
+           "de Vaucorbeil" 0   Nairn 0
+```
+
+The paper says **MPM 19 times** and cites no MPM method literature. Its rendered
+bibliography is 14 references, none of them methodological:
+
+```
+[1] NWS Turn Around Don't Drown      [8]  Heydinger et al (vehicle inertia)
+[2] Thorpe et al (PVWM)              [9]  Hsiao and Kumar (NeRF-driven)
+[3] Shand et al (AR&R)               [10] Shah et al (vehicles in motion)
+[4] Smith, Modra, Felder             [11] Xia et al (vehicle stability)
+[5] Kerbl et al (3DGS)               [12] CCSA (Yaris FE model)
+[6] Xie et al (PhysGaussian)         [13] Azhar et al (SPH plus lab)
+[7] Genesis Authors                  [14] Malone et al (FRED)
+```
+
+**This narrows FLAG-6 rather than closing it:** absence is now established through
+**2026-08-04**, not 2026-08-02, and on a compiled artifact rather than source.
+
+### 6b. A2 in my own WHAT_SURVIVES was wrong, and I introduced the error
+
+Checking the PDF's reference list contradicted one of my twelve safe-to-cite rows.
+A2 read: *"The paper's bibliography has 21 entries; only 3 are actually `\cite`d in
+any `.tex`."*
+
+Measured:
+
+| file | `\cite` commands | distinct keys |
+|---|---:|---:|
+| `paper/conference_101719.tex` | 21 | **11** |
+| `paper/canonical_2026-08-02/conference_101719_1.tex` | 35 | **14** |
+| compiled PDF, 2026-08-04 | - | **14 rendered**, 51 inline |
+
+The canonical file's 14 keys match the compiled PDF's 14 references exactly, which
+is a good sign that both are being read correctly.
+
+**Where the "3" came from, and why this matters more than the number.** Erratum 4
+is correct as written: of the **8 catalogued DOIs**, 3 are `\cite`d. That claim is
+scoped to catalogued DOIs. **When I consolidated it into WHAT_SURVIVES I dropped the
+qualifier**, and a true statement about 8 catalogued DOIs became a false statement
+about all 21 bibliography entries.
+
+**That is the same failure mode as my three truncated quotations**: dropping a
+qualifying clause and leaving a sentence that reads cleanly and says something
+false. It is worse here, because it happened in the document whose entire purpose is
+to stop people acting on my withdrawn claims, and it survived my own verification
+passes, which checked errata *numbering* and manifest coverage but never re-derived
+the errata *content*.
+
+**The consolidation itself needed an adversarial pass and did not get one.** That is
+the honest lesson, and it applies to any summary document, not only mine.
+
+**This does not weaken section 3.** The MPM-foundations finding is confirmed
+independently on the compiled PDF, and a paper citing 14 references rather than 3
+makes the absence of every MPM method paper more striking, not less.
