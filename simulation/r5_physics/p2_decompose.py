@@ -9,7 +9,7 @@ I carried that into a document on the reviewer's word. One source cited twice is
 sources, and it is the most consequential thing I am carrying, so this script derives it
 myself from the rollout artifacts, with no shared code path with the reviewer's scripts.
 
-WHAT P-2 IS, read from source (`sim_standing.py:463-465`):
+WHAT P-2 IS, read from source (`sim_standing.py:307-308`):
 
     lo_v, hi_v = veh.min(0), veh.max(0)
     inbox = ((w >= lo_v) & (w <= hi_v)).all(axis=1)
@@ -20,7 +20,7 @@ at the worst frame. Nothing in that expression restricts to the hull interior.
 
 THE DECOMPOSITION. At each run's own argmax frame, in-box water is split into:
   in_hull    water in a cell OCCUPIED by a vehicle particle, using the driver's own
-             voxel-occupancy test (`sim_standing.py:186-195`), i.e. genuine passthrough
+             voxel-occupancy test (`sim_standing.py:116`), i.e. genuine passthrough
   box_void   water in the bounding box but not in an occupied cell, i.e. the empty space
              a box inevitably encloses around a car-shaped object
 
@@ -94,7 +94,7 @@ def decompose(path):
     lo, hi = veh.min(0), veh.max(0)
     inbox = ((ww >= lo) & (ww <= hi)).all(axis=1)
 
-    # Driver's own voxel-occupancy test, sim_standing.py:186-195.
+    # Driver's own voxel-occupancy test, sim_standing.py:116.
     vk = np.floor(veh / h).astype(np.int64)
     wk = np.floor(ww / h).astype(np.int64)
     base = vk.min(0)

@@ -1,6 +1,6 @@
 """Free-surface depth at a FIXED station, versus the driver's moving-window diagnostic.
 
-WHY. `local_depth_footprint` (sim_standing.py:473-475) takes the 99.5th percentile of water
+WHY. `local_depth_footprint` (sim_standing.py:315-317) takes the 99.5th percentile of water
 z inside the vehicle's CURRENT bounding box. That box slides downstream as the vehicle
 drifts, into the pile-up against the closed downstream wall. So the diagnostic entangles
 two different things: the water getting deeper, and the measurement window moving into
@@ -35,7 +35,7 @@ RUNS = os.environ.get(
     # Data lives in the MAIN checkout, not in this worktree; a checkout of this branch
     # alone cannot reproduce these numbers. Override with CANFORD_RUNS. Flagged by review.
     "/Users/josie/can-it-ford/renders/yaris_render_s1/_incoming/*/rollout.npz")
-PCTL = 99.5          # identical to sim_standing.py:470,474
+PCTL = 99.5          # identical to sim_standing.py:313,317
 MIN_SEL = 20         # identical guard
 
 
@@ -48,7 +48,7 @@ def active_water(z, frame_water):
     Why this exists. `outflow_deactivate.py` retires water by setting
     `particle_selection` non-zero. A retired particle does NOT leave: advection is inside
     `g2p_particle` (`mpm_utils.py:1026`) behind the gate at `:1049`, so it **freezes in
-    place and stays in the array**. `sim_standing.py:451` dumps `w = x[:n_water]` with no
+    place and stays in the array**. `sim_standing.py:294` dumps `w = x[:n_water]` with no
     selection filter, so frozen ghosts land in `rollout.npz` looking exactly like water.
 
     Every depth statistic here is a high percentile of water z, and the ghosts are by

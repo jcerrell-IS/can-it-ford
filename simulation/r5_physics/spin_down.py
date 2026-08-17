@@ -8,7 +8,7 @@ I broke it. This file is the fix.
 It also corrects three defects the same review found in the numbers themselves:
 
   1. SETTLE LABEL. The figures were reported as "settle 8" and were computed frame 0 to 89.
-     The recorded series starts AT the kick (sim_standing.py:240 applies it right after the
+     The recorded series starts AT the kick (sim_standing.py:161 applies it right after the
      8 settle frames), so frame 0 is the kick frame and a settle-8 window is frames 8..89.
      Both are reported here, labelled.
 
@@ -52,7 +52,7 @@ def active_water(z, frame_water):
     Why this exists. `outflow_deactivate.py` retires water by setting
     `particle_selection` non-zero. A retired particle does NOT leave: advection is inside
     `g2p_particle` (`mpm_utils.py:1026`) behind the gate at `:1049`, so it **freezes in
-    place and stays in the array**. `sim_standing.py:451` dumps `w = x[:n_water]` with no
+    place and stays in the array**. `sim_standing.py:294` dumps `w = x[:n_water]` with no
     selection filter, so frozen ghosts land in `rollout.npz` looking exactly like water.
 
     Every depth statistic here is a high percentile of water z, and the ghosts are by

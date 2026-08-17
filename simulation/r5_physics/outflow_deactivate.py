@@ -22,7 +22,7 @@ path. The earlier "gates the P2G scatter at six sites" was wrong.
 THE ARTIFACT THAT MAKES THIS DANGEROUS TO RUN, AND IT IS THE DEFAULT
 --------------------------------------------------------------------
 **Nothing in this repository filters retired particles out of any diagnostic.**
-`sim_standing.py:451` dumps `w = x[:n_water]` with no selection filter, so frozen ghosts
+`sim_standing.py:294` dumps `w = x[:n_water]` with no selection filter, so frozen ghosts
 land in `rollout.npz`. `sim_standing.py:473-474` and `simulation/r5_physics/depth_station.py`
 both take the 99.5th percentile of water z, and the ghosts are **by construction exactly
 the particles that were above `z_target`, frozen there forever**.
@@ -37,7 +37,7 @@ current diagnostics, is an artifact. `retired_mask()` exists so callers can filt
 
 WHAT THIS IS NOT
 ----------------
-* **NOT an outflow.** The +x face is closed twice: `sim_standing.py:212-214` adds a slip
+* **NOT an outflow.** The +x face is closed twice: `sim_standing.py:132-137` adds a slip
   plane at `x = lim - wall` and `:215` calls `add_domain_walls()`. My own F-7
   (`OPTION_A_SESSION1_FINDINGS.md:170-171`) says an outflow BC must skip that call or use a
   variant leaving +x open. This module does neither. **As written it is a mass sink placed
