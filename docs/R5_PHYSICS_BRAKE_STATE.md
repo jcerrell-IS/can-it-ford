@@ -55,7 +55,28 @@ are different runs.
 > **CAVEAT ADDED 2026-08-16, and it was missing from the version below.** D1's own source
 > record says verbatim: "**Status: OPEN.** Do not treat the numbers below as final until
 > someone with publisher access reads the corrigendum." The corrigendum
-> `10.1016/j.rineng.2025.107527` exists and is **unread**. Every quantitative row in this
+> `10.1016/j.rineng.2025.107527` exists and is **unread**.
+>
+> **THE ASK IS SMALLER THAN RECORDED, 2026-08-17. NO PUBLISHER ACCESS IS NEEDED.** Resolved
+> live via scholar-sidekick and scite **[read]**: the corrigendum is
+> **gold open access, CC-BY, `publishedVersion`**, titled "Corrigendum to 'Full-scale
+> experimental assessment of passenger vehicle stability in flooding flow' [Results in
+> Engineering 28 (2025) 107189]", by Nihei, Onomura and Bando. Scite also confirms the
+> original carries an editorial notice of status **"has erratum"** pointing at it.
+>
+> So "until someone with publisher access reads it" overstates the barrier. **Anyone with a
+> normal browser session can read it**, and this is a Josie action of about thirty seconds,
+> not an institutional-access problem.
+>
+> What blocks *me* is host-level bot filtering, not licensing. Two routes tried and both
+> **403**: `sciencedirect.com/science/article/pii/S2590123025035820` and the scite
+> full-text resolver. That is the same pattern as MDPI and the DTU front end, and the same
+> lesson: **a licence status and a fetch status are different things, and recording the
+> second as the first inflates the blocker.**
+>
+> Also worth carrying: the original is confirmed **full-scale** by its own title. D1's
+> separate finding that scale-model sliding results err unsafe therefore does **not** apply
+> to this source, which is the direction that would otherwise have weakened section 5. Every quantitative row in this
 > section inherits that. Separately, "0.3x lower" is **ambiguous** between a factor of 0.3
 > and a 30% reduction; D1 and I independently chose the same reading, and one source read
 > twice is not corroboration.
