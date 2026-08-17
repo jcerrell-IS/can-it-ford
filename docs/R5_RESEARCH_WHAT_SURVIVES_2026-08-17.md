@@ -13,6 +13,22 @@ superseded ones, and that layer is the main obstacle to using this work.
 
 ---
 
+## RE-DERIVE THESE YOURSELF
+
+`data/r5_citation_verify.py` re-derives **every** citation count in section A from
+source and prints PASS/FAIL. Standard library only, runs in about a second:
+
+```
+python3 data/r5_citation_verify.py     # exit 0 if every claim reproduces
+```
+
+**18 of 18 checks pass as of 2026-08-19.** It exists because units 50 to 52 found
+three of twelve rows below were false, every one introduced when I compressed a
+correct unit into a one-line summary. **This script would have caught all three**,
+and it encodes the boundary cases that fooled me: the "units not specified" clause
+in row 40 that makes friction 9 rather than 8, and a second independent test for
+each yield.
+
 ## A. SAFE TO CITE
 
 Each of these was verified by primary source or by measurement, and each survived
