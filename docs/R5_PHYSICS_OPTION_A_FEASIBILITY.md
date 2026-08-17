@@ -1,5 +1,7 @@
 # D4: Option A re-diagnosed. The blocker is mass, not grid nodes.
 
+> **Line-number convention, corrected 2026-08-17.** All `sim_standing.py` line numbers in this document refer to **`renders/yaris_render_s1/_incoming/sim_standing.py`**, the copy that produced the 17 canonical runs and which register D4a makes canonical. An earlier version cited the tracked top-level copy, which is a *different file* (md5 `5ca372e4...` against `a3f7a0f3...`) with substantially different numbering. CLAUDE.md item 2's own citations (`:156-162`, `:190-198`) are `_incoming` numbering, which is how the error was found.
+
 > ## SUPERSEDED IN ITS CENTRAL ARGUMENT, 2026-08-17, by a second adversarial review
 >
 > **The event this document set out to explain never happened.** Sections 3 to 5 below are
@@ -103,12 +105,12 @@ the deferred item and became the upstream one.
 **First I verified the no-outflow claim myself rather than inheriting it** from the review
 that raised it **[read, `renders/yaris_render_s1/sim_standing.py`]**:
 
-- `:210-214` closes the domain: floor plane plus four slip walls at `restitution=0.05`,
+- `:132-137` closes the domain: floor plane plus four slip walls at `restitution=0.05`,
   then `add_domain_walls()`.
-- `:269-277` `_sustain_inflow` sets `vw[band, 0] = self.velocity` for particles with
+- `:190-198` `_sustain_inflow` sets `vw[band, 0] = self.velocity` for particles with
   `x < inflow_x`. That is a **velocity clamp on a fixed spatial band of existing
   particles**, not an inflow.
-- `:265-267` `_project_water` clamps outward velocity at the boundary. Containment, not
+- `:184` `_project_water` clamps outward velocity at the boundary. Containment, not
   outflow.
 - No creation, deletion or recycling anywhere. Particle count is fixed at load.
 

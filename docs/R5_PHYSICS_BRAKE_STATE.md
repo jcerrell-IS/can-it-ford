@@ -1,5 +1,7 @@
 # D4: brake state cannot overturn a SLIDE verdict, and it destroys the only STUCK one
 
+> **Line-number convention, corrected 2026-08-17.** All `sim_standing.py` line numbers in this document refer to **`renders/yaris_render_s1/_incoming/sim_standing.py`**, the copy that produced the 17 canonical runs and which register D4a makes canonical. An earlier version cited the tracked top-level copy, which is a *different file* (md5 `5ca372e4...` against `a3f7a0f3...`) with substantially different numbering. CLAUDE.md item 2's own citations (`:156-162`, `:190-198`) are `_incoming` numbering, which is how the error was found.
+
 2026-08-16. Branch `claude/r5-physics`. Mac only, no GPU.
 
 Claim tags: **[read]** primary source this session, **[measured]** computed here from local
@@ -107,8 +109,8 @@ can use it below. Had they disagreed I would have had no basis for section 4.
 
 ## 3. Our model implicitly assumes a braked vehicle, and a more braked one than AR&R's
 
-`sim_standing.py:154` sets `floor_friction=0.55` as the default and `:210` applies it to
-the single floor plane; the four walls are `friction=0.0` at `:214` **[measured, read
+`sim_standing.py:76` sets `floor_friction=0.55` as the default and `:132` applies it to
+the single floor plane; the four walls are `friction=0.0` at `:136` **[measured, read
 live]**. That is the only frictional contact in the scene.
 
 Two consequences, and the second is the sharper one:
@@ -181,7 +183,7 @@ left for a reviewer to find.
 
 ## 6. What it would take to test, and it is cheap
 
-One parameter. `--floor-friction` already exists at `sim_standing.py:309` **[measured]**,
+One parameter. `--floor-friction` already exists at `sim_standing.py:230` **[measured]**,
 so representing an unbraked vehicle needs no code change at all: re-run `sweepV_g64_v0p5`
 at `floor_friction = 0.0250` and at `0.30`, and read the verdict. No solver edit, no new
 geometry, and `sim_standing.py` stays untouched so its sha256 still stamps the run.

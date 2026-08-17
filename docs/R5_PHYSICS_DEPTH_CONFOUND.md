@@ -1,5 +1,7 @@
 # D4: the velocity sweep is also a depth sweep, and the labels are not the depths
 
+> **Line-number convention, corrected 2026-08-17.** All `sim_standing.py` line numbers in this document refer to **`renders/yaris_render_s1/_incoming/sim_standing.py`**, the copy that produced the 17 canonical runs and which register D4a makes canonical. An earlier version cited the tracked top-level copy, which is a *different file* (md5 `5ca372e4...` against `a3f7a0f3...`) with substantially different numbering. CLAUDE.md item 2's own citations (`:156-162`, `:190-198`) are `_incoming` numbering, which is how the error was found.
+
 > ## SECOND REVIEW, 2026-08-17. FIVE BLOCKING ISSUES. Most of this document is withdrawn.
 >
 > **Read this box and section 0 below; treat everything after them as superseded except
@@ -16,7 +18,7 @@
 > **W2. My deconfounding lever was structurally invalid, which is worse than being noisy.**
 > Two reasons, both from source. `n_water` moves **1.965x** across the depth sweep
 > (36842 to 72381) and is **constant** across the velocity sweep, so the P-2 denominator is
-> a different variable in each. And `sim_standing.py:160` sets
+> a different variable in each. And `sim_standing.py:82` sets
 > `lim = max(2.2*ext[1], 3.5*ext[0], 6.0*depth)`, which is **9.4217 m for every run**: the
 > domain footprint is depth-independent, the vehicle bbox spans the whole water column, so
 > numerator and denominator scale together and **the fraction is analytically invariant to a
@@ -62,7 +64,7 @@
 > my own correction and I left it standing; `14 of 17` becomes 15 of 17. Section 4's
 > "intervals are uneven" is **backwards**: interval CV is 35.4% for the nominal labels
 > against 11.2% at the fixed station and exactly **0.0%** for the initial fills. My "settle
-> 8" label is wrong throughout: `sim_standing.py:235-237` runs the settle inside `__init__`
+> 8" label is wrong throughout: `sim_standing.py:156` runs the settle inside `__init__`
 > before recording, so recorded frames 0-7 are post-kick development, not settle.
 
 ## 0. The finding that outranks everything I claimed: P-2 does not measure passthrough
@@ -130,7 +132,7 @@
 This came out of the review and is now independently confirmed **[measured, re-derived]**.
 
 `passthrough_max_frac` is `((w >= veh.min(0)) & (w <= veh.max(0))).all(axis=1).mean()`,
-maximised over frames (`sim_standing.py:463-465`). It counts water inside the vehicle's
+maximised over frames (`sim_standing.py:307-308`). It counts water inside the vehicle's
 **axis-aligned bounding box**, not inside the hull. Partitioned at each run's own argmax
 frame:
 
@@ -160,7 +162,7 @@ the span is 6.55 pp, not 7.89 pp.
 >
 > Section 5 of the first version flagged that I had not read `local_depth_footprint`'s
 > definition. I read it, and it contains a confound I had not anticipated
-> **[read, `sim_standing.py:473-475`]**: the selection window is the vehicle's **current**
+> **[read, `sim_standing.py:315-317`]**: the selection window is the vehicle's **current**
 > bounding box, `lo_v`/`hi_v`, which **slides downstream with the vehicle** into the very
 > pile-up whose depth it is measuring. So the diagnostic entangles the water getting deeper
 > with the measurement window moving into deeper water.

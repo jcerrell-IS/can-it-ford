@@ -1,5 +1,7 @@
 # D4: what survives, what was withdrawn, and what is still unreviewed
 
+> **Line-number convention, corrected 2026-08-17.** All `sim_standing.py` line numbers in this document refer to **`renders/yaris_render_s1/_incoming/sim_standing.py`**, the copy that produced the 17 canonical runs and which register D4a makes canonical. An earlier version cited the tracked top-level copy, which is a *different file* (md5 `5ca372e4...` against `a3f7a0f3...`) with substantially different numbering. CLAUDE.md item 2's own citations (`:156-162`, `:190-198`) are `_incoming` numbering, which is how the error was found.
+
 2026-08-17. Branch `claude/r5-physics`, **35 commits, unpushed and held**. Index current
 as of `0449091`.
 
@@ -88,7 +90,7 @@ and reproduces the driver's own value to 0.00e+00 in 17/17. My stated reason ref
 I put "5-21% of water sits below the floor plane, an ungated leakage channel" on the board
 after a reviewer raised it. **I then derived it myself and it is wrong.**
 
-`_project_water` (`sim_standing.py:250-267`) clamps water to `floor - 0.25*dx` **by design**
+`_project_water` (`sim_standing.py:184`) clamps water to `floor - 0.25*dx` **by design**
 and counts anything beyond as `leaked`. So "below the floor plane" is mostly the designed
 tolerance band. Measured at frame 89, N=17:
 
@@ -117,7 +119,7 @@ clamp. Resolution-specific and non-monotone, on **the grid 13 of the 17 canonica
 **Narrowed by a follow-up check, which changed the framing again.** It is **not** a dynamic
 leak that accumulates: it is already **4.8 to 5.8% at recorded frame 0**, jumps to ~15% by
 frame 5, then oscillates 8-19%. And recorded frame 0 is **not** initialisation: the 8
-settle frames run inside `__init__` before recording begins (`sim_standing.py:235-237`).
+settle frames run inside `__init__` before recording begins (`sim_standing.py:156`).
 The lattice itself cannot place a particle below the floor, since it starts at
 `floor + dx/4` and the jitter is only +/-0.1 dx.
 
@@ -165,7 +167,7 @@ were never new.**
 
 **(a) `water_layers` is already column 6 of `data/all_runs_inventory.csv`**, the very file
 L-3 cites, reading 3/3/3, 4/4/4, 6/6/6, 3/5/6. And route 1 was not independent:
-`_incoming/sim_standing.py:260` computes `layers` with that same `arange` and writes it to
+`_incoming/sim_standing.py:181` computes `layers` with that same `arange` and writes it to
 `summary.json`. I re-derived the driver's own stored output and called it a new precision.
 
 **(b) "The two methods agree in 17 of 17" is false.** Counting non-empty h-wide bins

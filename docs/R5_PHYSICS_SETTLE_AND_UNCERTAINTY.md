@@ -1,5 +1,7 @@
 # D4: the settle length has a citable answer, and it is not a frame count
 
+> **Line-number convention, corrected 2026-08-17.** All `sim_standing.py` line numbers in this document refer to **`renders/yaris_render_s1/_incoming/sim_standing.py`**, the copy that produced the 17 canonical runs and which register D4a makes canonical. An earlier version cited the tracked top-level copy, which is a *different file* (md5 `5ca372e4...` against `a3f7a0f3...`) with substantially different numbering. CLAUDE.md item 2's own citations (`:156-162`, `:190-198`) are `_incoming` numbering, which is how the error was found.
+
 2026-08-16. Branch `claude/r5-physics`. No GPU used: every number here is measured on
 existing local data with `simulation/r5_physics/blocking.py`.
 
@@ -78,7 +80,7 @@ boundary rather than a measurement in every case where it appears.
 
 **A precision that matters and that I nearly got wrong.** The 8 settle frames happen in
 `StandingFloodScene.__init__` before recording starts, and the one-shot velocity kick is
-applied at `sim_standing.py:240` immediately after them. So the 91 recorded frames begin
+applied at `sim_standing.py:161` immediately after them. So the 91 recorded frames begin
 **at the kick**, and what this analysis measures is the **post-kick transient, not the
 settle transient**. The two are different quantities. What is established is that the
 post-kick transient occupies 31% to 49% of every recorded run. It bounds the settle
@@ -166,7 +168,7 @@ Validated on the same controls that refuted the old rule, `blocking.py --selftes
 ### The finding that outranks all of this: the scene cannot reach a steady state
 
 The review found the thing I should have checked before building any of it.
-`sim_standing.py:269-277` clamps only an upstream band each frame, and `:210-214` closes
+`sim_standing.py:190-198` clamps only an upstream band each frame, and `:210-214` closes
 the domain with a friction floor plus four slip walls plus `add_domain_walls`. **There is
 no outflow boundary condition.** A closed tank with partial upstream forcing **must spin
 down**, and water mean speed does fall 15% to 62% over the second half in all 17 runs.
