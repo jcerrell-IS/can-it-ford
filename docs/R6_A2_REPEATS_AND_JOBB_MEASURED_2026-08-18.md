@@ -55,6 +55,12 @@ CONSTRUCTION for runs whose trajectories diverge immediately.
 This is the eighth instance of the round's core pattern, and the worst-placed one: unlike the
 other seven it is stamped into the summary of every published run.
 
+**Verified, not assumed.** `renders/yaris_render_s1/gates_results_all_runs.json` holds 20
+records, the 17 gated plus the 3 dry_start, exactly as CLAUDE.md item 8 says. **17 of 17 gated
+runs carry `determinism_identical: true`.** The 3 dry_start records carry the literal
+`"ABSENT"`. So the flag reads true on every published run, and none of those runs has ever had
+a repeat to compare against.
+
 **Distinguish carefully from what was already known.** The handoff already recorded that this
 field is a load-time hull check and not a trajectory check, and named the same line number.
 That part is not new. What is new is that nobody had measured whether the trajectories actually
