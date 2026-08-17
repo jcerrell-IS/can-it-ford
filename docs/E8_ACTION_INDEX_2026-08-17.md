@@ -20,7 +20,7 @@ They are **not equally serious, and they differ in kind, not just size.**
 
 | # | Exposure | Size | Rights position | Public surface | Remedy shape |
 |---|---|---|---|---|---|
-| 1 | **CCSA/NCAC geometry.** 4 original distribution archives (88,592,238 B) + 14 LS-DYNA decks (71,716,670 B), redistributed **intact** | 160,322,098 B | **Silent.** No grant, no licence, no copyright statement | **30 of 30 branches** | Ask permission; removal must cover every branch or it is cosmetic |
+| 1 | **CCSA/NCAC geometry.** 4 original distribution archives (88,592,238 B) + 14 LS-DYNA decks (71,716,670 B), **byte-identical to upstream, proven by SHA384** | 160,322,098 B | **Silent.** Confirmed on both CCSA download pages, not just the bundled README | **30 of 30 branches** | Ask permission; removal must cover every branch or it is cosmetic |
 | 2 | **Smith 2019.** The complete 15-page article, page by page | 6,215,623 B | **Asserted.** "© 2019 CIWEM and John Wiley & Sons Ltd" legible in the copy | 1 tree | Untrack, keep 4 scalars, cite the DOI. Free |
 | 3 | **AR&R report + 4 images** | 2,113,057 B | **Silent.** No copyright, licence or permission text | 1 tree | Ask permission. **Do not delete: load-bearing evidence** |
 | 4 | Two CC-licensed PDFs | 10,884,441 B | **Licensed** (CC BY; CC BY-NC-ND) | 1 tree | Keep, add attribution |
@@ -87,9 +87,12 @@ Anyone following the stale one does a two-machine rotation and stops. §0.1.
 "Full-scale testing of vehicle floating and sliding in flowing floodwater"; the real
 title is "Full-scale testing of stability curves for vehicles in flood waters".
 
-**8. Promote L-A, L-B and L-C** from `E8_METHOD_LESSONS_2026-08-16.md` into the
+**8. Promote L-A, L-B, L-C and L-D** from `E8_METHOD_LESSONS_2026-08-16.md` into the
 register or `CLAUDE.md`. **D2 is forbidden to edit either**, so that file is a holding
-place, not their home.
+place, not their home. **L-D is the one with the widest reach**: it is a rule against
+filing work as human-blocked without naming the capability the human has and you lack,
+and the coordinator reports the same over-attribution from itself, D3 and D4 in this
+round. It inflates the queue of the one person who cannot be parallelised.
 
 ---
 
@@ -142,6 +145,9 @@ current.
 | Row 1 is "the worst single defect here" | `d0d5a65` | `458115f` | **Row 1 was right.** H is a GitHub fine-grained PAT used as a Bearer to GitHub's Copilot MCP endpoint |
 | AR&R is plausibly **Commonwealth CC BY** | `cda67a3` (as a hypothesis) | `cda67a3` | Refuted. No Creative Commons text; the word "Commonwealth" does not appear |
 
+| "Blocked on a human: does an NHTSA-hosted copy exist" | `aacf12e` | `bb8bc92` | **Not blocked.** Two web fetches and a checksum, which then produced the dispatch's strongest evidence |
+| Two of three `.zip` provenance claims marked `[inferred]` | `6e771b6` | `ea04f33` | **All four archives are byte-identical to upstream, by SHA384.** Verbatim redistribution is proven, not inferred |
+
 **One count is not an error but is scope-sensitive, so never quote it bare:** the CCSA
 verbatim total is **160,322,098 B** including the 4 upstream READMEs, or
 **160,308,908 B** excluding them (D3's and the coordinator's scope). Both give 91.0%.
@@ -181,6 +187,29 @@ labels in `ac9fb54`, the 14-file Smith count in `ac9fb54`, these two). Every fig
 recomputed from `git ls-tree` in a checked script has been right. **Compute totals from
 the tree, print the enumeration, and check the sum before publishing it**, which is the
 corollary already stated in `E8_METHOD_LESSONS_2026-08-16.md` L-A.
+
+---
+
+## 7. Independent corroboration, and the status of this dispatch
+
+**The SHA384 finding rests on two separate origins, not one cited twice.** After I
+published it, the coordinator computed SHA384 over all four local archives itself and
+fetched both `ccsa.gmu.edu` pages itself. Every value matched, and it independently
+confirmed that neither page carries any licence, copyright, terms-of-use or
+redistribution statement, and that both download from `media.ccsa.gmu.edu`. Separate
+tooling, separate fetches, same result. **[relayed by the coordinator, whose method it
+described in enough detail to be checkable]**
+
+That matters because this project's own rule is that one source cited twice is not two
+sources. Here the two origins are genuinely distinct, so the central E8 finding is as
+well supported as anything in the round.
+
+**D2 is PARKED.** Both exposures are diagnosed, this index exists, the notices draft
+has no open items, the rotation checklist carries its caveats in a banner, and the
+citations audit is settled per file. **The only remaining item in the dispatch is the
+ten-second look at AR&R pages 1 to 3**, which is genuinely human-gated under L-D
+criterion 4, a physical look at a screen. Nothing further is startable without a
+decision from Josie.
 
 ---
 

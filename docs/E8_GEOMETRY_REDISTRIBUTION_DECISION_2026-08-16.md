@@ -119,9 +119,17 @@ side of `b0d2664f`'s distinction and not in the NHTSA "public information and ma
 distributed or copied" safe set. Section 1's qualification 1 is discharged.
 
 Both pages also state the models were developed **"under a contract with the Federal
-Highway Administration"**, which independently confirms the contractor relationship
-that makes 17 U.S.C. 105 inapplicable. Funding is not a grant, and now neither the
-distributor's page nor the bundled README says otherwise.
+Highway Administration"**, and the Silverado page adds that this was **for research
+purposes**. That independently confirms the contractor relationship that makes
+17 U.S.C. 105 inapplicable.
+
+**Quote that phrase as context, never as permission.** "Developed under contract with
+the FHWA for research purposes" describes **why the model was made**, not **what you
+may do with it**. It is the most quotable sentence on either page and the easiest to
+misread as a grant, so it should always travel with this caveat. A statement of
+purpose by the author is not a licence to the reader, and the same page that carries it
+carries no licence at all. Funding is not a grant; neither is a stated research
+purpose, and now neither the distributor's page nor the bundled README says otherwise.
 
 **Severity therefore follows bytes and rights-holder clarity, not file type:**
 

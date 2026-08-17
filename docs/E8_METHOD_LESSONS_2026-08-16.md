@@ -141,6 +141,50 @@ repetition inflated a **majority**. Same defect, and the same fix.
 
 ---
 
+## L-D. Name the capability before you file something as human-blocked
+
+**The rule:** before recording any item as blocked on a human, **state exactly which
+capability that human has and you lack.** If the answer is not one of these four, it is
+not blocked and you should do it:
+
+1. **Credentials or authentication you must not hold** (revoking a token at an issuer,
+   an interactive login, an account you have no business being inside).
+2. **An interactive token or session** you cannot obtain non-interactively.
+3. **A decision that is genuinely theirs** (a licence choice, a spend, an accepted
+   risk, anything irreversible or outward-facing).
+4. **A physical action** (looking at a screen, plugging something in, being in a room).
+
+**Everything else is work, and filing it as blocked hands it to someone else while it
+sits perfectly doable.**
+
+**The instance.** I filed "does an NHTSA-hosted copy of this Yaris exist" as blocked on
+a human. It was **two web fetches and a checksum**. Attempting it produced the single
+strongest piece of evidence in the dispatch: all four CCSA archives are byte-identical
+to the published upstream releases, verified against CCSA's own SHA384 values. That
+finding sat one untried command away from being filed as somebody else's problem.
+
+It was not isolated. **Two of my three "blocked" items this round were one untried
+approach away**: this, and the AR&R report's terms, which I recorded as needing a PDF
+text extractor I did not have, and then wrote in about ten lines of `zlib`.
+
+**And it is not personal to me.** The coordinator reports the same pattern in its own
+work and in D3's and D4's during the same round. Between us we over-attributed work to
+Josie repeatedly. That is the real cost and it is worth naming precisely: **a wrongly
+filed block does not merely delay the item, it inflates the queue of the one person in
+the loop who cannot be parallelised.** Four sessions each handing over one "small" item
+is four items she has to triage, three of which nobody needed to hand her.
+
+**The check to actually run:** write the sentence "this is blocked because Josie can
+X and I cannot." If you cannot complete that sentence with one of the four capabilities
+above, delete the block and do the work. If you can, keep the block **and say which
+one**, so the next reader can tell a real dependency from an unattempted one.
+
+**Corollary, from the same round:** "I do not have tool X" is usually a claim about
+convenience, not capability. Before it justifies a block, ask whether X can be built
+from primitives already available. The AR&R extractor was `zlib` plus a regex.
+
+---
+
 ## Why these are worth promoting
 
 Both are **falsifiable checks**, not advice. L-A names a control to run; L-B names a
