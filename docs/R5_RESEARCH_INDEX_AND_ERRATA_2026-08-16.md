@@ -74,6 +74,7 @@ rest is grouped by what it answers.
 | `R5_RESEARCH_BIB_DOI_SUPPLEMENT_2026-08-17.md` | **four verified DOIs the bibliography lacks**, and its year audit |
 | `R5_RESEARCH_UNCITED_AUDIT_2026-08-17.md` | audit of my own uncited method; it mostly holds |
 | `R5_RESEARCH_HULL_VOLUME_CONFLICT_2026-08-17.md` | **RETRACTED escalation.** Read section 0 only; the rest is kept as a worked error |
+| `R5_RESEARCH_FLOODFILL_MEASURED_2026-08-17.md` | **the measurement that closes the above.** The audit's 4.5628 does not reproduce; sealed cavity disagrees **2.1x**; operation is bistable near **22.2 mm**. Ships its script |
 | `R5_RESEARCH_NCAC_README_TERMS_2026-08-17.md` | **for D2**: the NCAC READMEs are tracked, carry an acknowledgement request, and no licence |
 | `R5_RESEARCH_MPM_BOUNDARY_CLUSTER_2026-08-17.md` | **for D4**: the BC anchor and a 2024 paper on the open BC question |
 
@@ -134,6 +135,8 @@ rest is grouped by what it answers.
 | 26 | "the project does not cite its closest comparator" (board wording) | units 7, 27 relays | **too loose.** The *bibliography* does not cite Al-Qadami 2023; the register names Al-Qadami in G5 and G8 as a misattribution hazard | unit 28 §2 |
 | 27 | the hull-density escalation: B5 contradicted, finding unintegrated, D4's P-2 qualified | units 34, 35 | **RETRACTED, 5 of 8 claims wrong.** B5 has a 2nd sentence I never read and AGREES; `genus` 33 and `mesh2sdf` 337 hits, not zero; `MESH_RECONCILIATION:196,201` already resolves 1609/2337; my "independent" 31.2% shares its numerator with item 4(b)'s 33.2%; and `5dbe04d` already measured in-hull water at median 6.50% rising 12x. **Survives: genus 222, which I finally measured myself** | unit 36, physics-skeptic |
 | 28 | "no Mac interpreter here has numpy", my reason for not verifying | unit 34 §7 | **false.** `~/Downloads/vehicle_meshes/mesh_venv` has trimesh 4.12.2 and numpy 2.5.1, documented at `MESH_RECONCILIATION_2026-08-08.md:39`. Verifying was a ten-minute job; I escalated instead of measuring | unit 36 |
+| 29 | the flood-fill interpretation: agreement with the audit's ~6.8 bound, a "35%" step, a cabin/window mechanism, and "density falls 11-52%" | unit 39 first draft | **FOUR WITHDRAWN.** The 6.8 is the *deprecated lowres* mesh (6.8185, genus 32) the audit itself calls "the misleading one"; the step is **+53.75%**, not 35% (I switched denominators mid-document); the leak aperture is **≲40 mm** seams, not windows (one 20 mm dilation seals it); and at 10/15/20 mm the fill seals **nothing**, so the density drop was half-voxel shell overhang. **Survives: the numbers reproduce exactly, and the sealed cavity disagrees 2.1x (1.020 vs 2.161 m3)** | unit 39, physics-skeptic |
+| 30 | my own "parameter-free apart from pitch" criticism of the audit | unit 39 §3(b) draft | **I had just committed it.** `binary_fill_holes` defaults to 6-connectivity and I never said so; 18- or 26-connectivity seals **nothing**, moving my headline by **3.25x**. I also shipped no script while criticising the audit for shipping none. Both fixed in the revision | unit 39 |
 
 **EVERY ORIGINAL IS NOW MARKED IN PLACE, unit 23.** This index only helps a
 reader who opens *it*. D4 read unit 3 directly and picked up a stale claim
