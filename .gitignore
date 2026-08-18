@@ -32,6 +32,13 @@ renders/*
 !renders/yaris_render_s1/
 renders/yaris_render_s1/*
 !renders/yaris_render_s1/*.py
+
+# Open-channel figures, 2026-08-18. Same walk-down idiom as yaris_render_s1 above:
+# un-ignore the directory, re-ignore its contents, then allow only the PNGs, so a
+# rollout.npz dropped in here later does not silently become a tracked 80 MB blob.
+!renders/openchannel_2026-08-18/
+renders/openchannel_2026-08-18/*
+!renders/openchannel_2026-08-18/*.png
 !data/track1_sweep_v1/
 !data/track1_sweep_v1/**
 !data/track1_sweep_v2/
