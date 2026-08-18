@@ -74,12 +74,32 @@ def main():
     print("=" * 76)
 
     print("\n0. COMPARABILITY. All four cells must match except engine and ghost layers.")
+    print("   A key ABSENT from every config is reported NOT CHECKED, never OK: an")
+    print("   all-None comparison is a check that cannot fail. The `lim` key was exactly")
+    print("   that mistake, the real key is `lim_m`.")
     ref = cells[("pinned", 0)]["config"]
-    for k in ("n_grid", "lim", "depth_m", "floor_m", "ref_radius_m", "analytic_buoyancy_N"):
+    MUST_MATCH = ("n_grid", "lim_m", "dx_m", "h_m", "depth_m", "floor_m", "surface_z_m",
+                  "wall_m", "substeps", "sdf_res", "seed", "h0_over_d",
+                  "ref_radius_m", "ref_mass_kg", "analytic_buoyancy_N")
+    MUST_DIFFER = ("n_ghost_layers", "ghost_depth_m", "n_water")
+    bad = 0
+    for k in MUST_MATCH:
         vals = {n: c["config"].get(k) for n, c in cells.items()}
+        if all(v is None for v in vals.values()):
+            print(f"   {k:24s} NOT CHECKED, absent from all four configs")
+            bad += 1
+            continue
         ok = len(set(map(repr, vals.values()))) == 1
-        print(f"   {k:24s} {'OK  ' if ok else 'DIFFER '} {ref.get(k)}"
+        if not ok:
+            bad += 1
+        print(f"   {k:24s} {'OK        ' if ok else 'DIFFER    '} {ref.get(k)}"
               + ("" if ok else f"   {vals}"))
+    for k in MUST_DIFFER:
+        vals = {n: c["config"].get(k) for n, c in cells.items()}
+        by_ghost = {n[1]: v for n, v in vals.items()}
+        consistent = all(vals[(e, g)] == by_ghost[g] for e, g in vals)
+        print(f"   {k:24s} {'VARIES BY GHOST ONLY' if consistent else 'INCONSISTENT'}  {by_ghost}")
+    print(f"   -> {bad} comparability problem(s)")
     for n, c in cells.items():
         print(f"   {str(n):16s} frames={len(c['rows']):4d}  n_water={c['config'].get('n_water')}"
               f"  n_ghost={c['config'].get('n_ghost_layers')}")
