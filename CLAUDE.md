@@ -674,3 +674,97 @@ STILL OPEN, not closed
   fresh Overleaf Git authentication token is needed before the next push; and
   the old token stays valid server-side until rotated in Overleaf account
   settings.
+
+## AUGUST 18 2026, ROUND 7 VERIFIED FINDINGS
+
+Every item measured live this session and reproducible by the script named beside it.
+Branch `claude/r7-ladder`, pushed to origin. Where something was refuted, including two of
+my own claims, it says so.
+
+R7-1. THE LADDER IS SIX RUNGS AND g192 IS A SECOND STUCK. Job 918351 collected. g192_m2337
+  gives STUCK 5/5, joint frames 0, margin -3, identical to g160. Regrade any rung with
+  `analysis/r7_ladder_grade.py`, which was validated against g160's published answers
+  BEFORE the new rung was graded, and then against g48/g64/g96/g128 including g64's
+  minority draw of 10 and g96's 3,4,3,4,3.
+  NO TRUNCATION on the 90-frame ladder runs: `metrics.csv` is already 92 lines, one header
+  plus 91 rows at indices 0 to 90, last t = 3.0 s. `r6_repeat_stats.py` needed `_truncate`
+  only because job 917797's repeats were 250-frame runs.
+
+R7-2. THE TWO STUCK ROWS ARE STUCK FOR DIFFERENT REASONS, and only g192 is physical stasis.
+  The joint SLIDE condition needs drift >= 0.05 m AND speed >= 0.05 m/s in the SAME frame,
+  and `sim_standing.py:240` applies a ONE-SHOT DECAYING KICK, so the speed criterion expires
+  by frame 6 to 14 at EVERY grid. g160 DOES cross 0.05 m drift, for 59 frames, starting at
+  frame 29, and is STUCK only because speed expired at frame 6. g192 never reaches 0.05 m at
+  all, max 0.04757. Never write that g192 reproduces g160 as a mechanism claim.
+  THE WHOLE VERDICT IS DECIDED IN THE FIRST HALF SECOND, because that is the only window in
+  which the speed criterion can fire at all.
+  THE CONTINUOUS QUANTITY IS THE BETTER RESULT. Max surge drift is monotone across all six
+  rungs, 0.18081 to 0.04757 m, and is NOT converged, still falling 13.5 percent g160 to g192.
+  Report that curve, not the binary flip. Raised by `claude/r7-collect` f8d22fe, re-verified
+  independently here.
+
+R7-3. REALIZED DEPTH IS CONSTANT ON ALL SIX RUNGS, not the four earlier text names. All of
+  3x0.098143149 through 12x0.024535787 equal 0.2944294473, exactly one distinct value from
+  g48 to g192. So the unpinned ladder never had a depth problem and the ONLY control it
+  lacks is the span. THE CONFOUND IS TOTAL: plan area and particle layers are both monotone
+  in n, so they are perfectly rank-correlated and NO ordering or rate argument on this
+  dataset separates them. Full-ladder growth is +15.00 percent span, +32.25 percent plan
+  area and +36.94 percent WATER VOLUME; quote volume, it is the physical one. The
+  g48-to-g128 sub-range gives +30.69 percent, reproducing the older +30.7 exactly.
+
+R7-4. BOTH FLOOR-LEAK FIXES WORK, ARE REDUNDANT WITH EACH OTHER, AND NEITHER RESCUES JOB B.
+  Balanced 2x2 from jobs 918461 and 918526, 15 config keys checked, 0 comparability problems.
+  `fz_over_analytic_measured`: pinned/ghost0 +51.22, pinned/ghost3 +38.03, bcfix/ghost0
+  +35.23, bcfix/ghost3 +35.92 percent. Interaction +0.13873, strongly NON-additive, and the
+  combination is slightly WORSE than the engine fix alone. So the unconstrained-node account
+  and the B-spline mass-deficiency account are ONE defect, not two.
+  THE DISSOCIATION IS THE REAL RESULT. Baseline-corrected floor crossings go 4.529, 0.653,
+  0.180, 0.008 percent, a 566-fold reduction, just 49 particles of 598505 over 300 frames.
+  REMOVING 99.8 PERCENT OF THE LEAK REMOVES ONLY 30 PERCENT OF THE FORCE ERROR. About 36
+  points survive a boundary that no longer leaks, so the floor leak is NOT the dominant cause
+  of Job B's failure and further work there is capped. All four cells FAIL; the ladder stays
+  stopped and Job C stays gated, on much stronger evidence than before.
+  NEVER compare `n_below_floor` raw across a ghost A/B: `--ghost-layers N` seeds particles
+  BELOW the nominal floor, so the raw column reports the fix making leakage WORSE. Subtract
+  each run's own frame-0 value.
+
+R7-5. THE CORPUS ALREADY HELD A NAMED MECHANISM FOR JOB B, UNCITED. Verified with
+  `analysis/research_index.py --doi`, which lives ONLY on `claude/add-ci-checks`, not on
+  every branch, so a bare invocation from another worktree returns a FALSE ZERO.
+  - `10.1016/j.compfluid.2018.09.005` Chen 2018, v-p MPM, **UNCITED**. Its abstract states
+    that weakly compressible MPM "suffers from volumetric-locking and numerical oscillation
+    in modeling fluid flow and fluid-structure interaction problems". That is a sourced,
+    named candidate for a force bias that survives boundary fixes and domain changes.
+  - `10.1016/j.jcp.2016.10.064` Zhang 2017, incompressible MPM, **UNCITED**. Introduced
+    explicitly to overcome WCMPM's shortcomings for FREE SURFACE flow, which is where a
+    half-submerged sphere sits.
+  - `10.1002/nme.7217` Baumgarten and Kamrin 2023, integration error: repo-only.
+  - `10.3390/en14020269` Kramer 2021, the sphere benchmark itself: repo-only.
+  - `10.1145/2185520.2185558` Akinci 2012, contact-force rigid-fluid coupling: **NOT in the
+    332-paper index at all**, genuinely new.
+  Volumetric locking outranks my own effective-radius hypothesis, which is REFUTED: a
+  one-cell skin fits all four 2x2 cells at 0.85 to 1.18 dx but the vehicle SDF validation
+  reads -7.668 at g64 and +7.280 at g96 (`docs/CONTEXT_CENSUS_2026-08-07.md:1049-1052`),
+  wrong sign and wrong magnitude.
+
+R7-6. A GUARD THAT COULD NOT FIRE ON THE FILE CLASS ITS OWN REGISTER NAMES. Register A3 says
+  "any SKILL FILE naming `cfrc_coupling_vel` in a warpmpm context is engine-conflated".
+  Skill files are `.md`. `params_check.py` walked only `ROOT.rglob("*.py")` AND required the
+  literal "warpmpm" in the file PATH, so it could not fire on the single real offender,
+  `.claude/skills/flood-mpm-debugging-reference/SKILL.md:41`. Fixed to walk `.md` too and to
+  test UNTAGGED USAGE per line rather than co-occurrence, because a co-occurrence test cannot
+  be satisfied by applying the register's own remedy. Verified both directions.
+  Six of the seven `/engine-audit` checks are otherwise CLEAN. Check 3, untagged
+  solver-behaviour claims, needs a judgement pass and is still OPEN.
+
+R7-7. A DEVIATION FROM A SOURCE IS ONLY A DEFECT IF IT IS UNDOCUMENTED. I claimed Job B "is
+  not running the benchmark it cites" and pushed it, on four deviations read from the run
+  config. Three are deliberate and documented and the fourth is backwards.
+  `R5_PHYSICS_BATCH_MANIFEST.md:204-206` keeps Job B pinned at `lim = 1.2` as "a cheap
+  hydrostatic pilot where reflections do not matter"; `sphere_heave.py:73-75` records the
+  900-to-500 mm depth reduction with `kh = 3.333`, `tanh(kh) = 0.99746`, deep-water to 0.25
+  percent; `MANIFEST:242` already specifies Job C as the Kramer free heave decay. Worst,
+  `MANIFEST:236-240` already makes the argument I presented as a discovery, declining to
+  grade B on Kramer's displacement tolerances because that would be a category error.
+  I inferred intent from a config-versus-paper mismatch without reading the document that
+  states the intent, one grep away in the same repo. Retracted in full.
