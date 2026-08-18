@@ -107,10 +107,26 @@ Never `--force` a branch checked out elsewhere.
     # Neither failure raises a conflict marker, which is why the count is the test.
     # At 00:45 this was: expect 1647, sideA-vanished=1455, sideB-vanished=848.
 
-A watchdog now guards the **merge** rather than side A: it alerts if side B's
-register leaves 1455 and says whether it landed on its computed target or on a
-loss. The target is B + (A - 656), currently 1602, and it MOVES whenever side A
-gains lines. It dies
+### The watcher, and how to re-arm it
+
+A watcher guards the **merge**: it alerts if side B's register leaves 1455 and
+reports whether it landed on the computed target or on a loss. It recomputes
+`B + (A - 656)` on every poll, so it stays correct as side A moves.
+
+**It dies when the session that started it ends, and nothing restarts it.** To
+re-arm, run it as a background monitor from any session:
+
+    /Users/josie/can-it-ford-bundles/watch_register_merge.sh
+
+It prints one line on arming, then only on a change. If you are not running a
+session, you do not need it: just compute the target with the snippet above
+immediately before merging, which is the check the watcher automates rather than
+replaces.
+
+**A watcher is a convenience here, not a safety net.** Both sides are committed
+on separate branches, so a bad merge is recoverable from the reflog or from
+`ALL-refs-*.bundle`. This was not true earlier tonight, when side A was
+uncommitted; it is true now. It dies
 with its session.
 
 ## 6. The off-machine decision, Josie's
