@@ -524,6 +524,14 @@ document is code provenance, git object state, or string presence in a file. Non
 percentage, force, verdict count, or distance. The subagent is not the right instrument for these
 and would have nothing to check.
 
+*Recorded for the provenance trail, not independently verified by me:* two sibling slots
+(`d2-persist` and `d4-bcmerge`) reported on the shared board that the physics-skeptic subagent
+terminated on an API error naming an unreachable model this session, and that a model override
+did not help. That is their measurement, not mine. It does not change the reasoning above, which
+is that these claims are outside what the subagent is for, but it does mean the instrument was
+also unavailable, so a future reader should not read the absence of a review here as a review
+that was skipped when it could have been run.
+
 **Corroboration from genuinely separate origins**, which matters because one source cited twice is
 not two sources. Three independent authors each hit this defect and each worked around it locally
 instead of fixing the name (**all read directly**):
