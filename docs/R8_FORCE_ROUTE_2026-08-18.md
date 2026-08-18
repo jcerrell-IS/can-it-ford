@@ -989,12 +989,45 @@ structural, and the submersion mismatch is not a settle artifact. The route is *
 because the sign inversion is genuinely gone and 29.9 points is a real improvement on 133.9,
 but it is further from a publishable force-convergence curve tonight than section 13 implied.
 
-### 15e. What did not run
+### 15e. THE 3600 RUNG DID RETURN, WITH THREE MINUTES OF ALLOCATION LEFT, AND IT IS THE MOST IMPORTANT ROW
 
-The `--settle 3600` rung was launched and was still running when the allocation expired. It
-would have shown whether the error keeps degrading past the met gate. **It is recorded as
-absent, not imputed.** Everything in 15a to 15d rests on the three caps that completed, all
-`rc=0`.
+Section 15e previously recorded this rung as absent. It completed at 23:28, `rc=0`, with 3:10
+remaining on the node. The full ladder:
+
+| cap | frames_run | gate_met | ratio | error | swing vs g64 |
+|---|---|---|---|---|---|
+| 900 | 900/900 | False | 0.7574 | -24.26% | 8.5 pts |
+| 1800 | 1800/1800 | False | 0.6790 | -32.10% | 16.3 pts |
+| 2700 | 2596/2700 | **True** | 0.5431 | -45.69% | 29.9 pts |
+| 3600 | **3280**/3600 | **True** | **0.4553** | **-54.47%** | **38.7 pts** |
+
+**TWO RUNS BOTH MET THE GATE AND DISAGREE BY 8.8 POINTS.** The gate tripped at 2596 frames in
+one and at 3280 frames in the other, same grid, same configuration, and they return -45.69 and
+-54.47 percent. The error is still falling monotonically at the deepest settle run, with no
+plateau anywhere in the ladder.
+
+**This is a stronger negative result than section 15b, and it changes the recommendation.**
+The quiescence gate (`sound_speed/vmax >= 20`) **does not identify a converged state.** It is a
+threshold on a noisy quantity, so where it trips varies run to run by 26 percent in frame
+count, and the underlying force has not stopped moving when it fires. `settle_gate_met=True`
+is therefore not a validity criterion for a coupling-accuracy measurement, and any artifact
+that carries it should not be read as converged.
+
+**The swing does not narrow toward a limit, it widens with settle depth:** 8.5, 16.3, 29.9,
+38.7 points as g96 settles longer. The 29.9-point figure in 15c is itself provisional and is
+better stated as **at least 29.9 points and still growing**, because the g96 arm has not
+converged. The only claim from unit 2 that survives all four caps is the qualitative one:
+**the sign inversion is gone**, at every cap, and both grids under-predict.
+
+**What should be tuned instead.** Not the settle length. The three candidates the ladder
+leaves are the added-mass regime (structural, 15d item 1), the submersion mismatch (not a
+settle artifact, 15d item 2), and the convergence criterion itself, since the current gate
+demonstrably passes non-converged states. Whoever picks this up should treat "raise the settle
+cap" as **answered and exhausted**: it is reachable, it is expensive, and it makes the number
+worse rather than better.
+
+Provenance: `$WORK/r8_rungb/rungb_cap{1800,2700,3600}_g96.{log,json}`, all `rc=0`, engine
+**warpmpm**, SDF-collider path, not the material-8 path the 17 canonical runs use.
 
 Provenance: `$WORK/r8_rungb/rungb_cap{1800,2700,3600}_g96.{log,json}`, engine **warpmpm**,
 SDF-collider path, not the material-8 path the 17 canonical runs use.
