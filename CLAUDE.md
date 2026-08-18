@@ -3,6 +3,17 @@
 These apply to every pane in every session automatically, do not
 restate them in chat prompts.
 
+- DO NOT CITE THIS FILE POSITIONALLY. Quote the section heading and the
+  sentence, never `CLAUDE.md:NNN`. Added 2026-08-18 after the rule proved
+  itself inside one hour: a session was given corrected line numbers for two
+  claims, this file was then edited, and the same two claims moved again, so
+  three different line numbers existed for them within the hour. The edit that
+  invalidated them was itself the commit fixing a STALE LINE NUMBER elsewhere
+  in this file. Line numbers here are cited by other people verbatim and this
+  file changes several times a night, so a positional citation is stale on
+  arrival. The identical rule already existed for `.gitignore` below; it
+  applies to this file for the same reason and more strongly.
+
 - Never fabricate a command, parameter, or claim. Pull from actual
   file content, actual output, or actual verified search results.
   This includes a prior claim from Claude itself, verify independently
