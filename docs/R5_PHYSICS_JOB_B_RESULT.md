@@ -297,3 +297,50 @@ flattering statistic.
 about the verdict.** The coupling is not showing a 61% error; it is showing a band-inflated
 sphere, which is a known, quantified engine behaviour. The pre-registered criterion is a
 FAIL and must be reported as one.
+
+## 9. The g96 discriminating run: band CONFIRMED, wall-leak REFUTED
+
+Job fired into idev 917886, g96, 300 frames, `RC_B96=0`, **496 s**, 2,019,044 water
+particles at dx 0.0125. Everything else held identical to the g64 run on purpose, so the
+only variable is resolution.
+
+**The predictions were opposed and quantitative, and were stated before this run existed**
+(section 8.1): contact band gives **+69.1% at g64 and +43.5% at g96**; a wall leak gives
+**no dx dependence at all**.
+
+Measured at **matched submergence** (0.07898 to 0.10093 m, the overlap of the two runs),
+which is the like-for-like the prediction is about **[derived]**:
+
+| | N | ratio | range | excess | band-corrected |
+|---|---|---|---|---|---|
+| **g64** (dx 0.01875) | 391 | 1.6320 | [1.5458, 1.7582] | **+63.20%** | **0.9937** |
+| **g96** (dx 0.0125) | 214 | 1.4313 | [1.0540, 1.9728] | **+43.13%** | **1.0230** |
+
+**g96 measured +43.13% against a predicted +43.5%: a hit to 0.4 percentage points, with
+nothing fitted.** The excess falls with dx exactly as the band model requires, so **the
+wall-leak hypothesis is refuted**: it predicts no resolution dependence and the excess
+moved 20 points.
+
+Correcting each run for its own band puts both within **2.3% of unity** (0.9937 and
+1.0230), at two different resolutions. That is the strongest evidence in this chain that
+**the coupling is not in error**: the fluid is seeing a sphere inflated by one cell,
+which is documented engine behaviour at `mpm_solver_warp.py:2627` and `:2711`, not a
+defect in the buoyancy response.
+
+### 9.1 What this does NOT establish, stated plainly
+
+- **g96 is much noisier.** Last-quarter spread is 0.5450 against g64's 0.0344, and the
+  matched-window range runs [1.0540, 1.9728]. The mean is the result; the spread is wide,
+  and 300 frames is half the g64 run. A repeat at g96 with more frames is needed before
+  the +43.13% is quoted as a settled number rather than a single run's mean.
+- **The band correction fixes the level, not the trend**, as section 8 already recorded.
+  Its slight over-correction at g96 (1.0230 against g64's 0.9937) is consistent with that
+  and is not explained here.
+- **Neither run is stationary**, so the nominal criterion still refuses both, and the
+  pre-registered measured-surface criterion still reports **FAIL** on the uncorrected
+  ratio. Confirming the band explanation does not convert a FAIL into a PASS: it explains
+  what the number is, and the criterion was fixed against the uncorrected quantity.
+- The floor-BC bug from section 8.3 is untouched and still real in both runs.
+
+**UNREVIEWED**: this section has not been through the physics-skeptic. Settle 8
+constructor-only, trimesh 4.12.2, engine 627367e.
