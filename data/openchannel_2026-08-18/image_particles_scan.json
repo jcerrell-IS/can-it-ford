@@ -1,0 +1,56 @@
+{
+  "produced": "2026-08-18",
+  "module": "simulation/image_particles.py",
+  "verdict": "REFUTED. Floor penetration worsens monotonically with image count.",
+  "mechanism": "images cannot carry their source's J because F has no setter, so they act as a spurious pressure source; predicted in the module docstring before the runs, and the monotone trend matches it",
+  "crashed": {
+    "images_12000": "grid-edge guard, three separate attempts"
+  },
+  "scope": "refutes THIS host-side mirror implementation, NOT Schulz and Sutmann 2019, whose method assumes the image carries the source stress state",
+  "runs": {
+    "baseline_0": {
+      "n_image": 0,
+      "floor_plane": true,
+      "clamped_z": 664372,
+      "clamped_y": 43280,
+      "passthrough_max_frac": 0.0833005975148345,
+      "final_disp_mag_m": 0.7686508297920227,
+      "image_clamped_total": 0,
+      "outflow_cells": null,
+      "n_water": 48367
+    },
+    "images_500": {
+      "n_image": 500,
+      "floor_plane": true,
+      "clamped_z": 650615,
+      "clamped_y": 44929,
+      "passthrough_max_frac": 0.0833005975148345,
+      "final_disp_mag_m": 0.7772592306137085,
+      "image_clamped_total": 0,
+      "outflow_cells": null,
+      "n_water": 48367
+    },
+    "images_2000": {
+      "n_image": 2000,
+      "floor_plane": true,
+      "clamped_z": 713498,
+      "clamped_y": 46695,
+      "passthrough_max_frac": 0.0833005975148345,
+      "final_disp_mag_m": 1.0671828985214233,
+      "image_clamped_total": 0,
+      "outflow_cells": null,
+      "n_water": 48367
+    },
+    "images_6000": {
+      "n_image": 6000,
+      "floor_plane": true,
+      "clamped_z": 877972,
+      "clamped_y": 57691,
+      "passthrough_max_frac": 0.0868980916740753,
+      "final_disp_mag_m": 2.286705493927002,
+      "image_clamped_total": 0,
+      "outflow_cells": null,
+      "n_water": 48367
+    }
+  }
+}

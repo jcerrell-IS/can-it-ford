@@ -1181,3 +1181,120 @@ L7. **SKILL DRIFT, RE-VERIFIED, and the previously recorded drift is FIXED.** Fi
      silently absorbed. THE ROUSE 1.4x TEST IS NOT YET PASSED OR FAILED; the
      corrected runs were still queued when this was written. Do not record a verdict
      on it from this item.
+
+26. **THE FREE-OVERFALL BED HAD TO BE AN SDF COLLIDER. add_box IS A VELOCITY SINK,
+    NOT A WALL, AND THE SOLVER'S OWN DOCSTRING SAYS SO.**
+
+    Item 25 recorded that the first overfall attempt drained itself and blamed the
+    absence of a host-side bed clamp. Adding that clamp did NOT fix it. The real
+    cause is the collider choice, and the engine documents it at
+    `core/solver.py:224`: add_box is a "volumetric grid-node velocity overwrite
+    ... for oriented surface contact with friction modes use add_sdf_collider".
+
+    Measured 2026-08-18, three inlet velocities each, grid 96, 94656 water
+    particles, `data/openchannel_2026-08-18/overfall_rounds.json`:
+
+    | bed | bed re-entries per frame | y_b late | Fr late | regime |
+    |-----|-------------------------:|---------:|--------:|--------|
+    | add_box            | 31903 | 0.0217 | 6.95 | supercritical, drained |
+    | add_sdf_collider   |  1094 | 0.0523 | 0.11 | subcritical, holds depth |
+
+    A 29x reduction in bed penetration, the depth holds instead of collapsing to a
+    0.01 m film, and the flow lands in the subcritical regime Rouse's end-depth
+    ratio actually applies to. THE BOX ARM IS KEPT as an explicit control rather
+    than deleted, because the failure mode is the reusable part.
+
+    SECOND DEFECT, found by fixing the first. With the SDF bed the channel holds
+    depth but the discharge decays from 0.28 to 0.009 m2/s: a horizontal bed with
+    no sustained head has nothing driving it once the injected momentum is spent.
+    Rouse fed his channel from a constant-head tank. `sim_overfall.py --head-len`
+    adds a sustained upstream velocity band, applied ONLY upstream of the brink so
+    the brink section stays unforced.
+
+27. **THE ROUSE 1.4x TEST IS NOT PASSED. THE BEST STATIONARY SUBCRITICAL
+    MEASUREMENT IS 1.286 +/- 0.025, AN 8.2 PERCENT SHORTFALL.**
+
+    This is the project's FIRST comparison against a number that did not come out
+    of its own pipeline, so the result matters more than its sign.
+
+    Head-velocity sweep at the SDF bed, grid 96, 300 frames, discard and n_eff from
+    `analysis/stationarity.py` applied to the ratio series:
+
+    | U m/s | Fr late | ratio | RUM95 | n_eff | stationary |
+    |------:|--------:|------:|------:|------:|------------|
+    | 0.30  | 0.638   | 1.286 | 0.0246 | 23.2 | **yes** |
+    | 0.45  | 0.858   | 1.973 | 0.1149 |  6.2 | no |
+    | 0.60  | 0.980   | 1.912 | 0.0420 | 19.2 | no |
+
+    Only the U=0.30 run is both subcritical and stationary. It gives
+    **1.286 +/- 0.025 against Rouse's 1.4**: 8.2 percent low, and 1.4 sits OUTSIDE
+    the RUM95 band, so this is a measured disagreement, not agreement within error.
+
+    FOUR REASONS NOT TO CALL THIS EITHER A PASS OR A REFUTATION YET.
+    (a) The retained window is 31 frames of 295 (discard 264) and n_eff is 23.2.
+    (b) The ratio series passes the stationarity test while the DISCHARGE is still
+        decaying, 0.171 to 0.042 m2/s. That is possible because the ratio is
+        scale-free, y_b and y_c shrinking together, so a stationary ratio does NOT
+        certify a steady flow. Do not read it as one.
+    (c) The two faster runs, closer to Fr = 1, give 1.9 to 2.0, so the ratio is
+        strongly regime-dependent across the sweep and one point is not a curve.
+    (d) The recycling BC, the SDF bed friction (0.4, unsourced here) and the finite
+        head are all candidate sources of an 8 percent bias and none has been
+        separated. Resolution has not been varied either.
+
+    WHAT WOULD SETTLE IT: hold a subcritical approach AND a steady discharge at the
+    same time, then vary bed friction and grid resolution and see whether 1.286
+    moves. Until then the honest statement is that the pipeline reproduces the
+    end-depth ratio to within 8 percent on a first attempt, and that the residual
+    is unexplained.
+
+28. **IMAGE PARTICLES ARE IMPLEMENTED AND NOT USABLE AS WRITTEN. THE J
+    APPROXIMATION FORCED BY F HAVING NO SETTER APPEARS TO DOMINATE.**
+
+    `simulation/image_particles.py` translates Schulz and Sutmann's boundary into a
+    fixed pool: images carved out at load time, repositioned each tick as mirrors of
+    band particles, because the engine cannot create a particle (item 21). Nine
+    self-tests pass on synthetic data.
+
+    In the scene it fails. THREE attempts, 12000 images, Yaris in the open channel:
+    every arm with images tripped the engine's P2G edge guard before producing a
+    summary, and the particle at the offending coordinate was WATER, not an image,
+    both upstream (x=0.2158 against a 0.2208 limit) and downstream (x=9.064 against
+    9.054). Moving the outflow plane from 4 cells to 8 fixed the downstream end and
+    the upstream failure survived it. So the image layer is displacing the water,
+    not merely sitting near the edge itself.
+
+    THE LIKELY MECHANISM IS THE ONE THE MODULE DOCSTRING ALREADY FLAGS. An image
+    ought to carry its source's compression state. F has no setter, so it carries
+    whatever J its own history produced, and pressure is p = -bulk (J^-1.1 - 1). At
+    12000 images that is a large spurious pressure source sitting under the floor.
+    THE COUNT SCAN SETTLES IT, AND IT IS A REFUTATION, NOT A TUNING PROBLEM.
+    Same scene, outflow at 8 cells, only the image count varies:
+
+    | images | clamped_z | vs baseline | P-2    | vs baseline |
+    |-------:|----------:|------------:|-------:|------------:|
+    |      0 |   664372  |      -      | 0.0833 |      -      |
+    |    500 |   650615  |   -2.1%     | 0.0833 |    0.0%     |
+    |   2000 |   713498  |   +7.4%     | 0.0833 |    0.0%     |
+    |   6000 |   877972  |  **+32.2%** | 0.0869 |   +4.3%     |
+    |  12000 |   CRASHED |      -      |   -    |      -      |
+
+    Floor penetration gets MONOTONICALLY WORSE as images are added, and the one
+    case that is indistinguishable from baseline (500) is the one with almost no
+    images in it. That is the opposite of what a working boundary treatment does,
+    and monotonicity rules out "the count was mistuned": there is no count at which
+    this helps. It is the signature of the images acting as a spurious pressure
+    source rather than as boundary support, which is exactly the J mechanism the
+    module docstring flags, so the refutation and the predicted failure mode agree.
+
+    WHAT THIS DOES AND DOES NOT ESTABLISH. It refutes THIS implementation, a
+    host-side mirror in a pool whose F cannot be written. It does NOT refute Schulz
+    and Sutmann, whose method assumes the image carries the source's stress state.
+    Implementing it properly needs a kernel-side F assignment, which is engine work,
+    not driver work. Record it as "attempted, refuted, mechanism identified",
+    never as "image particles do not work".
+
+    DO NOT record image particles as the passthrough fix. Item 24 already showed
+    that a substantial part of the passthrough is a boundary-condition artifact
+    that opening the domain removes, and this item shows the remaining part is not
+    addressed by this implementation.
