@@ -124,6 +124,24 @@ the confounded experiment it replaces.** Run 5 repeats per grid on m2337 at 90 f
 - **Failure:** the flip weakens or moves. Then tank growth was doing some or all of the work.
 - **Write it up identically either way.**
 
+**THE WRAPPER IS ALREADY WRITTEN.** `scripts/pinned_span_wrapper.py`, 155 lines, on this
+branch. It monkeypatches `extent[1]` inside `canonicalize()`, which is the single point every
+downstream consumer reads (`h_probe`, the `lim1`/`lim2` determinism probe, the scene's own
+`lim`, and the extent written to the rollout), so the override propagates by construction. The
+hull is NOT rescaled: only the advertised `extent[1]` changes, so particles, mesh, SDF, mass
+and spacing are the real hull and the blockage ratio is held fixed. **Verify in the output that
+`solid_volume_m3` and `hull_m3` match the unpinned runs.**
+
+**A TRADE-OFF NOBODY HAD SPOTTED, and it is why this needs care rather than a quick run.**
+Pinning the span does NOT pin the realized water depth. Depth is quantized to `L*h` with
+`L = ceil(depth/h - 0.5)`, so pinning the span moves the realized depth unless 40 divides
+`(n - 8)`. **The unpinned R6 ladder happens to hold realized depth EXACTLY constant at
+0.2944294 m (= lim/32) at n = 48/64/96/128.** That is a real control and it must not be
+surrendered silently in exchange for the span control. The wrapper exposes
+`--require-exact-depth`, which refuses any grid that would move the depth. **Decide explicitly
+which control you are buying, and say so in the write-up.** Running both variants is the
+defensible answer and is affordable.
+
 ---
 
 ## 3. WHAT ELSE IS MEASURED. All from tonight, all reproducible.
@@ -221,6 +239,22 @@ apply: the half-space below is already fully constrained. **And it is blocked**:
 exposes no pin/freeze/set_particle_*/ghost API, material 7 (stationary) is not reachable
 through `set_material_range`, and the only freezing path makes a free material-8 body that
 falls under gravity.
+
+**A SECOND APPROACH EXISTS AND GETS AROUND THE BLOCKER**, commit `6ed163e` on
+`claude/r5-physics`. The frozen-ghost route is blocked, but **the deficiency is missing MASS
+and mass does not have to be frozen.** `--ghost-layers N` seeds N extra layers of REAL fluid
+below the nominal floor and moves the seeding floor down to match. Those layers are
+sacrificial and may leak themselves; the point is that water AT the nominal floor becomes
+interior fluid with full B-spline support rather than a free surface against a mass-empty
+half-space. **3 layers covers the 1.5 dx support exactly, since h = dx/2.** Cost is
+`N*(span/h)^2` particles.
+
+**Default is 0 and that is load-bearing:** at `n_ghost = 0` the seeding floor and `n_z` are the
+original expressions, so every earlier run reproduces bit-for-bit and no comparison on that
+branch is silently changed. `n_ghost_layers` and `ghost_depth_m` are recorded in the run config
+so a result is self-describing. **UNTESTED ON GPU.** Anyone enabling it MUST re-measure the
+free surface, because the seeded column changes and `measure_surface`'s percentile would
+otherwise be taken over a different population.
 
 **Job 918450 is the partial fix, already running.** A COPY of the engine at
 `$WORK/mpm-engine-bcfix-src` with exactly one line changed, `dotproduct < 0.0` to `<= 0.0`,
@@ -548,6 +582,41 @@ worked all round: find, then attack, then only publish what survives.** Roughly 
 third of findings were refuted at every stage, which is the base rate to expect.
 
 ---
+
+## 11b. EVERY OPEN ITEM FROM ROUND 6, with owner and state
+
+Round 6 deployed four daughter sessions and then cleared them. Their committed work survives on
+their branches; their scrollback is archived at
+`can-it-ford-bundles/2026-08-18/r6-killed-sessions/`. **Nothing below is in progress. Every row
+is unowned and available.**
+
+| # | item | state at end of R6 | where the work is |
+|---|---|---|---|
+| 1 | **Pinned-span ladder control** | wrapper WRITTEN, never run | `scripts/pinned_span_wrapper.py` (this branch) |
+| 2 | Collect + grade **job 918450**, boundary-fix A/B | job queued, uncollected | `$WORK/d4_jobBbc_918450` |
+| 3 | Collect **g192 (918351)**, COMPLETED 10:50 | uncollected | `$WORK/r6_rep_g192_918351` |
+| 4 | **Sacrificial sub-floor** `--ghost-layers` | implemented, default OFF, UNTESTED on GPU | `6ed163e` on `claude/r5-physics` |
+| 5 | Engine one-liner `< 0.0` to `<= 0.0` on the PINNED engine | owner decision, breaks sha | see 3g |
+| 6 | **Force-vs-resolution curve** | started, not delivered | `claude/r5-research` |
+| 7 | **Inlet/outlet BC port to the vehicle scene** | not started | `simulation/openchannel_bc.py` on `claude/add-ci-checks` |
+| 8 | Rename `determinism_identical` (5 writers, 7 poster captions) | not started | see 3b |
+| 9 | Remove persistence from the verdict / report frequency | not started | see 3c |
+| 10 | Renders: wire asphalt PBR, add `--hero` | not started | see section 7 |
+| 11 | **AV traversability surface** | not started | see section 5 |
+| 12 | Register merge, merge the CURRENT tip | not started | see 10.10 |
+| 13 | Push the 4 staged bib entries to Overleaf | BLOCKED on the token file | `docs/overleaf_staging/` |
+| 14 | Write `~/.config/overleaf-mcp/token` | BLOCKED, Josie only | see section 8 |
+| 15 | Rotate 12 credentials, 0 done | BLOCKED, Josie only | see section 8 |
+| 16 | `check_claims.py` Rule C6 is stale | not started | asserts "TWO sites"; there is one |
+| 17 | Threshold provenance report | partially done | corpus dir, not the repo |
+| 18 | Al-Qadami mesh-independence detail | UNVERIFIED, MDPI 403 | needs a primary read |
+| 19 | Nihei corrigendum `10.1016/j.rineng.2025.107527` | unfetched | gates the brake-state numbers |
+| 20 | Job C | GATED on the Job B decision | do not run until 3e is settled |
+
+**Ranked, if you only do three: 1, then 2 and 3 together, then 7.** Item 1 decides whether the
+headline result is physics or geometry. Items 2 and 3 are already-paid GPU sitting uncollected.
+Item 7 is the biggest single gain in physical realism and is already written and measured for
+the channel.
 
 ## 12. HOW TO BEHAVE
 
