@@ -478,3 +478,59 @@ would discriminate, a band sweep at fixed dx (g64 predicts +29.69 / +64.49 / +10
 Also inherited and unfixed: the sphere JSONs carry no wall clock, job id or scene commit,
 so section 9's "496 s" and "job 917886" are unverifiable from the artifact, and section 7
 attributes the same job id to the g64 run.
+
+## 12. Band sweep at FIXED dx: the mechanism IS the contact band
+
+Three g64 runs, 300 frames, dx held at 0.01875 m, **h/2 fix active**, only `band_mult`
+varied. Because dx is fixed, all four rival O(dx) mechanisms (estimator offset, B-spline
+stencil, kernel truncation, wall-node quantisation) are **held constant by construction**.
+This is the confound section 11.3 said the g96 test did not remove.
+
+| band_mult | band (m) | N | ratio | measured excess | cap-law prediction |
+|---|---|---|---|---|---|
+| 0.5 | 0.009375 | 165 | 1.1989 | **+19.89%** | +27.71% |
+| 1.0 | 0.018750 | 163 | 1.5128 | **+51.28%** | +59.53% |
+| 2.0 | 0.037500 | 142 | 2.2066 | **+120.66%** | +136.56% |
+
+**The excess moves 100.77 points across the sweep.** A rival O(dx) mechanism predicts
+**no dependence on band at all**, so every one of them is refuted as the *dominant* term.
+**The mechanism is the collider's contact band.** That is the identification section 11.6
+said was missing, and unlike section 9 it rests on a comparison where the competing
+hypotheses were genuinely held fixed rather than assumed away.
+
+### 12.1 The mechanism is right; the quantitative model is not exact
+
+The simple `R + band` cap law **over-predicts at every point**, and systematically:
+
+| band_mult | measured / predicted |
+|---|---|
+| 0.5 | 0.718 |
+| 1.0 | 0.861 |
+| 2.0 | 0.884 |
+
+So the closed form overshoots by 12 to 28%, worst at the smallest band. **The excess is
+sub-linear in the band relative to a rigid radius inflation**, which is what one would
+expect if the constrained shell is partially rather than fully rigid, but that is a
+hypothesis and is not tested here. Report the mechanism as identified and the magnitude
+model as approximate; do not quote `R + band` as a correction factor.
+
+### 12.2 What this does and does not settle
+
+**Settles**: the dominant O(dx) inflation in this scene is the SDF collider's contact
+band, at `mpm_solver_warp.py:2627` with the impulse gated at `:2711`. The 6.4 sigma dx
+dependence from section 11.6 now has a named cause.
+
+**Does not settle**: the magnitude model (12.1); whether the residual after band
+correction is zero; and nothing about stationarity. **Neither the nominal nor the
+pre-registered criterion changes**: no run here is stationary, and the measured-surface
+criterion still reports FAIL on the uncorrected ratio. Identifying a mechanism is not a
+validation, and per CLAUDE.md item 6 this scene remains a self-consistency check against
+its own closed form, not the Kramer benchmark comparison, which is job C.
+
+**Sanity check, stated because it is weak evidence not strong**: the band = 1.0 arm gives
++51.28% at 300 frames against the retro-corrected g64 600-frame value of +47.41%. Same
+ballpark, but different run lengths and windows, so it is consistency, not replication.
+
+**UNREVIEWED**: no physics-skeptic pass on this section. Given that three of my headlines
+were overturned tonight, treat section 12 as the least-checked claim in this document.
+Settle 8 constructor-only, trimesh 4.12.2, engine 627367e, h/2 fix active.
