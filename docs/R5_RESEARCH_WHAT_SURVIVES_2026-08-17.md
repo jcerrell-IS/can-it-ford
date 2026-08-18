@@ -55,6 +55,32 @@ So the correct reading of every "zero `.tex`" result I publish:
 differs by branch (unit 62), and the live Overleaf head is unreachable (FLAG-6).
 **Quote the checkout, never a bare count.**
 
+## A0b. Did the register already hold my other corpus findings? (unit 66)
+
+Unit 65 retracted a whole unit because I mined a corpus artifact **without checking
+the register**, which already held it as G4a. Unit 13's rule is mine, so I checked
+the other corpus-derived units rather than assuming that was the only one.
+
+| unit | corpus finding | register coverage |
+|---|---|---|
+| 40 | the twelve-study **sealing** table | **PARTIAL.** `:259` already holds the Kramer sealing-scale-effect ("model-scale watertight vehicles float too shallow"), which I reported as a survivor. The twelve-study treatment split is **not** in the register |
+| 56 | the **validation protocol** is unused | **PARTIAL.** `:297` **G11** already holds Oberkampf and Roy 2010, ASME V&V 40 and "do not claim to have invented it". Adjacent, not identical: G11 is about the abstraction principle being prior art, mine about V&V citations being absent from the paper |
+| 49 | the paper cites **no MPM method literature** | **NONE.** Zero register hits for `Sulsky`, `GIMP`, `MPM after 25`, `method literature` |
+| 64 | friction 0.55 provenance | **FULL.** G4a, same report ID, twelve days earlier. **RETRACTED** |
+
+**So unit 64 was the worst case, not the only one.** Units 40 and 56 did engage the
+register (2 and 4 mentions each) and neither is retracted, but each has a specific
+entry I should have cited and did not.
+
+**And the audit confirms the important thing: unit 49's MPM-method-citation gap is
+genuinely new.** It is my strongest surviving finding and the register does not hold
+it in any form.
+
+**One correction the register hands me for free:** `:259` gives Toda et al. 2013 as
+**0.26 at 0 degrees and 0.57 at 90 degrees**, per-study mu varying strongly with yaw.
+That is the same correction the reviewer made to unit 64's "Toda 0.6", available in
+the register the whole time.
+
 ## A. SAFE TO CITE
 
 Each of these was verified by primary source or by measurement, and each survived
