@@ -692,8 +692,23 @@ R7-1. THE LADDER IS SIX RUNGS AND g192 IS A SECOND STUCK. Job 918351 collected. 
 
 R7-2. THE TWO STUCK ROWS ARE STUCK FOR DIFFERENT REASONS, and only g192 is physical stasis.
   The joint SLIDE condition needs drift >= 0.05 m AND speed >= 0.05 m/s in the SAME frame,
-  and `sim_standing.py:240` applies a ONE-SHOT DECAYING KICK, so the speed criterion expires
-  by frame 6 to 14 at EVERY grid. g160 DOES cross 0.05 m drift, for 59 frames, starting at
+  and the speed criterion is MEASURED to expire by frame 6 to 14 at EVERY grid.
+  PROVENANCE CORRECTION 2026-08-18, and it changes the mechanism, not the measurement.
+  I inherited the phrase "sim_standing.py:240 applies a one-shot DECAYING kick" from
+  `claude/r7-collect` and repeated it without reading the driver. Read live from
+  `renders/yaris_render_s1/_incoming/sim_standing.py` (sha256 `5215c38b...`, 389 lines):
+    :156-158  the settle loop
+    :161      `v[: self.n_water, 0] += velocity`   the kick, ONCE, ADDITIVE
+    :165      `self.time = 0.0`
+  So it is at :161, not :240, and there is NO decay term anywhere; the water simply slows
+  through the physics. The line number :240 is wrong for BOTH driver copies (the top-level
+  copy is 564 lines, sha `4696c3b2...`), and CLAUDE.md item 2 already cited it correctly as
+  ":156-162". Check which copy you are reading before citing a line.
+  AND THE MECHANISM IS NOT ESTABLISHED. `_project_water()` is a SUSTAINED per-frame
+  Dirichlet clamp on the upstream slab, defined at :169 and called every frame at :201, so
+  water momentum IS re-injected continuously. "The kick expired" therefore cannot on its own
+  explain why the vehicle's surge speed falls below 0.05 m/s by frame 6 to 14. The EXPIRY IS
+  MEASURED and stands; the causal story is UNVERIFIED and needs the clamp accounted for. g160 DOES cross 0.05 m drift, for 59 frames, starting at
   frame 29, and is STUCK only because speed expired at frame 6. g192 never reaches 0.05 m at
   all, max 0.04757. Never write that g192 reproduces g160 as a mechanism claim.
   THE WHOLE VERDICT IS DECIDED IN THE FIRST HALF SECOND, because that is the only window in
