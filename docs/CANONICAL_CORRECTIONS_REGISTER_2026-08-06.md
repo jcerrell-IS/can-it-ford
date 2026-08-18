@@ -1867,3 +1867,35 @@ L7. **SKILL DRIFT, RE-VERIFIED, and the previously recorded drift is FIXED.** Fi
     because the single-copy exposure is the larger hazard: five commits including the
     canonical seeding path exist only on one scratch filesystem.
 
+38. **SINGLE-COPY EXPOSURE: 45 LOCAL BRANCHES HAVE NEVER BEEN PUSHED, AND THE
+    LARGEST CARRIES 83 COMMITS.** T1, measured live 2026-08-18 with
+    `git for-each-ref` and `rev-list --count origin/main..<branch>`.
+
+    87 local branches. **45 have no upstream at all**, so they exist on one laptop
+    and nowhere else. Twelve or more carry commits unreachable from `origin/main`,
+    led by `claude/r5-research` at 83, `claude/r5-physics` at 73,
+    `claude/r5-safekeeping` and `claude/r5-exposure` at 47 each, and the current
+    `claude/add-ci-checks` at 41.
+
+    Read this together with item 37, where five mpm-engine commits including the
+    canonical `solidify_watertight` seeding exist only on Vista's `$WORK`, and with
+    the standing note that `~/can-it-ford-demo` `4d228d9` is single-copy. The project
+    is not one backup away from being safe; it is many.
+
+    **A CAVEAT THAT MATTERS BEFORE ANYONE "HARVESTS" A BRANCH.** The plan to harvest
+    `claude/fork-three-class` cites "85 files and 3,565 insertions". Re-measured, that
+    matches neither available reading. Three-dot against merge-base, which is the one
+    that answers "what does this branch ADD", gives **23 files and 3564 insertions**.
+    Two-dot gives 92 files, 3582 insertions and **26,459 DELETIONS**. Those deletions
+    are the point: the branch is an OLD fork, not a superset, so a naive merge or
+    cherry-pick would revert work that is on the current branch. Harvest the 23 files
+    deliberately, never by merging the branch wholesale, and re-measure before quoting
+    any figure, stating which of the two readings you used.
+
+    **NOT ACTIONED HERE.** Pushing is a remote write and this repo is PUBLIC, so a
+    blanket push is not available: `claude/credential-exposure-2026-08-13-DO-NOT-PUSH`
+    is among the 87 and is named that way for a reason. The safe move is a selective
+    push of the research branches after checking each for credential content, or a
+    `git bundle` of the whole ref set to external storage, which needs no remote write
+    and would close the exposure in one step.
+
