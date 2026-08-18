@@ -644,60 +644,137 @@ def intercode(root: Path = DEFAULT_ROOT, num_root: Path = NUM_ROOT) -> dict:
 # --------------------------------------------------------------------------------------
 # placing an external force-ratio error against the published inter-code spread
 # --------------------------------------------------------------------------------------
-def force_error_as_period_error(force_ratio_excess: float,
-                                a33_over_m: float = 0.5) -> dict:
-    """Convert a HYDROSTATIC vertical-force ratio error into an implied period error.
+def period_equivalents(force_ratio_excess: float, a33_over_m: float = 0.5,
+                       r: float = 0.5 * D_SPHERE) -> dict:
+    """Every defensible way to read a static force-ratio error as a period error.
 
-    THIS IS AN ATTRIBUTION, NOT A MEASUREMENT, and both defensible attributions are
-    returned rather than one being chosen silently. Job B is a pinned-sphere hydrostatic
-    check: `R5_PHYSICS_BATCH_MANIFEST.md` criterion 3 grades the steady vertical reaction
-    against 69.2180 N of analytic buoyancy. The eleven codes are compared here on damped
-    PERIOD, because that is what a free-decay record measures. Nothing in the benchmark
-    converts one into the other for free.
+    WITHDRAWN 2026-08-18, SAME DAY IT WAS WRITTEN. This function replaces
+    `force_error_as_period_error`, which offered TWO attributions, called the geometric one
+    "the more forgiving" and therefore "conservative for an outlier claim", and was used to
+    place Job B outside the eleven-code envelope. An adversarial review commissioned by the
+    R8 coordinator broke it and every point reproduces here. The old function is gone rather
+    than deprecated, because leaving a callable that returns a placement invites the
+    placement to be quoted again.
 
-        T = 2*pi*sqrt((m + a33)/k),   k = rho*g*pi*R^2
+    THREE THINGS WERE WRONG.
 
-    so the bridge is whatever the force error does to k, and that depends on WHERE the
-    error is:
+    1. THE GEOMETRIC ROUTE PUT A FLOATING BODY WHERE IT CANNOT FLOAT. It computed the
+       dilated sphere's stiffness as rho*g*pi*R'^2, which is the waterplane at the dilated
+       body's OWN half draft. At fixed mass a body 14.487% larger displaces 1.5006x its own
+       weight there, so it cannot sit at that draft. A free decay happens about the body's
+       own equilibrium, draft 0.13287 m, where the stiffness ratio is 1.2436 and not 1.3107.
+       That alone moves the equivalent from -12.65% to -10.33%, INSIDE the envelope, and the
+       whole "outside on both attributions" verdict turned on 0.3966 percentage points.
+    2. THE ADDED-MASS ROUTE WAS EXCLUDED ON A SENSITIVITY READ BACKWARDS. The old prose
+       said routing through a33 "inflates the equivalent about sixfold" and cited this
+       module's own 6.03% figure. That figure is PERIOD -> a33: a 1% period error implies a
+       6.03% a33 error. The map the bridge needs is a33 -> PERIOD, and it DEFLATES by the
+       same factor: a 50.06% a33 error is +8.02% of period, 6.24x smaller, INSIDE. The
+       ground for excluding a33 as a LOCUS (a hydrostatic reaction contains no added mass)
+       is sound and is kept; but excluding it as a locus does not license holding it
+       INVARIANT under an attribution that changes the geometry, and carrying it moves the
+       dilation route to -3.13%.
+    3. A LEVEL CANNOT CONSTRAIN A SLOPE. k is dF/dz. Job B measures F at ONE draft. Any
+       error that is constant in z gives identical static evidence and EXACTLY ZERO
+       stiffness error, and neither original attribution admitted that class at all. It is
+       not an exotic case: see `JOB_B_ACCESSOR_TRAP`, where a surface-estimator offset does
+       precisely this.
 
-      * SCALE. The error is in the rho*g product, or in the coupling's force
-        normalisation, i.e. anything that multiplies the buoyant force without changing
-        the geometry. Then k carries the same factor one for one, and
-        e_T = 1/sqrt(1+f) - 1.
-      * GEOMETRY. The error is an isotropic error in the sphere's effective radius in the
-        solver. Then F ~ R^3 while k ~ R^2, so a force excess f implies a radius excess
-        (1+f)^(1/3) - 1 and a stiffness excess (1+f)^(2/3) - 1, which is SMALLER. This is
-        the most forgiving of the two and is the one to quote when the claim is that a
-        number is an outlier.
-
-    Both are returned. The added-mass route is deliberately NOT offered: at a33/m = 0.5 a
-    1% period error becomes a ~6% error in a33, so routing a force error through a33
-    inflates the equivalent by about six and is the wrong bridge for a hydrostatic check,
-    which contains no added mass at all.
+    Returns every route with no preferred one, and `determinate: False`. If a future caller
+    wants a single number out of this, the answer is that the data does not contain one.
     """
     f = force_ratio_excess
-    e_scale = 1.0 / math.sqrt(1.0 + f) - 1.0
-    k_geom = (1.0 + f) ** (2.0 / 3.0)
-    e_geom = 1.0 / math.sqrt(k_geom) - 1.0
-    m_eff = 1.0 + a33_over_m
-    e_am_for_1pct = ((1.01 ** 2) * m_eff - 1.0) / a33_over_m - 1.0
-    return {
-        "force_ratio_excess": f,
-        "scale_attribution": {
-            "what": "error multiplies the buoyant force, k carries it one for one",
-            "stiffness_excess_frac": f,
-            "equivalent_period_error_pct": 100.0 * e_scale,
-        },
-        "geometry_attribution": {
-            "what": "isotropic effective-radius error, F ~ R^3 but k ~ R^2",
-            "implied_radius_excess_pct": 100.0 * ((1.0 + f) ** (1.0 / 3.0) - 1.0),
-            "stiffness_excess_frac": k_geom - 1.0,
-            "equivalent_period_error_pct": 100.0 * e_geom,
-        },
-        "added_mass_route_amplification_per_1pct_period": 100.0 * e_am_for_1pct,
-        "note": ("an attribution, not a measurement; the geometry route is the smaller "
-                 "equivalent and is therefore the conservative one for an outlier claim"),
+    veq = (2.0 / 3.0) * math.pi * r ** 3
+
+    def per(k_ratio, a33_new):
+        return 100.0 * (math.sqrt((1.0 + a33_new) / (1.0 + a33_over_m))
+                        / math.sqrt(k_ratio) - 1.0)
+
+    # free-body equilibrium draft of an isotropically dilated sphere at FIXED mass
+    rp = r * (1.0 + f) ** (1.0 / 3.0)
+    lo, hi = 0.0, 2.0 * rp
+    for _ in range(300):
+        mid = 0.5 * (lo + hi)
+        if math.pi * mid * mid * (3.0 * rp - mid) / 3.0 < veq:
+            lo = mid
+        else:
+            hi = mid
+    d_free = 0.5 * (lo + hi)
+    k_free = d_free * (2.0 * rp - d_free) / (r * r)
+
+    routes = {
+        "constant_offset_in_z": dict(
+            k_ratio=1.0, a33=a33_over_m,
+            what="the error is a LEVEL offset, constant in z. k is dF/dz and is untouched. "
+                 "A single-point static measurement cannot exclude this class."),
+        "surface_estimator": dict(
+            k_ratio=1.0, a33=a33_over_m,
+            what="the error is in the accessor's DENOMINATOR, not the solver force. See "
+                 "JOB_B_ACCESSOR_TRAP: 18.1 mm of surface error, 0.97 dx at g64, accounts "
+                 "for the entire +50.06 with zero stiffness error."),
+        "locus_in_a33": dict(
+            k_ratio=1.0, a33=a33_over_m * (1.0 + f),
+            what="a33 as the locus. Unphysical for a HYDROSTATIC reaction, which contains "
+                 "no added mass, but it is the route the old prose excluded backwards."),
+        "dilation_free_body": dict(
+            k_ratio=k_free, a33=a33_over_m,
+            what="isotropic radius error at fixed mass, stiffness taken at the body's OWN "
+                 "free equilibrium draft. This is the corrected form of the old geometry "
+                 "route and it lands inside."),
+        "dilation_free_body_a33_carried": dict(
+            k_ratio=k_free, a33=a33_over_m * (1.0 + f),
+            what="the same, with a33 scaled as R^3 rather than held fixed while the "
+                 "geometry changes underneath it."),
+        "scale_on_rho_g": dict(
+            k_ratio=1.0 + f, a33=a33_over_m,
+            what="the error multiplies the buoyant force without changing geometry, so k "
+                 "carries it one for one. The ONLY route that lands outside."),
     }
+    out = {"force_ratio_excess": f, "determinate": False,
+           "dilated_free_equilibrium_draft_m": d_free,
+           "dilated_stiffness_ratio": k_free,
+           "withdrawn_route_dilation_at_own_half_draft_pct":
+               per((1.0 + f) ** (2.0 / 3.0), a33_over_m),
+           "routes": {}}
+    vals = []
+    for name, spec in routes.items():
+        e = per(spec["k_ratio"], spec["a33"])
+        out["routes"][name] = {"equivalent_period_error_pct": e,
+                               "stiffness_ratio": spec["k_ratio"], "what": spec["what"]}
+        vals.append(e)
+    out["span_pct"] = [min(vals), max(vals)]
+    return out
+
+
+# The accessor conflation, which is the part of the refutation that is not about physics.
+JOB_B_ACCESSOR_TRAP = """
+sphere_heave.py ships TWO force accessors and they do not share a denominator:
+
+  :819  fz_over_analytic_nominal  = fz / (rho_w * g * (2/3)pi R^3) = fz / 69.2180 N
+  :818  fz_over_analytic_measured = fz / analytic_buoyancy_at_measured_surface_N (:813)
+
+Criterion 3 of R5_PHYSICS_BATCH_MANIFEST.md names 69.2180 N, which is the NOMINAL accessor.
+The +50.06 percent grade is on the MEASURED accessor, whose denominator is the buoyancy at
+whatever surface the run actually had. In job 918240 that surface had fallen 5.587 cm, so the
+pinned sphere sat at a draft of 0.09413 m, 31.4 percent of its diameter, and the denominator
+was 32.33 N rather than 69.2180 N.
+
+THE TWO ACCESSORS DO NOT EVEN AGREE ON THE SIGN. Against the 69.2180 N target, the same 200
+frames read -29.11 to -9.67 percent, a DEFICIT at every window. The earlier claim that "every
+Job B equivalent is negative, because a force excess shortens the period" was therefore an
+artefact of accessor choice, not a property of the run.
+
+TWO CONSEQUENCES FOR THE BRIDGE, both fatal to it:
+  * The waterplane at the measured draft is 0.060879 m2 against the nominal 0.070686, which
+    is 13.87 percent low. The stiffness that sets the decay period is not the stiffness of
+    the state that was measured.
+  * measure_surface (sphere_heave.py:676-714) EXCLUDES every particle within 2R of the
+    sphere axis, deliberately and for good reason (meniscus and splash). That annulus is
+    exactly where the pressure generating fz acts, so the near-field surface is unmeasured
+    by construction and a surface-estimator explanation cannot be ruled out by this data.
+    The same docstring records that a 4.688 mm h/2 correction moved the grade about 13
+    points with the solver force untouched.
+"""
 
 
 # --------------------------------------------------------------------------------------
@@ -917,87 +994,38 @@ def published_envelope(ic: dict) -> dict:
 
 
 def place_job_b(root: Path = DEFAULT_ROOT, num_root: Path = NUM_ROOT) -> dict:
-    """Where each Job B grade sits against the eleven-code envelope. NOT a re-grade."""
+    """WITHDRAWN. Returns the withdrawal and the span, never a placement.
+
+    This function used to report, for each Job B grade, whether its converted period
+    equivalent fell inside the eleven-code envelope. That placement is withdrawn: the
+    conversion is under-determined, five of the six defensible attributions land inside and
+    one lands outside, and the span straddles both envelope bounds. See
+    `period_equivalents` for what broke and `JOB_B_ACCESSOR_TRAP` for the accessor
+    conflation underneath it.
+
+    The envelope itself is untouched and is still returned. It is a real measurement about
+    the published corpus and never depended on Job B.
+    """
     ic = intercode(root, num_root)
     env = published_envelope(ic)
-    out = {"envelope": env, "grades": []}
+    out = {"envelope": env, "placement": "WITHDRAWN 2026-08-18", "grades": []}
     for job, excess, status in JOB_B_GRADES:
-        b = force_error_as_period_error(excess)
-        rec = {"job": job, "force_excess_pct": 100.0 * excess, "status": status,
-               "equivalents": b}
-        for key, tag in (("scale_attribution", "scale"),
-                         ("geometry_attribution", "geometry")):
-            e = b[key]["equivalent_period_error_pct"]
-            inside_all = env["all_codes_min_pct"] <= e <= env["all_codes_max_pct"]
-            rec[f"{tag}_period_pct"] = e
-            rec[f"{tag}_inside_all_code_envelope"] = bool(inside_all)
-            rec[f"{tag}_times_worst_published_code"] = abs(e) / env["all_codes_worst_abs_pct"]
-            rec[f"{tag}_times_worst_rans_code"] = abs(e) / env["rans_only_worst_abs_pct"]
-            # every Job B equivalent is NEGATIVE (a force excess shortens the period), so
-            # the bound it has to clear is the envelope's LOW edge, not its widest side.
-            # Comparing a negative equivalent against a positive worst case would flatter
-            # it: at 05D the worst code high is LPF4 at +12.83 and the worst low is LPF0
-            # at -12.26, and the difference decides whether "inside the scatter" is true.
-            same = env["all_codes_min_pct"] if e < 0 else env["all_codes_max_pct"]
-            rec[f"{tag}_same_sign_worst_code_pct"] = same
-            rec[f"{tag}_times_worst_same_sign_code"] = abs(e) / abs(same)
-            rec[f"{tag}_beyond_same_sign_bound_pct_points"] = abs(e) - abs(same)
-        out["grades"].append(rec)
-    return out
-
-
-# --------------------------------------------------------------------------------------
-# what a measured a33/m does to sphere_heave.py's reflection windows
-# --------------------------------------------------------------------------------------
-def reflection_windows(a33_over_m: float, lim: float = 1.2, wall: float = 0.100,
-                       depth: float = 0.5, g: float = 9.81, rho_w: float = RHO_W,
-                       mass: float = M_SPHERE, d: float = D_SPHERE) -> dict:
-    """Reproduce `sphere_heave.SphereTank.reflection_windows()` for any a33/m.
-
-    Reimplemented rather than imported because `sphere_heave.py` is out of scope for this
-    slot and must not be touched, and because importing it would drag in the engine
-    module. The constants are read from it: FLOOR/WALL at :478-479, PLANNED_CONFIGS at
-    :199, --lim/--depth defaults at :868-869, G_ENGINE at :146.
-
-    THE SCALING IS NOT LINEAR IN T FOR TWO OF THE THREE SPEEDS, and that is the finding.
-    c_group and c_phase are both PROPORTIONAL to T_n, so the window expressed in periods
-    goes as (2*d_wall/c)/T_n ~ 1/T_n^2. Only the sqrt(g*h) bound, whose speed does not
-    depend on the body at all, goes as 1/T_n.
-    """
-    k = rho_w * g * math.pi * (0.5 * d) ** 2
-    t_n = 2.0 * math.pi * math.sqrt((mass * (1.0 + a33_over_m)) / k)
-    d_wall = 0.5 * lim - wall
-    speeds = {"group": g * t_n / (4.0 * math.pi),
-              "kramer_phase": g * t_n / (2.0 * math.pi),
-              "shallow_bound": math.sqrt(g * depth)}
-    out = {"a33_over_m": a33_over_m, "natural_period_s": t_n, "wall_distance_m": d_wall,
-           "lim_m": lim, "depth_m": depth, "stiffness_N_per_m": k}
-    for name, c in speeds.items():
-        t = 2.0 * d_wall / c
-        out[f"c_{name}_m_s"] = c
-        out[f"reflect_{name}_s"] = t
-        out[f"reflect_{name}_periods"] = t / t_n
-    return out
-
-
-def reflection_delta(a33_measured: float, baseline: float = 0.5, **kw) -> dict:
-    """What every reflection window becomes if the estimate is replaced by the measurement."""
-    b = reflection_windows(baseline, **kw)
-    m = reflection_windows(a33_measured, **kw)
-    f = m["natural_period_s"] / b["natural_period_s"]
-    out = {"baseline_a33_over_m": baseline, "measured_a33_over_m": a33_measured,
-           "period_factor": f, "period_change_pct": 100.0 * (f - 1.0),
-           "baseline": b, "measured": m, "windows": {}}
-    for name in ("group", "kramer_phase", "shallow_bound"):
-        p0 = b[f"reflect_{name}_periods"]
-        p1 = m[f"reflect_{name}_periods"]
-        out["windows"][name] = {
-            "periods_at_baseline": p0,
-            "periods_at_measured": p1,
-            "change_pct": 100.0 * (p1 / p0 - 1.0),
-            "scaling_exponent_measured": float(
-                math.log(p1 / p0) / math.log(f)) if f != 1.0 else float("nan"),
-        }
+        eq = period_equivalents(excess)
+        vals = [r["equivalent_period_error_pct"] for r in eq["routes"].values()]
+        inside = [n for n, r in eq["routes"].items()
+                  if env["all_codes_min_pct"] <= r["equivalent_period_error_pct"]
+                  <= env["all_codes_max_pct"]]
+        out["grades"].append({
+            "job": job, "force_excess_pct": 100.0 * excess, "status": status,
+            "equivalent_span_pct": [min(vals), max(vals)],
+            "routes_inside_envelope": inside,
+            "n_routes_inside": len(inside), "n_routes": len(vals),
+            "verdict": "UNDETERMINED, placement withdrawn",
+            "equivalents": eq,
+        })
+    out["note"] = ("Job B's FAIL against its own pre-registered criterion stands on its own "
+                   "and never needed this comparison. The eleven-code envelope stands on "
+                   "its own too. Joining them is what does not survive.")
     return out
 
 
@@ -1195,8 +1223,10 @@ def main():
     p.add_argument("--place", action="store_true",
                    help="place every Job B grade against the eleven-code envelope")
     p.add_argument("--force-excess", type=float, metavar="FRAC", default=None,
-                   help="convert a vertical-force ratio excess (e.g. 0.5006) to the "
-                        "period error it would imply under a stiffness attribution")
+                   help="every defensible period equivalent of a force-ratio excess, with "
+                        "no preferred one; the conversion is under-determined")
+    p.add_argument("--accessor-trap", action="store_true",
+                   help="print the two-accessor conflation that broke the Job B placement")
     a = p.parse_args()
 
     if a.wg:
@@ -1210,6 +1240,9 @@ def main():
     if a.wg_verdict:
         print(json.dumps(wg_verdict(a.root, a.num_root), indent=2, sort_keys=True))
         return
+    if a.accessor_trap:
+        print(JOB_B_ACCESSOR_TRAP)
+        return
     if a.place:
         print(json.dumps(place_job_b(a.root, a.num_root), indent=2, sort_keys=True))
         return
@@ -1218,8 +1251,7 @@ def main():
         print(json.dumps(d, indent=2, sort_keys=True))
         return
     if a.force_excess is not None:
-        print(json.dumps(force_error_as_period_error(a.force_excess), indent=2,
-                         sort_keys=True))
+        print(json.dumps(period_equivalents(a.force_excess), indent=2, sort_keys=True))
         return
 
     s = summarise(a.root)

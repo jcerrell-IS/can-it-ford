@@ -33,13 +33,13 @@ attribution appear here and **no Kramer series file enters the repo**.
    `05D` only. And eleven series are not eleven independent results: LPF0 through LPF4 are
    five configurations by one author, the paper's own first author, and RANS2/RANS3 are one
    Plymouth code with the turbulence model switched. Section 2.
-2. **Job B's canonical +50.06 percent is an OUTLIER, not inside the published scatter.** It
-   falls outside the full eleven-code envelope on both available attributions and is 15 to
-   22 times the worst deviation of every independent group except one. **Two qualifications
-   belong beside that sentence every time it is stated, never the headline alone:** on the
-   more forgiving isotropic-radius attribution it is **1.03x LPF0**, essentially tied with
-   the single code the paper itself says to use with care at large amplitude; and the
-   **+18.05 point refinement floor is INSIDE the envelope** while still 6.6x worst-RANS.
+2. **Job B cannot be placed against that envelope, and the attempt to do it is
+   WITHDRAWN.** An earlier revision of this document called +50.06 percent an outlier among
+   published codes. The conversion from a static force ratio to a decay period is
+   under-determined: across six defensible attributions the equivalent spans **-18.37 to
+   +8.02 percent**, five land inside the envelope and one lands outside. Section 6 is the
+   withdrawal. **Job B's FAIL against its own pre-registered criterion stands on its own**
+   and never needed this comparison.
 3. **The added-mass estimate is good where the project actually runs and bad at the large
    drop.** Measured `a33/m` is 0.540 at 01D against the hardcoded 0.5, and 0.870 at 05D.
 4. **A planned configuration does not deliver the reflection window it was designed
@@ -358,94 +358,140 @@ standard uncertainties of {0.8, 0.5, 0.3} mm.
 
 ---
 
-## 6. Job B, placed
+## 6. Job B: THE PLACEMENT IS WITHDRAWN
 
-**This is not a re-grade and must never be used as one.** The criterion was fixed in
-advance at `docs/R5_PHYSICS_BATCH_MANIFEST.md:214-226` and re-scoring after seeing a
-failure is forbidden. What follows is only *where* a given grade sits relative to eleven
-published codes on the same benchmark.
+**An earlier revision of this document, committed today as 79dab7d and 0cb2855, said Job B's
+canonical +50.06 percent lies outside the eleven-code envelope on both available
+attributions and is therefore an outlier among published codes. THAT CLAIM IS WITHDRAWN.**
+I nominated section 6.1 as the claim I most wanted attacked; the R8 coordinator ran the
+attack from a session where the subagent path works, and it broke. Every point of it
+reproduces here, recomputed independently before being written down.
 
-### 6.1 The bridge, which is an attribution and not a measurement
+### 6.1 What replaces it
 
-Job B is a **hydrostatic** check: manifest criterion 3 grades the steady vertical reaction
-of a pinned sphere against 69.2180 N of analytic buoyancy. The eleven codes are compared
-above on damped **period**, because that is what a free-decay record measures. Nothing in
-the benchmark converts one into the other for free.
+> **Job B's canonical grade cannot be placed against the eleven-code envelope.** The two are
+> different observables, the conversion between them is under-determined, and across the
+> defensible attributions the equivalent period error spans **-18.37 to +8.02 percent**,
+> which straddles both envelope bounds. **Five of the six routes land inside the envelope
+> and one lands outside**, so the placement is decided entirely by a choice the data does
+> not make. It is withdrawn.
+>
+> **Job B's FAIL against its own pre-registered criterion stands on its own** and never
+> needed this comparison. So does the eleven-code result in section 4. What does not survive
+> is joining them.
 
-`T = 2*pi*sqrt((m + a33)/k)` with `k = rho*g*pi*R^2`, so the bridge is whatever the force
-error does to `k`, and that depends on where the error lives:
+### 6.2 The three things that were wrong
 
-* **Scale attribution.** The error multiplies the buoyant force without changing the
-  geometry: an error in `rho*g`, or in the coupling's force normalisation. Then `k`
-  carries it one for one and `e_T = 1/sqrt(1+f) - 1`.
-* **Geometry attribution.** The error is an isotropic error in the sphere's effective
-  radius in the solver. Then `F ~ R^3` while `k ~ R^2`, so a force excess `f` implies a
-  stiffness excess `(1+f)^(2/3) - 1`, which is **smaller**. This is the more forgiving of
-  the two and therefore the one an outlier claim must survive.
+**(a) A LEVEL CANNOT CONSTRAIN A SLOPE.** `k` is `dF/dz`. Job B measures `F` at one draft.
+Any error that is constant in `z` gives identical static evidence and **exactly zero**
+stiffness error, and neither of my two attributions admitted that class at all. It is not an
+exotic case; 6.3 gives a concrete instance of it.
 
-The added-mass route is deliberately not offered: at `a33/m = 0.5` a 1 percent period
-error becomes a 6.03 percent error in `a33`, so routing a force error through `a33`
-inflates the equivalent about sixfold, and a hydrostatic check contains no added mass at
-all.
+**(b) MY GEOMETRIC ROUTE PUT A FLOATING BODY WHERE IT CANNOT FLOAT.** I computed the dilated
+sphere's stiffness as `rho*g*pi*R'^2`, the waterplane at the dilated body's own **half**
+draft. At fixed mass a body 14.487 percent larger displaces 1.5006 times its own weight
+there and cannot sit at that draft. A free decay happens about the body's **own**
+equilibrium: draft **0.13287 m**, stiffness ratio **1.2436**, not the 1.3107 I used. That
+alone moves the equivalent from -12.65 to **-10.33 percent, inside**. The eleven codes are
+free bodies; a pinned body has no period at all, so the free-body constraint is the one that
+belongs here.
 
-### 6.2 The placement
+**And the verdict was resting on 0.3966 percentage points**, 3.2 percent of the bound. The
+geometry route crosses the low edge at a force excess of **+48.034 percent**, so 2.03 points
+of force error flips it. The same run flips on window choice too: `R6_A2` 4d-ter reports a
+last-frame value of 1.4790, which is +47.90 percent, already below the crossing.
 
-Envelope over 31 series: **all codes -12.26 to +12.83 percent** (low LPF0 at 05D, high
-LPF4 at 05D). **RANS only, 13 series: -0.82 to +0.23 percent.**
+**(c) I EXCLUDED THE MOST FORGIVING ROUTE ON A SENSITIVITY I READ BACKWARDS.** My prose said
+routing through `a33` "inflates the equivalent about sixfold", citing this module's own 6.03
+percent figure. That figure is **period to a33**: a 1 percent period error implies a 6.03
+percent `a33` error. The map the bridge needs is **a33 to period**, and it **deflates** by
+the same factor. A 50.06 percent `a33` error is **+8.02 percent** of period, 6.24 times
+smaller, inside. The *ground* for excluding `a33` as a **locus**, that a hydrostatic reaction
+contains no added mass, is sound and survives. But excluding it as a locus does not license
+holding it **invariant** under an attribution that changes the geometry underneath it, and
+carrying it consistently moves the dilation route to **-3.13 percent**.
 
-Every equivalent below is negative, because a force excess shortens the period, so the
-bound each must clear is the envelope's **low** edge, `-12.26 percent`. Comparing a
-negative equivalent against the positive high edge would flatter it.
+### 6.3 And the premise sentence was false, which is not a physics error at all
 
-| job | F excess | scale T % | inside? | x worst same-sign code | geom T % | inside? | x worst same-sign | x worst RANS |
-|---|---|---|---|---|---|---|---|---|
-| 918043 | +64.19 | -21.96 | no | 1.79x | -15.23 | no | 1.24x | 18.5x |
-| **918240** | **+50.06** | **-18.37** | **no** | **1.50x** | **-12.65** | **no** | **1.03x** | **15.4x** |
-| 918450 | +34.35 | -13.73 | no | 1.12x | -9.37 | yes | 0.76x | 11.4x |
-| 918722 (n=128) | +23.68 | -10.08 | yes | 0.82x | -6.84 | yes | 0.56x | 8.3x |
-| 918722 fitted floor | +18.05 | -7.96 | yes | 0.65x | -5.38 | yes | 0.44x | 6.6x |
+I wrote that "manifest criterion 3 grades the steady vertical reaction of a pinned sphere
+against 69.2180 N of analytic buoyancy". That is true of criterion 3. **It is not true of
+the number I bridged.** `sphere_heave.py` ships two accessors and they do not share a
+denominator:
 
-Lineage supplied by the coordinator from primary documents and encoded verbatim in
-`JOB_B_GRADES`: 918043 is **explicitly superseded** and biased high (predates commit
-7c9e0af's `measure_surface` h/2 correction); **918240 is the canonical grade**; 918450 is
-a *different configuration*, the boundary-fix treatment, and is not a re-grade of 918240;
-918722 is the refinement series whose two-term fit gives an irreducible +18.05 point floor.
+| accessor | line | denominator |
+|---|---|---|
+| `fz_over_analytic_nominal` | `:819` | `rho_w * g * (2/3)pi R^3` = **69.2180 N**, criterion 3's target |
+| `fz_over_analytic_measured` | `:818` | `analytic_buoyancy_at_measured_surface_N` (`:813`) |
 
-### 6.3 The sentence
+The +50.06 grade is on the **measured** accessor. In job 918240 the free surface had fallen
+**5.587 cm**, so the pinned sphere sat at a draft of 0.09413 m, **31.4 percent of its
+diameter**, and the denominator was **32.33 N**, not 69.2180 N. All four figures reproduce
+here from the module's own formulae.
 
-> **Job B's canonical +50.06 percent is an outlier among published codes, not a point
-> inside their scatter.** It falls outside the envelope of all eleven codes on both
-> available attributions. On the direct scale attribution it is 1.50 times worse than the
-> worst code in the comparison. On the most forgiving geometric attribution it is 1.03
-> times that worst code, that is, essentially tied with **LPF0**, a linear potential-flow
-> model with a constant added mass that the paper itself says should be used with care at
-> large amplitude. Measured against the five RANS codes, the family a two-phase CFD solver
-> belongs in, it is **15 to 22 times** their worst deviation.
+**The two accessors do not even agree on the sign.** Against the 69.2180 N target I named,
+the same 200 frames read **-29.11 to -9.67 percent, a deficit at every window**. So my
+justification that "every equivalent below is negative, because a force excess shortens the
+period" was an artefact of accessor choice, not a property of the run. Neither the earlier
+document nor the module disclosed the second accessor anywhere.
 
-Stated by group rather than by code, which section 2 shows is the sounder unit: **Job B's
-equivalent exceeds the worst deviation of every independent group except one**, and that one
-is five configurations of linear and semi-linear potential flow by a single author. The
-0.82 percent bound is Plymouth's, so "15.4x and 22.4x the worst RANS code" and "15.4x and
-22.4x the worst of the five non-Kramer groups" are the same two numbers.
+Two further consequences, each fatal to the bridge on its own:
 
-Two consequences worth keeping.
+* **The waterplane at the measured draft is 0.060879 m2 against the nominal 0.070686, which
+  is 13.87 percent low.** The stiffness that would set a decay period is not the stiffness
+  of the state that was actually measured.
+* **`measure_surface` (`sphere_heave.py:676-714`) excludes every particle within 2R of the
+  sphere axis**, deliberately and for good reason: that annulus carries the meniscus and any
+  splash. But it is also exactly where the pressure generating `fz` acts, so **the near-field
+  surface is unmeasured by construction** and a surface-estimator explanation cannot be
+  excluded by this data. The same docstring records that a 4.688 mm `h/2` correction moved
+  the grade about 13 points **with the solver force untouched**. Measured sensitivity is
+  **0.0277 ratio-points per mm**, so **18.1 mm of surface error, 0.97 dx at g64, accounts
+  for the entire +50.06 with zero stiffness error.**
 
-* **The boundary fix (918450) moves it from "outside on any reading" to "at the edge."**
-  It is inside the eleven-code envelope on the geometric attribution and outside on the
-  scale one. It remains 11.4 times the worst RANS deviation. It is still a FAIL against
-  its own criterion and this changes nothing about that.
-* **Refinement alone would land inside the envelope but not inside the RANS family.** The
-  fitted +18.05 point floor is inside on both attributions, and still 6.6 times the worst
-  RANS deviation. So "refine until it agrees" was never going to reach where the published
-  high-fidelity codes sit.
+### 6.4 Every route, since no single one is preferred
 
-**The honest limit of this framing.** The eleven codes and Job B are not measuring the
-same thing, and the conversion above is an assumption, not a measurement. The
-attribution-free version, which needs no bridge at all, is weaker but unarguable: the
-worst published code in this comparison misses the physical first-trough amplitude by
-12.86 mm out of 128.6 mm, **10.0 percent**, and misses the period by 12.83 percent. A
-50 percent error on a force ratio is not in that envelope on any reading; the attribution
-only sharpens by how much.
+Envelope over 31 series, unchanged and independent of all of this: all codes **-12.26 to
++12.83 percent**, RANS only **-0.82 to +0.23 percent**.
+
+| route | equivalent | vs envelope | |
+|---|---|---|---|
+| constant offset in `z` (level error, zero slope error) | **+0.00 %** | inside | a single static point cannot exclude it |
+| surface-estimator error (denominator only) | **+0.00 %** | inside | 18.1 mm, 0.97 dx, solver force untouched |
+| locus in `a33` | **+8.02 %** | inside | the route I excluded backwards |
+| isotropic dilation, free-body equilibrium | **-10.33 %** | inside | the corrected form of my geometry route |
+| isotropic dilation, free-body, `a33` carried as `R^3` | **-3.13 %** | inside | |
+| scale on `rho*g` | **-18.37 %** | **outside** | the only one that lands outside |
+| *my withdrawn geometry route* | *-12.65 %* | *outside* | *body placed where it cannot float* |
+
+**Five of six inside, one outside.** The same pattern holds for every Job B grade in the
+lineage, including the superseded 918043 at +64.19 percent, which is also 5 of 6 inside.
+
+### 6.5 The fallback does not survive either, and it was the harshest attribution in disguise
+
+The earlier document offered an "attribution-free version, weaker but unarguable": that the
+worst published code misses the period by 12.83 percent, so a 50 percent force error "is not
+in that envelope on any reading". **Comparing a percentage on a force directly against a
+percentage on a period assumes a conversion factor of exactly 1.0.** That is not the absence
+of an attribution, it is a third attribution, and it is the **harshest of them all**, since
+50 exceeds both 18.37 and 12.65. Calling it unarguable inverted my own stated rule that an
+outlier claim must survive the most forgiving route.
+
+### 6.6 What Job B's grades still are
+
+Unchanged, and none of it needs Kramer. Lineage supplied by the coordinator from primary
+documents and encoded verbatim in `JOB_B_GRADES`: 918043 is **explicitly superseded** and
+biased high; **918240 is the canonical grade**; 918450 is a *different configuration*, the
+boundary-fix treatment; 918722 is the refinement series whose two-term fit gives an
+irreducible +18.05 point floor.
+
+> **Job B fails its pre-registered criterion 3 at every window, on the accessor the code
+> itself designates.** That is the finding. It needs no inter-code comparison, and this
+> document neither strengthens nor weakens it.
+
+`place_job_b()` now returns this withdrawal and the span rather than a placement, and
+`force_error_as_period_error()` has been **deleted** rather than deprecated, because a
+callable that returns a placement invites the placement to be quoted again. Regenerate with
+`--place`, `--force-excess 0.5006` and `--accessor-trap`.
 
 ---
 
@@ -642,7 +688,12 @@ variation with drop height is not.
 
 ---
 
-## 9. THE TRAP, which is the most transferable thing here
+## 9. THREE TRAPS, which are the most transferable things here
+
+Three claims of mine died tonight. Each died a different way, and the three failure modes
+are more useful than the findings that replaced them.
+
+### 9.1 A linearisation whose error grows with the independent variable
 
 I wrote a finding down, and then my own correction deleted it. The mechanism is general
 enough to state as a rule.
@@ -679,6 +730,45 @@ form is four lines of algebra and checks against numerical quadrature to 5e-12.
 plausible physical story standing in for evidence, and the measured radii dissolved most of
 what it explained. Two for two. The tell in both cases was the same: a story that explained
 the data arrived before a test that could have refuted it.
+
+### 9.2 A different trap, from the section 6 withdrawal: the accessor with two denominators
+
+The linearisation trap above is about physics. This one is not, and it killed a bigger claim.
+
+`sphere_heave.py` ships `fz_over_analytic_nominal` and `fz_over_analytic_measured`. The names
+differ by one word. The denominators differ by a factor of two: 69.2180 N against 32.33 N in
+job 918240. **The entire sign of my argument depended on which one the number came from**, and
+against the target I explicitly named the same run is a deficit at every window, not an
+excess. I read the manifest, quoted its 69.2180 N correctly, and never checked that the grade
+I was bridging used that denominator.
+
+> **When a number arrives as a RATIO, the denominator is half the claim and it travels
+> separately.** A ratio quoted by name looks self-describing and is not. Read the accessor's
+> definition, not the criterion that names a target, and check they are the same quantity
+> before doing anything with the ratio.
+
+### 9.3 And the worst one, because it looks like diligence
+
+My own self-test 3 in section 11.2 reproduced 69.2180 N from `rho`, `g` and `R` to four
+decimals and **passed**. I then wrote that this "confirms Job B is a hydrostatic check and
+that the attribution is applied to the right quantity". The arithmetic was right. The
+inference was wrong, because the number I was bridging had a different denominator that the
+test never touched.
+
+> **A passing test on quantity A is not evidence about quantity B.** A correct calculation
+> attached to the wrong claim does not merely fail to support it, it launders it: the check
+> is displayed, it genuinely passed, and the reader has no way to see it was pointed
+> somewhere else.
+
+That is the most dangerous of the three, because the first two look like mistakes and this
+one looks like rigour.
+
+### 9.4 What actually worked
+
+I nominated section 6.1 as the single claim I most wanted attacked, on the grounds that it
+was the only load-bearing step that was an inference rather than a measurement. It was the
+one that broke. Naming the weakest link costs one sentence, and it is what turned an
+unreviewable document into a refuted claim and a set of surviving ones.
 
 ---
 
@@ -755,9 +845,19 @@ The project's designated `physics-skeptic` subagent was launched three times, on
 (`deepseek-ai/DeepSeek-V4-Flash:deepinfra`). The subagent path is broken in this session
 regardless of agent type or model override.
 
-**No claim in this document has been independently reviewed.** It is not marked reviewed
-and the review was not faked. What follows instead are known-answer self-tests, which are
-a weaker check because I wrote both the code and the test, and are reported as such.
+**UPDATE, and it is the reason section 6 is now a withdrawal.** The R8 coordinator ran the
+adversarial pass from a session where the subagent path works, against the one claim I
+nominated as weakest: the force-to-period bridge. **It broke.** Three named attacks, all
+three reproduce, two of them fatal, and the fallback did not survive either. Every figure in
+the refutation was recomputed here from the module's own formulae before being written into
+section 6, and every one matches to the digit: the +48.034 percent crossing, the 0.3966 point
+margin, the 1.2436 free-body stiffness ratio, the +8.02 percent inverse `a33` map, the
+32.33 N denominator, the 0.060879 m2 waterplane, the 18.1 mm surface offset.
+
+**The rest of this document remains unreviewed by a second party** and is not marked
+reviewed. Sections 1 to 5, 7, 8 and 10 were not the target of that pass and nothing in it
+touched them. What follows are known-answer self-tests, which are a weaker check because I
+wrote both the code and the test, and section 9.3 is about how one of them still misled me.
 
 ### 11.2 Known-answer self-tests, all passed
 
@@ -788,10 +888,15 @@ it cancels to first order in the deviation columns, which are all differences.
 200,001-point trapezoidal integral of `rho*g*(V_eq - V(z))`: relative error 1.7e-13 at
 01D, 1.6e-12 at 03D, 5.0e-12 at 05D. The `z > R` guard clamps rather than extrapolating.
 
-**Test 3, the Job B analytic target reproduces.** `rho = 998.2`, `g = 9.81` (engine, not
-the benchmark's 9.82), `R = 0.150`, half sphere gives **69.2180 N**, matching manifest
-criterion 3 to four decimals. This confirms Job B is a hydrostatic check and that section
-5.1's attribution is applied to the right quantity.
+**Test 3, the Job B analytic target reproduces, and the inference I drew from it did
+not.** `rho = 998.2`, `g = 9.81` (engine, not the benchmark's 9.82), `R = 0.150`, half sphere
+gives **69.2180 N**, matching manifest criterion 3 to four decimals. **The arithmetic is
+correct and stands. The conclusion I attached to it was wrong.** I wrote that this "confirms
+Job B is a hydrostatic check and that the attribution is applied to the right quantity". It
+confirms only that criterion 3's stated target reproduces. The number I actually bridged was
+on a **different accessor with a 32.33 N denominator**, which this test never touched. **A
+passing test on quantity A is not evidence about quantity B**, and reporting it as one is how
+a correct calculation launders a wrong claim. See section 6.3.
 
 **Test 4, the reversal control.** Reported in section 10: reversing the two codes that
 were already correct makes them 19 to 23 times worse, so the reversal test discriminates.
@@ -840,7 +945,8 @@ which rests on the analytic `1/T_n^2` scaling and its measured exponent of exact
 | paper quotations in sections 5, 8.1, 8.2 | **read directly** from the PDF in `can-it-ford-refs/`, page numbers as printed |
 | Job B grade lineage in section 6.2 | **supplied by the R8 coordinator** from primary documents, encoded verbatim in `JOB_B_GRADES`, not re-derived here |
 | `sphere_heave.py` line numbers and constants | **read directly** from the file, not edited |
-| the force-to-period bridge in section 6.1 | **inferred**, and labelled an attribution in both the code and the prose |
+| the force-to-period bridge | **WITHDRAWN.** Was inferred and labelled an attribution; the inference does not hold and section 6 is the withdrawal |
+| the refutation's figures in section 6 | **read directly** (accessor definitions at `sphere_heave.py:813-819`, `measure_surface` at `:676-714`) and **recomputed here** from the module's own formulae, not relayed |
 | gauge radii in section 8.2 | **read directly** off Figure 8 of the paper, corroborated by the derivation from its Section 3.5 text and by a fall in measured gauge disagreement |
 | code attribution in section 2 | **read directly** from `Description of numerical models.xlsx`, the archive's own Appendix B source |
 | independent adversarial review | **NONE. UNAVAILABLE.** Three subagent launches failed on a pinned-model API error; see section 11.1. Self-tests only. |
