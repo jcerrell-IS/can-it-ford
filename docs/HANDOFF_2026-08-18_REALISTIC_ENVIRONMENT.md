@@ -109,12 +109,40 @@ the machinery for a prescribed-traction boundary, which is exactly the
 pressure-controlled half of the outflow that the recycler does NOT implement. Its PDF
 also failed via Undermind and scite returned no excerpts, so it is a lead, not a read.
 
-**Next, in order.** (a) Land job 918245 and read off the Rouse ratio; it is the only
-external validation target in hand. (b) The floor and hull penetration are now known
-to be the same defect and both are the image-particle case; that is the next real
-piece of numerics. (c) End-of-channel bins sit about 25 percent above mid-channel,
-untouched. (d) Phase D still needs the hydroplaning paper. (e) Everything below is
-unchanged.
+**ROUND 3 UPDATE.** Register items 26 to 28 carry the working.
+
+| item | status |
+|---|---|
+| Rouse 1.4x test | **RUN, NOT PASSED.** 1.286 +/- 0.025, 8.2 percent low, target outside the band |
+| Overfall bed | **fixed.** add_box was a velocity sink; add_sdf_collider cut bed re-entries 31903 -> 1094 per frame |
+| Sustained head | **added.** --head-len; without it the discharge decayed 0.28 -> 0.009 m2/s |
+| Image particles | **implemented and REFUTED.** Monotonically worse with count: -2.1, +7.4, +32.2 percent |
+| End bins | **addressed by another session** via `inject_len` |
+| Road geometry, bib, paper prose, g128 metrics | **done by another session**, commits 1e6732b to 18dfbfa |
+| Hydroplaning PDF | **still blocked**, four routes, needs an upload |
+
+**THE ONE NUMBER TO CARRY FORWARD.** The pipeline reproduces Rouse's end-depth ratio
+to within 8.2 percent on a first attempt: 1.286 +/- 0.025 against 1.4, at Fr 0.638,
+stationary, n_eff 23.2. That is a measured disagreement, not agreement within error,
+and not a refutation either. It is the first comparison this project has made against
+a number that did not come out of its own pipeline. What would settle it: hold a
+subcritical approach AND a steady discharge at the same time, then vary bed friction
+(0.4, unsourced) and grid resolution and see whether 1.286 moves.
+
+**A CAUTION THAT COST ME TWO ROUNDS.** The ratio series passes the stationarity test
+while the discharge is still decaying, because the ratio is scale-free: y_b and y_c
+shrink together. A stationary ratio does NOT certify a steady flow. Check the flux
+separately.
+
+**AND ONE THAT COST ME THREE.** Twice I guessed a cause and was wrong: first the bed
+clamp, then the image count. Both times the answer was in a docstring or a monotone
+trend I had not looked for. The engine told me `add_box` was the wrong collider in
+its own documentation and I read past it.
+
+**Next, in order.** (a) Steady + subcritical simultaneously, then a friction and
+resolution sweep on the 8.2 percent residual. (b) Image particles properly, which is
+kernel-side F assignment, not driver work. (c) The hydroplaning PDF still needs an
+upload to the Undermind workspace. (d) Everything below is unchanged.
 
 ---
 
