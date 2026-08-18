@@ -15,7 +15,10 @@ what those documents say. It needs no network and no credentials.
     python3 docs/E8_VERIFY_FIGURES.py            # check against expected values
     python3 docs/E8_VERIFY_FIGURES.py --show     # just print what is measured
 
-EXIT CODES: 0 all figures match, 1 at least one drifted.
+EXIT CODES: 0 all figures match, 1 at least one changed.
+
+On a mismatch it prints, per figure, the grep that locates every reference to it in
+the document set, so updating is mechanical rather than a hunt through nine files.
 
 A FAILURE HERE IS NOT NECESSARILY A BUG. Several of these figures are expected to
 move: the branch count grows as work continues, and per-branch file presence
@@ -61,6 +64,35 @@ EXPECTED = {
     "branches_with_token_template": 34,
     "branches_with_secrets_env": 32,
     "branches_with_flag_doc": 1,
+}
+
+# When a figure changes, the next person has to update EVERY reference to it across
+# nine documents. Naming that task without giving the means is how a handoff wastes
+# someone's afternoon, so each figure carries the search that locates its references.
+# Values are grep -E patterns, matched against the docs/ set.
+LOCATORS = {
+    "public_branches": r"[0-9]+ (public )?branch|branches",
+    "branches_with_14_decks": r"[0-9]+ of [0-9]+ (public )?branches",
+    "branches_with_token_template": r"token_setup_template",
+    "branches_with_secrets_env": r"secrets-and-env",
+    "branches_with_flag_doc": r"FLAG_CREDENTIAL_EXPOSURE|1 of [0-9]+",
+    "vgr_total_bytes": r"176,252,809|176\.25",
+    "vgr_total_files": r"across 30\b|30 files",
+    "ccsa_verbatim_bytes_incl_readmes": r"160,322,098|160\.32",
+    "ccsa_verbatim_bytes_excl_readmes": r"160,308,908",
+    "archives_bytes": r"88,592,238",
+    "decks_bytes": r"71,716,670",
+    "all_ply_bytes": r"15,823,688|15\.82",
+    "citations_total_bytes": r"19,759,424|19\.76",
+    "citations_total_files": r"38 files",
+    "smith_group_bytes": r"6,215,623|6\.22",
+    "smith_group_files": r"16 files|16 Smith",
+    "smith_screenshot_bytes": r"5,846,160|5\.85",
+    "smith_screenshot_files": r"15 screenshots",
+    "wrl_bytes": r"760,091|0\.76",
+    "wrl_files": r"3 WRL",
+    "assets_cc0_bytes": r"11,205,063",
+    "assets_cc0_files": r"6 files",
 }
 
 EXPECTED_TO_MOVE = {
@@ -212,6 +244,20 @@ def main():
     if broken:
         print(f"{len(broken)} figure(s) FAILED that were not expected to move.")
         print("Investigate before editing either the docs or this file.")
+
+    print()
+    print("TO UPDATE. For each figure above, edit EXPECTED in this file AND every")
+    print("reference in the documents. These commands find the references:")
+    print()
+    for key, _want, _got in failures:
+        pat = LOCATORS.get(key)
+        if pat:
+            print(f"  # {key}")
+            print(f"  /usr/bin/grep -nE '{pat}' docs/E8_*.md docs/CREDENTIAL_ROTATION_CHECKLIST_*.md")
+    print()
+    print("Then re-run this script. A figure is not updated until it reads [ok  ] here")
+    print("AND no stale value survives the grep: the two are different checks, and")
+    print("only the second catches a reference you forgot existed.")
     return 1
 
 
