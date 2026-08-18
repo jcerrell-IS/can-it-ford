@@ -285,8 +285,11 @@ def main():
             continue
         line = ["  %-38s" % "/".join(key)]
         for w in ("pre_reflection_f60_89", "post_reflection_f120_149", "late_f220_249"):
-            k = "slope_" + w
-            line.append("%s %s" % (w.split("_f")[0], agg([r.get(k) for r in rs])))
+            line.append("%-16s slope %s" % (w.split("_f")[0],
+                                            agg([r.get("slope_" + w) for r in rs])))
+            line.append("%-16s spread_m %s  drained_bins_of_12 %s"
+                        % ("", agg([r.get("spread_" + w) for r in rs]),
+                           [r.get("drained_" + w) for r in rs]))
         print("\n      ".join(line))
 
     print()
