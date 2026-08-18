@@ -667,3 +667,132 @@ never retroactively validate the existing ladder.
 estimates of the same thing. `M*dv_cm/dt` on the material-8 path is `M/dt` times the
 difference of two PIC reprojections of a blended field, and no averaging, smoothing or
 window choice converts it into a force.
+
+---
+
+### 8b. EXTENSION RESULT, g192. THE LADDER IS CLOSED END TO END.
+
+g192 returned before the allocation expired. **All three parts of the section 8 prediction
+held again**, and the six-rung ladder is now complete.
+
+| grid | n | D0 control | D1 forced | R | D0 spread | substeps ctl/forced |
+|---|---|---|---|---|---|---|
+| 192 | 5 | +0.000108 | 0.045338 | **0.0024** | 0.000380 | 32 / 32 |
+
+Per-rep at g192: `+0.000143  -0.000036  -0.000068  +0.000187  +0.000312`. Sign changes
+within the grid again, and the mean is 3.5x smaller than its own spread.
+
+**COMPLETE SIX-RUNG RESULT, four rungs pre-registered plus two out of sample:**
+
+| grid | D1 forced (m) | D0 control (m) | R | pair | C |
+|---|---|---|---|---|---|
+| 48 | 0.181186 | +0.002282 | 0.0126 | g48 to g64 | 0.0182 |
+| 64 | 0.132089 | +0.003177 | **0.0241** | g64 to g96 | **0.0801** |
+| 96 | 0.085319 | -0.000571 | 0.0067 | g96 to g128 | 0.0503 |
+| 128 | 0.067261 | +0.000338 | 0.0050 | g128 to g160 | 0.0207 |
+| 160 | 0.051449 | +0.0000104 | 0.0002 | g160 to g192 | 0.0159 |
+| 192 | 0.045338 | +0.000108 | 0.0024 | | |
+
+**VERDICT ACROSS ALL SIX RUNGS: CLEAN.** Worst R is 0.0241 at g64, worst C is 0.0801 at
+g64 to g96, both under the 0.10 threshold. The masquerade trigger does not fire: the
+control's sign alternates across the pairs (no, yes, no, yes, no).
+
+**At most 8.0 percent of the resolution effect in surge displacement is reproduced with the
+flow switched off, at any rung of the ladder from g48 to g192.** At four of the six rungs
+the control drift is not distinguishable from its own repeat noise.
+
+The pre-registered verdict is the four-rung one. The two extension rungs are out of sample
+and are reported here as confirmation, not as part of it.
+
+---
+
+## 13. UNIT 2: THE UNEXERCISED SETTLE FIX, EXERCISED. THE SWING NARROWS BY 94 PERCENT.
+
+Section 12d concluded that `sdf_wrench` cannot carry a force-convergence curve today because
+its own error against analytic buoyancy swings 134 percentage points across two grids in the
+partial-submersion regime. Section 12e's first prerequisite was to exercise the `79fec32`
+settle fix, which was committed and had never been run. **It has now been run.**
+
+### 13a. What was changed, and what was held
+
+Exactly one thing changed against the runs that produced -18.9 and +115.0 percent: the
+settle. `79fec32` replaced `rung_b_coupled.py:83`'s hand-rolled `tank.solver.step(tank.dt, 1)`
+loop, one **substep** per iteration, with `settle_pinned(tank, settle_frames)`, one **frame**
+per iteration under a quiescence gate, which is the same call the rung-(a) reference uses.
+
+Everything else was left at the committed defaults: `--relax 1.0`, `--submersion-frac 0.80`,
+`--depth-cells 18`, `--rho-box 600`, `--steps 60`, `--settle 900`. Harness shipped from this
+worktree to a fresh Vista directory, md5 `8f01a66d88b4134851fd90926fa4f0d0`, verified
+identical to the local copy. No existing Vista checkout was modified. Smoke-tested first at
+`--settle 4 --steps 4`, which correctly returned `VALIDITY FAIL` and meaningless numbers, as
+the fix commit said it should.
+
+### 13b. THE RESULT: the swing collapses and the sign inversion disappears
+
+| | g64 | g96 | grid-to-grid swing |
+|---|---|---|---|
+| **BEFORE**, settle as substeps (job 3361315) | **-18.9%** | **+115.0%** | **133.9 points** |
+| **AFTER**, settle as frames (`79fec32`) | **-15.77%** | **-24.26%** | **8.5 points** |
+
+**The swing narrows by 93.7 percent.** More important than the magnitude: **the sign
+inversion is gone.** Before, the body sank at one grid and rose at 4 g at the other. Now both
+grids under-predict analytic buoyancy, by 16 and 24 percent, which is a single consistent
+bias rather than a contradiction.
+
+Measured ratios, read from the run logs: g64 `RATIO measured/analytic (median) = +0.8423`,
+g96 `= +0.7574`.
+
+**This is the answer to the question section 12d left open, and it points the favourable way.**
+An unsettled tank was doing most of the damage, exactly as `FINDINGS.md` diagnosed but never
+demonstrated.
+
+### 13c. IT IS STILL NOT A VALID MEASUREMENT, AND THAT MUST NOT BE SOFTENED
+
+The harness declares both runs invalid, by its own criteria, and it is right to:
+
+1. **The added-mass guardrail fires at both grids.** `added_mass_ratio` is **0.9353** at g64
+   and **1.0628** at g96, against `coupler.py`'s own `warn_added_mass = 0.5`, with
+   `relax = 1.0` so no mitigation is active. Both runs print
+   `VALIDITY FAIL: ... Numbers below are NOT a valid coupling-accuracy measurement.`
+   This is structural, not incidental: a floating body sits at ratio exactly 1.0 by identity,
+   so the flooded-vehicle case lives permanently in the regime the module warns about. The
+   blocker has **moved** from the settle to the added-mass ratio; it has not been removed.
+2. **g96 did not meet its settle gate even at the cap.** `frames_run=900/900 gate_met=False`,
+   `vmax_final=1.237`. g64 met the gate at `356/900`. So g96 is still under-settled and its
+   -24.26 percent is an upper bound on how good it gets, not a converged value. The
+   `--settle` cap needs raising above 900 frames for g96 specifically.
+3. **The refinement is still not controlled.** `frac_realized` is **0.5612** at g64 and
+   **0.6377** at g96, against a target of 0.80. The two grids are not at the same submersion,
+   so this remains a comparison of two different physical configurations. Until
+   `frac_realized` matches across grids, a difference between them cannot be attributed to
+   resolution.
+
+### 13d. Revised verdict on the `sdf_wrench` route
+
+Section 12g said "yes in principle, no today". That stands, but the reason has changed and
+the route is materially more promising than it looked:
+
+- **What was refuted tonight:** the belief that the partial-submersion force is wildly
+  grid-inconsistent. It is not. The 134-point swing was an artifact of an unsettled tank, and
+  with the settle fixed the two grids agree to 8.5 points and share a sign.
+- **What now blocks it:** the added-mass ratio sitting at 0.94 to 1.06 with no mitigation, an
+  under-settled g96 at the current cap, and an uncontrolled `frac_realized` between grids.
+  All three are addressable, none is addressed.
+- **What it would take next**, in dependency order: raise the g96 settle cap until the gate
+  is met; match `frac_realized` across grids; then, and only then, a third resolution and a
+  time-averaged observable with a GCI per section 12e items 2 and 3. Under-relaxation is
+  **not** the remedy for the added-mass problem: `FINDINGS.md` records that it makes the
+  error monotonically worse at both grids, so the scheme itself is the thing to revisit.
+
+**Honest framing of what this unit is worth.** It converts a route that was closed on a
+134-point inconsistency into one that is open pending three named, tractable fixes. It does
+not produce a force-convergence curve and does not claim one. Two grids that agree to 8.5
+points are still two grids, and the research review's recommendation 3 asks for at least
+three with successive changes below a stated tolerance.
+
+### 13e. Provenance
+
+Runs executed 2026-08-18 on Vista GH200 node c642-071 (job 920212, `gh-dev`), both `rc=0`.
+Logs and JSON at `$WORK/r8_rungb/rungb_fixedsettle_g{64,96}.{log,json}`. Engine **warpmpm**,
+SDF-collider path, which is **not** the material-8 path the 17 canonical runs use. Nothing in
+the repo was modified by these runs and no existing Vista checkout was touched.
