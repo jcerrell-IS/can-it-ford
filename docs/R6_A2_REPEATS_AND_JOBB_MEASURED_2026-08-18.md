@@ -268,6 +268,12 @@ designates. So:
 
 > **JOB B: FAIL on criterion 3. Per manifest line 214, the ladder is stopped.**
 
+**UPDATED with the h/2 surface fix, and the verdict is unchanged.** The figures in the table
+above are from 918043, which predates commit `7c9e0af`'s correction to `measure_surface` and
+is therefore biased HIGH on this ratio. The corrected run is **918240 at +50.06 percent**,
+still FAIL at every window from last-20 to last-200. See section 4d-bis for how the two runs
+were told apart, which was by sha and not by timestamp. **Quote +50.06, not +63.**
+
 This is a decision for Josie, not for a session to quietly route around. The two honest
 options are to accept the FAIL and stop the ladder as the manifest instructs, or to amend the
 criterion in writing, naming the accessor AND the window, and state explicitly that a band
@@ -334,6 +340,91 @@ centimetre beyond the first 0.74 is 100 percent unexplained, and the unexplained
 grown from 76.0 to 87.7 percent purely because the run got longer. **The mechanism is ongoing
 and it is not compression.** Roughly 0.0531 m3 is unaccounted for, about 64,500 particles' worth
 of volume.
+
+### 4d-bis. ANSWERED: the water leaks through the floor plane
+
+**Job 918240**, the same scene with `water_budget()` instrumentation added, COMPLETED rc=0,
+200 frames. The instrumentation was built with an explicit discriminator: counts GROW under
+leakage, occupied volume FALLS under compaction, and the two are independent so one run
+separates them.
+
+| frame | `n_below_floor` | `n_outside_walls` | `occupied_volume_m3` | `water_z_min_m` | surface drop |
+|---|---|---|---|---|---|
+| 0 | 2,248 | 965 | 0.518056 | 0.07411 | 0.878 cm |
+| 25 | 11,849 | 10,301 | 0.506520 | 0.06044 | 2.325 cm |
+| 50 | 16,610 | 10,901 | 0.497694 | 0.05890 | 3.043 cm |
+| 100 | 22,122 | 12,613 | 0.496296 | 0.05290 | 4.359 cm |
+| 150 | 25,301 | 13,640 | 0.490753 | 0.05235 | 5.048 cm |
+| **199** | **26,964** | **14,423** | **0.492308** | **0.05236** | **5.587 cm** |
+
+**It is LEAKAGE.** The counts grow monotonically and are still growing at the last frame:
+`n_below_floor` rises 12x to **4.505 percent of all water**, and `water_z_min_m` ends at
+0.05236 against a floor plane at `FLOOR = 0.075`, i.e. **2.4 cm underneath it**.
+`n_outside_walls` rises 15x to 2.410 percent. Occupied volume falls only 4.97 percent and is
+essentially flat after frame 50, which is the compaction signature and it is the SMALLER term.
+
+Budget, at the 5.587 cm this run measured:
+
+| term | contribution | of the fall |
+|---|---|---|
+| leakage, roughly 6.9 percent of particles leaving the column | ~3.45 cm | 62 % |
+| compression, the bounded one-time term | 0.74 cm | 13 % |
+| **residual, still unexplained** | **~1.4 cm** | **25 %** |
+
+**That moves the unexplained fraction from 87.7 percent to about 25 percent, and names the
+dominant mechanism.** The residual is real and should not be rounded away; leakage and
+compression are not additive in a strict sense because a particle below the floor still
+displaces nothing in the column, so treat the split as indicative and the identification as
+the result.
+
+**This is a known engine defect, not a new one.** CLAUDE.md item 7 records that all three g48
+runs fail gate P-3 with a negative z rise near -0.05 m, "the hull sank into the floor plane".
+The same floor plane leaks water here. The two are almost certainly the same defect seen from
+two sides.
+
+**It also corroborates the other session's B3 measurement independently** (commit `be1b138`):
+in a channel at ZERO grade a closed box manufactures +0.0927 m/m of free-surface slope and
+drains 2 of 12 bins, while a recycling BC leaves 33x less and drains none. Different scene,
+different diagnostic, same engine, same conclusion: **the closed-domain configuration loses
+water at zero forcing.** Two independent origins, so this is corroboration rather than one
+source cited twice.
+
+**CORRECTED. The two runs are the SAME trajectory, not two draws.** An earlier version of
+this section said the 6.055 cm and 5.587 cm drops were "different draws of a
+non-deterministic process". That is false. Both runs report a bias-free drop CHANGE over
+the run of **4.709 cm, identical to three decimals**, because the sphere scene seeds at
+`seed: 0` with no trimesh surface sampling and is therefore deterministic, unlike the
+vehicle scene of section 1. The entire 0.469 cm difference is the h/2 surface fix, see
+below.
+
+**THE h/2 SURFACE BIAS, and which of my runs carries it.** A concurrent session found that
+`measure_surface` took a percentile of particle CENTRES, which sit h/2 below their layer's
+fill line, so it under-read the free surface by h/2 = dx/4 = 4.688 mm at this resolution
+(commit `7c9e0af`, "runs before this commit are biased LOW on the surface and HIGH on
+`fz_over_analytic_measured`"). Established by sha, not by timestamp: `7c9e0af`'s version of
+`sphere_heave.py` is sha256 `583b4c7af94dca...`, which is EXACTLY the file staged to Vista
+and run as 918240.
+
+| run | h/2 fix | late-window `fz_over_analytic_measured` | surface drop at last frame |
+|---|---|---|---|
+| 918043 | **no** | +63.08 % | 6.055 cm |
+| **918240** | **yes** | **+50.06 %** | **5.587 cm** |
+
+**Quote 918240. 918043 is superseded.** Applying the h/2 correction to 918240 a second time
+would double-count and yields a spurious +38 percent; I did that once before checking the
+sha, and the sha is what settled it.
+
+**The FAIL verdict survives the correction**: +50.06 percent is still far outside criterion
+3's 25 percent FAIL band, at every window from last-20 to last-200. What changes is the
+magnitude, not the band.
+
+**The leakage result in the table above is UNAFFECTED**, because `n_below_floor`,
+`n_outside_walls` and `water_z_min_m` are direct particle counts against the floor plane and
+wall bands, not surface-derived quantities.
+
+**Open, and now sharply posed:** does the leak fraction fall when the walls move away at held
+dx? Job `918251` runs the same scene at `lim` 2.2 / `n_grid` 117 (dx 0.018803 against
+0.018750, so dx is held and only the domain grows) to answer exactly that.
 
 ### 4e. One hypothesis tested and largely refuted, by reading the code
 
