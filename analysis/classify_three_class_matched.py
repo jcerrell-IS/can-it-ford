@@ -186,7 +186,11 @@ def classify_one(run_dir: Path, prov: dict):
         "C3_oob_particle_frames": int(summary["C3_oob_particle_frames"]),
         "leaked_particle_frames": int(summary["leaked_particle_frames"]),
         "substeps": int(summary["substeps"]),
-        "determinism_identical_FLAG_DO_NOT_TRUST": summary.get("determinism_identical"),
+        # RENAMED 2026-08-18. The FLAG_DO_NOT_TRUST suffix was this script's own local
+        # workaround for the misleading name; the name is now accurate, so the suffix is
+        # dropped. Backward-compatible read: pre-rename summaries carry the old key.
+        "hull_load_identical": summary.get(
+            "hull_load_identical", summary.get("determinism_identical")),
         "hull_source": hull_path,
         "hull_sha256": hull_sha,
         "driver_sha256": prov["driver_sha256"],
