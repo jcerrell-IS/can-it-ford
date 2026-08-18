@@ -82,6 +82,7 @@ rest is grouped by what it answers.
 | `R5_RESEARCH_UNCITED_AUDIT_2026-08-17.md` | audit of my own uncited method; it mostly holds |
 | `R5_RESEARCH_HULL_VOLUME_CONFLICT_2026-08-17.md` | **RETRACTED escalation.** Read section 0 only; the rest is kept as a worked error |
 | `data/r5_citation_verify.py` | **runnable**: re-derives every citation count in this dispatch from source, 18/18 PASS. Run it instead of trusting a number |
+| `R5_RESEARCH_FORCE_CONVERGENCE_2026-08-19.md` | **the publishable one**: force-vs-resolution curve, 4 grids x N=5. Does NOT converge; 8 of 9 successive changes exceed 10% against a 0.0-2.8% noise floor |
 | `R5_RESEARCH_CLAUDEMD_STALE_SOUNDSPEED_2026-08-19.md` | **for the CLAUDE.md maintainer**: `:524` says the sound speed was "never swept here"; jobs 895330/895378 swept it across 3 decades on 2026-08-07 |
 | `R5_RESEARCH_MPM_SHORTLIST_2026-08-19.md` | **paste-ready**: the 4 MPM method citations, all verified against Crossref, each with its trap named (incl. a DOUBLE DOI) |
 | `R5_RESEARCH_FRICTION_055_PROVENANCE_2026-08-19.md` | **RETRACTED IN FULL.** Read it only as a worked failure: I asserted a parameter claim without reading the register, which already held it as G4a |
