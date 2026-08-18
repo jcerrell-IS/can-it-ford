@@ -126,3 +126,59 @@ failed and from where, not "blocked".
 
 Per the protocol I kept working on the rest of scope throughout. Everything Mac-only in
 `R5_PHYSICS_WHAT_SURVIVES.md` was produced while both flags were open.
+
+---
+
+# FLAG-3, opened 2026-08-18 03:45 BST. Three items blocked, all needing a human decision.
+
+FLAG-1 and FLAG-2a are closed (see the banner at the top). This is a NEW blocking state,
+opened after the work they unblocked ran to its end. Entry point for everything below:
+`R5_PHYSICS_HANDOFF_2026-08-18.md`.
+
+## 3a. 65 commits held, unpushed. Needs Josie's per-branch go-ahead.
+
+`claude/r5-physics` at `930f191`, worktree clean, 65 ahead of main, never pushed. The repo
+is PUBLIC and the standing rule is no push without an explicit per-branch go-ahead. Nothing
+in these commits is credential-bearing or geometry-bearing, but that is my assessment and
+not a substitute for the go-ahead.
+
+## 3b. The floor-BC bug: a real one-line fix with a real cost, and the cost is the decision
+
+`FLOOR = 0.075` is **exactly 4 dx** at g64, and the plane kernel gates on
+`dotproduct < 0.0` (`mpm_solver_warp.py:1955`), so **the node lying ON the floor plane
+receives no boundary condition**. Consequences measured this session:
+
+- 1.829 cm of the 7.16 cm free-surface drop
+- ~7.4% of the water leaves the domain by frame 299 (4.93% below floor, 2.5% outside
+  walls), so **every job B number was measured in a leaking tank**
+
+**Why I did not fix it.** Changing `FLOOR` changes the scene, which invalidates
+comparability with every run produced tonight: the g64/g96 comparison, the band sweep, and
+the retro-corrected values. That is a deliberate trade, not an oversight, and it is Josie's
+call rather than mine: fix it and re-run the chain, or keep comparability and carry the
+leak as a stated limitation.
+
+**Note the interaction if it is fixed:** `WALL = 0.100` is 5.333 dx at g64 but exactly
+8.000 dx at g96, so the two resolutions do not have identical tank footprints (+2.48% at
+g96) independently of the floor. Fixing one without the other leaves a cross-resolution
+confound.
+
+## 3c. Job C has never run, and it is the actual mission
+
+Everything in this branch's job B chain is a **self-consistency check against the scene's
+own closed form**, which is CLAUDE.md item 6's exact objection. **The external validation
+the dispatch asked for is job C and it has not been attempted.** It is now fully gradeable
+for the first time: `/s1` is on disk and reduced, giving measured first damped periods
+**0.7869 / 0.8093 / 0.8671 s** (N=4 each, spreads 0.0010 / 0.0012 / 0.0029) and per-drop
+tolerances **0.096 / 0.239 / 0.435 mm**.
+
+**Why I did not run it.** Three GPU arms whose grading I could not review, at the end of a
+session in which **four of four headline claims were overturned by adversarial review**.
+Producing a fourth unverified result would have been worse than producing none.
+
+## The rule this session earned
+
+**On this branch the measurement has been reliable and the sentence written on top of it
+has not.** Four audits, four overturned headlines, always the same mechanism: comparing
+two quantities that were not the same thing. Whatever runs next, budget for the review
+before the run, not after it.
