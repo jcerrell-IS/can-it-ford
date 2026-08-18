@@ -116,11 +116,36 @@ window 0 to 90:
 | **g160** | **0.05497** | **29..87 (59)** | **1..6 (6)** | **0** |
 | g192 | 0.04757 | **none** | 1..6 (6) | 0 |
 
-**The speed criterion is satisfied only in the first 6 to 14 frames at EVERY grid**, because
-`sim_standing.py:240` applies a one-shot `v[:n_water,0] += velocity` kick to all water at the
-end of settle, and that kick then decays. So the joint condition is decided by whether the kick
-carries the hull past 5 cm of drift **before the kick dies**, not by whether the flow sustains a
-slide.
+**The speed criterion is satisfied only in the first 6 to 14 frames at EVERY grid.**
+
+**CORRECTED 2026-08-18, and my first explanation of WHY was wrong.** I wrote that
+`sim_standing.py:240` "applies a one-shot kick ... and that kick then decays", so the verdict
+turned on "whether the kick carries the hull past 5 cm before the kick dies". **The forcing does
+not die.** Caught by the r7-pinned-span session and then verified here directly against the
+as-ran driver:
+
+- `_sustain_inflow` at `:190-198` does `vw[band, 0] = self.velocity`, a **hard Dirichlet clamp**
+  overwriting the upstream slab's x-velocity to 1.5 m/s (`:196`).
+- `step()` calls it **every frame**, at `:202`, before `solver.step`.
+- The one-shot additive kick at `:161` is real but is **not the only forcing**.
+
+This is the dual mechanism **CLAUDE.md item 2 already documents verbatim** ("a per-frame
+Dirichlet clamp on an upstream particle slab (sim_standing.py:190-198, called every frame at
+:202) plus a one-shot additive kick applied once after the settle phase"). I asserted a
+mechanism without reading it, which is the same error class as the retracted `grade_job_b.py`
+claim, in the same document.
+
+**The correct reading:** the forcing is sustained, and what decays is **the hull's own speed**
+after the initial transient, while the clamped slab fails to re-accelerate it past 0.05 m/s.
+That is a **quasi-steady creep, not an expired impulse**, and it changes what a 5 cm crossing
+means: the hull is still being pushed when it crosses.
+
+**LINE-NUMBER PROVENANCE, the D4a trap.** My `:223` and `:240` came from the **564-line canonical
+copy** `renders/yaris_render_s1/sim_standing.py` (sha256 `4696c3b2...`). **The runs used the
+389-line as-ran copy** `renders/yaris_render_s1/_incoming/sim_standing.py` (sha256 `5215c38b...`),
+which is what job 918350 stamped. All line numbers in this section are now the as-ran copy,
+verified live. CLAUDE.md warns about exactly this: `_incoming/` is the canonical per-run tree,
+so check which copy you are reading.
 
 **g160 and g192 are STUCK for DIFFERENT reasons, and only one of them is physical.** g192 never
 crosses the 5 cm drift threshold at all (max 0.04757 m), which is a real result. **g160 DOES
@@ -157,8 +182,10 @@ to explain, not one.
 
 ### THE STRONGEST RESULT IN PART 1 IS CONTINUOUS, NOT BINARY, AND IT IS NOT CONVERGED
 
-Added after review, because the binary verdict buried it. Max surge drift over rows 0 to 90,
-N=5 per grid, mean +/- sd:
+Added after review, because the binary verdict buried it. **These are the UNPINNED ladder**
+(jobs 918247-918250, 918350, 918351), in which the tank grows with refinement. A pinned-span
+ladder now exists separately and has its own, different scatter; do not quote these cv figures
+for it. Max surge drift over rows 0 to 90, N=5 per grid:
 
 | grid | max surge drift (m) | sd | cv | change vs previous |
 |---|---|---|---|---|
@@ -201,6 +228,43 @@ path to surge drift, and it is confounded with resolution exactly as the tank si
 
 **One thing that is genuinely held fixed, and is worth stating because it forecloses the obvious
 alternative:** realized water depth is **0.2944294 m on all six grids**, identical.
+
+#### THE CONFOUND HAS SINCE BEEN MEASURED, AND ITS SIGN IS THE OPPOSITE OF WHAT THIS DOCUMENT ASSUMED
+
+**Not my measurement. Reported by the `r7-pinned-span` session** (branch
+`claude/r7-pinned-span`, HEAD `bb27f61`, 10 grids x 5 repeats, jobs 918475 and 918487-918495,
+all COMPLETED), relayed 2026-08-18 and recorded here because it directly qualifies the section
+above. Their working is in `docs/R7_PINNED_SPAN_LADDER_2026-08-18.md` on their branch.
+
+Their strongest construction is three **matched pairs** in which dx, h, realized depth,
+`n_vehicle` and `parity_total_columns` are identical and **only the tank differs**:
+
+| tank change | max drift change |
+|---|---|
+| +21.66 % water volume | **+0.42 %** |
+| +32.94 % water volume | **+3.54 %** |
+
+Resolution moves the same quantity by a factor of **5.14** more than the tank does.
+
+**A BIGGER TANK GIVES MORE DRIFT, WHICH IS TOWARD SLIDE.** So across this ladder tank growth was
+pushing AGAINST the flip to STUCK, not producing it. **The confound was conservative.** Removing
+it therefore strengthens the resolution finding rather than threatening it, which inverts the
+worry this document and the Round 7 handoff both express. **The instruction to say "flips under a
+refinement that also enlarges the tank" still stands for THIS document's unpinned ladder**,
+because these six runs still cannot separate the two on their own; what changes is that the
+separation has now been done elsewhere and it came out favourably.
+
+Two independent reproductions of my own numbers, from their tree: the inflow-gap confound
+(+17.48 percent, and their wrapper reduces it 4.8x and reverses its sign to -3.65 percent, so it
+is **reduced, not eliminated**) and the water-volume ratio (+36.94 percent across the full six
+rungs; the handoff's +30.69 percent is the g48-to-g128 subrange, so both are right at their own
+scope).
+
+**CARRY THIS CAVEAT IF YOU CITE THEIR CONTROL, they disclosed it themselves:** 8 of 10 pinned
+rungs FAIL the P-2 containment gate (`gates.py:146-148`, `passthrough_max_frac` limit 0.10),
+where 0 of 6 unpinned rungs do. At matched h, unpinned g96 0.0835 passes against pinned g88
+0.1027 failing. Shrinking the tank raised passthrough 23 to 34 percent. **The unpinned rungs in
+this document are clean on P-2; theirs are not.**
 
 ### What g192 does and does not settle
 
