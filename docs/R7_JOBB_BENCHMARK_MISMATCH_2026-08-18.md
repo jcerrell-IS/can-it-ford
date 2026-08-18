@@ -1,137 +1,81 @@
-# R7: Job B is not running the benchmark it cites, and its pass criterion has no source
+# RETRACTED: "Job B is not running the benchmark it cites"
 
-Investigated 2026-08-18 after the boundary 2x2 showed that eliminating 99.8 percent of the
-floor leak removes only 30 percent of the force error, which means a third error source
-dominates. This is what that investigation found. Literature via an Undermind deep search,
-[workspace link](https://app.undermind.ai/projects/17299f2a-8dc8-438b-8c84-5abf19395e2c).
-Every DOI below was resolved and its title checked against the resolved record, not merely
-followed.
+**This document's original central claim was WRONG and is withdrawn in full.** It was
+committed in `5955a54` and pushed to a public repo before I read the manifest that defines
+Job B. What follows is the retraction, then the part of the investigation that survives.
 
-## 1. THE FINDING
+## 1. WHAT I CLAIMED, AND WHY EACH PART IS WRONG
 
-`sphere_heave.py` names its benchmark in its own provenance block:
+I claimed Job B "does not run the benchmark it cites" on four deviations. Read live from
+`docs/R5_PHYSICS_BATCH_MANIFEST.md:173-241` and `sphere_heave.py:55-95`, three of the four
+are deliberate, documented design choices and the fourth is the opposite of a defect.
 
-```
-benchmark_doi   10.3390/en14020269
-testcase_read   D=300mm; m=7.056kg; CoG=(0,0,-34.8)mm; g=9.82; H0={30,90,150}mm;
-                rho_w=998.2; d=900mm; 4 repetitions per drop height
-```
+| my claim | what the source actually says |
+|---|---|
+| "held fixed instead of released" | `MANIFEST:204-206`: Job B is kept at `lim = 1.2` deliberately as "a **cheap hydrostatic pilot where reflections do not matter**: the sphere is pinned and the quantity is a steady reaction, not a decay." The pinning is the point of the rung. |
+| "tank depth wrong by 1.8x" | `sphere_heave.py:73-75` records it as deviation 2 with a quantified justification: at 500 mm, `kh = 3.333`, `tanh(kh) = 0.99746`, deep-water to 0.25 %. "Stated as a quantified approximation, not asserted as equivalent." |
+| "graded a static force, not the benchmark's motion" | `MANIFEST:242`: **Job C IS** "Kramer free heave decay, three drops", already specified, with a corrected domain because "Job C cannot use this domain". B is its precursor, not its replacement. |
+| "tolerance is self-set, with no source" | `MANIFEST:3` derives the bands from the project's own box-SDF prior of 7.3 to 7.7 %, and marks that provenance `[recalled]`. Internal rather than external, but stated and reasoned, not invented silently. |
 
-That is Kramer et al. 2021, *Highly Accurate Experimental Heave Decay Tests with a Floating
-Sphere: A Public Benchmark Dataset for Model Validation of Fluid-Structure Interaction*,
-Energies. **The benchmark choice is correct and well made.** A 300 mm sphere ballasted to
-half submergence, with a public time-series dataset and quantified experimental uncertainty,
-is close to ideal for this project.
+**And the manifest already makes my own headline argument, against me.** `MANIFEST:236-240`:
+"Explicitly not graded here: the 0.090 / 0.270 / 0.450 mm per-drop-height tolerances. Those
+are **displacement** tolerances and apply only to the free-decay drops in Job C. A
+hydrostatic force check cannot be graded against a displacement tolerance, which is the
+category error section 3.2 of the test-case doc warns about."
 
-**Job B does not run its case.** Read live from the run config of job 918526:
+So the thing I presented as a discovery, that Kramer's 0.3 percent is a motion tolerance and
+cannot grade a static force, is exactly what the manifest says, and it says it as the reason
+NOT to do what I implied should have been done. My recommendation "run Kramer's actual case"
+reduces to "run Job C", which was already planned and is deliberately gated on B.
 
-| | Kramer 2021 specifies | Job B ran |
-|---|---|---|
-| body | **released from rest** at H0 = 30, 90, 150 mm | `free = False`, `h0_over_d = 0.0`, held fixed |
-| tank depth | **900 mm** | `depth_m = 0.5`, i.e. 500 mm |
-| graded quantity | **heave decay time series** | a **static force ratio** vs analytic buoyancy |
-| tolerance | **0.3 % of drop height** (0.09 / 0.27 / 0.45 mm absolute) | a self-set 10 / 25 % band |
+## 2. HOW I GOT IT WRONG
 
-**So Job B holds the sphere still in a tank of the wrong depth and grades a quantity the
-benchmark does not report, against a tolerance the benchmark does not state.** The criterion
-it fails is one the project invented. That is the systematic defect, and it is upstream of
-every mechanism the last two rounds chased.
+I read the run config and the driver, and inferred intent from a mismatch between the config
+and the cited paper. I did not read the document that states the intent, and it was one grep
+away. This is the project's own rule 12 failure: I named a mechanism that would refute me
+only after committing, not before. The refuting artifact was a file in the same repo.
 
-**This does not make the FAIL go away.** A +36 percent error against a closed-form hydrostatic
-result is still a real disagreement and still needs explaining. What it does mean is that
-"the ladder is stopped by criterion 3" is stopped by a criterion with no external warrant,
-while the actual published validation, which has an external warrant and public data, has
-never been run.
+The narrower discipline it violates: a deviation from a source is only a defect if the
+deviation is undocumented. I checked the deviation and not the documentation.
 
-## 2. WHAT THE LITERATURE SAYS ABOUT THE MECHANISM
+## 3. WHAT SURVIVES
 
-Deep search over the scholarly literature. The honest headline is that **it does not supply a
-mechanism that predicts a 50 percent positive bias**, and it explicitly does not establish
-that velocity-projection impulse exchange double counts gravity for a fixed body.
+**The measurement, unchanged.** Job B reads `fz_over_analytic_measured` at +50.06 percent,
+and after both boundary fixes +34.35 / +35.92 percent. All four 2x2 cells FAIL criterion 3.
+That is in `R7_JOBB_2X2_COMBINATION_2026-08-18.md` and none of it depended on this document.
 
-What it does support:
+**The literature, which was the point of the search and is not affected.** Deep search over
+the scholarly literature, [workspace](https://app.undermind.ai/projects/17299f2a-8dc8-438b-8c84-5abf19395e2c).
+Every DOI resolved and its title checked against the resolved record.
 
-- **Weakly compressible MPM is known to behave badly exactly at a free surface.** Zhang et al.
-  2017, *Incompressible material point method for free surface flow*, J. Comput. Phys.,
-  `10.1016/j.jcp.2016.10.064`, introduces a projection/incompressible MPM specifically because
-  the weakly compressible formulation performs poorly there. A half-submerged sphere lives on
-  the free surface, so this is the most directly relevant strand. Chen et al. 2018, *v-p
-  material point method for weakly compressible problems*, Computers & Fluids,
-  `10.1016/J.COMPFLUID.2018.09.005`, is the companion.
+- **Weakly compressible MPM is known to behave badly exactly at a free surface**, which is
+  where a half-submerged sphere sits. Zhang et al. 2017, *Incompressible material point
+  method for free surface flow*, J. Comput. Phys., `10.1016/j.jcp.2016.10.064`, introduces a
+  projection formulation for that reason. Companion: Chen et al. 2018, *v-p material point
+  method for weakly compressible problems*, `10.1016/J.COMPFLUID.2018.09.005`.
 - **Hydrostatic tests are the standard probe for MPM integration and quadrature error**, and
-  quadratic B-splines reduce but do not eliminate particle-location sensitivity. Steffen,
-  Kirby and Berzins, *Analysis and Reduction of Quadrature Errors in the Material Point
-  Method*, IJNME (no DOI on record, Semantic Scholar `da8e9159`), and Baumgarten and Kamrin
-  2023, *Analysis and mitigation of spatial integration errors for the material point method*,
-  IJNME, `10.1002/nme.7217`.
-- **The force-extraction route is a real design choice with published alternatives.** Akinci
-  et al. 2012, *Versatile rigid-fluid coupling for incompressible SPH*, ACM TOG,
-  `10.1145/2185520.2185558`, and Hu et al. 2018, *A moving least squares material point method
-  with displacement discontinuity and two-way rigid body coupling*, ACM TOG,
-  `10.1145/3197517.3201293`, both accumulate contact force rather than reading a velocity
-  projection. Li et al. 2022, `10.1016/j.cma.2022.114809`, is the immersed-FEM route.
-- **The gap in the field is our diagnostic list.** The search reports that published work
-  rarely states force-extraction windows, rarely cross-checks impulse exchange against a
-  pressure-surface integral, and rarely presents particles-per-cell convergence for the body.
-  Those three are exactly what this case needs and exactly what it lacks.
+  quadratic B-splines reduce but do not remove particle-location sensitivity. Baumgarten and
+  Kamrin 2023, `10.1002/nme.7217`; Steffen, Kirby and Berzins (no DOI on record).
+- **Accumulated contact force is the published alternative to velocity projection.** Akinci
+  et al. 2012, `10.1145/2185520.2185558`; Hu et al. 2018, `10.1145/3197517.3201293`. The
+  second is already in CLAUDE.md A-1; the first appears to be new to the project.
+- **The field rarely cross-checks impulse exchange against a pressure-surface integral**, and
+  rarely reports force-extraction windows or particles-per-cell convergence for the body.
+  That remains a genuine diagnostic gap and the most useful thing on this list.
 
-## 3. A CANDIDATE MECHANISM I TESTED AND COULD NOT SUSTAIN
+**The effective-radius hypothesis, already self-refuted in the original.** A one-cell skin
+fits all four cells at 0.85 to 1.18 dx, but the vehicle SDF validation reads -7.668 at g64
+and +7.280 at g96 (`docs/CONTEXT_CENSUS_2026-08-07.md:1049-1052`), wrong sign and wrong
+magnitude against the roughly +54 percent a universal skin predicts. Still worth one cheap
+`n_grid` sweep on the fixed sphere to close it, and that sweep is now the ONLY new experiment
+this investigation justifies.
 
-Recorded because it was close to persuasive and it is worth not re-deriving.
+## 4. WHAT ACTUALLY FOLLOWS
 
-A half-submerged sphere's buoyancy scales as radius cubed, so a collider whose EFFECTIVE
-radius is inflated by a skin of thickness delta reads high by `(1 + delta/r)^3 - 1` while the
-analytic target, computed from the true radius, does not move. Solving for delta from each
-measured cell:
-
-| cell | ratio | implied delta |
-|---|---|---|
-| control 918240 | 1.5122 | 22.17 mm = **1.18 dx** |
-| engine fix | 1.35233 | 15.88 mm = **0.85 dx** |
-| ghost fix | 1.38029 | 17.01 mm = **0.91 dx** |
-| combination | 1.35918 | 16.16 mm = **0.86 dx** |
-
-All four land within about one grid cell, which is the SDF band (1.00 dx) and the quadratic
-B-spline support half-width (1.50 dx). The sphere spans only 16 cells across its diameter, so
-a one-cell skin is a 36 percent volume error.
-
-**REFUTED as a general mechanism, by the only other SDF-collider buoyancy measurement in the
-project.** Read live from `docs/CONTEXT_CENSUS_2026-08-07.md:1049-1052`, the vehicle hull
-gives `err_steady_vs_analytic_pct` of **-7.668 at g64 and +7.280 at g96**, and the box
-collider **-37.912 and -21.276**. A universal one-cell skin predicts a large POSITIVE bias
-scaling with dx over body radius, which for the hull at g64 would be roughly +54 percent. The
-measured value is negative, and the sign flips between two grids. A hypothesis fitted with one
-free parameter to four similar numbers, that then fails to transfer and gets the sign wrong,
-is not established.
-
-**It is still worth ONE cheap test**, because the sphere and the hull are different scenes and
-different code paths. Hold everything and sweep `n_grid` 64, 96, 128 on the fixed sphere. The
-skin hypothesis predicts +37.7, +24.2, +17.8 percent, a clear fall roughly as dx. It is refuted
-if the error is flat in `n_grid`, and refuted differently if it falls faster than first order.
-At `n_grid` 128 this is about 4.8 M particles and a few minutes, so it costs 1 to 2 SU.
-
-## 4. WHAT TO REPLICATE, in order
-
-1. **Run Kramer's actual case.** Free sphere, released from H0 = 30, 90, 150 mm, tank depth
-   900 mm, and compare the heave time series against the public dataset using the paper's own
-   0.3-percent-of-drop-height uncertainty. This replaces an invented criterion with an
-   external one and tests the dynamic response, added mass and damping, rather than a static
-   number. The driver already supports `--h0-over-d` and free mode, so the code exists.
-2. **Fix the tank depth** to 900 mm regardless of anything else. It is a one-argument change
-   and it is currently wrong by a factor of 1.8 against the cited source.
-3. **Cross-check the force accessor** against a pressure-surface integral on the same run. The
-   deep search reports this cross-check is rare in the literature, which makes it both a real
-   diagnostic here and a small publishable contribution.
-4. **Sweep `n_grid` on the fixed sphere**, to close out section 3 either way.
-5. Only then revisit the static-force criterion, and if it is kept, state in writing that it is
-   a project-internal criterion with no source in the cited benchmark.
-
-## 5. WHAT THIS DOES AND DOES NOT CHANGE
-
-- It does **not** overturn the +36 percent measurement, which stands and is reproducible.
-- It does **not** reinstate "Job B is NOT GRADEABLE", which remains refuted.
-- It **does** mean the sentence "any FAIL stops the ladder" is currently being enforced by a
-  criterion with no external warrant, applied to a run that is not the benchmark case.
-- The Job B decision is therefore better framed as a third option alongside accept-the-FAIL and
-  amend-the-criterion: **run the benchmark that was actually cited**, and grade against its own
-  published tolerance.
+1. **The Job B decision is unchanged and is still Josie's**: accept the FAIL and stop the
+   ladder per `MANIFEST:214`, or amend criterion 3 in writing before Job C. There is no third
+   option, because the "run the real benchmark" option I proposed is Job C and is gated.
+2. **The one cheap experiment worth running** is the fixed-sphere `n_grid` sweep at 64, 96,
+   128, which closes the skin hypothesis either way for 1 to 2 SU.
+3. **The pressure-surface cross-check** is the diagnostic the literature says is missing, and
+   it is a Mac-side analysis of an existing run if the pressure field is dumped.
