@@ -409,6 +409,62 @@ def _selftest_overfall():
     print("overfall selftest: 4 checks PASS (estimator recovers Rouse 1.4 exactly)")
 
 
+def _selftest_overfall_bc():
+    """Exercise the catch-and-reinject cycle on synthetic data, no solver needed.
+
+    Written after the first three overfall runs drained themselves: every check
+    here is something that failure would have shown, if it had been checked before
+    the GPU time was spent rather than after.
+    """
+    dx, lim, bed, xbr = 0.041667, 4.0, 1.5, 2.6
+    catch = bed - 0.7
+    nw = 3000
+    rng = np.random.default_rng(3)
+    x = np.zeros((nw, 3), np.float32)
+    # an inlet column 0.30 m deep sitting on the bed, plus a nappe past the brink
+    n_col = 2000
+    x[:n_col, 0] = rng.uniform(0.167, 0.167 + 6.0 * dx, n_col)
+    x[:n_col, 1] = rng.uniform(1.6, 2.4, n_col)
+    x[:n_col, 2] = rng.uniform(bed, bed + 0.30, n_col)
+    x[n_col:, 0] = rng.uniform(xbr, xbr + 0.5, nw - n_col)
+    x[n_col:, 1] = rng.uniform(1.6, 2.4, nw - n_col)
+    x[n_col:, 2] = rng.uniform(0.2, bed, nw - n_col)      # some below catch, some above
+    v = rng.normal(0, 0.4, (nw, 3)).astype(np.float32)
+    x0, v0 = x.copy(), v.copy()
+
+    bc = OverfallBC(n_water=nw, x_in=0.167, catch_z=catch, bed_top=bed,
+                    inlet_velocity=0.7, dx=dx, grid_lim=lim, x_brink=xbr, seed=1)
+    fallen = x0[:, 2] < catch
+    n = bc.apply(x, v)
+    assert n == int(fallen.sum()) and n > 50, (n, int(fallen.sum()))
+    # 1. only the fallen moved
+    assert np.array_equal(x[~fallen], x0[~fallen]), "a non-fallen particle was moved"
+    # 2. reinjected inside the inlet band and ABOVE the bed, never inside it
+    got = x[fallen]
+    assert (got[:, 0] >= 0.167).all() and (got[:, 0] <= 0.167 + 2.0 * dx + 1e-6).all()
+    assert (got[:, 2] > bed).all(), "a recycled particle was placed inside the bed"
+    assert (got[:, 2] <= bed + 0.31).all(), got[:, 2].max()
+    # 3. the measured inlet depth tracks the column that actually exists (0.30 m)
+    assert 0.25 < bc.reinject_depth_last < 0.33, bc.reinject_depth_last
+    # 4. velocity prescribed
+    assert np.allclose(v[fallen], np.array([0.7, 0.0, 0.0], np.float32))
+    # 5. y preserved even here, where z cannot be
+    assert np.array_equal(x[fallen][:, 1], x0[fallen][:, 1]), "y was not preserved"
+    # 6. count conserved and the pool never grows
+    assert x.shape[0] == nw
+    # 7. a second call must not re-recycle the same particles (they are now high)
+    n2 = bc.apply(x, v)
+    assert n2 == 0, "particles were recycled twice in one place"
+    # 8. thin-column fallback: with almost no inlet water it must not divide by zero
+    x2 = x0.copy(); v2 = v0.copy()
+    x2[:n_col, 0] = 3.0                                   # empty the inlet band
+    bc2 = OverfallBC(nw, 0.167, catch, bed, 0.7, dx, lim, xbr, seed=2)
+    bc2.apply(x2, v2)
+    assert np.isfinite(bc2.reinject_depth_last) and bc2.reinject_depth_last > 0
+    print("overfall BC selftest: 8 checks PASS (catch, reinject above the bed, no double-recycle)")
+
+
 if __name__ == "__main__":
     _selftest()
     _selftest_overfall()
+    _selftest_overfall_bc()
