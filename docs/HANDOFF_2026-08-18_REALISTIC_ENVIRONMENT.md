@@ -8,6 +8,76 @@ Every claim in Part 1 was measured live in this session unless marked otherwise.
 
 ---
 
+# UPDATE, LATER ON 2026-08-18: PHASE C IS DONE AND B3 IS QUANTIFIED
+
+Appended by the session that ran Part 8. Read this before Parts 1 to 7; where it
+conflicts with them, this wins. Full working in register **J20 to J23**.
+
+**Phase C (unbound the domain) is implemented and measured.** Commit `be1b138`:
+`simulation/openchannel_bc.py` and `simulation/sim_channel.py`, artifacts in
+`data/openchannel_2026-08-18/`. Five runs on Vista c642-032, g64, water only.
+
+**B3 is no longer an assertion.** At ZERO grade the closed box manufactures
+`+0.09268 +/- 0.00161 m/m` of free-surface slope. A 3 degree road has a bed slope
+of `tan(3 deg) = 0.05241 m/m`. **The artifact is 1.77x the whole signal.** Opening
+the streamwise faces leaves `-0.00284 +/- 0.00029`, 33x smaller, and never drains
+a bin where the closed box empties 2 of 12 at zero grade and 4 of 12 at 3 degrees.
+
+**Four things in Parts 1 to 7 are now corrected.**
+
+1. **"The driver already has a sustained inflow of sorts" is WRONG.** `_sustain_inflow`
+   only overwrites vx in an upstream band and creates no particle. Neither inflow
+   nor outflow exists. The `inflow=` count decays because the band empties: measured
+   9044 at frame 0 to 4 at frame 89.
+2. **Gravity IS overridable through the public API**, so tilted gravity needs no
+   engine change. `set_material` spreads `**params` last, and `set_parameters_dict`
+   honours a `g` key. August 4 item 3's "unconditionally" describes the 17 gated
+   runs, not the API.
+3. **`periodic_x` is ruled out**, not merely trappy: its docstring says
+   "Incompatible with CDF colliders and rigid bodies" and the vehicle is one.
+4. **The g128 runs used a DIFFERENT driver** from the repo's canonical
+   `sim_standing.py`: `$WORK/render_s2/sim_standing.py`, 389 lines, sha256
+   `5215c38b`, not the 564-line `4696c3b2`. Scene physics is identical bar one
+   bookkeeping line, so J17 to J19 stand, but "its sha256 stamps 40 D5 runs" does
+   not extend to the g128 set. See J23 for a latent reporting fork this creates.
+
+**J22, and a correction to my own first draft of it.** I wrote the sound-speed
+shortfall up as a new finding. It is not: `.claude/checks/params_check.py` already
+emits `[lit:sound_speed_cfl] 15/17 runs below the 10x convention ... only 4.28x
+v_max`, with the same numbers. Running the repo's own gates before committing is
+what caught it. What is genuinely new is only that the shortfall carries into the
+g128 set, and that Zhao et al 2019 is a second independent citation for the same
+10x convention. No verdict is known to turn on it and that has not been tested.
+
+**Still open in Phase C.** Zhao's free-overfall case and its end-depth ratio is NOT
+tested; only the uniform channel is. Their target is Rouse's critical-depth-is-
+about-1.4x-brink-depth, taken from their own full text via Scite because **neither
+PDF was retrievable**: Undermind failed on both, and the CityU green-OA copy of the
+hydroplaning paper is behind a Cloudflare bot challenge that was not bypassed. So
+**Phase A step 1 is only partly done** - `10.1063/5.0276643` is verified (matched,
+high confidence) and its 51-item reference list is in hand, but its pavement
+representation, the thing Phase D needs, is still unread.
+
+**Correct the author list before citing it.** Part 2.1 and Part 3 say "Zhou, Qing &
+Wang 2025". Crossref gives **Zhou Changhong, Zhong Qing, He Zhihe, Wang Yixuan,
+Tang Xianyuan, Li Peilin**. "Qing" is Zhong Qing's given name, not a family name.
+
+**Known defects in what I shipped.** `leaked_particle_frames` is 2 to 3x higher in
+recycle mode than closed and is undiagnosed. Both grade=3 runs are non-stationary
+at 5 percent over 90 frames. `n_eff` is 3.9 to 9.1 of 90 frames in every run. The
+inlet and outlet end bins sit about 25 percent above mid-channel depth.
+
+**Next, in order.** (a) Diagnose the recycle-mode leak count. (b) Implement the
+free-overfall case and test against the 1.4x ratio, which is the only external
+validation target currently in hand. (c) Longer records for the graded runs until
+they pass the reverse-arrangement test. (d) Then Phase D (road geometry), which
+still wants the hydroplaning paper's pavement method, so getting that PDF is worth
+one focused effort. (e) Phases E, F, G unchanged.
+
+---
+
+---
+
 # PART 1: WHAT NOW EXISTS
 
 ## Ten commits, all local on `claude/add-ci-checks`, none pushed

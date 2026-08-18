@@ -884,3 +884,190 @@ J19. **THE g128 DEPTH SWEEP COMPLETES AN 11-CASE GRID-INVARIANCE RESULT, AND
      in conflict: layer count measures how well the water column is sampled,
      passthrough measures the boundary treatment at the hull, and only the second
      is what image particles (Schulz and Sutmann 2019) would address.
+
+J20. **THE BOUNDED-DOMAIN ARTIFACT IS LARGER THAN THE SLOPE IT WOULD MASK, AND
+     OPENING THE STREAMWISE FACES REMOVES IT. B3 IS NOW MEASURED, NOT ASSERTED.**
+
+     `docs/HANDOFF_2026-08-18_REALISTIC_ENVIRONMENT.md` blocker B3 stated that a
+     bounded domain physically cannot measure a slope, because conserving volume
+     in a closed box forces a redistribution larger than the effect. That was an
+     assertion carried across sessions. It is now a number.
+
+     Measured 2026-08-18 on Vista c642-032 (GH200, idev job 917886), g64, water
+     only, 90 frames, depth 0.30 m, velocity 1.5 m/s, domain lim 9.421742314 m
+     (the Yaris-derived value, so the geometry matches the canonical scene).
+     Driver `simulation/sim_channel.py`, BC module `simulation/openchannel_bc.py`,
+     both landed in be1b138. Artifacts `data/openchannel_2026-08-18/`.
+
+     The discriminator is the streamwise slope of the free surface. In
+     road-aligned axes, uniform flow has a surface parallel to the bed, so the
+     correct answer is ~0 whatever the grade; a non-zero slope is accumulation.
+     Discard length and n_eff come from `analysis/stationarity.py`, NOT from a
+     fixed settle length.
+
+     | bc      | grade | slope m/m | RUM95   | n_eff | discard | stationary | drained bins |
+     |---------|------:|----------:|--------:|------:|--------:|------------|-------------:|
+     | closed  | 0 deg | +0.09268  | 0.00161 |   4.4 |      59 | yes        | 2 of 12      |
+     | closed  | 3 deg | +0.16946  | 0.00224 |   3.9 |      70 | **no**     | 4 of 12      |
+     | recycle | 0 deg | -0.00284  | 0.00029 |   9.1 |      65 | yes        | 0 of 12      |
+     | recycle | 1 deg | -0.00072  | 0.00096 |   5.3 |      52 | yes        | 0 of 12      |
+     | recycle | 3 deg | +0.00596  | 0.00086 |   4.3 |      79 | **no**     | 0 of 12      |
+
+     **AT ZERO GRADE THE CLOSED BOX MANUFACTURES +0.0927 m/m OF FREE-SURFACE
+     SLOPE.** The bed slope of a 3 degree road is tan(3 deg) = 0.05241 m/m. The
+     artifact is **1.77x the entire signal**, and 5.31x the signal at 1 degree.
+     Any slope study run in the closed configuration would have been reading its
+     own boundary condition. Recycling leaves 33x less.
+
+     The drained-bin column is the same finding in binary form. The closed box
+     empties 2 of 12 streamwise bins at zero grade and 4 of 12 at 3 degrees: the
+     upstream end of the channel runs dry while water piles 0.74 m deep against
+     the downstream wall, against a 0.30 m nominal depth. Recycling never drains
+     a bin at any grade.
+
+     SECOND, INDEPENDENT SIGNATURE, separate origin from the depth profile:
+     outflow discharge rises monotonically with grade, 240.7 then 278.4 then 355.4
+     particles per frame at 0, 1 and 3 degrees, +47.6 percent. The closed box
+     cannot produce this quantity at all, because its upstream velocity band
+     drains from 9044 particles at frame 0 to 4 by frame 89.
+
+     THAT DECAY ALSO SETTLES A STANDING QUESTION. The canonical
+     `SCENARIO=STANDING_WATER_SUSTAINED_INFLOW` label is wrong in both halves.
+     `_sustain_inflow` (sim_standing.py) only overwrites vx inside an upstream
+     band and creates no particle, so it is a momentum source, not a mass inflow;
+     and `_project_water` clamps x, so there is no outflow either. The handoff's
+     reading that "inflow partly exists, outflow is the missing half" is wrong:
+     **neither exists**. The decay of the band count was previously inferred from
+     code; it is now measured, 9044 to 4.
+
+     NOT TESTED, AND NOT CLAIMED. Zhao et al's free-overfall case, and its
+     end-depth ratio, is not exercised; this is their uniform-channel case only.
+     Their stated target is Rouse's finding that the critical depth is about 1.4x
+     the brink depth, retrieved 2026-08-18 from their own full text via Scite
+     (`10.1016/j.compfluid.2018.10.007`), because NEITHER that PDF NOR the
+     hydroplaning PDF was retrievable this session: Undermind returned "could not
+     get PDF" for both, and the CityU green-OA copy of the hydroplaning paper sits
+     behind a Cloudflare bot challenge that was not worked around. Both grade=3
+     runs are non-stationary at 5 percent over 90 frames, so those two rows are
+     provisional. No vehicle is in the loop yet.
+
+J21. **THE ENGINE PERMITS NO PARTICLE ADD OR REMOVE, AND periodic_x IS RULED OUT
+     BY THE VEHICLE. RECYCLING IS THE ONLY AVAILABLE TRANSLATION OF ZHAO 2019.**
+
+     Read live 2026-08-18 from `third_party/mpm-engine-544c93dd-solver-core/`:
+
+     - `core/solver.py:103` `load_particles` constructs
+       `MPM_Simulator_WARP(len(pos))` exactly once. There is no `add_particles`,
+       no `remove_particles` and no resize anywhere in the Solver class. Zhao et
+       al's add/remove formulation therefore cannot be implemented literally.
+     - `core/solver.py:93` `periodic_x` is the engine's own streamwise wrap, and
+       its docstring says "Incompatible with CDF colliders and **rigid bodies**".
+       The gated vehicle IS a rigid body. `add_cdf_collider` guards this at :379;
+       `add_sdf_collider` does not, so the incompatibility is silent on the SDF
+       path. Do not reach for periodic_x as the road-slope fix.
+     - `core/solver.py:80` `sort_interval` defaults to 0 and its own docstring
+       warns that sorting "changes particle index identity". Every driver here
+       addresses water as `[0, n_water)`, so this MUST stay 0. `sim_channel.py`
+       raises if it is not.
+     - `F` has no setter. `F()` (:543) and `F_torch()` (:625) are exports only.
+       This is why a recycled particle must keep its (y, z): for a fluid,
+       `kernels/mpm_utils.py:1086-1089` overwrites F every substep with
+       J^(1/3) I for mat 6, 10 and 12, discarding the deviatoric part, so the only
+       carried state is J; pressure is p = -bulk (J^-1.1 - 1)
+       (`mpm_utils.py:28-54`); and in a uniform channel the head is a function of
+       z alone. Re-inserting at the same depth re-inserts at the correct J. There
+       is no host-side way to correct a wrong one.
+
+     ALSO REACHABLE WITH NO ENGINE CHANGE, and previously believed not to be:
+     gravity is overridable. `set_material` builds
+     `{"material": name, "g": [0,0,-9.81], **params}` with `**params` LAST
+     (solver.py:165-167), so a `g` passed through `**overrides` wins, and
+     `set_parameters_dict` honours it (`kernels/mpm_solver_warp.py:742-743`).
+     August 4 item 3 says the 9.81 is hardcoded "unconditionally"; that is true
+     of the 17 gated runs, which pass no override, but it is NOT a property of
+     the API. A road grade goes in as tilted gravity with the floor left flat,
+     which is the chute formulation the periodic_x docstring itself names.
+
+J22. **THE SOUND-SPEED SHORTFALL IS NOT A NEW FINDING. THE REPO'S OWN GATE
+     ALREADY REPORTS IT, AND THIS ITEM ONLY EXTENDS ITS SCOPE AND ITS SOURCING.**
+
+     WRITTEN AS A NEW DISCOVERY IN THE FIRST DRAFT OF THIS ITEM, AND CORRECTED THE
+     SAME DAY BEFORE COMMIT. Running `.claude/checks/params_check.py` emits:
+     `[lit:sound_speed_cfl] 15/17 runs below the 10x convention (gamma=1.1 from the
+     pinned solver), worst is sweepV_g64_v3p0: sound speed 12.8452 m/s is only
+     4.28x v_max`. That gate landed in aa754dc and already carries the same
+     numbers, including the same 4.28x. A number recomputed by a second script is
+     the same source measured twice, not corroboration. The table below is a
+     restatement of an existing gate, not an independent result.
+
+     TWO THINGS HERE ARE ACTUALLY NEW, and only these should be cited as such:
+     (a) the shortfall extends to the g128 set (J17 to J19), which postdates the
+     gate's 17-run scope, since `bulk_modulus` and `sound_speed_ms` are unchanged
+     at 1.5e5 and 12.8452 in every g128 summary; and (b) Zhao et al 2019 is a
+     SECOND, independent citation for the same 10x convention, alongside the
+     Monaghan line the gate already cites, which matters because the gate's own
+     wording rests on a single convention.
+
+     `sim_standing.py` fixes `bulk_modulus=1.5e5`, giving
+     c = sqrt(1.1 K / rho) = 12.8452 m/s, a figure the g128 summaries carry
+     directly as `sound_speed_ms`. Zhao et al reduce the water bulk modulus and
+     require the numerical sound speed to stay above 10x the maximum flow
+     velocity (`docs/OPTION_A_INFLOW_OUTFLOW_BC_PLAN.md`, citing Liang; the same
+     Monaghan 10x convention already in this project's literature base).
+
+     | velocity m/s | c/v   | meets >10x |
+     |-------------:|------:|------------|
+     | 0.5          | 25.69 | yes        |
+     | 1.0          | 12.85 | yes        |
+     | 1.5          |  8.56 | **no**     |
+     | 2.0          |  6.42 | **no**     |
+     | 2.5          |  5.14 | **no**     |
+     | 3.0          |  4.28 | **no**     |
+
+     So the canonical g64 and g128 baselines at v=1.5, and the whole upper half
+     of the velocity sweep, sit below it, the worst case by a factor of 2.3. The
+     gate counts 15 of 17 rather than the 4 of 6 velocities implied by the table
+     because the 17 runs are not evenly spread over velocity.
+     STATE THIS CAREFULLY. It is a criterion from one paper's practice, and the
+     ratio uses the NOMINAL inlet velocity, so the true margin against the maximum
+     realised flow velocity is worse than the table. The consequence of a low
+     margin is excess compressibility, not instability, and NO published verdict
+     is known to turn on it. That has not been tested. To close it, re-run one
+     canonical case at a bulk modulus giving c/v >= 10 and confirm the verdict is
+     unchanged. Do not close it by assertion.
+
+J23. **THE g128 RUNS WERE PRODUCED BY A DIFFERENT DRIVER FROM THE ONE THE REPO
+     CALLS CANONICAL. THE PHYSICS IS IDENTICAL; THE PROVENANCE RECORD WAS NOT.**
+
+     `docs/HANDOFF_2026-08-18_REALISTIC_ENVIRONMENT.md` says of `sim_standing.py`
+     "its sha256 stamps 40 D5 runs". True for D5. NOT true for J17, J18 and J19.
+
+     Measured live 2026-08-18. `run_s2.sh` and `run_sweep.sh`, the two scripts
+     that produced the entire g128 set, both set
+     `DRIVER=$BASE/sim_standing.py` with `BASE=$WORK/render_s2`. That file is
+     **389 lines, sha256 5215c38b...**. The Mac canonical copy at
+     `renders/yaris_render_s1/sim_standing.py` is **564 lines, sha256
+     4696c3b2...**. Two other Vista copies
+     (`can-it-ford-track1-6dof/`, `render_s2/multigeom_2026-08-08/`) are
+     4696c3b2 and are NOT the ones the g128 runs used.
+
+     CONFIRMED BY OUTPUT, not just by the launcher text: the 389-line driver has
+     no vehicle registry, and every g128 `summary.json` is missing `vehicle_key`,
+     `vehicle_class`, `mass_source`, `hull_source`, `preflight_fill_ratio`,
+     `hull_watertight` and `mass_alt_kg`, all of which the 564-line driver writes.
+
+     THE VERDICTS STAND. Extracting `class StandingFloodScene` from both files and
+     diffing gives exactly ONE differing line: the 564-line version has
+     `self.bulk_modulus = float(bulk_modulus)` and the 389-line one does not. That
+     is a recorded attribute, not a computation. The 175-line gap is the vehicle
+     registry, `resolve_vehicle`, the preflight block and hull provenance
+     instrumentation, none of which enters the scene for a `--mass`-driven Yaris
+     run. Scope of this check: the scene class was diffed in full; the two
+     `main()` bodies were not.
+
+     ONE LATENT FORK SURVIVES. The 389-line driver writes
+     `"bulk_modulus": 1.5e5` into its summary as a HARDCODED LITERAL, while the
+     564-line one writes the value actually used. They agree today because
+     nothing overrides it. The moment anyone adds a `--bulk-modulus` flag, which
+     J22 is a direct reason to do, the g128-lineage driver will report 1.5e5
+     whatever it ran. Fix the literal before running that sweep.
