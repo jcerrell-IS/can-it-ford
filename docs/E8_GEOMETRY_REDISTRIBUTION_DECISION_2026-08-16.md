@@ -262,6 +262,32 @@ Two consequences, both worth carrying:
 **Anyone editing `.gitignore:63` should know it is load-bearing for something other
 than what it was written for.**
 
+### Coverage across branches, not just `main`, checked 2026-08-19
+
+Every inventory figure in this document was measured on `origin/main`. D3's point that
+*an unfetched public branch is UNAUDITED, not clean* applies to any single-branch
+measurement, so the other branches were checked rather than assumed. [read]
+
+Of the **471 blob versions that exist on non-`main` branches and nowhere on `main`**:
+
+- **Zero** are CCSA archives, `.key` decks, `.ply` hulls, `citations/` material or
+  `assets/`. **No third-party source material differs from, or is additional to, what
+  `main` carries.** The licence inventory therefore covers the whole public surface,
+  not one branch of thirty-six.
+- **One** sits inside an audited tree,
+  `vehicle_geometry_research/flood-mpm-debugging-reference_SKILL_v3_friction_corrected.md`,
+  and it is a **project-authored** skill document in a different revision, not
+  third-party content.
+- Ten are **project-generated outputs**: poster and paper figures, render stills, a
+  sweep video.
+
+**One scope note carried honestly:** the "6 of 15 renders" classification in section 3
+counted `main`'s renders. Several of those ten branch-only outputs are stills and
+figures that may also depict the CCSA-derived hull, so the *render* count is
+`main`-scoped where the *source material* count is now surface-wide. With permission
+reported this changes no conclusion, and it is recorded so nobody later reads 15 as a
+whole-repository figure.
+
 ### Reconciling three independent counts of the same tree
 
 D3, the coordinator and I each measured this separately and got **160,308,908 B**
