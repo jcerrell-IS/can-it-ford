@@ -11,6 +11,16 @@
     "wolfram": {
       "type": "http",
       "url": "https://agenttools.wolfram.com/mcp"
+    },
+    "canford-corpus": {
+      "type": "stdio",
+      "command": "/usr/bin/python3",
+      "args": ["/Users/josie/can-it-ford/.claude/tooling/corpus_mcp.py"]
+    },
+    "canford-tacc": {
+      "type": "stdio",
+      "command": "/usr/bin/python3",
+      "args": ["/Users/josie/can-it-ford/.claude/tooling/tacc_mcp.py"]
     }
   }
 }
