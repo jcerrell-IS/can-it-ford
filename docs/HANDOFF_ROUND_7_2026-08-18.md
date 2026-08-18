@@ -372,9 +372,21 @@ the same head. F has no setter, so this is the only consistent route.
 road is tan(3 deg) = 0.0524 m/m, so the artifact is 1.77x the entire signal. Recycling leaves
 33x less and never drains a bin.
 
-**Do this: port the recycling BC to the VEHICLE scene.** It is the single change that most
-improves physical realism, it is already written and measured for the channel, and it removes
-the reflection window that currently caps every run at ~91 usable frames.
+**DONE 2026-08-18, commit `a6e534a` on `claude/r7-inflow`, Slurm job 918506.** Full write-up
+at `docs/R7_INFLOW_OUTFLOW_VEHICLE_2026-08-18.md`. Headline: with a vehicle in it the closed
+tank manufactures **+0.07114 m/m, 1.36x tan(3 deg)**, and recycling removes it; **no verdict
+moves anywhere**, 3 configs x 2 horizons x N=5; but displacement at the canonical horizon
+rises +35.4 / +38.3 / +15.0 percent and by row 250 rises +307 / +521 / +88 percent, and all
+16 closed-tank runs end row 250 closer to their start than at row 90 while all 18 recycling
+runs end further. Two caveats found by measuring rather than assuming: the below-floor leak
+roughly triples at g64 under recycling (0.000 percent at g96 in both arms), and the
+recirculation reaches the vehicle at row 64, inside the 90-frame horizon.
+
+**This section's own premise is qualified by that work.** "The first wall reflection arrives
+at frame 112.3" is reproducible only as a STILL-WATER shallow-water round trip. The scene runs
+at Fr 0.88, where an upstream-travelling wave makes 0.1995 m/s and needs about 478 frames.
+The number reproduces to 0.04 of a frame and still cannot be its own mechanism. See section 9
+of the write-up.
 
 `periodic_x` is documented "Incompatible with CDF colliders and rigid bodies" (`solver.py:93`),
 which the gated vehicle is, so periodic is NOT the route. Recycling is.
@@ -538,8 +550,9 @@ appear only in `docs/` notes and never in the paper. It is a check that cannot f
 2. **Collect job 918450**, the boundary-fix A/B, and grade it against the prediction written in
    its own run script.
 3. **Collect job 918351 (g192)** and extend the ladder table.
-4. **Port the recycling inflow-outflow BC to the vehicle scene.** Section 6. Biggest single
-   gain in physical realism, already written and measured for the channel.
+4. ~~**Port the recycling inflow-outflow BC to the vehicle scene.**~~ **DONE**, commit
+   `a6e534a`, job 918506, `docs/R7_INFLOW_OUTFLOW_VEHICLE_2026-08-18.md`. No verdict moved;
+   the margins behind the verdicts moved 15 to 521 percent. Section 6 for the numbers.
 5. **Force-vs-resolution curve.** The corpus review's recommendation 3 says explicitly that a
    multi-resolution force-convergence curve for a vehicle "is currently rare and would
    materially improve the literature", and recommendation 6 says it would REPLACE the field's
@@ -598,7 +611,7 @@ is unowned and available.**
 | 4 | **Sacrificial sub-floor** `--ghost-layers` | implemented, default OFF, UNTESTED on GPU | `6ed163e` on `claude/r5-physics` |
 | 5 | Engine one-liner `< 0.0` to `<= 0.0` on the PINNED engine | owner decision, breaks sha | see 3g |
 | 6 | **Force-vs-resolution curve** | started, not delivered | `claude/r5-research` |
-| 7 | **Inlet/outlet BC port to the vehicle scene** | not started | `simulation/openchannel_bc.py` on `claude/add-ci-checks` |
+| 7 | ~~**Inlet/outlet BC port to the vehicle scene**~~ | **CLOSED 2026-08-18**, job 918506, 34/34 rc=0 | `a6e534a` on `claude/r7-inflow`; `docs/R7_INFLOW_OUTFLOW_VEHICLE_2026-08-18.md` |
 | 8 | Rename `determinism_identical` (5 writers, 7 poster captions) | not started | see 3b |
 | 9 | Remove persistence from the verdict / report frequency | not started | see 3c |
 | 10 | Renders: wire asphalt PBR, add `--hero` | not started | see section 7 |
@@ -613,10 +626,12 @@ is unowned and available.**
 | 19 | Nihei corrigendum `10.1016/j.rineng.2025.107527` | unfetched | gates the brake-state numbers |
 | 20 | Job C | GATED on the Job B decision | do not run until 3e is settled |
 
-**Ranked, if you only do three: 1, then 2 and 3 together, then 7.** Item 1 decides whether the
+**Ranked, if you only do three: 1, then 2 and 3 together, then 9.** Item 1 decides whether the
 headline result is physics or geometry. Items 2 and 3 are already-paid GPU sitting uncollected.
-Item 7 is the biggest single gain in physical realism and is already written and measured for
-the channel.
+**Item 7 is now closed**, and its result promotes item 9: the v0.5 recycle arm reaches 0.1793 m
+of displacement, 3.6x the `slide_m` threshold and 6.2x its own closed control, and is still
+classified STUCK. A binary that will not move while the quantity under it moves 6x is the
+clearest case yet for reporting gate-pass frequency instead.
 
 ## 12. HOW TO BEHAVE
 
