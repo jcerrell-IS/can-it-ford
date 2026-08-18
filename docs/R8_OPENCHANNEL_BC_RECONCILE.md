@@ -205,10 +205,30 @@ same numbers, but they would have no recorded reason to expect that, and the mis
 hash would look like drift. That is exactly the situation the parity test is meant to
 convert from "unknown" into "checked".
 
-Recommended, and NOT done here because both files are outside this slot's write scope: when
-`claude/r7-inflow` next writes a manifest, record `ANCESTOR_BLOB` alongside
-`bc_module_sha256`, so an artifact names the behaviour it depends on rather than only the
-bytes it happened to run.
+### What the next person should stamp, so the break is repaired rather than recorded
+
+Recommended, and NOT done here because `claude/r7-inflow` is outside this slot's write
+scope. `bc_module_sha256` alone cannot survive a module edit, because it pins BYTES, and the
+bytes are allowed to change. Stamp three fields instead of one, so an artifact names the
+BEHAVIOUR it depends on:
+
+```python
+"bc_module_sha256":       sha256(REPO / "simulation" / "openchannel_bc.py"),  # as today
+"bc_module_ancestor_blob": openchannel_bc.ANCESTOR_BLOB,                      # "9a94e247..."
+"bc_module_parity_ok":     _selftest_ancestor_parity() ran without raising,   # True / False
+```
+
+Read that triple as: these exact bytes ran, they claim parity with blob `9a94e247`, and that
+claim was checked at run time rather than asserted. An artifact carrying it stays comparable
+with r7's existing ones, because the historical mapping is fixed and verified here: content
+sha256 `bef123f9` IS git blob `9a94e247` IS the module r7 ran. So a future run whose
+`bc_module_sha256` differs but whose `ancestor_blob` matches and whose `parity_ok` is True is
+directly comparable to the published result, and one whose `parity_ok` is False is not, which
+is the distinction the current single field cannot express.
+
+If `_selftest_ancestor_parity` is ever removed or its goldens regenerated from the current
+module rather than from the ancestor blob, `parity_ok` becomes decorative. Section 7's
+re-derivation command is the check on the check.
 
 r7's headline result is unaffected. READ from
 `claude/r7-inflow:docs/R7_INFLOW_OUTFLOW_VEHICLE_2026-08-18.md`: three configurations, two
@@ -253,22 +273,39 @@ correct, that is a genuine trunk conflict rather than an addition, and the answe
 to either a versioned class or a fork. The test is what will detect that day. Nothing found
 in the current tip meets that condition.
 
-### Two frictions found while arguing this, both real, neither fatal
+### Two hazards found while arguing this. One is a latent silent corruption
 
-READ. `OverfallBC.__init__` at `:383` assigns `self.rng = np.random.default_rng(seed)`,
-overwriting the generator the parent constructed at `:147` from the parent's own `seed`
-parameter. Harmless today, because `OverfallBC.apply` fully overrides and never reads
-`inject_len`. It becomes a trap the moment anyone tries to pass `inject_len` to an
-`OverfallBC`: the parent would store it and the child's `apply` would ignore it, silently.
-`OverfallBC.__init__` does not currently accept `inject_len`, so this cannot happen by
-accident today.
+HAZARD 1, a parameter that will accept a value and ignore it. READ.
+`OverfallBC.__init__` at `:383` assigns `self.rng = np.random.default_rng(seed)`,
+overwriting the generator the parent constructed at `:147` from the parent's own `seed`.
+Harmless today: `OverfallBC.apply` fully overrides and never reads `inject_len`, and
+`OverfallBC.__init__` does not accept `inject_len`, so it cannot be reached by accident
+now.
 
-MEASURED, and the sharper one. `ReservePool` writes to rows `[n_water, n_water + n_reserve)`
-(`self.lo = self.n_water`, `:573`). In the water-only channel scenes those rows are spare
-particles. In the r7 VEHICLE scene those rows are the rigid body: the wrapper reads the
-vehicle as `x[self.n_water:]`. Constructing `ReservePool(n_water, 20, ...)` in a vehicle
-scene and calling `pin_parked` displaces 20 of the 37 vehicle rows into the park box, with
-no error:
+WHAT BREAKS. The obvious next edit is to let `OverfallBC` take `inject_len`, because a
+spread inlet is exactly what an overfall inlet wants. The moment that passthrough is added,
+the parent stores `self.inject_len` and the child's `apply` never consults it.
+
+HOW IT PRESENTS. Not as an error. The caller sets an injection band, the run completes
+normally, and the sheeting artifact the band exists to remove is still there at the same
+magnitude. The natural conclusion is "the injection band does not help at an overfall",
+which is a physics conclusion drawn from a parameter that was never read.
+
+WHY NOTHING FIRES. Python stores an attribute whether or not anything reads it, and there
+is no assertion anywhere that a constructor argument reaches a code path. The value is
+present on the instance and simply unused.
+
+THE FIX, one line, recommended and NOT applied: have `OverfallBC.__init__` either forward
+`inject_len` to a path that honours it, or refuse it with a `TypeError`, so the parameter
+cannot be silently inert. Reseeding `self.rng` is then a deliberate override rather than an
+accident of ordering.
+
+HAZARD 2, AND THIS ONE IS A LATENT CORRUPTION, NOT A FRICTION. MEASURED.
+`ReservePool` writes to rows `[n_water, n_water + n_reserve)` (`self.lo = self.n_water`,
+`:573`). In the water-only channel scenes those rows are spare particles. In the r7 VEHICLE
+scene those rows ARE THE RIGID BODY: the wrapper reads the vehicle as `x[self.n_water:]`.
+Constructing `ReservePool(n_water, 20, ...)` in a vehicle scene and calling `pin_parked`
+teleports 20 of the 37 vehicle rows into the park box and raises nothing:
 
 ```
 pin_parked pinned      : 20
@@ -276,13 +313,36 @@ VEHICLE rows displaced : 20 of 37
 vehicle row 0 before   : [4.  4.  0.6] after: [1.0833334 1.0833334 1.0833334]
 ```
 
-This is a scene-layout contract, not a module conflict, and it does not argue for a fork:
-the fix is one guard. Recommended for whoever owns `claude/add-ci-checks`, and NOT applied
-here because `ReservePool` is production code outside this slot's remit: have `ReservePool`
-take the total particle count, or an explicit row range, and raise if the reserve block
-overlaps a rigid body. Anyone combining a reserve pool with a vehicle before that lands
-must order the rows water, reserve, vehicle, and pass the BC an `n_water` that excludes the
-reserve.
+WHAT BREAKS, from the pinned solver rather than from a summary. READ,
+`third_party/mpm-engine-544c93dd-solver-core/kernels/mpm_solver_warp.py`: the rigid body's
+centre of mass at `:857` is a mass-weighted mean of its particles' POSITIONS, and its
+inertia tensor at `:864-869` is built from `r = x_np[idx] - x_cm` over those same positions,
+with `:865` storing them as the body-frame reference the rigid update then places particles
+from. Total mass at `:856` sums the particle MASSES and so is unchanged, since the parked
+rows are still material 8. So the specific damage is: mass right, centre of mass dragged
+toward the park box, inertia tensor inflated by the `r` squared term for every displaced
+particle, and the body-frame reference geometry wrong. If the pin runs after
+`finalize_rigid_bodies` instead, the host rewrite fights the rigid update every tick.
+
+HOW IT PRESENTS. As physics. The run does not crash. It completes, it renders, it produces
+a displacement and a verdict, and the vehicle it produces them for is a body with the right
+mass, the wrong centre of mass and the wrong inertia. A CG error biases topple behaviour and
+an inertia error biases rotational response, which are exactly the quantities this project
+reports. Nothing in the output announces that a third of the hull was somewhere else.
+
+WHY NOTHING FIRES. `ReservePool`'s only constructor guard (`:566-570`) validates the PARK
+BOX against the P2G edge rule. It never validates the ROWS. Nothing anywhere asserts that
+`[n_water, n_water + n_reserve)` contains water, and numpy fancy indexing into an existing
+(N, 3) array is perfectly legal for those indices, because in a vehicle scene the vehicle
+rows are what make N large enough. The write is in bounds, silent and complete.
+
+THE FIX, recommended and NOT applied because `ReservePool` is production code outside this
+slot's remit: have `ReservePool` take the TOTAL particle count or an explicit row range, and
+raise if its block overlaps any non-water rows. Until that lands, anyone combining a reserve
+pool with a vehicle must order the rows water, reserve, vehicle, and pass the BC an
+`n_water` that excludes the reserve. This is a scene-layout contract rather than a module
+conflict, so it does not argue for a fork, but it is the single most dangerous thing found
+in this audit and it is dangerous precisely because it is quiet.
 
 ## 6. What this branch changed, exactly
 
@@ -398,10 +458,11 @@ nothing needed to be: this deliverable contains no physical parameter, no unit c
 and no new citation. The one external reference, Zhao et al 2019, is carried verbatim from
 the module's existing docstring and was not re-checked against the primary record here.
 
-## 10. A tooling trap that nearly corrupted this audit, recorded because it is silent
+## 10. A tooling trap that nearly corrupted this audit, and the correction to my own
+first account of it
 
 MEASURED. In zsh 5.9, which is this project's shell, a git rev-and-path built from a
-variable is eaten by a history modifier, and QUOTING DOES NOT HELP:
+variable can be eaten by a history modifier, and QUOTING DOES NOT HELP:
 
 ```
 for c in 1315a4a; do echo "[$c:simulation/openchannel_bc.py]"; done
@@ -410,10 +471,68 @@ git rev-parse "$c:simulation/openchannel_bc.py"   -> 1315a4a079...  (the COMMIT 
 git rev-parse "${c}:simulation/openchannel_bc.py" -> 70946f61e7...  (the BLOB sha, correct)
 ```
 
-zsh reads `:s...` as the substitution modifier. git then receives a bare, valid commit-ish,
-resolves it happily, and returns commit-level output with no error anywhere. Two loops in
-this audit produced confidently wrong tables before the contradiction was noticed, one of
-them claiming `1315a4a` did not contain `inject_len` when its own blob contains seven
-occurrences of it. Both were re-measured with `git cat-file` on explicit blob shas, which
-is what the tables above use. Always brace it: `"${sha}:${path}"`. Any tooling in this repo
-that interpolates a rev and a path in zsh should be checked for this.
+CORRECTION, SAME SESSION, AND IT IS THE INTERESTING PART. My first write-up of this implied
+the trap always fires. It does not, and the canary I originally put in this section, built
+on `README.md`, DOES NOT FIRE AT ALL. I found that by running my own canary instead of
+publishing it, which is the same lesson as M5 in section 3.
+
+What actually governs it is the FIRST CHARACTER OF THE PATH, because that character decides
+whether zsh sees a modifier. MEASURED over 19 literal prefixes with `c=HEAD`:
+
+| altered | 11 prefixes, by first letter: `a c e g h l q r s t u` |
+|---|---|
+| unaffected | 8 prefixes: `d p x` and `README.md`, `CLAUDE.md`, `vehicle.py`, `notes.md`, `info.md` |
+
+The modifiers do different damage. `:a` absolutises, `:h` takes a dirname, `:l` lowercases,
+`:t` takes a basename, `:s` substitutes. So `renders/x` became `HEADenders/x` and
+`analysis/x` became an absolute path with `HEADnalysis/x` glued on.
+
+AND THIS IS WHY IT IS DANGEROUS IN EXACTLY ONE PLACE. Of the mangled prefixes I put through
+git, four produced a string git REJECTED, which is loud and harmless:
+
+```
+git rev-parse "$c:renders/yaris_render_s1"  -> fatal: ambiguous argument 'HEADenders/...'
+git rev-parse "$c:third_party/x"            -> fatal: ambiguous argument 'HEADhird_party/x'
+git rev-parse "$c:analysis/x"               -> fatal: ambiguous argument '/Users/...'
+git rev-parse "$c:scripts/check_claims.py"  -> fatal: ambiguous argument 'HEADk_claims.py'
+```
+
+One did not:
+
+```
+git rev-parse "$c:simulation/openchannel_bc.py"  -> 1aa4e19546bc54db9e8ac1bcee686aaa19aa9d6f
+git rev-parse HEAD                               -> 1aa4e19546bc54db9e8ac1bcee686aaa19aa9d6f
+```
+
+The `:s` substitution consumed the whole path and left the bare rev intact, so git received a
+valid commit-ish, resolved it happily, and returned COMMIT-level output with no error
+anywhere. `git show` on that argument prints an entire commit diff, and a script that greps
+it gets a confident wrong answer. That is precisely what happened here: two loops produced
+wrong tables, one claiming `1315a4a` did not contain `inject_len` when its own blob contains
+seven occurrences, caught only because a later result contradicted it.
+
+So the live hazard for this repo is narrow and badly placed: `docs/`, `paper/` and `data/`
+are safe, which is why this has never bitten before, and `simulation/` is the silent case.
+`scripts/`, `renders/`, `analysis/` and `third_party/` are mangled but LOUD.
+
+THE REMEDY, in copyable form. Any of these three is safe; the last two cannot be mangled at
+all, because the path is a separate argument:
+
+```sh
+git show "${sha}:${path}"                 # brace it, quotes alone are NOT enough
+git ls-tree "${sha}" -- "${path}"         # prints mode, type, BLOB sha, path
+git cat-file blob "${blobsha}"            # pin by blob, immune to a branch moving
+```
+
+A canary that actually fires, unlike my first one. If your shell is safe these print the
+same sha; if it is not, the first prints the sha of HEAD itself:
+
+```sh
+c=HEAD
+git rev-parse "$c:simulation/openchannel_bc.py"
+git rev-parse "${c}:simulation/openchannel_bc.py"
+```
+
+Interpolating a variable AFTER the colon also defends by accident, because `$` is not a
+modifier character: `"$c:$path"` survives where `"$c:simulation/x"` does not. Do not rely on
+that, it is a property of where the literal text sits, not a rule anyone will remember.
