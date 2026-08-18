@@ -82,7 +82,8 @@ class ChannelScene:
                  lim=None, bc="recycle", grade_deg=0.0, water_density=1000.0,
                  water_eta=1.0e-3, bulk_modulus=1.5e5, fps=30, floor_friction=0.55,
                  settle_frames=8, device="auto", seed=0, inflow_len=1.5,
-                 prescribe="full", n_image=0, floor_plane=True):
+                 prescribe="full", n_image=0, floor_plane=True,
+                 outflow_cells=4.0):
         if bc not in ("closed", "recycle"):
             raise ValueError("bc must be 'closed' or 'recycle'")
         self.bc_mode = bc
@@ -201,8 +202,14 @@ class ChannelScene:
         self._inflow_x = wall + inflow_len
 
         # Outflow one wall-thickness inside the domain, inflow at the upstream wall.
+        # The outflow plane sits outflow_cells in from the downstream edge. The
+        # default 4 reproduces every run in register items 20 and 24. It is a flag
+        # because 4 cells leaves only 1.5 dx between x_out and the engine's P2G edge
+        # guard, and the image-particle arms pushed WATER (not images) to x=9.064
+        # against a guard limit of 9.054 and died before producing a summary. When
+        # comparing arms, move it for ALL arms or the comparison is not controlled.
         self.x_in = wall
-        self.x_out = lim - wall
+        self.x_out = lim - float(outflow_cells) * dx
         self.wall = None
         if self.n_image:
             # free_slip mirrors the canonical floor, which is add_plane(..., "slip").
@@ -337,6 +344,8 @@ def main():
     p.add_argument("--bins", type=int, default=12)
     p.add_argument("--images", type=int, default=0,
                    help="image particles mirrored across the floor (0=off)")
+    p.add_argument("--outflow-cells", type=float, default=4.0,
+                   help="outflow plane distance from the downstream edge, in cells")
     p.add_argument("--no-floor-plane", action="store_true",
                    help="drop the grid-BC floor so the image layer IS the wall")
     p.add_argument("--dump-water", type=int, default=0,
@@ -368,7 +377,8 @@ def main():
                       vehicle_mass=mass, lim=a.lim, bc=a.bc, grade_deg=a.grade_deg,
                       water_eta=a.eta, floor_friction=a.floor_friction,
                       settle_frames=a.settle_frames, prescribe=a.prescribe,
-                      n_image=a.images, floor_plane=not a.no_floor_plane)
+                      n_image=a.images, floor_plane=not a.no_floor_plane,
+                      outflow_cells=a.outflow_cells)
 
     print("SCENARIO=OPEN_CHANNEL bc=%s grade_deg=%.3f" % (a.bc, a.grade_deg), flush=True)
     print("INSTRUMENT dx=%.6f h=%.6f floor=%.6f lim=%.6f" % (sc.dx, sc.h, sc.floor, sc._lim),
