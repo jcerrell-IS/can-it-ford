@@ -213,6 +213,71 @@ is not uniform across the study: it is concentrated exactly where the refinement
 lives. Any claim that the verdict survives refinement must state `sustain_frames` alongside
 it, because at the finest grid that integer IS the verdict.
 
+### 2a-quinquies. The ladder is inadequate against the literature's own criterion, at EVERY grid
+
+**MEASURED from the hull mesh, `analysis/r6_hull_clearance.py`.** The corpus review
+"Particle Resolution and Force Convergence for Rigid Bodies in Flood-Type Flows: A Critical
+Review" (`/Users/josie/Claude/reu/compass_artifact_wf-211aad60-...md`) makes two findings
+that bear directly on section 2a-quater, and this project has absorbed neither.
+
+**First: there is NO validated force-convergence criterion** for particle methods on immersed
+bodies. Only conventions. The two most cited are `dp <= D/10` on the smallest force-bearing
+feature, and ~10 particles per flow depth (40 for broken waves). The depth rule is attributed
+to a 2021 *Engineering Structures* tsunami study and was calibrated on free-surface elevation,
+NOT on force. So L-3's "roughly 10 particles per flow depth" does have a lineage, but it
+cannot legitimately be cited as a FORCE criterion. Provenance is being traced separately.
+
+**Second, and this is the one that reframes everything: set spacing from the SMALLEST
+FORCE-BEARING FEATURE, and for a vehicle the review names the GROUND CLEARANCE explicitly**,
+not the body length and not the domain. This project sets `dx` from the domain.
+
+The clearance is recorded nowhere in `vehicle_params.py`, so measure it. Binning the
+327,212 hull vertices in plan and taking per-column minima between the axles (a global z-min
+returns the tyre contact patch, not the clearance):
+
+| region | min | 5th pct | median |
+|---|---|---|---|
+| central 40% length x 50% width | 160.5 mm | **177.4 mm** | 201.9 mm |
+| between axles, full width | 160.5 mm | 177.0 mm | 204.5 mm |
+
+**Underbody clearance = 177 mm.** Against it:
+
+| grid | dx | cells across the clearance | meets `dp <= D/10`? |
+|---|---|---|---|
+| g48 | 196.3 mm | **0.90** | no |
+| g64 | 147.2 mm | 1.21 | no |
+| g96 | 98.1 mm | 1.81 | no |
+| g128 | 73.6 mm | 2.41 | no |
+| g160 | 58.9 mm | 3.01 | no |
+| g192 | 49.1 mm | 3.61 | no |
+
+**At g48, the published baseline, `dx` is LARGER than the ground clearance.** The gap that
+carries the entire underbody flow is sub-cell. `D/10` would require `dx <= 17.7 mm`, about
+4.2x finer than g192, roughly g810 on this domain, and unreachable.
+
+**This is a mechanism for the margin collapse, not just a caveat.** The review documents that
+coarse resolution most often OVER-predicts peak hydrodynamic force, via boundary kernel
+truncation and particle deficiency. An underbody gap spanned by 0.9 cells cannot pass flow
+correctly and blocks it instead, inflating drag, inflating sliding, inflating the margin. As
+`dx` falls from 196 to 74 mm the gap resolves from 0.9 to 2.4 cells and the spurious force
+drains away. Margin 8 to 0. **The collapse is the artifact leaving, not the physics arriving,
+and nothing indicates it has bottomed out.**
+
+**The free win nobody has proposed.** `grid_lim` is 9.42 m for a 4.28 m hull, so 2.2 vehicle
+lengths of largely empty water, and it is DERIVED from the hull extent rather than chosen. At
+fixed `n_grid`, shrinking the domain multiplies resolution at zero compute cost. A 6 m domain
+at g128 would give `dx` 46.9 mm, i.e. 3.8 cells across the clearance, beating g192 on the
+current domain for less than half the particles. Being costed separately, with the
+wall-reflection window as the constraint.
+
+**Caveat on the bias direction.** CLAUDE.md L-4 states coarse over-prediction as settled and
+concludes NO-FORD verdicts are "therefore conservative". The review calls it "a documented
+tendency with clear exceptions, not a consistently validated law", with a documented inversion
+where over-fine resolution triggered premature wave breaking and UNDER-predicted. The
+conservatism argument survives for SAFETY, since predicting unsafe when it is safe errs the
+right way. It does not survive for the SCIENTIFIC claim: the verdict distribution is biased
+toward SLIDE by an amount nobody has bounded.
+
 ### 2a. What this does NOT overturn
 
 J15's refinement trend survives. The `m2337` series collapses 11 to 10 to 4 across g48/g64/g96,
