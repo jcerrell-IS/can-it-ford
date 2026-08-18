@@ -312,6 +312,58 @@ class AxisRecycler(RecyclingChannelBC):
         return n
 
 
+
+class InflowSlab:
+    """Per-tick Dirichlet clamp on an upstream slab, re-imposed EVERY tick.
+
+    WHY THIS EXISTS, and it was added after a measured failure rather than by
+    foresight. The first version of this driver forced the flow with a one-shot
+    additive kick and then relied on the recyclers alone to maintain it. A
+    recycler only re-imposes the free stream on particles that actually CROSS the
+    outflow plane, so it is not forcing at all: it is a boundary condition that
+    does nothing when the flow stops.
+
+    And the flow does stop. Measured 2026-08-19 on the g64 arc: with pure
+    broadside flow at 3.0 m/s only 34 of 48,746 water particles recycled in 60
+    frames, against roughly 33,000 expected from the travel distance, while the
+    pure axial cell at the same speed recycled 34,414. The hull is 4.28 m long
+    and 1.75 m wide in an 8.53 m channel, so it blocks about 54 percent of the
+    broadside path and about 24 percent of the axial one. The kick's momentum was
+    destroyed by the obstruction and never replaced, so the broadside cells were
+    measuring how fast the flow STALLED, not the load on the hull.
+
+    This is sim_standing.py's own mechanism (a per-frame Dirichlet clamp on an
+    upstream particle slab, :190-198, called every frame at :202) rather than
+    something invented here, which is what keeps the forcing comparable to the
+    canonical runs.
+    """
+
+    def __init__(self, axis, u_free_vec, p_lo, p_hi, thickness):
+        self.axis = int(axis)
+        self.u = np.asarray(u_free_vec, dtype=np.float64).reshape(3)
+        self.u_axis = float(self.u[self.axis])
+        self.p_lo, self.p_hi, self.thickness = float(p_lo), float(p_hi), float(thickness)
+        self.n_last = 0
+
+    @property
+    def active(self):
+        return self.u_axis != 0.0
+
+    def apply(self, x, v, n_water):
+        if not self.active:
+            self.n_last = 0
+            return 0
+        s = x[:n_water, self.axis]
+        if self.u_axis > 0.0:
+            sel = s <= (self.p_lo + self.thickness)
+        else:
+            sel = s >= (self.p_hi - self.thickness)
+        n = int(sel.sum())
+        v[:n_water][sel] = self.u
+        self.n_last = n
+        return n
+
+
 def clamp_floor_only(x, v, n_water, z_floor):
     """Vertical containment only.
 
@@ -339,7 +391,8 @@ class MovingVehicleChannelScene:
     """Prescribed hull, bi-axial recycling free stream, wrench measured per tick."""
 
     def __init__(self, mesh, sdf, depth, v_car, v_water, n_grid,
-                 ground_frame=False, device="auto", seed=0, bc_target_frac=0.5):
+                 ground_frame=False, device="auto", seed=0, bc_target_frac=0.5,
+                 wrench_dt_mode="frame", inflow_cells=6.0, no_hull=False):
         from warpmpm.core.solver import GridConfig, Solver
         from warpmpm.materials import newtonian
 
@@ -349,6 +402,9 @@ class MovingVehicleChannelScene:
         self.v_car = float(v_car)
         self.v_water = float(v_water)
         self.ground_frame = bool(ground_frame)
+        if wrench_dt_mode not in ("frame", "substep"):
+            raise ValueError("wrench_dt_mode must be 'frame' or 'substep'")
+        self.wrench_dt_mode = wrench_dt_mode
 
         # ext[1] is the LONG axis AFTER load_vehicle(up='z') permutes. Taking the
         # PLY axes at face value gives 14.989 m instead of 9.4217 m, a 59 percent
@@ -358,7 +414,33 @@ class MovingVehicleChannelScene:
         dx = grid.dx
         h = dx / 2.0
         floor = 3.0 * dx
-        pad = 3.0 * dx                      # recycle planes, clear of the 2.5 dx guard
+        # RECYCLE PLANES MUST CLEAR THE DOMAIN-WALL KILL BAND.
+        #
+        # Solver.add_domain_walls "zero[es] outward velocity in a three-cell band
+        # at each domain face" (solver.py:315-322). The first version of this
+        # driver put the recycle planes at exactly 3 dx and lim - 3 dx, which is
+        # the band edge, so a particle driven outward had its outward velocity
+        # zeroed exactly where the plane sat and never crossed it.
+        #
+        # THAT FAILED ASYMMETRICALLY, WHICH IS WHY IT SURVIVED THE UNIT TESTS.
+        # The recycler tests `s >= p_hi` for positive flow and `s <= p_lo` for
+        # negative flow, and against a wall that arrests particles at the plane
+        # those two predicates do not behave alike. Measured 2026-08-19, no hull,
+        # 3.0 m/s, stream_established_frac: +x -0.187, -x +0.997, +y -0.188,
+        # -y +0.997. Negative flow worked perfectly on both axes and positive
+        # flow failed identically on both, so it was one sign bug, not an axis
+        # bug and not the vehicle: the no-hull control was WORSE than with the
+        # hull, which is what refuted the blockage explanation.
+        #
+        # 5 dx leaves 2 dx of clear interior between each plane and its band.
+        wall_band = 3.0 * dx
+        pad = 5.0 * dx
+        if pad <= wall_band:
+            raise ValueError(
+                "recycle plane at %.4f m is inside add_domain_walls' %.1f-cell "
+                "kill band; outward velocity is zeroed there and nothing will "
+                "ever cross the plane" % (pad, wall_band / dx))
+        self.wall_band = wall_band
         self.lim, self.dx, self.h, self.floor, self.pad = lim, dx, h, floor, pad
         self.n_grid = int(n_grid)
 
@@ -399,7 +481,17 @@ class MovingVehicleChannelScene:
         water = water + rng.uniform(-0.2 * h, 0.2 * h, water.shape)
         n_before = len(water)
 
-        inside = sdf_nearest(sdf, water - self.center0) < dx
+        # no_hull is the CONTROL that separates a defect in this file's own
+        # forcing path from a physical blockage effect of the vehicle. Identical
+        # domain, identical water block, identical recyclers and inflow slabs,
+        # with the hull removed and nothing else changed. If the stream
+        # establishes here and not with the hull, the forcing code is sound and
+        # the vehicle is what stops the flow.
+        self.no_hull = bool(no_hull)
+        if self.no_hull:
+            inside = np.zeros(len(water), dtype=bool)
+        else:
+            inside = sdf_nearest(sdf, water - self.center0) < dx
         water = water[~inside].astype(np.float32)
         self.n_carved = int(inside.sum())
         self.n_water_before_carve = int(n_before)
@@ -417,10 +509,13 @@ class MovingVehicleChannelScene:
         # solver.py:256 documents wxyz one screen away in the same file.
         # Trap 4: prescribed only; the body is never integrated, so no COM offset
         # is ever required and RigidBody6DOF is never constructed.
-        self.handle = s.add_sdf_collider(
-            sdf, center=tuple(self.center0), quat=(0.0, 0.0, 0.0, 1.0),
-            velocity=(0.0, 0.0, 0.0), omega=(0.0, 0.0, 0.0),
-            surface=COLLIDER_SURFACE, friction=COLLIDER_FRICTION)
+        if self.no_hull:
+            self.handle = None
+        else:
+            self.handle = s.add_sdf_collider(
+                sdf, center=tuple(self.center0), quat=(0.0, 0.0, 0.0, 1.0),
+                velocity=(0.0, 0.0, 0.0), omega=(0.0, 0.0, 0.0),
+                surface=COLLIDER_SURFACE, friction=COLLIDER_FRICTION)
         self.solver = s
 
         # CFL and substeps: sim_standing.py:227-233
@@ -452,11 +547,16 @@ class MovingVehicleChannelScene:
 
         # recyclers, one per horizontal axis, built from the SOLVED-frame stream
         self.rec = []
+        self.slab = []
+        self.inflow_thickness = float(inflow_cells) * dx
         for a in (0, 1):
             r = AxisRecycler(axis=a, n_water=self.n_water, p_lo=pad, p_hi=lim - pad,
                              u_free_vec=self.u_free, dx=dx, grid_lim=lim, seed=seed + a)
             self.rec.append(r)
+            self.slab.append(InflowSlab(a, self.u_free, pad, lim - pad,
+                                        self.inflow_thickness))
         self.n_clamped_floor = 0
+        self.slab_frac = None
 
     # ----------------------------------------------------------------
     def _host_bc(self):
@@ -465,10 +565,29 @@ class MovingVehicleChannelScene:
         moved = 0
         for r in self.rec:
             moved += r.apply(x, v)
+        ns = 0
+        for sl in self.slab:
+            ns += sl.apply(x, v, self.n_water)
+        self.slab_frac = ns / float(self.n_water)
         self.n_clamped_floor += clamp_floor_only(x, v, self.n_water, self.floor)
         self.solver.set_x(x)
         self.solver.set_v(v)
         return moved
+
+    def water_speed_stats(self):
+        """Mean water velocity over the whole pool.
+
+        THE STALL DETECTOR. It exists because the stall above was found only by
+        noticing an odd recycle count, which is an indirect symptom. A driver
+        whose forcing dies should say so in its own record. u_mean projected on
+        the intended free stream, divided by |u_free|, is 1.0 for a fully
+        established stream and falls toward 0 as it stalls.
+        """
+        v = self.solver.v()[:self.n_water]
+        um = v.mean(axis=0)
+        mag = float(np.linalg.norm(self.u_free))
+        proj = float(um @ self.u_free / mag) / mag if mag > 0 else 0.0
+        return um.tolist(), proj
 
     def kick(self):
         """One-shot additive free-stream kick on every water particle.
@@ -492,16 +611,21 @@ class MovingVehicleChannelScene:
         """
         trace = []
         for i in range(int(frames)):
+            if self.handle is None:
+                self.solver.step(self.dt, self.substeps)
+                trace.append({"settle_frame": i + 1, "force_N": [0.0, 0.0, 0.0]})
+                continue
             self.solver.reset_sdf_force(self.handle)          # trap 2
             self.solver.step(self.dt, self.substeps)
-            w = self.solver.sdf_wrench(self.handle, self.frame_dt)   # trap 1
+            wdt = self.dt if self.wrench_dt_mode == "substep" else self.frame_dt
+            w = self.solver.sdf_wrench(self.handle, wdt)             # trap 1
             f = np.asarray(w["force"], dtype=float)
             trace.append({"settle_frame": i + 1, "force_N": f.tolist()})
         return trace
 
     def start_motion(self):
         """Ground frame only: hand the hull its prescribed velocity."""
-        if self.ground_frame:
+        if self.ground_frame and self.handle is not None:
             self.solver.set_sdf_pose(self.handle,
                                      velocity=tuple(float(c) for c in self.hull_velocity))
 
@@ -515,13 +639,27 @@ class MovingVehicleChannelScene:
         Trap 1 lives here: the wrench dt is self.frame_dt_effective, the duration
         of everything stepped since the reset, NOT self.dt. Handing it self.dt
         would inflate every force in this file by exactly substeps_effective.
+
+        wrench_dt_mode EXISTS TO MAKE THAT FAILURE REPRODUCIBLE ON PURPOSE.
+        A test that merely passes when the right dt is handed over is not
+        evidence: it would also pass if the detector were blind. Setting
+        wrench_dt_mode = "substep" commits the trap deliberately, so the
+        no-forcing control can be shown to MOVE by exactly substeps_effective.
+        A detector that has never been seen to fire has not been tested.
         """
         s = self.solver
-        s.reset_sdf_force(self.handle)                       # trap 2, every tick
+        if self.handle is not None:
+            s.reset_sdf_force(self.handle)                   # trap 2, every tick
         for _ in range(self.bc_per_frame):
             s.step(self.dt, self.sub_per_tick)
             self._host_bc()
-        w = s.sdf_wrench(self.handle, self.frame_dt_effective)   # trap 1
+        if self.handle is None:
+            self.time += self.frame_dt_effective
+            return {"force": np.zeros(3), "torque": np.zeros(3)}
+        if self.wrench_dt_mode == "substep":
+            w = s.sdf_wrench(self.handle, self.dt)           # DELIBERATELY WRONG
+        else:
+            w = s.sdf_wrench(self.handle, self.frame_dt_effective)   # trap 1
         self.time += self.frame_dt_effective
         return w
 
@@ -575,10 +713,17 @@ def _selftest():
     body = src.split(marker)[0]
     assert "sdf_wrench(self.handle, self.frame_dt_effective)" in body, \
         "step_frame must hand sdf_wrench the TICK duration, not dt"
-    assert "sdf_wrench(self.handle, self.dt)" not in body, \
-        "a wrench read with the substep dt would inflate force by n_substeps"
-    assert "sdf_wrench(self.handle, self.frame_dt)" in body, \
-        "the settle phase reads the wrench over a whole frame too"
+    # The WRONG call form is present ON PURPOSE, exactly once, and only behind the
+    # wrench_dt_mode guard, so the no-forcing control can be re-run with the trap
+    # deliberately committed and the detector shown to fire. A detector that has
+    # never been observed to fire has not been tested. What must hold is that it
+    # is guarded and that the default is the correct branch.
+    assert body.count("sdf_wrench(self.handle, self.dt)") == 1, \
+        "the wrong-dt call must appear exactly once, behind its guard"
+    assert 'self.wrench_dt_mode == "substep"' in body, \
+        "the wrong-dt call must be reachable only through the explicit mode"
+    assert 'wrench_dt_mode="frame"' in body, \
+        "the DEFAULT wrench dt mode must be the correct one"
     ok += 1
 
     # ST2 trap 2: a reset in the settle loop and a reset in step_frame
@@ -680,6 +825,40 @@ def _selftest():
     assert frames_at_22 > 50.0, frames_at_22
     ok += 1
 
+    # ST13 THE PLANE-VERSUS-KILL-BAND GEOMETRY. This is the assertion that would
+    # have caught the sign bug above, and it did not exist when that bug shipped.
+    # add_domain_walls zeroes OUTWARD velocity in a three-cell band at each face,
+    # so a recycle plane at or inside 3 dx can never be crossed from the inside.
+    dxk = 9.421742 / 64.0
+    assert 5.0 * dxk > 3.0 * dxk, "recycle pad must clear the 3-cell wall band"
+    assert 9.421742 - 5.0 * dxk < 9.421742 - 3.0 * dxk
+    # and it must still satisfy the inherited P2G guard, which is the OTHER
+    # constraint; the window is [2.5 dx, lim - 2.5 dx] and both must hold at once
+    assert 5.0 * dxk >= 2.5 * dxk
+    ok += 1
+
+    # ST12 the inflow slab picks the UPSTREAM end for each sign, and is a no-op
+    # at zero stream. This is the forcing whose absence stalled the first arc.
+    dx2 = 0.147215
+    lo2, hi2 = 3 * dx2, 9.421742 - 3 * dx2
+    sl = InflowSlab(0, np.array([3.0, 0.0, 0.0]), lo2, hi2, 6 * dx2)
+    x = np.array([[lo2 + 0.1, 4.0, 0.2], [hi2 - 0.1, 4.0, 0.2]])
+    v = np.zeros((2, 3))
+    assert sl.apply(x, v, 2) == 1
+    assert np.allclose(v[0], [3.0, 0, 0]), "upstream end must be clamped"
+    assert np.allclose(v[1], [0, 0, 0]), "downstream end must be free"
+    sl = InflowSlab(1, np.array([0.0, -3.0, 0.0]), lo2, hi2, 6 * dx2)
+    x = np.array([[4.0, lo2 + 0.1, 0.2], [4.0, hi2 - 0.1, 0.2]])
+    v = np.zeros((2, 3))
+    assert sl.apply(x, v, 2) == 1
+    assert np.allclose(v[1], [0, -3.0, 0]), "for -y flow the HIGH end is upstream"
+    assert np.allclose(v[0], [0, 0, 0])
+    sl = InflowSlab(0, np.zeros(3), lo2, hi2, 6 * dx2)
+    v = np.zeros((2, 3))
+    assert sl.apply(np.array([[lo2, 4.0, 0.2], [hi2, 4.0, 0.2]]), v, 2) == 0, \
+        "zero stream must inject nothing, or the no-forcing control is not a control"
+    ok += 1
+
     print("SELFTEST OK: %d groups passed" % ok)
     return 0
 
@@ -690,7 +869,8 @@ def run_cell(args, mesh, sdf, v_car, v_water, f_buoy, tag):
     scene = MovingVehicleChannelScene(
         mesh, sdf, depth=args.depth, v_car=v_car, v_water=v_water,
         n_grid=args.n_grid, ground_frame=args.ground_frame,
-        device=args.device, seed=args.seed)
+        device=args.device, seed=args.seed,
+        wrench_dt_mode=args.wrench_dt_mode, no_hull=args.no_hull)
     if scene.ground_frame:
         need = v_car * (args.frames / FPS)
         if need > scene.travel_available:
@@ -709,6 +889,7 @@ def run_cell(args, mesh, sdf, v_car, v_water, f_buoy, tag):
         rows.append({"frame": i + 1, "fx": float(f[0]), "fy": float(f[1]),
                      "fz": float(f[2]), "tx": float(t[0]), "ty": float(t[1]),
                      "tz": float(t[2])})
+    u_mean, u_proj = scene.water_speed_stats()
     keep = rows[args.discard:]
     arr = np.array([[r["fx"], r["fy"], r["fz"]] for r in keep], dtype=float)
     tq = np.array([[r["tx"], r["ty"], r["tz"]] for r in keep], dtype=float)
@@ -722,10 +903,13 @@ def run_cell(args, mesh, sdf, v_car, v_water, f_buoy, tag):
         "n_grid": scene.n_grid, "dx_m": scene.dx, "lim_m": scene.lim,
         "depth_m": scene.depth, "depth_cells": scene.depth_cells,
         "band_over_depth": scene.band_over_depth,
+        "no_hull": scene.no_hull,
         "n_water": scene.n_water, "water_layers": scene.water_layers,
         "substeps": scene.substeps, "substeps_effective": scene.substeps_effective,
         "bc_per_frame": scene.bc_per_frame, "dt_s": scene.dt,
-        "wrench_dt_s": scene.frame_dt_effective,
+        "wrench_dt_mode": scene.wrench_dt_mode,
+        "wrench_dt_s": (scene.dt if scene.wrench_dt_mode == "substep"
+                        else scene.frame_dt_effective),
         "frames": args.frames, "discard": args.discard,
         "settle_frames": args.settle_frames,
         "fz_settle_N": fz_settle,
@@ -738,6 +922,10 @@ def run_cell(args, mesh, sdf, v_car, v_water, f_buoy, tag):
         "recycled_x": self_total(scene, 0), "recycled_y": self_total(scene, 1),
         "max_overshoot_over_dx": max(r.max_overshoot for r in scene.rec) / scene.dx,
         "floor_clamps": scene.n_clamped_floor,
+        "inflow_slab_cells": 6.0,
+        "inflow_slab_frac_of_pool": scene.slab_frac,
+        "u_mean_water_ms": u_mean,
+        "stream_established_frac": u_proj,
         "wall_s": time.time() - t0,
         "series": rows,
     }
@@ -773,6 +961,12 @@ def main():
     ap.add_argument("--out", default=str(REPO / "out" / "r9_moving"))
     ap.add_argument("--sdf-cache", default=str(REPO / "out" / "sdf_cache"))
     ap.add_argument("--label", default="r9")
+    ap.add_argument("--wrench-dt-mode", default="frame", choices=["frame", "substep"],
+                    help="substep DELIBERATELY commits trap 1, so the detector can "
+                         "be shown to fire. Never use it for a reported result.")
+    ap.add_argument("--no-hull", action="store_true",
+                    help="CONTROL: identical scene with the vehicle removed, to "
+                         "separate a forcing defect from a blockage effect.")
     ap.add_argument("--selftest", action="store_true")
     args = ap.parse_args()
 
