@@ -208,6 +208,22 @@ first version compared branch **names**. That catches a new branch and misses a
 effectively and changes nothing in a name list. The baseline now stores
 **name + SHA**, and a moved tip is scanned exactly like a new branch.
 
+**HARDENED 03:06, prompted by D2 finding the same class of bug in its own
+check.** My detector reported an unfetched tip as "tip not local", which is at
+least not a false clean, but it read as a mild note about a branch that is
+**public and unexamined**. It now **tries to fetch the tip so the scan completes**
+rather than being deferred, and only if that fails does it report, loudly:
+
+    !! NEW <branch> <sha>  *** UNAUDITED: PUBLIC AND NOT SCANNED ***
+       Could not fetch the tip, so this branch has NOT been checked for
+       credentials. It is world-readable regardless. Do not record it as clean.
+
+**The distinction matters more than it looks.** "Not scanned" and "scanned and
+clean" are opposite states, and a check that renders them similarly will
+eventually have one read as the other. Controlled with a bogus SHA to force the
+path, then regression-tested: normal runs stay silent and the NEW path still
+scans and reports clean.
+
 **Three controls, all now passing:** NEW fires with a real SHA and a verdict,
 MOVED fires on a rewritten tip, and an unchanged surface is silent. The controls
 earned their keep twice over: the first NEW path printed an **empty SHA** and
