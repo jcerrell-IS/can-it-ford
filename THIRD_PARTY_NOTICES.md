@@ -182,28 +182,88 @@ a public remote.
 
 | | |
 |---|---|
-| Paths | `citations/ARR_Project_10_Stage2_Report_Final.pdf` (1,115,134 bytes); `citations/ARR table 1 - guidelines and recommendations for limits for vehicle stability.png` (237,832 bytes) |
+| Paths | `citations/ARR_Project_10_Stage2_Report_Final.pdf` (1,115,134 bytes) |
 | Publisher | Engineers Australia, Engineering House, Barton ACT |
 | Report number | P10/S2/020, February 2011. ISBN 978-0-85825-948-5 |
 | Contractor | Water Research Laboratory, UNSW |
 | Authors | T D Shand, R J Cox, M J Blacka, G P Smith |
 | Licence as found | **NONE FOUND** |
 
-**Routes tried, both failed to find a statement:** (1) full text of all 29 pages extracted with
-`pypdf` and scanned case-insensitively for `copyright`, `©`, `licen[cs]`, `all rights reserved`,
-`may be reproduced` and `permission`: **zero matches on every page**; (2) no DOI is printed in the
-report, so the Unpaywall route used for entries 5a to 5c is unavailable. A standing project note
-records that `arr.ga.gov.au` returns HTTP 403, so the publisher's terms page has not been read.
+**Routes tried, both inconclusive:** (1) full text of all 29 pages extracted with `pypdf` and
+scanned case-insensitively for `copyright`, `©`, `licen[cs]`, `all rights reserved`,
+`may be reproduced` and `permission`: **zero matches on every page**; (2) the report prints no
+DOI, so the Unpaywall route used for entries 5a to 5c is unavailable.
 
-### 5e. WRL report figures
+### 5e. AR&R Table 1, reproduced as an image
 
-**Status: UNRESOLVED.**
+**Status: UNRESOLVED, inherited from entry 5d.**
+
+| | |
+|---|---|
+| Path | `citations/ARR table 1 - guidelines and recommendations for limits for vehicle stability.png` (237,832 bytes) |
+| Source | **Table 1, page 14** of the AR&R Project 10 Stage 2 report at entry 5d |
+| Licence as found | **NONE FOUND**, same document, same silence |
+
+Identified by matching the filename against the table caption in the extracted page text: page 14
+carries "Table 1 / Guidelines and recommendations for limits for vehicle stability". This image is
+a reproduction of a document **already published in this same directory**, so it adds no exposure
+beyond entry 5d, but it is listed separately because a reader should not have to infer that a
+table image and a report PDF are the same rights question.
+
+### 5f. WRL Technical Report 2014/07, reproduced as images
+
+**Status: UNRESOLVED. A distinct fourth source, not present in this repository as a document.**
 
 | | |
 |---|---|
 | Paths | `citations/WRL reports technical and Research/`, 3 image files, 760,091 bytes |
-| Source | Water Research Laboratory reports, combined flood hazard curves and vulnerability threshold tables |
-| Licence as found | **NONE FOUND.** Same publisher family and same silence as entry 5d. |
+| Files | `Figure 5-5 Combined flood hazard curves.png`; `Table 5-1 Combined hazard curves - vulnerability thresholds.png`; `Table 5-2 Combined hazard curves - vulnerability thresholds classification limits.png` |
+| Source | **WRL Technical Report 2014/07, FINAL, September 2014**, Water Research Laboratory, UNSW |
+| Content | The H1 to H6 combined flood hazard vulnerability classification |
+| Licence as found | **NONE FOUND** |
+
+**How the source was identified.** The images carry their own provenance: the `Table 5-1` capture
+includes the page footer "WRL Technical Report 2014/07   FINAL   September 2014" and the page
+number 38. This is **not** the AR&R Stage 2 report at entry 5d: that report numbers its figures
+and tables flat (Figures 1 to 11, Tables 1 to 3, confirmed by extracting every figure and table
+reference from all 29 pages), whereas these use chapter-prefixed numbering. The two are separate
+documents and separate rights questions, and the report itself is not in this repository.
+
+**Routes tried, all four inconclusive:** (1) no PDF of WRL TR 2014/07 is in the repository, so no
+full-text scan of its front matter is possible; (2) the images carry no DOI, so the Unpaywall
+route is unavailable; (3) `WebSearch` was unavailable in the session that made this
+determination (upstream model routing error), so no search route was run; (4) direct fetches
+returned `https://www.unsw.edu.au/research/wrl/our-research/technical-reports` HTTP 404,
+`https://arr.ga.gov.au/arr-guideline` HTTP 403 (reproducing a standing project note that this
+host 403s), and `https://knowledge.aidr.org.au/resources/australian-rainfall-and-runoff/`
+HTTP 404.
+
+**Lead for whoever closes this, not a finding.** The H1 to H6 classification in these figures was
+subsequently adopted into Australian Rainfall and Runoff Book 6. If that adopted version carries a
+usable licence, it would be a cleaner source for the same content than the WRL technical report.
+**This has not been verified** and must not be relied on until someone reads the ARR terms
+directly; it is recorded only so the next person does not have to rediscover the possibility.
+
+---
+
+## 5g. Summary: four distinct third-party sources are reproduced as images
+
+Twenty image files in `citations/` reproduce figures or tables from **four separate third-party
+sources**. A table lifted from a report is the same class of object as a screen capture of a
+paywalled paper, and all of it is on a public repository.
+
+| Source | Files | Bytes | Rights verdict |
+|---|---|---|---|
+| Smith, Modra and Felder 2019 (entry 5c) | 16 | 6,215,623 | **CLOSED, all rights reserved. No permission established.** Worst case of the four. |
+| WRL Technical Report 2014/07 (entry 5f) | 3 | 760,091 | **UNRESOLVED**, four routes tried |
+| AR&R Project 10 Stage 2, Table 1 (entry 5e) | 1 | 237,832 | **UNRESOLVED**, inherited; source PDF also published here |
+| **Total** | **20** | **7,213,546** | |
+
+None of these is deleted, and deletion is not the proposed remedy. Deletion does not unpublish:
+this repository is public and GitHub has served removed blobs by SHA in this account. The remedy
+is a decision by the repository owner, and possibly a permission request to each rights holder.
+The purpose of this section is to make that decision possible by stating exactly what is exposed
+and under what terms.
 
 ---
 
@@ -248,8 +308,9 @@ specific flagged risk; it is not a clean-room audit.
 | Wang and Marsooli 2021 | AGU / Wiley | **CC BY-NC-ND** | conflicts with unrestricted BSD-3 |
 | Dasallas 2025 | Wiley | CC BY | clean, attribution required |
 | Smith, Modra and Felder 2019, 16 images | Wiley | **closed, all rights reserved** | **no permission established** |
-| AR&R Project 10 Stage 2 + table image | Engineers Australia | none found | **UNRESOLVED** |
-| WRL report figures (3) | Water Research Laboratory | none found | **UNRESOLVED** |
+| AR&R Project 10 Stage 2 report | Engineers Australia | none found | **UNRESOLVED**, 2 routes tried |
+| AR&R Table 1 image (1) | Engineers Australia | none found | **UNRESOLVED**, inherited from the report |
+| WRL Technical Report 2014/07 figures (3) | Water Research Laboratory, UNSW | none found | **UNRESOLVED**, 4 routes tried |
 | PhysGaussian | `XPandora/PhysGaussian` | none (upstream unlicensed) | algorithm only, no source redistributed |
 
 ---

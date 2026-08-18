@@ -18,8 +18,9 @@ Repository state at time of measurement: `origin/main` at `c7f0a16`.
 2. **168.09 and 176 are the same number.** See section 3 before anyone re-opens this.
 3. The root `LICENSE` claims BSD-3 over the entire repository, including third-party material the
    project does not own. Section 6 drafts a scope carve-out. **It awaits Josie's sign-off.**
-4. `citations/` publishes a **CC BY-NC-ND** article and 16 screen captures of a **closed-access**
-   article, under that same unrestricted BSD-3 claim. Section 7.
+4. `citations/` publishes a **CC BY-NC-ND** article, and 20 image files reproducing figures or
+   tables from **four separate third-party sources**, one of which is **closed access, all rights
+   reserved**. All under that same unrestricted BSD-3 claim. Section 7.
 5. `bridge/` was checked for redistributed PhysGaussian source. **It is clean, measured, not
    judged.** Section 8.
 6. One question is blocked on Krishna Kumar and is written out, not resolved, in section 9.
@@ -41,6 +42,22 @@ anything:** tracked files on `origin/main` at `c7f0a16`; declaration sites only,
 mentions; untracked and gitignored paths excluded. This project has already had one count move
 three times in a day for want of a stated scope (CLAUDE.md August 4 audit, item 13). A bare
 number is the defect, not any particular value.
+
+---
+
+### Method note: which numbers failed, and the guard that catches them
+
+Recorded because the failure was not where it would be expected. The **headline figures held**
+under recomputation: the 30-file count, the 176,252,809-byte total and the 91.0 percent share were
+all correct as first derived. **Three hand-summed subtotals were wrong**, and were caught only
+because they were recomputed before commit: 227,383 against the true 271,383; 6,285,072 against
+6,215,623; 760,889 against 760,091.
+
+The guard is cheap and general: **assert that the parts equal the stated total.** Here, that the
+six largest files plus the remainder equal 160,322,098 exactly, which they do. Any subtotal in a
+document should either come out of the same command that produced the total, or be checked against
+it. A subtotal typed by hand beside a machine-derived total looks exactly as authoritative as the
+total and is not.
 
 ---
 
@@ -332,6 +349,21 @@ frequently lives only on the article landing page. The DOI record via Unpaywall 
 answered. Recorded so the null PDF result is not mistaken for evidence of absence by whoever
 checks next.
 
+**The image exposure is four distinct sources, not one.** Twenty image files in `citations/`
+reproduce figures or tables from four separate third-party works: Smith, Modra and Felder 2019
+(16 files, 6,215,623 bytes, closed access, the worst case), WRL Technical Report 2014/07 (3 files,
+760,091 bytes), and AR&R Project 10 Stage 2 Table 1 (1 file, 237,832 bytes). A table lifted from a
+report is the same class of object as a screen capture of a paywalled paper, and a reader should
+not have to infer that. Each now carries its own verdict or an explicit UNRESOLVED with the routes
+tried, in `THIRD_PARTY_NOTICES.md` sections 5c to 5g.
+
+**The three WRL images are a source nobody had identified.** They carry their own provenance
+footer, "WRL Technical Report 2014/07   FINAL   September 2014", page 38, and they are **not**
+from the AR&R report already in this repository: that report numbers figures and tables flat
+(Figures 1 to 11, Tables 1 to 3, confirmed by extracting every reference from all 29 pages) while
+these use chapter-prefixed numbering. Four routes were tried to establish rights and all four
+failed, named in `THIRD_PARTY_NOTICES.md` section 5f. Status **UNRESOLVED**.
+
 **AR&R report, UNRESOLVED, with the routes named.** The PDF was read in full with `pypdf`: 29
 pages, and a case-insensitive scan for `copyright|©|licen[cs]|all rights reserved|may be
 reproduced|permission` returns **zero matches on every page**. Page 2 gives the imprint:
@@ -350,8 +382,57 @@ stability curves for vehicles in flood waters"*. Authors (Smith, Modra, Felder),
 journal and volume all match, so this is a citation error, not a fabricated reference. It is
 nonetheless the exact surface signature of the dominant fabrication pattern (a real DOI paired
 with a title that is not the resolved title), so it would fail any bibliography audit. The title
-has been corrected in `citations/README.md` in this commit. **Anywhere else this title appears,
-including the paper and its `.bib`, is outside this slot's scope and needs the same fix.**
+has been corrected in `citations/README.md` in this commit.
+
+**CORRECTION TO THIS SLOT'S OWN FIRST REPORT, same day.** This entry initially said the same fix
+was needed "anywhere else this title appears, including the paper and its `.bib`", and that was
+routed to slot d5-priorart. **That was wrong and the routing is withdrawn.** Checked directly
+afterwards: `paper/can_it_ford_references_IEEE.bib` **and** the second bibliography at
+`overleaf_sync/can_it_ford_references_IEEE.bib`, which the first pass did not cover, both carry
+`title = {Full-Scale Testing of Stability Curves for Vehicles in Flood Waters}` on `origin/main`
+**and** on `claude/add-ci-checks`. That is the Crossref-correct title. A `git grep` for the wrong
+title across both branches returns three hits: `citations/README.md` (this file's own error, now
+fixed) and two that are not citations at all, an Elicit CSV quoting a paper's findings about
+floating and sliding instability modes, and `paper/poster_methods.md:21` using the phrase as
+ordinary prose. **Both bibliographies were clean and always were. The error was confined to a
+single file, and that file was in this slot's own scope.** The instinct to route a cross-cutting
+fix was right; the target was not, and sending a sibling to confirm something unbroken is a real
+cost.
+
+---
+
+### A physics-adjacent line changed during a licence pass, and the basis for it
+
+`citations/README.md` is in this slot's write scope, but one line in it was a **physics** claim,
+not a licence one, so changing it needs stating rather than doing quietly. The line read:
+
+> Threshold used: DV <= 0.60 m2/s for the Large 4WD vehicle class specifically, not a generic
+> all-vehicle number.
+
+**This slot initially declined to touch it** and flagged it instead, on the grounds that it had
+not verified which reading was correct and that silently editing a physics claim during a licence
+pass is the kind of scope creep that gets published unreviewed. That default was right. It was
+then **overridden with evidence, not with preference**, and the evidence is primary:
+
+- `vehicle_params.py:207-223`, `AR_R_STABILITY_LIMITS`: `small_passenger` is
+  `depth_m 0.30, velocity_ms 3.0, haz_m2s 0.30`; `large_4wd` is `0.50, 3.0, 0.60`.
+- `vehicle_params.L1_verdict` at `:228` defaults to `small_passenger`.
+- `hf_space/app.py:41-53` implements the **joint** rule, all three of depth, velocity and the
+  D x V product must pass, and its docstring states it is "Identical to vehicle_params.L1_verdict
+  and gates.py:23". Its class label reads "Small passenger (the 2010 Yaris used in this project)".
+- Commit `f6348c7`, subject "Space L1 used the Large 4WD threshold for a Yaris and dropped two of
+  three conditions", replaced exactly this error in the deployed demo.
+
+So the old line applied the **Large 4WD** D x V cap, 0.60, to a **Small passenger** vehicle whose
+actual cap is 0.30, and stated a hazard-only rule where the project uses a joint rule. It is
+twice the correct number on the one condition it did state, and it omits the two conditions that
+`f6348c7` restored. The corrected text names the joint rule, gives all three classes, states that
+the Yaris is Small passenger, and cites the primary sources above. The half of the old sentence
+that was right is preserved: 0.60 was never a generic all-vehicle number.
+
+**Why this is recorded at this length.** A licence commit that quietly edits a physics threshold
+is indistinguishable, in a later `git log`, from one that got it wrong. The basis is written here
+so the change can be re-derived or reversed without trusting this session.
 
 ---
 
@@ -467,7 +548,7 @@ needs both.
 | 4 | 16 screen captures of a closed-access article | Published under an unrestricted BSD-3 claim. The carve-out stops the false grant; it does not create permission. | Josie's call, informed by Wiley's terms. |
 | 5 | Kumar dataset co-authorship and ODC-By-1.0 choice | Blocked on Kumar. Section 9. | Kumar. |
 | 6 | `bridge/README.md` stale status column | Outside this slot's write scope. | Whichever slot owns `bridge/`. |
-| 7 | Smith 2019 title elsewhere | Corrected in `citations/README.md` only. The paper and `.bib` are outside this slot's scope. | d5-priorart. |
+| 7 | **CLOSED, was never open.** Smith 2019 title | Both bibliographies checked on both branches and both carry the correct Crossref title. The error existed only in `citations/README.md` and is fixed. | nobody, no action needed |
 
 ---
 
