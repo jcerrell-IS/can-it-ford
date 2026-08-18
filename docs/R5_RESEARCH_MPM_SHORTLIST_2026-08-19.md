@@ -22,7 +22,7 @@ cited   1,440 times (Crossref is-referenced-by-count)
 **Trap:** Crossref lists an alias, `10.1016/0045-7825(94)00033-6`. Use the `90112-0`
 form; the alias is the same paper and will confuse a dedup pass.
 
-**Bardenhagen and Kober 2004. GIMP, the interpolation scheme in near-universal use.**
+**Bardenhagen and Kober 2004. GIMP, the standard reference for MPM's shape-function problem.**
 ```
 doi     10.3970/cmes.2004.005.477
 title   The Generalized Interpolation Material Point Method
