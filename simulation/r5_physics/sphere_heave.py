@@ -454,7 +454,7 @@ class SphereTank:
 
     def __init__(self, n_grid, lim, depth, h0_over_d=0.1, diameter=D_SPHERE,
                  mass=M_SPHERE, seed=0, device="auto", sdf_res=96,
-                 sdf_band_safety=2.0, free=True, sdf_cache=None):
+                 sdf_band_safety=2.0, free=True, sdf_cache=None, band_mult=1.0):
         from warpmpm.core.solver import GridConfig, Solver
         from warpmpm.materials import newtonian
 
@@ -535,8 +535,19 @@ class SphereTank:
         # tuned. For surface_type 2 the impulse is m*(v_free - v_surf - v_tan_scaled)
         # (mpm_solver_warp.py:2731), whose NORMAL part is friction-independent; heave is
         # normal-dominated on a sphere, so friction cannot carry this measurement.
+        # band_mult EXISTS TO RUN THE ONE TEST THAT DISCRIMINATES. add_sdf_collider
+        # defaults band to dx (mpm_solver_warp.py:2627) and gates the impulse on
+        # sd <= band (:2711), so the fluid sees a body inflated by the band. Four O(dx)
+        # mechanisms fit the two-point g64/g96 comparison equally well, so resolution
+        # cannot separate them. Sweeping the band AT FIXED dx can: only the band
+        # hypothesis predicts the excess moves with it. Predicted at g64:
+        # +29.69 / +64.49 / +104.78 / +150.93 percent at 0.5 / 1.0 / 1.5 / 2.0 dx.
+        # band_mult=1.0 reproduces the engine default exactly, so the default path is
+        # unchanged and every run before this one remains comparable.
+        self.band_mult = float(band_mult)
         self.collider = s.add_sdf_collider(sdf, (c0[0], c0[1], self.z0),
                                            velocity=(0.0, 0.0, 0.0),
+                                           band=(self.band_mult * self.dx),
                                            surface="separable", friction=0.4)
         self.solver = s
 
@@ -589,6 +600,7 @@ class SphereTank:
             "h0_m": self.h0, "h0_over_d": self.h0 / self.diameter,
             "z0_m": self.z0, "free": self.free,
             "n_water": self.n_water, "n_carved": self.n_carved,
+            "band_mult": self.band_mult, "band_m": self.band_mult * self.dx,
             "substeps": self.substeps, "dt_substep_s": self.dt, "dt_tick_s": self.tick,
             "sphere_cells_across": self.diameter / self.dx,
             "depth_over_dx": self.depth / self.dx,
@@ -755,7 +767,7 @@ def run(args):
     tank = SphereTank(n_grid=args.n_grid, lim=args.lim, depth=args.depth,
                       h0_over_d=args.h0_over_d, seed=args.seed, device=args.device,
                       sdf_res=args.sdf_res, free=not args.fixed,
-                      sdf_cache=args.sdf_cache)
+                      sdf_cache=args.sdf_cache, band_mult=args.band_mult)
     cfg = tank.config()
     cfg["mode"] = "fixed" if args.fixed else "free"
     cfg["seed"] = args.seed
@@ -801,6 +813,10 @@ def main():
     p.add_argument("--fixed", action="store_true",
                    help="pin the sphere and measure the steady reaction (hydrostatic control)")
     p.add_argument("--sdf-res", type=int, default=96)
+    p.add_argument("--band-mult", type=float, default=1.0,
+                   help="collider contact band as a multiple of dx; 1.0 is the engine "
+                        "default. Sweeping this at FIXED dx is the only test that "
+                        "separates the band from the other O(dx) candidates")
     p.add_argument("--sdf-cache", default=None,
                    help="directory for build_sdf_cached; the serial numpy SDF build "
                         "dominated job 917909 at over 5 min before its first solver step")
