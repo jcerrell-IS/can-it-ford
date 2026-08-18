@@ -165,7 +165,9 @@ def g1(inv):
 
     cap = (
         "Fixed grid 64, fixed realized depth %.4f m (4 layers x h), one Yaris hull, "
-        "1100 kg, all runs deterministic (determinism_identical = True).\n"
+        "1100 kg. The summary flag hull_load_identical is True on all 17 runs; that "
+        "compares two loads of the same hull on particle count and grid limit only and "
+        "is NOT evidence that the runs are reproducible.\n"
         "THE ARGUMENT: the criterion is varied along the axis it is built on and still "
         "returns the wrong verdict at two of six points.\n"
         "At v = 0.5 and v = 1.0 m/s the AR&R product D x V stays under the 0.30 m2/s "
@@ -230,7 +232,8 @@ def g2(inv):
         "Displacement rises steeply and then nearly saturates: the last two points are "
         "%.4f m and %.4f m, a gain of only %.4f m for a whole extra layer, so the response "
         "is flattening at the top of this depth range rather than continuing to climb.\n"
-        "Fixed grid 64, fixed 1.5 m/s surge, one hull at 1100 kg, all runs deterministic. "
+        "Fixed grid 64, fixed 1.5 m/s surge, one hull at 1100 kg. Hull loading is "
+        "bit-identical across these runs; their trajectories are not known to be. "
         "Source: data/all_runs_inventory.csv, runs %s."
         % (h, dep[3], dep[0], dep[1], dep[2], disp[-2], disp[-1], disp[-1] - disp[-2],
            ", ".join(r["run"] for r in rows))
@@ -464,7 +467,8 @@ def g5(inv, dry):
         "contains no mass term at all.\n"
         "The two scenarios are not a controlled pair (different drivers, sustained inflow "
         "in one only), so read each series against itself, not against the other. "
-        "Grid 64, realized depth %.4f m, 1.5 m/s surge, all runs deterministic.\n"
+        "Grid 64, realized depth %.4f m, 1.5 m/s surge. Hull loading is bit-identical "
+        "across these runs; their trajectories are not known to be.\n"
         "Source: data/all_runs_inventory.csv and renders/yaris_render_s1/gates_results.json."
         % (" to ".join(str(x) for x in nv), " to ".join(str(x) for x in dnv),
            sd[0] / sd[-1], sd[0], sd[-1], dd[0] / dd[-1], dd[0], dd[-1],
@@ -563,7 +567,11 @@ def g7(inv):
     fr = [float(r["fill_ratio"]) for r in inv]
     pt = [float(r["passthrough_max_frac"]) for r in inv]
     worst = max(inv, key=lambda r: float(r["passthrough_max_frac"]))
-    det = {r["determinism_identical"] for r in inv}
+    # BACKWARD-COMPATIBLE READ, 2026-08-18: renamed from determinism_identical.
+    # data/all_runs_inventory.csv on disk still carries the OLD column and is deliberately
+    # not regenerated, so both spellings are accepted. Never raises.
+    det = {(r.get("hull_load_identical") or r.get("determinism_identical") or "ABSENT")
+           for r in inv}
     oob = {int(r["C3_oob_particle_frames"]) for r in inv}
 
     fig, (axl, axr) = plt.subplots(1, 2, figsize=(17.5, 8.6),
@@ -600,7 +608,11 @@ def g7(inv):
         ("water surface open_edges", "%s" % (edges if edges else "n/a"), "PASS"),
         ("water volume error", "%s raw, %s smoothed" % (raw or "n/a", smooth or "n/a"), "PASS"),
         ("oob_particle_frames", "%s" % ", ".join(str(x) for x in sorted(oob)), "PASS"),
-        ("determinism_identical, all 17 runs", "%s" % ", ".join(sorted(det)), "PASS"),
+        # Relabelled and downgraded PASS -> NOTED 2026-08-18. The value is a true
+        # statement about HULL LOADING, and a green PASS beside the old name read as a
+        # reproducibility guarantee the flag cannot provide.
+        ("hull_load_identical, all 17 runs (hull load, NOT trajectory)",
+         "%s" % ", ".join(sorted(det)), "NOTED"),
         ("realized rho vs the 100 to 300 band", "%s kg/m3 at grid 64"
          % " / ".join(str(x) for x in rho), "FAIL"),
         ("water particle passthrough", "%.1f to %.1f pct; worst at v = 3.0 m/s"
