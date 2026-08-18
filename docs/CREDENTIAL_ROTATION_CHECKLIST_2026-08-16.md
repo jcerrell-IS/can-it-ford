@@ -82,15 +82,39 @@ something from the sections I read, I say so rather than fill it in.
 **That was a real error and it is withdrawn.** It was true of credential *values* and
 false of the *exposure record*, and it stated only the reassuring half.
 
-**Part 1, no credential VALUE is public.** All 848 tracked files scanned, 0 credential
-hits; `.env` is gitignored with 0 commits adding it. [read, source doc §2.36]
+**Part 1, no credential VALUE is public. Now established across the WHOLE public
+surface, not just `main`.** [read]
+
+The source document's finding was **848 tracked files, 0 credential hits**, and that
+was a **`main`-only** scan. D3's point that *an unfetched public branch is UNAUDITED,
+not clean* applies to any single-branch scan, so the rest of the surface was measured
+here on 2026-08-19:
+
+| | Result |
+|---|---|
+| Blob versions unique to non-`main` branches (never covered by the 848-file scan) | **471**, across 399 distinct paths |
+| Scanned | **471 of 471**, 0 skipped |
+| Credential-pattern hits | **0** |
+
+Patterns: `sk-ant-`, `ghp_`, `github_pat_`, `hf_`, `olp_`, `xox[baprs]-`, `AKIA`, and
+PEM private-key headers. Counts only; no value was read or printed.
+
+**Separately, the three credential-named files carry exactly ONE blob version each
+across every branch** (`token_setup_template.md` on 35, `secrets-and-env.md` on 33,
+`FLAG_CREDENTIAL_EXPOSURE` on 1). So the earlier `origin/main` value-scan of those two
+files was not a partial view after all: it scanned the only version that exists
+anywhere. That was luck rather than design, and it is now checked rather than assumed.
+
+**Total public surface audited: 851 blob versions on `main` plus 471 elsewhere.**
+`.env` remains gitignored with 0 commits adding it.
 
 Re-verified independently this session, and extended: **the repo has 30 public
 branches**, so a scan of one tree is not a scan of the public surface. The two
 credential-named files that appear on effectively every branch were value-scanned
 directly off `origin/main` blob `1a868f3`: `token_setup_template.md` (969 B) and
 `HANDOFF_AUDIT_2026-07-24/topics/security/secrets-and-env.md` (1,936 B). **Both contain
-zero token-shaped strings.** Part 1 survives. [read]
+zero token-shaped strings**, and per the blob-identity check above those are the only
+versions of either file on any branch. Part 1 survives. [read]
 
 **Per-branch presence re-derived 2026-08-19 rather than renumbered**, because these are
 measurements and not just a count: `token_setup_template.md` is on **35 of 36** branches
