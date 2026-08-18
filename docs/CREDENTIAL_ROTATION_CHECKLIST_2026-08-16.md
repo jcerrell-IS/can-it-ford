@@ -92,9 +92,14 @@ here on 2026-08-19:
 
 | | Result |
 |---|---|
-| Blob versions unique to non-`main` branches (never covered by the 848-file scan) | **471**, across 399 distinct paths |
-| Scanned | **471 of 471**, 0 skipped |
+| Blob versions unique to non-`main` branches (never covered by the 848-file scan) | **477** |
+| Scanned | **477 of 477**, 0 skipped, 0 branch trees absent |
 | Credential-pattern hits | **0** |
+
+Re-run after the round's first push, 2026-08-19: the surface grew from 471 blob
+versions across 36 branches to **477 across 37**, and the result is unchanged at zero.
+**A push is exactly when a "the repo is clean" claim goes stale**, so this is re-derived
+rather than carried forward.
 
 Patterns: `sk-ant-`, `ghp_`, `github_pat_`, `hf_`, `olp_`, `xox[baprs]-`, `AKIA`, and
 PEM private-key headers. Counts only; no value was read or printed.
@@ -105,13 +110,16 @@ across every branch** (`token_setup_template.md` on 35, `secrets-and-env.md` on 
 files was not a partial view after all: it scanned the only version that exists
 anywhere. That was luck rather than design, and it is now checked rather than assumed.
 
-**Total public surface audited: 851 blob versions on `main` plus 471 elsewhere.**
+**Total public surface audited: 851 blob versions on `main` plus 477 elsewhere.**
 `.env` remains gitignored with 0 commits adding it.
 
 Re-verified independently this session, and extended: **the repo has 30 public
 branches**, so a scan of one tree is not a scan of the public surface. The two
 credential-named files that appear on effectively every branch were value-scanned
-directly off `origin/main` blob `1a868f3`: `token_setup_template.md` (969 B) and
+directly off `1a868f3`, which was `origin/main` at scan time and is now an ancestor of
+it (`origin/main` fast-forwarded to `c7f0a16` on 2026-08-19; the audited trees
+`vehicle_geometry_research/`, `citations/` and `assets/` are byte-identical between the
+two, so the scan still describes the current head): `token_setup_template.md` (969 B) and
 `HANDOFF_AUDIT_2026-07-24/topics/security/secrets-and-env.md` (1,936 B). **Both contain
 zero token-shaped strings**, and per the blob-identity check above those are the only
 versions of either file on any branch. Part 1 survives. [read]
