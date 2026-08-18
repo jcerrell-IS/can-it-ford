@@ -1244,9 +1244,13 @@ L7. **SKILL DRIFT, RE-VERIFIED, and the previously recorded drift is FIXED.** Fi
 
     WHAT WOULD SETTLE IT: hold a subcritical approach AND a steady discharge at the
     same time, then vary bed friction and grid resolution and see whether 1.286
-    moves. Until then the honest statement is that the pipeline reproduces the
-    end-depth ratio to within 8 percent on a first attempt, and that the residual
-    is unexplained.
+    moves.
+
+    **THAT SWEEP HAS NOW BEEN RUN AND THE 8.2 PERCENT FIGURE IS WITHDRAWN. SEE
+    ITEM 30.** The ratio moves by more than 100 percent across plausible friction
+    and grid choices, so 1.286 was one point on an unconverged surface and the
+    8.2 percent agreement with Rouse was a coincidence of one configuration. Do not
+    quote it.
 
 28. **IMAGE PARTICLES ARE IMPLEMENTED AND NOT USABLE AS WRITTEN. THE J
     APPROXIMATION FORCED BY F HAVING NO SETTER APPEARS TO DOMINATE.**
@@ -1356,3 +1360,64 @@ L7. **SKILL DRIFT, RE-VERIFIED, and the previously recorded drift is FIXED.** Fi
     experiments were static with fixed wheels while real washaways involve vehicles
     free to roll. Their Fig. 17 plots all three, unbraked, braked and AR&R (2011),
     for a small passenger vehicle.
+
+30. **THE OVERFALL RATIO IS NOT CONVERGED IN EITHER BED FRICTION OR GRID, AND NO
+    CONFIGURATION HOLDS A STEADY DISCHARGE. ITEM 27'S 8.2 PERCENT IS WITHDRAWN.**
+
+    Seven runs, one factor at a time about a centre point of grade 0.15 deg, bed
+    friction 0.4, grid 96, head 0.6 m at U=0.30, 300 frames each. Vista job 918391.
+
+    | run | grade | fric | grid | Fr late | q_last/q_first | ratio | RUM95 | n_eff | stationary |
+    |---|---:|---:|---:|---:|---:|---:|---:|---:|---|
+    | sep_g0p00   | 0.00 | 0.4 |  96 | 0.638 | 0.25 | 1.431 | 0.2495 |  4.9 | no |
+    | sep_g0p15   | 0.15 | 0.4 |  96 | 0.662 | 0.25 | 1.249 | 0.0256 | 20.0 | **yes** |
+    | sep_g0p30   | 0.30 | 0.4 |  96 | 0.690 | 0.27 | 1.379 | 0.0830 |  5.3 | no |
+    | sep_f0p20   | 0.15 | 0.2 |  96 | 0.854 | 0.26 | 2.711 | 0.0679 | 29.2 | **yes** |
+    | sep_f0p60   | 0.15 | 0.6 |  96 | 0.617 | 0.28 | 1.072 | 0.0288 | 21.6 | **yes** |
+    | sep_grid64  | 0.15 | 0.4 |  64 | 0.293 | 0.26 | 0.740 | 0.0317 | 29.9 | no |
+    | sep_grid128 | 0.15 | 0.4 | 128 | 1.063 | 0.29 | 2.479 | 0.0346 | 39.6 | **yes** |
+
+    **(a) NOT CONVERGED, AND BY A LOT.** Holding everything else fixed, the ratio
+    spans 1.07 to 2.71 across bed friction 0.2 to 0.6, and 0.74 to 2.48 across grid
+    64 to 128. Those are swings of 117 and 124 percent about a target of 1.4. Grade
+    barely matters by comparison, 0.182 of spread. So item 27's 1.286 was one point
+    on an unconverged surface and its 8.2 percent agreement was a coincidence of
+    one configuration, not a measurement of anything.
+
+    **(b) THE GRID SWEEP IS CONFOUNDED AND MUST NOT BE READ AS A CONVERGENCE
+    STUDY.** Froude covaries with resolution, 0.293 / 0.662 / 1.063 at grid
+    64 / 96 / 128, so refining the grid changes the FLOW REGIME as well as the
+    discretisation. The grid-128 case is supercritical, where Rouse's ratio does
+    not apply at all. Two things moved at once; nothing was isolated.
+
+    **(c) THE RUNS THAT AGREE ARE NOT STATIONARY AND THE STATIONARY RUNS DO NOT
+    AGREE.** Only sep_g0p00 (+2.2 percent) and sep_g0p30 (-1.5 percent) put 1.4
+    inside their RUM95, and both fail the reverse-arrangement test. Every run that
+    passes it lands at -23.4, -10.8, +77.1 or +93.6 percent. That pattern is the
+    signature of reading a number off a transient: the short, noisy records happen
+    to straddle the target while the well-resolved ones do not.
+
+    **(d) NO CONFIGURATION HOLDS A STEADY DISCHARGE, AND THE FAILURE IS
+    STRUCTURAL.** q_last/q_first is 0.25 to 0.29 in ALL SEVEN runs, essentially
+    independent of grade, friction and resolution. A mild bed slope did not fix it.
+    That constancy is the diagnosis: the decay is a property of the recycling
+    closure, not of any physics knob. With one-in-one-out recycling the total water
+    is fixed and the only reservoir is the channel itself, so the channel fills,
+    the throughflow settles to whatever the geometry allows, and no sustained
+    supply exists to hold a discharge.
+
+    **THIS CLOSES A LOOP THAT WAS OPEN FROM THE FIRST COMMIT.**
+    `simulation/openchannel_bc.py` has said since be1b138 that one-in-one-out
+    recycling expresses Zhao et al's UNIFORM channel case and "cannot express their
+    NON-UNIFORM case, which needs a net flux imbalance and therefore a spare
+    particle reservoir". The free overfall IS a non-uniform case. The limitation
+    documented at the start is exactly the one now blocking the validation, which
+    is at least evidence the documentation was honest.
+
+    **WHAT TO DO NEXT, in order.** (1) Implement the reserve pool: allocate spare
+    particles, park them outside the wetted domain, and draw from them at the inlet
+    so inflow can exceed outflow. That is the piece that makes a sustained head
+    possible and it is the only route to a steady discharge in this engine.
+    (2) Only then re-run the friction and grid sweeps, holding Froude fixed rather
+    than letting it drift with resolution. (3) Do not report a Rouse comparison
+    before (1) and (2). The test is currently incapable of passing or failing.
