@@ -213,9 +213,29 @@ repository does**, and that is worth stating rather than leaving to be rediscove
 
 The two excluded files are the **detailed** decks:
 `silverado-detailed-v3e.key` (105,761,312 B) and `yaris-detailed-v2j.key`
-(169,061,007 B). **The unpublished portion is larger than the published portion.**
-This is why section 0 could report the two detailed models as present only inside
-their `.zip`: their extracted decks exist on disk and are simply not committed.
+(169,061,007 B).
+
+> **CORRECTED 2026-08-19, caught by D3 within minutes of my publishing it.** I wrote
+> *"the unpublished portion is larger than the published portion."* **That is wrong and
+> is withdrawn.** D3 pointed out the 275 MB is recoverable from the committed zips, and
+> verified here by listing the tracked blobs: `2010-toyota-yaris-detailed-v2j.zip`
+> contains `yaris-detailed-v2j.key` at **169,061,007 B** and
+> `2007-chevrolet-silverado-detailed-v3e.zip` contains `silverado-detailed-v3e.key` at
+> **105,761,312 B**, byte-for-byte the sizes of the local files. [read]
+>
+> **So nothing is "unpublished". The local files are extracted duplicates of content
+> that is already public inside the tracked archives.** The gitignore rule is not
+> withholding anything; it is declining to store a second, uncompressed copy.
+>
+> **This makes the exposure finding stronger, not weaker.** All four CCSA models are
+> fully public including both detailed decks, and the two largest single artifacts in
+> the whole set, at 169.1 MB and 105.8 MB uncompressed, reach the public repository
+> inside the archives. The 160,322,098 B figure is **stored** size; the **content**
+> made available is considerably larger, because the archives are compressed.
+>
+> My error was inferring "not in the tree" meant "not available", without opening the
+> archives that were sitting in the tree. That is the partial-view rule again, and I
+> had cited it against D1 two hours earlier.
 
 ### The rule keeping them out is a credential rule, and it is holding by accident
 
@@ -229,11 +249,13 @@ Two consequences, both worth carrying:
 1. **14 `.key` decks are tracked anyway.** `.gitignore` only governs untracked files,
    so those were added before the rule existed or force-added past it. The rule is not
    a guard that held; it is a guard 14 files already bypassed.
-2. **Tightening the rule would publish 274.8 MB.** If someone narrows `*.key` to
-   target credentials precisely, which is a reasonable hygiene improvement, these two
-   decks stop being ignored and the next broad `git add` commits them. With permission
-   now reported that is a repository-size problem rather than a licence one, but it is
-   a surprising outcome for a change that looks purely like a security tidy-up.
+2. **Tightening the rule would add 274.8 MB of redundant storage.** If someone narrows
+   `*.key` to target credentials precisely, which is a reasonable hygiene improvement,
+   these two decks stop being ignored and the next broad `git add` commits them.
+   **Corrected per the note above: that publishes no new content**, since both decks are
+   already public inside the tracked archives. It would commit a second uncompressed
+   copy of material the repo already carries, roughly tripling the size of
+   `vehicle_geometry_research/` for nothing.
 
 **Anyone editing `.gitignore:63` should know it is load-bearing for something other
 than what it was written for.**
