@@ -389,4 +389,250 @@ continuing the g96 and g128 behaviour rather than the g48 and g64 behaviour.
 these two rungs moves any `C` above 0.10, the four-rung CLEAN verdict is downgraded and
 that is reported as the headline, not as a footnote.
 
-*(results appended below once the runs return)*
+### 8a. EXTENSION RESULT, g160. Out of sample, reported separately.
+
+**g160 is the cleanest rung in the entire ladder, and it is the one that matters most.**
+
+The g160 rung is where the SLIDE-to-STUCK flip sits, so it is where a contaminated-noise
+result would have been most damaging. It is not contaminated:
+
+| grid | n | D0 control | D1 forced | R | D0 spread | substeps ctl/forced |
+|---|---|---|---|---|---|---|
+| 160 | 4 | +0.000095 | 0.051449 | **0.0018** | 0.000491 | 26 / 26 |
+
+Per-rep surge at g160: `+0.000313  +0.000175  -0.000177  +0.000068`. **The sign changes
+within a single grid**, and the mean (0.000095 m) is **five times smaller than its own
+repeat spread** (0.000491 m). The drift is 0.095 mm against a 51.4 mm forced signal.
+
+`R = 0.0018` is 55x below the 0.10 threshold. The extension prediction in section 8 said
+`|D0| <= 0.001 m`, `R <= 0.02`, and mean below its own spread. **All three held**, this
+time including the directional part.
+
+Trend test with g160 added: `C(g128 to g160) = 0.0154`. Five-rung verdict remains **CLEAN**
+at every rung and every pair (worst R 0.0241, worst C 0.0801).
+
+**The SLIDE-to-STUCK flip at g160 is not explained by zero-forcing noise.** Whatever drives
+it, it is not PIC reprojection drift.
+
+*(g192 was still running when this section was written; it is reported in section 8b if it
+returned before the allocation expired, and recorded as absent if it did not.)*
+
+---
+
+## 9. A CONFOUND THE RETRACTION COULD NOT CLOSE IS NOW CLOSED BY MEASUREMENT
+
+`docs/R5_RESEARCH_FORCE_CONVERGENCE_2026-08-19.md` section 3 lists three confounds that
+move monotonically with refinement, all uncontrolled. Confound (a), verbatim:
+
+> **(a) Substeps rise 2.6x across the ladder.** PIC reprojection is dissipative, so the
+> number of dissipative reprojections per recorded frame rises monotonically with
+> refinement, in the same direction as every "converging" trend I reported. **Untested
+> as the cause.**
+
+**It is now tested, and it is not the cause.**
+
+The control runs at `--velocity 0` returned substep counts of **8 / 11 / 16 / 21 / 26** at
+g48 / g64 / g96 / g128 / g160, which are **identical** to the forced runs at the same
+grids. That is not a coincidence and it was predicted before submitting, in section 2a:
+`term_advective = max(velocity, 1e-6)/(0.5*dx)` collapses to about `1e-5` at zero velocity
+while the acoustic term dominates by 15.29x, so the substep rate is unchanged.
+
+Because the substep count is held fixed between control and forced at every rung, the
+control carries confound (a) at **exactly the same strength** as its forced counterpart.
+If the rising substep count were producing the apparent convergence, the control would show
+the same trend, because it has the same substep ladder. It does not: the control's surge is
+non-monotone, sign-changing, and at most 2.4 percent of the forced signal.
+
+**Rising substep count is not what produces the resolution trend in surge displacement.**
+Confound (a) can be marked closed. Confounds (b), depth never resolved beyond about 4.1
+cells, and (c), `realized_rho` varying 642.8 to 663.6, are **not** addressed by this control
+and remain open.
+
+---
+
+## 10. THE ZERO-FORCING SURGE FLOOR, a new named quantity
+
+This project has never had a number for the size of its own numerical floor. It has one now,
+and it is given a name here so it can be cited rather than re-derived.
+
+> **Zero-forcing surge floor (ZFS).** The mean surge displacement `final_disp_m[0]` of the
+> canonical standing-flood scene after 90 frames with `--velocity 0` and every other
+> parameter held at the canonical values (m2337, depth 0.30 m, eta 1.0e-3, floor friction
+> 0.55), over 5 repeats at fixed `seed=0`.
+
+| grid | ZFS (m) | ZFS (mm) | ZFS repeat spread (mm) | forced signal (mm) | ZFS / forced |
+|---|---|---|---|---|---|
+| 48 | +0.002282 | 2.28 | 0.67 | 181.19 | 1.26% |
+| 64 | +0.003177 | 3.18 | 1.51 | 132.09 | 2.41% |
+| 96 | -0.000571 | 0.57 | 0.98 | 85.32 | 0.67% |
+| 128 | +0.000338 | 0.34 | 0.57 | 67.26 | 0.50% |
+| 160 | +0.000095 | 0.095 | 0.49 | 51.45 | 0.18% |
+
+**The citable bounding statement:** the zero-forcing surge floor never exceeds **3.2 mm** at
+any resolution tested, against a forced signal of 51 to 181 mm, and it falls **below 1 mm at
+every grid of g96 and finer**. At g96, g128 and g160 the mean is smaller than its own repeat
+spread, so at those three rungs it is **not distinguishable from zero at 5 repeats**.
+
+Per W3 of the retraction, the repeat spread is GPU floating-point non-determinism in atomic
+P2G accumulation, not physical or model uncertainty: `seed=0` is hard-coded and no `--seed`
+flag exists. The control's spread matches the forced set's to within about 1.1x at three of
+four rungs (0.00067 against 0.00066, 0.00151 against 0.00139, 0.00098 against 0.00108),
+which is what a shared round-off origin predicts.
+
+**What this is for.** Any future claim in this project of the form "displacement changed by
+X between resolutions" can now be checked against the floor. A claimed effect smaller than a
+few millimetres of surge is inside the numerical floor and is not a result.
+
+---
+
+## 11. THE g48 P-3 FLOOR-SINK IS NOT FLOW-DRIVEN. Answered by control.
+
+CLAUDE.md August 4 audit item 7 records that **all three g48 canonical runs fail gate P-3**
+with a negative z rise near -0.05 m, that is, the hull sank into the floor plane. The cause
+has been open.
+
+The control answers it, because the control has no flow:
+
+| | control (velocity 0) | forced (velocity 1.5) | difference |
+|---|---|---|---|
+| g48 mean z displacement | **-0.047847 m** | **-0.047957 m** | **0.2 percent** |
+
+**The g48 floor-sink is present at full strength with the flow switched off.** It is a
+gravity, buoyancy and floor-boundary effect, not a hydrodynamic one. Switching the forcing
+off changes it by two parts in a thousand.
+
+Two consequences:
+
+1. Any explanation of the g48 P-3 failure that invokes flow loading, drag, or momentum
+   transfer from the water is refuted by this control. The remaining candidates are the
+   floor boundary condition, the buoyancy or density treatment, and the g48 resolution
+   itself, all of which are active with no flow at all.
+2. The sink is resolution-dependent and largely disappears with refinement: mean control z
+   is -0.047847 at g48 but -0.002913 at g64, -0.003023 at g96 and -0.000003 at g128. It is a
+   coarse-grid artifact, and it is the coarse grid rather than the flow that produces it.
+
+This also means gate P-3 at g48 is not testing what its name suggests at that resolution.
+
+---
+
+## 12. CAN `sdf_wrench` CARRY A FORCE-VS-RESOLUTION CURVE? Verdict: yes in principle, no today.
+
+### 12a. What it is, and what it accumulates. Read directly from the pinned engine.
+
+`core/solver.py:354-361`, verbatim contract:
+
+```
+force  = sum m*(v_free - v_new) / dt
+torque = sum (x - center) x impulse / dt      (about the collider centre, world frame)
+```
+
+returned as `{'force': (3,), 'torque': (3,)}`. **This is a genuine force.** It is the
+momentum the collider removed from the material per unit time, that is, the Newton third-law
+reaction, accumulated on the grid. It is not a differentiated velocity trace.
+
+`kernels/mpm_solver_warp.py:856` (`mass_np[b] = float(m_b.sum())`) is the rigid mass sum,
+verified live, confirming the corrected citation already recorded as closed in CLAUDE.md.
+
+### 12b. THE DECISIVE POINT: it is on a different code path from every published run
+
+`sdf_wrench` belongs to the **SDF collider** path (`add_sdf_collider` at `:324`). All 17
+canonical runs, all 20 R6 repeats, and all 24 control runs reported above use the
+**free-rigid material 8** path, which has no force accumulator (section 1a).
+
+`simulation/coupling_force/coupler.py:4-8` states the same thing independently and its
+engine citations check out against the pinned source:
+
+> "The engine's free-rigid path (material 8) never forms a force. Per step it gathers the
+> mass-weighted grid velocity at each rigid particle and assigns
+> `v_cm = rigid_linear_mom / M` (kernels/mpm_utils.py:1434, with M from
+> kernels/mpm_solver_warp.py:856)."
+
+So a force-vs-resolution curve built from `sdf_wrench` **would not describe the runs this
+project has published.** It would describe a different scene, on a different coupling
+architecture. That is not a reason against building it, but it is a reason it can never be
+retrofitted as validation of the existing ladder.
+
+### 12c. It is already implemented, and it must not be rebuilt
+
+`simulation/coupling_force/` is committed and contains the full partitioned explicit FSI
+loop. The per-tick contract at `coupler.py:142-175` is:
+
+```
+reset_sdf_force(h) -> step(dt) x substeps_per_pose -> sdf_wrench(h, tick_dt)
+   -> integrate Newton-Euler -> set_sdf_pose(h, center=x_cm, quat, velocity, omega)
+```
+
+`realism_track/FINDINGS.md:152-160` records this explicitly: "This is already implemented
+and must not be duplicated." Its `test_rigid_body.py` reports 14 analytic checks passing,
+but those validate **the integrator, not the fluid coupling**.
+
+### 12d. Why the answer is "no today": the force itself is not yet trustworthy in this regime
+
+Measured, from `realism_track/coupling_accuracy.json` and `FINDINGS.md:9-21`, read live:
+
+| regime | collider | g64 error vs analytic | g96 error vs analytic |
+|---|---|---|---|
+| rung (a), FULLY submerged, still | sdf | **-7.67%** | **+7.28%** |
+| rung (a), fully submerged, still | box | -37.91% | -21.28% |
+| rung (b), PARTIALLY submerged | sdf | **-18.9%** | **+115.0%** |
+
+The flooded-vehicle case is partial submersion, and there the force is currently **refuted**,
+not validated: the error swings 134 percentage points between two grids and the body sinks
+at one while rising at 4 g at the other. `FINDINGS.md:21` is explicit: "Do not quote
+-7.67%/+7.28% as a coupling-accuracy figure for a floating vehicle."
+
+**A quantity whose own error against an analytic reference swings by 134 points across two
+grids cannot be the ordinate of a convergence study.** The convergence of the measurement
+must be established before the measurement can establish convergence of anything else.
+
+Root cause of the rung (b) failure is recorded and is not exotic: the water was never settled
+(`rung_b_coupled.py:83` advanced one substep per iteration where the reference advances one
+frame under a quiescence gate; the 900 that ran were 23 percent at g64 and 7.2 percent at g96
+of what the gate required), plus a comparison that was never like-for-like (frac 1.0 against
+frac 0.5187). Fixed in `79fec32`, **not re-run**.
+
+### 12e. What building the curve would actually require
+
+1. **Re-run rung (b) with the `79fec32` settle fix at three or more grids.** The fix is
+   committed and unexercised. Until it runs, there is no trustworthy force at any resolution.
+2. **Three resolutions minimum, with successive percentage changes**, per the research
+   review's recommendation 3, declaring convergence only below a stated tolerance of 5 to 10
+   percent. Two points that cross zero (-7.67 to +7.28) are not a convergence curve. *(That
+   review is a secondary, AI-generated source and is cited here for positioning only.)*
+3. **A time-averaged observable over a demonstrated-stationary window, with a GCI**, not an
+   instantaneous peak (Syamlal, Celik and Benyahia 2017, 10.1002/AIC.15868; Celik et al 2007,
+   10.1115/1.2960953, already in the paper bib). This project has the tool for the stationary
+   window, `analysis/stationarity.py`, and the retraction's W2 shows what happens without it:
+   the discarded region held the quantity being reported in 20 of 20 runs.
+4. **Fix the manifest provenance gap first.** `canitford_git_commit`, `grid_density`,
+   `mesh_sha256`, `solver_git_sha` and `vehicle_mass` are absent from all 20 R6 manifests.
+   A convergence curve whose rungs cannot be tied to a driver and a mesh is not auditable.
+   *(Recorded in the retraction section 6; not independently re-verified here.)*
+
+### 12f. The five traps, each checked against source rather than restated
+
+| # | trap | status, verified live |
+|---|---|---|
+| 1 | **wrench-dt.** `sdf_wrench` divides by whatever `dt` it is handed, so passing the substep dt instead of the tick duration inflates the force by exactly the substep count, plausibly and silently. | **CONFIRMED**, `solver.py:361` `return {"force": f / dt, ...}`. The existing coupler gets it right: `coupler.py:151` passes `cfg.dt * cfg.substeps_per_pose`. |
+| 2 | **The accumulator is never auto-zeroed.** A naive read returns the run-to-date total. | **CONFIRMED**, the only zeroing in `solver.py` is inside the explicit reset methods at `:298-299`, `:350-351` and `:417`. Nothing in `step()` clears it. The coupler gets it right at `:147`. |
+| 3 | **Quaternion order differs inside one file.** | **CONFIRMED**, `add_cup` at `:256` defaults `(1,0,0,0)` and `:262` documents "``quat`` uses wxyz order", while `add_sdf_collider` at `:324` defaults `(0,0,0,1)`, xyzw. The coupler uses xyzw at `:168`, consistent with the SDF path. |
+| 4 | **COM offset.** | **THE CARRIED FORM DOES NOT VERIFY HERE, AND IS WITHDRAWN.** The claim names `RigidBody6DOF` raising `NotImplementedError` on non-zero COM offset. `RigidBody6DOF` **does not exist in this repo** (searched `simulation/` and `analysis/`), and the only `NotImplementedError` in `coupling_force/` is `inflow_outflow.py:123`, about a log-law roughness height. The **verifiable** form: `sdf_wrench` reports torque about the **collider centre** (`:356-357`), while `rigid_body.py:64-84` computes inertia about the **centre of mass**. `coupler.py:172` sets `center=tuple(self.state.x_cm)`, so the two coincide **only if the SDF's own geometric origin is the COM**. `coupler.py` contains no mention of that reconciliation. It is an **unguarded assumption**, not a raised error, which is more dangerous than the carried form suggested. |
+| 5 | **periodic_x.** | **CONFIRMED**, `add_cdf_collider` guards it at `:379-380` with an explicit `raise NotImplementedError`; `add_sdf_collider` at `:324-337` has **no equivalent guard**. Combining `periodic_x` with an SDF vehicle fails silently. |
+
+### 12g. Verdict
+
+**`sdf_wrench` is the correct independent force measurement and it is the only real force on
+a body available in this engine.** It should be the basis of any future force-convergence
+work, and the machinery is already written.
+
+**It cannot carry the curve today**, for three reasons, in order of how hard they are to fix:
+its accuracy in the partial-submersion regime is currently refuted at -18.9 and +115.0
+percent and must be re-established after the unexercised `79fec32` settle fix; only two
+resolutions exist where at least three are needed; and it measures a different coupling
+architecture from every run this project has published, so it can extend the work but can
+never retroactively validate the existing ladder.
+
+**What it is NOT is a substitute that lets `M*dv/dt` back in.** The two are not alternative
+estimates of the same thing. `M*dv_cm/dt` on the material-8 path is `M/dt` times the
+difference of two PIC reprojections of a blended field, and no averaging, smoothing or
+window choice converts it into a force.
