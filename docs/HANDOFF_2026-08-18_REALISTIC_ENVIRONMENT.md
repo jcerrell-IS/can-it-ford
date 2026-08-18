@@ -67,12 +67,54 @@ recycle mode than closed and is undiagnosed. Both grade=3 runs are non-stationar
 at 5 percent over 90 frames. `n_eff` is 3.9 to 9.1 of 90 frames in every run. The
 inlet and outlet end bins sit about 25 percent above mid-channel depth.
 
-**Next, in order.** (a) Diagnose the recycle-mode leak count. (b) Implement the
-free-overfall case and test against the 1.4x ratio, which is the only external
-validation target currently in hand. (c) Longer records for the graded runs until
-they pass the reverse-arrangement test. (d) Then Phase D (road geometry), which
-still wants the hydroplaning paper's pavement method, so getting that PDF is worth
-one focused effort. (e) Phases E, F, G unchanged.
+**ROUND 2 UPDATE, same night.** Most of the list above is now done. Register items
+24 and 25 carry the working; commits `7933f1e`, `e2f985e`, `28a2fab`.
+
+| item | status |
+|---|---|
+| Free overfall implemented | **done**, `simulation/sim_overfall.py` |
+| Rouse 1.4x ratio tested | **NOT YET.** First attempt drained itself (register 25); corrected runs queued as job 918245 behind another session's jobs |
+| leaked_particle_frames diagnosed | **done, my hypothesis refuted.** 87.2% is z, water sinking through the floor; the inlet velocity condition is not the cause (1.1% A/B) |
+| Longer graded records | **done, and they overturned a number.** See the retraction below |
+| Vehicle in the loop | **done.** Passthrough 0.1069 -> 0.0833 at g64, crossing the P-2 limit |
+| Three meshes | **done**, all three pass P-2 in the open channel, but NOT at matched resolution |
+| Rendering | **done.** Local stack installed; `renders/openchannel_2026-08-18/` |
+| Passthrough fix | **partly.** The BC component is now measured and removed; image particles still unimplemented |
+| Hydroplaning PDF | **blocked, four routes exhausted** |
+| End bins ~25% high | **not addressed** |
+
+**THE RETRACTION MATTERS MORE THAN THE NEW RESULTS.** Item 20 reported the recycle
+residual slope as `-0.00284 +/- 0.00029 m/m`. Re-running the identical configuration
+at 300 frames instead of 90 gives `+0.00673` at the same grade. Two of three grades
+flip sign and the trend with grade reverses direction. The RUM95 measured scatter
+inside one short record and I read it as a precision; it is not one. What survives is
+the bound and the separation: every recycle residual, both lengths, all grades, has
+|slope| <= 0.0088 against 0.0927 and 0.1695 closed, so worst-case separation is 10.6x
+and every recycle residual sits at least 6.0x below tan(3 deg) = 0.05241. **Cite the
+bound. Never cite a recycle slope to five decimals.** The general lesson is in item 24:
+re-running at a different record length is the cheapest control available and was not
+part of the protocol. It should be.
+
+**THE HYDROPLANING PDF IS BLOCKED AND YOU CAN UNBLOCK IT IN ONE STEP.** Four routes
+tried and all failed: Undermind `read_pdfs` returns "could not get PDF"; scite reports
+`isOa: false, contentDenied: true`; the CityU green-OA copy sits behind a Cloudflare
+bot challenge which I did not work around; and it is not in the Zotero library.
+**Upload the PDF into the Undermind workspace** (`Can it ford`,
+`17299f2a-8dc8-438b-8c84-5abf19395e2c`) and `read_pdfs` will then read it like any
+other. Until then Phase D has no prior-art method for expressing a pavement in an MPM
+grid. A LEAD WORTH FOLLOWING MEANWHILE: Remmerswaal, Vardon & Hicks 2024,
+`10.1016/j.compgeo.2024.106494`, "Inhomogeneous Neumann boundary conditions for MPM
+and GIMP", is CC-BY open access and Vardon is a co-author of Zhao et al 2019. That is
+the machinery for a prescribed-traction boundary, which is exactly the
+pressure-controlled half of the outflow that the recycler does NOT implement. Its PDF
+also failed via Undermind and scite returned no excerpts, so it is a lead, not a read.
+
+**Next, in order.** (a) Land job 918245 and read off the Rouse ratio; it is the only
+external validation target in hand. (b) The floor and hull penetration are now known
+to be the same defect and both are the image-particle case; that is the next real
+piece of numerics. (c) End-of-channel bins sit about 25 percent above mid-channel,
+untouched. (d) Phase D still needs the hydroplaning paper. (e) Everything below is
+unchanged.
 
 ---
 
