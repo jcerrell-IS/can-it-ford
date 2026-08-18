@@ -741,9 +741,41 @@ whether it reaches a reader-facing document. Built 2026-08-15 by
 and a recursive search silently reported zero hits.
 
 Headline numbers, measured not estimated: **43 of 332 papers reach `paper/`,
-`docs/`, `deliverables/` or `citations/`. 256 are cited nowhere.** 60 carry no
+`docs/`, `deliverables/` or `citations/`.** 60 carry no
 DOI and are undiffable. 222 have an abstract; the other 110 are metadata-only
 because each report details its top 50 only, so never describe those as read.
+
+**"REACH" IS NOT "CITED" AND THIS BLOCK USED TO CONFLATE THEM.** Corrected
+2026-08-18. The clause "256 are cited nowhere" is WITHDRAWN: it took the
+complement of *reach* and reported it as *cited*, which are different
+predicates measured by different means. The full ladder, so the two can never
+be collapsed again:
+
+      332  papers in the corpus
+       76  DOI-shaped string anywhere in the tracked tree  (`cited_in_repo`)
+       43  DOI-shaped string in a reader-facing directory  (`cited_reader_facing`)
+        4  hold an entry in the SHIPPED bibliography
+        3  are `\cite`d, and therefore print in the reference list
+
+So FORTY papers reach a reader-facing directory without reaching the reader.
+43 and 3 are both correct and answer different questions. The field names
+`cited_in_repo` and `cited_reader_facing` are what mislead; the data is
+internally consistent, so do not go looking for a data bug.
+
+The top of the ladder was re-derived independently 2026-08-18 against
+`overleaf/main`: the submitted tex carries **14 distinct `\cite` keys**, the
+shipped bib **15 entries**, 14 cited and in the bib, 0 cited but missing, and
+exactly one entry never cited, `xiong2024`. BibTeX drops it, so it does not
+print. The 3 rests on a census matching those 15 against the corpus rather
+than on a search, which is the right method and is the part to re-check first.
+
+SEPARATE AND OPEN: **the corpus is NOT a superset of the bibliography.** Of the
+14 works the paper cites, 11 are absent from the 332 entirely, including
+`shah2018` (`10.1051/matecconf/201820307003`), which is flood-vehicle
+literature the paper already cites. Corpus coverage therefore cannot answer
+what the paper cites, and the index cannot report this about itself. Whether
+that is a sourcing gap or a dropped merge is unresolved and belongs to
+whoever owns the index build.
 
 THE CITED-STATUS COUNT IS SCOPE-SENSITIVE, exactly like the DRIFT_THRESHOLD total
 in item 13. `.claude/worktrees/` MUST be excluded. A first version of the index
