@@ -382,7 +382,7 @@ def sdf_margin_cells(span, dx, res, band_safety=2.0):
     return margin
 
 
-def build_sphere_sdf(diameter, dx, res=96, band_safety=2.0, cache_dir=None):
+def build_sphere_sdf(diameter, dx, res=96, band_safety=2.0, cache_dir=None, band_m=None):
     """Build the sphere SDF and return (SDFData, provenance dict).
 
     The provenance dict carries `sdf_radius_rms_err_m`: the SDF of a sphere has a
@@ -390,6 +390,9 @@ def build_sphere_sdf(diameter, dx, res=96, band_safety=2.0, cache_dir=None):
     way a vehicle hull can never be. That check is the reason a sphere is the right
     first external benchmark and it costs nothing.
     """
+    # band_m defaults to the engine default of dx so existing callers are unchanged.
+    band_m = float(dx) if band_m is None else float(band_m)
+
     from warpmpm.geometry import build_sdf, build_sdf_cached
 
     verts, faces = sphere_mesh(diameter)
@@ -425,8 +428,24 @@ def build_sphere_sdf(diameter, dx, res=96, band_safety=2.0, cache_dir=None):
         "sdf_cell_m": cell,
         "sdf_cell_over_dx": cell / dx,
         "sdf_boundary_min_m": boundary_min,
-        "sdf_band_m": dx,
-        "sdf_band_clearance": boundary_min / dx,
+        # NORMALISED BY THE ACTUAL BAND, NOT BY dx. These two lines previously hardcoded
+        # dx, which was correct only while the band was always the engine default. Once
+        # --band-mult existed they became wrong: all three sweep arms reported an
+        # identical sdf_band_m 0.01875 and clearance 2.1387 even though the real band
+        # varied 4x. True clearances are 4.277 / 2.139 / 1.069 at band_mult 0.5 / 1.0 /
+        # 2.0, so the 2.0 arm clears the engine's own guard (mpm_solver_warp.py:2639,
+        # `if band >= boundary_min: raise`) by only 0.65 SDF cells against a 2.06e-03 m
+        # max SDF radius error. It is legal but sits ON the design limit, because
+        # sdf_margin_cells(band_safety=2.0) sized the margin for exactly band = 2 dx.
+        #
+        # A caveat that belongs with any 2 dx result: band = 2 dx EXCEEDS the B-spline
+        # half-width of 1.5 dx, so the constrained set includes nodes no surface-adjacent
+        # particle supports. Treat 2 dx as a different regime, not a third point on one
+        # curve.
+        "sdf_band_m": band_m,
+        "sdf_band_clearance": boundary_min / band_m,
+        "sdf_band_over_dx": band_m / dx,
+        "sdf_band_exceeds_bspline_halfwidth": bool(band_m > 1.5 * dx),
         "sdf_radius_rms_err_m": float(np.sqrt(np.mean(resid ** 2))),
         "sdf_radius_max_err_m": float(np.max(np.abs(resid))),
         "sdf_mesh_verts": int(len(verts)),
@@ -528,9 +547,12 @@ class SphereTank:
             s.add_plane(pt, nrm, "slip", friction=0.0, restitution=0.0)
         s.add_domain_walls()
 
+        # band_m is passed so the SDF provenance describes the band ACTUALLY used, not
+        # dx. self.band_mult is set below, so compute the band here rather than reorder.
         sdf, self.sdf_info = build_sphere_sdf(self.diameter, self.dx, res=sdf_res,
                                               cache_dir=sdf_cache,
-                                              band_safety=sdf_band_safety)
+                                              band_safety=sdf_band_safety,
+                                              band_m=float(band_mult) * self.dx)
         # surface and friction are the engine's own add_sdf_collider defaults and are NOT
         # tuned. For surface_type 2 the impulse is m*(v_free - v_surf - v_tan_scaled)
         # (mpm_solver_warp.py:2731), whose NORMAL part is friction-independent; heave is
