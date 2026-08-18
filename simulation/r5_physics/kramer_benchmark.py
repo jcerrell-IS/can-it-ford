@@ -104,12 +104,99 @@ ZIP_SHA256 = "04c4d78d6987e4eec6c31d692d3c5cf5adea2580ffcfe50fbbd44e6589c7623f"
 DROPS = {"01D": 0.030, "03D": 0.090, "05D": 0.150}
 REPS = (1, 2, 3, 4)
 
-# The eleven blind-test codes, and the fidelity family the paper groups them into
-# (Section 1.2 / Appendix C). Order is the paper's own directory order.
+# The eleven blind-test codes. Order is the paper's own directory order.
 CODES = ("FNPF1", "LPF0", "LPF1", "LPF2", "LPF3", "LPF4",
          "RANS1", "RANS2", "RANS3", "RANS4", "RANS5")
-FAMILY = {c: ("FNPF" if c.startswith("FNPF") else
-              "LPF" if c.startswith("LPF") else "RANS") for c in CODES}
+# --------------------------------------------------------------------------------------
+# WHO ACTUALLY WROTE THE ELEVEN CODES. Read 2026-08-18 from
+# "Datafile/Numerical results/Description of numerical models.xlsx", which is Appendix B's
+# source. Before this was read, the fidelity families here came from DIRECTORY NAMES, which
+# is provenance by folder, and the directory names turn out to be wrong about the physics
+# in three places.
+#
+# THE ARCHIVE'S OWN NAMING IS INCONSISTENT WITH ITSELF, so check both:
+#   * the spreadsheet calls the potential-flow code NLPF1; the directory calls it FNPF1.
+#   * the spreadsheet carries TWO EXTRA ROWS, UoPLam and UoPSST, with no directory. Their
+#     descriptions are word-for-word those of RANS2 and RANS3, so they are the same two
+#     submissions under Plymouth's internal names. 13 rows, 2 duplicates, 11 models.
+#
+# THREE THINGS THE DIRECTORY NAMES HIDE:
+#   1. THREE OF THE FIVE "RANS" CODES RUN NO TURBULENCE MODEL AT ALL (RANS1, RANS2, RANS5
+#      are laminar). "RANS" here is the archive's label for the family, not a statement
+#      that a Reynolds-averaged closure was used.
+#   2. RANS2 AND RANS3 ARE ONE CODE IN TWO CONFIGURATIONS, same institution, same solver,
+#      same mesh, differing only by the turbulence model. The paper uses them as exactly
+#      that controlled pair (p.23: "An increased accuracy from inclusion of a turbulence
+#      model (k-omega-SST) can be seen by comparing the RANS2 and RANS3 models"). They are
+#      not two independent results.
+#   3. LPF0 THROUGH LPF4 ARE ALL BY ONE AUTHOR, the paper's own first author, via ditto
+#      marks in the Author column. Five of the eleven series come from one person, and
+#      they are the two ends of the whole inter-code envelope.
+CODE_META = {
+    "FNPF1": dict(alias="NLPF1", group="Chalmers", institution="Chalmers University of Technology",
+                  author="Carl-Erik Janson", software="SHIPFLOW-Motions 6",
+                  family="FNPF", turbulence="n/a (potential flow)",
+                  note="fully nonlinear potential flow BEM, 1600 panels on the sphere and "
+                       "4600 on the free surface, dt 0.005 s, ~1 h on a 6-core desktop"),
+    "LPF0":  dict(alias=None, group="Kramer", institution="Aalborg University",
+                  author="Morten Kramer", software="WAMIT+Matlab",
+                  family="LPF", turbulence="n/a (potential flow)",
+                  note="simple analytical equation using linear coefficients from BEM, <1 s"),
+    "LPF1":  dict(alias=None, group="Kramer", institution="Floating Power Plant",
+                  author="Morten Kramer (ditto in the sheet)", software="WAMIT+Matlab/Simulink",
+                  family="LPF", turbulence="n/a (potential flow)",
+                  note="linear hydrostatics, linear BEM coefficients"),
+    "LPF2":  dict(alias=None, group="Kramer", institution="Floating Power Plant",
+                  author="Morten Kramer (ditto)", software="WAMIT+Matlab/Simulink (ditto)",
+                  family="LPF", turbulence="n/a (potential flow)",
+                  note="NONLINEAR hydrostatics, linear BEM coefficients"),
+    "LPF3":  dict(alias=None, group="Kramer", institution="Floating Power Plant",
+                  author="Morten Kramer (ditto)", software="WAMIT+Matlab/Simulink (ditto)",
+                  family="LPF", turbulence="n/a (potential flow)",
+                  note="nonlinear hydrostatics, linear radiation, POSITION-DEPENDENT "
+                       "infinite-frequency added mass"),
+    "LPF4":  dict(alias=None, group="Kramer", institution="Floating Power Plant",
+                  author="Morten Kramer (ditto)", software="WAMIT+Matlab/Simulink (ditto)",
+                  family="LPF", turbulence="n/a (potential flow)",
+                  note="nonlinear hydrostatics, POSITION-DEPENDENT radiation functions"),
+    "RANS1": dict(alias=None, group="Aalborg-CFD", institution="Aalborg University",
+                  author="Claes Eskilsson & Jacob Andersen", software="OpenFOAM-v1912",
+                  family="RANS", turbulence="LAMINAR, no turbulence model",
+                  note="2 vertical symmetry planes, reflective side walls, 6-9 M cells, "
+                       "SLERP mesh morphing, 2nd order, CFL 0.5, 3000-6500 CPU hours"),
+    "RANS2": dict(alias="UoPLam", group="Plymouth", institution="Plymouth University",
+                  author="Edward Ransley & Scott Brown", software="OpenFOAM 5.0",
+                  family="RANS", turbulence="LAMINAR, no turbulence model",
+                  note="entire basin with two symmetry planes, beaches excluded so walls "
+                       "are perfectly reflective, 12 M cells, dt 0.1 to 6.4 ms"),
+    "RANS3": dict(alias="UoPSST", group="Plymouth", institution="Plymouth University",
+                  author="Edward Ransley & Scott Brown", software="OpenFOAM 5.0",
+                  family="RANS", turbulence="k-omega SST",
+                  note="IDENTICAL to RANS2 except for the turbulence model; the paper uses "
+                       "the RANS2/RANS3 pair as its controlled turbulence comparison"),
+    "RANS4": dict(alias=None, group="NREL", institution="National Renewable Energy Lab.",
+                  author="Yi-Hsiang Yu & Thanh Toan Tran", software="STAR-CCM+ 13.06",
+                  family="RANS", turbulence="k-omega SST, y+ ~ 30",
+                  note="half 3D basin with 2 m DAMPING zones at inlet and outlet, ~5.97 M "
+                       "cells, heave-only mesh morphing, 9*Te0 total including a 0.2 s "
+                       "fixed-sphere pre-simulation"),
+    "RANS5": dict(alias=None, group="Budapest",
+                  institution="Budapest University of Technology and Economics",
+                  author="Josh Davidson & Csaba Horvath", software="OpenFOAM 7",
+                  family="RANS", turbulence="LAMINAR, no turbulence model",
+                  note="2D AXISYMMETRIC WEDGE, one slice only, 20,000 cells total, one "
+                       "laptop core, and the TANK FLOOR IS EXTENDED TO 1.8 m to allow "
+                       "space for mesh motion against the experiment's 0.900 m"),
+}
+
+# Independent submitting groups. Eleven series are NOT eleven independent results.
+GROUPS = {}
+for _c, _m in CODE_META.items():
+    GROUPS.setdefault(_m["group"], []).append(_c)
+
+# Sourced from CODE_META, NOT from the directory name prefix, which was the previous
+# implementation and is provenance by folder.
+FAMILY = {c: m["family"] for c, m in CODE_META.items()}
 
 # Table 1 constants, for the closed-form stiffness. Benchmark gravity, not the engine's:
 # this module describes the EXPERIMENT, so it uses the experiment's g.
@@ -441,6 +528,27 @@ def _stat(a: np.ndarray) -> dict:
 # --------------------------------------------------------------------------------------
 # the eleven codes
 # --------------------------------------------------------------------------------------
+def _group_spreads(rows: dict) -> dict:
+    """Worst deviation per INDEPENDENT SUBMITTING GROUP, not per code.
+
+    Eleven series are not eleven independent results. From CODE_META: LPF0 through LPF4
+    are five configurations by one author (the paper's own first author), and RANS2/RANS3
+    are one Plymouth code with the turbulence model switched. Six groups submitted. A
+    pooled eleven-code spread lets one group's five configurations set both ends of it,
+    which is exactly what happens here.
+    """
+    out = {}
+    for grp, members in GROUPS.items():
+        mem = [c for c in members if c in rows]
+        if not mem:
+            continue
+        dv = np.array([rows[c]["dev_period_pct"] for c in mem])
+        out[grp] = {"members": mem, "n": len(mem),
+                    "min_dev_pct": float(dv.min()), "max_dev_pct": float(dv.max()),
+                    "worst_abs_dev_pct": float(np.abs(dv).max())}
+    return out
+
+
 def _family_spreads(rows: dict) -> dict:
     """Spread within each fidelity family separately.
 
@@ -520,6 +628,7 @@ def intercode(root: Path = DEFAULT_ROOT, num_root: Path = NUM_ROOT) -> dict:
             "max_abs_dev_period_pct": float(dev.max()),
             "median_abs_dev_period_pct": float(np.median(dev)),
             "by_family": _family_spreads(rows),
+            "by_group": _group_spreads(rows),
             "experiment": {
                 "first_damped_period_s": exp[drop]["first_damped_period_s"],
                 "decay_rate_per_s": exp[drop]["decay_rate_per_s"],
@@ -706,7 +815,15 @@ def wg_verdict(root: Path = DEFAULT_ROOT, num_root: Path = NUM_ROOT) -> dict:
     """The whole item-4 answer, computed rather than argued."""
     w = wg_inventory(root, num_root)
     g = wave_gauge_distances()
-    radii = [g["distances_m"][f"WG{i}"] for i in (1, 2, 3)]
+    radii = [WAVE_GAUGE_RADII_M[f"WG{i}"] for i in (1, 2, 3)]   # MEASURED, not derived
+    g["measured_m"] = dict(WAVE_GAUGE_RADII_M)
+    g["measured_source"] = WAVE_GAUGE_SOURCE
+    g["derived_minus_measured_pct"] = {
+        k: 100.0 * (g["distances_m"][k] / WAVE_GAUGE_RADII_M[k] - 1.0)
+        for k in WAVE_GAUGE_RADII_M}
+    lam = g["metres_per_lead_period"]
+    g["measured_radii_in_lead_periods"] = {
+        k: v / lam for k, v in WAVE_GAUGE_RADII_M.items()}
     exp = {}
     for drop in DROPS:
         per = []
@@ -735,6 +852,7 @@ def wg_verdict(root: Path = DEFAULT_ROOT, num_root: Path = NUM_ROOT) -> dict:
         "gauge_radii_in_wavelengths": {f"WG{i+1}": radii[i] / (G_BENCHMARK * 0.7561 ** 2
                                                               / (2.0 * math.pi))
                                        for i in range(3)},
+        "radii_used_m": list(radii), "radii_are": "MEASURED off Figure 8",
         "experiment": exp, "codes": codes,
         "codes_with_inverted_radial_order": sorted(
             {k.split("/")[0] for k, v in codes.items()
@@ -897,6 +1015,24 @@ def lim_for_clean_periods(n_periods: float, a33_over_m: float, wall: float = 0.1
     d_wall = n_periods * g * t_n ** 2 / (4.0 * math.pi)
     return {"n_periods": n_periods, "a33_over_m": a33_over_m, "natural_period_s": t_n,
             "required_wall_distance_m": d_wall, "required_lim_m": 2.0 * (d_wall + wall)}
+
+
+# MEASURED wave gauge radii, read 2026-08-18 off Figure 8 of the paper itself, which is
+# captioned "Test setup and measurements of the wave basin. Measurements are given in mm."
+# The figure puts the sphere at the basin centre (6500 mm from each concrete wall, 4220 mm
+# from the wavemaker) and the three gauges on ONE radial line running from the sphere
+# toward the wavemaker, in a chain of three 600 mm steps.
+#
+# These SUPERSEDE the derived values in wave_gauge_distances(), which is retained because
+# it is now an independent cross-check rather than the source: derivation gave 1.787,
+# 1.162 and 0.625 m against these, errors of -0.7%, -3.2% and +4.2%, every one inside the
+# +/-0.045 m the one-decimal prose implied. The closure runs both ways: at these measured
+# radii the reflection lead times come out at 2.015, 1.343 and 0.672 wave periods, which is
+# exactly the paper's "around 2.0, 1.3, and 0.7".
+WAVE_GAUGE_RADII_M = {"WG1": 1.800, "WG2": 1.200, "WG3": 0.600}
+WAVE_GAUGE_SOURCE = ("measured off Figure 8 of Kramer 2021 (chain of three 600 mm steps "
+                     "from the sphere toward the wavemaker); the reflective wavemaker is "
+                     "at 4220 mm and the basin is 13.00 x 8.44 m")
 
 
 def wave_gauge_distances(te0_s: float = 0.7561, g: float = G_BENCHMARK,
