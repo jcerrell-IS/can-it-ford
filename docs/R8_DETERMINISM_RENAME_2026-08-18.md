@@ -56,9 +56,33 @@ rendered text, extracted from the committed blob:
 > one hull at 1100 kg, **all runs deterministic.** Vertical rule marks v = 1.0189 m/s, where
 > DxV crosses the AR&R small-passenger 0.30 m2/s cap. ...
 
-Both rest entirely on the summary field `determinism_identical`, which compares a particle count
-and a grid limit between two loads of the same hull (section 2). Neither statement is supported
-by that field. The word `ESTABLISHED` is what makes statement A the more serious of the two.
+### THE POSTER IS NOT SLOPPY. IT IS THE NAMING DEFECT REACHING PRINT.
+
+Statement A is careful, specific, and correct about everything except the one word that matters.
+Read it clause by clause against what was measured:
+
+| clause in statement A | true? |
+|---|---|
+| "20 coupled runs" | **true**, `gates_results_all_runs.json` holds 20 records |
+| "All 17 that carry a determinism record" | **true**, 17 carry the field |
+| "the 3 dry-start runs record none" | **true**, those 3 carry the literal `"ABSENT"` |
+| "are **bit-reproducible**" | **FALSE** |
+
+Every factual component is right. The author counted correctly, partitioned the runs correctly,
+and reported the field's value correctly. The sentence is false only because it substitutes the
+**name** of the field for what the field **measures**, and the name is wrong:
+`determinism_identical` compares a particle count and a grid limit between two loads of the same
+hull (section 2), while the trajectories differ.
+
+So this is not overclaiming, and describing it that way would be both weaker and less accurate.
+**It is a correct statement about a field whose name does not describe what the field measures,
+printed under a heading that reads `ESTABLISHED`.** A reader doing everything right, trusting the
+field name as a field name, arrives at a false published claim. That is the strongest available
+argument for renaming rather than merely documenting: the defect had already reached print, and
+no amount of care at the writing stage would have caught it.
+
+The same reading applies to statement B, with `ESTABLISHED` being what makes statement A the more
+serious of the two.
 
 Note that the poster's Fig 2 caption drops the `(determinism_identical = True)` parenthetical
 that the figure generator emits. That is why a search for the field name finds the claim in
@@ -157,12 +181,16 @@ All are untracked and all are outside this slot's write scope.
 
 **Standalone erratum**, if the poster is not re-issued:
 
-> **Erratum, 2026-08-18.** The poster and slides state that 17 of 20 coupled runs are
-> "bit-reproducible" and that "all runs" are "deterministic". Both statements rest on the
-> summary field `determinism_identical`, which compares two loads of the same hull on particle
-> count and grid limit only. It is a hull-load check and is not evidence of run-to-run
-> reproducibility. The field has been renamed `hull_load_identical`. Hull loading is
-> bit-identical; the trajectories are not established to be.
+> **Erratum, 2026-08-18.** The poster states, under `ESTABLISHED`, that "All 17 that carry a
+> determinism record are bit-reproducible", and the Fig 2 caption says "all runs deterministic".
+> The slides repeat the first. **The run counts and the partition in those sentences are correct,
+> and so is the value they report. The error is in the word "bit-reproducible", and it was
+> inherited from the name of the field rather than introduced in the writing.** The summary field
+> was called `determinism_identical`, but it compares a particle count and a grid limit between
+> two loads of the same hull, and nothing else. It is a hull-load check. It reads True on all 17
+> runs and cannot detect whether the trajectories differ. The field has been renamed
+> `hull_load_identical` so the name states what it measures. **Corrected claim: hull loading is
+> bit-identical across the 17 runs; their trajectories are not established to be.**
 
 ### 1.5 What this slot did NOT do, deliberately
 
