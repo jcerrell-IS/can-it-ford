@@ -2069,6 +2069,67 @@ L7. **SKILL DRIFT, RE-VERIFIED, and the previously recorded drift is FIXED.** Fi
     skip it. Manufacture a solution, take the residual as a source, add it, sweep the
     spacing, fit the order from an L1 error.
 
+    **CORRECTED WITHIN THE HOUR, BY A 22-AGENT ADVERSARIAL PASS THAT REFUTED ME.
+    EVERYTHING BELOW HEADED "THE BLOCKER" IS WRONG, AND WRONG IN THE EXPENSIVE
+    DIRECTION: IT SAYS THE THING IS BLOCKED WHEN IT IS NOT.**
+
+    **MMS NEEDS NO ENGINE CHANGE.** `kernels/mpm_solver_warp.py:1182-1188` is a launch
+    loop over `self.pre_p2g_operations`, firing each registered Warp kernel at
+    `dim=self.n_particles` with `inputs=[self.time, dt, self.mpm_state,
+    self.impulse_params[k]]`. A user-supplied kernel appended there computes
+    `q(x, t)` analytically from `state.particle_x[p]` and the `time` argument, which
+    is precisely the spatially and temporally varying momentum source MMS requires.
+    A subagent applied `b(x,t) = A sin(kx) cos(wt)` through this path and measured the
+    response live on CPU, so this is executed, not read.
+
+    **WHY I GOT IT WRONG, because the mechanism generalises.** I grepped `def set_` on
+    the typed facade `core/solver.py`, plus a handful of force-shaped names, found
+    nothing, and reported absence. The capability is not on the facade, it is on the
+    simulator class underneath. That is the project's own standing rule broken in one
+    step: absence of evidence from a partial view is not evidence of absence, and I did
+    not say which view I had searched.
+
+    **WHAT IS ACTUALLY TRUE, and it is narrower.** The *documented* injector,
+    `add_impulse_on_particles` (`:2385`), cannot express `q(x)`: its kernel applies one
+    uniform `param.force` divided by particle mass over an axis-aligned box mask
+    (`:2419-2423`). So "the documented API cannot do MMS" holds. "The engine cannot do
+    MMS" does not, and that is the claim that was load-bearing.
+
+    **TRAP IN THAT EXTENSION POINT.** `pre_p2g_operations[k]` and `impulse_params[k]`
+    are INDEX-PAIRED at the launch site. Appending a kernel without a matching param
+    entry raises `IndexError`. `particle_velocity_modifiers` is a separate list pair,
+    so mixing the two stays aligned only by care.
+
+    **AND THE F CLAIM BELOW IS ALSO WRONG.** `import_particle_F_from_torch` exists at
+    `:1658` and does write `particle_F`, so "export-only, no setter" (inherited from a
+    DeepWiki answer, never checked live) is false. The real constraint is subtler:
+    `compute_stress_from_F_trial` runs first in each substep and reads
+    `particle_F_trial`, not `particle_F`, so an imported F is overwritten before it can
+    reach the stress update on some material paths. Manufacture in velocity, not in F.
+
+    **PySPH'S ANSWER TO ITEM 32 IS ALSO OVERSTATED BELOW.** Its inlet/outlet case is a
+    SUBMERGED bluff body at Re 200. It is not a free-surface outlet, so its
+    applicability to item 32's actual problem is NOT ESTABLISHED. The underlying
+    formulation is Negi, Ramachandran and Haftu 2020, CMAME 367:113119, which is absent
+    from the 332-paper corpus (a grep for `113119` returns zero), so nobody here has
+    read it. Adopting the design is a REIMPLEMENTATION, not a port: the IOM hands SPH
+    kernel interpolation equations to a scheme object warpmpm does not have, and the
+    typed API exposes no grid accessor at all, only particle-level and collider-level
+    ones, so the ghost-particle extrapolation would have to be done host-side in numpy
+    and written back through `set_x` and `set_v`. Say that fidelity gap out loud.
+
+    **CHEAPEST NEXT ACTION FOR ITEM 32, AND IT COSTS NO SU.** The register already
+    names the mechanism as loop latency. Test it: at `simulation/sim_overfall.py:254`
+    retirement uses the SAME fall predicate as the outflow (`catch_z`, passed at
+    `:198`, implemented as `fallen = w[:, 2] < self.catch_z` at
+    `openchannel_bc.py:381`), so a drawn particle only returns to the pool after
+    crossing the whole channel. Decouple retirement from the outflow test and rerun.
+    Both outcomes are results. And do NOT blame `draw_cap`: it is computed once outside
+    the frame loop at `:197`, giving 800 per frame against an observed 536, so it never
+    engaged.
+
+    **SUPERSEDED TEXT FOLLOWS, RETAINED ONLY SO THE ERROR IS AUDITABLE.**
+
     **THE BLOCKER, NAMED.** warpmpm has no per-particle or per-node source term. The
     complete host-side setter list on `core/solver.py` is `set_material`,
     `set_material_range`, `set_box`, `set_cup`, `set_sdf_pose`, `set_cdf_pose`,

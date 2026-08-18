@@ -488,8 +488,13 @@
              stepper and a fluid-to-inlet/outlet conversion callback, and section 4.3
              exercises it on flow past a cylinder at Re 200, reporting lift 1.524 and
              drag 0.722 within 5 percent of the reference and Strouhal 0.2 within
-             2 percent. That is a working, quantitatively checked answer to the open
-             outlet problem in register item 32. (2) BUILD MODEL: pure Python with
+             2 percent. That is a working, quantitatively checked outlet. CAVEAT ADDED
+             2026-08-18 after adversarial review: that case is a SUBMERGED bluff body,
+             not a free surface, so its applicability to register item 32's
+             FREE-SURFACE outlet is NOT established, and the underlying formulation
+             (Negi, Ramachandran and Haftu 2020, CMAME 367:113119) is absent from this
+             project's 332-paper corpus and unread. Adopting the design is a
+             reimplementation, not a port. (2) BUILD MODEL: pure Python with
              runtime code generation through compyle to Cython, OpenMP, OpenCL and
              CUDA, so there are no architecture-specific static libraries of the kind
              note L-8 used to rule out DualSPHysics on aarch64. The paper does NOT
