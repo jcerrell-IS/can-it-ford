@@ -1,98 +1,139 @@
-# R5-D1 unit 64: our floor friction is nearly double the flood literature's convention
+# R5-D1 unit 64: RETRACTED IN FULL
 
 Date 2026-08-19. Branch `claude/r5-research`.
-**Section 3 is a claim about verdict direction and is UNREVIEWED pending
-physics-skeptic.** Sections 1 and 2 are citation provenance and are not.
 
-The corpus subject index flags one artifact HIGH VALUE: a citation-provenance audit
-of **mu = 0.55 in Azhar, Pauwels and Bui (2023)**. That is the same number as
-`floor_friction=0.55` in `sim_standing.py:154`, the default for all 17 canonical runs.
+> ## THIS UNIT IS WITHDRAWN. Five blocking issues, and the worst is a rule I have quoted to others.
+>
+> **I did not read the register before asserting a parameter claim.** CLAUDE.md's
+> standing rule is explicit: "Before asserting any parameter, threshold, citation,
+> mesh property, or milestone as fact, read
+> `docs/CANONICAL_CORRECTIONS_REGISTER_2026-08-06.md`." I have cited that rule to
+> siblings during this dispatch. I broke it, and everything below follows from that.
+>
+> Nothing in the original document should be used. It is replaced by this record,
+> because how it failed is worth more than what it claimed.
 
 ---
 
-## 1. What the project already knows, and I am not restating as new
+## 1. My entire "new" finding was register G4a, twelve days old
 
-The provenance is **not** unknown here. `docs/LIT_QUEUE_2026-07-30.md:333` already
-asks whether Azhar's 0.55 is "a physical Coulomb coefficient or a solver parameter"
-and answers **"Physical"**, quoting the rubber-mat sentence. Measured repo-wide:
-`azhar` 86 files, `Wong` 13, `Theory of Ground Vehicles` 8, `0.50 to 0.70` 6.
+Register `:270`, **G4a, dated 2026-08-07**, cites **the same external report
+`65474f37`** I presented as a discovery, and states the same chain: Azhar
+"**measured 0.55 themselves** with a spring balance on the rubber mat", cite Wong
+"only to show the value falls inside a handbook range of 0.50 to 0.70", a "**two-hop
+chain, terminating in a general-automotive handbook**", and the judgement that it is
+"of lab rubber mat, not of submerged asphalt".
 
-## 2. What is new: the terminus, and the number it is measured against
+G4a even closes the loop I thought I was opening: "The canonical paper at
+`paper/canonical_2026-08-02/conference_101719_1.tex:205` **already states exactly
+this, independently**."
 
-**The chain, per the audit:**
+## 2. I used the exact framing the register warns against
 
-| hop | source | status |
-|---|---|---|
-| 0 | Azhar 2023, `10.1111/jfr3.12885` | **MEASURED**, spring balance on their own lab **rubber mat** |
-| 1 | Wong, *Theory of Ground Vehicles* (2008) | handbook range **0.50-0.70** peak, wet **asphalt** |
-| terminus | **SAE 690214**, Harned, Johnston and Scharpf (1969), GM tyre brake-force testing | primary, **general automotive, not flood** |
+Register `:272`, **G4b**:
 
-Azhar's own words, quoted in the audit: *"a rubber mat has been used as a
-representative of the road surface with a wet coefficient of friction of 0.55."*
-So 0.55 is a genuine primary measurement **of a laboratory rubber mat**, not of
-submerged asphalt.
+> "**0.30 is REFUTED as a measurement and REAL as a convention. Do not collapse the
+> two.** ... Anyone reading only the convention half **will try to resurrect 0.30 as
+> best-sourced and will be wrong.**"
 
-**The terminus is absent from this repo:** `690214` **0 files**, `Harned` **0 files**,
-against `Wong` 13. So the chain is documented for one hop and stops there.
+My document was titled "our floor friction is nearly double the flood literature's
+convention" and its headline number was 1.83x against 0.30. **That is the failure
+G4b names, described in advance.**
 
-**And here is the number nobody has written down next to ours.** The flood-vehicle
-stability literature does not use 0.55. It overwhelmingly uses **0.3**, chosen
-deliberately as conservative:
+And **G4** at `:266` refutes my premise outright: "`mu_wet ~ 0.30` is **REFUTED** as a
+wet-road value ... Model-scale measurements run **0.52 to 0.68**." **0.55 sits inside
+the measured band.** G4b supplies comparanda my table omitted entirely: Shu et al.
+2011 measured Ford Transit 0.39, Ford Focus 0.50, Volvo XC90 0.68.
 
-| study | mu |
-|---|---|
-| Bonham and Hattersley 1967 | **0.3** (measured range 0.3-0.5) |
-| Gordon and Stone 1973 | **0.3** |
-| Keller and Mitsch 1992 | **0.3** |
-| **Shand, Cox, Blacka and Smith 2011 (AR&R Project 10)** | **0.3** |
-| Toda et al. 2013 | 0.6 |
-| Smith, Modra and Felder 2019 | measured ~0.76; WRL 2017/07 used 0.78 |
-| Azhar 2023 | **0.55** |
-| published range across the field | **~0.25 to 0.78** |
+## 3. The physics conclusion was backwards, and I verified that myself
 
-Shand et al. verbatim, via the audit: *"While the assumed coefficient of friction of
-mu = 0.3 is likely conservative, the present lack of suitable data and wide range of
-road surfaces and tyre tread conditions prohibits the refinement of the
-coefficient."*
+I argued 16/17 SLIDE at 0.55 would survive 0.30, making the verdicts conservative.
+**The one run that can move is the one I ignored.** `sweepV_g64_v0p5`, the single
+STUCK verdict, measured from its own `metrics.csv`:
 
-**Our 0.55 is 1.83x the value underpinning the very AR&R curves the project compares
-its verdicts against.** Measured in `docs/`: the 0.55-versus-0.3 comparison **is not
-made anywhere**.
+```
+frames with |vx| >= 0.05 m/s : 8
+last such frame  : 8    dx = 0.036268   vx = 0.054263
+SLIDE needs dx >= 0.05  ->  short by 0.013732 m, 27.5% of threshold
+max |dx| overall : 0.056779, reached after vx has fallen to ~0
+```
 
-## 3. UNREVIEWED: which way this cuts
+SLIDE requires drift **and** speed simultaneously for 3 sustained frames
+(`failure_modes.py:181-183`). This run misses **only** because it decelerates below
+the speed gate before drift reaches 0.05 m. **Floor friction is what produces that
+deceleration.** Lowering mu extends the window, so 0.30 pushes this run **toward**
+SLIDE.
 
-**I believe it cuts in the project's favour, and I am flagging it rather than
-asserting it**, because it is a claim about verdict direction and my dispatch
-requires physics-skeptic before I finalise one.
+STUCK is the safe verdict. **So at the one run where friction can change the answer,
+0.55 gives the safer result: anti-conservative, the exact opposite of what I wrote.**
+I reasoned about the 16 that cannot move and silently dropped the 17th, which is the
+lowest-velocity and most policy-relevant case.
 
-The reasoning: friction resists sliding, so a **higher** mu makes sliding **harder**.
-Our runs use 0.55 and still return **16 SLIDE of 17**. At the literature's 0.3, the
-resisting force would be lower, so sliding should be at least as easy. **A SLIDE
-verdict obtained at 0.55 would therefore not be overturned by adopting 0.3**, which
-would make the published verdicts conservative with respect to this parameter.
+## 4. Monotonicity does not hold in this solver anyway
 
-**Three reasons I will not state that as established:**
+**Engine: WARPMPM** (`sim_standing.py:10-12`), which my original never tagged.
+`mpm_solver_warp.py:975` applies
 
-1. **Our 0.55 is not a tyre-road coefficient.** The vehicle is a rigid particle cloud
-   resting on a floor plane; there are no tyres and no four contact patches. It is an
-   analogue of tyre-road friction, not the same quantity.
-2. **The comparison is not one-dimensional.** Buoyancy reduces normal force, and the
-   17 runs already fail gate P-2 in 7 cases, so the contact state is not clean.
-3. **Nobody has run it.** A mu = 0.3 control is a one-parameter re-run and would
-   settle the direction by measurement rather than argument. That is D4's call, not
-   mine.
+```python
+J_t = min(v_t_mag / denom_t, mu * J_n)
+```
 
-## 4. Status
+which **saturates**: once `mu*J_n` exceeds the tangential term, raising mu does
+nothing. So "higher mu means harder sliding" is not even structurally true here.
 
-UNVERIFIED:
-1. **Section 3 is UNREVIEWED.** physics-skeptic has not seen it at the time of
-   writing.
-2. **I have not read Azhar 2023, Wong, or SAE 690214.** Section 2 is the corpus
-   audit's reporting, and its quotations are its own. It is one document, and unit
-   40 is a standing reminder that a single corpus document can be wrong.
-3. The `mu` values in the table are the audit's, cross-checked only against my own
-   Elicit extraction, which independently recorded 0.55 measured, 0.3 assumed,
-   0.52-0.62, 0.76 and 0.25/0.75 (unit 51's enumeration). **That is partial
-   corroboration from a different source, not confirmation of every row.**
-4. Repo counts are for the **main checkout on `claude/add-ci-checks`** (unit 63).
-5. Whether a mu = 0.3 control is worth GPU time is D4's and Josie's judgement.
+And the project's only mu data, `data/mu_sweep_results.csv`, is **non-monotone**:
+displacement rises 21.5% from mu 0.0 to 0.3, then falls 0.93% across 0.3 to 0.7.
+(That sweep is **GENESIS/SPH** and varies *coupling* friction, not floor friction, so
+it is suggestive rather than dispositive. Conflating the two engines is precisely the
+risk here.)
+
+## 5. Two claims of absence that were simply false
+
+- **"Nobody has run it."** `data/mu_sweep_results.csv` exists, is in the paper, and
+  `docs/CITATION_AUDIT_2026-07-30.md:204-206` already audits it.
+- **"The 0.55-versus-0.3 comparison is made nowhere in docs/."**
+  `paper/canonical_2026-08-02/conference_101719_1.tex:205` already says AR&R assumed
+  0.3, that Shand et al. call it conservative, that the existing sweep "does not
+  settle this, because it varied the coupling friction between vehicle and water, not
+  the friction between vehicle and ground", and that the direct test is to **"rerun
+  the sweep with floor friction set to 0.30 ... We name it here as the first thing to
+  check."**
+
+**The paper is deliberately agnostic on direction. I asserted a direction it declines
+to claim.** That is a regression against the published text, not an addition to it.
+
+## 6. Smaller errors, recorded
+
+- **Toda et al. 2013 is not 0.6.** Register `:259`: **0.26 at 0 degrees, 0.57 at 90
+  degrees.**
+- **Keller and Mitsch year:** I wrote 1992 from unit 57's OpenAlex match; the repo
+  says 1993 in 3 of 3 occurrences. Still unresolved against the primary source, and I
+  should not have propagated either figure into a parameter argument.
+- **Smith 2019** is ~0.78 in register G4, not the ~0.76 I quoted.
+- **"690214: 0 files"** is a wrong measurement. There are 4 hits, all numeric
+  coincidence inside a metrics value. Substantively absent; the count was wrong.
+- **My repo counts (azhar 86, Wong 13) do not reproduce** on the same branch under
+  either case setting, and I gave no command. Withdrawn.
+- I cited `sim_standing.py:154` (the kwarg default) but not `:210-211` (the actual
+  `add_plane` call).
+
+## 7. What actually survives
+
+**Almost nothing of mine.** The provenance chain is real but is register G4a's, not
+my finding. The one thing I contributed that the register does not already hold is
+negative and small: **SAE 690214 and Harned are substantively absent from this repo**,
+so the chain's terminus is documented one hop short.
+
+**And one thing worth more than the unit:** `sweepV_g64_v0p5` sits **0.013732 m**
+from flipping STUCK to SLIDE, and the margin is friction-mediated. That is a real
+sensitivity, it points the opposite way from my claim, and it belongs to **D4**.
+
+## 8. Why this happened
+
+I found a HIGH VALUE flag in the corpus subject index and went straight to the
+artifact **without checking whether the register had already absorbed it**. The
+register had, twelve days earlier, from the same report ID. Every subsequent error,
+the framing G4b predicts, the backwards physics, the two false absences, followed
+from starting in the wrong place.
+
+**The rule exists because of exactly this, and I am the one who kept quoting it.**
