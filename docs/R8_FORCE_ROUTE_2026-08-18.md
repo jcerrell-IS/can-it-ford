@@ -389,7 +389,7 @@ continuing the g96 and g128 behaviour rather than the g48 and g64 behaviour.
 these two rungs moves any `C` above 0.10, the four-rung CLEAN verdict is downgraded and
 that is reported as the headline, not as a footnote.
 
-### 8a. EXTENSION RESULT, g160. Out of sample, reported separately.
+### 8a. EXTENSION RESULT, g160 COMPLETE at 5 repeats. Out of sample, reported separately.
 
 **g160 is the cleanest rung in the entire ladder, and it is the one that matters most.**
 
@@ -398,24 +398,35 @@ result would have been most damaging. It is not contaminated:
 
 | grid | n | D0 control | D1 forced | R | D0 spread | substeps ctl/forced |
 |---|---|---|---|---|---|---|
-| 160 | 4 | +0.000095 | 0.051449 | **0.0018** | 0.000491 | 26 / 26 |
+| 160 | 5 | +0.0000104 | 0.051449 | **0.0002** | 0.000640 | 26 / 26 |
 
-Per-rep surge at g160: `+0.000313  +0.000175  -0.000177  +0.000068`. **The sign changes
-within a single grid**, and the mean (0.000095 m) is **five times smaller than its own
-repeat spread** (0.000491 m). The drift is 0.095 mm against a 51.4 mm forced signal.
+Per-rep surge at g160: `+0.000313  +0.000175  -0.000177  +0.000068  -0.000327`. **The sign
+changes within a single grid**, twice, and the mean (0.0000104 m) is **sixty-one times
+smaller than its own repeat spread** (0.000640 m). The drift is 0.0104 mm against a 51.4 mm
+forced signal.
 
-`R = 0.0018` is 55x below the 0.10 threshold. The extension prediction in section 8 said
-`|D0| <= 0.001 m`, `R <= 0.02`, and mean below its own spread. **All three held**, this
-time including the directional part.
+> **Reporting note.** An earlier revision of this section reported g160 at n=4 as
+> `D0 = +0.000095, R = 0.0018`, which was correct for the four repeats then available and
+> was labelled n=4. The fifth repeat returned `-0.000327` and moved the mean to
+> `+0.0000104`, `R = 0.0002`. The n=4 figure is superseded, not retracted: it was an honest
+> partial. The direction of the change is itself informative, because a mean that collapses
+> by an order of magnitude when one more sample arrives is a mean that was never
+> distinguishable from zero.
 
-Trend test with g160 added: `C(g128 to g160) = 0.0154`. Five-rung verdict remains **CLEAN**
-at every rung and every pair (worst R 0.0241, worst C 0.0801).
+`R = 0.0002` is 500x below the 0.10 threshold. The extension prediction in section 8 said
+`|D0| <= 0.001 m`, `R <= 0.02`, and mean below its own repeat spread. **All three held**,
+this time including the directional part.
+
+Trend test with g160 added: `C(g128 to g160) = 0.0207`. Five-rung verdict remains **CLEAN**
+at every rung and every pair (worst R 0.0241 at g64, worst C 0.0801 at g64 to g96).
 
 **The SLIDE-to-STUCK flip at g160 is not explained by zero-forcing noise.** Whatever drives
-it, it is not PIC reprojection drift.
+it, it is not PIC reprojection drift. This is the out-of-sample confirmation of the
+pre-registered result, at the rung where a contaminated answer would have mattered most.
 
-*(g192 was still running when this section was written; it is reported in section 8b if it
-returned before the allocation expired, and recorded as absent if it did not.)*
+*(g192 was still running when this section was written. It is reported in section 8b if it
+returned before the allocation expired, and recorded as absent if it did not. A truncated
+set honestly labelled beats a complete set that did not run.)*
 
 ---
 
@@ -444,9 +455,16 @@ the same trend, because it has the same substep ladder. It does not: the control
 non-monotone, sign-changing, and at most 2.4 percent of the forced signal.
 
 **Rising substep count is not what produces the resolution trend in surge displacement.**
-Confound (a) can be marked closed. Confounds (b), depth never resolved beyond about 4.1
-cells, and (c), `realized_rho` varying 642.8 to 663.6, are **not** addressed by this control
-and remain open.
+Confound (a) can be marked closed.
+
+> **CONFOUNDS (b) AND (c) ARE NOT CLOSED AND THIS SECTION DOES NOT TOUCH THEM.**
+> A reader who sees one confound closed will assume the section is finished. It is not.
+> **(b)** No level of this ladder resolves the flow depth by more than about 4.1 cells,
+> against the roughly 10-particles-per-depth rule of thumb that register B3 and CLAUDE.md
+> L-3 both record. Untouched by this control.
+> **(c)** `realized_rho` varies 642.8 to 663.6 across the ladder, so the body's own mass
+> is not constant along the refinement. Untouched by this control.
+> Closing (a) narrows the field of explanations. It does not clear the ladder.
 
 ---
 
@@ -510,6 +528,19 @@ Two consequences:
 2. The sink is resolution-dependent and largely disappears with refinement: mean control z
    is -0.047847 at g48 but -0.002913 at g64, -0.003023 at g96 and -0.000003 at g128. It is a
    coarse-grid artifact, and it is the coarse grid rather than the flow that produces it.
+
+**THE SHORTLIST, for whoever takes this.** CLAUDE.md August 4 audit item 7 currently records
+the cause of the g48 P-3 failure as open. This control does not close it, but it removes a
+whole class of explanations and leaves exactly three candidates, all of which are active with
+no flow at all:
+
+1. **The floor boundary condition.** The floor plane at friction 0.55, and the restitution
+   0.05 that `_apply_rigid_restitution` applies, are live in every one of these runs.
+2. **The buoyancy or density treatment.** On the material-8 path the body adopts a
+   mass-weighted grid velocity and no buoyant force is integrated, so density cannot drive
+   motion (section 1a). A hull at realized_rho about 643 in water should not sink.
+3. **g48 itself.** dx at g48 is 0.196286 m, which is larger than the hull's measured ground
+   clearance, so the force-bearing feature is not resolved at all at that grid.
 
 This also means gate P-3 at g48 is not testing what its name suggests at that resolution.
 
