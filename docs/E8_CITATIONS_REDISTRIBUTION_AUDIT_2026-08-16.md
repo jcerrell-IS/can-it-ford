@@ -23,7 +23,7 @@ Scope note: D1 mines the **content** of these files. This assesses their
 >
 > | # | Exposure | Scale | Rights position | Public surface |
 > |---|---|---|---|---|
-> | 1 | **CCSA/NCAC geometry.** 4 original distribution archives (88,592,238 B) + 14 extracted decks (71,716,670 B), redistributed **intact**, not derived | 160,322,098 B | Licence **silent**: no grant, no licence name, no copyright statement | **36 of 36 branches** |
+> | 1 | **CCSA/NCAC geometry.** 4 original distribution archives (88,592,238 B) + 14 extracted decks (71,716,670 B), redistributed **intact**, not derived | 160,322,098 B | Licence **silent**: no grant, no licence name, no copyright statement | **every public branch** |
 > | 2 | **Smith 2019 reproduction.** The complete 15-page article, page by page | 6,215,623 B | Licence **asserted**: "© 2019 CIWEM and John Wiley & Sons Ltd" legible in the copy itself | 1 tree, `main` |
 > | 3 | The two CC-licensed PDFs | 10,884,441 B | **Licensed.** Housekeeping, not a problem | 1 tree, `main` |
 >
@@ -33,8 +33,10 @@ Scope note: D1 mines the **content** of these files. This assesses their
 > The four `.ply` files that originally framed this whole thread are 15,823,688 B,
 > **under 9% of the geometry tree**, and should stop being the headline.
 >
-> Separately, the credential FLAG document is public on **1 of 36** branches while the
-> geometry is on **36 of 36** (re-measured 2026-08-19; the surface grew 30 to 35 to 36). Same reason: one remediation shape does not fit both.
+> Separately, the credential FLAG document is public on **exactly one** branch while
+> the geometry is on **every** branch. Stated as invariants, not counts: the total grew
+> 30 to 35 to 36 between 2026-08-16 and 08-19, so any figure quoting it is stale on
+> arrival. Same reason: one remediation shape does not fit both.
 
 ---
 

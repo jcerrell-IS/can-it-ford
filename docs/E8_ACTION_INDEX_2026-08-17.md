@@ -125,7 +125,7 @@ They are **not equally serious, and they differ in kind, not just size.**
 
 | # | Exposure | Size | Rights position | Public surface | Remedy shape |
 |---|---|---|---|---|---|
-| 1 | **CCSA/NCAC geometry.** 4 original distribution archives (88,592,238 B) + 14 LS-DYNA decks (71,716,670 B), **byte-identical to upstream, proven by SHA384** | 160,322,098 B | **Silent.** Confirmed on both CCSA download pages, not just the bundled README | **36 of 36 branches**, grew 30 to 35 to 36 during the dispatch | **CLEARED.** No action |
+| 1 | **CCSA/NCAC geometry.** 4 original distribution archives (88,592,238 B) + 14 LS-DYNA decks (71,716,670 B), **byte-identical to upstream, proven by SHA384** | 160,322,098 B | **Silent.** Confirmed on both CCSA download pages, not just the bundled README | **every public branch** (total grew 30 to 35 to 36 during the dispatch) | **CLEARED.** No action |
 | 2 | **Smith 2019.** The complete 15-page article, page by page | 6,215,623 B | **Asserted** "© 2019 CIWEM and John Wiley & Sons Ltd", **and permission reported 2026-08-18** | 1 tree | **CLEARED.** No action |
 | 3 | **AR&R report + 1 AR&R table image** | 1,352,966 B | **Silent**, permission reported 2026-08-18 | 1 tree | **CLEARED.** No action |
 | 3b | **3 WRL images**, from **WRL Technical Report 2014/07** (UNSW WRL, Sept 2014) | 760,091 B | **Fourth rights holder**, distinct from Engineers Australia | 1 tree | **One question:** does the grant cover WRL TR 2014/07? |

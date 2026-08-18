@@ -45,7 +45,7 @@ confirmation is the primary source for it.
 
 | Item | Status |
 |---|---|
-| CCSA/NCAC archives and decks, 160,322,098 B, on **36 of 36** branches | **CLEARED for republication** |
+| CCSA/NCAC archives and decks, 160,322,098 B, on **every public branch** | **CLEARED for republication** |
 | Derived hulls, 2 `.ply` | **CLEARED**, they inherit component 1's position |
 | The 6 renders depicting the hull | **CLEARED**, same |
 | AR&R report + 4 AR&R/WRL images | **CLEARED**, rights permitted |
@@ -171,8 +171,10 @@ downloaded NCAC vehicle FE models, Silverado and Yaris, coarse and detailed`. [r
 Raised by D3, and **verified independently here** rather than taken on report, by
 walking `git ls-remote --heads origin` and counting `.key` blobs in each tree:
 
-**36 of 36 public branches carry exactly 14 CCSA `.key` decks each. No branch
-deviates, and no branch tree was missing.** [read, re-measured 2026-08-18]
+**Every public branch carries exactly 14 CCSA `.key` decks. No branch deviates, and
+no branch tree was missing.** Stated as an invariant rather than a count, because the
+count keeps moving: 30 on 2026-08-16, 35 on 08-18, **36 on 08-19**. Re-checked by
+`E8_VERIFY_FIGURES.py`, which tests the relation rather than a hardcoded number.
 
 > **The public surface GREW while this dispatch ran: 30 branches to 35, and all five
 > new ones carry the decks too.** First measured at 30 of 30 on 2026-08-16;
@@ -338,7 +340,7 @@ purpose, and now neither the distributor's page nor the bundled README says othe
 
 | Rank | What | Bytes | Rights holder | Why it ranks here |
 |---|---|---|---|---|
-| 1 | CCSA `.key` decks and `.zip` archives, on all **35** branches | 160,322,098 | CCSA/GMU, unambiguous author, silent licence | Verbatim redistribution, largest by far, no transformation argument available |
+| 1 | CCSA `.key` decks and `.zip` archives, on **every public branch** | 160,322,098 | CCSA/GMU, unambiguous author, silent licence | Verbatim redistribution, largest by far, no transformation argument available |
 | 2 | Derived hulls, 2 `.ply` | 13,422,794 | Derived from rank 1 | Inherits rank 1's status, but a genuine derived-work argument exists |
 | 3 | Renders depicting the hull, 6 files | see section 3 | Derived from rank 2 | Two steps removed, lowest-resolution depiction |
 | 4 | `car_mesh*.ply`, 2 files | 2,400,894 | Not CCSA at all | Outside E8. Do not remediate under it |

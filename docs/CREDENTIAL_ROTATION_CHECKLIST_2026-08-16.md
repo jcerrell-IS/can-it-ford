@@ -92,10 +92,12 @@ directly off `origin/main` blob `1a868f3`: `token_setup_template.md` (969 B) and
 `HANDOFF_AUDIT_2026-07-24/topics/security/secrets-and-env.md` (1,936 B). **Both contain
 zero token-shaped strings.** Part 1 survives. [read]
 
-**Per-branch presence re-derived 2026-08-18 rather than renumbered**, because these are
+**Per-branch presence re-derived 2026-08-19 rather than renumbered**, because these are
 measurements and not just a count: `token_setup_template.md` is on **35 of 36** branches
 (it was on all 30, so one of the five new branches lacks it),
-`secrets-and-env.md` on **33 of 36**, and the FLAG document on **1 of 36**. The value
+`secrets-and-env.md` on **33 of 36**, and the FLAG document on **exactly one** branch.
+**The first two are point-in-time counts and will drift with every branch push**; only
+the FLAG figure is an invariant, and `E8_VERIFY_FIGURES.py` checks it as one. The value
 scan is unchanged: still zero token-shaped strings in either file.
 
 **Part 2, a document enumerating the HOLDERS is public.**
