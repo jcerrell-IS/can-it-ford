@@ -89,9 +89,26 @@ over {1..20}, to dropping the first {0..100} frames, and to frame count
 2. **53% of the SLIDE evidence is the vehicle moving UPSTREAM.** `failure_modes.py:170`
    takes `np.abs` of the surge velocity, so reverse motion scores as SLIDE. For
    mu = 0.0250, 102 of the 191 conjunction frames have `vx < 0`, mean -0.1617 m/s.
-3. **mu = 0.0250 has no vehicle-physical basis.** It is 22x below the canonical 0.55 and
-   about 31x below Smith 2019's wet-or-dry 0.78. **"The flip is measured" must never be
-   read as "the flip occurs at a realistic friction."**
+3. ~~**mu = 0.0250 has no vehicle-physical basis.** It is 22x below the canonical 0.55
+   and about 31x below Smith 2019's wet-or-dry 0.78.~~ **WITHDRAWN 2026-08-18, and it was
+   the most consequential thing either the audit or I got wrong about job A.**
+
+   Nihei et al. 2025 (Results in Engineering 28:107189), read directly from the PDF,
+   measures the rolling-resistance coefficient of a **full-scale passenger vehicle washed
+   away with the handbrake DISENGAGED** as **mu_R = 0.0250** (Case 1-2) and **0.0242**
+   (Case 2-4). **0.0250 is that measured value to three significant figures.**
+
+   So the arm is not sub-physical and not arbitrary: it is the correct coefficient for a
+   vehicle with its handbrake off, which is exactly the condition the brake-state question
+   was posed about. **The measured STUCK to SLIDE flip IS the handbrake-disengaged case.**
+   The comparison against 0.55 and 0.78 was the wrong comparison, because those are STATIC
+   friction values and 0.0250 is a ROLLING resistance: comparing them is a category error
+   of the same kind as the register's rule to deduplicate by name and unit, never by value.
+
+   Full working, including that Nihei's static-friction figure is a LOWER BOUND
+   (mu_s > 0.038, because Case 3 did not wash away) and not a measurement:
+   `R5_PHYSICS_NIHEI_2025_BRAKE_GROUNDING.md`. That document also corrects the author
+   list, which a metadata resolver had given as three names with one of them wrong.
 
 ### 2.3 BLOCKING: every 250-frame magnitude sits inside the reflection window
 
