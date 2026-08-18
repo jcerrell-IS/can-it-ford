@@ -1587,6 +1587,25 @@ L7. **SKILL DRIFT, RE-VERIFIED, and the previously recorded drift is FIXED.** Fi
     correct and which left an orphaned 3.9.7 venv at `$WORK/.venv312` on LS6.
     LS6 also exposes **gpu-h100** alongside gpu-a100 and gpu-a100-dev.
 
+    **CORRECTED 2026-08-18, SAME DAY, BY DIRECT READ OF BOTH MACHINES. THE ENGINE
+    PIN IN THIS ITEM IS FALSE AND WAS NEVER ACHIEVABLE.** This item says all three
+    versions are pinned to Vista's, "warp 1.15.0, torch 2.11.0+cu128, mpm-engine
+    627367e". The first two are true and were re-verified. The third is not.
+    `git rev-parse HEAD` on each machine returns LS6
+    `544c93dd02cb9c7ead89e1155a62967243244fce`, on `main`, clean, never moved; Vista
+    `627367ecc0d022b366f825b1c3f60c37f286f1e2`. **`627367e` is one of five commits
+    Vista holds above its own upstream**, so it does not exist in a public clone and
+    `git cat-file -t 627367e` on LS6 returns "NOT PRESENT". The checkout in
+    `scripts/ls6_setup.sh` could not have succeeded and the script has been corrected
+    to pin 544c93dd, which is what is actually reachable.
+    The delta is **one file**, `src/warpmpm/vehicle.py`, +126/-10, carried by fd390d6
+    and b43c3a2. 544c93dd is an ancestor of 627367e, so this is a gap, not a fork.
+    **`solidify_watertight` is ABSENT from 544c93dd**, confirmed by grep against
+    `third_party/mpm-engine-544c93dd/src/warpmpm/vehicle.py`. See item 37 for what
+    that costs. The line "the vendoring discrepancy is still unresolved" is now
+    resolved in the opposite direction from the one this item assumed: the VENDORED
+    SHA is what LS6 runs, and Vista is the outlier.
+
 34. **THREE DEEP SEARCHES: WHAT THEY SETTLED, AND THREE GAPS THAT ARE
     CONTRIBUTIONS RATHER THAN OVERSIGHTS.**
 
@@ -1667,8 +1686,14 @@ L7. **SKILL DRIFT, RE-VERIFIED, and the previously recorded drift is FIXED.** Fi
     on 2026-08-18 rather than transcribed.
 
     LS6 job 3372943 (gpu-a100-dev, x86_64 A100) against the Vista `leak_full` run
-    (aarch64 GH200), engine 627367e, warp 1.15.0, torch 2.11.0+cu128, identical
-    arguments. **45 fields compared: 17 integer counts all identical; 16 scalar
+    (aarch64 GH200), warp 1.15.0, torch 2.11.0+cu128, identical arguments.
+    **THE ENGINES WERE NOT THE SAME AND THE FIRST VERSION OF THIS ITEM SAID THEY
+    WERE.** LS6 ran 544c93dd, Vista ran 627367e; see item 33's correction. What
+    rescues the comparison is not the pinning, it is that the entire engine delta is
+    `vehicle.py` and **this run has no vehicle**: both summaries carry
+    `vehicle_key: None`, `vehicle_mass_kg: 0.0`, `n_carved: 0`, and
+    `n_total == n_water == 50176`. `sim_channel.py:45` does import that module, so
+    the delta is inert by CALL GRAPH, not by import graph. State it that way. **45 fields compared: 17 integer counts all identical; 16 scalar
     floats, 14 bit-exact; 12 depth bins, 0 bit-exact.** Worst relative difference
     **1.852e-05**, on `late_depth_slope_m_per_m`; the bins are tighter at 2.991e-06.
     Divergence is confined to quantities accumulated over 90 frames, the expected
@@ -1682,6 +1707,10 @@ L7. **SKILL DRIFT, RE-VERIFIED, and the previously recorded drift is FIXED.** Fi
     but false as written. It survives on a CHECK, not on the pinning: `n_image` is 0
     and all three image counters are 0, so the added path produced no particles.
     Pin the driver too, or record its hash, before the next cross-machine claim.
+    Note the pattern: THREE separate things were assumed matched and only two were,
+    and in both misses the saving grace was that the differing code was never
+    executed. That is luck twice, not method. The next comparison should assert
+    inertness up front rather than discover it afterwards.
 
     **CAVEAT 2, THE FIRST COMPARISON WAS WRONG AND NEARLY SHIPPED.** It printed
     "6 of 6 identical" while silently skipping every float, because the consolidated
@@ -1766,4 +1795,41 @@ L7. **SKILL DRIFT, RE-VERIFIED, and the previously recorded drift is FIXED.** Fi
       self-refutations (items 27, 30, the withdrawn 8.2 percent, the settle-transient
       reversals). That is a reportable pattern under this frame, not an embarrassment
       to be compressed.
+
+37. **LS6 CANNOT REPRODUCE ANY OF THE 17 GATED VEHICLE RUNS, AND THE REASON IS THREE
+    COMMITS THAT EXIST ONLY ON VISTA'S LOCAL DISK.** T1, read live 2026-08-18 from
+    both machines plus a grep of the vendored tree.
+
+    LS6's engine is 544c93dd. The seeding function `solidify_watertight` is not in
+    it: `grep -rn "def solidify_watertight"
+    third_party/mpm-engine-544c93dd/src/warpmpm/vehicle.py` returns nothing. It is
+    introduced by b43c3a2, which sits with fd390d6 and the merge 627367e among the
+    **five commits Vista holds above its upstream**. `git ls-remote` cannot see them;
+    they are not on GitHub in any form.
+
+    **WHY THIS IS LOAD-BEARING AND NOT A VERSION-SKEW FOOTNOTE.**
+    `solidify_watertight` is what produces the canonical hull fill and density: it
+    superseded the old column-fill path, giving fill_ratio 1.0023 and rho 309.78
+    against the retired 2.17 / 143 figures, and 310.494 kg/m^3 is the number CLAUDE.md
+    carries as the canonical Yaris effective density. An LS6 vehicle run on 544c93dd
+    would seed the hull by the OLD path and silently produce a different density,
+    which is exactly the class of difference no gate in `gates.py` can catch, because
+    G-3 compares against a `RHO_REF` derived from the same pipeline (CLAUDE.md item 6,
+    and the "agreement for the wrong reasons" trap in item 36).
+
+    **SO THE LS6 CAPABILITY CLAIM MUST BE SPLIT.** Item 33 says LS6 "runs warpmpm".
+    Precisely: LS6 can run **water-only** cases faithfully, which is what job 3372943
+    demonstrated and all the open-channel work needs. It **cannot** run the vehicle
+    scenes, and the 15.5x budget argument does not transfer to vehicle work until the
+    commits move. Do not queue a vehicle sweep on LS6 on the strength of item 33.
+
+    **TWO WAYS TO CLOSE IT, NEITHER DONE, BOTH NEEDING A DECISION.**
+    (a) Push the three commits from Vista to the `jcerrell-IS/mpm-engine` fork, then
+        fetch on LS6. Durable, and it also removes a single-copy risk: those commits
+        currently exist in exactly one place.
+    (b) `git bundle create` on Vista, scp to LS6, fetch from the bundle. No public
+        write, fully reversible, but leaves the single-copy risk standing.
+    Both are remote writes and neither was attempted. (a) is the better one precisely
+    because the single-copy exposure is the larger hazard: five commits including the
+    canonical seeding path exist only on one scratch filesystem.
 

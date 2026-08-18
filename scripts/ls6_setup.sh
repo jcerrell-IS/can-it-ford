@@ -11,13 +11,12 @@
 #
 #     warp-lang    1.15.0          ($WORK/.venv/bin/python -c "import warp")
 #     torch        2.11.0+cu128    (same)
-#     mpm-engine   627367e         (git -C $WORK/mpm-engine rev-parse --short HEAD)
+#     mpm-engine   544c93dd        (public kks32/mpm-engine main; see ENGINE_PIN below)
 #
-# NOTE ON 627367e. That is VISTA'S working-copy HEAD, which is NOT the SHA this
-# repo vendors (third_party/mpm-engine-544c93dd). That discrepancy is recorded and
-# unresolved. This script deliberately matches VISTA, because the point is to
-# reproduce Vista's results; if the vendored SHA is later declared canonical, change
-# the pin here and re-run the reproduction rather than assuming it still holds.
+# THE ENGINE PIN IS NOT MATCHED ACROSS MACHINES AND CANNOT BE, YET. Vista runs
+# 627367e, which is Vista-local and unpushed. LS6 can only reach 544c93dd, its
+# ancestor. warp and torch ARE matched. See the ENGINE_PIN block for the exact delta
+# and for what LS6 can and cannot faithfully run until those commits are moved.
 #
 # ARCHITECTURE. LS6 is x86_64, Vista is aarch64. That is why the install takes
 # minutes here with stock wheels. It also means note L-8's DualSPHysics
@@ -40,7 +39,24 @@ ENGINE=$WORK/mpm-engine
 WARP_PIN="1.15.0"
 TORCH_PIN="2.11.0"
 TORCH_INDEX="https://download.pytorch.org/whl/cu128"
-ENGINE_PIN="627367e"
+# ENGINE_PIN was "627367e" until 2026-08-18. THAT PIN COULD NEVER HAVE WORKED.
+# 627367e is a VISTA-LOCAL commit: it is one of five commits Vista's $WORK/mpm-engine
+# holds above its own upstream, so `git checkout 627367e` in a fresh public clone of
+# kks32/mpm-engine fails with "Needed a single revision". Verified live 2026-08-18:
+# LS6 sat at 544c93dd, on main, clean, and had never moved.
+#
+# 544c93dd IS an ancestor of 627367e and the entire delta is ONE FILE,
+# src/warpmpm/vehicle.py, +126/-10, from fd390d6 (dispatch ply loading on content,
+# not on the .ply suffix) and b43c3a2 (solidify_watertight seeding).
+#
+# CONSEQUENCE, and it is not cosmetic: `solidify_watertight` is ABSENT from 544c93dd,
+# confirmed by grep against third_party/mpm-engine-544c93dd/src/warpmpm/vehicle.py.
+# That is the canonical seeding path for the vehicle hull. So LS6 as configured can
+# run WATER-ONLY cases faithfully and CANNOT reproduce any of the 17 gated vehicle
+# runs. Getting it there needs those three commits moved off Vista, either by pushing
+# them to the jcerrell-IS/mpm-engine fork or by `git bundle` over scp. Neither has
+# been done, so this script pins to what is actually reachable and says so.
+ENGINE_PIN="544c93dd"
 
 if [ -e "$VENV" ]; then
     echo "[ls6_setup] $VENV already exists; stopping rather than overwriting it." >&2
