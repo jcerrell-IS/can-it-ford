@@ -1361,6 +1361,40 @@ L7. **SKILL DRIFT, RE-VERIFIED, and the previously recorded drift is FIXED.** Fi
     free to roll. Their Fig. 17 plots all three, unbraked, braked and AR&R (2011),
     for a small passenger vehicle.
 
+    **AMENDED 2026-08-18: THE CORRIGENDUM IS STILL UNREAD, BUT ITS BLAST RADIUS IS
+    NOW MEASURED, AND IT IS DOCUMENTARY ONLY.** Every number in this item comes from
+    Nihei et al 2025, `10.1016/j.rineng.2025.107189`, which carries a corrigendum,
+    `10.1016/j.rineng.2025.107527`. scite confirms the link in the original's
+    `editorialNotices`. The corrigendum text has resisted **ten** retrieval routes
+    (doi.org, ScienceDirect, linkinghub, DOAJ, Unpaywall, OpenAlex, Semantic Scholar,
+    Europe PMC, the scite connector, and scite's own signed access link), all recorded
+    at `.claude/worktrees/r5-research/docs/R5_RESEARCH_NIHEI_ROUTES_AND_AUTHOR_TRAP_2026-08-16.md`.
+    Two further attempts on 2026-08-18, scite full-text and a WebFetch through the
+    Elsevier redirect, also returned nothing: scite holds the metadata and scores the
+    full-text query `relevancyScore: 0.0` on both records.
+
+    **NO ELEVENTH AUTOMATED ATTEMPT SHOULD BE MADE.** The landing page carries
+    `tdm-reservation: 1`, a machine-readable opt-out from automated retrieval. Driving
+    a browser at it to extract the text is the thing that header reserves against, and
+    the article being CC-BY does not settle that. The remaining routes are a person
+    opening the DOI, UT Austin institutional access, or asking the authors.
+
+    **WHAT TURNS ON IT, measured live 2026-08-18 rather than assumed.** A scoped
+    search for `0.0242` and `0.0250` returns **zero hits in any Python file** outside
+    `third_party/` and `.claude/worktrees/`. No script, no gate, no verdict, and no
+    published figure consumes these numbers. They appear in five markdown documents
+    and in the `nihei2025fullscale` bib note. The four apparent hits under
+    `deliverables/for_kumar/` are `passthrough_max_frac: 0.024264...`, a numeric
+    coincidence and not this coefficient; that was checked, not assumed from a count.
+
+    **SO: this is not blocking, and it was being carried as though it were.** Nothing
+    computed depends on it. It becomes blocking the moment the friction argument, the
+    order-of-magnitude braked-versus-unbraked claim, or the `(mu_R/mu_s)^(1/2)`
+    scaling enters the paper or the poster. Resolve it before writing that section,
+    not before the next run. Until then the values stay PROVISIONAL and every use
+    must say so.
+
+
 30. **THE OVERFALL RATIO IS NOT CONVERGED IN EITHER BED FRICTION OR GRID, AND NO
     CONFIGURATION HOLDS A STEADY DISCHARGE. ITEM 27'S 8.2 PERCENT IS WITHDRAWN.**
 
