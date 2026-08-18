@@ -724,6 +724,34 @@ public repo, which is the same reasoning that applied to
 `FLAG_CREDENTIAL_EXPOSURE` in section 5. Read the file before authorising the
 branch; do not read the verdict as "a secret was found".
 
+### FIRST PUSH OF THE ROUND, 03:57, and the verdict held
+
+**read.** `claude/can-it-ford-round-5-87a6d6` is now **public** on origin at
+`6cc9ac3`, **13 commits** published. This is the first thing to leave the machine
+all round.
+
+**Detected automatically**, which is what the detector was built for two hours
+ago: the incremental's at-risk count *fell* 491 to 489 and its ref count 34 to
+33, because a branch with unpushed work no longer has any. Origin went 36 to 37.
+
+**Audited at the published tip, not at the local one:**
+
+    files matching a credential pattern   0
+    credential-named files                0
+    CCSA .key decks                      14   (the standard set, permission reported)
+    at-risk commits remaining             0   (fully pushed)
+
+**My ledger verdicted this branch OK when it carried 5 at-risk commits. That
+verdict held at 13 commits and at the published tip.** This is the first
+opportunity all round to check a push-ledger verdict against an actual push, and
+it was correct.
+
+**One thing that was mine, not the tool's.** My first look filtered the refresh
+output with a grep that matched only `PUBLIC SURFACE|UNAUDITED|GONE|WARNING`, so
+I saw the header and not the branch line under it, and briefly suspected the
+detector of printing an empty report. The detector was fine; **the filter was too
+narrow.** Read a detector's raw output before doubting it.
+
 ### `claude/add-ci-checks` re-scanned 23:50, because it now carries side A
 
 This branch was one line in the table above at **1 at-risk commit**. It is now
