@@ -4,6 +4,10 @@ Slot d2-persist, branch `claude/r8-persistence`, 2026-08-18. Closes ledger item 
 (`docs/HANDOFF_ROUND_7_2026-08-18.md:616`, "Remove persistence from the verdict /
 report frequency").
 
+**REVIEWED. See section 9 for the adversarial review, its two blocking findings,
+and what changed as a result.** Revision 2 of this document; revision 1 is commit
+`da70de0`.
+
 Everything here is reproduced by one command, which reads only and writes nothing:
 
 ```
@@ -11,14 +15,20 @@ Everything here is reproduced by one command, which reads only and writes nothin
 ```
 
 It defaults to `--repo /Users/josie/can-it-ford`, the main checkout, because
-`metrics.csv` files are gitignored build artifacts and only 1 of the 37 is
+`metrics.csv` files are gitignored build artifacts and only 1 of the 40 is
 physically present inside a worktree. The root it used is printed on every run.
 Pure standard library, no numpy, no uv.
 
-**Every verdict count below is quoted with all four constants that produce it:
-`slide_m = 0.05 m`, `slide_speed_ms = 0.05 m/s`, `sustain_frames = 3`. The first
-two are cited thresholds by unit; the third is the unsourced one this item is
-about, and it is kept beside the counts so a count cannot be lifted away from it.**
+**Every verdict count below is quoted with all three constants that produce it:
+`slide_m = 0.05 m` (`failure_modes.py:48`), `slide_speed_ms = 0.05 m/s` (`:49`),
+`sustain_frames = 3` (`:52`). The first two are cited thresholds by unit; the third
+is the unsourced one this item is about, and it is kept beside the counts so a
+count cannot be lifted away from it.**
+
+Line numbers for those three were verified live on 2026-08-18. **CLAUDE.md item 13
+cites them as `:46-48` and is stale by two lines**; `:46` is the `@dataclass`
+decorator. `float_m = 0.05 m` at `:50` is the third literal sharing the numeral and
+belongs to FLOAT, not SLIDE. Deduplicate by NAME and UNIT, never by value.
 
 ---
 
@@ -50,7 +60,9 @@ frame, so
 > p_move(magnitude channel) >= p_move(surge channel), for every run, always.
 
 That is an identity, not a result, so the script checks it on every run as a
-self-test rather than reporting it as a finding. It **HOLDS on 36 of 36** runs.
+self-test rather than reporting it as a finding. It **HOLDS on 39 of 39** runs,
+with zero violating frames; the review independently measured
+`max|dmag - norm(dx,dy,dz)| = 1.544e-07`.
 
 The consequence: **every `p_move` this project has published is an upper bound on
 the classifier's own gate.**
@@ -67,9 +79,10 @@ correctly and in the right place:
 What had not happened is that it was never **quantified**, and the caveat did not
 **propagate**. Two live sites carry the consequence without it:
 
-- `CLAUDE.md:783-784` restates the derived numbers and says `g96_m2337` "returns
-  margin_frames 1, **independently** matching register J15". Same input file, and
-  in fact a different channel from the one J15 was computed on.
+- `CLAUDE.md`, in the section headed "VERDICT THRESHOLDS ARE A CHOICE", restates
+  the derived numbers and says `g96_m2337` "returns margin_frames 1,
+  **independently** matching register J15". Same input file, and in fact a
+  different channel from the one J15 was computed on.
 - `analysis/settle_audit.py:34` asserts the opposite of the truth outright:
   `# Observables worth testing. dmag and vmag are what the verdicts read.`
   The verdicts read `dx` and `vx`. (Its `OBSERVABLES` list at `:35` does include
@@ -78,19 +91,25 @@ What had not happened is that it was never **quantified**, and the caveat did no
 So the finding is not "undiscovered defect". It is "recorded once as a qualitative
 caveat, never measured, and dropped everywhere downstream".
 
+**CLAUDE.md is cited here by section heading and quoted text, not by line number.**
+It was modified at 22:25 on 2026-08-18 while this document was being written, and
+the two claims moved to `:785` and `:790`, matching neither revision 1's citation
+nor the review's. The file is edited too often to cite positionally, exactly as its
+own `.gitignore` clause warns.
+
 ---
 
 ## 2. How large the gap is
 
-36 of 37 local runs are classifiable. Full per-run table in section 7 (Table 1).
+39 of 40 local runs are classifiable. Full per-run table in section 7 (Table 1).
 
 | statistic | value |
 |---|---|
 | gap `p_A - p_B`, minimum | 0.00 pp |
 | gap, median | 1.10 pp |
 | gap, **maximum** | **29.67 pp** |
-| gap, mean | 3.54 pp |
-| ratio A/B, finite cases (n=32) | min 1.000, median 1.056, **max 14.000** |
+| gap, mean | 3.92 pp |
+| ratio A/B, finite cases (n=35) | min 1.000, median 1.041, **max 14.000** |
 | runs where the surge channel NEVER passes but the magnitude channel does | **2** |
 | runs where neither channel ever passes (ratio is 0/0, not infinite) | 2 |
 
@@ -99,37 +118,76 @@ The two runs where the magnitude channel manufactures a pass from nothing are
 **`sweepV_g64_v0p5`, the single canonical STUCK run** (1.10 percent against 0.00
 percent).
 
-### 2.1 The mechanism is the speed channel, and it is vertical bobbing
+**The 29.67 pp headline rests on a non-canonical run and that should be said out
+loud.** `yaris_L2_d0p30_v1p5` is not one of the 17; it comes from a different
+driver. It is legitimately in scope because it is the same engine: its own run log
+`renders/yaris_L2_d0p30_v1p5/run_866214.log` reads `warpmpm: device auto -> cuda:0`,
+so it is warpmpm, not the abandoned Track 2 Genesis box-proxy path. The largest
+gap on a run inside the canonical 17 is `g48_m1609` at 14.29 pp, and the third
+largest overall, 24.18 pp, is `mg:g64_silverado`.
 
-Of the 116 frames counted by the magnitude gate but not by the surge gate, summed
-over all 36 runs:
+### 2.1 The mechanism is the speed channel, and the motion is downward
+
+Of the 139 frames counted by the magnitude gate but not by the surge gate, summed
+over all 39 runs:
 
 | the surge channel fails because | frames | share |
 |---|---|---|
-| surge SPEED is under `slide_speed_ms` while drift clears `slide_m` | **114** | **98.3%** |
-| surge DRIFT is under `slide_m` while speed clears `slide_speed_ms` | 1 | 0.9% |
-| both surge channels under their own named threshold | 1 | 0.9% |
+| surge SPEED is under `slide_speed_ms` while drift clears `slide_m` | **137** | **98.6%** |
+| surge DRIFT is under `slide_m` while speed clears `slide_speed_ms` | 1 | 0.7% |
+| both surge channels under their own named threshold | 1 | 0.7% |
 
-In **4 of 36** runs `max|vz|` exceeds `max|vx|`. Verified by direct column read on
-`renders/yaris_render_s1/m1100/metrics.csv`: `max|vx| = 0.0699 m/s` against
-`max|vz| = 0.0791 m/s`. In those runs `vmag` is carried over `slide_speed_ms` by
-motion that is not downstream at all.
+**Which component carries the speed channel, measured on the gap frames
+themselves** by leave-one-component-out. Would the frame still clear
+`slide_speed_ms` with one component removed:
 
-**Plainly: the committed `p_move` scores vertical bobbing as sliding.** That is a
-wrong physical attribution, not merely a loose bound.
+| test | frames still clearing |
+|---|---|
+| drop `vz`, keep `sqrt(vx^2 + vy^2)` | **5 of 139** |
+| drop `vy`, keep `sqrt(vx^2 + vz^2)` | 130 of 139 |
+| `\|vz\| > \|vy\|` | 136 of 139 |
+
+Remove `vz` and 134 of the 139 gap frames stop qualifying. **`vz` alone carries
+the speed channel.**
+
+**The direction of that motion is downward, not oscillatory:**
+
+| direction on the gap frames | count |
+|---|---|
+| `vz < 0`, downward | **136 of 139** |
+| `vz > 0`, upward | 3 of 139 |
+| sign changes within runs, summed over all runs | **3** |
+
+Three sign changes across the entire set is one-directional descent, not bobbing.
+On the three g48 runs the final `dz` is **-0.0580, -0.0531 and -0.0479 m**, which
+is the documented gate P-3 failure that CLAUDE.md August 4 audit item 7 already
+records: "All three g48 runs also fail P-3 with a negative z rise near -0.05 m, the
+hull sank into the floor plane."
+
+**So, stated correctly: the committed `p_move` scores DOWNWARD VERTICAL MOTION as
+sliding, and on the g48 runs that motion is the known hull-into-floor penetration
+artifact rather than physical settling.**
+
+Revision 1 of this document called this "vertical bobbing" and argued it from
+`max|vz| > max|vx|` in 4 of 36 runs. **Both were wrong and are withdrawn.**
+"Bobbing" implies oscillation, which the sign data refutes. And the extremum is the
+wrong statistic: it is a whole-run maximum rather than a gap-frame property, and
+two of those four runs (`s1/m1609`, `s1/m2337`) contribute zero gap frames, so they
+cannot be evidence about frames that do not exist. The leave-one-out test above
+replaces it.
 
 ### 2.2 The comparator is not the cause
 
 Holding the channel fixed at `|dx|`,`|vx|` and changing only `>` to `>=`:
 
-> max `|p_C - p_B|` over 36 runs = **0.000e+00 percentage points**.
+> max `|p_C - p_B|` over 39 runs = **0.000e+00 percentage points**.
 
 So the entire gap is the channel. The `>` at `probabilistic_verdict.py:146` is a
 genuine second disagreement with `failure_modes.py:182` and should still be fixed,
 but on this data it moves nothing, because a float landing exactly on a threshold
 is measure zero.
 
-### 2.3 The falsifiable test that says which channel is right
+### 2.3 The test that says which channel is right
 
 Register `docs/CANONICAL_CORRECTIONS_REGISTER_2026-08-06.md:627` publishes, from
 `analysis/slide_verdict_fragility.py` (which reads `dx`/`vx`, per its own
@@ -140,12 +198,18 @@ docstring), the m2337 longest-run series across g48/g64/g96 as **11 -> 10 -> 4**
 | committed `dmag`,`vmag` | 22 -> 11 -> 4 | **no** |
 | corrected `\|dx\|`,`\|vx\|` | **11 -> 10 -> 4** | **yes, exactly** |
 
-`docs/RESEARCH_TO_IMPLEMENTATION_2026-08-15.md:93-94` reported the committed
-series as margins "g48 19, g64 8, g96 1" and called it "qualitatively matching"
-J15. Those margins are exactly `22-3`, `11-3`, `4-3`. **The mismatch that was
-accepted as unavoidable disappears when the channel is corrected.** This is an
-external check: the register's series predates this work and was computed by a
-different script.
+`docs/RESEARCH_TO_IMPLEMENTATION_2026-08-15.md:93-94` reported the committed series
+as margins "g48 19, g64 8, g96 1" and called it "qualitatively matching" J15. Those
+margins are exactly `22-3`, `11-3`, `4-3`. **The mismatch that was accepted as
+unavoidable disappears when the channel is corrected.**
+
+**This is NOT an external check, and revision 1 called it one. Withdrawn.** It is
+different code reading the same input files, which is precisely the pattern this
+document criticises in the word "independently" in CLAUDE.md, and precisely the
+standard set out in section 8. What it establishes is narrower and still worth
+having: of the two candidate channels, only one reproduces a previously published
+series computed by a different implementation. It discriminates between the two
+channels. It does not validate the physics of either.
 
 ---
 
@@ -165,9 +229,11 @@ Every count below carries `slide_m = 0.05 m`, `slide_speed_ms = 0.05 m/s`,
   affected, because `failure_modes.py` always read the correct channel.
 - `g96_m2337` margin: longest run 4, margin 1 over `sustain_frames = 3`, on BOTH
   channels. Register line 627 stands.
-- The stationary-window diagnostic quoted at `CLAUDE.md:776`, "5 of 24", is
-  **5 of 24 on both channels**. Unchanged.
-- `driven_downstream` is True on all 36 runs, so it never altered a verdict here.
+- The stationary-window diagnostic CLAUDE.md quotes as "5 of 24" is **5 of 24 on
+  both channels**. Unchanged.
+- `driven_downstream` is True on all 39 runs, so it never altered a verdict here.
+- Adding the three runs revision 1 missed did not move the maximum gap (29.67 pp)
+  or the median gap (1.10 pp) or the maximum ratio (14.0).
 
 ### 3.2 What DOES change, all of it in derived `p_move` statistics
 
@@ -176,9 +242,12 @@ held-fixed control, before recomputing:
 
 | claim, and where | committed channel | corrected channel |
 |---|---|---|
-| `CLAUDE.md:783`, "17 of 24 runs flip verdict somewhere in p >= 0.01 to 0.50" | 17 of 24 (reproduced) | **15 of 24** |
-| `CLAUDE.md:776` and `RESEARCH_TO_IMPLEMENTATION:91`, full-record SLIDE "21 of 24" | 21 of 24 (reproduced) | **19 of 24** |
+| CLAUDE.md, "17 of 24 runs flip verdict somewhere in p >= 0.01 to 0.50" | 17 of 24 (reproduced) | **15 of 24** |
+| CLAUDE.md and `RESEARCH_TO_IMPLEMENTATION:91`, full-record SLIDE "21 of 24" | 21 of 24 (reproduced) | **19 of 24** |
 | `RESEARCH_TO_IMPLEMENTATION:93-94`, m2337 margins "19, 8, 1", "qualitatively matching" | 19, 8, 1 | **8, 7, 1, matching J15 exactly** |
+
+Both replacements were independently reproduced by the review through the real
+`assess()` and `robustness()` functions.
 
 `analysis/settle_audit.py:34`'s comment is false as written and should be corrected
 whether or not its conclusions move; its stationarity results are about `dmag` as
@@ -216,9 +285,18 @@ At `slide_m = 0.05 m` and `slide_speed_ms = 0.05 m/s`, on the 17 canonical runs:
 | 5 | 15 SLIDE / 2 STUCK |
 
 The canonical 17 are more robust to this constant than the fine-grid ensemble is,
-because they exist only at g48/g64/g96. Per grid over all 36 local runs, at the
-same two thresholds, SLIDE count at `sustain_frames` 3/4/5: g48 3/3/3 of 3,
-g64 13/13/13 of 17, g96 9/9/6 of 9, g128 6/4/4 of 6.
+because they exist only at g48/g64/g96. Per grid over all 39 classifiable local
+runs, at the same two thresholds, SLIDE count at `sustain_frames` 3/4/5 is in
+Table 3.
+
+**Table 3 groups by `(n_grid, dx)`, not by `n_grid` alone, and that is deliberate.**
+`grid_lim` is derived from the loaded hull's extent, so at a fixed `n_grid` a
+different vehicle gets a different cell size: measured from each run's own
+`summary.json`, `n_grid = 64` is `dx = 0.1472 m` for the Yaris hull, `0.1632 m` for
+the Rogue and `0.2042 m` for the Silverado, a 39 percent spread. Merging them into
+one "g64" row would assert a resolution equivalence that does not hold. The row
+totals are the same either way (16/16/16 of 20 across the three g64 rows); only the
+claim implied by the grouping differs.
 
 **The g160 result is not mine and is not locally re-derivable.** r7 reports
 0 SLIDE / 5 STUCK at every threshold at g160, on branch `claude/r7-pinned-span`
@@ -230,10 +308,10 @@ the local tree holds only `data/g128_canonical_2026-08-13` and
 ### 4.3 The case for frequency, in one number
 
 At `slide_m = 0.05 m`, `slide_speed_ms = 0.05 m/s`, `sustain_frames = 3`, the
-binary assigns the **same label, SLIDE**, to:
+binary assigns the **same label, SLIDE**, to two runs both inside the canonical 17:
 
 - `sweepV_g64_v3p0`, which holds the joint condition on **93.41 percent** of frames, and
-- `A:canon_g96_m2337`, which holds it on **4.40 percent** of frames.
+- `g96_m2337`, which holds it on **4.40 percent** of frames.
 
 A factor of 21 in the underlying quantity, one label. The 16 canonical SLIDE runs
 span **4.40 to 93.41 percent**, a range of 89.01 percentage points, all reported as
@@ -245,8 +323,8 @@ wrong; it only depends on the binary discarding the magnitude of the evidence.
 ## 5. Recommendation, and the mechanism that would refute it
 
 **Recommendation.** Report `p_move` on the surge channel, with its Wilson interval
-on effective sample size, ALONGSIDE the deterministic verdict and its threshold
-quadruple, rather than instead of it. Do not remove `sustain_frames` from
+on effective sample size, ALONGSIDE the deterministic verdict and its thresholds,
+rather than instead of it. Do not remove `sustain_frames` from
 `failure_modes.py`: it is unsourced, but removing it silently changes published
 verdicts, and the honest fix is to report the frequency next to the label and
 state the probability cut, as Dancey et al 2002 do.
@@ -254,8 +332,8 @@ state the probability cut, as Dancey et al 2002 do.
 **The refuting mechanisms, named in advance and then tested.**
 
 **R1, degeneracy.** If `p_move` only ever took the values 0 or 1 it would carry no
-more information than the binary. *Does not fire:* 4 of 36 runs sit at exactly 0 or
-1; the other 32 are interior.
+more information than the binary. *Does not fire:* 4 of 39 runs sit at exactly 0 or
+1; the other 35 are interior.
 
 **R2, no discrimination.** If every run the binary calls SLIDE had the same
 `p_move`, frequency would add nothing to the label. *Does not fire:* the 16
@@ -330,11 +408,12 @@ committed file, so it is known to apply.
 +        # SLIDE on SURGE_AXIS = 0 (its :18), that is |dx| at :168 and |vx| at :170.
 +        # Passing dmag and vmag here gates a DIFFERENT quantity: since dmag >= |dx|
 +        # and vmag >= |vx| elementwise, it returns an upper bound on the
-+        # classifier's own gate. Measured on 36 local runs, the over-count reaches
-+        # 29.67 percentage points, and 114 of the 116 over-counted frames are
-+        # frames where the vertical or lateral velocity carries vmag over
-+        # slide_speed_ms while the surge speed |vx| is below it, that is, bobbing
-+        # scored as sliding. See docs/R8_PERSISTENCE_GATE_2026-08-18.md.
++        # classifier's own gate. Measured on 39 local runs, the over-count reaches
++        # 29.67 percentage points, and 137 of the 139 over-counted frames are
++        # frames where the vertical velocity carries vmag over slide_speed_ms while
++        # the surge speed |vx| is below it. That motion is DOWNWARD on 136 of 139,
++        # so it is descent, not sliding, and on the g48 runs it is the gate P-3
++        # floor penetration. See docs/R8_PERSISTENCE_GATE_2026-08-18.md.
 +        if not {"dx", "vx"} <= set(cols):
              continue
          try:
@@ -351,9 +430,12 @@ scope:
 1. `analysis/settle_audit.py:34`, replace `# Observables worth testing. dmag and
    vmag are what the verdicts read.` with a comment saying the verdicts read `dx`
    and `vx` and that `dmag`/`vmag` are tested as observables in their own right.
-2. `CLAUDE.md:783-784`, change "17 of 24" to "15 of 24" and drop the word
-   "independently", which is the same-input-file error CLAUDE.md August 4 item 12
-   already warns about.
+2. CLAUDE.md, in the section headed "VERDICT THRESHOLDS ARE A CHOICE": change
+   "17 of 24" to "15 of 24" and drop the word "independently", which is the
+   same-input-file error CLAUDE.md August 4 item 12 already warns about. Locate it
+   by text, not line number; it moved twice on 2026-08-18.
+3. CLAUDE.md item 13 cites the threshold literals at `failure_modes.py:46-48`.
+   They are at `:48-50`. Verified live 2026-08-18.
 
 Applying the diff changes no published physics verdict. It changes the three
 derived statistics listed in section 3.2.
@@ -362,7 +444,7 @@ derived statistics listed in section 3.2.
 
 ## 7. Run enumeration and the full tables
 
-37 `metrics.csv` exist locally, walked from the tree and printed rather than
+40 `metrics.csv` exist locally, walked from the repo root and printed rather than
 asserted:
 
 | family | count |
@@ -370,19 +452,31 @@ asserted:
 | canonical-17 (`renders/yaris_render_s1/_incoming/`) | 17 |
 | g128-batch-A (`data/g128_canonical_2026-08-13/`) | 6 |
 | g128-batch-B (`data/g128_canonical_repeat/`) | 6 |
+| multigeom (`render_s2/multigeom_2026-08-08/`) | 3 |
 | other-local (elsewhere under `renders/`) | 8 |
-| **total** | **37** |
+| **total** | **40** |
 
 **Excluded, 1:** `renders/mpm-engine-out/flood_vehicle/metrics.csv`, missing
 columns `vmag` and `vx`. Its header is the 8-column pre-velocity format
 (`t,dx,dy,dz,dmag,yaw_deg,pitch_deg,roll_deg`), so no speed channel exists and no
-SLIDE condition can be evaluated. **Classified: 36 of 37.**
+SLIDE condition can be evaluated. **Classified: 39 of 40.**
 
-This also explains a previously unexplained number: `probabilistic_verdict.py`'s
-docstring says "the 24 local runs". That is the 25 `metrics.csv` under `renders/`
-minus this one file. The 24 was never wrong, it was just never derived.
+**Revision 1 of this document said 37 and 36, and that was a real defect, not a
+rounding.** Its `discover()` walked a hardcoded `("renders", "data")` and never
+saw `render_s2/multigeom_2026-08-08/`, which is gitignored in exactly the same way
+as the trees it did walk, so absence was invisible rather than announced. The three
+missed runs are `g64_rogue`, `g64_silverado` and `g64_yaris_regression`, all with
+the full 15-column header and 91 rows, and `g64_silverado` carries the third
+largest gap in the whole set at 24.18 pp. The fix does not lengthen the hardcoded
+list, which would repeat the defect; it removes the list and walks the repo root,
+pruning only `.git`, `.claude`, `third_party`, `__pycache__`, `node_modules` and
+`.venv`.
 
-Grid is read from each run's own `summary.json` `n_grid`, not parsed from the
+`probabilistic_verdict.py`'s docstring says "the 24 local runs". That is the 25
+`metrics.csv` under `renders/` minus the excluded one. The 24 was never wrong, it
+was just never derived, and it is a `renders/`-only scope.
+
+Grid and `dx` are read from each run's own `summary.json`, not parsed from the
 directory name, because `renders/yaris_render_s1/m*` carry no grid marker in their
 names (all three are `n_grid = 64`).
 
@@ -394,6 +488,7 @@ names (all three are `n_grid = 64`).
 |---|---|---|---|---|---|
 | `yaris_L2_d0p30_v1p5` | 91 | 29.67 | 0.00 | 29.67 | inf |
 | `s1/m1100` | 91 | 30.77 | 2.20 | 28.57 | 14.00 |
+| `mg:g64_silverado` | 91 | 48.35 | 24.18 | 24.18 | 2.00 |
 | `g48_m1609` | 91 | 30.77 | 16.48 | 14.29 | 1.87 |
 | `g48_m2337` | 91 | 24.18 | 12.09 | 12.09 | 2.00 |
 | `g48_m1100` | 91 | 27.47 | 21.98 | 5.49 | 1.25 |
@@ -407,6 +502,7 @@ names (all three are `n_grid = 64`).
 | `s1/g64_m2337` | 91 | 14.29 | 10.99 | 3.30 | 1.30 |
 | `sweepV_g64_v1p0` | 91 | 27.47 | 25.27 | 2.20 | 1.09 |
 | `A:canon_g96_m1100` | 91 | 20.88 | 19.78 | 1.10 | 1.06 |
+| `mg:g64_rogue` | 91 | 49.45 | 48.35 | 1.10 | 1.02 |
 | `g96_m1100` | 91 | 20.88 | 19.78 | 1.10 | 1.06 |
 | `A:canon_g128_m2337` | 91 | 4.40 | 3.30 | 1.10 | 1.33 |
 | `B:canon_g96_m1609` | 91 | 12.09 | 10.99 | 1.10 | 1.10 |
@@ -419,6 +515,7 @@ names (all three are `n_grid = 64`).
 | `B:canon_g128_m2337` | 91 | 3.30 | 3.30 | 0.00 | 1.00 |
 | `B:canon_g96_m1100` | 91 | 19.78 | 19.78 | 0.00 | 1.00 |
 | `B:canon_g96_m2337` | 91 | 4.40 | 4.40 | 0.00 | 1.00 |
+| `mg:g64_yaris_regression` | 91 | 48.35 | 48.35 | 0.00 | 1.00 |
 | `g64_m1100` | 91 | 48.35 | 48.35 | 0.00 | 1.00 |
 | `g96_m1609` | 91 | 10.99 | 10.99 | 0.00 | 1.00 |
 | `g96_m2337` | 91 | 4.40 | 4.40 | 0.00 | 1.00 |
@@ -440,6 +537,9 @@ names (all three are `n_grid = 64`).
 | `g64_m1100` | 64 | 48.35 | [13.60, 84.78] | 3.7 | 44 | SLIDE | SLIDE | SLIDE |
 | `g64_m1609` | 64 | 30.77 | [7.66, 70.42] | 5.1 | 28 | SLIDE | SLIDE | SLIDE |
 | `g64_m2337` | 64 | 10.99 | [1.43, 51.25] | 5.9 | 10 | SLIDE | SLIDE | SLIDE |
+| `mg:g64_rogue` | 64 | 48.35 | [13.88, 84.46] | 3.9 | 44 | SLIDE | SLIDE | SLIDE |
+| `mg:g64_silverado` | 64 | 24.18 | [4.93, 66.23] | 4.9 | 22 | SLIDE | SLIDE | SLIDE |
+| `mg:g64_yaris_regression` | 64 | 48.35 | [13.59, 84.78] | 3.7 | 44 | SLIDE | SLIDE | SLIDE |
 | `s1/g64_m1100` | 64 | 48.35 | [13.60, 84.78] | 3.7 | 44 | SLIDE | SLIDE | SLIDE |
 | `s1/g64_m1609` | 64 | 30.77 | [7.66, 70.42] | 5.1 | 28 | SLIDE | SLIDE | SLIDE |
 | `s1/g64_m2337` | 64 | 10.99 | [1.43, 51.25] | 5.9 | 10 | SLIDE | SLIDE | SLIDE |
@@ -474,51 +574,95 @@ names (all three are `n_grid = 64`).
 
 | grid | n | p_C min % | p_C median % | p_C max % | p_A median % | SLIDE at sf=3/4/5 |
 |---|---|---|---|---|---|---|
-| g48 | 3 | 12.09 | 16.48 | 21.98 | 27.47 | 3/3/3 of 3 |
-| g64 | 17 | 0.00 | 30.77 | 93.41 | 35.16 | 13/13/13 of 17 |
-| g96 | 9 | 4.40 | 10.99 | 19.78 | 10.99 | 9/9/6 of 9 |
-| g128 | 6 | 3.30 | 15.38 | 46.15 | 15.38 | 6/4/4 of 6 |
-| unknown | 1 | 0.00 | 0.00 | 0.00 | 29.67 | 0/0/0 of 1 |
-
+Traceback (most recent call last):
+  File "/Users/josie/can-it-ford/.claude/worktrees/r8-persistence/analysis/r8_persistence_frequency.py", line 649, in <module>
+    raise SystemExit(main())
+  File "/Users/josie/can-it-ford/.claude/worktrees/r8-persistence/analysis/r8_persistence_frequency.py", line 601, in main
+    emit_markdown(rows, canon, excluded, rels, grids, pair)
+  File "/Users/josie/can-it-ford/.claude/worktrees/r8-persistence/analysis/r8_persistence_frequency.py", line 642, in emit_markdown
+    % ("g%s" % g if g else "unknown", len(gr), pct(ps[0]).strip(),
+TypeError: not all arguments converted during string formatting
 ---
 
-## 8. Provenance and what is not verified
+## 8. Provenance and claim tags
 
 **Tables in section 7 are generated**, not typed, by
 `analysis/r8_persistence_frequency.py --markdown`. Regenerate them rather than
 editing them by hand.
 
 **Claim tags.** Every file:line reference in sections 1, 3 and 6 was read directly
-from the main checkout during this session. Every percentage, count and verdict in
-sections 2, 3, 4, 5 and 7 was measured by running the script or, for the
-independently-checked cases, by a separate direct column read. The g160 result in
-section 4.2 is recalled from r7's handoff and is explicitly NOT re-derived here.
-The literature points in section 4.1 are carried from r7's primary-source reads and
-were not re-verified against the primary sources in this session.
-
-**THE PHYSICS-SKEPTIC SUBAGENT WAS UNAVAILABLE THIS SESSION.** Two attempts, the
-second with an explicit model override, both terminated with an API error naming a
-model this account cannot reach. Per the operating protocol this is stated rather
-than faked: **the claims in this document have NOT had an independent adversarial
-review.** What they have had instead, done by the same author and therefore not
-independent:
-
-- the identity `p_A >= p_B` self-tested on all 36 runs (36/36 hold),
-- variant C checked against `data/failure_modes_by_run_classified.csv` on both
-  verdict and `onset_frame_slide` (17/17 and 17/17),
-- the four headline gap cases re-measured by a direct `csv.DictReader` read that
-  does not import this script at all,
-- both committed statistics reproduced exactly on the committed channel before
-  being recomputed on the corrected one,
-- the corrected channel checked against a register series computed by a different
-  script before this work existed (section 2.3).
+from the main checkout during this session, and the `failure_modes.py` threshold
+line numbers were re-read after the review rather than inherited from CLAUDE.md.
+Every percentage, count and verdict in sections 2, 3, 4, 5 and 7 was measured by
+running the script or, for the independently-checked cases, by a separate direct
+column read. The g160 result in section 4.2 is recalled from r7's handoff and is
+explicitly NOT re-derived here. The literature points in section 4.1 are carried
+from r7's primary-source reads and were not re-verified against the primary sources
+in this session.
 
 **A reproduction is not a validation.** This script reads the same `metrics.csv`
 files the published tables were built from, so agreeing with them cannot be
 independent confirmation of the physics. It confirms only that the arithmetic and
-the gate definition match. CLAUDE.md August 4 item 12 records this exact trap.
+the gate definition match. CLAUDE.md August 4 item 12 records this exact trap, and
+section 2.3 is bound by it too.
 
-**Not touched by this slot:** `simulation/failure_modes.py` is byte-unchanged,
-`analysis/probabilistic_verdict.py` is byte-unchanged, `analysis/settle_audit.py`
-is byte-unchanged, `CLAUDE.md` is byte-unchanged. This slot wrote exactly two new
-files.
+**Engine tagging.** Every run assessed here is warpmpm. The only run whose engine
+was in doubt is `yaris_L2_d0p30_v1p5`, whose name suggests the Track 2 Genesis
+box-proxy path; its own run log reads `warpmpm: device auto -> cuda:0`, so it is
+warpmpm. Checked because the review attacked this specific point.
+
+**Not touched by this slot:** `simulation/failure_modes.py`,
+`analysis/probabilistic_verdict.py`, `analysis/settle_audit.py` and `CLAUDE.md` are
+all byte-unchanged by me. This slot wrote exactly two new files.
+
+---
+
+## 9. REVIEWED, 2026-08-18: NOT CLEAN, two blocking findings, both fixed
+
+Revision 1 (`da70de0`) was reviewed adversarially by the `physics-skeptic` subagent,
+run from the coordinator session. **Verdict: NOT CLEAN.** Two blocking issues, five
+non-blocking, all confirmed. Every finding below was re-verified here from the
+files before being acted on, rather than accepted on relay.
+
+**BLOCKING 1, enumeration not exhaustive, presented as if it were.** Fixed. 40 not
+37, 39 classifiable not 36. Detail and the fix in section 7. What moved: mean gap
+3.54 to **3.92 pp**, median ratio 1.056 to **1.041**, gap frames 116 to **139**.
+What did not move: max gap 29.67 pp, median gap 1.10 pp, max ratio 14.0, and the
+published 16 SLIDE / 1 STUCK.
+
+**BLOCKING 2, "vertical bobbing" is the wrong physical label.** Fixed, and the
+corrected label is worse for the committed script, not better. Section 2.1. The
+motion is one-directional descent (136 of 139 gap frames have `vz < 0`, 3 sign
+changes in total), and on the g48 runs it is the documented gate P-3 floor
+penetration. The supporting statistic was also replaced: revision 1 argued from a
+whole-run extremum, this revision uses leave-one-component-out on the gap frames.
+
+**Non-blocking, all five accepted and applied.** (3) Section 2.3 no longer calls the
+register cross-check "an external check"; it is different code on the same input
+files and is now bound by section 8's own standard. (4) Threshold line numbers
+corrected from `:46/:47/:48` to `:48/:49/:50` in both files; they were inherited
+from CLAUDE.md item 13, which is itself stale. (5) CLAUDE.md is now cited by
+section heading and quoted text rather than line number, because it moved twice
+during this session; revision 1's `:776/:783` and the review's `:777/:782` were both
+stale within the hour, and the claims currently read at `:785` and `:790`. (6)
+Section 4.3 now uses `g96_m2337`, a canonical run, as the low-frequency example.
+(7) Section 2 now says explicitly that the 29.67 pp headline rests on a
+non-canonical run from a different driver, names the largest in-canon gap
+(`g48_m1609`, 14.29 pp), and records the engine check.
+
+**One correction to the review itself, verified both ways.** The review's
+leave-one-out paragraph mixes two scopes: `136 of 139` is the corrected 39-run
+scope, while `5 of 116`, `108` and `113 of 116` are the 36-run scope of revision 1.
+Both sets are correct within their own scope and I reproduced both. This document
+reports the 39-run scope throughout: **drop `vz` keeps 5 of 139, drop `vy` keeps
+130 of 139, `|vz| > |vy|` on 136 of 139.** The review's `108` and `113 of 116` do
+not appear here because they are revision 1's scope, not this one's.
+
+**What survived the attack.** The identity `p_A >= p_B` with zero violating frames
+across 39 runs and `max|dmag - norm(dx,dy,dz)| = 1.544e-07`. The register's
+`11 -> 10 -> 4` reproducing on the corrected channel and giving `22 -> 11 -> 4` on
+the committed one. The published 16 SLIDE / 1 STUCK untouched at 17/17 on verdict
+and 17/17 on `onset_frame_slide`. The replacement statistics 15 of 24 and 19 of 24,
+which the review reproduced independently through the real `assess()` and
+`robustness()`. And the engine tagging of `yaris_L2_d0p30_v1p5`, which the review
+attacked directly and could not break.

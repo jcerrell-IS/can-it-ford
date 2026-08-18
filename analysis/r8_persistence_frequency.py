@@ -54,12 +54,12 @@ cause.
 
 THRESHOLDS, quoted together every time a count is printed
 ---------------------------------------------------------
-  slide_m         = 0.05 m     failure_modes.py:46
-  slide_speed_ms  = 0.05 m/s   failure_modes.py:47
+  slide_m         = 0.05 m     failure_modes.py:48
+  slide_speed_ms  = 0.05 m/s   failure_modes.py:49
   sustain_frames  = 3          failure_modes.py:52   UNSOURCED, and the subject here
 
 CLAUDE.md item 13's unit trap applies: three literals share the numeral 0.05 across
-two units at failure_modes.py:46-48. `float_m = 0.05 m` (:48) belongs to the FLOAT
+two units at failure_modes.py:48-50. `float_m = 0.05 m` (:50) belongs to the FLOAT
 mode and is NOT part of the SLIDE gate. Deduplicate by NAME and UNIT, never by value.
 
 REUSE, NOT REIMPLEMENTATION
@@ -90,14 +90,16 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import os
 import sys
 
 DEFAULT_REPO = "/Users/josie/can-it-ford"
 
-# Values as declared in simulation/failure_modes.py:46,47,52.
-SLIDE_M = 0.05           # metres,           failure_modes.py:46
-SLIDE_SPEED_MS = 0.05    # metres per second, failure_modes.py:47
+# Values as declared in simulation/failure_modes.py:48,49,52. Line numbers verified
+# live 2026-08-18; CLAUDE.md item 13 cites :46-48 and is stale by two.
+SLIDE_M = 0.05           # metres,           failure_modes.py:48
+SLIDE_SPEED_MS = 0.05    # metres per second, failure_modes.py:49
 SUSTAIN_FRAMES = 3       # frames,           failure_modes.py:52, UNSOURCED
 FPS = 30.0
 
@@ -155,17 +157,25 @@ def frac(mask):
 # run discovery
 # --------------------------------------------------------------------------
 
+# Directories that never hold a run of ours. Everything else is walked.
+PRUNE = {".git", ".claude", "third_party", "__pycache__", "node_modules", ".venv"}
+
+
 def discover(repo):
-    """Every metrics.csv under repo/renders and repo/data. Enumerated, not asserted."""
+    """Every metrics.csv anywhere under the repo root. Enumerated, not asserted.
+
+    WALKS THE WHOLE ROOT ON PURPOSE. An earlier version of this function walked a
+    hardcoded ("renders", "data") and silently missed render_s2/multigeom_2026-08-08/,
+    which holds three further runs, one of them with the third largest channel gap in
+    the set. Replacing a short hardcoded list with a longer one would repeat the same
+    defect, so the list of trees is gone: only genuinely irrelevant directories are
+    pruned, and the caller prints what was found.
+    """
     found = []
-    for top in ("renders", "data"):
-        base = os.path.join(repo, top)
-        if not os.path.isdir(base):
-            continue
-        for root, dirs, files in os.walk(base):
-            dirs[:] = [d for d in dirs if d != ".claude"]
-            if "metrics.csv" in files:
-                found.append(os.path.relpath(os.path.join(root, "metrics.csv"), repo))
+    for root, dirs, files in os.walk(repo):
+        dirs[:] = [d for d in dirs if d not in PRUNE]
+        if "metrics.csv" in files:
+            found.append(os.path.relpath(os.path.join(root, "metrics.csv"), repo))
     found.sort()
     return found
 
@@ -183,10 +193,10 @@ def grid_of(repo, rel):
                 d = json.load(fh)
             g = d.get("n_grid")
             if g is not None:
-                return int(g), "summary.json"
+                return int(g), d.get("dx"), "summary.json"
         except (ValueError, OSError):
             pass
-    return None, "unavailable"
+    return None, None, "unavailable"
 
 
 def family_of(rel):
@@ -196,6 +206,8 @@ def family_of(rel):
         return "g128-batch-A"
     if rel.startswith("data/g128_canonical_repeat/"):
         return "g128-batch-B"
+    if rel.startswith("render_s2/multigeom_2026-08-08/"):
+        return "multigeom"
     return "other-local"
 
 
@@ -204,6 +216,7 @@ def label_of(rel):
         .replace("renders/yaris_render_s1/", "s1/") \
         .replace("data/g128_canonical_2026-08-13/", "A:") \
         .replace("data/g128_canonical_repeat/", "B:") \
+        .replace("render_s2/multigeom_2026-08-08/", "mg:") \
         .replace("renders/", "")
 
 
@@ -278,8 +291,26 @@ def assess_run(repo, rel, mod):
                               and dx[i] <= SLIDE_M)
     row["only_a_both"] = sum(1 for i in only_a if dx[i] <= SLIDE_M
                              and vx[i] <= SLIDE_SPEED_MS)
-    row["max_vx"] = max(vx)
-    row["max_vz"] = max(abs(z) for z in cols["vz"][:n]) if "vz" in cols else float("nan")
+    # LEAVE ONE COMPONENT OUT, evaluated ON THE GAP FRAMES THEMSELVES. An earlier
+    # version of this file argued the mechanism from a whole-run extremum,
+    # max|vz| > max|vx|, which is the wrong statistic: it is not restricted to the
+    # frames that actually differ, and two runs satisfying it contribute no gap
+    # frames at all. This asks the direct question instead: on each gap frame, would
+    # the speed channel still clear slide_speed_ms with one component removed?
+    vy_c = cols.get("vy", [0.0] * n)[:n]
+    vz_c = cols.get("vz", [0.0] * n)[:n]
+    row["gapf_vz_neg"] = sum(1 for i in only_a if vz_c[i] < 0)
+    row["gapf_vz_pos"] = sum(1 for i in only_a if vz_c[i] > 0)
+    row["gapf_keep_no_vz"] = sum(
+        1 for i in only_a
+        if math.sqrt(cols["vx"][i] ** 2 + vy_c[i] ** 2) > SLIDE_SPEED_MS)
+    row["gapf_keep_no_vy"] = sum(
+        1 for i in only_a
+        if math.sqrt(cols["vx"][i] ** 2 + vz_c[i] ** 2) > SLIDE_SPEED_MS)
+    row["gapf_vz_gt_vy"] = sum(1 for i in only_a if abs(vz_c[i]) > abs(vy_c[i]))
+    sgn = [1 if vz_c[i] >= 0 else -1 for i in only_a]
+    row["gapf_sign_changes"] = sum(1 for i in range(1, len(sgn)) if sgn[i] != sgn[i - 1])
+    row["final_dz"] = cols["dz"][n - 1] if "dz" in cols else float("nan")
     row["gap"] = row["p_A"] - row["p_B"]
     if row["p_B"] > 0:
         row["ratio"] = row["p_A"] / row["p_B"]
@@ -289,8 +320,8 @@ def assess_run(repo, rel, mod):
         row["ratio"] = None           # neither channel ever passes, 0/0 is not inf
     row["identity_ok"] = row["p_A"] >= row["p_B"] - 1e-12
     row["comparator_delta"] = row["p_C"] - row["p_B"]
-    g, gsrc = grid_of(repo, rel)
-    row["grid"], row["grid_src"] = g, gsrc
+    g, gdx, gsrc = grid_of(repo, rel)
+    row["grid"], row["dx"], row["grid_src"] = g, gdx, gsrc
     return row
 
 
@@ -397,11 +428,31 @@ def main():
               % (dr, 100.0 * dr / tot))
         print("    both surge channels under their own named threshold:         %4d (%.1f%%)"
               % (bo, 100.0 * bo / tot))
-    nvz = sum(1 for r in rows if r["max_vz"] > r["max_vx"])
-    print("  runs where the vertical bob exceeds the surge speed, max|vz| > max|vx|: %d of %d"
-          % (nvz, len(rows)))
-    print("  those are the runs where vmag is carried over slide_speed_ms by vertical")
-    print("  motion, so the committed p_move counts BOBBING as SLIDING.")
+    neg = sum(r["gapf_vz_neg"] for r in rows)
+    pos = sum(r["gapf_vz_pos"] for r in rows)
+    sc = sum(r["gapf_sign_changes"] for r in rows)
+    kz = sum(r["gapf_keep_no_vz"] for r in rows)
+    ky = sum(r["gapf_keep_no_vy"] for r in rows)
+    vg = sum(r["gapf_vz_gt_vy"] for r in rows)
+    if tot:
+        print()
+        print("  LEAVE ONE COMPONENT OUT, on the gap frames themselves, still clears")
+        print("  slide_speed_ms:")
+        print("    drop vz, keep sqrt(vx^2 + vy^2):  %4d of %d" % (kz, tot))
+        print("    drop vy, keep sqrt(vx^2 + vz^2):  %4d of %d" % (ky, tot))
+        print("    |vz| > |vy| on                    %4d of %d" % (vg, tot))
+        print("  so vz alone carries the speed channel on the gap frames.")
+        print()
+        print("  DIRECTION of that vertical motion on the gap frames:")
+        print("    vz < 0 (downward): %4d of %d" % (neg, tot))
+        print("    vz > 0 (upward):   %4d of %d" % (pos, tot))
+        print("    sign changes within runs, summed: %d" % sc)
+        print("  One-directional DESCENT, not oscillation. 'Bobbing' is the wrong word.")
+        print("  Final dz on the three g48 runs, the documented gate P-3 floor")
+        print("  penetration (CLAUDE.md August 4 item 7, 'the hull sank into the floor')")
+        for r in sorted(rows, key=lambda z: z["label"]):
+            if r["label"].startswith("g48_"):
+                print("    %-14s final dz = %+.4f m" % (r["label"], r["final_dz"]))
     print()
 
     # ---- comparator control ------------------------------------------------
@@ -433,22 +484,31 @@ def main():
     # ---- table 3, per grid -------------------------------------------------
     print("TABLE 3  PER GRID, %s" % TRIPLE)
     print("-" * 78)
-    h3 = "%-8s %4s %9s %9s %9s %9s %11s" % ("grid", "n", "p_C min", "p_C med",
-                                            "p_C max", "p_A med", "SLIDE sf3/4/5")
+    h3 = "%-8s %8s %4s %9s %9s %9s %9s %11s" % ("grid", "dx m", "n", "p_C min",
+                                                "p_C med", "p_C max", "p_A med",
+                                                "SLIDE sf3/4/5")
     print(h3)
     print("-" * len(h3))
+    # Grouped by (n_grid, dx), NOT by n_grid alone. grid_lim comes from the loaded
+    # hull's extent, so at a fixed n_grid a different vehicle gets a different dx:
+    # measured here, g64 is dx 0.1472 for the Yaris hull, 0.1632 for the Rogue and
+    # 0.2042 for the Silverado, a 39 percent spread. Merging them into one "g64" row
+    # would assert a resolution equivalence that does not hold.
     grids = {}
     for r in rows:
-        grids.setdefault(r["grid"], []).append(r)
-    for g in sorted(grids, key=lambda z: (z is None, z)):
+        key = (r["grid"], round(r["dx"], 4) if r["dx"] is not None else None)
+        grids.setdefault(key, []).append(r)
+    for g in sorted(grids, key=lambda z: (z[0] is None, z[0] or 0, z[1] or 0)):
         gr = grids[g]
         ps = sorted(x["p_C"] for x in gr)
         pa = sorted(x["p_A"] for x in gr)
         s3 = sum(1 for x in gr if x["verdict_C_sf3"] == "SLIDE")
         s4 = sum(1 for x in gr if x["verdict_C_sf4"] == "SLIDE")
         s5 = sum(1 for x in gr if x["verdict_C_sf5"] == "SLIDE")
-        print("%-8s %4d %9s %9s %9s %9s   %2d/%2d/%2d of %d"
-              % ("g%s" % g if g else "unknown", len(gr), pct(ps[0]),
+        gn, gdx = g
+        print("%-8s %8s %4d %9s %9s %9s %9s   %2d/%2d/%2d of %d"
+              % ("g%s" % gn if gn else "unknown",
+                 "%.4f" % gdx if gdx is not None else "?", len(gr), pct(ps[0]),
                  pct(ps[len(ps) // 2]), pct(ps[-1]), pct(pa[len(pa) // 2]),
                  s3, s4, s5, len(gr)))
     print()
@@ -572,7 +632,7 @@ def emit_markdown(rows, canon, excluded, rels, grids, pair):
     print()
     print("| grid | n | p_C min % | p_C median % | p_C max % | p_A median % | SLIDE at sf=3/4/5 |")
     print("|---|---|---|---|---|---|---|")
-    for g in sorted(grids, key=lambda z: (z is None, z)):
+    for g in sorted(grids, key=lambda z: (z[0] is None, z[0] or 0, z[1] or 0)):
         gr = grids[g]
         ps = sorted(x["p_C"] for x in gr)
         pa = sorted(x["p_A"] for x in gr)
