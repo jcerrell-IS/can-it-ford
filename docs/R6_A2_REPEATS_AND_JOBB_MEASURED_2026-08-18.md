@@ -278,6 +278,72 @@ conservatism argument survives for SAFETY, since predicting unsafe when it is sa
 right way. It does not survive for the SCIENTIFIC claim: the verdict distribution is biased
 toward SLIDE by an amount nobody has bounded.
 
+### 2a-sexies. THE LADDER IS CONFOUNDED. Four tanks, not four resolutions.
+
+**This qualifies everything in 2a-bis through 2a-quinquies and must be read before any of them.**
+Found by an adversarial pass, verified here at source and by measurement.
+
+`sim_standing.py:81` sets the domain INDEPENDENTLY of the grid:
+
+```
+lim = float(max(2.2 * ext[1], 3.5 * ext[0], 6.0 * depth))
+```
+
+and 2.2 x 4.2826 = 9.4217, exactly the observed `grid_lim`, so the long-axis term binds. But
+`:86` and `:100` set the offsets IN CELLS:
+
+```
+floor = 3.0 * dx        wall = 4.0 * dx
+```
+
+so the water span is `lim - 8*dx`, which GROWS as the grid refines. Measured from the run
+summaries, N=5 per grid:
+
+| grid | interior span | plan area | water volume |
+|---|---|---|---|
+| g48 | 7.8515 m | 61.645 m2 | 17.199 m3 |
+| g64 | 8.2440 m | 67.964 m2 | 19.289 m3 |
+| g96 | 8.6366 m | 74.591 m2 | 21.278 m3 |
+| g128 | 8.8329 m | 78.020 m2 | **22.478 m3** |
+| change | **+12.5 %** | **+26.6 %** | **+30.7 %** |
+
+`span = lim*(1 - 8/n)` is exact and independent of `lim`, so the 12.5 and 26.6 percent are
+structural, not incidental to this hull.
+
+**So the refinement ladder is four different tanks.** Refining the grid simultaneously enlarges
+the tank and adds 30.7 percent more water. The margin collapse 8, 6, 0/1, 0 is therefore **not
+yet a resolution result and must not be published as one.**
+
+**The floor offset is NOT part of the confound**, and that distinction matters. `floor = 3.0*dx`
+moves the collider, the water base and the vehicle placement together and does not enter the
+horizontal footprint. Only the walls confound.
+
+**Two co-directional mechanisms, currently inseparable.** The clearance argument of
+2a-quinquies (an underbody gap resolving from 0.9 to 2.4 cells, releasing spurious blockage)
+and this confound (a tank growing 26.6 percent in plan, lowering the blockage ratio) push the
+margin the SAME way. Nothing in the present data separates them. An earlier version of this
+document asserted the clearance mechanism as the explanation. That was premature.
+
+**The control, and it does not touch the sha-stamped driver.** Pin the interior span in metres
+by choosing `lim` per grid, `lim_n = S / (1 - 8/n)`, which is reachable by presenting a vehicle
+whose `extent[1]` is `lim_n / 2.2`. `extent` is read at `:81`, `:236`, `:239`, `:240` and
+written to the summary at `:337`, so the override propagates consistently and is
+self-documenting in the output. The precedent is D5, which injected settle and seed by wrapper
+subclass rather than editing the driver.
+
+At S = 7.85145 m, the g48 span:
+
+| n | lim | dx | vs current dx |
+|---|---|---|---|
+| 48 | 9.4217 | 0.19629 | unchanged |
+| 64 | 8.9731 | 0.14020 | finer |
+| 96 | 8.5652 | 0.08922 | finer |
+| 128 | 8.3749 | 0.06543 | finer |
+| 192 | 8.1928 | 0.04267 | finer |
+
+Every `dx` is FINER than the current ladder at the same `n`, because the domain shrinks. **The
+control is cheaper than the confounded experiment it replaces.**
+
 ### 2a. What this does NOT overturn
 
 J15's refinement trend survives. The `m2337` series collapses 11 to 10 to 4 across g48/g64/g96,
