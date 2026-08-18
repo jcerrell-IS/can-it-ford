@@ -150,6 +150,11 @@ themselves** by leave-one-component-out. Would the frame still clear
 Remove `vz` and 134 of the 139 gap frames stop qualifying. **`vz` alone carries
 the speed channel.**
 
+*Scope note, so a reader meeting both sets does not think one is wrong.* The same
+three tests on revision 1's smaller 36-run scope give 5 of 116, 108 of 116 and
+113 of 116. Those figures are correct at that scope and appear in the review of
+`da70de0`; this document reports the 39-run scope throughout.
+
 **The direction of that motion is downward, not oscillatory:**
 
 | direction on the gap frames | count |
@@ -666,3 +671,45 @@ and 17/17 on `onset_frame_slide`. The replacement statistics 15 of 24 and 19 of 
 which the review reproduced independently through the real `assess()` and
 `robustness()`. And the engine tagging of `yaris_L2_d0p30_v1p5`, which the review
 attacked directly and could not break.
+
+---
+
+## 10. Open items this document does not close
+
+**OPEN 1. The section 6 diff is unapplied.** `analysis/probabilistic_verdict.py`,
+`analysis/settle_audit.py` and CLAUDE.md are all outside slot d2-persist's write
+scope, so the fix ships as a patch and not as a commit. It needs a human with write
+access to `analysis/`. Until it is applied, every `p_move` the repo reports remains
+an upper bound on the classifier's own gate, and
+`docs/HANDOFF_2026-08-18_REALISTIC_ENVIRONMENT.md` prescribes
+`probabilistic_verdict.py` for reporting future verdicts, so the defect propagates
+forward rather than sitting still.
+
+**OPEN 2. R3 is the weakest link in section 5, and it is weak by construction here.**
+The reproducibility test rules out a LARGE penalty and nothing finer, because the
+6 available repeat pairs offer only 1 to 3 at-risk frames each out of 91. A zero
+difference measured against 1 at-risk frame is close to no measurement at all.
+
+*The experiment that would settle it, and the design constraint that makes or
+breaks it.* Run an ensemble of at least 10 repeats at a single held-fixed setting,
+and **site it at a run whose binary is already near its own boundary**. That siting
+constraint is the whole experiment: a repeat ensemble at `g64_m1100`, whose longest
+qualifying run is 44 frames against `sustain_frames = 3`, can never flip the binary
+no matter how many repeats are drawn, so it cannot discriminate between the two
+measures and would return a meaningless pass. The two local candidates that can
+discriminate are **`canon_g128_m2337`, longest run 3 against 3 required, margin 0**,
+and **`g96_m2337`, longest run 4, margin 1**. Then compare the spread of `p_move`
+across repeats against the flip rate of the binary across those same repeats, and
+report the at-risk frame count alongside, exactly as the pair table in section 5
+does, so the power of the test is visible rather than assumed. If the binary holds
+one label across all repeats while `p_move` scatters widely at a near-boundary run,
+R3 fires and the recommendation in section 5 should be weakened.
+
+The number of repeats needed is NOT derived here. Ten is a practical floor, not a
+power calculation.
+
+*Not attempted tonight.* This experiment needs new runs rather than reanalysis of
+what is on disk, and the GPU node is spoken for: per the R8 board and the
+coordinator, c642-071 on Vista, partition gh, is held by slot d3-force for a
+zero-forcing control. That is recalled from the board, not verified live here;
+check `squeue` before planning against it.
