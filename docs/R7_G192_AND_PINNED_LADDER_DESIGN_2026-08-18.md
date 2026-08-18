@@ -18,6 +18,31 @@ verdicts     STUCK x5      joint frames [0,0,0,0,0]      margin [-3,-3,-3,-3,-3]
 **The g160 flip is not a single-rung artifact.** Two independent grids now give
 STUCK 5 of 5 with zero joint SLIDE frames, in 10 runs total.
 
+**BUT THE TWO STUCK ROWS ARE STUCK FOR DIFFERENT REASONS, and only g192's is physical
+stasis.** Raised by session `claude/r7-collect` in `f8d22fe` and re-verified here against my
+own copies rather than taken on their report. The joint SLIDE condition needs drift >= 0.05 m
+AND speed >= 0.05 m/s in the SAME frame, and `sim_standing.py:240` applies a ONE-SHOT DECAYING
+KICK, so the speed criterion expires by frame 6 to 14 at every grid:
+
+| grid | max drift (m) | crosses 0.05 m | drift frames | first drift frame | last speed frame |
+|---|---|---|---|---|---|
+| g48  | 0.18081 | yes | 87 | 4 | 14 |
+| g64  | 0.13917 | yes | 87 | 4 | 12 |
+| g96  | 0.08611 | yes | 86 | 5 | 7 |
+| g128 | 0.07497 | yes | 85 | 6 | 8 |
+| g160 | 0.05497 | **yes, 59 frames** | 59 | **29** | 6 |
+| g192 | 0.04757 | **no, never** | 0 | n/a | 6 |
+
+**g160 DOES cross the drift threshold, for 59 frames.** It is STUCK only because drift starts
+at frame 29 while the speed criterion expired at frame 6, so the two never overlap. g192 never
+reaches 0.05 m at all. So "g192 reproduces g160" is wrong as a MECHANISM claim, and the whole
+verdict is decided inside the first half second, because that is the only window in which the
+speed criterion can fire at all.
+
+**THE CONTINUOUS QUANTITY IS THE BETTER RESULT AND THE BINARY VERDICT BURIES IT.** Max surge
+drift is cleanly monotone across all six rungs, 0.18081 down to 0.04757 m, and it is NOT
+converged: still falling 13.5 percent from g160 to g192. Report that curve, not the flip.
+
 ### The complete ladder, all six rungs regraded through one code path
 
 | grid | layers | dx (m) | n_water | verdict (N=5) | joint frames | margin |
@@ -54,8 +79,8 @@ trimming a file that is already the right length and silently losing a row.
 | g160 | 5 STUCK | 5 STUCK | 5 STUCK |
 | g192 | **5 STUCK** | **5 STUCK** | **5 STUCK** |
 
-g192 reproduces g160's behaviour: with 0 joint frames the verdict is STUCK at
-every threshold tested. The `sustain_frames` fragility is confined to g96 and
+g192 matches g160 on threshold-insensitivity: with 0 joint frames the verdict is STUCK
+at every threshold tested. It does NOT match it on mechanism, see the table above. The `sustain_frames` fragility is confined to g96 and
 g128 and is absent at both ends of the ladder.
 
 ## 2. THE CONFOUND IS TOTAL IN THIS DATASET. It cannot be argued away.
@@ -70,7 +95,12 @@ Per-step geometry, computed from the run summaries rather than from prose:
 | g128 to g160 | +1.33 % | +2.68 %  | +2 | -3 |
 | g160 to g192 | +0.88 % | +1.76 %  | +2 | 0  |
 
-Totals across the full ladder are **+15.00 % in span and +32.25 % in plan area**,
+Totals across the full ladder are **+15.00 % in span, +32.25 % in plan area and +36.94 % in
+water volume**. Volume is the physically relevant one and I omitted it initially; computed as
+`n_water * h^3` it runs 17.1992, 19.2891, 21.2777, 22.4784, 23.1450, 23.5523 m3 across g48 to
+g192, and the g48-to-g128 sub-range gives +30.69 %, reproducing the handoff's +30.7 % exactly,
+which is the cross-check that the two accountings agree where they overlap. The span and area
+totals
 which supersedes the g48-to-g128 figures of +12.5 % and +26.6 %: those were
 correct for the four-rung ladder and the ladder is now six rungs.
 
@@ -112,13 +142,29 @@ Verified live by calling the wrapper's own `predict()` at `S = 7.851451928106 m`
 
 `span` is one distinct value across all five rows, and the realized depth equals
 the unpinned ladder's 0.2944294473039918 m at every rung. **Both controls held
-simultaneously.** The default sequence does not do this: n = 64, 96, 160 and 192
+simultaneously.**
+
+**CORRECTED: the UNPINNED ladder already holds realized depth constant on ALL SIX rungs, not
+the four the handoff names.** Measured live as `water_layers * h`: 3x0.098143149,
+4x0.073607362, 6x0.049071575, 8x0.036803681, 10x0.029442945 and 12x0.024535787 all equal
+0.2944294473, exactly one distinct value from g48 to g192. So the existing ladder never had a
+depth problem, and the ONLY control it lacks is the span. That makes the trade-off this
+section resolves less costly than the handoff implies, and it also means a free-depth pinned
+rung gives up something the unpinned ladder was already providing. The default sequence does not do this: n = 64, 96, 160 and 192
 move the depth by -4.76 %, +6.06 %, +5.26 % and +1.45 % respectively.
 
 **Why this ladder is decisive.** The unpinned flip sits between 8 layers (g128,
 SLIDE, margin 0) and 10 layers (g160, STUCK, margin -3). The pinned ladder
 brackets that with 9 layers at n=128 and 12 layers at n=168, at constant tank and
 constant depth.
+
+**A GAP IN THIS DESIGN, found by session `claude/r7-pinned-span`, recorded against my own
+proposal.** Because the pinned domain is SMALLER, the same `n` gives a finer `h` and therefore
+MORE layers, so at the pinned span exactly 10 layers falls at `n` between 133 and 145, NOT at
+160. The exact-depth ladder above BRACKETS the 10-layer convention and never lands on it, and
+the entire headline is about that convention. Their ladder adds **n = 141**, which gives
+exactly 10 layers at a realized depth of 0.295167 m, +0.251 percent off the unpinned target.
+That is the right fix and it is a better design than the one proposed here.
 
 - If the pinned ladder **still flips** between n=128 and n=168, the tank is
   excluded and the flip is a resolution result.
