@@ -107,6 +107,41 @@ Restate the claim as: **zero to one frame from STUCK, N=10, two of ten at zero.*
 stronger statement of J15's own finding, not a weaker one. The heaviest vehicle at the finest
 grid is sometimes exactly at the boundary rather than one frame off it.
 
+### 2a-bis. The verdict survives repeats. It does not survive `sustain_frames`.
+
+**MEASURED, zero GPU cost.** The classifier requires the joint SLIDE condition to hold for
+`sustain_frames` consecutive frames. That value is `3`, declared as a bare literal at
+`simulation/failure_modes.py:52`, and it has **no source anywhere**: not in CLAUDE.md, not
+in the register, not in `classify_failure_modes.py`, which merely restates it at :26.
+
+Longest joint runs across the 10 `g96_m2337` repeats are `[4,4,4,4,4,4,3,3,4,4]`. Sweeping
+the threshold against those same 10 runs, window 0 to 90:
+
+| `sustain_frames` | `g96_m2337` | `v0p5` |
+|---|---|---|
+| 2 | 10 SLIDE / 0 STUCK | 0 SLIDE / 10 STUCK |
+| **3, the published value** | **10 SLIDE / 0 STUCK** | **0 SLIDE / 10 STUCK** |
+| 4 | 8 SLIDE / **2 STUCK** | 0 SLIDE / 10 STUCK |
+| 5 | **0 SLIDE / 10 STUCK** | 0 SLIDE / 10 STUCK |
+
+**One step up from the published value flips 2 of 10. Two steps up flips all 10.** The
+`g96_m2337` SLIDE verdict is not robust to a one-integer change in an unsourced threshold,
+and the collapse at 5 is total rather than gradual.
+
+This is the DRIFT_THRESHOLD problem in a new place, and worse, because `sustain_frames`
+gates the verdicts in BOTH directions. Register D6f already records that it "is the only
+thing keeping TOPPLE from firing on all 13". So the same unsourced integer simultaneously
+suppresses 13 TOPPLE verdicts and sustains the SLIDE verdict at the finest published grid.
+
+**`v0p5` is completely insensitive**, 0 SLIDE at every value tested, because its longest
+joint run is 0. The STUCK control is robust in this dimension as well as across repeats.
+
+**What this does and does not say.** It does NOT say the published verdict is wrong: 3 is
+as defensible as 4, and nothing here identifies a correct value. It says the verdict at
+`g96_m2337` rests on a threshold with no provenance, sitting two steps from total collapse,
+and that this was never measured. Report `sustain_frames` beside any SLIDE verdict from that
+configuration, exactly as the project already requires for DRIFT_THRESHOLD's scope.
+
 ### 2a. What this does NOT overturn
 
 J15's refinement trend survives. The `m2337` series collapses 11 to 10 to 4 across g48/g64/g96,
