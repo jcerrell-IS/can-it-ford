@@ -196,6 +196,15 @@ def grade(path: Path, drop_frac: float | None = None) -> dict:
                 f"slope={st.get('slope_per_frame'):+.5f} N/frame at "
                 f"{st.get('slope_n_sigma'):.2f} sigma). A mean over a trend is not a "
                 "steady value."),
+            # THE PROMISE AT THE TOP OF THIS FUNCTION WAS BROKEN HERE. The measured-surface
+            # criterion is documented as "reported ALONGSIDE the nominal grade, never
+            # instead of it", and this refusal path omitted the key entirely. Both real
+            # runs refuse, so the tool had NEVER emitted that criterion for real data, and
+            # the +60.8% in the job B document was computed by hand OUTSIDE the tool built
+            # to stop hand-computed grading. Same defect class as the one this file's own
+            # header documents. It is emitted on the refusal path too now.
+            "measured_surface_criterion": measured,
+            "measured_surface_available": have_measured,
             "stationarity_window": {k: v for k, v in st.items()
                                    if not isinstance(v, (list, tuple))},
             "stationarity_full_series": {k: v for k, v in st_full.items()
@@ -277,6 +286,10 @@ def main():
         print(f"  target                {TARGET_N:.4f} N")
         print(f"\n  BAND: NOT GRADEABLE")
         print(f"  reason: {g['refusal_reason']}")
+        m = g.get("measured_surface_criterion")
+        if m:
+            print(f"    measured-surface ratio {m['mean_ratio']:.4f} "
+                  f"({m['rel_error_pct_signed']:+.2f}% from 1.0)  BAND: {m['band']}")
         return
 
     print(f"  stationary window     from frame {g['stationary_start_frame']} "

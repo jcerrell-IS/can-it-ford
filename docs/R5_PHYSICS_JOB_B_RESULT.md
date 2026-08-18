@@ -189,3 +189,111 @@ Until that is done, **the +60.8% must not be reported as a coupling error**.
 
 **UNREVIEWED**, every number in this section, settle 8 constructor-only, trimesh 4.12.2,
 engine 627367e.
+
+## 8. Physics-skeptic audit: NOT CLEAN. The +60.8% is explained, and section 7 was wrong
+
+Four blocking issues. Section 7 stands on its tables, which reproduce exactly, and falls
+on its framing.
+
+### 8.1 BLOCKING. The excess is the collider's contact band, with no fitted parameter
+
+`kernels/mpm_solver_warp.py:2627` sets `band = float(self.mpm_model.dx)` and `:2711` gates
+the impulse on `if sd <= param.band`. **Every grid node within dx of the surface is
+constrained**, so the fluid sees a sphere of radius **R + dx = 0.16875 m**, not 0.15.
+
+Evaluating the same closed form on that body, with nothing fitted:
+
+```
+R_eff = R + dx     per-window ratio 1.0375 1.0293 1.0202 0.9708 0.9584 0.9454
+                                                             mean  0.9936
+```
+
+The best-fit band that zeroes the excess is **0.986 dx**, the engine default to **1.4%**.
+**A "+60.8% unexplained" residual becomes -0.6%.** Section 7.1 offered two candidates and
+chose neither; it was missing the one that works, and its recommended next test was the
+wrong priority.
+
+Why this regime and not the C1-SDF box: the submerged cap is only **4.18 dx** deep at the
+end of the run, so the contact band is **23.9% of the cap depth**. That is exactly where a
+band-thickness inflation dominates, and it is why the box gave 7.3-7.7% and this gives 61%.
+
+**The decisive test is a resolution sweep, not a particle count.** The band hypothesis
+predicts the excess at fixed submergence falls with dx: **+97.4% at g48, +69.1% at g64,
++43.5% at g96, +31.7% at g128**. A wall-leak hypothesis predicts **no dx dependence at
+all**. One g96 rerun separates them.
+
+### 8.2 BLOCKING. The pre-registered criterion says FAIL, and the tool had never said so
+
+`rel_error` on the measured-surface ratio is **0.6077** against pre-registered bands of
+0.10 / 0.25 that this project declared "set in advance and are not to be moved". **That is
+a FAIL**, and the word does not appear anywhere in section 7.
+
+Worse, and this is mine: the grader's refusal path **dropped the very key** the file
+promises will be "reported ALONGSIDE the nominal grade, never instead of it". Both real
+runs refuse, so **the tool had never emitted that criterion for any real run**, and the
++60.8% in section 7 was computed by hand **outside the tool built to stop hand-computed
+grading**. Fixed: the refusal path now carries it, and prints
+`measured-surface ratio 1.6077 (+60.77% from 1.0) BAND: FAIL`.
+
+### 8.3 BLOCKING. Section 7.1's mechanism is refuted, and there is a real scene bug instead
+
+The percentile argument is dead: adding a fraction f of low-z margin particles moves p99 by
+**0.84 mm**, and about **24 mm** is needed, short by a factor of 28. It is also a category
+error, because a genuine leak lowers the true surface, which `measure_surface` then reports
+and `buoyancy_at` is evaluated at, so a leak **cannot bias the ratio at all**.
+
+The 7.16 cm drop is **63% explained without any water leaving**:
+
+| term | cm |
+|---|---|
+| estimator: top particle centre is h/2 below the fill line | 0.469 |
+| EOS compression | 0.742 |
+| **floor BC one cell low: the node at 4 dx is exempt from its own plane** | **1.829** |
+| wall BC acting 0.625 cm outside the nominal wall on each side | 1.499 |
+| **total explained** | **4.539** |
+| residual, genuinely unexplained | ~2.6 (5.5% of the water, not 14.4%) |
+
+**The floor term is a scene bug worth fixing on its own**: `mpm_solver_warp.py:1955` gates
+on `dotproduct < 0.0`, and `FLOOR = 0.075` is exactly 4 dx, so the node lying *on* the
+floor plane receives no boundary condition. And **frame 0 is reconstructible to 0.20 mm**
+from seeding plus one tick of free fall, so 0.78 cm of the headline 7.23 cm is present
+before any physics runs.
+
+### 8.4 BLOCKING. "Converging" is contradicted by the gate's own statistic
+
+Section 7 reports the slope falling 7x and calls it converging. The **test statistic rose**:
+8.47 sigma at 200 frames, 10.30 at 600, and **19.75 on the last 100 frames**. Reporting the
+raw slope as the story while the gate's own number moves the other way is choosing the
+flattering statistic.
+
+### 8.5 Also found
+
+- **Claim 1's physics HOLDS and is now independently supported**: `d lnFz / d ln(sub)` over
+  the six windows is **1.6524** against the exact spherical-cap law's **1.6542**. Fz follows
+  the cap law, not an area law. Only the headline sentence was wrong: it welded a full-run
+  factor of 1.9 to a last-half stability statistic, and over frames 300-599 Fz falls only
+  1.095x. Across the full run the ratio is **not** flat and not monotone, wobbling 5.3%.
+- **Over-precision.** 1 mm of surface error is 2.28% of ratio; the estimator's own
+  quantisation h/2 = 4.69 mm is **10.70%**. Quoting "+60.8%" and "spread 0.1007" from that
+  estimator is over-precise by an order of magnitude. The h/2 offset is a one-line fix.
+- **The "~10 percent" false-refusal rate in `grade_job_b.py` is wrong**: measured
+  **15 to 39%** on stationary AR(1), and still 1.7 to 19.3% at 3.0. The test is
+  mis-calibrated at every threshold; 3.0 halves a problem it does not fix. **3.0 still
+  cannot flip either real verdict**, which was the only load-bearing part.
+- **Unreported replication, in the run's favour**: the 200- and 600-frame runs agree on
+  window means to 0.27 / 0.11 / 0.13 / 0.01%, correlation 0.999991. Strongest evidence in
+  the dataset and section 7 never mentioned it.
+- **Unreported regression, against it**: the mesh coarsening raised
+  `sdf_radius_rms_err_m` 1.159e-04 -> 2.201e-04, **1.90x**. Immaterial to the excess but it
+  should have been stated, and "the collider geometry is not the problem" is a non-sequitur
+  when the live candidate is the band, a coupling parameter.
+- **"The sphere never moves `[read]`"** is configuration, not observation: `free=False`
+  means `advance()` cannot integrate it. **Dead literal**: `RHO_W = 1000.0` at
+  `sphere_heave.py:136` is read by nothing. **Timing**: neither JSON carries a wall clock,
+  so 423 s and 13:55 came from the job log's TIMING_ANCHOR pair on Vista, not from an
+  artifact on this host.
+
+**Net: the run is better than section 7 said about the physics and worse than it said
+about the verdict.** The coupling is not showing a 61% error; it is showing a band-inflated
+sphere, which is a known, quantified engine behaviour. The pre-registered criterion is a
+FAIL and must be reported as one.
