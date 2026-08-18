@@ -1997,3 +1997,126 @@ L7. **SKILL DRIFT, RE-VERIFIED, and the previously recorded drift is FIXED.** Fi
     Vista side on the current driver would remove the doubt and has not been done.
     Recording it because an unstated version difference is exactly the kind of thing
     that makes a reproduction claim collapse later.
+
+40. **THE PARKED RESERVE IS NOT INERT, AND PINNING CANNOT MAKE IT INERT. MY OWN FIX
+    IS REFUTED BY THE CONTROL I WROTE FOR IT.**
+
+    Item 32 recorded the reserve-hold control as a weak pass and blamed the 19.3
+    percent early-discharge disagreement on `pin_parked` running once BEFORE the
+    8-step settle loop, so the parked block free-fell through settling. Commit
+    ad6f169 pinned it inside the loop and stated the falsifiable form: if the
+    early-time disagreement does not shrink, the park is not inert for a different
+    reason and the design needs rethinking rather than retuning.
+
+    **IT DID NOT SHRINK. IT DID NOT MOVE AT ALL.** Job 918731, same configuration:
+
+    | quantity | before fix | after fix |
+    |---|---:|---:|
+    | q_first  | **-19.25%** | **-19.25%** |
+    | q_last   | -1.01%  | +0.25%  |
+    | Fr_late  | -0.60%  | +0.53%  |
+    | ratio    | +13.91% | +17.16% |
+
+    q_first is identical to four significant figures across the two jobs while other
+    quantities moved by a few percent, so the runs are not trivially identical and
+    the fix genuinely had no effect on the discriminator. The deployed file was
+    checked and did carry the change.
+
+    **WHY, and it is obvious in hindsight.** The per-frame pin already runs on frame
+    0 of the main loop, so wherever the block fell to during settling, it was put
+    back before the first measured frame. The settle-phase fall was transient and
+    self-correcting. **The perturbation is from the block's PRESENCE, not its
+    motion**: 40,000 particles carrying h^3 of fluid each, suspended in the domain,
+    deposit mass and exert pressure on the grid for the whole run. Pinning holds them
+    still; it does not make them weightless.
+
+    **THE CONSEQUENCE FOR THE DESIGN.** To be inert the reserve would have to be
+    genuinely outside the computational domain, and item 21 establishes there is no
+    such place in warpmpm: the edge guard forbids the boundary, and any interior
+    location deposits mass. So a spare-particle reservoir cannot be made
+    non-perturbing in this engine by any host-side means. Item 30's route to a
+    sustained discharge is therefore closed as stated, and the remaining candidates
+    are the open-boundary formulations item 34 names (Tafuni et al 2018, Negi et al
+    2019) or a genuine pressure/traction outlet, none of which need a reservoir.
+
+    **THE CONTROL STILL CANNOT DISCRIMINATE, and that is worth keeping.** B's RUM95
+    on the ratio is 0.2277 at n_eff 5.0, unchanged. The comparison "passes" on the
+    ratio for the same bad reason as before. What carries this item is q_first and
+    the 33-of-37 bit-exact agreement on everything else, not the ratio.
+
+    **ONE STALE DIAGNOSTIC, fix before it misleads someone.**
+    `water_count_conserved` reports **False** for every reserve run. It tests
+    `len(s.x()) == n_water`, which is false by construction once n_reserve > 0. It is
+    a pre-reserve check that was never updated, not a conservation failure. Nothing
+    was lost: `analysis/summary_compare.py` surfaced it only because that tool
+    refuses to skip non-numeric fields.
+
+39. **THE MANUFACTURED-SOLUTIONS TIER IS BLOCKED BY EXACTLY ONE MISSING API, AND THE
+    FIX IS ONE KERNEL.** T1, read live 2026-08-18 against
+    `third_party/mpm-engine-544c93dd-solver-core/`, plus T2 from Negi and
+    Ramachandran 2021 `10.1063/5.0072383` read from the arXiv v2 full text.
+
+    Item 36 recorded that this project has no manufactured-solution or
+    order-of-accuracy tier, which the V&V literature treats as baseline evidence for a
+    particle method. This item says what it would actually take.
+
+    **MMS IS NOT SPH-SPECIFIC.** The paper's own statement of the requirement is that
+    it be possible to add an arbitrary source term to a particular equation. Nothing
+    else about the method is tied to SPH, so "we run MPM, not SPH" is not a reason to
+    skip it. Manufacture a solution, take the residual as a source, add it, sweep the
+    spacing, fit the order from an L1 error.
+
+    **THE BLOCKER, NAMED.** warpmpm has no per-particle or per-node source term. The
+    complete host-side setter list on `core/solver.py` is `set_material`,
+    `set_material_range`, `set_box`, `set_cup`, `set_sdf_pose`, `set_cdf_pose`,
+    `set_x` and `set_v`. The only body force is `set_gravity`
+    (`kernels/mpm_solver_warp.py:811`), which assigns a **single global `wp.vec3`**
+    and is consumed at grid level in `grid_normalization_and_gravity`
+    (`kernels/mpm_utils.py:928`). A valid manufactured solution must vary in space and
+    time, so gravity cannot carry it. The deformation gradient is export-only, with no
+    setter, so a solution cannot be manufactured in F either.
+
+    **THE OBVIOUS WORKAROUND IS A TRAP.** One could read velocity, add `dt * s_u`, and
+    write it back through `set_v` each step. That is operator splitting, it is
+    first-order in the splitting, and it would contaminate the very second-order
+    result the exercise exists to measure. Do not do this and then report an order.
+
+    **THE CLEAN FIX IS SMALL.** Gravity is already applied per grid node in
+    `grid_normalization_and_gravity`. A source term belongs in the same place: one
+    additional array of per-node source values and one kernel that adds it alongside
+    gravity. That is a scoped engine change, not a redesign, and it is the single
+    thing standing between this project and a real verification tier.
+
+    **ONE CONSTRAINT THAT DOES NOT BITE.** warpmpm fixes particle count at load and
+    cannot add or remove particles. Negi and Ramachandran hit the same issue and
+    resolve it with iterative particle shifting rather than insertion or deletion, so
+    the fixed count is compatible with the method as published.
+
+    **THREE EMPIRICAL RESULTS FROM THAT PAPER, EACH WORTH A SWEEP.** A
+    divergence-free manufactured field FAILS to show second order, because the initial
+    divergence error is not captured, so use a non-solenoidal field. At least 100
+    timesteps are needed before the measured order is trustworthy, after which it stops
+    depending on the initial particle configuration. And a packed, not perturbed,
+    configuration is what tests discretisation robustness. Boundary conditions get
+    their own manufactured solution by multiplying by `(C - F)^m`, m = 1 for Dirichlet
+    and m = 2 for Neumann. Source terms are generated symbolically with sympy rather
+    than hand-coded.
+
+    **AND A SOUND-SPEED WARNING THAT LANDS ON THIS PROJECT.** The authors needed
+    `c_o = 80 m/s` on Taylor-Green to demonstrate second order, against `20 m/s` for
+    their MMS cases. Achievable order is sound-speed dependent. This project runs
+    `12.85 m/s`. Whatever order a future suite measures must be reported WITH the
+    sound speed it was measured at, or it will not be comparable to anything.
+
+    **SEPARATELY, PySPH ANSWERS ITEM 32.** Ramachandran et al 2021
+    `10.1145/3460773`, section 3.4.2, implements a full `InletOutletManager`: ghost
+    particles, interpolation equations, a stepper, and a callback converting
+    inlet/outlet particles to fluid and back. Section 4.3 exercises it on flow past a
+    cylinder at Re 200 and reports lift 1.524 and drag 0.722 within 5 percent of
+    reference, Strouhal 0.2 within 2 percent. That is a working, quantitatively
+    checked outlet, which is what item 32 has been unable to build. It is BSD-3 and
+    pure Python with runtime code generation, so it also carries none of the
+    architecture-specific static libraries that note L-8 used to rule out DualSPHysics
+    on aarch64. The paper tests no ARM, so that is absence of the known blocker and
+    not a port report; say it that way.
+
