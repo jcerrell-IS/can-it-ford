@@ -34,7 +34,18 @@ published driver sha, and the hull is
 
 Divergence onset is **frame 0**, and the first column to differ is `yaw_deg`. Position holds
 to frame 1 and differs from frame 2. So the runs differ in ORIENTATION at the first recorded
-frame, before any fluid has done anything.
+frame.
+
+**CORRECTED. Row 0 is NOT the initial condition, and an earlier version of this document said
+the divergence happens "before any fluid has done anything". That is false.**
+`sim_standing.py:235-237` runs `for _ in range(settle_frames): self._project_water();
+s.step(self.dt, self.substeps)` with `settle_frames = 8`, the velocity kick is added at
+:238-240, and only then do :244-246 set `time = 0.0` and append the first history row. With
+`substeps` 16 at g96 and 11 at v0p5, that is **128 and 88 solver substeps before row 0 is
+recorded**. The fluid has done a great deal. The correct statement is that the runs have
+already diverged by the time recording starts, which locates the divergence inside the settle
+phase and does not by itself say whether the seeding or the solve caused it. This is the same
+settle-transient hazard that has invalidated results on this project before.
 
 ### 1a. `determinism_identical` measures something adjacent to its own name
 
@@ -123,17 +134,26 @@ Same 20 runs, same frames, four statistics:
 
 | statistic | spread across 10 repeats |
 |---|---|
-| `margin_frames` | 0 to 1 frame, and IDENTICAL at the 91 and 250 frame windows |
-| `dmag` at frame 91 | 3.84 % of mean (`v0p5`), 2.38 % (`g96_m2337`) |
+| `margin_frames` | 0 to 1 frame, and IDENTICAL at the 90, 111 and 250 frame windows |
+| `dmag` at frame 90 (canonical) | 3.70 % of mean (`v0p5`), 2.35 % (`g96_m2337`) |
 | `dmag` at frame 250 | 9.56 % (`v0p5`), 4.48 % (`g96_m2337`) |
 | `leaked_particle_frames` | 489,722 to 490,044, a range of 0.066 % |
 
-The 250-frame window inflates the `dmag` spread by about 2.5x on `v0p5` through wall-reflection
+**CORRECTED: the canonical horizon is row index 90, not 91.** Verified live at
+`renders/yaris_render_s1/_incoming/g96_m2337/summary.json`, which carries `"frames": 90`, and
+whose `metrics.csv` holds 92 lines, that is one header plus 91 data rows at indices 0 to 90,
+with last `t` = 2.999999999999999 s, exactly 3.0 s at 30 fps. An earlier version of this
+document reported the canonical column at frame 91, which is one row past the horizon. The
+corrected figures are 3.70 and 2.35 percent, against the 3.84 and 2.38 previously stated. The
+verdicts and margins are unchanged at either window.
+
+The 250-frame window inflates the `dmag` spread by about 2.6x on `v0p5` through wall-reflection
 contamination (first reflection predicted at frame 112.3, observed at 112, 125, 126), while
 leaving `margin_frames` completely unchanged, because the joint SLIDE condition fires early.
 
 **Operationally: `margin_frames` may be quoted off the 250-frame runs. `dmag` may not.** Always
-name the statistic beside any spread, and name the frame window beside any magnitude.
+name the statistic beside any spread, and name the frame window beside any magnitude, and state
+which row index the window ends on rather than a frame count, since 90 frames is 91 rows.
 
 ---
 
@@ -364,8 +384,8 @@ rather than a bare total:
 branch, including this one. The script locates it across sibling worktrees and fails with a
 message naming the branch rather than an ImportError. Override with `--blocking-dir`.
 
-`--windows` defaults to 91, 111 and 250 and the output flags any window at or past the first
-observed wall reflection at frame 112.
+`--windows` defaults to 90, 111 and 250 and the output flags any window at or past the first
+observed wall reflection at frame 112. 90 is the canonical row index, see section 3.
 
 ### The data
 

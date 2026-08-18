@@ -17,11 +17,25 @@ Needs numpy. No system python on the Mac has it:
     /opt/homebrew/bin/uv run --with numpy python3 analysis/r6_repeat_stats.py ...
 
 WHY THE FRAME WINDOW IS AN ARGUMENT AND NOT A CONSTANT. These repeats are 250-frame
-runs against the canonical 91. The first wall reflection is predicted at frame 112.3
-and observed at 112, 125 and 126, so any magnitude at or after that is contaminated.
-margin_frames is unaffected because the joint SLIDE condition fires early; dmag is
-inflated about 2.5x. The spread of one statistic does not transfer to another, so the
-window is stated beside every number this prints.
+runs against a canonical horizon of ROW INDEX 90. The first wall reflection is predicted
+at frame 112.3 and observed at 112, 125 and 126, so any magnitude at or after that is
+contaminated. margin_frames is unaffected because the joint SLIDE condition fires early;
+dmag is inflated about 2.5x. The spread of one statistic does not transfer to another, so
+the window is stated beside every number this prints.
+
+THE CANONICAL HORIZON IS 90, NOT 91. Verified live at
+renders/yaris_render_s1/_incoming/g96_m2337/summary.json, which carries "frames": 90, and
+whose metrics.csv holds 92 lines, i.e. one header plus 91 data rows at indices 0 to 90,
+with last t = 2.999999999999999 s, exactly 3.0 s at 30 fps. A window of "0 to 91
+inclusive" therefore runs ONE ROW PAST the canonical horizon. An earlier version of this
+script defaulted to 91 and was wrong by that one row.
+
+ROW 0 IS NOT THE INITIAL CONDITION, so do not describe row-0 spread as a difference in
+starting conditions. sim_standing.py:235-237 runs `for _ in range(settle_frames):
+self._project_water(); s.step(self.dt, self.substeps)` with settle_frames = 8, the
+velocity kick is added at :238-240, and only then do :244-246 set time = 0.0 and append
+the first history row. With substeps 16 (g96) and 11 (v0p5) that is 128 and 88 solver
+substeps BEFORE row 0 is recorded.
 """
 from __future__ import annotations
 
@@ -262,9 +276,9 @@ def main() -> int:
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--jobA", type=Path, help="extracted d4_jobA directory from job 917797")
     ap.add_argument("--jobB", type=Path, help="sphere_fixed_g64.json from job 918043 or later")
-    ap.add_argument("--windows", type=int, nargs="+", default=[91, 111, 250],
-                    help="frame windows to report. 91 is canonical, 112 is the first "
-                         "observed wall reflection. Default: 91 111 250")
+    ap.add_argument("--windows", type=int, nargs="+", default=[90, 111, 250],
+                    help="frame windows to report. 90 is the CANONICAL horizon (see below), "
+                         "112 is the first observed wall reflection. Default: 90 111 250")
     ap.add_argument("--jobB-window-start", type=int, default=100,
                     help="late-window start for job B (default 100, the grader's)")
     ap.add_argument("--tmp", type=Path, default=Path("/tmp/r6_repeat_stats"),
