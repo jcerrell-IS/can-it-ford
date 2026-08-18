@@ -56,9 +56,17 @@ echo "=== R8 LAUNCH  (GO=$GO, wave=${WAVE:-all}, slot=${ONLY:-all}) ==="
 echo
 
 # Refuse to run at all if the dead Round 5 autodispatcher is still firing.
-if pgrep -f round5_autodispatch.py >/dev/null 2>&1; then
-  echo "REFUSING: round5_autodispatch.py is still running and will type into panes."
-  echo "  Stop it first, then re-run:  pkill -f round5_autodispatch.py"
+# `pgrep -f` matches the FULL command line, and every R8 session is launched with a
+# 12 KB prompt as an argv element. A prompt that merely NAMES this script therefore
+# matches, and on 2026-08-18 23:37 that false positive blocked a whole wave: the only
+# match was slot d6-tooling's own claude process, whose dispatch quotes the filename.
+# So subtract the claude sessions from the matches and refuse only on what is left.
+_ad_all=$(pgrep -f round5_autodispatch 2>/dev/null | sort -u)
+_ad_claude=$(pgrep -f "claude --model" 2>/dev/null | sort -u)
+_ad_real=$(comm -23 <(printf '%s\n' "$_ad_all") <(printf '%s\n' "$_ad_claude") | sed '/^$/d')
+if [ -n "$_ad_real" ]; then
+  echo "REFUSING: a real round5_autodispatch.py is running (PIDs: $_ad_real) and will type into panes."
+  echo "  Stop it first, then re-run:  kill $_ad_real"
   exit 1
 fi
 
