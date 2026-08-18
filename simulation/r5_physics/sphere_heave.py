@@ -670,6 +670,33 @@ class SphereTank:
             "group_velocity_m_s": cg,
             **{f"ref_{k}": v for k, v in self.ref.items()},
             **self.sdf_info,
+            # WHICH NUMBER IS GRADED, carried IN THE DATA. Added 2026-08-19 by slot
+            # d11-accessor. The run emits two force accessors whose denominators differ by
+            # about a factor of two once the tank drains, and until now nothing in the
+            # emitted JSON said which one criterion 3 grades: the answer lived in a source
+            # comment, which is how two downstream tools ended up asserting the opposite of
+            # the manifest. A designation that travels with the data cannot drift away from
+            # it. This block is descriptive, not authoritative: the manifest is the
+            # authority and this records what it currently says, so a mismatch between the
+            # two is itself detectable.
+            "criterion3_spec": {
+                "graded_field": "fz_over_analytic_measured",
+                "companion_field": "fz_over_analytic_nominal",
+                "nominal_denominator_N": (RHO_W_BENCHMARK * G_ENGINE
+                                          * (2.0 / 3.0 * math.pi * self.radius ** 3)),
+                "nominal_denominator_is": "submerged HEMISPHERE, not a full sphere",
+                "primary_window": "last 50 percent of frames",
+                "bands": "within 0.10 PASS, 0.10-0.25 REPORTABLE PARTIAL, beyond 0.25 FAIL",
+                "window_robustness_required": True,
+                "stationarity_gate_applies_to": "the graded ratio, not fz_N",
+                "authority": "docs/R5_PHYSICS_BATCH_MANIFEST.md criterion 3, amended 2026-08-19",
+                "working": "docs/R9_ACCESSOR_DEFECT_2026-08-18.md",
+                "caveat": ("the graded denominator uses a free-surface estimate that excludes "
+                           "every particle within 2R of the sphere axis, where the pressure "
+                           "generating fz acts; sensitivity 0.0278 ratio-points per mm, so "
+                           "about 1 dx at g64 spans the whole discrepancy observed to date. "
+                           "A PASS here is not a coupling validation."),
+            },
         }
 
     # --- free surface -----------------------------------------------------------------
@@ -802,10 +829,38 @@ class SphereTank:
             "heave_m": self.z - self.surface_z,
             "net_N": fz - self.mass * G_ENGINE,
             # The moving target, measured rather than assumed. fz_over_analytic_measured
-            # is the number job B should actually be graded on: it divides the measured
-            # reaction by the closed form AT THE SURFACE THAT EXISTS, so a falling free
-            # surface no longer masquerades as a coupling error. surface_drop_m is the
-            # diagnostic that exposed this, 3.09 cm over 200 frames in job 917909.
+            # divides the measured reaction by the closed form AT THE SURFACE THAT EXISTS,
+            # so a falling free surface no longer masquerades as a coupling error.
+            # surface_drop_m is the diagnostic that exposed this, 3.09 cm over 200 frames
+            # in job 917909.
+            #
+            # THIS COMMENT NO LONGER DESIGNATES ANYTHING. Rewritten 2026-08-19 by slot
+            # d11-accessor. It used to read "is the number job B should actually be graded
+            # on", and that sentence was the ONLY place in the repository where the choice
+            # between the two accessors below was recorded. The manifest said something
+            # different: criterion 3 named 69.2180 N, the OTHER denominator. A source
+            # comment cannot overrule a pre-registration, but in practice it did, because
+            # it was the nearest thing to hand: the designation propagated into
+            # r7-collect's r7_jobb_bcfix_ab.py and r6_repeat_stats.py, which now print
+            # "THE DESIGNATED ACCESSOR" for one quantity while the manifest names the
+            # other. Two of those citations point at :669-670, where this comment used to
+            # live, and land inside measure_surface's docstring today.
+            #
+            # THE AUTHORITY IS docs/R5_PHYSICS_BATCH_MANIFEST.md CRITERION 3, and nothing
+            # here. As amended 2026-08-19 it grades fz_over_analytic_measured over the last
+            # 50 percent of frames, with a window-robustness gate, a stationarity gate on
+            # the ratio, and 69.2180 N retained as a mandatory companion. If you need to
+            # know which number is graded, read the manifest, not this file. Full working:
+            # docs/R9_ACCESSOR_DEFECT_2026-08-18.md.
+            #
+            # BOTH ACCESSORS BELOW ARE MEANINGFUL AND NEITHER IS DEPRECATED. They differ by
+            # roughly a factor of two whenever the tank has drained (32.33 N against
+            # 69.2180 N in job 918240) and their relative errors therefore carry OPPOSITE
+            # SIGNS. That is arithmetic, not a contradiction: one force lying between two
+            # denominators must read above one and below the other. Their disagreement is
+            # the measurement that separates a coupling error from a draining tank, which
+            # is why both are emitted. The KEY NAMES ARE A DATA CONTRACT read by scripts on
+            # other branches; do not rename them without fixing those readers first.
             "surface_z_measured_m": surf,
             "surface_drop_m": self.surface_z - surf,
             "submerged_depth_m": sub,

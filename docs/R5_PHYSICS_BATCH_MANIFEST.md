@@ -211,6 +211,23 @@ this domain** and is re-specified below.
 the committed test suite]**. Note this is **not** 69.3428 N: that was the superseded
 `rho_w = 1000` derivation.
 
+**Three cautions on 69.2180 N, added 2026-08-19 by slot `d11-accessor`:**
+
+1. **It is a HEMISPHERE, not a fully submerged sphere.** `2/3 pi R^3` is half of
+   `4/3 pi R^3`. A fully submerged sphere would be **138.4360 N**. Describing 69.2180 N as
+   a fully-submerged buoyancy is wrong by a factor of two and has been done in dispatch
+   text before.
+2. **It is also the sphere's own weight, by construction of the benchmark.**
+   `m*g = 7.056 * 9.81 = 69.2194 N`, against 69.2180 N here, a 0.002% gap that the emitted
+   config records as `ref_mass_route_disagreement_kg = 0.00014`. Kramer chose the mass so
+   the sphere floats at its equator, so the design-waterline buoyancy and the weight
+   coincide. That is why this number is meaningful, and it is not a coincidence to be
+   re-derived independently each time.
+3. **As of the 2026-08-19 amendment, 69.2180 N is the COMPANION number, not the graded
+   one.** Criterion 3 below grades `fz_over_analytic_measured`. 69.2180 N is still reported
+   with every run and is still required; it is no longer what the band is computed from.
+   See `docs/R9_ACCESSOR_DEFECT_2026-08-18.md` for why.
+
 **Pass criteria, fixed in advance and graded in this order.** Any FAIL stops the ladder:
 
 1. **The collider is accepted.** `add_sdf_collider` refuses a collider whose stored SDF does
@@ -219,16 +236,74 @@ the committed test suite]**. Note this is **not** 69.3428 N: that was the supers
 2. **The SDF matches the closed form.** `sdf_radius_rms_err_m` must be small against
    `sdf_cell_m`. A sphere's SDF is exactly `|x| - r`, so this is a check no vehicle hull
    permits. **This grades the builder, not the physics.**
-3. **The steady vertical reaction against 69.2180 N**, with a **blocked** standard error
-   from `blocking.py`, not a raw standard deviation. Prior expectation from the box-SDF path
-   is 7.3 to 7.7% **[recalled]**, so: **within 10% is a PASS, 10 to 25% is a REPORTABLE
-   PARTIAL, beyond 25% is a FAIL.** These bands are set now and will not be moved.
+3. **The steady vertical reaction, graded on `fz_over_analytic_measured`**, with a
+   **blocked** standard error from `blocking.py`, not a raw standard deviation. Prior
+   expectation from the box-SDF path is 7.3 to 7.7% **[recalled]**, so: **within 10% is a
+   PASS, 10 to 25% is a REPORTABLE PARTIAL, beyond 25% is a FAIL.** These bands are set now
+   and will not be moved.
+
+   **AMENDED 2026-08-19 by slot `d11-accessor`. The bands are untouched; what changed is
+   that the criterion now names WHICH quantity and OVER WHAT WINDOW.** As originally
+   written this criterion said only "the steady vertical reaction against 69.2180 N", which
+   named a denominator but no window, and `sphere_heave.py` designated a *different*
+   denominator in a source comment. Two quantities were live under one criterion and the
+   comment, not this manifest, is what downstream tools followed. Full working, the
+   downstream inventory, and the evidence for every figure below:
+   `docs/R9_ACCESSOR_DEFECT_2026-08-18.md`.
+
+   - **Graded quantity:** `fz_over_analytic_measured` = `fz_N` divided by
+     `analytic_buoyancy_at_measured_surface_N`, that is Archimedes on the spherical cap
+     actually submerged at the free surface the run actually has. **Not** 69.2180 N. The
+     sphere is pinned (`mode = fixed`) and the tank drains, so 69.2180 N is the reaction at
+     a waterline that did not exist during the measurement. This criterion's own prior, the
+     7.3 to 7.7% box-SDF figure, is a *coupling* accuracy prior, and only this quantity
+     isolates coupling accuracy; the nominal ratio is coupling error and drainage combined,
+     and they partly cancel.
+   - **Primary window:** the last 50% of frames. Fixed in advance rather than chosen from
+     the data, the coarsest defensible transient exclusion, and already what
+     `grade_job_b.py` applies as `DEFAULT_DROP_FRAC`.
+   - **Window-robustness gate.** The band must be identical at last-20, last-50, last-100
+     and full-series. If it is not, the run is **NOT GRADEABLE on window sensitivity** and
+     that is reported, never resolved by picking a window. Measured: the nominal ratio
+     swings FAIL / PARTIAL / PASS across those four windows on jobs 917909, 918043 and
+     918240, a 19.4-point spread, and job 918240's nominal reading crosses a band edge at
+     frame 163 of its own 200-frame run. The graded ratio spans 1.1 to 3.1 points.
+   - **Stationarity gate, on the GRADED RATIO only, at 3.0 sigma.** Non-stationarity of the
+     raw `fz_N` series is expected and is not disqualifying, per criterion 5 below. This
+     distinction is what makes criteria 3 and 5 satisfiable at once: measured on jobs
+     918043 / 918240 / 918450, `fz_N` is non-stationary at 8.52 / 8.52 / 3.95 sigma while
+     the graded ratio is stationary at 0.15 / 0.64 / 1.08 sigma.
+   - **Mandatory companion, never suppressed:** the nominal ratio against **69.2180 N**,
+     with its own window table, plus `surface_drop_m`. Where the two disagree that
+     disagreement IS the finding, because it separates a coupling error from a draining
+     tank. Both quantities remain meaningful and neither is deleted.
+   - **Standing caveat that travels with any PASS on this criterion.** The denominator
+     depends on a free-surface estimate that excludes every particle within 2R of the
+     sphere axis, which is exactly where the pressure generating `fz` acts. Measured
+     sensitivity is 0.0278 ratio-points per mm of surface, so roughly 1 dx of surface offset
+     at g64 spans the entire discrepancy observed to date. **A PASS here is not a coupling
+     validation until that estimator is validated in the near field.**
+   - **Note on stationarity of a ratio.** A stationary ratio built from two co-trending
+     non-stationary series shows that numerator and denominator fall together, not that the
+     measurement has settled; `surface_z_measured_m` is non-stationary at 16.9 to 20.0
+     sigma. The claim licensed here is only the weaker one that suffices for grading: the
+     verdict does not depend on window choice. Convergence remains open.
 4. **Lateral force vanishes by symmetry.** `|F_lateral| / |Fz|` should be small; a large
    value means the readout is unsound regardless of whether `Fz` matches.
 5. **Stationarity, via `blocking.py`.** Given what blocking found on the C1-SDF series, a
    NOT-STATIONARY verdict here is **expected, not disqualifying**, and must be reported with
    its **drift ratio against the error being claimed**, exactly as in
    `R5_PHYSICS_SETTLE_AND_UNCERTAINTY.md` section 3.
+
+   **Scope clarified 2026-08-19 by slot `d11-accessor`.** This tolerance applies to the raw
+   `fz_N` series. It is **not** a licence to grade criterion 3 on a drifting quantity:
+   criterion 3 carries its own stationarity gate on the *graded ratio*. Before this was
+   distinguished, `grade_job_b.py` refused all four job B runs as `NOT GRADEABLE` on exactly
+   the ground this criterion calls "expected, not disqualifying", which is a direct
+   contradiction between criteria 3 and 5 and is why no job B run had a top-level band.
+   Reporting the drift ratio is where this criterion does its real work: on job 918450 the
+   raw series drifts **261%** of the error being claimed against it, which is what exposes
+   that run's nominal PASS as a decaying series caught inside the band.
 
 **Explicitly not graded here:** the 0.090 / 0.270 / 0.450 mm per-drop-height tolerances.
 Those are **displacement** tolerances and apply only to the free-decay drops in Job C. A
