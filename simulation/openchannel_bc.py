@@ -100,7 +100,7 @@ class RecyclingChannelBC:
     """
 
     def __init__(self, n_water, x_in, x_out, inlet_velocity, dx, grid_lim,
-                 prescribe="full"):
+                 prescribe="full", inject_len=None, seed=0):
         if not (x_in < x_out):
             raise ValueError("x_in (%r) must be < x_out (%r)" % (x_in, x_out))
         # The engine raises if any particle sits within 2 cells of the grid edge,
@@ -124,6 +124,18 @@ class RecyclingChannelBC:
         self.prescribe = prescribe
         self.dx = float(dx)
         self.grid_lim = float(grid_lim)
+        # Re-injection spread. DEFAULT None reproduces the original behaviour exactly
+        # (land at x_in plus the sub-cell overshoot), because register items 20 and 24
+        # were measured with it and changing a BC under published numbers is not a
+        # free action. Set inject_len to spread injection over a band instead.
+        #
+        # WHY IT MATTERS: item 24 records that the end bins sit about 25 percent above
+        # mid-channel. The inflow end of that is self-inflicted: every recycled
+        # particle in a tick lands within one sub-cell overshoot of the same plane, so
+        # a tick's worth of water arrives as a sheet. Spreading it over a band of a few
+        # cells delivers the same flux without the sheet.
+        self.inject_len = None if inject_len is None else float(inject_len)
+        self.rng = np.random.default_rng(seed)
         self.recycled_total = 0
         self.recycled_last = 0
         self.clamped_y = 0
@@ -159,7 +171,10 @@ class RecyclingChannelBC:
         # than the channel, which would otherwise place the particle past x_out
         # again and recycle it forever within one tick.
         L = self.channel_length
-        x[:nw, 0][crossed] = self.x_in + np.mod(overshoot, L)
+        if self.inject_len is None:
+            x[:nw, 0][crossed] = self.x_in + np.mod(overshoot, L)
+        else:
+            x[:nw, 0][crossed] = self.x_in + self.rng.uniform(0.0, self.inject_len, n)
         # y and z are deliberately untouched: see the module docstring on J.
         if self.prescribe == "full":
             v[:nw][crossed] = (self.inlet_velocity, 0.0, 0.0)
@@ -226,7 +241,21 @@ def _selftest():
     nw, nveh = 500, 37
     dx, lim = 0.147, 9.42
     x = np.zeros((nw + nveh, 3), dtype=np.float32)
+    # Range deliberately EXCEEDS x_out. The first version of this fixture used
+    # uniform(0.6, 8.8) against an outflow plane at 8.80, and numpy's uniform is
+    # half-open, so not one particle ever crossed: n was 0 and checks 3 to 6 were
+    # vacuous while reporting PASS. Same failure mode as register item 25, where
+    # clamped_z == 0 read as clean containment and meant the check never ran.
     x[:, 0] = rng.uniform(0.6, 8.8, nw + nveh)
+    # ...and then deliberately push a fifth of the WATER past the outflow plane, so
+    # the recycler has something to do. A uniform spread over [0.6, 8.8) puts almost
+    # nothing past 8.80, which is how the first version of this fixture came to
+    # exercise nothing at all.
+    # Overshoot range matched to what a real tick produces: the measured
+    # max_overshoot in the g64 runs was 0.0425 m, so 0.05 m here. An unrealistically
+    # large synthetic overshoot would flatter the default and understate what the
+    # injection band actually changes.
+    x[: nw // 5, 0] = rng.uniform(8.80, 8.85, nw // 5)
     x[:, 1] = rng.uniform(0.6, 8.8, nw + nveh)
     x[:, 2] = rng.uniform(0.45, 0.75, nw + nveh)
     v = rng.normal(0, 0.3, (nw + nveh, 3)).astype(np.float32)
@@ -237,6 +266,7 @@ def _selftest():
     n = bc.apply(x, v)
     moved = x0[:nw, 0] >= 8.80
     assert n == int(moved.sum()), (n, int(moved.sum()))
+    assert n >= 100, ("fixture recycles too few particles to test anything", n)
     # 1. vehicle rows are untouched
     assert np.array_equal(x[nw:], x0[nw:]), "vehicle positions were modified"
     assert np.array_equal(v[nw:], v0[nw:]), "vehicle velocities were modified"
@@ -272,6 +302,21 @@ def _selftest():
         else:
             raise AssertionError("guard did not fire for %r" % bad)
 
+    # 9b. inject_len spreads the arrivals instead of sheeting them onto one plane
+    xA, vA = x0.copy(), v0.copy()
+    bcA = RecyclingChannelBC(nw, 0.60, 8.80, 1.5, dx, lim)                  # default
+    bcA.apply(xA, vA)
+    xB, vB = x0.copy(), v0.copy()
+    bcB = RecyclingChannelBC(nw, 0.60, 8.80, 1.5, dx, lim, inject_len=3.0 * dx, seed=7)
+    bcB.apply(xB, vB)
+    spread_default = float(xA[:nw][moved][:, 0].std())
+    spread_band = float(xB[:nw][moved][:, 0].std())
+    assert spread_band > 5.0 * spread_default, (spread_default, spread_band)
+    assert (xB[:nw][moved][:, 0] >= 0.60).all()
+    assert (xB[:nw][moved][:, 0] <= 0.60 + 3.0 * dx + 1e-6).all()
+    # and the default is unchanged, so published numbers stay reproducible
+    assert np.array_equal(xA, x), "default injection behaviour drifted"
+
     # 10. project_cross_stream never moves x
     x3, v3 = x0.copy(), v0.copy()
     bc3 = RecyclingChannelBC(nw, 0.60, 8.80, 1.5, dx, lim)
@@ -288,7 +333,7 @@ def _selftest():
     _, d_pile = depth_profile(piled, floor=0.44, x_lo=1.0, x_hi=8.0, n_bins=7)
     assert d_pile[-1] > d_pile[0] + 0.2, d_pile
 
-    print("openchannel_bc selftest: 11 checks PASS")
+    print("openchannel_bc selftest: 12 checks PASS")
 
 
 
