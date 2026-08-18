@@ -202,6 +202,21 @@ diff to notice. Anything newly public is world-readable the moment it lands, so
 **scans any new branch for credential patterns and credential-named files**,
 printing what to do if it finds either. It also reports branches that disappear.
 
+**UPGRADED 02:55, prompted by D2's "check the invariant, not the count".** The
+first version compared branch **names**. That catches a new branch and misses a
+**push to an existing public branch**, which publishes new content just as
+effectively and changes nothing in a name list. The baseline now stores
+**name + SHA**, and a moved tip is scanned exactly like a new branch.
+
+**Three controls, all now passing:** NEW fires with a real SHA and a verdict,
+MOVED fires on a rewritten tip, and an unchanged surface is silent. The controls
+earned their keep twice over: the first NEW path printed an **empty SHA** and
+wrongly told the reader to fetch a tip that was already local, because macOS
+`grep` has no `-P`; and a botched edit of mine left `PUBNOW="$PUBNOW"`, a
+self-referential empty assignment that silenced the whole detector. **Both would
+have looked like "no new branches" in normal use**, which is the most dangerous
+possible failure for this particular check.
+
 **Guarded to fail open:** if `ls-remote` cannot reach origin it prints a warning
 and the refresh continues, because a backup must never fail on a missing network.
 
