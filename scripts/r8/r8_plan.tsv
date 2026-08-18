@@ -1,0 +1,11 @@
+slot	wave	branch	base	worktree	needs_gpu	writes_only
+d1-safe	C	claude/add-ci-checks	SAME	/Users/josie/can-it-ford	no	CLAUDE.md,.claude/settings.json,.claude/hooks/orient_live.sh,.claude/checks/params_check.py,.claude/skills/connector-router/SKILL.md,scripts/check_claims.py
+d2-persist	A	claude/r8-persistence	claude/r7-inflow	/Users/josie/can-it-ford/.claude/worktrees/r8-persistence	no	analysis/r8_persistence_frequency.py,docs/R8_PERSISTENCE_GATE_2026-08-18.md
+d3-force	B	claude/r8-force	claude/r5-physics	/Users/josie/can-it-ford/.claude/worktrees/r8-force	later	analysis/r8_noforcing_control.py,docs/R8_FORCE_ROUTE_2026-08-18.md
+d4-bcmerge	A	claude/r8-bc-merge	1a868f3	/Users/josie/can-it-ford/.claude/worktrees/r8-bc-merge	no	simulation/openchannel_bc.py,docs/R8_OPENCHANNEL_BC_RECONCILE.md
+d5-priorart	A	claude/r8-priorart	claude/can-it-ford-round-5-87a6d6	/Users/josie/can-it-ford/.claude/worktrees/r8-priorart	no	paper/conference_101719.tex,paper/can_it_ford_references_IEEE.bib,docs/R8_PRIOR_ART_2026-08-18.md
+d6-tooling	B	claude/r8-tooling	claude/add-ci-checks	/Users/josie/can-it-ford/.claude/worktrees/r8-tooling	no	.claude/tooling/**,docs/R8_TOOLING_PROVENANCE.md
+d7-register	A	claude/r8-register	claude/add-ci-checks	/Users/josie/can-it-ford/.claude/worktrees/r8-register	no	docs/CANONICAL_CORRECTIONS_REGISTER_2026-08-06.md,docs/R8_REGISTER_MERGE_2026-08-18.md
+d8-naming	A	claude/r8-naming	claude/add-ci-checks	/Users/josie/can-it-ford/.claude/worktrees/r8-naming	no	analysis/build_runs_inventory.py,analysis/check_run_validity_2026-08-10.py,analysis/classify_three_class_matched.py,analysis/make_poster_figures*.py,renders/**/sim_standing.py,renders/yaris_render_s1/gates_all_runs.py,renders/yaris_render_s3_enhanced/sim_enhanced.py,docs/R8_DETERMINISM_RENAME_2026-08-18.md
+d9-kramer	A	claude/r8-kramer	claude/r5-physics	/Users/josie/can-it-ford/.claude/worktrees/r8-kramer	no	simulation/r5_physics/kramer_benchmark.py,docs/R8_KRAMER_INTERCODE_2026-08-18.md
+d10-licence	B	claude/r8-licence	origin/main	/Users/josie/can-it-ford/.claude/worktrees/r8-licence	no	LICENSE,THIRD_PARTY_NOTICES.md,citations/README.md,docs/R8_LICENCE_RECONCILE_2026-08-18.md
