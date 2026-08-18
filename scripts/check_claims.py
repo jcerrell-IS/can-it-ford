@@ -148,16 +148,26 @@ RULES: list[Rule] = [
 
     Rule("C6", WARN,
          r"9\.80665",
-         "9.80665 appears at TWO sites, not one: failure_modes.py:14 AND "
-         "analysis/viability_dashboard_scaffold.py:11. Both are post-processing "
-         "consumers of the rigid timeseries. A 0.034% fork against the solver and "
-         "five 9.81 sites. It IS live: used at failure_modes.py:170 (surge_accel_g) "
-         "and :174 (weight_n), and the classifier has now run on all 17 runs, so it "
-         "fed the published verdicts. Do NOT write that it never influenced a gated "
-         "result, and do NOT write that it appears only in failure_modes.py. Unify "
-         "on 9.81, then re-run analysis/classify_failure_modes.py and confirm "
-         "16 SLIDE / 1 STUCK holds.",
-         "CLAUDE.md items 3, 12, 15; register A2, A6, D6, D6b",
+         "9.80665 survives at exactly ONE site, and it is DEAD CODE: "
+         "analysis/viability_dashboard_scaffold.py:11 assigns G and never reads "
+         "it anywhere in that file, so it cannot reach a verdict. "
+         "simulation/failure_modes.py:14 reads G = 9.81, unified by commit "
+         "e495b56 on 2026-08-12, which regenerated data/failure_modes_by_run.json "
+         "and data/failure_modes_by_run_classified.csv in the same commit. That "
+         "CSV was re-counted live 2026-08-18 and still reads 16 SLIDE / 1 STUCK "
+         "across 17 rows, so the remediation this rule used to prescribe is DONE. "
+         "That 16/1 count is THRESHOLD-DEPENDENT, not a bare fact: it rests on "
+         "failure_modes.py slide_m=0.05 m, slide_speed_ms=0.05 m/s and "
+         "float_m=0.05 m, three literals sharing one numeral across two units "
+         "(item 13). analysis/probabilistic_verdict.py exists because a single "
+         "deterministic cut is not defensible. Quote the thresholds with the count. "
+         "Do NOT write that 9.80665 appears at two sites. Do NOT write that "
+         "failure_modes.py carries it. Do NOT write that the regenerated "
+         "artifacts were byte-identical: e495b56 moved one figure, and only the "
+         "VERDICTS are unchanged. The old 'five 9.81 sites' figure is stale too; "
+         "a scoped live count returns 14, so state the scope with any total.",
+         "CLAUDE.md items 3, 12, 15; register A2, A6, D6, D6b; "
+         "corrected 2026-08-18 against e495b56",
          context=None),
 
     Rule("C7", ERROR,

@@ -456,11 +456,27 @@ def run_literature_gates():
 
 
 def main():
-    find_density_literals()
-    check_inertia_wired()
-    check_figure_scripts_reimplement_l1()
-    check_genesis_warpmpm_conflation()
-    run_literature_gates()
+    # FAIL OPEN, added 2026-08-18 per CLAUDE.md "Hooks must fail open".
+    # pretooluse_git_commit_gate.py:24 turns ANY nonzero return from this
+    # script into exit 2, which blocks every commit in the repo. Before this
+    # wrap, a bug anywhere in the checks below did exactly that: the
+    # 34-blocked-commit incident. Reserve exit 1 for a real finding; an
+    # unexpected fault now warns on stderr and passes.
+    try:
+        find_density_literals()
+        check_inertia_wired()
+        check_figure_scripts_reimplement_l1()
+        check_genesis_warpmpm_conflation()
+        run_literature_gates()
+    except Exception as exc:
+        import traceback
+        sys.stderr.write(
+            "params_check.py: INTERNAL FAULT, failing open so commits are not "
+            "blocked by a bug in the guard itself. This check did NOT run:\n"
+        )
+        traceback.print_exc(file=sys.stderr)
+        sys.stderr.write("params_check.py: fix the guard, then re-run it.\n")
+        sys.exit(0)
     for w in warnings:
         print(f"WARNING: {w}")
     for f in failures:
