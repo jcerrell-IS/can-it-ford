@@ -45,7 +45,31 @@ commit**. The zero was correct when measured.
 **So unit 45's finding stands as measured, its bibliography half has since been
 addressed by someone else, and its sharper half is still open.**
 
-## 2. MY ERROR: the IEEE bib has 36 entries, not 21
+## 2. RETRACTED SAME DAY: this was a BRANCH difference, not a regex bug
+
+> **Unit 62 falsified this section within minutes of writing it, using the
+> verification script written to catch exactly this.** The original text is kept
+> below because the misdiagnosis is more instructive than the number.
+>
+> ```
+> worktree claude/r5-research    9,503 bytes   naive 21   permissive 21
+> main     claude/add-ci-checks 16,906 bytes   naive 36   permissive 36
+> ```
+>
+> **Both regexes agree on both copies.** The file simply differs by branch:
+> `ffc05d9` added 144 lines on `claude/add-ci-checks`, which my branch does not
+> contain. **So "21 entries" was correct for this branch all along, my regex was
+> never too strict, and the "fourth regex failure" I announced does not exist.**
+> Units 51, 53 and 54 stand as regex failures; this one does not.
+>
+> The lesson that survives is the opposite of the one I drew: **a bare entry count
+> is branch-dependent in a repo with concurrent sessions on different branches, so
+> report the checkout alongside the number.** The script now refuses to assert
+> either figure and prints which copy it read.
+
+### Original text, WRONG, retained deliberately
+
+**MY ERROR: the IEEE bib has 36 entries, not 21**
 
 I have reported "21 entries" since unit 3, including in `WHAT_SURVIVES` A6 and in
 the consolidated bibliography state in `BIB_DOI_SUPPLEMENT`.

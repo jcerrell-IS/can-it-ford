@@ -109,8 +109,63 @@ def tsv_checks():
     check("V&V uncited rate, percent", round(100 * vu / (vu + vc)), 86)
 
 
+# --------------------------------------------------------------- bibliographies
+IEEE_BIB = "paper/can_it_ford_references_IEEE.bib"
+LIVE_BIB = "deliverables/paper/overleaf/refs.bib"
+
+
+def bib_checks():
+    """Added unit 62. Its FIRST RUN falsified the unit-61 diagnosis it encoded.
+
+    Unit 61 claimed the IEEE bib has 36 entries and that my long-reported 21 came
+    from a too-strict regex (`^@[a-z]+\\{`, anchored and lowercase-only). WRONG.
+    Both regexes agree on both copies. The difference is the BRANCH:
+
+        worktree claude/r5-research   9,503 bytes   21 entries
+        main     claude/add-ci-checks 16,906 bytes  36 entries
+
+    commit ffc05d9 added 144 lines on claude/add-ci-checks, which my branch does
+    not contain. So 21 was correct for this branch all along, and the "fourth
+    regex failure" was a misdiagnosis. This function therefore asserts NEITHER
+    number: it reports which checkout it read and flags a divergence instead.
+    """
+    import os as _os
+    keys = {}
+    for label, path in (("IEEE", IEEE_BIB), ("live", LIVE_BIB)):
+        if not _os.path.exists(path):
+            results.append((None, f"{label} bib", "ABSENT", path,
+                            "live bib is gitignored under deliverables/; not a failure"))
+            continue
+        t = open(path, encoding="utf-8", errors="replace").read()
+        k = re.findall(r"@\w+\{([^,]+),", t)
+        keys[label] = set(k)
+        blocks = re.split(r"\n(?=@)", t)
+        ndoi = sum(1 for b in blocks if re.search(r"^\s*doi\s*=", b, re.I | re.M))
+        nver = sum(1 for b in blocks if "VERIFY" in b)
+        # NOT asserted against a fixed number: the IEEE bib differs BY BRANCH
+        # (21 entries on claude/r5-research, 36 on claude/add-ci-checks).
+        results.append((None, f"{label} bib entries", len(k), "branch-dependent",
+                        f"{ndoi} with doi=, {nver} VERIFY. Report the branch, never a bare count"))
+
+    if "IEEE" in keys and "live" in keys:
+        check("bib keys shared by both", len(keys["IEEE"] & keys["live"]), 6)
+        # The three findings that target the file the live paper does NOT use.
+        for k in ("ccsa2010yaris", "alqadami2022", "martinezgomariz2018"):
+            check(f"'{k}' absent from live bib", k in keys["live"], False)
+
+    # REGRESSION GUARD, inverted from what unit 61 believed: the two regexes AGREE.
+    # If they ever disagree, a genuinely too-strict pattern has crept in.
+    if _os.path.exists(IEEE_BIB):
+        t = open(IEEE_BIB, encoding="utf-8", errors="replace").read()
+        naive = len(re.findall(r"^@[a-z]+\{([^,]+),", t, re.M))
+        correct = len(re.findall(r"@\w+\{([^,]+),", t))
+        check("bib regexes agree (unit 61 was a BRANCH diff, not a regex bug)",
+              naive, correct, f"naive {naive} vs permissive {correct}")
+
+
 elicit_checks()
 tsv_checks()
+bib_checks()
 
 print(f"  {'':2} {'claim':38} {'got':>26}  {'want':>10}")
 print(f"  {'-'*2} {'-'*38} {'-'*26}  {'-'*10}")
