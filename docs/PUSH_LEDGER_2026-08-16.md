@@ -157,6 +157,13 @@ Current rows, both verify OK, 33 refs each:
     2026-08-16 2121  INCREMENTAL-all-branches-2121.bundle  7,617,689 B
     2026-08-16 2122  INCREMENTAL-all-branches-2122.bundle  7,610,725 B
 
+**FAILURE PATHS NOW PRINT REMEDIES, 01:26.** A bundle failing `git bundle
+verify` is a broken backup, and the script used to report that as the single
+word `FAIL` in a log column. Both failure paths now say what to do: that the
+bundle is not usable and must not be copied or counted as insurance, how to
+diagnose it (`git fsck --strict`, then read the verify output), and where the
+last known-good artifact is (the newest `OK` row in `refresh_log.tsv`).
+
 ### Two traps found while testing that, both of them mine
 
 **1. Git bundles are not byte-reproducible. Never compare two by sha256.** The
