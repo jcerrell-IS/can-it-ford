@@ -222,13 +222,51 @@ def check_figure_scripts_reimplement_l1():
 
 
 def check_genesis_warpmpm_conflation():
-    for pyfile in ROOT.rglob("*.py"):
-        rel = str(pyfile.relative_to(ROOT))
-        if skip_path(rel):
+    # REGISTER A3 says: "Any SKILL FILE naming it in a warpmpm context is engine-conflated."
+    # Skill files are .md. The previous version of this check walked only ROOT.rglob("*.py")
+    # AND required "warpmpm" in the file PATH, so it could not fire on a .md file, and could
+    # not fire on any path lacking the literal string "warpmpm" either. It therefore could
+    # not fire on the single real offender in the tree,
+    # .claude/skills/flood-mpm-debugging-reference/SKILL.md:41, which prescribes summing
+    # cfrc_coupling_vel to validate "ANY force number this pipeline produces" while the
+    # canonical pipeline is warpmpm. A check that cannot fire on the file class its own
+    # register names is not a check. Corrected 2026-08-18.
+    #
+    # The context test is now on FILE CONTENT, not on the path. Files whose purpose is to
+    # STATE the rule necessarily name both terms, so they are allowlisted explicitly rather
+    # than by a pattern, so the allowlist itself stays auditable.
+    A3_RULE_STATING_FILES = {
+        ".claude/checks/params_check.py",
+        ".claude/hooks/banned_phrase_guard.py",
+        ".claude/commands/engine-audit.md",
+        "docs/CANONICAL_CORRECTIONS_REGISTER_2026-08-06.md",
+    }
+    for src in sorted(list(ROOT.rglob("*.py")) + list(ROOT.rglob("*.md"))):
+        rel = str(src.relative_to(ROOT))
+        if skip_path(rel) or rel in A3_RULE_STATING_FILES:
             continue
-        text = pyfile.read_text(errors="ignore")
-        if "cfrc_coupling_vel" in text and "warpmpm" in rel.lower():
-            failures.append(f"{rel}: references cfrc_coupling_vel, that accessor is Genesis-only, does not exist in warpmpm")
+        try:
+            text = src.read_text(errors="ignore")
+        except OSError:
+            continue
+        if "cfrc_coupling_vel" not in text or "warpmpm" not in text.lower():
+            continue
+        # Test the ACTUAL condition, which is UNTAGGED usage, not mere co-occurrence.
+        # Register A3's remedy is "tag the sentence GENESIS", so a line that carries an
+        # explicit Genesis-only marker is compliant and must not be flagged. An earlier
+        # version of this check flagged co-occurrence, which meant the very sentence that
+        # applies the remedy still failed, i.e. the check could not be satisfied by doing
+        # the thing it asked for. Checked per line because these are long markdown lines.
+        for lineno, line in enumerate(text.splitlines(), 1):
+            if "cfrc_coupling_vel" not in line:
+                continue
+            if re.search(r"GENESIS[- ]ONLY|Genesis[- ]only", line):
+                continue
+            failures.append(
+                f"{rel}:{lineno}: names cfrc_coupling_vel in a file that also discusses "
+                f"warpmpm, with no Genesis tag on that line. That accessor is Genesis-only "
+                f"(register A3) and has no warpmpm counterpart. Tag the sentence "
+                f"GENESIS-ONLY explicitly, or remove the accessor.")
 
 
 # ---------------------------------------------------------------------------
