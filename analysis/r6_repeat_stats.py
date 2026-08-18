@@ -237,6 +237,31 @@ def job_b(json_path: Path, window_start: int, blocking_dir: Path | None) -> None
         print(f"    {name:28s} halves={str(r['halves_stationary']):5s} "
               f"trend={str(r['trend_stationary']):5s} slope_n_sigma={r['slope_n_sigma']:.2f}")
 
+    # CRITERION 3, graded. The manifest fixes the bands and says at :214 "Any FAIL stops
+    # the ladder", and sphere_heave.py:669-670 designates fz_over_analytic_measured as
+    # "the number job B should actually be graded on". Criterion 3 names NO WINDOW, so
+    # sweep it: a criterion whose verdict is selected by an unnamed free parameter was not
+    # operationally fixed in advance, whatever its text says.
+    def band(pct):
+        a = abs(pct)
+        return "PASS" if a <= 10 else ("REPORTABLE PARTIAL" if a <= 25 else "FAIL")
+
+    print("\n  CRITERION 3 graded across windows."
+          "  bands: <=10 PASS, 10-25 REPORTABLE PARTIAL, >25 FAIL")
+    for name, label in (("fz_over_analytic_nominal", "nominal, vs the fixed target"),
+                        ("fz_over_analytic_measured", "MEASURED, the designated accessor")):
+        y = col(name)
+        verdicts = set()
+        print(f"    {name}   ({label})")
+        for n in (20, 40, 80, 100, 150, 200):
+            if n > len(y):
+                continue
+            pct = (y[-n:].mean() - 1) * 100
+            verdicts.add(band(pct))
+            print(f"      last {n:3d} frames {pct:+7.2f} %  -> {band(pct)}")
+        note = "WINDOW-ROBUST" if len(verdicts) == 1 else "<-- SWINGS ON WINDOW CHOICE"
+        print(f"      verdicts across windows: {sorted(verdicts)}   {note}")
+
     y = col("fz_over_analytic_measured")[window_start:]
     se = B.blocked_se(y)
     print(f"\n  measured ratio late-window mean {y.mean():.6f} +/- {se['se_blocked']:.6f} "

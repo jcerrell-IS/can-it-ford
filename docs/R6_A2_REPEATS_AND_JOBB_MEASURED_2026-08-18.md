@@ -167,9 +167,12 @@ sha256 `f74223122ae868c1a1e95c4e061eac55e649ccbdf47da49782460b9833e10118`, byte-
 local file at branch HEAD. The criterion was committed at `ae08cce` BEFORE any run had ever
 produced the field, so it cannot have been tuned to this result.
 
-**Nominal grade: NOT GRADEABLE**, correctly, and for the right reason now that `68731f7` fixed
-the tuple-parsing bug that previously reported PASS at -9.806 percent. Late-window mean
-53.5913 N against the 69.2180 N target.
+`grade_job_b.py` reports **NOT GRADEABLE** on the nominal series, rejecting it for
+non-stationarity. Late-window mean 53.5913 N against the 69.2180 N target. **Do NOT stop
+reading there, and do not repeat that as the verdict: it is not what the manifest asks for.
+See 4a-bis, which supersedes it.** `68731f7` fixed the tuple-parsing bug that previously
+reported PASS at -9.806 percent, so the tool no longer passes a bad run; it now refuses a
+gradeable one instead.
 
 ### 4a. The mechanism fired
 
@@ -193,7 +196,49 @@ All sigmas here are blocked, not OLS. It matters in both directions: blocking DE
 to blocked 0.15). The stationarity conclusion is robust either way, since both readings sit far
 below any threshold, but quote the blocked ones.
 
-### 4b. The level is wrong, on the opposite side
+### 4a-bis. CORRECTED VERDICT: Job B FAILS, and the ladder is stopped
+
+**An earlier version of this document reported Job B as NOT GRADEABLE and stopped there.
+That was wrong, and the error was mine, not the tool's.** I took `grade_job_b.py`'s refusal
+as the answer instead of grading against the criterion the tool exists to implement. Three
+things, all read live at source, settle it:
+
+1. `docs/R5_PHYSICS_BATCH_MANIFEST.md:214`: "Pass criteria, fixed in advance and graded in
+   this order. **Any FAIL stops the ladder.**"
+2. `simulation/r5_physics/sphere_heave.py:669-670`, in the code that writes the field:
+   "**`fz_over_analytic_measured` is the number job B should actually be graded on**".
+3. Manifest criterion 5: "Stationarity, via `blocking.py`. Given what blocking found on the
+   C1-SDF series, a **NOT-STATIONARY verdict here is expected, not disqualifying**."
+
+So the grader refuses on precisely the ground the manifest says is not disqualifying. The
+first version of that grader wrongly reported PASS at -9.806 percent; the fixed version now
+wrongly refuses. Both failures are the same shape: the check and the criterion were never
+connected.
+
+Graded against criterion 3's bands (10 PASS, 10 to 25 REPORTABLE PARTIAL, beyond 25 FAIL):
+
+| accessor | last 20 | last 40 | last 80 | last 100 | last 150 | last 200 | stationary |
+|---|---|---|---|---|---|---|---|
+| `fz_over_analytic_nominal` | -29.11 **FAIL** | -27.92 **FAIL** | -24.68 PARTIAL | -22.58 PARTIAL | -17.12 PARTIAL | -9.67 **PASS** | No, 8.52 sigma |
+| `fz_over_analytic_measured` | +64.19 | +63.52 | +62.97 | +63.08 | +61.68 | +61.08 | **Yes, 0.15 sigma** |
+
+**The nominal accessor cannot yield a verdict.** Criterion 3 names no window, and on a series
+this non-stationary the window chooses the band: FAIL, REPORTABLE PARTIAL and PASS are all
+reachable from the same 200 frames. A criterion with an unnamed free parameter that selects
+its own outcome was not operationally fixed in advance, whatever its text says.
+
+**The measured accessor is stationary, therefore window-robust, and it FAILS at every window
+from last-20 to last-200, +61.08 to +64.19 percent.** It is also the accessor the code itself
+designates. So:
+
+> **JOB B: FAIL on criterion 3. Per manifest line 214, the ladder is stopped.**
+
+This is a decision for Josie, not for a session to quietly route around. The two honest
+options are to accept the FAIL and stop the ladder as the manifest instructs, or to amend the
+criterion in writing, naming the accessor AND the window, and state explicitly that a band
+declared unmovable was moved. Do not let Job C proceed on an assumption that B passed.
+
+### 4b. The level, and why neither target is right
 
 Stationary ratio **1.6308 ± 0.0082**, blocked SE, converged, plateau at block size 8 with 12
 blocks, inflation over naive 1.548, tau_int 2.396 frames. That is **+63.1 percent**, outside the
