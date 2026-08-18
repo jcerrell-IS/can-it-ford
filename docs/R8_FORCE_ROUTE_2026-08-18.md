@@ -513,7 +513,16 @@ The control answers it, because the control has no flow:
 
 | | control (velocity 0) | forced (velocity 1.5) | difference |
 |---|---|---|---|
-| g48 mean z displacement | **-0.047847 m** | **-0.047957 m** | **0.2 percent** |
+| g48 z displacement, **5-repeat mean** | **-0.047847 m** | **-0.047920 m** | **0.15 percent** |
+| g48 z, control repeat spread | 0.000077 m | 0.000049 m | |
+
+> **Corrected 2026-08-18, same session.** An earlier revision of this row quoted the forced
+> value as **-0.047957 m**, which is forced **repeat 1**, not the 5-repeat mean. The
+> conclusion is unchanged and the corrected gap is 0.15 percent rather than 0.2, but
+> comparing a single draw against a mean is precisely the error this document is about, and
+> it is recorded here rather than silently fixed. Both figures above are now 5-repeat means,
+> and the difference between them (0.000073 m) is comparable to the control's own repeat
+> spread (0.000077 m), which makes the agreement stronger, not weaker.
 
 **The g48 floor-sink is present at full strength with the flow switched off.** It is a
 gravity, buoyancy and floor-boundary effect, not a hydrodynamic one. Switching the forcing
@@ -796,3 +805,109 @@ Runs executed 2026-08-18 on Vista GH200 node c642-071 (job 920212, `gh-dev`), bo
 Logs and JSON at `$WORK/r8_rungb/rungb_fixedsettle_g{64,96}.{log,json}`. Engine **warpmpm**,
 SDF-collider path, which is **not** the material-8 path the 17 canonical runs use. Nothing in
 the repo was modified by these runs and no existing Vista checkout was touched.
+
+
+---
+
+## 14. THE CONTROL IS CLEAN IN SURGE ONLY. IN THE VERTICAL CHANNEL, ESSENTIALLY NOTHING SURVIVES THE FLOW BEING REMOVED.
+
+**Added 2026-08-18 after the six-rung result was written up. It corrects the wording of the
+headline and it generalises section 11 from a g48 curiosity into a statement about the whole
+vertical channel.**
+
+Every verdict in sections 6, 8a and 8b is computed on `final_disp_m[0]`, the surge axis, and
+is correct as stated **for that component**. The same 30 control and 30 forced runs also carry
+y and z, and those were left latent in the data rather than reported. They should not have
+been.
+
+### 14a. All three components, same data, same 5-repeat means
+
+| grid | R in **x (surge)** | R in **y** | R in **z** |
+|---|---|---|---|
+| 48 | 0.0126 | 0.3744 | **0.9985** |
+| 64 | 0.0241 | 0.1129 | **1.0254** |
+| 96 | 0.0067 | 0.1670 | **0.9985** |
+| 128 | 0.0050 | 1.4048 | 1.2784 *(noise over noise, see 14c)* |
+| 160 | 0.0002 | 0.8374 | 0.4807 *(noise over noise)* |
+| 192 | 0.0024 | 1.1852 | 5.7802 *(noise over noise)* |
+
+Pairwise trend contamination:
+
+| pair | C in **x** | C in **y** | C in **z** |
+|---|---|---|---|
+| g48 to g64 | 0.0182 | 0.8570 | **0.9968** |
+| g64 to g96 | 0.0801 | 0.0029 | 0.5888 |
+| g96 to g128 | 0.0503 | 0.6982 | **0.9983** |
+| g128 to g160 | 0.0207 | 3.8541 | 0.3351 |
+| g160 to g192 | 0.0159 | 0.0478 | 0.0210 |
+
+### 14b. What this means, stated plainly
+
+**In z, at every rung where the vertical channel is doing anything at all, the control
+reproduces the forced result to within about 0.2 to 2.5 percent.** `R` is 0.9985, 1.0254 and
+0.9985 at g48, g64 and g96, and the pairwise `C` is 0.9968 and 0.9983. That is not
+"contamination" in the sense the pass/fail rule was built to detect. It is the finding that
+**vertical motion in this scene is not hydrodynamic at all.** Switching the inflow off changes
+it by essentially nothing.
+
+This generalises section 11. What was reported there as "the g48 P-3 floor-sink is not
+flow-driven" is not specific to g48 and not specific to the P-3 gate: **the entire vertical
+channel is flow-independent at every rung where it has any magnitude.** The g48 case is simply
+the one where the magnitude is largest (48 mm rather than 3 mm) and therefore the one where a
+gate noticed.
+
+In y the picture is neither clean nor uniform: `R` spans 0.1129 to 1.4048 and `C` reaches
+3.8541. y displacements are small (control means 0.6 to 3.9 mm) and no claim is made from
+them beyond the negative one: **the control is not clean in y either, and any future
+lateral-displacement claim must be checked against a control before it is believed.**
+
+### 14c. The exclusion, stated so it cannot be misread as a result
+
+At g128, g160 and g192 the z displacements are **under 15 microns on both arms**
+(control means -0.000003, -0.000007, -0.000006 m). The `R` values there (1.2784, 0.4807,
+5.7802) are a ratio of one near-zero number to another and carry no information. **Nothing is
+claimed from those three cells.** They are shown only so the table is not silently truncated
+at the point where it stops meaning anything.
+
+### 14d. The corrected headline
+
+The sentence that must be used, replacing any component-free version:
+
+> **At most 8.0 percent of the resolution effect IN SURGE DISPLACEMENT is reproduced with the
+> flow switched off, at any rung from g48 to g192. In the VERTICAL channel essentially 100
+> percent is reproduced, so vertical motion in this scene is not hydrodynamic at all.**
+
+The CLEAN verdict is unaffected: it was always defined on surge, in section 3, and the
+pass/fail rule in section 5 names `final_disp_m[SURGE_AXIS]` explicitly. What was wrong was a
+component-free restatement of it on the shared cross-session board, which has been corrected
+there by a dated correction row rather than by editing the original.
+
+### 14e. Distinguishability in surge, restated in sigma
+
+The "not distinguishable from repeat noise" claim in sections 6b and 8b is made precise here.
+Control mean divided by the control's own sample standard deviation, 5 repeats:
+
+| grid | mean (m) | sd (m) | \|mean\|/sd |
+|---|---|---|---|
+| 48 | +0.002282 | 0.000292 | **7.82 sigma** |
+| 64 | +0.003177 | 0.000621 | **5.12 sigma** |
+| 96 | -0.000571 | 0.000401 | 1.42 sigma |
+| 128 | +0.000338 | 0.000237 | 1.42 sigma |
+| 160 | +0.000010 | 0.000261 | **0.04 sigma** |
+| 192 | +0.000108 | 0.000159 | 0.68 sigma |
+
+So the zero-forcing surge drift is **real and resolvable at g48 and g64** (7.8 and 5.1 sigma,
+2.3 and 3.2 mm) and **not distinguishable from zero at g96 and finer** (all under 1.5 sigma).
+The floor is not uniformly "noise": it is a small but genuine coarse-grid drift that vanishes
+under refinement.
+
+### 14f. Independent re-derivation
+
+The surge table in sections 6 and 8b was re-derived independently by the coordinator from the
+same 30 control and 30 forced `SUMMARY` lines, without using this document's tables, and
+reproduced `R = 0.0126, 0.0241, 0.0067, 0.0050, 0.0002, 0.0024` and
+`C = 0.0182, 0.0801, 0.0503, 0.0207, 0.0159` to every digit, along with the 3.177 mm maximum
+of the Zero-Forcing Surge floor. The z and y decomposition in this section was raised by that
+same re-derivation and was then computed again here from the raw files before being written
+down. Two independent parses of one dataset is not two datasets, and this is recorded as
+arithmetic agreement, not as corroboration of the physics.
