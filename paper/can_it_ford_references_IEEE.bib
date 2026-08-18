@@ -10,8 +10,8 @@
 
 @misc{ccsa2010yaris,
   author        = {{Center for Collision Safety and Analysis, George Mason University}},
-  title         = {2010 {Toyota} {Yaris} Finite Element Model Validation, Coarse Mesh},
-  year          = {2010},
+  title         = {2010 {Toyota} {Yaris} Finite Element Model Validation Coarse Mesh},
+  year          = {2016},
   doi           = {10.13021/G8JS5D},
   note          = {Coarse deck (v1l): 378,376 elements, 393,165 nodes, 919 parts. Check distribution license terms before public release of derived meshes.}
 }
@@ -25,13 +25,20 @@
   note          = {VERIFY: confirm full author list and venue before submission.}
 }
 
-@misc{hsiaokumar2025,
+@article{hsiaokumar2025,
   author        = {Hsiao, Cheng-Hsi and Kumar, Krishna},
-  title         = {{NeRF}-to-{MPM} Inversion for Granular Material Property Estimation},
+  title         = {From images to properties: a {NeRF}-driven framework for granular material parameter inversion},
+  journal       = {EPJ Web of Conferences},
+  volume        = {340},
+  pages         = {10017},
   year          = {2025},
+  doi           = {10.1051/epjconf/202534010017},
   eprint        = {2507.09005},
   archivePrefix = {arXiv},
-  note          = {VERIFY: confirm exact published title before submission.}
+  note          = {Title and venue verified live 2026-08-18 against DataCite (arXiv record)
+                   and Crossref (published record). The previous title,
+                   ``NeRF-to-MPM Inversion for Granular Material Property Estimation'',
+                   did NOT match either record (similarity 0.713) and is retired.}
 }
 
 @misc{kerbl20233dgs,
@@ -139,17 +146,41 @@
 }
 
 @article{martinezgomariz2018,
-  author = {Mart{\'i}nez-Gomariz and others},
-  title  = {{VERIFY: exact title}},
-  year   = {2018},
-  note   = {Cited for: passenger vehicles fail via floating/sliding, not toppling. VERIFY full citation.}
+  author  = {Mart{\'i}nez-Gomariz, E. and G{\'o}mez, M. and Russo, B. and Djordjevi{\'c}, S.},
+  title   = {Stability criteria for flooded vehicles: a state-of-the-art review},
+  journal = {Journal of Flood Risk Management},
+  volume  = {11},
+  number  = {S2},
+  pages   = {S817--S826},
+  year    = {2018},
+  doi     = {10.1111/jfr3.12262},
+  note    = {Title/authors resolved live 2026-08-18 from Crossref; the previous title field
+             contained the literal string ``VERIFY: exact title''. YEAR IS CONTESTED and the
+             key is not evidence: Crossref returns issued year 2016 (online-first) while the
+             issue is JFRM 11(S2), the 2018 special issue, which is what the corpus index
+             records. Both are defensible; state which you mean. The entry is not cited in
+             conference_101719.tex, so nothing in the current draft turns on it. Identification
+             is INFERRED from the key year plus the failure-mode claim in the old note, not
+             read off a citing sentence, because no citing sentence exists.}
 }
 
 @article{alqadami2022,
-  author = {Al-Qadami and others},
-  title  = {{VERIFY: exact title}},
-  year   = {2022},
-  note   = {Cited for: passenger vehicles fail via floating/sliding, not toppling. A separate Al-Qadami et al. 2023 (Sustainability, DOI 10.3390/su151713262) also appears in project notes; confirm which is the correct rollover-literature citation.}
+  author  = {Al-Qadami, Ebrahim Hamid Hussein and Mustaffa, Zahiraniza and
+             Al-Atroush, Mohamed Ezzat and Mart{\'i}nez-Gomariz, Eduardo and
+             Teo, Fang Yenn and El-Husseini, Yasser},
+  title   = {A numerical approach to understand the responses of passenger vehicles
+             moving through floodwaters},
+  journal = {Journal of Flood Risk Management},
+  volume  = {15},
+  number  = {4},
+  pages   = {e12828},
+  year    = {2022},
+  doi     = {10.1111/jfr3.12828},
+  note    = {DUPLICATE KEY. This is the same work as alqadami2022moving, which was already
+             complete and correct. Metadata filled 2026-08-18 from Crossref so that a stray
+             \cite{alqadami2022} resolves to the right paper instead of printing a placeholder;
+             the two keys should be merged onto alqadami2022moving. Previously this entry's
+             title field contained the literal string ``VERIFY: exact title''.}
 }
 
 @techreport{sae1999011336,
@@ -163,8 +194,10 @@
 }
 
 @misc{videophy2024,
-  author        = {{VERIFY AUTHOR LIST}},
-  title         = {VideoPhy},
+  author        = {Bansal, Hritik and Lin, Zongyu and Xie, Tianyi and Zong, Zeshun and
+                   Yarom, Michal and Bitton, Yonatan and Jiang, Chenfanfu and Sun, Yizhou and
+                   Chang, Kai-Wei and Grover, Aditya},
+  title         = {{VideoPhy}: Evaluating Physical Commonsense for Video Generation},
   year          = {2024},
   eprint        = {2406.03520},
   archivePrefix = {arXiv},
@@ -172,8 +205,9 @@
 }
 
 @misc{mpmworlds2026,
-  author        = {{VERIFY AUTHOR LIST}},
-  title         = {MPMWorlds},
+  author        = {Kova\v{c}i\v{c}, \v{Z}iga and Ellis, Kevin},
+  title         = {{MPMWorlds}: Material-Point-Method Simulations for Inferring and
+                   Extrapolating Physical Dynamics},
   year          = {2026},
   eprint        = {2606.01538},
   archivePrefix = {arXiv},
