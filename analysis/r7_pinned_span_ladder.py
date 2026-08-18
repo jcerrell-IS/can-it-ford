@@ -562,6 +562,69 @@ def section_gates(pin_root: Path, unp_root: Path) -> None:
     print()
 
 
+def section_threshold_sweep(pin_root: Path, FM, np) -> None:
+    """Robustness of the pinned verdicts to ALL THREE unsourced literals, not just
+    sustain_frames.
+
+    Prompted by the r7-collect session, which measured this on the UNPINNED ladder and
+    found its g160 and g192 joint runs stay at 0 down to slide_m 0.040 and
+    slide_speed_ms 0.010, concluding the fragility is concentrated in the middle rungs.
+    That conclusion does NOT transfer to the pinned ladder, which is why it is recomputed
+    here rather than carried over: on the pinned ladder the 9 and 10 layer STUCK verdicts
+    are threshold-contingent, and unconditional STUCK does not begin until 12 layers."""
+    print("=" * 78)
+    print("9. VERDICT ROBUSTNESS TO ALL THREE LITERALS, not just sustain_frames")
+    print("=" * 78)
+    print("   published (slide_m, slide_speed_ms) = (0.050, 0.050), sustain_frames = 3")
+    print("   failure_modes.py:46-48. None of the three has a peer-reviewed source.")
+    print()
+    grid = [(0.050, 0.050), (0.040, 0.050), (0.050, 0.010), (0.040, 0.010), (0.060, 0.050)]
+
+    def joints(d, sm, ss):
+        out = []
+        for i in range(1, N_REP + 1):
+            q = d / f"rep_{i}" / "metrics.csv"
+            if not q.exists():
+                continue
+            k = FM.kinematics_from_columns(FM.load_timeseries(str(q)), MASS)
+            dr = np.abs(k.disp[:, FM.SURGE_AXIS])
+            sp = np.abs(k.vel[:, FM.SURGE_AXIS])
+            j = (dr >= sm) & (sp >= ss)
+            best = r = 0
+            for x in j:
+                r = r + 1 if x else 0
+                best = max(best, r)
+            out.append(best)
+        return out
+
+    print("   %-7s %-6s %s" % ("layers", "n", "  ".join("m%.3f/s%.3f" % g for g in grid)))
+    robust = []
+    for grid_n in sorted(set(FREE_GRIDS) | set(EXACT_GRIDS)):
+        d = find_pinned(pin_root, grid_n)
+        if d is None:
+            continue
+        ss_ = load_summaries(d)
+        if not ss_:
+            continue
+        cells, verds = [], []
+        for sm, sp_ in grid:
+            j = joints(d, sm, sp_)
+            nsl = sum(1 for x in j if x >= FM.FailureThresholds().sustain_frames)
+            verds.append(nsl)
+            cells.append("%dS/%dK(%d-%d)" % (nsl, len(j) - nsl, min(j), max(j)))
+        if all(v == 0 for v in verds):
+            robust.append((ss_[0]["water_layers"], grid_n))
+        print("   %-7d %-6d %s" % (ss_[0]["water_layers"], grid_n,
+                                   "  ".join("%-16s" % c for c in cells)))
+    print()
+    print("   S = SLIDE, K = STUCK at sustain 3, N=5. (min-max) is the joint-run length.")
+    print("   UNCONDITIONALLY STUCK under every variation tested: %s"
+          % ", ".join("%d layers (n=%d)" % r for r in robust))
+    print("   Everything below that is threshold-contingent. The continuous measure in")
+    print("   section 4 is unaffected by any of this, which is why it leads the write-up.")
+    print()
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--pinned", required=True, type=Path)
@@ -585,6 +648,7 @@ def main() -> int:
     section_tank_effect(a.pinned, a.unpinned, FM, np)
     section_threshold_fragility(a.pinned, a.unpinned, FM, np)
     section_gates(a.pinned, a.unpinned)
+    section_threshold_sweep(a.pinned, FM, np)
     return 0
 
 

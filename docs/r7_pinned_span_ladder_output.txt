@@ -221,3 +221,26 @@ S = 7.851451928106448 m, the g48 interior span
    unpinned 0 of 6 rungs FAIL P-2.  pinned 8 of 10 rungs FAIL P-2.
    Every pinned STUCK rung is a P-2 failure. This must be stated with the result.
 
+==============================================================================
+9. VERDICT ROBUSTNESS TO ALL THREE LITERALS, not just sustain_frames
+==============================================================================
+   published (slide_m, slide_speed_ms) = (0.050, 0.050), sustain_frames = 3
+   failure_modes.py:46-48. None of the three has a peer-reviewed source.
+
+   layers  n      m0.050/s0.050  m0.040/s0.050  m0.050/s0.010  m0.040/s0.010  m0.060/s0.050
+   3       48     5S/0K(11-11)      5S/0K(12-12)      5S/0K(14-14)      5S/0K(15-15)      5S/0K(11-11)    
+   4       64     5S/0K(8-8)        5S/0K(9-9)        5S/0K(12-15)      5S/0K(13-16)      5S/0K(7-7)      
+   6       88     5S/0K(3-4)        5S/0K(4-5)        5S/0K(5-6)        5S/0K(6-7)        1S/4K(2-3)      
+   7       96     5S/0K(7-7)        5S/0K(8-8)        5S/0K(9-12)       5S/0K(10-13)      5S/0K(6-7)      
+   9       128    0S/5K(0-1)        5S/0K(3-3)        5S/0K(3-3)        5S/0K(5-6)        0S/5K(0-0)      
+   10      141    0S/5K(0-0)        0S/5K(1-2)        0S/5K(0-2)        5S/0K(3-5)        0S/5K(0-0)      
+   12      160    0S/5K(0-0)        5S/0K(3-3)        0S/5K(1-2)        5S/0K(4-5)        0S/5K(0-0)      
+   12      168    0S/5K(0-0)        0S/5K(0-0)        0S/5K(0-0)        0S/5K(0-1)        0S/5K(0-0)      
+   14      192    0S/5K(0-0)        0S/5K(0-0)        0S/5K(0-0)        0S/5K(0-0)        0S/5K(0-0)      
+   15      208    0S/5K(0-0)        0S/5K(0-0)        0S/5K(0-0)        0S/5K(0-0)        0S/5K(0-0)      
+
+   S = SLIDE, K = STUCK at sustain 3, N=5. (min-max) is the joint-run length.
+   UNCONDITIONALLY STUCK under every variation tested: 12 layers (n=168), 14 layers (n=192), 15 layers (n=208)
+   Everything below that is threshold-contingent. The continuous measure in
+   section 4 is unaffected by any of this, which is why it leads the write-up.
+

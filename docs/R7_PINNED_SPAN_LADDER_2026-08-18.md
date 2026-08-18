@@ -241,6 +241,37 @@ that anchors the flip, drift exceeds the 0.05 m criterion for **83 of 91 frames*
 26.7 percent over it. It is STUCK only because drift and speed never overlap for 3
 consecutive frames.
 
+### 4.4a Robustness to all three literals, and it is worse than 4.4 says
+
+Prompted by the `r7-collect` session, which measured this on the **unpinned** ladder and
+found its g160 and g192 joint runs stay at 0 down to `slide_m` 0.040 and `slide_speed_ms`
+0.010, concluding the fragility sits in the middle rungs. **That conclusion does not
+transfer to the pinned ladder**, which is why it was recomputed here rather than carried
+over. Sweeping all three literals on my own runs (section 9 of the output):
+
+| layers | n | published | m0.040 | s0.010 | m0.040/s0.010 | m0.060 |
+|---|---|---|---|---|---|---|
+| 6 | 88 | SLIDE | SLIDE | SLIDE | SLIDE | 1S/4K |
+| 9 | 128 | **STUCK** | **SLIDE** | **SLIDE** | **SLIDE** | STUCK |
+| 10 | 141 | STUCK | STUCK | STUCK | **SLIDE** | STUCK |
+| 12 | 160 free | STUCK | **SLIDE** | STUCK | **SLIDE** | STUCK |
+| 12 | 168 exact | STUCK | STUCK | STUCK | STUCK | STUCK |
+| 14 | 192 | STUCK | STUCK | STUCK | STUCK | STUCK |
+| 15 | 208 | STUCK | STUCK | STUCK | STUCK | STUCK |
+
+**Unconditionally STUCK under every variation tested: only 12 layers (n=168), 14 (n=192)
+and 15 (n=208).** The 9-layer rung that anchors the "first all-STUCK" statement is **not**
+threshold-robust: it flips to SLIDE 5/5 under three of the four perturbations. So the
+binary headline should be read as: *under the published thresholds* the transition is
+between 8 and 9 layers, but *unconditional* stasis does not begin until 12 layers.
+
+This is a third demonstration that the two 12-layer rungs are not the same state: g168
+(exact depth) is robust to everything, g160 (free, +5.26 percent depth) flips at
+`slide_m = 0.040`.
+
+**None of this touches section 4.1 or 4.2.** The monotone drift decline and the measured
+tank bound are threshold-free, which is precisely why they lead this write-up.
+
 ---
 
 ## 5. THE GATE BREACH THE FIX INTRODUCED
