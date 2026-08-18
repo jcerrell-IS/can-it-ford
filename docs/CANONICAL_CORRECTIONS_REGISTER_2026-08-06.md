@@ -1298,3 +1298,61 @@ L7. **SKILL DRIFT, RE-VERIFIED, and the previously recorded drift is FIXED.** Fi
     that a substantial part of the passthrough is a boundary-condition artifact
     that opening the domain removes, and this item shows the remaining part is not
     addressed by this implementation.
+
+29. **`floor_friction = 0.55` IS UNSOURCED AND IS 23x THE ONLY MEASURED VALUE.
+    NIHEI ET AL 2025 IS THE FULL-SCALE SLIDING EXPERIMENT THIS PROJECT HAS BEEN
+    SAYING DOES NOT EXIST.**
+
+    Nihei, Onomura, Bando, Inoue, Kashiwada, Yoshikawa and Tanaka (2025),
+    *Results in Engineering* 28, 107189, `10.1016/j.rineng.2025.107189`, CC-BY.
+    Verified matched, high confidence, 2026-08-18. **NOT in the 332-paper corpus
+    index** (`--query` returns 0), so it is genuinely new to the project, and the
+    PDF is on local disk at `~/Downloads/1-s2.0-S259012302503244X-main.pdf`.
+
+    **IT CARRIES AN ERRATUM**, `10.1016/j.rineng.2025.107527`, listed twice by
+    Crossref. Check it before quoting any number below into the paper.
+
+    WHAT IT MEASURES. Full-scale prototype passenger vehicles in a large outdoor
+    open channel, targeting SLIDING rather than floating, which is the mode 16 of
+    the project's 17 runs return. At washaway with the handbrake DISENGAGED the
+    rolling-resistance coefficient is **mu_R = 0.0250 and 0.0242**, about an order
+    of magnitude below the locked-wheel static value **mu_s ~ 0.30**. They also
+    report **C_D = 1.38 +/- 0.18**, and that mu_R decays to a steady state near 40
+    percent of its initial maximum, so a criterion built on peak mu_R is
+    unconservative.
+
+    WHAT IT SAYS ABOUT THIS REPO. `sim_standing.py` defaults `floor_friction=0.55`
+    and nothing sources it; the same literal recurs in `sim_dam_break.py`,
+    `box_sdf_collider_setup.py` and the abandoned Genesis Track 2 files. Against
+    Nihei's measurements, 0.55 is **1.8x the locked-wheel value and 23x the
+    free-rolling value**. Their Eq. 8 discussion gives critical velocity scaling as
+    sqrt(mu), so:
+
+    | condition | mu | mu / 0.55 | V_crit factor vs the project |
+    |---|---:|---:|---:|
+    | project default        | 0.55   | 1.000 | 1.000 |
+    | locked wheels (mu_s)   | 0.30   | 0.545 | 0.739 |
+    | free-rolling (mu_R)    | 0.0242 | 0.044 | **0.210** |
+
+    THE DIRECTION OF THE ERROR MATTERS AND IT IS MOSTLY GOOD NEWS. Lower friction
+    slides more easily, so the 16 SLIDE verdicts obtained at mu=0.55 are
+    CONSERVATIVE with respect to friction and would only strengthen at a realistic
+    rolling resistance. **The single STUCK, `sweepV_g64_v0p5`, is the one verdict
+    NOT protected by that argument**, and it is the one to re-run at mu_R before
+    anyone reports "16 SLIDE and 1 STUCK" again.
+
+    DO NOT SIMPLY SET friction TO 0.0242. Nihei's mu_R is a TIRE-ON-ROAD rolling
+    resistance for a wheeled vehicle free to roll. The project's floor_friction is
+    a Coulomb coefficient in an MPM grid boundary condition acting on a solidified
+    particle hull with no wheels. They are not the same quantity, and substituting
+    one for the other would be the same category error as the AR&R-versus-hull
+    mismatches already in this register. What IS established is that 0.55 is
+    unsourced, that it sits far above every measured value in the nearest
+    experiment, and that the sensitivity is a square root rather than linear.
+
+    IT ALSO RETIRES A STANDING GAP. Item L-2 and the paper's limitations draft both
+    say there is no experimental basis for a sliding threshold in the corpus. There
+    is now, at full scale, and it disagrees with AR&R specifically because AR&R's
+    experiments were static with fixed wheels while real washaways involve vehicles
+    free to roll. Their Fig. 17 plots all three, unbraked, braked and AR&R (2011),
+    for a small passenger vehicle.
