@@ -126,6 +126,8 @@ class RecyclingChannelBC:
         self.grid_lim = float(grid_lim)
         self.recycled_total = 0
         self.recycled_last = 0
+        self.clamped_y = 0
+        self.clamped_z = 0
         # Largest single-tick overshoot seen. If this ever approaches the channel
         # length the recycler is being called too rarely and particles are jumping
         # more than one channel per tick, which would alias the flux.
@@ -183,6 +185,10 @@ class RecyclingChannelBC:
         out_lo = w < lo
         out_hi = w > hi
         n = int(out_lo.sum() + out_hi.sum())
+        # Per-axis, because a single total cannot say whether water is escaping
+        # sideways or sinking through the bed, and those have different causes.
+        self.clamped_y += int(out_lo[:, 1].sum() + out_hi[:, 1].sum())
+        self.clamped_z += int(out_lo[:, 2].sum() + out_hi[:, 2].sum())
         if n:
             np.clip(w, lo, hi, out=w)
             vw[out_lo] = np.maximum(vw[out_lo], 0.0)
@@ -285,5 +291,124 @@ def _selftest():
     print("openchannel_bc selftest: 11 checks PASS")
 
 
+
+
+class OverfallBC(RecyclingChannelBC):
+    """Free-overfall recycling: the outflow trigger is a FALL, not a plane crossing.
+
+    Zhao et al chose the free overfall as their stringent validation case because
+    the bed level drops suddenly, and they report the end-depth ratio against
+    Rouse, who found the critical depth is about 1.4x the brink depth (their own
+    text, retrieved 2026-08-18 via Scite full-text search of
+    doi:10.1016/j.compfluid.2018.10.007; the PDF itself was not retrievable).
+
+    A particle that has fallen past `catch_z` is returned to the inlet. Everything
+    else follows RecyclingChannelBC.
+
+    THE (y, z) PRESERVATION ARGUMENT DOES NOT SURVIVE HERE, and pretending it does
+    would be wrong. A particle in free fall past the brink carries J close to 1
+    because nothing confines it, and it is re-injected into a water column whose
+    head needs J of about 1.018 at 0.3 m depth (p = rho g h = 2943 Pa against
+    bulk = 1.5e5). So re-injection introduces a pressure error of order 1.8
+    percent. It is a TRANSIENT, not a bias: the acoustic time to cross 0.3 m at
+    c = 12.85 m/s is 0.023 s, about 0.7 frames at 30 fps, so it relaxes almost
+    immediately and cannot accumulate. It is recorded in the summary rather than
+    hidden. F has no setter, so it cannot be corrected directly.
+    """
+
+    def __init__(self, n_water, x_in, catch_z, bed_top, inlet_velocity, dx, grid_lim,
+                 x_brink, seed=0, prescribe="full"):
+        # x_out is unreachable in overfall mode (the fall is the outflow), so it is
+        # parked just inside the guard purely to satisfy the base-class validation.
+        super().__init__(n_water=n_water, x_in=x_in, x_out=grid_lim - 2.6 * dx,
+                         inlet_velocity=inlet_velocity, dx=dx, grid_lim=grid_lim,
+                         prescribe=prescribe)
+        self.catch_z = float(catch_z)
+        self.bed_top = float(bed_top)
+        self.x_brink = float(x_brink)
+        self.rng = np.random.default_rng(seed)
+        self.reinject_depth_last = float("nan")
+
+    def apply(self, x, v):
+        """Catch fallen water and return it to the inlet column."""
+        nw = self.n_water
+        w = x[:nw]
+        fallen = w[:, 2] < self.catch_z
+        n = int(fallen.sum())
+        self.recycled_last = n
+        if n == 0:
+            return 0
+        # Measure the live inlet column so re-injection matches the depth that
+        # actually exists, rather than the nominal seeded depth.
+        near = (w[:, 0] >= self.x_in) & (w[:, 0] < self.x_in + 6.0 * self.dx) & \
+               (w[:, 2] >= self.bed_top)
+        if int(near.sum()) >= 20:
+            d = float(np.percentile(w[near, 2], 99.5)) - self.bed_top
+        else:
+            d = 4.0 * self.dx
+        d = max(d, 2.0 * self.dx)
+        self.reinject_depth_last = d
+        x[:nw, 0][fallen] = self.x_in + self.rng.uniform(0.0, 2.0 * self.dx, n)
+        x[:nw, 2][fallen] = self.bed_top + self.rng.uniform(0.05 * d, d, n)
+        if self.prescribe == "full":
+            v[:nw][fallen] = (self.inlet_velocity, 0.0, 0.0)
+        else:
+            v[:nw, 0][fallen] = self.inlet_velocity
+        self.recycled_total += n
+        return n
+
+
+def overfall_metrics(xw, bed_top, x_brink, dx, width_m, q_m2_s, g=9.81):
+    """Brink depth, critical depth and the Rouse ratio, from one frame.
+
+    y_b is the free surface at the brink section, taken over the last half cell
+    upstream of the brink so the sample sits on the bed rather than in the nappe.
+    y_c = (q^2 / g)^(1/3) is the critical depth for a rectangular channel, with q
+    the discharge PER UNIT WIDTH supplied by the caller from the recycling flux,
+    which is an independent measurement from the free surface. Returns
+    (y_b, y_c, y_c/y_b, froude_upstream) with NaN where the sample is too thin.
+    """
+    sel = (xw[:, 0] >= x_brink - 1.5 * dx) & (xw[:, 0] <= x_brink) & (xw[:, 2] >= bed_top)
+    y_b = float(np.percentile(xw[sel, 2], 99.5)) - bed_top if int(sel.sum()) >= 20 else np.nan
+    y_c = float((q_m2_s ** 2 / g) ** (1.0 / 3.0)) if q_m2_s > 0 else np.nan
+    ratio = y_c / y_b if (np.isfinite(y_b) and np.isfinite(y_c) and y_b > 0) else np.nan
+    up = (xw[:, 0] >= x_brink - 12.0 * dx) & (xw[:, 0] <= x_brink - 6.0 * dx) & \
+         (xw[:, 2] >= bed_top)
+    y_up = float(np.percentile(xw[up, 2], 99.5)) - bed_top if int(up.sum()) >= 20 else np.nan
+    fr = (q_m2_s / y_up) / np.sqrt(g * y_up) if (np.isfinite(y_up) and y_up > 0) else np.nan
+    return y_b, y_c, ratio, fr
+
+
+def discharge_per_width(n_recycled, fps, h, width_m):
+    """q = Q / b from the recycling flux. Each particle carries volume h^3, so
+    Q = (particles per second) * h^3. This never reads the free surface, which is
+    what makes the y_c it feeds independent of the y_b it is compared against."""
+    return (float(n_recycled) * float(fps) * h ** 3) / float(width_m)
+
+
+def _selftest_overfall():
+    # Rouse: y_c is about 1.4x y_b. Build a surface that satisfies it exactly and
+    # confirm the estimator recovers 1.4, so a later miss is physics, not algebra.
+    g, q = 9.81, 0.30
+    y_c = (q ** 2 / g) ** (1.0 / 3.0)
+    y_b = y_c / 1.4
+    bed, xbr, dx = 1.5, 2.6, 0.0625
+    n = 4000
+    xs = np.full(n, xbr - 0.25 * dx)
+    zs = bed + np.linspace(0.0, y_b, n)
+    pts = np.column_stack([xs, np.full(n, 1.0), zs])
+    up = np.column_stack([np.full(n, xbr - 9.0 * dx), np.full(n, 1.0),
+                          bed + np.linspace(0.0, 0.30, n)])
+    allp = np.vstack([pts, up])
+    yb, yc, r, fr = overfall_metrics(allp, bed, xbr, dx, width_m=3.5, q_m2_s=q)
+    assert abs(r - 1.4) < 0.02, (yb, yc, r)
+    assert abs(yc - y_c) < 1e-9
+    qq = discharge_per_width(240, 30, 0.03125, 3.5)
+    assert abs(qq - (240 * 30 * 0.03125 ** 3) / 3.5) < 1e-15
+    assert 0.0 < fr < 1.0, fr          # the constructed approach flow is subcritical
+    print("overfall selftest: 4 checks PASS (estimator recovers Rouse 1.4 exactly)")
+
+
 if __name__ == "__main__":
     _selftest()
+    _selftest_overfall()

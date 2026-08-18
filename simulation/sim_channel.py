@@ -80,7 +80,8 @@ class ChannelScene:
     def __init__(self, depth, velocity, n_grid=64, vehicle=None, vehicle_mass=None,
                  lim=None, bc="recycle", grade_deg=0.0, water_density=1000.0,
                  water_eta=1.0e-3, bulk_modulus=1.5e5, fps=30, floor_friction=0.55,
-                 settle_frames=8, device="auto", seed=0, inflow_len=1.5):
+                 settle_frames=8, device="auto", seed=0, inflow_len=1.5,
+                 prescribe="full"):
         if bc not in ("closed", "recycle"):
             raise ValueError("bc must be 'closed' or 'recycle'")
         self.bc_mode = bc
@@ -174,6 +175,9 @@ class ChannelScene:
         self.floor, self.h, self.dx = floor, h, dx
         self._wall, self._lim = wall, lim
         self.leaked = 0
+        self.clamped_x = 0
+        self.clamped_y = 0
+        self.clamped_z = 0
         self._inflow_x = wall + inflow_len
 
         # Outflow one wall-thickness inside the domain, inflow at the upstream wall.
@@ -183,7 +187,7 @@ class ChannelScene:
         if bc == "recycle":
             self.bc = RecyclingChannelBC(
                 n_water=self.n_water, x_in=self.x_in, x_out=self.x_out,
-                inlet_velocity=velocity, dx=dx, grid_lim=lim)
+                inlet_velocity=velocity, dx=dx, grid_lim=lim, prescribe=prescribe)
 
         c = float(np.sqrt(1.1 * bulk_modulus / water_density))
         self.term_acoustic = c / (0.28 * dx)
@@ -237,6 +241,13 @@ class ChannelScene:
             s.set_x(x)
             return
         self.leaked += int(np.unique(np.nonzero(out_lo | out_hi)[0]).size)
+        # Per-axis. A single total cannot distinguish water escaping sideways from
+        # water sinking through the floor, and in recycle mode x is never counted
+        # because it is never clamped, so the two modes' totals are not comparable
+        # until they are split.
+        self.clamped_x += int(out_lo[:, 0].sum() + out_hi[:, 0].sum())
+        self.clamped_y += int(out_lo[:, 1].sum() + out_hi[:, 1].sum())
+        self.clamped_z += int(out_lo[:, 2].sum() + out_hi[:, 2].sum())
         np.clip(w, lo, hi, out=w)
         vw[out_lo] = np.maximum(vw[out_lo], 0.0)
         vw[out_hi] = np.minimum(vw[out_hi], 0.0)
@@ -287,6 +298,10 @@ def main():
     p.add_argument("--mass", type=float, default=None)
     p.add_argument("--lim", type=float, default=None)
     p.add_argument("--bins", type=int, default=12)
+    p.add_argument("--dump-water", type=int, default=0,
+                   help="dump water positions every N frames to rollout.npz (0=off)")
+    p.add_argument("--prescribe", choices=("full", "streamwise"), default="full",
+                   help="inlet velocity condition: full sets (U,0,0), streamwise sets vx only")
     p.add_argument("--canon-dir", default=None,
                    help="directory holding sim_standing.py (only for --vehicle)")
     a = p.parse_args()
@@ -311,7 +326,7 @@ def main():
     sc = ChannelScene(depth=a.depth, velocity=a.velocity, n_grid=a.grid, vehicle=veh,
                       vehicle_mass=mass, lim=a.lim, bc=a.bc, grade_deg=a.grade_deg,
                       water_eta=a.eta, floor_friction=a.floor_friction,
-                      settle_frames=a.settle_frames)
+                      settle_frames=a.settle_frames, prescribe=a.prescribe)
 
     print("SCENARIO=OPEN_CHANNEL bc=%s grade_deg=%.3f" % (a.bc, a.grade_deg), flush=True)
     print("INSTRUMENT dx=%.6f h=%.6f floor=%.6f lim=%.6f" % (sc.dx, sc.h, sc.floor, sc._lim),
@@ -330,12 +345,25 @@ def main():
     prof_rows = []
     driven = []
     n0 = sc.n_water
+    dump_w, dump_s, dump_f, dump_v = [], [], [], []
+    frac_max = 0.0        # max water fraction inside the vehicle bbox = gates.py P-2
     for f in range(a.frames):
         sc.step()
         x = sc.solver.x()
+        vel = sc.solver.v()
         w = x[:sc.n_water]
         centres, depths = depth_profile(w, sc.floor, sc.x_in, sc.x_out, n_bins=a.bins)
         prof_rows.append(depths)
+        if a.dump_water and (f % a.dump_water == 0 or f == a.frames - 1):
+            dump_w.append(w.astype(np.float32))
+            dump_s.append(np.linalg.norm(vel[:sc.n_water], axis=1).astype(np.float32))
+            dump_f.append(f)
+            if sc.n_total > sc.n_water:
+                dump_v.append(x[sc.n_water:].astype(np.float32))
+        if sc.n_total > sc.n_water:
+            veh = x[sc.n_water:]
+            lo_v, hi_v = veh.min(0), veh.max(0)
+            frac_max = max(frac_max, float(((w >= lo_v) & (w <= hi_v)).all(axis=1).mean()))
         driven.append(sc.n_driven)
         if f % 10 == 0 or f == a.frames - 1:
             fin = np.isfinite(depths)
@@ -347,6 +375,21 @@ def main():
                   % (f, sc.n_driven, np.nanmin(depths), np.nanmax(depths),
                      np.nanmax(depths) - np.nanmin(depths), slope, float(w[:, 0].max())),
                   flush=True)
+
+    if sc.history is not None:
+        sc.history.to_csv(out / "metrics.csv")
+
+    if a.dump_water:
+        np.savez_compressed(
+            out / "rollout.npz",
+            water=np.asarray(dump_w, dtype=np.float32),
+            speed=np.asarray(dump_s, dtype=np.float32),
+            frames_dumped=np.asarray(dump_f, dtype=np.int32),
+            vehicle=(np.asarray(dump_v, dtype=np.float32) if dump_v else np.zeros((0, 0, 3), np.float32)),
+            lim=np.float32(sc._lim), dx=np.float32(sc.dx), h=np.float32(sc.h),
+            floor=np.float32(sc.floor), x_in=np.float32(sc.x_in), x_out=np.float32(sc.x_out),
+            depth=np.float32(a.depth), velocity=np.float32(a.velocity),
+            grade_deg=np.float32(a.grade_deg), n_grid=np.int32(a.grid))
 
     prof = np.asarray(prof_rows)
     np.savetxt(out / "depth_profile.csv", prof, delimiter=",",
@@ -381,6 +424,16 @@ def main():
         "recycled_total": int(sc.bc.recycled_total) if sc.bc else 0,
         "max_overshoot_m": float(sc.bc.max_overshoot) if sc.bc else 0.0,
         "leaked_particle_frames": int(sc.leaked),
+        "clamped_x": int(sc.clamped_x), "clamped_y": int(sc.clamped_y),
+        "clamped_z": int(sc.clamped_z),
+        "prescribe": a.prescribe,
+        "passthrough_max_frac": float(frac_max),
+        "final_disp_mag_m": (float(np.linalg.norm(sc.history.displacement[-1]))
+                             if sc.history is not None else None),
+        "final_disp_m": ([float(q) for q in sc.history.displacement[-1]]
+                         if sc.history is not None else None),
+        "final_yaw_deg": (float(sc.history.yaw[-1]) if sc.history is not None else None),
+        "final_roll_deg": (float(sc.history.roll[-1]) if sc.history is not None else None),
         "water_count_conserved": bool(sc.n_water == n0),
         # Zhao et al validate against Rouse's free overfall, where the critical depth
         # is about 1.4x the brink depth (their text, retrieved 2026-08-18 via Scite
