@@ -25,6 +25,7 @@ Usage:
 import argparse
 import json
 import os
+import re
 import subprocess
 import time
 
@@ -104,6 +105,27 @@ def has_pending_tool(msg):
     c = msg.get("content")
     if isinstance(c, list):
         return any(isinstance(x, dict) and x.get("type") == "tool_use" for x in c)
+    return False
+
+
+def pane_is_busy(slot):
+    """A long reasoning turn writes NOTHING to the transcript while it runs, so
+    file mtime alone reports a thinking session as idle. Measured 2026-08-18
+    21:59: d9-kramer was 7m09s and 28.6k tokens into one turn with a 188 s quiet
+    transcript, and the detector called it idle. Interrupting there is exactly
+    the failure this tool exists to prevent, so the pane's own working indicator
+    is consulted as a veto.
+    """
+    try:
+        out = subprocess.run(["tmux", "capture-pane", "-p", "-t", f"canford8:{slot}"],
+                             capture_output=True, text=True, timeout=10).stdout
+    except Exception:
+        return False
+    if re.search(r"esc to interrupt", out):
+        return True
+    # the spinner line carries an elapsed time and a token counter
+    if re.search(r"\(\d+m?\s*\d*s?\s*·\s*[↓↑].*tokens\)", out):
+        return True
     return False
 
 
@@ -272,7 +294,9 @@ def main():
             if not v["exists"]:
                 continue
             age = time.time() - v.get("mtime", 0)
-            idle = age >= a.idle_s and not v.get("pending_tool")
+            idle = (age >= a.idle_s
+                    and not v.get("pending_tool")
+                    and not pane_is_busy(row["slot"]))
             key = row["slot"]
             prev = seen.get(key, {})
             if a.status:
