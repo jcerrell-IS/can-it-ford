@@ -53,3 +53,77 @@ print("  Skill: research-corpus. Four prior vehicle-fording works exist and")
 print("  paper/ cites NONE of them. settle_frames=8 is contradicted by all 25 runs.")
 PY
 fi
+
+# --- connector + CI health, added 2026-08-18 ---------------------------------
+# Answers "is my stack actually working and being used", which git status alone
+# never shows. FAILS OPEN by construction, per the hooks rule in CLAUDE.md:
+# every probe is guarded, capped at 5s, and any error path prints nothing and
+# returns 0. Network results are cached for 30 min in TMPDIR (never in the repo,
+# so it creates no git noise and no worktree dependency).
+{
+  REPO="${CLAUDE_PROJECT_DIR:-/Users/josie/can-it-ford}"
+  CACHE="${TMPDIR:-/tmp}/canford_connector_health"
+  MAXAGE=1800
+
+  # -- local, instant, no network: unpushed work and unlanded workflows --------
+  echo "--- connector + CI health (network parts cached 30 min) ---"
+  if git -C "$REPO" rev-parse --git-dir >/dev/null 2>&1; then
+    AHEAD=$(git -C "$REPO" rev-list --count origin/main..HEAD 2>/dev/null)
+    BR=$(git -C "$REPO" rev-parse --abbrev-ref HEAD 2>/dev/null)
+    if [ -n "$AHEAD" ] && [ "$AHEAD" -gt 0 ] 2>/dev/null; then
+      echo "UNMERGED: ${BR} is ${AHEAD} commits ahead of origin/main"
+    fi
+    # A workflow file that exists here but not on main runs NOWHERE.
+    for wf in "$REPO"/.github/workflows/*.yml; do
+      [ -f "$wf" ] || continue
+      b=$(basename "$wf")
+      git -C "$REPO" cat-file -e "origin/main:.github/workflows/$b" 2>/dev/null \
+        || echo "  CI NOT LIVE: .github/workflows/${b} is not on origin/main, so it runs nowhere"
+    done
+  fi
+
+  # -- network probes, cached -------------------------------------------------
+  NOW=$(date +%s 2>/dev/null || echo 0)
+  AGE=999999
+  if [ -f "$CACHE" ]; then
+    MT=$(stat -f %m "$CACHE" 2>/dev/null || stat -c %Y "$CACHE" 2>/dev/null || echo 0)
+    AGE=$(( NOW - MT ))
+  fi
+
+  if [ "$AGE" -gt "$MAXAGE" ] 2>/dev/null; then
+    {
+      # W&B: authenticated via ~/.netrc, which is the path a real job uses.
+      WB=$(curl -s -n --max-time 5 -H 'Content-Type: application/json' \
+        -d '{"query":"{project(name:\"can-it-ford\",entityName:\"jcerrell29-claremont-mckenna-college\"){runCount runs(first:1){edges{node{createdAt}}}}}"}' \
+        https://api.wandb.ai/graphql 2>/dev/null)
+      if printf '%s' "$WB" | grep -q '"runCount"'; then
+        N=$(printf '%s' "$WB" | sed -E 's/.*"runCount":([0-9]+).*/\1/')
+        LAST=$(printf '%s' "$WB" | sed -E 's/.*"createdAt":"([^"]{16}).*/\1/')
+        echo "wandb: OK, ${N} runs, latest ${LAST}"
+      else
+        echo "wandb: NOT REACHABLE (check ~/.netrc machine api.wandb.ai)"
+      fi
+
+      # HuggingFace: the Mac token store the hf CLI itself uses.
+      HFT="$HOME/.cache/huggingface/token"
+      if [ -r "$HFT" ]; then
+        HFN=$(curl -s --max-time 5 -H "Authorization: Bearer $(tr -d '\n\r' < "$HFT")" \
+              https://huggingface.co/api/whoami-v2 2>/dev/null | sed -E 's/.*"name":"([^"]+)".*/\1/')
+        case "$HFN" in
+          ''|*'{'*|*'error'*) echo "hf: TOKEN DEAD or unreachable (regenerate at huggingface.co/settings/tokens)" ;;
+          *) echo "hf: OK as ${HFN}" ;;
+        esac
+      fi
+
+      # CI: the last conclusion of each workflow that is actually on main.
+      if command -v gh >/dev/null 2>&1; then
+        for w in csv-check.yml physics-consistency-review.yml sync-to-hub.yml; do
+          C=$(gh run list -R jcerrell-IS/can-it-ford --workflow="$w" --limit 1 \
+               --json conclusion -q '.[0].conclusion' 2>/dev/null)
+          [ -n "$C" ] && [ "$C" != "success" ] && echo "CI FAILING: ${w} last run = ${C}"
+        done
+      fi
+    } > "$CACHE" 2>/dev/null
+  fi
+  [ -f "$CACHE" ] && cat "$CACHE" 2>/dev/null
+} 2>/dev/null || true
