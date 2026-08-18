@@ -36,6 +36,7 @@ IDS = os.path.join(STATE, "r8_session_ids.tsv")
 DIGESTS = os.path.join(STATE, "r8_digests")
 BOARD = os.path.join(STATE, "r8_board.md")
 SEEN = os.path.join(STATE, "r8_watch_seen.json")
+DONE = os.path.join(STATE, "r8_done.txt")
 PROJECTS = os.path.expanduser("~/.claude/projects")
 
 
@@ -290,9 +291,23 @@ def main():
         except Exception:
             seen = {}
 
+    def load_done():
+        # A completed slot sits idle forever by design. Without this it is
+        # re-digested every cycle and buries the one session still working.
+        out = set()
+        if os.path.exists(DONE):
+            for line in open(DONE):
+                line = line.strip()
+                if line and not line.startswith("#"):
+                    out.add(line)
+        return out
+
     def pass_once(emit=True):
         changed = False
+        done = load_done()
         for row in rows:
+            if row["slot"] in done and not a.status:
+                continue
             sid = ids.get(row["slot"])
             if not sid:
                 continue
