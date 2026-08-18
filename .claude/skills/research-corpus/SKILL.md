@@ -7,11 +7,52 @@ description: Query the project's own 332-paper external research index before ma
 
 This project holds **332 distinct external papers** across eight Undermind
 deep-research reports, 37 Claude artifacts, five Perplexity reports and two
-Elicit extracts. Measured 2026-08-15: only **43 of the 332 reach a reader-facing
-document** (`paper/`, `docs/`, `deliverables/`, `citations/`), and 256 are cited
-nowhere at all. The failure mode this skill exists to stop is **asserting
+Elicit extracts. The failure mode this skill exists to stop is **asserting
 something the corpus already answers**, in either direction: claiming novelty
 that prior art contradicts, or proposing a method the reports already evaluated.
+
+## The ladder. Five numbers, five different predicates, never one number.
+
+Scope, stated here because it decides every figure below: index built 2026-08-15,
+tracked tree only, **`.claude/worktrees/` excluded**, bibliography read at
+`overleaf/main:can_it_ford_references_IEEE.bib` and paper source at
+`overleaf/main:conference_101719_1.tex`.
+
+| n | predicate | how it is measured |
+|---|---|---|
+| **332** | papers in the corpus | distinct records in the index |
+| **76** | DOI-shaped string **anywhere in the tracked tree** | `cited_in_repo` |
+| **43** | DOI-shaped string in a **reader-facing directory** | `cited_reader_facing`, meaning `paper/` `docs/` `deliverables/` `citations/` |
+| **4** | hold an entry in the **shipped bibliography** | census against the 15 entries on `overleaf/main` |
+| **3** | are `\cite`d, so they **print in the reference list** | census against the 14 distinct cite keys |
+
+**"REACH" IS NOT "CITED", AND THIS FILE USED TO SAY IT WAS.** Corrected
+2026-08-19. This section previously read "43 of the 332 reach a reader-facing
+document, and **256 are cited nowhere at all**". That clause is **WITHDRAWN**. It
+took the complement of *reach* and reported it as *cited*, which is a different
+predicate measured a different way. The arithmetic is **332 - 76 = 256**, so the
+number is the complement of the **76** rung, DOI-string-appears-anywhere, and it
+was published under the word "cited", which is the **3** rung. Two rungs apart.
+`CLAUDE.md`
+withdrew the identical clause on 2026-08-18; this file was not updated with it
+and kept asserting the retracted number for a day.
+
+Why the two cannot be collapsed: **reach** asks whether a DOI string appears in a
+directory. **Cited** asks whether a bibliography entry exists and a `\cite`
+command references it. A paper can be named in twelve `docs/` files and still
+print nowhere. That is not an edge case, it is the normal case here: **40 papers
+reach a reader-facing directory without reaching the reader.** 43 and 3 are both
+correct and answer different questions. The field names `cited_in_repo` and
+`cited_reader_facing` are what mislead. The data is internally consistent, so do
+not go looking for a data bug.
+
+**Never quote a rung without its scope, and never quote the complement of one
+rung as if it were another.** An earlier index build that failed to exclude
+`.claude/worktrees/` reported 269 of 332 as cited, because another session's
+`r5_citation_xref.tsv` carries 489 DOIs.
+
+**60 of the 332 carry no DOI at all**, so they are excluded from the 76 and the 43
+by construction. The denominator for any DOI-join statement is **272, not 332**.
 
 ## The tool
 
@@ -26,13 +67,53 @@ python3 analysis/research_index.py --method added-mass -v     # by method tag
 python3 analysis/research_index.py --query "wall penetration" # free text
 python3 analysis/research_index.py --doi 10.1002/nme.7217     # one paper
 python3 analysis/research_index.py --gaps --method validation-dataset
+python3 analysis/research_index.py --bib-audit                 # corpus vs the bib
 ```
 
-Status flags in output: `IN-PAPER` reaches a reader-facing doc, `repo-only` is
-cited somewhere in the tree but nowhere a reviewer looks, `UNCITED` appears
-nowhere. Rebuild with `--build` only when a new report is added.
+`--bib-audit` censuses the shipped bibliography against the corpus AND against
+the eight source reports, and every row states the ROUTE it matched or failed to
+match by, plus the best rejected candidate and its score. Name the ref with
+`--bib-ref`: the entry count is **21** on `origin/main`, **42** on
+`claude/add-ci-checks` and **15** on `overleaf/main`, so a bare bibliography
+count is wrong on two of the three. It ends with an INDEX SELF-CHECK. It refuses
+to run at all unless all eight source reports load, because a partial read would
+silently report works from the unread reports as never ingested.
+
+Status flags in output, and read these as REACH, not as citation: `IN-PAPER` means
+its DOI string appears in a reader-facing directory, `repo-only` means the string
+appears somewhere in the tree but nowhere a reviewer looks, and `UNCITED` means
+the string appears **in no tracked file**. None of the three tells you whether the
+paper is in the bibliography or is `\cite`d. For that, run `--bib-audit`. In
+particular `UNCITED` is automatic for the 60 records with no DOI, because the
+match is gated on having a DOI at all, so for those it is a statement about the
+record and not about the repo. Rebuild with `--build` only when a new report is
+added.
 
 25 method tags exist. Run `--stats` rather than guessing tag names.
+
+### Two traps that return a FALSE ZERO. A zero from either looks exactly like absence.
+
+**1. `--query` searched only titles and abstracts until 2026-08-19, never authors.**
+So every author-name query returned zero regardless of the corpus contents.
+Measured that day: `--query "Al-Qadami"` returned **0 match** while **5** records
+carry Al-Qadami in `authors`, including `10.1111/jfr3.12828`, the moving
+full-scale vehicle paper this project's own prior-art section cites. A
+coordinating session used that zero as evidence the corpus was silent on the
+project's closest prior art. It was not: 4 of the 6 flood-vehicle DOIs in that
+check were present. **Fixed**, `--query` now searches authors too. If you are
+reading an older checkout, search the authors field directly before concluding
+absence.
+
+**2. An author's name is not their work.** Even with the fix, a surname hit is a
+surname, not an identity, and a miss on one work by an author whose other work is
+present is the interesting case rather than a null result. The corpus holds six
+papers from the Shah/Mustaffa flood-vehicle group and **not** `shah2018`
+(`10.1051/matecconf/201820307003`), which the paper cites.
+
+**Before writing "the corpus has nothing on X", run at least two of: `--query`
+against the term, a direct DOI check, and an author check. State which you ran.**
+A single search that could not match the field you care about is not evidence of
+absence.
 
 ## Facts already established. Do not re-derive, do not contradict without evidence.
 
@@ -50,7 +131,20 @@ positioned against these first:
 Al-Qadami et al 2022 (`10.1111/jfr3.12828`) additionally claim "for the very
 first time" a full-scale passenger vehicle **moving** perpendicular to
 floodwaters, reporting critical depth 0.38 m and minimum depth x velocity
-0.39 m^2/s.
+0.39 m^2/s. **That paper IS in the corpus**, along with four others by the same
+group, which is worth knowing because a `--query` on the author name returned
+zero until the fix above.
+
+**The corpus is NOT a superset of the bibliography, and that is a sourcing gap
+rather than a dropped merge.** Measured 2026-08-19, scope `overleaf/main`: of the
+14 works the paper `\cite`s, 3 are in the corpus and 11 are not, and the 11 are
+absent from the **raw text** of all eight source reports, which is upstream of
+the index build. But they are not 11 of the same thing: 3 preprints, 1 GitHub
+repo, 1 web page, 1 crash-test FE model, 2 techreports, and 3 peer-reviewed of
+which two are computer graphics. A literature search does not return software
+repositories or government pages, so that is a category boundary. **Exactly one
+in-scope absence: `shah2018`.** Do not quote "11 of 14" as a corpus quality
+figure. Full working in `docs/R9_CORPUS_BIB_GAP_2026-08-18.md`.
 
 **A fixed settle length is not defensible, and ours is contradicted by our own
 data.** `sim_standing.py:154` uses `settle_frames=8`. `analysis/settle_audit.py`
@@ -107,7 +201,9 @@ quadrature. Standard MPM, GIMP, CPDI and B-spline MPM are not interchangeable.
 
 ## Validation targets that exist and are unused
 
-`--method validation-dataset` returns 76 papers, 65 of them uncited. The repo has
+`--method validation-dataset` returns 76 papers, 65 of them carrying no DOI-shaped
+string anywhere in the tracked tree, `.claude/worktrees/` excluded (22 of the 76
+have no DOI at all, so they cannot match by construction). The repo has
 **no physics regression test**; `tests/` holds only `test_count_claims_check.py`
 and `test_csv_schema.py`.
 
@@ -150,3 +246,17 @@ and `test_csv_schema.py`.
 - The index excludes `.claude/worktrees/` when computing cited status, per the
   standing H0 rule. An earlier version did not and reported 269 of 332 as cited
   because another session's cross-reference file holds 489 DOIs.
+- **Three records are in the index with an EMPTY DOI and raw markdown left in
+  their title**, so they can never be marked cited however often the repo cites
+  them: `settling-force#11`, `#29`, `#30`. Cause: `parse_report` pulls the DOI
+  with a `[link](url)` regex, that report escapes its brackets, and an ASCE DOI
+  legitimately contains parentheses, so the non-greedy match truncates. **One of
+  them is Dancey et al 2002** (`10.1061/(ASCE)0733-9429(2002)128:12(1069)`), which
+  this file cites above for the verdict-threshold claim. So 3 of the 60 no-DOI
+  records are a parse bug, not a source without a DOI. `--bib-audit` prints an
+  INDEX SELF-CHECK that detects this class. **The data has NOT been repaired**,
+  because that needs a `--build` which would move the 332, the 60 and the 76/43
+  rungs; whoever owns the index build owns the fix.
+- **The index cannot report its own coverage of the bibliography.** Use
+  `--bib-audit` for that, and see the two false-zero traps above before making
+  any absence claim.

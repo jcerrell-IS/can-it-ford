@@ -197,6 +197,63 @@ a genuine sourcing gap.
 
 ---
 
+## 5a. An offered corroboration that is REFUTED, and the false zero behind it
+
+Added 2026-08-19. A coordinating session offered this as corroboration: six
+flood-vehicle DOIs were resolved against Crossref, `research_index.py --query
+"Al-Qadami"` returned zero matches, and therefore "not one of them is in the 332",
+making the gap cover "the literature the project most needs". I was asked to
+verify it rather than take it on trust. **It does not survive.**
+
+DERIVED, checking the six DOIs directly against the index instead of through
+`--query`: **4 of the 6 are in the corpus.**
+
+| DOI | in the 332? |
+|---|---|
+| `10.1007/s11069-021-04949-6` | **yes**, Al-Qadami et al 2021 |
+| `10.1111/jfr3.12828` | **yes**, Al-Qadami et al 2022 |
+| `10.3390/su151713262` | **yes**, 2023 |
+| `10.1111/jfr3.12657` | **yes**, Shah et al 2020 |
+| `10.1051/matecconf/201820307003` | no, this is `shah2018` |
+| `10.1016/j.trd.2017.06.020` | no |
+
+READ, the mechanism, from `analysis/research_index.py` at the `--query` clause
+before I changed it:
+
+```python
+sel = [r for r in sel
+       if q in r["title"].lower() or q in r["abstract"].lower()]
+```
+
+**The `authors` field is never read.** So an author-name query returns zero
+whatever the corpus contains. It is not a weak search, it is a search that cannot
+succeed. DERIVED: `--query "Al-Qadami"` returned `0 match` while **5** records
+carry Al-Qadami in `authors`. `10.1111/jfr3.12828` is among them, and it is the
+paper `CLAUDE.md` names as claiming the first moving full-scale vehicle
+simulation, with critical depth 0.38 m and minimum D x V 0.39 m^2/s. The corpus
+is not silent on the project's closest prior art. It holds it, and marks it
+`IN-PAPER`.
+
+This is the exact failure the same dispatch warned me about in the same message,
+a search that errors or cannot match returning 0, and a false zero being
+indistinguishable from a true one. It reached a conclusion opposite to the truth
+in a single step.
+
+**Fixed**, since `analysis/research_index.py` is in my scope: `--query` now
+searches `authors` as well, and `--query "Al-Qadami"` returns 5. The comment at
+that line records the measured before-and-after so the fix cannot be silently
+reverted as a tidy-up.
+
+**What survives, and it strengthens section 5 rather than weakening it.** The
+corpus holds 5 Al-Qadami papers and 6 papers from the Shah/Mustaffa group, all
+of them in-scope flood-vehicle work, and still does not hold `shah2018`. The
+searches did not miss this neighbourhood. They worked it repeatedly and returned
+eleven of its papers. That makes a single in-scope absence a sharper finding than
+a claim of blanket silence would have been, because blanket silence would have
+been explained by scope and this cannot be.
+
+---
+
 ## 6. `shand2011arr` is uncertain to the tool, and a human read resolves it
 
 The census returns `UNCERTAIN_RELATED_WORK` for `shand2011arr` and refuses to

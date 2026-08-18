@@ -1065,9 +1065,20 @@ def main() -> int:
         sel = [r for r in sel if a.method.lower()
                in [m.lower() for m in r["methods"]]]
     if a.query:
+        # SEARCHES AUTHORS TOO, AND THAT IS A FIX, NOT A FLOURISH.
+        # This clause read `title or abstract` until 2026-08-19. An author-name
+        # query therefore returned a STRUCTURALLY FALSE ZERO: the field being
+        # queried was never read, and 0 matches is indistinguishable from "not
+        # in the corpus". Measured that day: `--query "Al-Qadami"` returned 0
+        # while 5 records carry Al-Qadami in `authors`, among them
+        # 10.1111/jfr3.12828, the project's closest prior art. A coordinating
+        # session used that zero as evidence the corpus was silent on it.
+        # This is the tool whose whole purpose is to stop absence claims, so a
+        # false zero here is worse than no tool.
         q = a.query.lower()
         sel = [r for r in sel
-               if q in r["title"].lower() or q in r["abstract"].lower()]
+               if q in r["title"].lower() or q in r["abstract"].lower()
+               or q in r.get("authors", "").lower()]
     if a.doi:
         d = a.doi.lower().strip()
         sel = [r for r in sel if r["doi"] == d or d in r["doi"]]
