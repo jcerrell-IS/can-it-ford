@@ -1,0 +1,264 @@
+#!/usr/bin/env python3
+"""
+inflow_vehicle_stats.py  --  reduce the recycling-in/outflow vehicle runs and print
+every number the write-up quotes, with its enumeration rather than a bare total.
+
+INPUT is a directory of run directories produced by scripts/inflow_vehicle_wrapper.py.
+Each run directory must hold metrics.csv and summary.json (written by the canonical
+driver) and, for wrapped runs, inflow_summary.json and inflow_instrument.npz.
+
+The run directory NAME carries the arm: <config>__<arm>__rep<N>. arm is one of
+  bare      the unwrapped canonical driver, the wrapper-inertness control
+  closed    wrapped, streamwise walls present, x clamped   (matched control)
+  recycle   wrapped, streamwise walls dropped, outflow recycles to inflow
+  recycnb   as recycle but with sim_standing's upstream velocity band removed
+
+WHAT IT REFUSES TO DO
+It does not average a verdict. Verdicts are tallied, never meaned. It does not quote a
+magnitude without the profile row window it was taken over, because the closed arm is
+contaminated by its own wall reflection from about frame 112 and the recycle arm is not.
+
+Usage
+  /opt/homebrew/bin/uv run --with numpy python3 analysis/inflow_vehicle_stats.py \
+      --runs <dir> [--json out.json]
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import statistics
+import sys
+from collections import defaultdict
+from pathlib import Path
+
+import numpy as np
+
+REPO = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(REPO / "simulation"))
+sys.path.insert(0, str(REPO))
+
+import failure_modes as FM  # noqa: E402
+from vehicle_params import get_vehicle  # noqa: E402
+
+SSF = float(get_vehicle("compact_sedan")["ssf"])
+ARMS = ("bare", "closed", "recycle", "recycnb")
+
+
+def classify_at(metrics_csv, mass_kg, last_row):
+    """Verdict using only metrics rows 0..last_row inclusive.
+
+    Truncate BEFORE differentiating, not after: np.gradient over the full series would
+    let post-horizon frames influence the accelerations inside the horizon, and TOPPLE is
+    scored on acceleration.
+    """
+    cols = FM.load_timeseries(metrics_csv)
+    n = len(cols["t"])
+    k = min(int(last_row), n - 1)
+    cut = {name: np.asarray(v)[: k + 1] for name, v in cols.items()}
+    kin = FM.kinematics_from_columns(cut, mass_kg)
+    res = FM.classify_kinematics(kin, SSF)
+    return res, k, n, kin
+
+
+def summarize(run_dir: Path):
+    s = json.loads((run_dir / "summary.json").read_text())
+    iw_path = run_dir / "inflow_summary.json"
+    iw = json.loads(iw_path.read_text()) if iw_path.exists() else None
+    mass = float(s["mass_kg"])
+    metrics = run_dir / "metrics.csv"
+
+    row = {
+        "run": run_dir.name,
+        "arm": run_dir.name.split("__")[1] if "__" in run_dir.name else "?",
+        "config": run_dir.name.split("__")[0],
+        "n_grid": s["n_grid"], "mass_kg": mass,
+        "velocity_ms": s["velocity_ms"], "depth_m": s["depth_m"],
+        "realized_depth_m": None,
+        "frames": s["frames"],
+        "final_disp_mag_m": s["final_disp_mag_m"],
+        "local_depth_bow_peak": s["local_depth_bow_peak"],
+        "local_depth_bow_peak_frame": s["local_depth_bow_peak_frame"],
+        "local_depth_footprint_peak": s["local_depth_footprint_peak"],
+        "passthrough_max_frac": s["passthrough_max_frac"],
+        "leaked_particle_frames": s["leaked_particle_frames"],
+        "C2_veh_zmin_rise": s["C2_veh_zmin_rise"],
+        "C3_oob_particle_frames": s["C3_oob_particle_frames"],
+        "n_water": s["n_water"],
+        "determinism_identical": s["determinism_identical"],
+    }
+
+    for horizon, tag in ((90, "h90"), (10 ** 9, "hend")):
+        res, k, n, kin = classify_at(metrics, mass, horizon)
+        row["metrics_rows"] = n
+        row["verdict_" + tag] = res.mode.value
+        row["row_" + tag] = k
+        # Full 3-vector norm, the same statistic the driver writes as final_disp_mag_m.
+        row["dmag_" + tag] = float(np.linalg.norm(kin.disp[k]))
+        row["max_surge_drift_" + tag] = float(res.max_surge_drift_m)
+        row["max_vertical_lift_" + tag] = float(res.max_vertical_lift_m)
+        idx = res.first_index.get(FM.FailureMode.SLIDE)
+        row["onset_slide_" + tag] = (None if idx is None or idx < 0 else int(idx))
+        row["sustained_" + tag] = {m.value: bool(v) for m, v in res.sustained.items()}
+
+    if iw is not None:
+        row["realized_depth_m"] = iw["realized_depth_m"]
+        row["bc"] = iw["bc"]
+        row["band"] = iw["band"]
+        row["n_dropped_planes"] = iw["n_dropped_planes"]
+        row["recycled_total"] = iw["recycled_total"]
+        row["tagged_frac_final"] = iw["tagged_frac_final"]
+        row["first_tagged_near_vehicle_frame"] = iw["first_tagged_near_vehicle_frame"]
+        row["max_overshoot_m"] = iw["max_overshoot_m"]
+        row["stream_reflection_frame"] = iw["reflection_prediction"]["stream_reflection_frame"]
+        row["cross_reflection_frame"] = iw["reflection_prediction"]["cross_reflection_frame"]
+        for wname, w in iw["free_surface_slope"].items():
+            row["slope_" + wname] = w["slope_m_per_m"]
+            row["spread_" + wname] = w["spread_m"]
+            row["drained_" + wname] = w["drained_bins"]
+        for k2, v in iw["budget_final_pct_of_water"].items():
+            row["pct_" + k2] = v
+        row["min_z_ever"] = iw["min_z_ever"]
+        row["floor_m"] = iw["floor_m"]
+        row["floor_penetration_final_m"] = iw["floor_m"] - iw["min_z_ever"]
+    return row
+
+
+def agg(values):
+    v = [x for x in values if x is not None and np.isfinite(x)]
+    if not v:
+        return None
+    if len(v) == 1:
+        return {"n": 1, "mean": float(v[0]), "sd": None,
+                "min": float(v[0]), "max": float(v[0])}
+    return {"n": len(v), "mean": float(statistics.mean(v)),
+            "sd": float(statistics.stdev(v)),
+            "min": float(min(v)), "max": float(max(v))}
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--runs", required=True)
+    ap.add_argument("--json", default=None)
+    a = ap.parse_args()
+
+    root = Path(a.runs)
+    dirs = sorted(d for d in root.iterdir()
+                  if d.is_dir() and (d / "summary.json").exists()
+                  and (d / "metrics.csv").exists())
+    if not dirs:
+        raise SystemExit("no complete run directories under %s" % root)
+    rows = [summarize(d) for d in dirs]
+
+    print("=" * 100)
+    print("RUNS FOUND: %d under %s" % (len(rows), root))
+    for r in rows:
+        print("  %-46s arm=%-8s rows=%4d  verdict@90=%-6s verdict@end=%-6s"
+              % (r["run"], r["arm"], r["metrics_rows"], r["verdict_h90"], r["verdict_hend"]))
+
+    by = defaultdict(list)
+    for r in rows:
+        by[(r["config"], r["arm"])].append(r)
+
+    print()
+    print("=" * 100)
+    print("1. WRAPPER INERTNESS. bare (unwrapped canonical driver) vs closed (wrapped).")
+    print("   These must agree to within the run-to-run spread; the wrapper adds only")
+    print("   read-only instrumentation in the closed arm.")
+    for cfgname in sorted({r["config"] for r in rows}):
+        b = by.get((cfgname, "bare"), [])
+        c = by.get((cfgname, "closed"), [])
+        if not b or not c:
+            continue
+        print("  %s" % cfgname)
+        for field in ("final_disp_mag_m", "local_depth_bow_peak", "passthrough_max_frac",
+                      "leaked_particle_frames", "n_water"):
+            print("    %-26s bare %s   closed %s"
+                  % (field, agg([x[field] for x in b]), agg([x[field] for x in c])))
+        print("    verdicts@90        bare %s   closed %s"
+              % ([x["verdict_h90"] for x in b], [x["verdict_h90"] for x in c]))
+
+    print()
+    print("=" * 100)
+    print("2. VERDICT TALLY. Never meaned. SSF=%.2f, classifier G=%.5f, stock thresholds "
+          "(slide_m %.2f, slide_speed_ms %.2f, sustain_frames %d)."
+          % (SSF, FM.G, FM.FailureThresholds().slide_m,
+             FM.FailureThresholds().slide_speed_ms, FM.FailureThresholds().sustain_frames))
+    for key in sorted(by):
+        rs = by[key]
+        t90 = defaultdict(int)
+        tend = defaultdict(int)
+        for r in rs:
+            t90[r["verdict_h90"]] += 1
+            tend[r["verdict_hend"]] += 1
+        print("  %-38s N=%d   @row90 %s   @end(row %s) %s"
+              % ("/".join(key), len(rs), dict(t90), rs[0]["row_hend"], dict(tend)))
+
+    print()
+    print("=" * 100)
+    print("3. FREE-SURFACE SLOPE, m/m, by window. The closed-box artifact the channel")
+    print("   measured at +0.09268 water-only is the number to compare against.")
+    for key in sorted(by):
+        rs = by[key]
+        if "slope_pre_reflection_f60_89" not in rs[0]:
+            continue
+        line = ["  %-38s" % "/".join(key)]
+        for w in ("pre_reflection_f60_89", "post_reflection_f120_149", "late_f220_249"):
+            k = "slope_" + w
+            line.append("%s %s" % (w.split("_f")[0], agg([r.get(k) for r in rs])))
+        print("\n      ".join(line))
+
+    print()
+    print("=" * 100)
+    print("4. WATER BUDGET, percent of water outside the CANONICAL box, final frame.")
+    print("   Measured pre-clamp on the same reference box in both arms, so the numbers")
+    print("   are commensurable even though the recycle arm no longer walls the x faces.")
+    for key in sorted(by):
+        rs = by[key]
+        if "pct_n_below_floor" not in rs[0]:
+            continue
+        print("  %-38s below_floor %s" % ("/".join(key),
+                                          agg([r["pct_n_below_floor"] for r in rs])))
+        print("      %-34s out_y       %s" % ("", agg(
+            [r["pct_n_out_ylo"] + r["pct_n_out_yhi"] for r in rs])))
+        print("      %-34s out_x       %s" % ("", agg(
+            [r["pct_n_out_xlo"] + r["pct_n_out_xhi"] for r in rs])))
+        print("      %-34s floor_pen_m %s" % ("", agg(
+            [r["floor_penetration_final_m"] for r in rs])))
+
+    print()
+    print("=" * 100)
+    print("5. RECYCLING AND RECIRCULATION CONTAMINATION.")
+    for key in sorted(by):
+        rs = by[key]
+        if not rs[0].get("recycled_total"):
+            continue
+        onsets = [r["first_tagged_near_vehicle_frame"] for r in rs]
+        print("  %-38s recycled_total %s" % ("/".join(key),
+                                             agg([r["recycled_total"] for r in rs])))
+        print("      %-34s tagged_frac_final %s" % ("", agg(
+            [r["tagged_frac_final"] for r in rs])))
+        print("      %-34s first tagged particle inside the vehicle window, per rep: %s"
+              % ("", onsets))
+        print("      %-34s max single-tick overshoot %s"
+              % ("", agg([r["max_overshoot_m"] for r in rs])))
+
+    print()
+    print("=" * 100)
+    print("6. MAGNITUDES, with the window named. dmag is the surge/sway displacement")
+    print("   magnitude at that row. Row 90 is the canonical horizon.")
+    for key in sorted(by):
+        rs = by[key]
+        print("  %-38s dmag@90 %s" % ("/".join(key), agg([r["dmag_h90"] for r in rs])))
+        print("      %-34s dmag@end %s" % ("", agg([r["dmag_hend"] for r in rs])))
+        print("      %-34s bow_depth_peak %s" % ("", agg(
+            [r["local_depth_bow_peak"] for r in rs])))
+        print("      %-34s bow_peak_frame %s" % ("", agg(
+            [float(r["local_depth_bow_peak_frame"]) for r in rs])))
+
+    if a.json:
+        Path(a.json).write_text(json.dumps({"rows": rows, "ssf": SSF, "G": FM.G}, indent=2))
+        print("\nwrote %s" % a.json)
+
+
+if __name__ == "__main__":
+    main()
