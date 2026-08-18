@@ -34,9 +34,15 @@
 #                              spanning 0 to 1 rather than a scalar. Repeating comfortable
 #                              runs measures nothing.
 #
-# N=5 IS NOT DECORATION. summary.json determinism_identical is false on all 17 published
-# runs: load_vehicle/solidify is not reproducible, so every run is a draw. A single
-# closed-vs-recycle pair cannot establish a verdict change and will not be reported as one.
+# N=5 IS NOT DECORATION, AND THE REASON WAS STATED WRONG IN THE FIRST VERSION OF THIS
+# COMMENT. summary.json determinism_identical reads TRUE on all 17 published runs, checked
+# live. It is not a reproducibility flag: sim_standing.py:389 defines it as
+# (v1.n_particles == v2.n_particles) and (lim1 == lim2), a particle count and a grid limit,
+# so it says the HULL LOAD is bit-identical and nothing more. Hull loading genuinely is
+# deterministic; the nondeterminism is in the SOLVE, and handoff 3a records all 20 R6 A2
+# repeats coming out bit-different at every grid, diverging by the first recorded frame.
+# So every run is a draw, a single closed-vs-recycle pair cannot establish a verdict change,
+# and this matrix reports the within-arm spread as its own evidence of that.
 #
 # 250 FRAMES, NOT 90. The canonical horizon is metrics row 90, and everything is reported
 # there as well; 250 exists so the wall-reflection window at about frame 112 is INSIDE the

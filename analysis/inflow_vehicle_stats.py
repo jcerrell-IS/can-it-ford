@@ -161,6 +161,45 @@ def reflection_arrivals(prof, fit_lo=40, fit_hi=90, start=90, k=4.0, sustain=3):
     return out
 
 
+def slope_series(prof, centres):
+    """Free-surface slope, m/m, fitted independently at EVERY profile row.
+
+    This is the discriminator that survived. The residual-based arrival detector above
+    fires at row 91 in both arms, i.e. immediately at the start of its search window,
+    because a line fitted over rows 40..89 does not extrapolate past 89 in either arm; it
+    therefore separates nothing and is reported, not deleted, so the failure is on record.
+    A slope fitted per row needs no model of what the series should have been doing.
+    """
+    n = prof.shape[0]
+    out = np.full(n, np.nan)
+    for r in range(n):
+        y = prof[r]
+        fin = np.isfinite(y)
+        if fin.sum() >= 3:
+            out[r] = float(np.polyfit(centres[fin], y[fin], 1)[0])
+    return out
+
+
+def first_sign_change(sl, start=40):
+    """First row at or after `start` where the slope changes sign and STAYS changed for 5
+    rows. In a closed basin this is the moment the water that piled downstream has come
+    back; there is no equivalent event in an open channel."""
+    n = len(sl)
+    ref = None
+    for r in range(start, n):
+        if not np.isfinite(sl[r]):
+            continue
+        if ref is None:
+            ref = np.sign(sl[r])
+            continue
+        if np.sign(sl[r]) != ref and ref != 0:
+            seg = sl[r:r + 5]
+            seg = seg[np.isfinite(seg)]
+            if len(seg) >= 3 and np.all(np.sign(seg) != ref):
+                return r
+    return None
+
+
 def agg(values):
     v = [x for x in values if x is not None and np.isfinite(x)]
     if not v:
@@ -177,6 +216,11 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--runs", required=True)
     ap.add_argument("--json", default=None)
+    ap.add_argument("--npz", default=None,
+                    help="consolidate every run's per-frame depth profile, water budget "
+                         "and recycle trace into ONE npz small enough to commit, so the "
+                         "evidence behind the tables is git-visible rather than living "
+                         "only on Vista")
     a = ap.parse_args()
 
     root = Path(a.runs)
@@ -332,9 +376,57 @@ def main():
               % ("", rs[0].get("stream_reflection_frame", float("nan")),
                  rs[0].get("cross_reflection_frame", float("nan"))))
 
+    print()
+    print("=" * 100)
+    print("8. FREE-SURFACE SLOPE AS A TIME SERIES. Fitted independently at every profile")
+    print("   row, so it assumes nothing about what the series should have been doing.")
+    print("   A closed basin conserves volume, so water piled downstream must come back and")
+    print("   the slope must reverse sign. An open channel has no such obligation.")
+    for key in sorted(by):
+        rs = by[key]
+        rows_sl = []
+        for r in rs:
+            q = Path(r["_dir"]) / "inflow_instrument.npz"
+            if not q.exists():
+                continue
+            z = np.load(q)
+            sl = slope_series(np.asarray(z["depth_profile"], dtype=float),
+                              np.asarray(z["bin_centres"], dtype=float))
+            rows_sl.append(sl)
+        if not rows_sl:
+            continue
+        at = lambda i: agg([sl[i] for sl in rows_sl if i < len(sl)])
+        print("  %-38s slope@row89  %s" % ("/".join(key), at(89)))
+        print("      %-34s slope@row149 %s" % ("", at(149)))
+        print("      %-34s slope@row249 %s" % ("", at(249)))
+        print("      %-34s max slope    %s" % ("", agg([float(np.nanmax(sl)) for sl in rows_sl])))
+        print("      %-34s min slope    %s" % ("", agg([float(np.nanmin(sl)) for sl in rows_sl])))
+        print("      %-34s first sustained sign reversal, per rep: %s"
+              % ("", [first_sign_change(sl) for sl in rows_sl]))
+
     if a.json:
         Path(a.json).write_text(json.dumps({"rows": rows, "ssf": SSF, "G": FM.G}, indent=2))
         print("\nwrote %s" % a.json)
+
+    if a.npz:
+        # The rollout.npz files are 170 to 650 MB each and stay on Vista under the
+        # job-id-keyed path. Everything the tables above are computed from is small and
+        # goes here instead, so a reader can recompute rather than trust.
+        bundle = {}
+        for r in rows:
+            q = Path(r["_dir"]) / "inflow_instrument.npz"
+            if not q.exists():
+                continue
+            z = np.load(q)
+            for k in ("depth_profile", "bin_centres", "recycled_per_frame",
+                      "tagged_near_vehicle", "tagged_total", "water_x_span",
+                      "budget_n_below_floor", "budget_n_out_xlo", "budget_n_out_xhi",
+                      "budget_n_out_ylo", "budget_n_out_yhi", "budget_min_z"):
+                if k in z:
+                    bundle["%s|%s" % (r["run"], k)] = z[k]
+        np.savez_compressed(a.npz, **bundle)
+        print("wrote %s (%d arrays from %d runs)"
+              % (a.npz, len(bundle), len({k.split("|")[0] for k in bundle})))
 
 
 if __name__ == "__main__":
