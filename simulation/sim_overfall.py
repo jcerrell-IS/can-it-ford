@@ -207,7 +207,21 @@ def main():
     print("INSTRUMENT c=%.4f substeps=%d dt=%.3e mach_margin_vs_fall=%.2f"
           % (c, substeps, dt, c / v_fall), flush=True)
 
+    # PIN THROUGH THE SETTLE PHASE, not only before it. Register item 32 records that
+    # the reserve-hold control agreed with the no-reserve baseline on q_last and
+    # Fr_late to within 1 percent but differed by 19.3 percent on q_first, and that
+    # the ratio comparison "passed" only because the held run's RUM95 was 0.2275 at
+    # n_eff 5.0. This is the cause: pin_parked ran ONCE before this loop, so the
+    # parked block free-fell for all 8 settle steps and landed somewhere it was never
+    # meant to be, perturbing the early discharge. Pinning inside the loop is the fix
+    # item 32 asked for. Re-run the --reserve-hold control after this change: if the
+    # early-time disagreement does not shrink, the park is not inert for a different
+    # reason and the reserve design needs rethinking, not retuning.
     for _ in range(8):
+        if n_reserve:
+            xs_, vs_ = s.x(), s.v()
+            pool.pin_parked(xs_, vs_)
+            s.set_x(xs_); s.set_v(vs_)
         s.step(dt, substeps)
     v = s.v(); v[:, 0] += a.velocity; s.set_v(v)
 
