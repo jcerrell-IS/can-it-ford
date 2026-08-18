@@ -138,3 +138,91 @@ direction of the simulation being less stable than the experiment.
 **This is the single most checkable external claim available to this project and it should
 be the next thing reviewed.** UNREVIEWED, and given four of four headlines were overturned
 tonight, treat the factor of two as a lead, not a finding.
+
+## 6. Section 5.1 is REFUTED. The factor of two was mine, not the physics.
+
+Fifth headline overturned tonight. **Section 5.1 is withdrawn in full.** What survives is
+section 1's withdrawal of "sub-physical", and the metadata correction. Nothing built on
+top of them.
+
+### 6.1 Rebuilt on the sim's own geometry the gap is 1.30, not 1.94
+
+I listed four caveats and quantified none. Quantified, two of them absorb most of the gap:
+
+- **Buoyancy removes 38.25% of the normal force.** Measured from `rollout.npz`: 1055 of
+  8905 rigid particles submerged, `F_B = 4127.5 N` against `W = 10791.0 N`. Nihei's Eq. 8
+  **drops** buoyancy, justified because his vehicle was barely wetted and stayed below its
+  0.155 m ground clearance. The sim hull has **no ground clearance** and is wetted to
+  0.2944 m. **The paper's own conclusion 4 says buoyancy LOWERS the sliding threshold**, so
+  0.97 is an upper bound relative to the sim's regime, **by construction, in the direction
+  of my "discrepancy".** I named this caveat and never stated its sign.
+- **The sim is BROADSIDE, Nihei is FRONTAL only.** The kick and clamp act on x
+  (`sim_standing.py:240`, `:275`) and the hull's x-extent is its **width**, so flow strikes
+  the 4.2 m side. Measured submerged projected area ratio **1.750**; Nihei's limitations
+  section puts it at 2.3x for his own vehicle and warns the body would **yaw rather than
+  slide**, so the sliding criterion may be the wrong mode entirely.
+
+Eq. 8 rebuilt with the sim's measured area, its 1100 kg and its buoyancy, at mu = 0.0250:
+**0.651 m/s against the run's 0.5 m/s = 1.30x.** A 1.3 ratio on a closed form using a
+borrowed `C_D` of 1.38 +/- 0.18 is not a reportable disagreement.
+
+### 6.2 I labelled the WORST row "Consistent"
+
+Applied across the whole sweep instead of the one arm I chose:
+
+| mu | sim at 0.5 m/s | Nihei Eq. 8 | disagreement |
+|---|---|---|---|
+| 0.55 | STUCK, bracket (0.5, 1.0] | **4.668 m/s** | **4.7x to 9.3x** |
+| 0.30 | SLIDE | 3.448 m/s | 6.9x |
+| 0.0250 | SLIDE | 0.995 m/s | 2.0x |
+
+**mu = 0.55 is the largest disagreement of the three and I called it "Consistent."** The
+test I used ("3.42 is far above 0.5, so a braked vehicle should be stable") is one-sided
+and **cannot fail**: any STUCK below the criterion "agrees". And I compared the 0.55 run
+against a criterion computed at **mu_s = 0.30**; at 0.55 it is 4.67 m/s. I reported the
+smallest of three discrepancies as the finding.
+
+### 6.3 The novelty claim is refuted by this project's own code
+
+"Until tonight this project had no external number to place its verdicts against at its
+own depth" is **false**. AR&R's hazard product is implemented at `vehicle_params.py:209`
+and forked at `gates.py:17` (`haz_m2s: 0.30`), and gives **1.0189 m/s** at the run's own
+depth. **Nihei's 0.97 is 95.2% of a number the project has been computing all along** and
+that is exactly the sentence I quoted at section 5 ("the AR&R criteria agree well with the
+without-handbrake criteria"). Nihei adds a **brake-state label** for an existing threshold.
+That is still worth having, and it is not a new external number.
+
+### 6.4 Four further corrections
+
+- **The unbraked curve uses mu_R = 0.0242, not 0.0250.** Stated twice: body text
+  ("the smaller mu_R value obtained from the sliding cases ... i.e., 0.0242") and the
+  Fig. 17 caption. At 0.0250 Eq. 8 gives 0.995, not 0.97. My section 1 headline elevates
+  the value the paper itself declined to use for this calculation.
+- **"To three significant figures" is refuted by the paper's own error analysis**:
+  accounting for `C_D = 1.38 +/- 0.18` it states mu_R "could range from approximately
+  **0.021 to 0.028**". That is +/-14%, two significant figures at best.
+- **"Exactly 0.30 m" is wrong.** Realized depth is **0.2944294473039918**, and only **14 of
+  17** runs sit there. 0.30 is the REQUESTED depth. Nihei's Case 2-4 at h = 0.294 m is the
+  closer match and I missed it.
+- **The washaway events are not a cross-check.** Eq. 6b back-calculates mu from those two
+  events and Eq. 8 is Eq. 6b solved for V, so the points lie on the curve **by algebraic
+  identity**.
+
+### 6.5 The branch already predicted this, and I did not reconcile it
+
+`R5_PHYSICS_BRAKE_STATE.md:164` scales the project's own measured bracket by sqrt(mu) and
+predicts v_crit(0.0250) in **(0.107, 0.213] m/s**. I predicted 0.97. **A factor of 4.6 to
+9.1, on the same branch, the same night, at the same mu**, and my document neither cites
+nor supersedes it. Under the branch's own scaling, sliding at 0.5 m/s is exactly what was
+expected and **there is no anomaly at all**.
+
+That file also bounds the substitution I ignored: setting `floor_friction = 0.025`
+simulates **a body sliding on a slippery floor, not a car rolling**. The hull has no
+wheels. My "physically correct coefficient for exactly the condition" restores a claim a
+sibling document had explicitly fenced.
+
+### 6.6 What survives
+
+The withdrawal of "sub-physical" (0.0250 is a literature number for an unbraked full-scale
+vehicle, not an arbitrary one), the metadata correction (7 authors, Yu Bando), and the
+quotations in sections 2, 3 and 5 as quotations. **Everything inferential is withdrawn.**
