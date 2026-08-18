@@ -271,6 +271,46 @@ during a run, and compression accounts for well under a quarter of it.
 
 ---
 
+## 4g. A1's caveats, independently re-derived from the same job's data
+
+The handoff states these as caveats that must travel with A1. None had been re-derived. All are
+now checked against `d4_jobA/brake_mu*/metrics.csv` using the published classifier.
+
+| claim | status |
+|---|---|
+| mu = 0.55 reproduces STUCK, the control holds | **CONFIRMED**, 0 joint frames of 251 |
+| mu = 0.30 SLIDE at frame 8 | **CONFIRMED**, first sustained index 8 |
+| mu = 0.0250 SLIDE at frame 6 | **CONFIRMED**, first sustained index 6 |
+| `peak_surge_accel_g` 0.682 g is a frame-0 artifact | **CONFIRMED**, the max is at frame 0 exactly |
+| excluding frame 0 gives 0.3954 g | **CONFIRMED to 4 dp** |
+| from frame 20, 0.0285 g | **CONFIRMED to 4 dp** |
+| real margin to SSF is 49.8x, not 2.08x | **CONFIRMED**, 49.82x from frame 20 against 2.08x including frame 0 |
+| 102 of 191 conjunction frames have vx below zero | **CONFIRMED exactly** |
+| mean -0.1617 m/s | **CORRECT, but the statistic must be named.** See below |
+
+**The one number that needs its statistic named.** -0.1617 m/s is the mean over the 102 NEGATIVE
+frames, not over all 191 conjunction frames. Both readings are grammatically available in the
+handoff's sentence. Over the same 191 frames:
+
+```
+mean vx over ALL conjunction frames  +0.0156 m/s
+mean vx over the NEGATIVE subset     -0.1617 m/s   <- 102 frames, this is the handoff's number
+mean vx over the POSITIVE subset     +0.2187 m/s   <-  89 frames
+mean |vx| over all conjunction       +0.1882 m/s
+min  vx over all conjunction         -0.2361 m/s
+```
+
+**This sharpens the caveat rather than weakening it.** The natural misreading, that the vehicle
+drifts upstream on average, is false: the mean over all conjunction frames is +0.0156 m/s, which
+is nearly zero. What is actually happening is an OSCILLATION about a near-stationary mean, 53.4
+percent of frames upstream at mean -0.1617 and 46.6 percent downstream at mean +0.2187. The
+`abs()` at `failure_modes.py:170` converts that oscillation into 191 consecutive frames scoring
+as sustained sliding. "Upstream slosh scores as SLIDE" understates it: a vehicle going nowhere
+on average scores as SLIDE.
+
+This is the project's own deduplicate-by-name-and-unit rule appearing in a new place. A mean is
+not a statistic until its support set is named.
+
 ## 5. Closed, with evidence
 
 **CLAUDE.md item 15 and Round-6 handoff section 4 item 5 are CLOSED, not started.**
