@@ -32,6 +32,7 @@ on pages fetched at a point in time. See E8_ACTION_INDEX_2026-08-17.md.
 """
 
 import hashlib
+import os
 import subprocess
 import sys
 
@@ -219,9 +220,15 @@ def measure(root):
     # Per-branch presence. Local trees only; absent trees are reported, not skipped.
     rows = [ln.split() for ln in git(root, "ls-remote", "--heads", "origin").splitlines() if ln.strip()]
     m["public_branches"] = len(rows)
+    # FORCE_ABSENT=n pretends n trees are unfetched, so the refusal path above can be
+    # exercised. A guard that has never been seen to fire is not a guard.
+    force_absent = int(os.environ.get("FORCE_ABSENT", "0"))
     with_decks = tok = sec = flag = absent = 0
-    for row in rows:
+    for i, row in enumerate(rows):
         sha = row[0]
+        if i < force_absent:
+            absent += 1
+            continue
         have = subprocess.run(
             ["git", "-C", root, "cat-file", "-e", sha + "^{tree}"],
             capture_output=True,
@@ -276,11 +283,25 @@ def main():
 
     print()
     print("Invariants (these do not go stale when a branch is pushed):")
-    for label, test, fmt in INVARIANTS:
-        held = test(m)
-        if not held:
-            failures.append((label, "invariant", fmt(m)))
-        print(f"  [{'ok  ' if held else 'FAIL'}] {label}: {fmt(m)}")
+    # A branch whose tree is not present locally was never inspected, so it can neither
+    # confirm nor deny an invariant about branch contents. Evaluating anyway would
+    # report a missing FETCH as a missing DECK, which is a confident wrong answer.
+    # Refuse instead, and say what to run. Same reasoning as D3's watcher refusing to
+    # print a merge target once its single-append assumption stops holding.
+    absent = m["_trees_absent_locally"]
+    if absent:
+        for label, _test, _fmt in INVARIANTS:
+            print(f"  [ -- ] {label}: INDETERMINATE")
+        print(f"         {absent} branch tree(s) were never inspected, so a shortfall")
+        print("         here would be an unfetched branch, not a missing deck.")
+        print("         Run:  git -C <repo> fetch origin  and re-run.")
+        failures.append(("invariants_indeterminate", "evaluable", f"{absent} tree(s) unfetched"))
+    else:
+        for label, test, fmt in INVARIANTS:
+            held = test(m)
+            if not held:
+                failures.append((label, "invariant", fmt(m)))
+            print(f"  [{'ok  ' if held else 'FAIL'}] {label}: {fmt(m)}")
     print()
     print("Observed counts (informational, expected to grow, not checked):")
     for k in ("public_branches", "branches_with_14_decks",
