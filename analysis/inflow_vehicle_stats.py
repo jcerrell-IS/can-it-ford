@@ -68,6 +68,7 @@ def summarize(run_dir: Path):
     metrics = run_dir / "metrics.csv"
 
     row = {
+        "_dir": str(run_dir),
         "run": run_dir.name,
         "arm": run_dir.name.split("__")[1] if "__" in run_dir.name else "?",
         "config": run_dir.name.split("__")[0],
@@ -121,6 +122,43 @@ def summarize(run_dir: Path):
         row["floor_m"] = iw["floor_m"]
         row["floor_penetration_final_m"] = iw["floor_m"] - iw["min_z_ever"]
     return row
+
+
+def reflection_arrivals(prof, fit_lo=40, fit_hi=90, start=90, k=4.0, sustain=3):
+    """Per-bin first row at/after `start` whose depth departs from the rows fit_lo..fit_hi
+    linear trend by more than k residual sigmas for `sustain` consecutive rows.
+
+    Returns a list with one entry per bin, None where the bin never departs or holds too
+    few finite rows to fit. The DETREND is the load-bearing part: a closed box piles water
+    downstream steadily, so an undetrended threshold fires on the pile-up rather than on
+    the reflection and would report an arrival in both arms.
+    """
+    out = []
+    n = prof.shape[0]
+    for b in range(prof.shape[1]):
+        y = prof[:, b]
+        rows = np.arange(n, dtype=float)
+        m = np.isfinite(y)
+        base = m.copy(); base[:fit_lo] = False; base[fit_hi:] = False
+        if base.sum() < 10:
+            out.append(None); continue
+        c = np.polyfit(rows[base], y[base], 1)
+        resid = y - np.polyval(c, rows)
+        sig = float(np.std(resid[base]))
+        if not np.isfinite(sig) or sig <= 0:
+            out.append(None); continue
+        hit = np.zeros(n, dtype=bool)
+        idx = np.arange(start, n)
+        hit[idx] = np.isfinite(y[idx]) & (np.abs(resid[idx]) > k * sig)
+        found = None
+        run = 0
+        for r in range(start, n):
+            run = run + 1 if hit[r] else 0
+            if run >= sustain:
+                found = r - sustain + 1
+                break
+        out.append(found)
+    return out
 
 
 def agg(values):
@@ -254,6 +292,45 @@ def main():
             [r["local_depth_bow_peak"] for r in rs])))
         print("      %-34s bow_peak_frame %s" % ("", agg(
             [float(r["local_depth_bow_peak_frame"]) for r in rs])))
+
+    print()
+    print("=" * 100)
+    print("7. REFLECTION ARRIVAL, from the streamwise free-surface record itself.")
+    print("   DETECTOR, parameters stated so it can be argued with: per streamwise bin,")
+    print("   fit depth linearly in time over profile rows 40..89, which is after the")
+    print("   startup transient and before the predicted first return; arrival is the")
+    print("   first row at or after 90 whose residual exceeds 4 sigma of that fit's own")
+    print("   residuals for 3 consecutive rows. The linear detrend is what stops the")
+    print("   closed box's steady downstream pile-up from firing the detector on its own.")
+    for key in sorted(by):
+        rs = by[key]
+        npzs = [Path(r["_dir"]) / "inflow_instrument.npz" for r in rs]
+        npzs = [q for q in npzs if q.exists()]
+        if not npzs:
+            continue
+        first_arrivals, speeds = [], []
+        for q in npzs:
+            z = np.load(q)
+            prof = np.asarray(z["depth_profile"], dtype=float)
+            centres = np.asarray(z["bin_centres"], dtype=float)
+            arr = reflection_arrivals(prof)
+            fin = [(centres[b], arr[b]) for b in range(len(arr))
+                   if arr[b] is not None]
+            if fin:
+                first_arrivals.append(min(f for _, f in fin))
+            if len(fin) >= 4:
+                xs = np.array([c for c, _ in fin]); ts = np.array([f for _, f in fin]) / 30.0
+                # upstream-propagating front: dx/dt negative. Report |speed|.
+                sl = np.polyfit(ts, xs, 1)[0]
+                speeds.append(abs(float(sl)))
+        print("  %-38s earliest arrival row per rep: %s"
+              % ("/".join(key), first_arrivals if first_arrivals else "none detected"))
+        if speeds:
+            print("      %-34s implied front speed |dx/dt| %s m/s (sqrt(g*d) = %.4f)"
+                  % ("", agg(speeds), float(np.sqrt(9.81 * (rs[0]["realized_depth_m"] or 0.2944294)))))
+        print("      %-34s predicted stream return row %.1f, cross-stream %.1f"
+              % ("", rs[0].get("stream_reflection_frame", float("nan")),
+                 rs[0].get("cross_reflection_frame", float("nan"))))
 
     if a.json:
         Path(a.json).write_text(json.dumps({"rows": rows, "ssf": SSF, "G": FM.G}, indent=2))
