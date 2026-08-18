@@ -1,0 +1,104 @@
+% MPM METHOD FOUNDATIONS, to be APPENDED to the Overleaf bib.
+% STAGED ONLY. Nothing here has been written to Overleaf or to paper/.
+%
+% TARGET FILE: can_it_ford_references_IEEE.bib on the overleaf remote,
+% https://git.overleaf.com/6a5958d10484feadf65a934e, branch main.
+% NOT paper/can_it_ford_references_IEEE.bib in this repo, which is a DIFFERENT
+% file whose keys diverge. Pushing the repo copy over the Overleaf one would
+% break 17 \cite commands (shand2011arr alone is cited 11 times). A repo hook
+% also forbids editing paper/ without explicit go-ahead, for exactly this reason.
+%
+% WHY THESE EXIST. Verified live 2026-08-18 by
+%   git show overleaf/main:can_it_ford_references_IEEE.bib
+% The paper's bibliography has 15 entries and NONE is an MPM method paper. The
+% keys present are thorpe2026pvwm, hsiao2025nerfmpm, kerbl20233dgs,
+% xie2023physgaussian, shand2011arr, smithmodrafelder2019, shah2018, xia2014,
+% azhar2023, xiong2024, ccsa2016yaris, heydinger1999sae, nws_tadd, genesis2024,
+% fred2026. The paper runs MPM for a free-surface fluid coupled to a rigid body
+% and cites nothing for the method. That is a FOUNDATIONS gap, not a novelty gap,
+% and it is fixable by citation alone.
+%
+% NO KEY BELOW COLLIDES with those 15.
+%
+% EVERY DOI HERE WAS VERIFIED against the resolved Crossref record on 2026-08-18,
+% checking the claimed TITLE against what the identifier actually resolves to.
+% That check exists because the dominant fabrication pattern is a REAL, resolvable
+% DOI paired with an INVENTED title, which passes any "does the link work" test.
+% Verdicts are recorded per entry. Do not add an entry here without running it.
+
+% VERIFIED matched / high confidence. Crossref: CMAME 118(1-2):179-196, 1994,
+% 1440 citations. Authors confirmed D. Sulsky, Z. Chen, H. L. Schreyer.
+% WHY: the founding MPM reference. A paper that runs MPM and cites nothing for
+% the method itself has no foundation to stand on.
+@article{sulsky1994particle,
+  author  = {Sulsky, D. and Chen, Z. and Schreyer, H. L.},
+  title   = {A particle method for history-dependent materials},
+  journal = {Computer Methods in Applied Mechanics and Engineering},
+  volume  = {118},
+  number  = {1-2},
+  pages   = {179--196},
+  year    = {1994},
+  doi     = {10.1016/0045-7825(94)90112-0}
+}
+
+% VERIFIED matched / high confidence. Crossref: Int. J. Numer. Methods Eng.
+% 76(6):922-948, 2008. Authors confirmed Steffen, Kirby, Berzins.
+% WHY, and this is the most load-bearing entry here: this project reports a
+% NON-MONOTONE grid convergence across g48/g64/g96, and a margin that collapses
+% 8 -> 6 -> 0/1 -> 0 through g128. Steffen's own abstract states the mechanism:
+% "lack of regularity in the grid functions used for representing the solution to
+% the equations of motion can hamper spatial convergence of the method." That is
+% the citable explanation. Without it the result reads as an unexplained anomaly
+% rather than a known and documented property of MPM.
+@article{steffen2008quadrature,
+  author  = {Steffen, Michael and Kirby, Robert M. and Berzins, Martin},
+  title   = {Analysis and reduction of quadrature errors in the material point method ({MPM})},
+  journal = {International Journal for Numerical Methods in Engineering},
+  volume  = {76},
+  number  = {6},
+  pages   = {922--948},
+  year    = {2008},
+  doi     = {10.1002/nme.2360}
+}
+
+% VERIFIED matched / high confidence. Crossref: ACM Trans. Graph. 37(4):1-14,
+% 2018. Authors confirmed Hu, Fang, Ge, Qu, Zhu, Pradhana, Jiang.
+% NOTE: last author Chenfanfu Jiang is ALREADY in the bibliography as last author
+% of xie2023physgaussian, so this is not an unfamiliar source to the paper.
+% WHY: the 17 canonical runs couple fluid to a rigid body by a mass-weighted grid
+% velocity average with no force accumulator. This paper's abstract introduces
+% CPIC and "two-way coupling with rigid bodies", the force-accumulating
+% alternative. Citing it turns an unexplained architecture choice into a stated
+% one with a literature-backed alternative.
+@article{hu2018mlsmpm,
+  author  = {Hu, Yuanming and Fang, Yu and Ge, Ziheng and Qu, Ziyin and Zhu, Yixin and Pradhana, Andre and Jiang, Chenfanfu},
+  title   = {A moving least squares material point method with displacement discontinuity and two-way rigid body coupling},
+  journal = {ACM Transactions on Graphics},
+  volume  = {37},
+  number  = {4},
+  pages   = {1--14},
+  year    = {2018},
+  doi     = {10.1145/3197517.3201293}
+}
+
+% NOT VERIFIABLE BY THE SAME METHOD, and the page RANGE END is deliberately
+% omitted. CMES does not deposit DOIs for this era, so there is no identifier to
+% resolve. Saying so is the point: three entries above were checked and this one
+% could not be, and that difference must survive into the paper's provenance.
+% The FIRST page 477 is doubly attested: it appears in Steffen 10.1002/nme.2360's
+% own Crossref reference list (retrieved 2026-08-18) as {first-page 477, volume 5,
+% issue 6}, and in the widely circulated citation. NO source consulted attests a
+% LAST page, so the "477--495" that circulates is unsupported and is not written
+% here. If a venue requires a range, read it off the PDF first.
+% WHY: GIMP is the standard answer to the grid-crossing error Steffen quantifies,
+% so the two belong together.
+@article{bardenhagen2004gimp,
+  author  = {Bardenhagen, S. G. and Kober, E. M.},
+  title   = {The generalized interpolation material point method},
+  journal = {Computer Modeling in Engineering and Sciences},
+  volume  = {5},
+  number  = {6},
+  pages   = {477},
+  year    = {2004},
+  note    = {First page attested by the Crossref reference list of 10.1002/nme.2360; no last page attested by any source consulted}
+}
