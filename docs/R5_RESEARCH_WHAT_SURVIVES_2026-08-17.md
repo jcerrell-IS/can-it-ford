@@ -66,6 +66,40 @@ calls itself the most robust finding.
 **The finding is undamaged, and arguably better stated now:** two class definitions
 that differ in scope *and* in traversal depth both return exactly one half.
 
+### A0a. Blast radius of the unit-58 scope error: ONE unit
+
+Unit 58 found I had measured a single artifact (the 7-page compiled PDF) and
+generalised to "the work", missing a **second paper** at
+`deliverables/paper/overleaf/`. **Twelve `.tex` files exist in this repo; the scoped
+command I used saw two.**
+
+Unit 13's rule applies to me here, so I re-ran **every** published "zero `.tex`"
+claim against all twelve files:
+
+```
+Sulsky 0   Bardenhagen 0   GIMP 0   "Generalized Interpolation" 0
+FHWA 0     "Federal Highway" 0
+4071177 0  47142 0   Pazouki 0   Khapane 0
+access.2022.3157904 0   app11051983 0   nme.70210 0
+
+CONTROLS   MPM 52   Yaris 27   convergence 8   uncertainty 2   GCI 1
+```
+
+**All thirteen hold.** And the controls are the point: `convergence` 8,
+`uncertainty` 2 and `GCI` 1 are hits that exist **only** in the tree I had missed,
+so the probe demonstrably reaches it now. Those are the very hits that refuted
+unit 56.
+
+**So the scope error was real and its blast radius was one unit.** The
+MPM-foundations finding (A-list), the FHWA acknowledgement (A7), the four
+novelty-guard papers and the V&V DOIs all survive, because those were measured with
+repo-wide greps rather than the `paper/`-scoped command that produced unit 56.
+
+**I record this as a negative result deliberately.** After a correction that severe,
+the tempting move is to assume everything is contaminated, and the honest move is to
+go and measure which parts are. Over-correction is its own failure mode; unit 37 has
+me nearly retracting correct work for exactly that reason.
+
 ### A0. Result of auditing every safe-to-cite row
 
 Prompted by unit 50, which found A2 false by accident. **Three of twelve rows were
