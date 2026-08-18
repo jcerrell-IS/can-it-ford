@@ -950,6 +950,19 @@ Compute it immediately before merging, not from this page:
     B=$(git -C $R show claude/fork-register-reconcile:$F  | wc -l)
     echo "expect $(( B + A - 656 ))   sideA-vanished=$B   sideB-vanished=$A"
 
+**The watcher now verifies this itself, 02:59.** It was computing a target from
+an assumption it never checked, which is the same defect class as a hardcoded
+number: confident output resting on something unexamined. Each poll it counts the
+hunks, and if side A ever stops being a single append it **refuses to give a
+target at all** and prints the three-blob `merge-file` command instead. Controlled
+both ways: silent when the invariant holds, refusing with the alternative when
+forced to see 3 hunks.
+
+Side A has grown **656 -> 1183** across six moves tonight and the invariant has
+held every time: still one hunk, `@@ -656,0 +657,527 @@`. Sixth move checked
+against a real merge rather than arithmetic: `merge-file` exit 0, **1982 lines**,
+matching the formula exactly.
+
 **Verify the invariant too**, because the formula depends on it. This must print
 **1**, a single hunk starting at 656:
 
