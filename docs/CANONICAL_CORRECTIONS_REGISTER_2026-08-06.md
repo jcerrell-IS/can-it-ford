@@ -761,7 +761,7 @@ L7. **SKILL DRIFT, RE-VERIFIED, and the previously recorded drift is FIXED.** Fi
 
 ## ADDENDUM 2026-08-18
 
-J17. **THE g128 CANONICAL SET NOW EXISTS, AND THE VERDICT SURVIVES REFINEMENT.**
+17. **THE g128 CANONICAL SET NOW EXISTS, AND THE VERDICT SURVIVES REFINEMENT.**
      J15 called running it "the single highest-value open item". Run 2026-08-18 on
      Vista node c642-032 (GH200 120GB) inside idev job 917886, via the unmodified
      `run_s2.sh 128`, which writes to new `g128_m*` directories and therefore did
@@ -802,7 +802,7 @@ J17. **THE g128 CANONICAL SET NOW EXISTS, AND THE VERDICT SURVIVES REFINEMENT.**
      Artifacts at `data/g128_2026-08-18/`, three `summary.json` and three
      `metrics.csv`, so this is re-derivable without the cluster.
 
-J18. **THE g128 VELOCITY SWEEP: EVERY VERDICT HOLDS, AND PASSTHROUGH GETS WORSE.**
+18. **THE g128 VELOCITY SWEEP: EVERY VERDICT HOLDS, AND PASSTHROUGH GETS WORSE.**
      Run 2026-08-18 on Vista c642-032 (GH200) in idev job 917886 via the unmodified
      `run_sweep.sh 128`, writing to new `sweepV_g128_*` directories.
 
@@ -847,7 +847,7 @@ J18. **THE g128 VELOCITY SWEEP: EVERY VERDICT HOLDS, AND PASSTHROUGH GETS WORSE.
      Artifacts at `data/g128_sweeps_2026-08-18/`. The three `sweepD_g128_*` depth
      cases from the same runner are NOT yet classified here.
 
-J19. **THE g128 DEPTH SWEEP COMPLETES AN 11-CASE GRID-INVARIANCE RESULT, AND
+19. **THE g128 DEPTH SWEEP COMPLETES AN 11-CASE GRID-INVARIANCE RESULT, AND
      REFINEMENT INTRODUCES A NEW P-2 FAILURE.** Same run as J18, `run_sweep.sh 128`,
      Vista c642-032, job 917886.
 
@@ -885,7 +885,7 @@ J19. **THE g128 DEPTH SWEEP COMPLETES AN 11-CASE GRID-INVARIANCE RESULT, AND
      passthrough measures the boundary treatment at the hull, and only the second
      is what image particles (Schulz and Sutmann 2019) would address.
 
-J20. **THE BOUNDED-DOMAIN ARTIFACT IS LARGER THAN THE SLOPE IT WOULD MASK, AND
+20. **THE BOUNDED-DOMAIN ARTIFACT IS LARGER THAN THE SLOPE IT WOULD MASK, AND
      OPENING THE STREAMWISE FACES REMOVES IT. B3 IS NOW MEASURED, NOT ASSERTED.**
 
      `docs/HANDOFF_2026-08-18_REALISTIC_ENVIRONMENT.md` blocker B3 stated that a
@@ -951,7 +951,15 @@ J20. **THE BOUNDED-DOMAIN ARTIFACT IS LARGER THAN THE SLOPE IT WOULD MASK, AND
      runs are non-stationary at 5 percent over 90 frames, so those two rows are
      provisional. No vehicle is in the loop yet.
 
-J21. **THE ENGINE PERMITS NO PARTICLE ADD OR REMOVE, AND periodic_x IS RULED OUT
+     **PRECISION RETRACTED THE SAME DAY, SEE J24.** The table above quotes the
+     recycle residual as -0.00284 +/- 0.00029 m/m. Re-running the identical
+     configuration at 300 frames gives +0.00673 at the same grade, and two of the
+     three grades flip sign. The RUM95 measured scatter inside one short record and
+     was read here as a precision; it is not one. THE COMPARISON SURVIVES, the
+     precision does not. Cite the bound (|recycle slope| <= 0.0088) and the
+     separation (10.6x worst case), never a recycle slope to five decimals.
+
+21. **THE ENGINE PERMITS NO PARTICLE ADD OR REMOVE, AND periodic_x IS RULED OUT
      BY THE VEHICLE. RECYCLING IS THE ONLY AVAILABLE TRANSLATION OF ZHAO 2019.**
 
      Read live 2026-08-18 from `third_party/mpm-engine-544c93dd-solver-core/`:
@@ -988,7 +996,7 @@ J21. **THE ENGINE PERMITS NO PARTICLE ADD OR REMOVE, AND periodic_x IS RULED OUT
      the API. A road grade goes in as tilted gravity with the floor left flat,
      which is the chute formulation the periodic_x docstring itself names.
 
-J22. **THE SOUND-SPEED SHORTFALL IS NOT A NEW FINDING. THE REPO'S OWN GATE
+22. **THE SOUND-SPEED SHORTFALL IS NOT A NEW FINDING. THE REPO'S OWN GATE
      ALREADY REPORTS IT, AND THIS ITEM ONLY EXTENDS ITS SCOPE AND ITS SOURCING.**
 
      WRITTEN AS A NEW DISCOVERY IN THE FIRST DRAFT OF THIS ITEM, AND CORRECTED THE
@@ -1036,7 +1044,7 @@ J22. **THE SOUND-SPEED SHORTFALL IS NOT A NEW FINDING. THE REPO'S OWN GATE
      canonical case at a bulk modulus giving c/v >= 10 and confirm the verdict is
      unchanged. Do not close it by assertion.
 
-J23. **THE g128 RUNS WERE PRODUCED BY A DIFFERENT DRIVER FROM THE ONE THE REPO
+23. **THE g128 RUNS WERE PRODUCED BY A DIFFERENT DRIVER FROM THE ONE THE REPO
      CALLS CANONICAL. THE PHYSICS IS IDENTICAL; THE PROVENANCE RECORD WAS NOT.**
 
      `docs/HANDOFF_2026-08-18_REALISTIC_ENVIRONMENT.md` says of `sim_standing.py`
@@ -1071,3 +1079,105 @@ J23. **THE g128 RUNS WERE PRODUCED BY A DIFFERENT DRIVER FROM THE ONE THE REPO
      nothing overrides it. The moment anyone adds a `--bulk-modulus` flag, which
      J22 is a direct reason to do, the g128-lineage driver will report 1.5e5
      whatever it ran. Fix the literal before running that sweep.
+
+24. **ROUND 2: OPENING THE DOMAIN MOVES VEHICLE PASSTHROUGH ACROSS THE P-2 GATE,
+     THE LEAK HYPOTHESIS IS REFUTED, AND J20'S PRECISION IS WITHDRAWN.**
+
+     Twenty runs, Vista jobs 918238 and 918241, 2026-08-18. Artifacts
+     `data/openchannel_2026-08-18/results_round2.json`, figures under
+     `renders/openchannel_2026-08-18/`.
+
+     **(a) PASSTHROUGH IS PARTLY A BOUNDARY-CONDITION ARTIFACT.** Same script, same
+     hull, same mass, only the BC differs:
+
+     | grid | bc      | passthrough_max_frac | P-2 (limit 0.10) |
+     |------|---------|---------------------:|------------------|
+     | g64  | closed  | 0.1069               | FAIL             |
+     | g64  | recycle | 0.0833               | **PASS**         |
+     | g96  | closed  | 0.0972               | pass             |
+     | g96  | recycle | 0.0848               | pass             |
+
+     -22.1 percent at g64, crossing the gate limit, and -12.8 percent at g96. J18
+     and J19 established that REFINEMENT makes passthrough worse and even converted
+     a passing case to failing. This adds the other half: a substantial part of the
+     passthrough is water having nowhere to go, not the hull boundary treatment.
+     Image particles (Schulz and Sutmann 2019) remain worth doing and are still the
+     right instrument for the hull-boundary component, but they were never going to
+     address this component, and any future passthrough claim must say which of the
+     two it is talking about.
+
+     Rogue 0.0823 and Silverado 0.0797 also pass in the open channel. THESE ARE NOT
+     SAME-RESOLUTION COMPARISONS: at fixed n_grid a different hull changes both dx
+     and the realised depth, giving 4.1, 3.7 and 2.9 water layers for yaris, rogue
+     and silverado. Displacement over 90 frames is 0.7076, 0.7437 and 0.3428 m.
+
+     **(b) THE LEAK HYPOTHESIS IS REFUTED BY ITS OWN CONTROL.** J20 recorded that
+     `leaked_particle_frames` runs 2 to 3x higher in recycle mode and was
+     undiagnosed. I predicted the cause was the inlet velocity condition. A
+     controlled A/B refutes it: prescribe=full 346679 against prescribe=streamwise
+     350551, 1.1 percent apart. The per-axis split, added for this purpose, says
+     what it actually is: **87.2 percent z, 12.8 percent y, 0.0 percent x**. Water
+     is sinking through the floor plane, not escaping sideways.
+
+     The closed-vs-open contrast is the informative part: for the SAME Yaris scene,
+     clamped_z is 8009 closed against 258334 recycle, a factor of 32. A closed box
+     ends as a deep slow pile; an open channel keeps fast water in contact with the
+     floor for the whole run. So this is not a defect the recycler introduces, it is
+     a floor-BC defect that only becomes visible once the flow is sustained, and it
+     is the same class of penetration as the hull passthrough in (a).
+
+     **(c) THE RECYCLE RESIDUAL SLOPE IS BOUNDED, NOT RESOLVED. J20's PRECISION IS
+     WITHDRAWN.** Identical configurations at two record lengths:
+
+     | grade | 90 frames | 300 frames | |
+     |-------|----------:|-----------:|--|
+     | 0 deg | -0.00284  | +0.00673   | **sign flip** |
+     | 1 deg | -0.00072  | -0.00350   | |
+     | 3 deg | +0.00596  | -0.00876   | **sign flip** |
+
+     The trend with grade is monotone increasing at 90 frames and monotone
+     decreasing at 300. Two of three flip sign. n_eff is 4.3 to 13.5. The 300-frame
+     grade=1 run is NON-stationary at 5 percent with a recommended discard of 268 of
+     300, so a longer record did not simply fix it, and D9's 250-frame figure is not
+     sufficient here either.
+
+     WHAT SURVIVES, and this is what J20 was actually claiming: every recycle
+     residual, at both record lengths and all three grades, has magnitude <= 0.0088,
+     against 0.0927 and 0.1695 for the closed box. Worst-case separation 10.6x, and
+     every recycle residual sits at least 6.0x below tan(3 deg) = 0.05241. The
+     closed-box artifact still exceeds the bed slope of a 3 degree road and the
+     recycle residual still sits well under it. **Cite the bound and the separation.
+     Never cite a recycle slope to five decimals.**
+
+     GENERAL LESSON, worth more than the number: a RUM95 computed from one record
+     measures scatter WITHIN that record. It is not run-to-run reproducibility and
+     it is not evidence the mean has converged. The only thing that caught this was
+     re-running at a different length, which is the cheapest control available here
+     and was not part of the protocol. It should be.
+
+25. **THE FIRST FREE-OVERFALL ATTEMPT DRAINED ITSELF, AND `clamped_z == 0` WAS THE
+     TELL THAT LOOKED LIKE CLEANLINESS.**
+
+     `add_box` (solver.py:224) is documented as a "volumetric grid-node velocity
+     overwrite", not surface contact. It zeroes the velocity of grid nodes it
+     covers and applies NO restoring force. A particle that drifts into the bed is
+     therefore trapped there for the rest of the run.
+
+     The first three overfall runs (v=0.7, 1.0, 1.3, 2026-08-18) bled water into
+     their own bed for 240 frames: discharge decayed from q=0.16 to q=0.016 m2/s,
+     the caught count fell 611 to 63, the approach flow went supercritical with Fr
+     rising past 13, the brink depth collapsed to NaN, and the Rouse ratio read 2.2
+     to 7.5 against a target of 1.4.
+
+     `water_count_conserved` was TRUE throughout, because the particles still
+     existed; they were just inside the bed. And `clamped_z` was **exactly 0** in
+     all three runs, which reads as a clean containment record and actually meant
+     the projection had been handed `z_floor=0.0` and never fired at all. A zero in
+     a diagnostic counter is not evidence of health until you have confirmed the
+     diagnostic can produce a non-zero.
+
+     Fixed in `simulation/sim_overfall.py`: the bed the box could not provide is now
+     imposed host-side for x <= x_brink, and bed re-entries are counted rather than
+     silently absorbed. THE ROUSE 1.4x TEST IS NOT YET PASSED OR FAILED; the
+     corrected runs were still queued when this was written. Do not record a verdict
+     on it from this item.
