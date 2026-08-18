@@ -1,0 +1,45 @@
+{
+  "what": "Cross-machine reproduction: LS6 (x86_64, A100) vs Vista (aarch64, GH200)",
+  "date": "2026-08-18",
+  "controlled": {
+    "engine_sha": "627367e",
+    "warp": "1.15.0",
+    "torch": "2.11.0+cu128",
+    "args": "identical (--bc recycle --lim 9.421742314 --depth 0.30 --velocity 1.5 --frames 90 --grid 64 --eta 1.0e-3 --floor-friction 0.55)"
+  },
+  "ls6_job": 3372943,
+  "ls6_partition": "gpu-a100-dev",
+  "counts_compared": 17,
+  "counts_identical": 17,
+  "floats_compared": 16,
+  "floats_bit_exact": 14,
+  "worst_relative_float_difference": 1.8524581287350937e-05,
+  "worst_relative_float_field": "late_depth_slope_m_per_m",
+  "keys_only_in_vista": [],
+  "keys_only_in_ls6": [
+    "floor_plane",
+    "image_clamped_total",
+    "image_duplicated_last",
+    "image_sources_last",
+    "n_image"
+  ],
+  "diverging_floats": {
+    "late_depth_slope_m_per_m": {
+      "vista": -0.0016676219454208688,
+      "ls6": -0.0016676528374191533,
+      "rel": 1.8524581287350937e-05
+    },
+    "late_depth_spread_m": {
+      "vista": 0.060855199893315615,
+      "ls6": 0.060855540964338484,
+      "rel": 5.604632364481472e-06
+    }
+  },
+  "interpretation": "Every integer/count quantity is identical. Divergence is confined to the two quantities accumulated over 90 frames of GPU reduction, which is the expected signature of non-associative floating-point summation under a different parallel decomposition, not of a physics difference. Per the V&V literature this is evidence of ROBUSTNESS, not of physical validity (Sen08, Gop21).",
+  "scope_limit": "Tested at 90 frames ONLY. Whether the divergence grows with record length is UNTESTED; do not extrapolate to the 200-300 frame runs.",
+  "late_depth_by_bin_n": 12,
+  "late_depth_by_bin_max_rel": 2.991450076310536e-06,
+  "late_depth_by_bin_bit_exact": 0,
+  "driver_version_caveat": "THE TWO RUNS DID NOT USE THE SAME DRIVER SCRIPT. The LS6 summary carries five fields the Vista summary does not (n_image, image_clamped_total, image_duplicated_last, image_sources_last, floor_plane), so the LS6 copy of sim_channel.py post-dates the Vista leak_full run. The engine SHA, warp and torch were pinned; the DRIVER was not, and last session's claim that 'any difference is the MACHINE, not the software' was therefore true in effect but not as stated. Checked live: n_image=0 and all three image counters are 0, so the added code path produced no particles and is inert in this run. The comparison stands ON THAT CHECK, not on the pinning.",
+  "fields_compared_total": 45
+}

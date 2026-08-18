@@ -1590,6 +1590,23 @@ L7. **SKILL DRIFT, RE-VERIFIED, and the previously recorded drift is FIXED.** Fi
 34. **THREE DEEP SEARCHES: WHAT THEY SETTLED, AND THREE GAPS THAT ARE
     CONTRIBUTIONS RATHER THAN OVERSIGHTS.**
 
+    **TIER: T2 THROUGHOUT. Added 2026-08-18, one session late.** Every bullet in this
+    item is an Undermind deep-search synthesis, which is the same evidence class this
+    register already tiers T2 at E6a, G1a and G4a ("T2, external report `<id>`"). It is
+    NOT T1: nothing here was read off a primary source by this project. The item was
+    originally written in the same voice as the measured items 26 to 33, which is the
+    exact failure the register's line-8 standing rule exists to prevent.
+
+    **AND THE NEGATIVE CLAIMS ARE WEAKER THAN T2.** "The ten-times sound-speed rule has
+    no primary derivation", "no published speed-depth map exists", "no crowned-road
+    comparison exists" and "no surrogate preserves a discrete threshold" are claims of
+    ABSENCE from a retrieval, not from an exhaustive search. Per this project's own
+    claim-discipline rule, absence of evidence from a partial view is not evidence of
+    absence. Write them as "not found by four deep searches covering 243 papers",
+    never as "nobody has done this", and never in a paper's novelty sentence without a
+    named primary-source check. Item 36 records the framework that says the same thing
+    in the V&V literature's own vocabulary.
+
     Launched 2026-08-18 into the `Can it ford` Undermind workspace after an audit
     found the previous prompt asked about a stationary vehicle only, inferred gaps
     from tag counts rather than content, and ignored compute. 48, 47 and 56 papers.
@@ -1643,3 +1660,110 @@ L7. **SKILL DRIFT, RE-VERIFIED, and the previously recorded drift is FIXED.** Fi
     coefficients and recommend a worst-case value, but **no retrieved study
     quantifies the error from substituting an effective roughness for resolved
     roughness**, which is exactly the substitution this project's cell size forces.
+
+35. **THE LS6 CROSS-MACHINE REPRODUCTION, WITH THE TWO CAVEATS THE RUN ITSELF
+    REVEALED AND THE ONE THE LITERATURE IMPOSES.** T1, artifacts committed at
+    `data/ls6_reproduction_2026-08-18/`, regenerated from the raw driver summaries
+    on 2026-08-18 rather than transcribed.
+
+    LS6 job 3372943 (gpu-a100-dev, x86_64 A100) against the Vista `leak_full` run
+    (aarch64 GH200), engine 627367e, warp 1.15.0, torch 2.11.0+cu128, identical
+    arguments. **45 fields compared: 17 integer counts all identical; 16 scalar
+    floats, 14 bit-exact; 12 depth bins, 0 bit-exact.** Worst relative difference
+    **1.852e-05**, on `late_depth_slope_m_per_m`; the bins are tighter at 2.991e-06.
+    Divergence is confined to quantities accumulated over 90 frames, the expected
+    signature of non-associative summation under a different parallel decomposition.
+
+    **CAVEAT 1, THE DRIVERS WERE NOT THE SAME.** The pins covered engine, warp and
+    torch. They did not cover `sim_channel.py`. The LS6 summary carries five fields
+    Vista's does not (`n_image`, `image_clamped_total`, `image_duplicated_last`,
+    `image_sources_last`, `floor_plane`), so the LS6 copy post-dates the Vista run.
+    The claim "any difference is the MACHINE, not the software" was true in effect
+    but false as written. It survives on a CHECK, not on the pinning: `n_image` is 0
+    and all three image counters are 0, so the added path produced no particles.
+    Pin the driver too, or record its hash, before the next cross-machine claim.
+
+    **CAVEAT 2, THE FIRST COMPARISON WAS WRONG AND NEARLY SHIPPED.** It printed
+    "6 of 6 identical" while silently skipping every float, because the consolidated
+    artifact had been re-keyed (`free_surface_slope_m_per_m`) away from the driver's
+    own name (`late_depth_slope_m_per_m`). The second attempt then compared genuinely
+    unrelated fields, `sound_speed_ms` against `mach_margin` and `substeps` against
+    `n_grid`. **A comparison that skips the quantities most likely to differ is worse
+    than no comparison**, because it returns a pass. Compare raw driver output to raw
+    driver output; if a consolidation step renames keys, it must carry the mapping.
+
+    **CAVEAT 3, AND IT BOUNDS WHAT THIS BUYS. Cross-architecture agreement is
+    evidence of ROBUSTNESS, NOT of physical validity.** That is the V&V literature's
+    position, not an internal hedge: rounding growth and parallel-reduction ordering
+    alter trajectories without any physics changing (Senoner et al 2008,
+    `10.2514/1.34862`; Gopalakrishnan et al 2021,
+    `10.1109/Correctness54621.2021.00007`). See item 36. This reproduction licenses
+    "LS6 may carry work comparable to Vista's". It licenses nothing about whether
+    either machine's answer is right.
+
+    **SCOPE.** 90 frames only. Whether the divergence grows with record length is
+    UNTESTED; do not extrapolate to the 200 to 300 frame runs, where it would have to
+    grow by more than 15x to reach the RUM95 on that same slope.
+
+36. **HOW COMPUTATIONAL SCIENTISTS ACTUALLY AUDIT WORK LIKE THIS, AND WHAT IT SAYS
+    ABOUT RESULTS THIS PROJECT ALREADY HOLDS.** T2, Undermind deep search
+    "how computational researchers audit and defend simulation credibility",
+    2026-08-18, 92 papers. Tier and negative-claim caveats of item 34 apply here too.
+
+    This is the search that should have been run first, because it is the only one of
+    the four that changes how the EXISTING results get written up rather than what to
+    compute next.
+
+    - **Credibility is a context-of-use claim, assembled from separate evidence about
+      code correctness, solution accuracy, model adequacy and uncertainty. It is not
+      conferred by agreement with one benchmark.** Oberkampf and Trucano 2002
+      `10.1016/S0376-0421(02)00005-2`; Roy and Oberkampf 2011
+      `10.1016/J.CMA.2011.03.016`; Riedmaier et al 2020 `10.1007/s11831-020-09473-7`.
+      This directly supports CLAUDE.md item 6, "no gate is a physics validation",
+      from outside the project rather than from self-inspection.
+    - **Richardson extrapolation and GCI are defensible only in an asymptotic
+      refinement regime. A non-monotone quantity should be reported as numerical
+      UNCERTAINTY, not reduced to significant figures.** Roy 2010 `10.2514/6.2010-126`;
+      Celik et al 2007 `10.1115/1.2960953`. The g48/g64/g96 `final_disp_mag_m`
+      non-monotonicity (CLAUDE.md item 5) therefore already has the right treatment,
+      "cite the verdict, never the displacement magnitude", and now has a citation
+      for why that is correct practice rather than evasion.
+    - **For a binary verdict, the defensible object is a robustness or
+      failure-probability statement over record length, friction and resolution, and
+      threshold-based validation relates comparison error to DISTANCE FROM THE
+      ENGINEERING THRESHOLD.** Hariharan et al 2017 `10.1371/journal.pone.0178749`.
+      `analysis/probabilistic_verdict.py` already computes the right shape of object;
+      this is the framework that licenses reporting it as the primary result instead
+      of as a robustness appendix to a deterministic 16 SLIDE / 1 STUCK.
+    - **A correlated finite record must carry sampling uncertainty.** Oliver et al
+      2012 `10.1063/1.4866813`. This is the missing citation for the measured
+      N_eff of 2.9 to 11.0 across all 25 runs (CLAUDE.md, 2026-08-15), which is
+      currently an internal measurement with no external support.
+    - **A benchmark at a different physical scale supports only PARTIAL validation
+      unless a hierarchy of simpler shared-physics tests links it to the target, and
+      extrapolation uncertainty is an open problem.** Oliver and Moser 2014
+      `10.1016/j.cma.2014.08.023`. This is the governing frame for validating a
+      full-scale hull against 1:10 scale experiments.
+    - **No universal minimum evidence standard for particle methods has been
+      adopted.** Brannon et al 2011, no DOI,
+      `https://www.semanticscholar.org/paper/a1110387f396ff2323bd21373a1de6e3d7ae97c5`.
+      A credible weakly-compressible case normally combines manufactured solutions and
+      order tests, boundary-condition verification, conservation and stability checks,
+      refinement, and validation of the coupled physics: Negi and Ramachandran 2021
+      `10.1063/5.0072383`; Vacondio et al 2020 `10.1007/S40571-020-00354-1`.
+      **This project currently has none of the manufactured-solution tier.**
+    - **Provenance expected with a result**: versioned code, inputs, parameters,
+      environment, hardware and parallel settings, workflow, output provenance.
+      Leipzig et al `10.1016/j.patter.2021.100322`. Item 35's caveat 1 is exactly the
+      "hardware and parallel settings plus versioned code" clause failing in practice.
+    - **Two documented traps this project is exposed to.** Agreement for the wrong
+      reasons, Berg et al 2018 `10.1002/cnm.3150`, which is the named failure mode for
+      gate G-3 comparing against `RHO_REF` derived from the same pipeline. And
+      underestimated iterative error, Eca et al 2020 `10.1115/1.4047922`.
+    - **Null and self-refuting results are strongest reported as sensitivity,
+      uncertainty and decision-boundary findings, not buried.** Easterling 2001
+      `10.2172/780290`. This project has accumulated an unusual number of
+      self-refutations (items 27, 30, the withdrawn 8.2 percent, the settle-transient
+      reversals). That is a reportable pattern under this frame, not an embarrassment
+      to be compressed.
+
