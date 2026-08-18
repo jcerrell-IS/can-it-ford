@@ -153,8 +153,25 @@ It targeted tmux `canford5` panes D1, D2 and D3. Live `tmux list-panes -a` shows
 so one of its three targets had been gone for some time and a third of its work was
 addressed to nothing.
 
-Not restated here: the "36 misroutes into r7-pinned-span" figure from the R8 board. That
-is the coordinator's measurement and this session did not re-derive it.
+**1357 and 36 are different quantities and both are real.** They were briefly treated here
+as a discrepancy; they are not, and the pair is worse than either number alone.
+
+| figure | what it counts | source |
+|---|---|---|
+| 1357 | messages the dispatcher COMPOSED and then REFUSED to send | this session, counting `DUPLICATE, refusing to send` in `.claude/state/round5_autodispatch.log` |
+| 37 | misrouted follow-ups that actually LANDED in `r7-pinned-span` | that session's own running tally in its transcript |
+
+So the dispatcher **refused 1357 and delivered about 37**. Its deduplication guard worked
+throughout while its routing did not, which is why neither number on its own describes the
+failure: a broken router behind a working guard looks quiet from the log side.
+
+The R8 board records 36. Verified live from the receiving session's transcript
+(`~/.claude/projects/-Users-josie-can-it-ford--claude-worktrees-r7-pinned-span/45445c36-...jsonl`,
+1580 lines): the running tally reaches `"Thirty-seventh misroute; ignoring."` and there is
+no thirty-eighth, so **the final count is 37 and 36 is the second-to-last tally line**. The
+difference changes nothing about the conclusion and is recorded only because the number is
+now written down in two places. Note also `"Misroutes thirty-three through thirty-five
+(three arrived batched)"`, so the tally counts messages, not turns.
 
 The script is now tracked at `43968bb`, so its behaviour is reviewable from any worktree
 rather than only from the main checkout.
@@ -255,49 +272,103 @@ loses all three. Committing the edit is still the right fix; it is just not an e
 
 ---
 
-## 4. Recording a sibling's measurement error, at their request
+## 4. METHOD NOTE: a comparison whose both arms failed, reported as agreement
 
-The coordinator's board row of `2026-08-18 21:40` stated that
-`watch_register_merge.sh` was stopped and that there was "no respawn after 6 s". Section
-2.3 shows that was false at 21:46.
+Three sessions hit this in one night, with three different tools. It is a pattern, not
+three anecdotes, and this slot owns tooling, so it is written up here.
 
-**The coordinator found and corrected this themselves before this session's row was
-appended**, in their board row of 22:05, and re-measured the process tree independently
-rather than accepting this session's report. This section corroborates that correction; it
-is not a fresh find.
+**The shape.** A check compares two things. Both sides fail to produce a value. The two
+failures are equal to each other, so the comparison returns "same" and the check reports a
+clean pass. Nothing errors. The output is not just wrong, it is *reassuring*.
 
-It is recorded because it is a measurement error rather than a typo, and the shape recurs:
-a process was killed, a **six second** window was observed, nothing came back, and a clean
-sample was generalised into a verified absence. Six seconds cannot detect a process that a
-live session relaunches on its own cadence. This is the project's standing rule that
-absence of evidence from a partial view is not evidence of absence, and it was walked into
-while writing the row that asserted the opposite.
+### The three instances
 
-The same shape appears twice more in this document, which is why it is worth naming rather
-than filing as one session's slip:
+**(a) `d6-tooling`, this session, a hash comparison of 17 files.** Verifying that the
+committed blobs matched the main checkout, the comparison ran inside a `while read`
+subshell that had lost `PATH`. `git` and `shasum` were both "command not found", so both
+digests were the empty string, `[ "$a" = "$b" ]` was trivially true, and **all 17 lines
+printed `OK`**. See section 1b. The rerun used Python with an absolute `git` path and
+printed the digests themselves.
 
-- section 1b, a hash comparison that passed because both hashes were empty
-- section 3a, a filename search that found nothing because the backup was a patch
+**(b) `d7-register`, a content probe over register copies.** Read directly from that
+session's transcript, not relayed: "My first content probe used `md5 -q`, which errored on
+both sides under this shell; both sides returned identically empty and the probe reported"
+SAME. That session called both arms erroring and being reported as agreement "the single
+most dangerous shape on this project". The count of affected entries (six) is the
+coordinator's figure and was not re-derived here.
 
-In all three the tool reported cleanly and the **probe** was what failed. The defence is
-the same each time: make the probe print what it actually saw, not just its verdict.
+**(c) `coordinator`, a process-respawn check.** A process was killed, a **six second**
+window was observed, nothing came back, and "verified no respawn" was written to the board.
+Six seconds cannot detect a process that a live session relaunches on its own cadence. The
+absent evidence was read as evidence of absence. Refuted in section 2.3; the coordinator
+found and corrected it themselves at 22:05, re-measuring independently rather than
+accepting this session's report, so section 2.3 corroborates rather than claims it.
+
+(c) is the same family rather than literally two failed arms: the *sample* was too narrow
+to contain the phenomenon, and a clean sample was generalised into a verified absence. In
+all three the tool exited cleanly and the **probe** was what failed.
+
+A fourth, closely related instance appears in section 3a of this document: a
+`find -name canford_monitor.sh` that returned nothing because the backup exists as a
+**patch** rather than a file copy. That one produced a false *alarm* rather than a false
+pass, which is the same defect with the sign flipped, and it is the safer direction to fail.
+
+### The rule
+
+**A check must distinguish "equal" from "could not evaluate".** Those are different
+answers and only one of them is a pass. Concretely:
+
+- **Print what the probe saw, not just its verdict.** Two empty strings are visibly not two
+  digests. A verdict alone hides its own inputs.
+- **Verify the probe on a known-different pair before trusting it on an unknown one.** A
+  comparator that cannot produce a FAIL has not been shown to work.
+- **Treat a run of uniform passes as evidence to distrust.** This is what caught (a): every
+  line passed, including files there was no reason yet to trust.
+- **Say which view you searched.** A negative result is a statement about the probe's
+  reach, not about the world, until the reach is stated.
+
+This is the same discipline the positive control in section 5 enforces for
+`corpus_cited_status`: a fix for a check that cannot fail needs a test that can fail, and
+the way to know it can is to make it go red on purpose.
 
 ---
 
-## 5. `corpus_cited_status`, the novelty guard that could not fail
+## 5. `corpus_cited_status`: a checker whose corpus included its own output
 
 Routed here by `d5-priorart` because the file is this slot's. Fixed in **`51677d3`**.
 
-### The defect
+### The defect class, named, because it will recur
 
-`corpus_cited_status` names the four vehicle-fording prior-art works in its own tool
-description, then answered the question by running `/usr/bin/grep -rIl` over `docs/`,
-`paper/` and `CLAUDE.md` and setting `cited_in_repo = len(hits) > 0`. Writing "these four
-papers are uncited" into a note put their DOIs into `docs/`, which flipped them to
-"cited". The act of recording the problem was what defeated the check.
+**A checker whose search corpus includes its own findings cannot fail.** Any note it
+provokes becomes evidence that the thing it warned about is fine. The feedback is positive
+and silent: the more diligently the problem is documented, the more confidently the checker
+reports that there is no problem.
+
+That is the general form. The specific instance is worse than the general one:
+
+`corpus_cited_status` calls itself THE NOVELTY GUARD and names the four vehicle-fording
+prior-art works in its own tool description. It then answered the question by running
+`/usr/bin/grep -rIl` over `docs/`, `paper/` and `CLAUDE.md` and setting
+`cited_in_repo = len(hits) > 0`. It never opened a `.tex` file.
 
 Reproduced from source before reading anyone else's report. Needle `10.1115/1.4071177`
-returns 6 files: four `docs/` notes, the `.bib`, and `CLAUDE.md` itself.
+returns **6 files: four `docs/` notes, the `.bib`, and `CLAUDE.md` itself**.
+
+`CLAUDE.md`'s own sentence, verified live at lines 746 to 750 on 2026-08-18 and quoted
+here as the anchor because line numbers in that file go stale, reads "Four prior vehicle
+fording or wading simulations exist and `paper/` cites NONE of them:" and then lists the
+four DOIs, `10.1115/1.4071177` among them. **That sentence is one of the six hits.** So the canonical record that these papers are uncited is part of what made the
+guard answer "cited". The project wrote down the problem, and writing it down is what hid it.
+
+Two design rules follow, and they generalise past this file:
+
+1. **A checker must not read the tree it is warning about.** Ground the answer in the
+   artifact whose state is in question, here the submitted LaTeX, not in commentary about it.
+2. **Distinguish the artifact from the discussion of the artifact.** A DOI in a note, a DOI
+   in a `.bib` and a `\cite` key in the tex are three different claims. Collapsing them into
+   one boolean is what made "cited" unfalsifiable.
+
+### What the old check actually measured
 
 Parsing the LaTeX instead: `paper/conference_101719.tex` carries 21 cite commands and 11
 distinct keys. All four prior-art works have `.bib` entries among the 42, and **none of the
@@ -378,7 +449,8 @@ defect claim, and it has not been made.
 
 ## 7. What this session did not verify
 
-- The board's "36 misroutes into `r7-pinned-span`" for `round5_autodispatch.py`.
+- ~~The board's "36 misroutes into `r7-pinned-span`"~~ NOW VERIFIED, and corrected to **37**,
+  from the receiving session's own transcript. See section 2.1.
 - The board's claim that a respawn loop in tmux `canford:0-MONITOR` was driving
   `canford_monitor.sh`, and that it was interrupted. Absence from `ps` is confirmed; the
   loop is not.
