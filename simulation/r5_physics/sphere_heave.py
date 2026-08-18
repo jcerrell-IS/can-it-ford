@@ -133,7 +133,14 @@ import numpy as np
 
 # Engine constants, read directly from simulation/validate_coupling_force.py:15-23,
 # which reads them from the pinned solver. Do not fork these.
-RHO_W = 1000.0        # the project's canonical water density, NOT the benchmark's
+# RHO_W = 1000.0 WAS DECLARED HERE AND REMOVED 2026-08-18. It was read by nothing:
+# every use in this file and in test_sphere_geometry.py is RHO_W_BENCHMARK. Two water
+# densities in one module is the exact shape of defect the register's threshold rule
+# warns about, and an unused constant that looks canonical is worse than no constant,
+# because the next reader wires it. THIS SCENE HAS ONE WATER DENSITY: RHO_W_BENCHMARK
+# = 998.2, from Kramer 2021 Table 1, because the scene exists to compare against that
+# experiment. The project's canonical 1000.0 is deliberately NOT used here and its
+# absence is correct, not an oversight.
 BULK = 1.5e5
 ETA = 1.0e-3
 G_ENGINE = 9.81       # hardcoded at core/solver.py:167-169 and NOT overridable
