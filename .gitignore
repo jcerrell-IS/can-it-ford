@@ -116,3 +116,9 @@ render_s2/
 # g128 velocity/depth sweeps, register J18.
 !data/g128_sweeps_2026-08-18/
 !data/g128_sweeps_2026-08-18/**
+
+# Open-channel in/outflow BC validation, 2026-08-18. data/* above is a
+# blanket ignore, so a new data directory needs this explicit pair or it silently
+# never travels.
+!data/openchannel_2026-08-18/
+!data/openchannel_2026-08-18/**
