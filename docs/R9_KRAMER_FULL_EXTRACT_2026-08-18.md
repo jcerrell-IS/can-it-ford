@@ -18,6 +18,7 @@ $V $X --order                # section 5, RANS4 and RANS5
 $V $X --sphere               # section 6, the workbook nobody opened
 $V $X --descriptions         # section 7
 $V $X --all --json           # everything, machine readable
+$V $X --self-test            # section 11, proves every fail-loud guard fires
 ```
 
 **Source.** `energies-14-00269-s001.zip`, sha256
@@ -66,7 +67,7 @@ go in this repo, **no Kramer series file does**.
    drop heights, and against its own drop height RANS4 misses on all three. The two codes
    still differ by a lot in degree, but "consistent with a column swap" was my sentence and
    it was wrong.
-6. **An entire workbook of measured physical properties has never been opened**, including a
+6. **An entire workbook of measured physical properties is opened by no committed code in this repo**, including a
    CAD-derived inertia tensor and a CoG, on a benchmark where this project has spent
    considerable effort establishing that estimated tensors must not be called measured.
    Section 6. Two of the three checks I first built on it are **downgraded** there: the
@@ -402,7 +403,7 @@ survive, so it should not be put to them as though it had.
 
 ---
 
-## 6. The workbook nobody has opened
+## 6. The workbook no committed code in this repo has opened
 
 `Descriptions/Details on sphere mass distribution and densities.xlsx`, three sheets: `Weights
 and ballast`, `Densities`, `Inertia moments`. No committed code in this repo has ever opened
@@ -590,6 +591,76 @@ And the sentence section 4 of that document is missing, which is the one I would
 
 ---
 
+## 11. THE SELF-AUDIT RULE APPLIED, AND IT CAUGHT ME TWICE
+
+The coordinator's standing rule for this unit: *an extractor that opens the wrong sheet and
+finds no rows must not report "no such series". Assert on zero rows, loudly, per series.*
+
+**I probed my own committed script for that defect before adding any guard, and found it in
+my most prominent claim.** Pointing `radial_order()` at an empty directory:
+
+```
+radial_order() RETURNED NORMALLY. It did not raise.
+  n series analysed                     : 0
+  codes_reversed_on_every_series        : []
+  codes_inconsistent                    : []
+  reversal_is_universal_where_it_occurs : True
+```
+
+**A headline verdict produced from zero data, and nothing in the output distinguished it from
+a real result.** `audit_code_meta()` had the same shape, returning `NO SUBSTANTIVE DRIFT`
+after checking zero fields, which would have made the `CODE_META` audit, the whole point of
+this unit, unfalsifiable. `cost_classes()` returned a silent empty.
+
+**What changed.** An `ExtractionError` that is caught nowhere, `_require`, `_require_count`
+and `_require_nonempty`, and an `EXPECTED` block recording the archive's own counts (13 sheet
+rows, 11 models, 31 numerical series, 27 experimental, 10 WG series, 12 experimental
+repetitions, 3 densities, 4 cost entries, 24 CAD entries). Per series, `radial_order()` now
+requires nonzero rows, nonzero samples at `t >= 0`, and strictly positive eta^2 integrals,
+because the ratio divides by those and a zero column would have produced an `inf` verdict
+rather than an error. The headline field is now `"UNDEFINED, no code in this set reverses"`
+when no code reverses, instead of `True`.
+
+**And the guard immediately caught a second defect, this one already committed and already in
+this document.** On the real archive, `--all` failed with:
+
+```
+ExtractionError: inertia label 'Ixx and Iyy' not found.
+```
+
+The sheet merges `B7:B11` for the words "Inertia moments", so on row 7 the first populated
+cell is `B7` and the label sits in `C7`. My parser scanned only the first populated cell of
+each row, **skipped that row entirely, and dropped `Ixx and Iyy` from its output while still
+reporting the other six inertia entries and looking complete.** Section 6's table quotes
+`Ixx and Iyy = 0.098252280525 kg m2`, and until this fix **that number came from a scratch
+probe, not from the committed script.** The value was right. It did not regenerate, which is
+the one property this document claims for every number in it. Parser fixed to scan every cell
+in the row; it now extracts from `D7` and matches.
+
+**Proof the guards work, because an assertion nobody has seen fail is decoration.**
+`--self-test` breaks one input per case and requires an `ExtractionError`:
+
+| case | result |
+|---|---|
+| `radial_order` on an empty numerical tree | fires: expected 10, found 0 |
+| `series_manifest` on an empty numerical tree | fires: expected 31, found 0 |
+| `model_table` with the header row moved | fires: names the missing headers |
+| `model_table` with zero data rows | fires: expected 13, found 0 |
+| `cost_classes` with no second table | fires: "is EMPTY" |
+| `audit_code_meta` with `CODE_META` empty | fires: "checked ZERO fields" |
+
+**6 of 6 fire, 6 of 6 message-match, `--self-test` exits 0.** It exits 1 if any guard stops
+firing, so this cannot silently rot.
+
+**The transferable form.** The rule that catches this is not "add assertions". It is that a
+check must be able to report *"I could not evaluate this"*, and that state must not be
+representable as a pass. Both of my false passes came from a boolean derived from an empty
+collection: `not []` is `True`, and `all(...)` over nothing is `True`. **Any verdict computed
+as a negation or an `all()` over a collection that could be empty is a false pass waiting to
+happen**, and both of mine were exactly that.
+
+---
+
 ## 10. Review status and what is not verified
 
 ### ADVERSARIAL REVIEW WAS NOT AVAILABLE. THESE CLAIMS ARE UNREVIEWED BY A SECOND PARTY.
@@ -617,6 +688,11 @@ which is the one load-bearing claim in this document that nothing has yet been t
 
 Every number above is reported with the command that regenerates it.
 
+**Registered upstream.** This document's `CODE_META` finding is **row B3** of
+`docs/R9_DISCREPANCY_REGISTER_2026-08-19.md`. The coordinator has also corrected its own
+outward report, which had described the six-groups attribution as "derived"; it is
+transcribed, and the audit in section 2 is what makes it checkable.
+
 **Self-checks that passed.**
 
 - ditto resolution verified by inspection against the printed cells: Author E14:E17 to E13,
@@ -628,7 +704,10 @@ Every number above is reported with the command that regenerates it.
 - the radial-order test reproduces the prior slot's per-code verdicts before adding
   monotonicity and the per-series split
 - Archimedes check independently lands the sphere at half draft to 0.0030 percent
-- both `--all` and `--all --json` exit 0
+- both `--all` and `--all --json` exit 0, and every subcommand exits 0 individually
+- `--self-test` exits 0 with 6 of 6 guards firing and message-matching (section 11)
+- the `Ixx and Iyy` value in section 6 now regenerates from the committed script rather
+  than from a scratch probe, which is what the guard exposed
 
 **What is NOT verified.**
 

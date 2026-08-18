@@ -80,6 +80,67 @@ DITTO = "-||-"
 SHEET_TO_DIR = {"NLPF1": "FNPF1"}
 
 
+# --------------------------------------------------------------------------------------
+# FAIL-LOUD GUARDS. Added after a probe showed three silent false passes in this file.
+# --------------------------------------------------------------------------------------
+# THE DEFECT THESE EXIST TO PREVENT, demonstrated against this module before they were
+# written: pointing `radial_order()` at an EMPTY directory returned normally with zero
+# series analysed and `reversal_is_universal_where_it_occurs: True`. A headline verdict
+# was produced from no data at all, and nothing in the output distinguished it from a
+# real result. `audit_code_meta()` did the same, reporting "NO SUBSTANTIVE DRIFT" after
+# checking zero fields.
+#
+# THE RULE: a check must be able to say "I could not evaluate this", and that must not
+# look like "I evaluated this and it was fine". An empty read is an ERROR, never a pass.
+#
+# So every extraction below asserts what it expected to find, and the counts are the
+# ARCHIVE'S OWN, recorded here so a future change to the archive fails loudly rather than
+# silently shrinking a result set. `--self-test` proves each guard actually fires.
+
+EXPECTED = {
+    "sheet_rows": 13,           # 11 models plus the two duplicate UoP rows
+    "models": 11,
+    "numerical_series": 31,     # NOT 33: RANS3 ships 05D only
+    "experimental_series": 27,  # 24 Measured plus 3 CI95
+    "numerical_wg_series": 10,  # RANS2 x3, RANS3 x1, RANS4 x3, RANS5 x3
+    "experimental_wg_reps": 12,
+    "densities": 3,
+    "cost_entries": 4,
+    "cad_entries": 24,
+}
+
+
+class ExtractionError(RuntimeError):
+    """Raised when an extraction finds nothing, or finds a different amount than expected.
+
+    Deliberately NOT caught anywhere in this module. A caller that wants to continue past
+    a failed extraction has to do so explicitly, which is the point.
+    """
+
+
+def _require(cond: bool, what: str, detail: str = "") -> None:
+    if not cond:
+        raise ExtractionError(f"{what}. {detail}".strip())
+
+
+def _require_count(got: int, want: int, what: str, where: str) -> None:
+    """Exact-count assertion. Says what it wanted, what it got, and where to look."""
+    if got != want:
+        raise ExtractionError(
+            f"{what}: expected {want}, found {got}, reading {where}. "
+            f"Either the archive changed or this is pointed at the wrong place. "
+            f"A count that silently shrinks is the failure mode this guard exists for; "
+            f"do not 'fix' it by lowering the expectation without checking the source.")
+
+
+def _require_nonempty(seq, what: str, where: str):
+    if len(seq) == 0:
+        raise ExtractionError(
+            f"{what} is EMPTY, reading {where}. This is an error, not a pass: an empty "
+            f"result set must never be reported as a clean verdict.")
+    return seq
+
+
 def _fail(msg: str) -> None:
     print(f"  !! {msg}")
 
@@ -119,6 +180,11 @@ def model_table(path: Path = MODEL_XLSX) -> dict:
     want = ("Model name", "Institution", "Author", "Software",
             "Description", "Computational effort")
     missing = [w for w in want if w not in cols]
+    _require(not missing,
+             f"model sheet header row {hdr_row} is missing {missing}",
+             f"found headers {sorted(cols)} in {path.name} sheet {ws.title!r}. "
+             f"The table does not start at A1; if the sheet was edited the header row "
+             f"may have moved. Do NOT read a zero-row result as 'no models'.")
 
     rows, r = [], hdr_row + 1
     while r <= ws.max_row:
@@ -159,11 +225,13 @@ def model_table(path: Path = MODEL_XLSX) -> dict:
         r += 1
 
     # duplicate detection is by DESCRIPTION text, which is what actually repeats
+    _require_count(len(rows), EXPECTED["sheet_rows"], "model sheet data rows",
+                   f"{path.name} sheet {ws.title!r} from row {hdr_row + 1}")
     by_desc = {}
     for rec in rows:
         by_desc.setdefault(rec["description"] or "", []).append(rec["name"])
     dups = {k: v for k, v in by_desc.items() if len(v) > 1}
-    return {
+    out = {
         "path": str(path), "sheet": ws.title, "header_row": hdr_row,
         "header_columns": {k: ws.cell(row=hdr_row, column=v).coordinate
                            for k, v in cols.items()},
@@ -175,6 +243,9 @@ def model_table(path: Path = MODEL_XLSX) -> dict:
             for k, v in dups.items()],
         "n_models_after_dedup": len(rows) - sum(len(v) - 1 for v in dups.values()),
     }
+    _require_count(out["n_models_after_dedup"], EXPECTED["models"],
+                   "distinct models after dedup", path.name)
+    return out
 
 
 def cost_classes(path: Path = MODEL_XLSX) -> dict:
@@ -197,7 +268,11 @@ def cost_classes(path: Path = MODEL_XLSX) -> dict:
                         "cells": [ws.cell(row=r, column=7).coordinate,
                                   ws.cell(row=r, column=8).coordinate]})
         r += 1
+    _require_nonempty(out, "cost-by-class table rows",
+                      f"{path.name} sheet {ws.title!r} columns G:H below row 20")
     header = out[0] if out else None
+    _require_count(len(out) - 1, EXPECTED["cost_entries"],
+                   "cost-by-class entries", f"{path.name} G28:H31")
     return {"path": str(path), "sheet": ws.title, "title": title,
             "header": header, "entries": out[1:] if out else [],
             "n_entries": max(0, len(out) - 1)}
@@ -271,6 +346,13 @@ def audit_code_meta(mt: dict | None = None) -> dict:
             findings.append({"code": code, "field": "turbulence", "severity": "DRIFT",
                              "in_code_meta": stated, "from_sheet_description": derived,
                              "sheet_cell": rec["description_cell"]})
+    _require(checked > 0,
+             "CODE_META audit checked ZERO fields",
+             "either CODE_META is empty or no sheet row matched any code name. "
+             "Reporting a clean verdict here would be a false pass, which is exactly "
+             "what this guard exists to prevent.")
+    _require_count(checked, 4 * EXPECTED["models"],
+                   "CODE_META fields checked (4 per code)", "kramer_benchmark.CODE_META")
     return {"available": True, "n_fields_checked": checked,
             "n_findings": len(findings),
             "n_drift": sum(1 for f in findings if f["severity"] == "DRIFT"),
@@ -416,22 +498,33 @@ def sphere_properties(path: Path = SPHERE_XLSX) -> dict:
                 "value_kg_m3": cells[1].value,
                 "cell": cells[1].coordinate,
                 "note": str(cells[2].value) if len(cells) > 2 else None}
+    _require_count(len(dens), EXPECTED["densities"], "material densities",
+                   f"{path.name} sheet 'Densities'")
     out["densities_kg_m3"] = dens
     out["total_sphere_with_ballast_g"] = find(ws, "Total Sphere with ballast", 3)
     out["total_sphere_no_ballast_g"] = find(ws, "Total Sphere no ballast", 3)
 
     ws = wb["Inertia moments"]
     inertia = {}
+    # SCAN EVERY CELL OF THE ROW FOR THE LABEL, not just the first populated one.
+    # THIS IS A BUG FIX AND THE GUARD ABOVE IS WHAT FOUND IT. The sheet merges B7:B11
+    # for the words "Inertia moments", so on row 7 the FIRST populated cell is B7 and the
+    # label 'Ixx and Iyy' sits in C7. A first-cell-only scan skipped that row entirely
+    # and dropped Ixx/Iyy = 0.098252280525 kgm2 from the output WITHOUT COMPLAINING,
+    # while still reporting the other six inertia entries and looking complete.
+    WANT = ("CoG z", "m", "Ixx and Iyy", "Izz", "Ixz and Izx",
+            "Izy and I yz", "Ixy and Iyx")
     for row in ws.iter_rows():
         cells = [c for c in row if c.value is not None]
-        if len(cells) >= 2:
-            lab = str(cells[0].value).strip()
-            if lab in ("CoG z", "m", "Ixx and Iyy", "Izz", "Ixz and Izx",
-                       "Izy and I yz", "Ixy and Iyx"):
-                inertia[lab] = {"value": cells[1].value, "cell": cells[1].coordinate,
-                                "unit": str(cells[2].value) if len(cells) > 2 else None}
-            elif lab in ("Ixx and Iyy",):
-                pass
+        for i, c in enumerate(cells[:-1]):
+            lab = str(c.value).strip()
+            if lab in WANT and lab not in inertia:
+                val = cells[i + 1]
+                inertia[lab] = {"value": val.value, "cell": val.coordinate,
+                                "unit": str(cells[i + 2].value)
+                                        if len(cells) > i + 2 else None}
+        if False:
+            pass
     # the second block of the same sheet is the raw Solidworks dump
     for key, txt in (("mass_g", "Mass ="), ("volume_mm3", "Volume ="),
                      ("surface_area_mm2", "Surface area =")):
@@ -444,7 +537,14 @@ def sphere_properties(path: Path = SPHERE_XLSX) -> dict:
             if hit:
                 break
         inertia[key] = hit
+    for key in ("CoG z", "m", "Ixx and Iyy", "Izz"):
+        _require(inertia.get(key) is not None,
+                 f"inertia label {key!r} not found",
+                 f"{path.name} sheet 'Inertia moments'. A renamed label would otherwise "
+                 f"return None silently and be reported as absent rather than as a miss.")
     out["inertia"] = inertia
+    _require(out["total_sphere_with_ballast_g"] is not None,
+             "ballasted sphere mass not found", f"{path.name} sheet 'Densities'")
     return out
 
 
@@ -572,6 +672,16 @@ def series_manifest() -> dict:
                     "n_columns": int(a.shape[1]), "n_rows": int(a.shape[0]),
                     "has_wg": bool(a.shape[1] >= 5)})
     present = [s for s in num if s["present"]]
+    _require_count(len(present), EXPECTED["numerical_series"],
+                   "numerical series found", str(NUM_ROOT))
+    _require_count(len(exp), EXPECTED["experimental_series"],
+                   "experimental series found", str(EXP_ROOT))
+    for sr in present:
+        _require(sr["n_rows"] > 0,
+                 f"numerical series {sr['code']}/{sr['drop']} read ZERO rows", sr["file"])
+    for sr in exp:
+        _require(sr["n_rows"] > 0,
+                 f"experimental series {sr['file']} read ZERO rows", sr["file"])
     rows = [s["n_rows"] for s in present]
     return {
         "numerical": num, "experimental": exp,
@@ -618,9 +728,20 @@ def radial_order() -> dict:
             a = np.loadtxt(p, skiprows=1)
             if a.shape[1] < 5:
                 continue
+            # PER SERIES, per the self-audit rule: a series that reads to zero usable rows
+            # must stop the run, not silently drop out of the set and shrink the verdict.
+            _require(a.shape[0] > 0, f"{d.name}/{drop} read ZERO rows", str(p))
             m = a[:, 0] >= 0.0
+            _require(int(m.sum()) > 0,
+                     f"{d.name}/{drop} has ZERO samples at t >= 0",
+                     f"{p}: {a.shape[0]} rows, t spans "
+                     f"{a[:, 0].min():.4f} to {a[:, 0].max():.4f}")
             t = a[m, 0]
             ints = [float(np.trapezoid(a[m, 2 + i] ** 2, t)) for i in range(3)]
+            _require(all(v > 0.0 for v in ints),
+                     f"{d.name}/{drop} has a non-positive eta^2 integral {ints}",
+                     f"{p}: the ratio test divides by these, so a zero column would "
+                     f"produce an inf or nan verdict rather than an error")
             rising = ints[2] > ints[0]
             mono_in = ints[0] < ints[1] < ints[2]
             mono_out = ints[0] > ints[1] > ints[2]
@@ -643,6 +764,10 @@ def radial_order() -> dict:
         for rep in REPS:
             p = EXP_ROOT / f"{drop}_Measured{rep}_Raw.txt"
             a = np.loadtxt(p, skiprows=1)
+            _require(a.shape[0] > 0, f"experimental {drop} rep{rep} read ZERO rows", str(p))
+            _require(a.shape[1] >= 5,
+                     f"experimental {drop} rep{rep} has {a.shape[1]} columns, need 5",
+                     f"{p}: the control depends on WG1-3 being present")
             m = a[:, 0] >= 0.0
             t = a[m, 0]
             ints = [float(np.trapezoid(a[m, 2 + i] ** 2, t)) for i in range(3)]
@@ -671,6 +796,11 @@ def radial_order() -> dict:
     # repetition, 01D_rep1 at 2.655. Against its OWN drop, RANS4 lands outside on all
     # three. Both comparators are therefore computed and both are reported; the
     # drop-matched one is the one to quote.
+    # SET-LEVEL GUARDS, before any verdict is formed from these rows.
+    _require_count(len(rows), EXPECTED["numerical_wg_series"],
+                   "numerical series carrying WG columns", str(NUM_ROOT))
+    _require_count(len(exp_rows), EXPECTED["experimental_wg_reps"],
+                   "experimental repetitions in the control", str(EXP_ROOT))
     eb = [r["ratio_WG3_over_WG1"] for r in exp_rows]
     lo, hi = min(eb), max(eb)
     dm = {}
@@ -728,7 +858,15 @@ def radial_order() -> dict:
         c for c, v in out["by_code"].items() if v["consistent"] and v["summary"] == "REVERSED")
     out["codes_inconsistent"] = sorted(
         c for c, v in out["by_code"].items() if not v["consistent"])
-    out["reversal_is_universal_where_it_occurs"] = not out["codes_inconsistent"]
+    # THE FIELD THAT WAS FALSE-PASSING. It is a statement about the codes that reverse,
+    # so it is undefined when none were examined, and it must say so rather than say True.
+    _require_nonempty(out["by_code"], "per-code radial-order verdicts", str(NUM_ROOT))
+    reversed_codes = [c for c, v in out["by_code"].items() if "REVERSED" in v["verdicts"]]
+    out["n_codes_examined"] = len(out["by_code"])
+    out["n_series_examined"] = len(rows)
+    out["reversal_is_universal_where_it_occurs"] = (
+        (not out["codes_inconsistent"]) if reversed_codes else
+        "UNDEFINED, no code in this set reverses")
     return out
 
 
@@ -1034,6 +1172,137 @@ def _p_cost(c):
         print(f"    {e['model_type']:<52} {e['cost']:<14} {e['cells']}")
 
 
+def self_test() -> dict:
+    """Prove every guard FIRES. An assertion nobody has seen fail is not a check.
+
+    Each case below deliberately breaks one input and requires an ExtractionError. A case
+    that returns normally is a FAILURE of the self-test, because it means that extraction
+    can still produce a verdict from data it did not read. This is the direct answer to
+    the failure mode that motivated the guards: five checks in one night returned an
+    answer they could not evaluate, and a silent empty-read looked exactly like a pass.
+    """
+    import tempfile
+    results = []
+
+    def case(name, fn, expect_substring=""):
+        try:
+            fn()
+        except ExtractionError as e:
+            ok = expect_substring.lower() in str(e).lower()
+            results.append({"case": name, "fired": True, "matched": ok,
+                            "message": str(e)[:150]})
+        except Exception as e:                                  # pragma: no cover
+            results.append({"case": name, "fired": False, "matched": False,
+                            "message": f"WRONG EXCEPTION {type(e).__name__}: {e}"[:150]})
+        else:
+            results.append({"case": name, "fired": False, "matched": False,
+                            "message": "RETURNED NORMALLY, guard did not fire"})
+
+    tmp = Path(tempfile.mkdtemp(prefix="kramer_selftest_"))
+    empty = tmp / "empty"
+    empty.mkdir()
+
+    global NUM_ROOT, EXP_ROOT
+    saved_num, saved_exp = NUM_ROOT, EXP_ROOT
+
+    # 1. THE ONE THAT WAS ACTUALLY BROKEN: radial_order on an empty tree used to return
+    #    normally with reversal_is_universal_where_it_occurs = True.
+    def c1():
+        global NUM_ROOT
+        NUM_ROOT = empty
+        try:
+            radial_order()
+        finally:
+            NUM_ROOT = saved_num
+    case("radial_order on an empty numerical tree", c1, "carrying WG columns")
+
+    # 2. series_manifest must not report a shrunken set as a result
+    def c2():
+        global NUM_ROOT
+        NUM_ROOT = empty
+        try:
+            series_manifest()
+        finally:
+            NUM_ROOT = saved_num
+    case("series_manifest on an empty numerical tree", c2, "numerical series found")
+
+    # 3. a model sheet whose header row moved
+    def c3():
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.title = "Sheet1"
+        for col, val in zip("CDEFGH", ("Model name", "Institution", "Author",
+                                       "Software", "Description",
+                                       "Computational effort")):
+            ws[f"{col}5"] = val            # row 5, not row 4
+        f = tmp / "shifted.xlsx"
+        wb.save(f)
+        model_table(f)
+    case("model_table with the header row moved", c3, "missing")
+
+    # 4. a model sheet with the right headers but no data rows
+    def c4():
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.title = "Sheet1"
+        for col, val in zip("CDEFGH", ("Model name", "Institution", "Author",
+                                       "Software", "Description",
+                                       "Computational effort")):
+            ws[f"{col}4"] = val
+        f = tmp / "norows.xlsx"
+        wb.save(f)
+        model_table(f)
+    case("model_table with zero data rows", c4, "expected 13, found 0")
+
+    # 5. the cost table missing
+    def c5():
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.title = "Sheet1"
+        f = tmp / "nocost.xlsx"
+        wb.save(f)
+        cost_classes(f)
+    case("cost_classes with no second table", c5, "is EMPTY")
+
+    # 6. CODE_META emptied: the audit used to say NO SUBSTANTIVE DRIFT after 0 fields
+    def c6():
+        sys.path.insert(0, str(Path(__file__).resolve().parents[1]
+                               / "simulation" / "r5_physics"))
+        import kramer_benchmark as kb
+        saved = dict(kb.CODE_META)
+        kb.CODE_META.clear()
+        try:
+            audit_code_meta()
+        finally:
+            kb.CODE_META.update(saved)
+    case("audit_code_meta with CODE_META empty", c6, "ZERO fields")
+
+    n_fired = sum(1 for r in results if r["fired"])
+    n_matched = sum(1 for r in results if r["matched"])
+    return {"n_cases": len(results), "n_fired": n_fired, "n_matched": n_matched,
+            "all_fired": n_fired == len(results),
+            "all_matched": n_matched == len(results),
+            "results": results, "tmpdir": str(tmp)}
+
+
+def _p_selftest(t):
+    print("=" * 86)
+    print("GUARD SELF-TEST: each case breaks one input and REQUIRES an ExtractionError")
+    print("=" * 86)
+    for r in t["results"]:
+        mark = "PASS" if r["matched"] else ("FIRED, message mismatch" if r["fired"]
+                                            else "**FAILED, NO GUARD**")
+        print(f"  [{mark:<22}] {r['case']}")
+        print(f"      {r['message']}")
+    print()
+    print(f"  guards that fired: {t['n_fired']} of {t['n_cases']}")
+    print(f"  messages matched : {t['n_matched']} of {t['n_cases']}")
+    print(f"  ALL GUARDS FIRE  : {t['all_fired']}")
+    if not t["all_fired"]:
+        _fail("AT LEAST ONE EXTRACTION CAN STILL PRODUCE A VERDICT FROM DATA IT DID NOT "
+              "READ. Do not trust any result from this module until that is fixed.")
+
+
 def main():
     ap = argparse.ArgumentParser(description=(__doc__ or "").split("\n")[0])
     ap.add_argument("--model-table", action="store_true")
@@ -1046,9 +1315,15 @@ def main():
     ap.add_argument("--sphere", action="store_true")
     ap.add_argument("--descriptions", action="store_true")
     ap.add_argument("--cost", action="store_true")
+    ap.add_argument("--self-test", action="store_true",
+                    help="prove every fail-loud guard actually fires")
     ap.add_argument("--all", action="store_true")
     ap.add_argument("--json", action="store_true")
     a = ap.parse_args()
+    if a.self_test:
+        t = self_test()
+        _p_selftest(t)
+        raise SystemExit(0 if t["all_fired"] else 1)
     if not any((a.model_table, a.audit, a.groups, a.manifest, a.order,
                 a.sphere, a.descriptions, a.cost, a.envelope)):
         a.all = True
