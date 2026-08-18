@@ -139,10 +139,53 @@ clamp, then the image count. Both times the answer was in a docstring or a monot
 trend I had not looked for. The engine told me `add_box` was the wrong collider in
 its own documentation and I read past it.
 
-**Next, in order.** (a) Steady + subcritical simultaneously, then a friction and
-resolution sweep on the 8.2 percent residual. (b) Image particles properly, which is
-kernel-side F assignment, not driver work. (c) The hydroplaning PDF still needs an
-upload to the Undermind workspace. (d) Everything below is unchanged.
+**ROUND 4 UPDATE. All three open items acted on; two produced negative results and
+one produced a paper.** Register items 29 and 30.
+
+1. **The 8.2 percent residual is WITHDRAWN.** The separation sweep (7 runs, one
+   factor at a time) shows the ratio is not converged: it spans 1.07 to 2.71 across
+   bed friction 0.2 to 0.6 and 0.74 to 2.48 across grid 64 to 128, swings of 117 and
+   124 percent about a target of 1.4. There is no residual to explain because there
+   is no converged number. Worse, the grid sweep is confounded (Froude covaries with
+   resolution, 0.29 / 0.66 / 1.06, so grid-128 is supercritical where Rouse does not
+   apply), and the two runs that agree with 1.4 are the two that FAIL the
+   stationarity test.
+
+2. **No configuration holds a steady discharge, and the cause is structural.**
+   q_last/q_first is 0.25 to 0.29 in ALL SEVEN runs, near-identical regardless of
+   grade, friction or grid. A mild bed slope did not fix it. That constancy is the
+   diagnosis: with one-in-one-out recycling the water is fixed and the only
+   reservoir is the channel itself. `openchannel_bc.py` has said since the first
+   commit that this expresses Zhao's UNIFORM case and cannot express the NON-UNIFORM
+   case without a spare particle reservoir. **A free overfall is a non-uniform case.
+   The limitation documented in commit one is exactly what blocks the validation.**
+
+3. **The PDF was not the hydroplaning paper, and it is worth more.** Nihei et al
+   2025, `10.1016/j.rineng.2025.107189`, CC-BY, full-scale prototype vehicles,
+   targeting SLIDING. Not in the 332-paper corpus index. Measures rolling resistance
+   at washaway with the handbrake off: **mu_R = 0.0250 and 0.0242**, an order of
+   magnitude below the locked-wheel 0.30. `floor_friction=0.55` is unsourced and is
+   1.8x the locked value and 23x the rolling value; critical velocity goes as
+   sqrt(mu). **It carries an erratum, `10.1016/j.rineng.2025.107527`.**
+
+**THE ONE ACTION THAT UNBLOCKS THE MOST.** Implement the reserve pool in
+`openchannel_bc.py`: allocate spare particles, park them outside the wetted domain,
+draw from them at the inlet so inflow can exceed outflow. That is the only route to
+a sustained discharge in this engine, and without it the overfall test is incapable
+of passing or failing. Everything else in the overfall chain is now working: the SDF
+bed holds depth, the head band drives the flow, the estimator recovers 1.4 exactly
+on a constructed surface.
+
+**AND ONE RE-RUN THAT MATTERS FOR THE PUBLISHED VERDICTS.** Lower friction slides
+more easily, so the 16 SLIDE verdicts at mu=0.55 are conservative and would only
+strengthen. The single STUCK, `sweepV_g64_v0p5`, is NOT protected by that argument.
+Re-run it before anyone reports "16 SLIDE and 1 STUCK" again. Do NOT simply set
+friction to 0.0242: Nihei's mu_R is tire-on-road for a rolling wheel, ours is a
+Coulomb coefficient on a wheel-less particle hull. Different quantities.
+
+**Next, in order.** (a) The reserve pool. (b) Re-run friction and grid holding
+Froude fixed. (c) The STUCK re-run. (d) The hydroplaning paper is still unread and
+still needs an upload. (e) Everything below is unchanged.
 
 ---
 
