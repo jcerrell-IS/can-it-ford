@@ -193,6 +193,26 @@ that is decided, and that is now true.** Note it is authored source rather than
 build output, so "it is gitignored" is not by itself evidence anyone meant it to
 be disposable.
 
+### New public branches are now detected automatically, 02:41
+
+Origin grew **30 -> 35 -> 36** in three hours, and each growth needed a hand-run
+diff to notice. Anything newly public is world-readable the moment it lands, so
+`refresh_bundle.sh` now checks on every run: it keeps a baseline at
+`can-it-ford-bundles/public_branches.txt`, diffs live `ls-remote` against it, and
+**scans any new branch for credential patterns and credential-named files**,
+printing what to do if it finds either. It also reports branches that disappear.
+
+**Guarded to fail open:** if `ls-remote` cannot reach origin it prints a warning
+and the refresh continues, because a backup must never fail on a missing network.
+
+**Proved by a positive control, not assumed:** with a baseline doctored to omit
+one branch, the detector fired and scanned it correctly, then the real baseline
+was restored (36 branches).
+
+The newest branch, `claude/zotero-source-integrations-8c7744` at `09f7243`, was
+audited on the way in: **0 credential-named files, 0 files matching a secret
+pattern**, 14 `.key` decks like every other public branch.
+
 ### Insurance ages out. `refresh_bundle.sh`, and how to re-take it without me
 
 **read.** The 15:40 snapshot was **12 commits stale within six hours**, because
