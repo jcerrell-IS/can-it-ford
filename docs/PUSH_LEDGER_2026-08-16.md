@@ -1008,6 +1008,20 @@ Compute it immediately before merging, not from this page:
     B=$(git -C $R show claude/fork-register-reconcile:$F  | wc -l)
     echo "expect $(( B + A - 656 ))   sideA-vanished=$B   sideB-vanished=$A"
 
+**NARROWED A THIRD TIME, 04:43, because it was alarming every two minutes.** Side
+A's register moved **nine times in ninety minutes, 656 to 1422**, and every alert
+said "not merged yet". A-register was in the signature as a *trigger* when it is
+only an *input*: the target recomputes silently on every poll, so being told each
+time adds nothing and steadily devalues the one alert that will matter.
+
+The signature now holds only what would make someone **act**: side B's length,
+side B's tip, and whether the append invariant still holds. Controlled both ways
+again after the change.
+
+**Three narrowings, and the fix was the same every time: alarm on less, rather
+than describe the noise better.** First A-tip, then A-register, each removed only
+after it proved itself noise on real data rather than in anticipation.
+
 **The watcher now verifies this itself, 02:59.** It was computing a target from
 an assumption it never checked, which is the same defect class as a hardcoded
 number: confident output resting on something unexamined. Each poll it counts the
