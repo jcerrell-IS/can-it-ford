@@ -368,12 +368,20 @@ not by file read from the Mac, see the item for its evidence path.
     print the paths, so the number can be audited instead of trusted.
 
     CORRECTED 2026-08-07: failure_modes.py carries THREE 0.05
-    literals, not two. Verified live by /usr/bin/grep:
-      :46 slide_m         = 0.05   metres
-      :47 slide_speed_ms  = 0.05   METRES PER SECOND
-      :48 float_m         = 0.05   metres
-    This item previously named only :46 and :48. :47 is a SPEED that
-    happens to share the numeral. A naive find-and-replace across
+    literals, not two. LINE NUMBERS RE-MEASURED 2026-08-18 and they
+    had drifted by two; the ones this item carried from 2026-08-07
+    were stale and had already propagated into a downstream analysis
+    script that cited them verbatim. Live, by /usr/bin/sed:
+      :48 slide_m         = 0.05   metres
+      :49 slide_speed_ms  = 0.05   METRES PER SECOND
+      :50 float_m         = 0.05   metres
+      :52 sustain_frames  = 3      frames, the unsourced one
+    The stale form read :46/:47/:48. A file:line citation in this
+    document is copied into other people's work verbatim, so a
+    two-line drift here becomes a wrong citation everywhere it lands.
+    Re-measure before citing rather than trusting this block.
+    This item previously named only two of them. slide_speed_ms is a
+    SPEED that happens to share the numeral. A naive find-and-replace across
     "0.05" during any deduplication would silently convert a speed
     into a distance and change SLIDE verdicts, which are the 16 of 17
     published outcomes. Deduplicate by NAME and UNIT, never by value.
