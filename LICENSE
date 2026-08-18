@@ -1,3 +1,12 @@
+Can It Ford
+
+SCOPE. The BSD 3-Clause License below applies to the original code and
+documentation authored for this project. It does NOT apply to third-party
+material redistributed in this repository, which remains under its own terms
+and, in several cases, under terms that have not been established. No licence
+is granted here in any third-party material, and no claim of copyright is made
+over it. See THIRD_PARTY_NOTICES.md for the per-asset inventory.
+
 BSD 3-Clause License
 
 Copyright (c) 2026, Josie Cerrell
@@ -26,3 +35,8 @@ SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
 CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+---
+
+Third-party components and their licences, including components whose licence
+status is UNRESOLVED, are listed in THIRD_PARTY_NOTICES.md.

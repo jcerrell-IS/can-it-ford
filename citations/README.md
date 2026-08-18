@@ -2,6 +2,32 @@
 
 Source documents this project's parameters and thresholds actually trace back to. `CITATION.cff` at the repo root is for citing this repository itself, not a bibliography, this file is the bibliography.
 
+## Rights status of the files in this directory
+
+**Added 2026-08-18.** This file is a bibliography: it records what each source establishes. It
+previously recorded nothing about whether the project may redistribute the files sitting next to
+it, and this directory publishes third-party publisher PDFs and 20 image reproductions to a
+**public** repository. Licences below were resolved per DOI through Unpaywall on 2026-08-18.
+Full working and the per-asset inventory: `THIRD_PARTY_NOTICES.md` and
+`docs/R8_LICENCE_RECONCILE_2026-08-18.md`.
+
+The repository's root `LICENSE` (BSD 3-Clause) does **not** apply to any of these files. It now
+carries an explicit scope carve-out saying so.
+
+| File or folder | Licence as found | Status |
+|---|---|---|
+| `Water Resources Research - 2021 - Wang and Marsooli ....pdf` | **CC BY-NC-ND** (DOI 10.1029/2020WR028616) | NonCommercial, NoDerivatives. Redistribution of the unmodified PDF with attribution is permitted; commercial use and derivatives are not. |
+| `J Flood Risk Management - 2025 - Dasallas ....pdf` | **CC BY** (DOI 10.1111/jfr3.70154) | Clean. Attribution required and given here. |
+| `Smith-Modra-Felder/` (16 images) | **closed access, all rights reserved** (DOI 10.1111/jfr3.12527) | **No permission established.** Unpaywall reports no open-access location; Crossref records Wiley's standard terms. Most exposed item in this directory. |
+| `ARR_Project_10_Stage2_Report_Final.pdf`, `ARR table 1 ....png` | **UNRESOLVED** | All 29 pages carry no copyright, licence or reproduction statement; the report prints no DOI; `arr.ga.gov.au` returns 403. Two routes tried, both inconclusive. |
+| `WRL reports technical and Research/` (3 images) | **UNRESOLVED** | Same publisher family and same silence as the AR&R report. |
+| `vehicle(kks32).py`, `splat_sim(kks32).py` | **MIT**, header in-file | Clean. Copyright is "The mpm-engine authors", not this project. |
+| `Elicit - *.bib`, `Elicit - *.csv`, and the `.md` notes | project-authored or tool output | Covered by the root `LICENSE`. |
+
+**UNRESOLVED means no permission has been established, not that permission is presumed.** Silence
+from a publisher is not a grant. If you hold rights in any of the above and object to its
+inclusion, please open an issue on the repository.
+
 ## L0, static depth threshold
 
 NWS Turn Around Don't Drown. https://www.weather.gov/safety/flood-turn-around-dont-drown
@@ -14,7 +40,9 @@ Threshold used: DV <= 0.60 m2/s for the Large 4WD vehicle class specifically, no
 
 ## L2, WCSPH physical validation
 
-Smith, G., Modra, B., & Felder, S. (2019). Full-scale testing of vehicle floating and sliding in flowing floodwater. Journal of Flood Risk Management. DOI:10.1111/jfr3.12527. Source in `citations/Smith-Modra-Felder/`.
+Smith, G. P., Modra, B. D., & Felder, S. (2019). Full-scale testing of stability curves for vehicles in flood waters. Journal of Flood Risk Management, 12(S2), e12527. DOI:10.1111/jfr3.12527. Source in `citations/Smith-Modra-Felder/`.
+
+> **Title corrected 2026-08-18.** This entry previously read "Full-scale testing of vehicle floating and sliding in flowing floodwater", which is not the title at that DOI. Verified against the Crossref record: the DOI, authors and year were all correct, so this was a citation error rather than a fabricated reference, but it is the same surface pattern (a real DOI paired with a title that is not the resolved title) and it would fail a bibliography audit. **Anywhere else this title appears, including the paper and its `.bib`, needs the same fix.**
 
 ## L2, DRIFT_THRESHOLD = 0.05m reframing
 
