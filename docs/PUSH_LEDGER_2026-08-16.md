@@ -164,6 +164,28 @@ scanned before the artifact counts.
 
 `refresh_bundle.sh` now does this on every run, so the hole does not reopen.
 
+**And a bounded check on what the rule leaves out, prompted by D2.** D2 measured
+**274,822,319 B** of gitignored CCSA material, far larger than the 824 KB I
+capture, excluded by my whitelist because it is `.key`. Before adding 275 MB to
+every backup I asked whether it is actually at risk. It is not:
+
+    yaris-detailed-v2j.key      169,061,007 B   sha256 9db04f7b...
+    silverado-detailed-v3e.key  105,761,312 B   sha256 e76c9a02...
+
+**Both are byte-identical to copies inside the `.zip` archives that are already
+tracked and public on `origin/main`**, verified by streaming each out of the
+committed zip and hashing it against the on-disk file, not by comparing sizes.
+So the on-disk decks are extracted copies of committed artifacts: **fully
+recoverable, and correctly excluded.** Backing them up would add 275 MB per
+snapshot to duplicate something GitHub already stores.
+
+This is the distinction that makes the capture rule defensible: **the question is
+not "is it gitignored" but "does it exist anywhere else".** `deliverables/paper/`
+exists nowhere else and is captured; the detailed decks exist inside committed
+zips and are not.
+
+
+
 **What I am NOT doing.** D1 correctly left the decision open, and it is not mine
 to take: whether to un-ignore this, relocate it, or deliberately keep it out of a
 public repo is Josie's call. **My job was to make sure it cannot be lost while
