@@ -130,6 +130,47 @@ risk. `ALL-refs.bundle` carries **all 77** local branches (verified by `comm`
 against `git for-each-ref refs/heads`: zero live branches missing from it), plus
 34 remote-tracking refs, 8 tags, HEAD and 27 worktree HEADs.
 
+### A THIRD COVERAGE HOLE, found by D1: gitignored authored source
+
+**read, 02:25.** A bundle covers refs. The uncommitted capture covers modified
+tracked files and untracked files. **Neither covers a file that is gitignored**,
+because `git ls-files --others --exclude-standard` excludes ignored paths by
+definition. So there was a category of work covered by nothing at all, and D1
+found a real instance sitting in it.
+
+`deliverables/paper/overleaf/`: **28 files, 0 tracked**, hidden by a blanket
+`deliverables/` rule at `.gitignore:80`, so `git status` does not even list it as
+untracked. Verified independently: `git check-ignore -v` names that rule, `git
+ls-files` returns 0, and **my own snapshot saw 0 of the 144 files under
+`deliverables/`** while `ls-files --others` without `--exclude-standard` saw all
+144. D1 reports it is the most careful version of the paper in existence
+(convergence 8, uncertainty 2, GCI 1, against 3/0/0 in the compiled PDF).
+
+**Now captured, and the capture is scanned.** 2,944 files are ignored repo-wide,
+overwhelmingly generated output (1,601 under `renders/` alone), so a blanket
+sweep would be wrong. The rule takes authored text extensions and excludes
+generated trees:
+
+    ignored-source-<HHMM>/ignored-source.tar.gz   157 files, 824,154 B, mode 0600
+      deliverables 63   data 49   reference_docs 16   render_s2 9
+      bridge 7   docs 5   files 3   paper 2   archive 2
+
+**The first attempt was wrong and the scan caught it.** A wider rule pulled in
+248 files including `_inbox/`, and **four of them matched value-shaped credential
+patterns**, among them a `zshrc` section and two session logs. Rebuilt with
+`_inbox/`, `session_archive/`, `logs/`, `.claude/` and `.remember/` excluded:
+**0 credential matches**, paper's 8 section files present. Every rebuild is
+scanned before the artifact counts.
+
+`refresh_bundle.sh` now does this on every run, so the hole does not reopen.
+
+**What I am NOT doing.** D1 correctly left the decision open, and it is not mine
+to take: whether to un-ignore this, relocate it, or deliberately keep it out of a
+public repo is Josie's call. **My job was to make sure it cannot be lost while
+that is decided, and that is now true.** Note it is authored source rather than
+build output, so "it is gitignored" is not by itself evidence anyone meant it to
+be disposable.
+
 ### Insurance ages out. `refresh_bundle.sh`, and how to re-take it without me
 
 **read.** The 15:40 snapshot was **12 commits stale within six hours**, because
