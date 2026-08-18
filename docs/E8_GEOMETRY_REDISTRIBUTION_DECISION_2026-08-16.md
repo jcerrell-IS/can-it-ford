@@ -45,7 +45,7 @@ confirmation is the primary source for it.
 
 | Item | Status |
 |---|---|
-| CCSA/NCAC archives and decks, 160,322,098 B, on **35 of 35** branches | **CLEARED for republication** |
+| CCSA/NCAC archives and decks, 160,322,098 B, on **36 of 36** branches | **CLEARED for republication** |
 | Derived hulls, 2 `.ply` | **CLEARED**, they inherit component 1's position |
 | The 6 renders depicting the hull | **CLEARED**, same |
 | AR&R report + 4 AR&R/WRL images | **CLEARED**, rights permitted |
@@ -171,12 +171,12 @@ downloaded NCAC vehicle FE models, Silverado and Yaris, coarse and detailed`. [r
 Raised by D3, and **verified independently here** rather than taken on report, by
 walking `git ls-remote --heads origin` and counting `.key` blobs in each tree:
 
-**35 of 35 public branches carry exactly 14 CCSA `.key` decks each. No branch
+**36 of 36 public branches carry exactly 14 CCSA `.key` decks each. No branch
 deviates, and no branch tree was missing.** [read, re-measured 2026-08-18]
 
 > **The public surface GREW while this dispatch ran: 30 branches to 35, and all five
 > new ones carry the decks too.** First measured at 30 of 30 on 2026-08-16;
-> re-measured at 35 of 35 on 2026-08-18. **This is the substantive point, not the
+> re-measured at 35 of 35 on 2026-08-18, and again at **36 of 36 on 2026-08-19**. **This is the substantive point, not the
 > renumbering:** the exposure tracked the branch count automatically, because every
 > branch off `main` inherits the whole tree. Now that permission is reported the growth
 > is harmless, but it is worth recording that **any removal-based remediation would
@@ -522,8 +522,8 @@ knowingly continued, which is worse than the current position of not having aske
 not unpublish it**, on two independent grounds now. First, GitHub has served removed
 blobs by SHA after history rewrites in this very account. **[recalled from project
 memory; the W&B key precedent]** Second, and this is the newer and larger point,
-**the decks are on all 35 public branches** (re-measured 2026-08-18, up from 30), so
-removing them from `main` leaves 34 branches still serving them. A `main`-only removal would look like remediation and
+**the decks are on all 36 public branches** (re-measured 2026-08-19; 30 on 08-16,
+35 on 08-18), so removing them from `main` leaves 35 branches still serving them. A `main`-only removal would look like remediation and
 achieve close to none of it.
 *Cost:* low, and the benefit is correspondingly low unless every branch is handled.
 Breaks any script reading those paths (the hull is load-bearing: it is the canonical
@@ -546,7 +546,7 @@ retain the 2 derived `.ply` and the renders.
 portion, while keeping every artifact the project actually needs to run and to
 reproduce. The derived-hull question stays open under option 1.
 *Scope requirement, from the 30-branch finding:* this has to be applied **across all
-35 branches**, or it is cosmetic. Most of the 34 non-`main` branches are finished or
+36 branches**, or it is cosmetic. Most of the 35 non-`main` branches are finished or
 abandoned work; the cheapest honest route is to delete the stale ones outright rather
 than rewrite each, which is a decision about branch hygiene as much as licensing.
 Enumerate them before acting: several are named in D3's branch taxonomy.

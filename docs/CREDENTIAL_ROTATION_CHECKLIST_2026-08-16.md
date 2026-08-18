@@ -16,7 +16,8 @@ Dispatch R5-D2, 2026-08-16. Branch `claude/r5-exposure`.
 > ### Three things to carry into every row below
 >
 > **1. The public surface is 35 BRANCHES, not one tree, and it GREW from 30 while
-> this dispatch ran.** `origin` has 35 public branches (re-measured 2026-08-18). Any statement of the form "the repo is clean" that was established by
+> this dispatch ran.** `origin` has 36 public branches (re-measured 2026-08-19; it was
+> 30 on 08-16 and 35 on 08-18). Any statement of the form "the repo is clean" that was established by
 > scanning one tree does not cover it. Verified live 2026-08-16; this is what the
 > correction in `5f01dd2` turned on, and it is the reason the "nothing is public"
 > claim failed the first time.
@@ -58,7 +59,7 @@ Dispatch R5-D2, 2026-08-16. Branch `claude/r5-exposure`.
 > answers directly in its row 12.
 >
 > **What this file still adds, and it is narrower than first claimed:** the public-surface
-> findings (35 branches; the FLAG document public on one of them), the two-part public
+> findings (36 branches; the FLAG document public on one of them), the two-part public
 > status, the divergent-copies hazard in section 0.1 below, and the three defects in
 > section 0.2. **For the rotation itself, use the source document's own list**, with the
 > corrections below applied to it.
@@ -92,9 +93,9 @@ directly off `origin/main` blob `1a868f3`: `token_setup_template.md` (969 B) and
 zero token-shaped strings.** Part 1 survives. [read]
 
 **Per-branch presence re-derived 2026-08-18 rather than renumbered**, because these are
-measurements and not just a count: `token_setup_template.md` is on **34 of 35** branches
+measurements and not just a count: `token_setup_template.md` is on **35 of 36** branches
 (it was on all 30, so one of the five new branches lacks it),
-`secrets-and-env.md` on **32 of 35**, and the FLAG document on **1 of 35**. The value
+`secrets-and-env.md` on **33 of 36**, and the FLAG document on **1 of 36**. The value
 scan is unchanged: still zero token-shaped strings in either file.
 
 **Part 2, a document enumerating the HOLDERS is public.**
@@ -231,7 +232,7 @@ lowercase, 12 distinct characters, Shannon entropy **3.51 bits/char** against ro
 131 reads: *"**Nothing here is public.** Every item below is local or on TACC."* The
 correction in `5f01dd2` applies to the source document too, not only to this file: no
 credential **value** is public, **and** a document enumerating the holders is public on
-one of 35 branches. Whoever owns the source should carry that correction across.
+one of 36 branches. Whoever owns the source should carry that correction across.
 
 ---
 

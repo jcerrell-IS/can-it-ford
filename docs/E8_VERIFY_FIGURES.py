@@ -60,10 +60,10 @@ EXPECTED = {
     "assets_cc0_bytes": 11_205_063,
     "assets_cc0_files": 6,
     # Measurements EXPECTED to change as the repo grows.
-    "public_branches": 35,
-    "branches_with_14_decks": 35,
-    "branches_with_token_template": 34,
-    "branches_with_secrets_env": 32,
+    "public_branches": 36,
+    "branches_with_14_decks": 36,
+    "branches_with_token_template": 35,
+    "branches_with_secrets_env": 33,
     "branches_with_flag_doc": 1,
 }
 

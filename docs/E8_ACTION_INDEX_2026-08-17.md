@@ -32,7 +32,7 @@ figure cannot be cited from an early commit.
 > repo exported into every Mac shell, three Anthropic OAuth tokens (one in iCloud and
 > in TACC backups), two Hugging Face tokens, a W&B key, and an unidentified secret.
 > A document enumerating which machines hold which unrotated tokens is public on 1 of
-> 35 branches. Measured, not asserted: 5 of 5 backup files in `~/.claude/backups/`
+> 36 branches. Measured, not asserted: 5 of 5 backup files in `~/.claude/backups/`
 > carried a live token format, newest 57 s old, spanning 6 minutes, so the copies
 > self-clone faster than deletion can remove them. **Revocation at the issuer is the
 > only remedy that reaches any of it, and it stays available at any time.**
@@ -125,13 +125,13 @@ They are **not equally serious, and they differ in kind, not just size.**
 
 | # | Exposure | Size | Rights position | Public surface | Remedy shape |
 |---|---|---|---|---|---|
-| 1 | **CCSA/NCAC geometry.** 4 original distribution archives (88,592,238 B) + 14 LS-DYNA decks (71,716,670 B), **byte-identical to upstream, proven by SHA384** | 160,322,098 B | **Silent.** Confirmed on both CCSA download pages, not just the bundled README | **35 of 35 branches**, grew from 30 during the dispatch | **CLEARED.** No action |
+| 1 | **CCSA/NCAC geometry.** 4 original distribution archives (88,592,238 B) + 14 LS-DYNA decks (71,716,670 B), **byte-identical to upstream, proven by SHA384** | 160,322,098 B | **Silent.** Confirmed on both CCSA download pages, not just the bundled README | **36 of 36 branches**, grew 30 to 35 to 36 during the dispatch | **CLEARED.** No action |
 | 2 | **Smith 2019.** The complete 15-page article, page by page | 6,215,623 B | **Asserted** "© 2019 CIWEM and John Wiley & Sons Ltd", **and permission reported 2026-08-18** | 1 tree | **CLEARED.** No action |
 | 3 | **AR&R report + 1 AR&R table image** | 1,352,966 B | **Silent**, permission reported 2026-08-18 | 1 tree | **CLEARED.** No action |
 | 3b | **3 WRL images**, from **WRL Technical Report 2014/07** (UNSW WRL, Sept 2014) | 760,091 B | **Fourth rights holder**, distinct from Engineers Australia | 1 tree | **One question:** does the grant cover WRL TR 2014/07? |
 | 4 | Two CC-licensed PDFs | 10,884,441 B | **Licensed** (CC BY; CC BY-NC-ND) | 1 tree | Keep, add attribution |
 | 5 | CC0 assets (ambientCG ×2, Poly Haven) | 11,205,063 B | **CC0.** No violation, ever | 1 tree | Courtesy attribution only |
-| 6 | **Credentials.** 12, across Vista, LS6, Mac | n/a | **THE ONLY OPEN EXPOSURE** | **No value public.** A holder-enumerating doc is public on 1 of 35 branches | **REVOKE.** Deletion cannot win |
+| 6 | **Credentials.** 12, across Vista, LS6, Mac | n/a | **THE ONLY OPEN EXPOSURE** | **No value public.** A holder-enumerating doc is public on 1 of 36 branches | **REVOKE.** Deletion cannot win |
 
 **1 is largest and most widespread. 2 is smallest of the licence problems but the
 least ambiguous**, because silence leaves an open question and an explicit © does not.
@@ -256,7 +256,7 @@ current.
 
 | Claim | Made in | Withdrawn in | The truth |
 |---|---|---|---|
-| "Nothing here is public" (credentials) | `30dee69` | `5f01dd2` | Two-part: no **value** is public, **and** a holder-enumerating doc is public on 1 of 35 branches. It **raises** urgency |
+| "Nothing here is public" (credentials) | `30dee69` | `5f01dd2` | Two-part: no **value** is public, **and** a holder-enumerating doc is public on 1 of 36 branches. It **raises** urgency |
 | Sizes labelled **MB** | `6e771b6`, `823cd82` | `ac9fb54` | They were **MiB**, understating every headline by 4.6%. Now decimal SI. **Proportions were always right** |
 | The `strings` licence probe, **in full** | `823cd82` | `ac9fb54` | It was **0 for 3**, including both files where my own control called it reliable |
 | Smith group = **14 files / 5,798,374 B** | `823cd82` | `ac9fb54` | **15 screenshots + 1 table = 16 files, 6,215,623 B.** Spaces in filenames broke the field split |
