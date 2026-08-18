@@ -29,6 +29,32 @@ and it encodes the boundary cases that fooled me: the "units not specified" clau
 in row 40 that makes friction 9 rather than 8, and a second independent test for
 each yield.
 
+## SCOPE OF EVERY PAPER MEASUREMENT (unit 63)
+
+**All my paper findings were measured in the MAIN checkout, not in my own worktree,
+and that was necessary rather than sloppy.**
+
+```
+                        .tex files    MPM control    deliverables/paper/overleaf/
+worktree r5-research         2             0                    ABSENT
+main     add-ci-checks      12            52                    present
+```
+
+**My worktree cannot answer these questions at all.** Gitignored paths are not
+materialised into a new worktree, so `deliverables/paper/overleaf/` and
+`paper/canonical_2026-08-02/` simply do not exist here, and the two `.tex` files
+that do exist contain no `MPM` at all. **A Sulsky-zero measured in this worktree
+would have been a broken probe returning a meaningless zero.**
+
+So the correct reading of every "zero `.tex`" result I publish:
+
+> measured against the **main checkout's working tree**, which is on branch
+> `claude/add-ci-checks` and includes gitignored files my branch does not carry.
+
+**This is not the same as "the paper".** Three artifacts differ (unit 60), the bib
+differs by branch (unit 62), and the live Overleaf head is unreachable (FLAG-6).
+**Quote the checkout, never a bare count.**
+
 ## A. SAFE TO CITE
 
 Each of these was verified by primary source or by measurement, and each survived
