@@ -1,0 +1,260 @@
+#!/usr/bin/env python3
+"""corpus MCP server for can-it-ford.
+
+WHY THIS EXISTS, precisely. On 2026-08-14 five separate dispatch sessions
+(D1, D2, D7, D9, D11) each independently reported research artifacts as
+unreadable, because each checked ~/Downloads only, where macOS TCC denies
+access. Every one of those artifacts existed in full at /Users/josie/Claude/reu.
+That is a five-instance false-negative class caused purely by lookup method.
+
+It also answers the question that cost the most credibility that night: four
+vehicle-fording papers sat in our own Undermind catalogs, uncited, while the
+project prepared to claim novelty. cited_status() makes that a single call.
+
+Zero dependencies. Python 3.9 safe.
+"""
+import os
+import re
+import subprocess
+import sys
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from mcp_scaffold import Server  # noqa: E402
+
+REPO = os.environ.get("CANFORD_REPO") or "/Users/josie/can-it-ford"
+# ^ env override added 2026-08-18 so the server works from a plugin cache copy
+#   and from a fresh clone. Absent the env var, behaviour is byte-identical.
+
+# Ordered by reliability. ~/Downloads is LAST and flagged, because it is the
+# one root that intermittently returns "Operation not permitted".
+ROOTS = [
+    "/Users/josie/Claude/reu",
+    "/Users/josie/Documents/Claude/reu",
+    "/Users/josie/Desktop/CAN_IT_FORD_RESEARCH_CORPUS_2026-08-13",
+    "/Users/josie/Documents/Claude",
+    "/Users/josie/Documents/CAN_IT_FORD_ARCHIVE_2026-07-17",
+    "/Users/josie/Downloads",
+]
+
+ID8 = re.compile(r"\b([0-9a-f]{8})\b")
+DOI = re.compile(r"10\.\d{4,9}/[-._;()/:A-Za-z0-9]+")
+
+srv = Server("canford-corpus")
+
+
+def _walk(root, maxdepth=6):
+    if not os.path.isdir(root):
+        return
+    base = root.rstrip("/").count("/")
+    for dirpath, dirnames, filenames in os.walk(root):
+        if dirpath.count("/") - base >= maxdepth:
+            dirnames[:] = []
+        dirnames[:] = [d for d in dirnames if d not in
+                       (".git", "__pycache__", "node_modules", ".venv")]
+        for fn in filenames:
+            if fn.endswith(".md") or fn.endswith(".tsv"):
+                yield os.path.join(dirpath, fn)
+
+
+def _readable(p):
+    try:
+        with open(p, "rb") as fh:
+            fh.read(1)
+        return True
+    except OSError:
+        return False
+
+
+def _title(p):
+    try:
+        with open(p, "r", errors="replace") as fh:
+            for _ in range(80):
+                ln = fh.readline()
+                if not ln:
+                    break
+                if ln.startswith("# "):
+                    return ln[2:].strip()
+    except OSError:
+        return ""
+    return ""
+
+
+@srv.tool(
+    "corpus_resolve",
+    "Resolve an 8-hex artifact id to EVERY readable path on disk. Use this "
+    "before ever reporting a research artifact as missing or unreadable: an "
+    "absence from ~/Downloads is not an absence.",
+    {"type": "object",
+     "properties": {"id8": {"type": "string",
+                            "description": "8-hex artifact id, e.g. 65474f37"}},
+     "required": ["id8"]},
+)
+def corpus_resolve(id8):
+    id8 = id8.strip().lower()
+    hits = []
+    for root in ROOTS:
+        for p in _walk(root):
+            if id8 in os.path.basename(p).lower():
+                hits.append({"path": p,
+                             "readable": _readable(p),
+                             "bytes": os.path.getsize(p) if _readable(p) else None,
+                             "title": _title(p) if _readable(p) else None,
+                             "tcc_risk": p.startswith("/Users/josie/Downloads")})
+    if not hits:
+        return {"id8": id8, "found": 0,
+                "verdict": "NOT FOUND in any of %d roots" % len(ROOTS),
+                "roots_searched": ROOTS}
+    readable = [h for h in hits if h["readable"]]
+    return {"id8": id8, "found": len(hits), "readable": len(readable),
+            "verdict": "READABLE" if readable else "PRESENT BUT UNREADABLE",
+            "use_this_path": readable[0]["path"] if readable else None,
+            "hits": hits}
+
+
+@srv.tool(
+    "corpus_search",
+    "Search every research artifact title and body for a query string. "
+    "Returns file, title and matching line numbers. Searches all roots, not "
+    "just the one you happened to think of.",
+    {"type": "object",
+     "properties": {
+         "query": {"type": "string"},
+         "max_files": {"type": "integer", "default": 25},
+         "titles_only": {"type": "boolean", "default": False}},
+     "required": ["query"]},
+)
+def corpus_search(query, max_files=25, titles_only=False):
+    q = query.lower()
+    out = []
+    seen_names = set()
+    for root in ROOTS:
+        for p in _walk(root):
+            name = os.path.basename(p)
+            if name in seen_names:
+                continue
+            if not _readable(p):
+                continue
+            t = _title(p)
+            if titles_only:
+                if q in t.lower():
+                    seen_names.add(name)
+                    out.append({"path": p, "title": t})
+                continue
+            try:
+                with open(p, "r", errors="replace") as fh:
+                    lines = fh.readlines()
+            except OSError:
+                continue
+            hits = [i + 1 for i, ln in enumerate(lines) if q in ln.lower()]
+            if hits:
+                seen_names.add(name)
+                out.append({"path": p, "title": t, "n_hits": len(hits),
+                            "first_lines": hits[:8]})
+            if len(out) >= max_files:
+                return {"query": query, "files": out, "truncated": True}
+    return {"query": query, "files": out, "truncated": False}
+
+
+@srv.tool(
+    "corpus_read",
+    "Read a slice of an artifact by line range, so a 3.4 MB manifest or a "
+    "600-line report never has to be read whole. On 2026-08-14 a session "
+    "reported the 6,241-row research manifest as unreadable when the real "
+    "problem was a whole-file size limit.",
+    {"type": "object",
+     "properties": {"path": {"type": "string"},
+                    "start": {"type": "integer", "default": 1},
+                    "count": {"type": "integer", "default": 120}},
+     "required": ["path"]},
+)
+def corpus_read(path, start=1, count=120):
+    if not _readable(path):
+        return {"path": path, "error": "not readable (TCC denial or missing)"}
+    with open(path, "r", errors="replace") as fh:
+        lines = fh.readlines()
+    sl = lines[max(0, start - 1): max(0, start - 1) + count]
+    return {"path": path, "total_lines": len(lines),
+            "range": [start, start + len(sl) - 1],
+            "text": "".join(sl)}
+
+
+@srv.tool(
+    "corpus_headings",
+    "List the markdown headings of an artifact so you can pick a section "
+    "instead of reading the whole file.",
+    {"type": "object", "properties": {"path": {"type": "string"}},
+     "required": ["path"]},
+)
+def corpus_headings(path):
+    if not _readable(path):
+        return {"path": path, "error": "not readable"}
+    out = []
+    with open(path, "r", errors="replace") as fh:
+        for i, ln in enumerate(fh, 1):
+            if ln.startswith("#"):
+                out.append({"line": i, "heading": ln.rstrip()})
+    return {"path": path, "headings": out}
+
+
+@srv.tool(
+    "corpus_cited_status",
+    "Is this DOI or citation key already cited anywhere in the repo? "
+    "THIS IS THE NOVELTY GUARD. On 2026-08-14 four vehicle-fording papers "
+    "(Wasfy 2015 DETC2015-47142, Pazouki 2016, Khapane 2014 SAE 2014-01-0936, "
+    "He 2026 10.1115/1.4071177) sat in our own catalogs uncited while the "
+    "project prepared to claim nobody had simulated fording.",
+    {"type": "object",
+     "properties": {"needle": {"type": "string",
+                               "description": "DOI, SAE number, or author-year"}},
+     "required": ["needle"]},
+)
+def corpus_cited_status(needle):
+    # /usr/bin/grep, never the shell function: the shell grep is a ugrep
+    # wrapper with --ignore-files and silently skips gitignored paths.
+    cmd = ["/usr/bin/grep", "-rIl", "--", needle, REPO + "/docs",
+           REPO + "/paper", REPO + "/CLAUDE.md"]
+    try:
+        r = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
+        repo_hits = [x for x in r.stdout.splitlines() if x.strip()]
+    except Exception as e:
+        repo_hits = ["<grep failed: %s>" % e]
+    corpus = corpus_search(needle, max_files=10)
+    return {"needle": needle,
+            "cited_in_repo": len(repo_hits) > 0,
+            "repo_files": repo_hits,
+            "present_in_corpus": len(corpus["files"]) > 0,
+            "corpus_files": [f["path"] for f in corpus["files"]],
+            "verdict": ("IN CORPUS BUT NOT CITED, investigate"
+                        if corpus["files"] and not repo_hits else
+                        "cited" if repo_hits else "not found either place")}
+
+
+@srv.tool(
+    "corpus_inventory",
+    "Count artifacts per root and report which roots are currently readable. "
+    "Run this first in any session that will touch research, so a TCC denial "
+    "is visible as a denial rather than as an absence.",
+    {"type": "object", "properties": {}},
+)
+def corpus_inventory():
+    out = []
+    for root in ROOTS:
+        exists = os.path.isdir(root)
+        n = 0
+        readable = 0
+        if exists:
+            for p in _walk(root, maxdepth=6):
+                n += 1
+                if _readable(p):
+                    readable += 1
+        out.append({"root": root, "exists": exists, "files": n,
+                    "readable": readable,
+                    "STATUS": ("OK" if exists and readable == n else
+                               "PARTIAL/TCC-DENIED" if exists else "ABSENT")})
+    return {"roots": out,
+            "rule": "A zero or partial count is a BROKEN PROBE, not evidence "
+                    "that an artifact does not exist."}
+
+
+if __name__ == "__main__":
+    srv.run()
