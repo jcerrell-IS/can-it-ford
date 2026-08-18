@@ -142,6 +142,46 @@ as defensible as 4, and nothing here identifies a correct value. It says the ver
 and that this was never measured. Report `sustain_frames` beside any SLIDE verdict from that
 configuration, exactly as the project already requires for DRIFT_THRESHOLD's scope.
 
+### 2a-ter. g128: the margin reaches ZERO, in 6 of 6 draws
+
+**MEASURED 2026-08-18, job 918247, five repeats of `g128_m2337` at 90 frames on the
+canonical driver.** All five `metrics.csv` are bit-distinct, so the non-determinism of
+section 1 holds at g128 too.
+
+| source | joint frames | margin |
+|---|---|---|
+| their `g96_m2337`, single draw | 4 | 1 |
+| **their `g128_m2337`, single draw** | **3** | **0** |
+| **my `g128_m2337`, N=5** | 3, 3, 3, 3, 3 | **0, 0, 0, 0, 0** |
+
+Their g128 value is computed here from THEIR OWN output at
+`$WORK/render_s2/g128_m2337/metrics.csv` with the same classifier, not taken from prose,
+because the prose is ambiguous. Commit `a677a59` reads "g96_m2337's one-frame margin does not
+collapse to STUCK; it stays at 1", which is a statement about the g96 margin and is correct.
+Read quickly it suggests the margin held at 1 through refinement, and **their own data does
+not show that: at g128 it is 0.**
+
+So six independent draws at g128, one theirs and five mine, all give margin **0**. The m2337
+margin series is:
+
+| grid | g48 | g64 | g96 | **g128** |
+|---|---|---|---|---|
+| margin | 8 | 7 | 1 (0 to 1 across my N=10) | **0, in 6 of 6** |
+
+**The verdict survives refinement and the margin does not.** SLIDE is returned in 5 of 5 of my
+repeats and in theirs, so "the verdict survives refinement to g128" stands. But at g128 every
+measured draw sits EXACTLY on `sustain_frames = 3`, with zero spare frames. One fewer joint
+frame in any of them and the verdict is STUCK.
+
+**Combine that with 2a-bis and the exposure is stark.** `sustain_frames` is an unsourced bare
+literal. At g128 the joint condition holds for exactly 3 frames in every draw measured, so
+setting it to 4, a one-integer change to a value with no provenance, flips **all six g128
+draws to STUCK**. The 16 SLIDE / 1 STUCK headline at the finest grid rests entirely on that
+integer being right, and nothing in the project says why it is 3.
+
+This does not overturn J15, it sharpens it: J15 said the margin closes with refinement and
+asked for g128. The answer is that it closes **to zero**.
+
 ### 2a. What this does NOT overturn
 
 J15's refinement trend survives. The `m2337` series collapses 11 to 10 to 4 across g48/g64/g96,
