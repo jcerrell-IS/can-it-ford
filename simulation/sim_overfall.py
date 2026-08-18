@@ -46,7 +46,7 @@ from warpmpm.core.solver import GridConfig, Solver      # noqa: E402
 from warpmpm.materials import newtonian                 # noqa: E402
 
 from openchannel_bc import (                            # noqa: E402
-    OverfallBC, discharge_per_width, overfall_metrics, tilted_gravity,
+    OverfallBC, ReservePool, discharge_per_width, overfall_metrics, tilted_gravity,
 )
 
 
@@ -88,6 +88,14 @@ def main():
     p.add_argument("--grade-deg", type=float, default=0.0)
     p.add_argument("--width", type=float, default=None,
                    help="channel width in m; default is the full domain minus walls")
+    p.add_argument("--reserve", type=int, default=0,
+                   help="spare particles held out of the flow, drawn to hold inlet depth")
+    p.add_argument("--reserve-hold", action="store_true",
+                   help="allocate the reserve but NEVER draw from it: the control that "
+                        "tests whether a parked pool is inert. A held run must reproduce "
+                        "the --reserve 0 run; if it does not, the park is not inert.")
+    p.add_argument("--target-depth", type=float, default=None,
+                   help="inlet depth the reserve tries to hold, m (default: --depth)")
     p.add_argument("--head-len", type=float, default=0.0,
                    help="length of the sustained upstream velocity band, m (0=off)")
     p.add_argument("--bed", choices=("box", "sdf"), default="sdf",
@@ -122,6 +130,13 @@ def main():
     vol = np.full(n_water, h ** 3, dtype=np.float32)
 
     width = y_hi - y_lo
+    # Reserve particles are appended AFTER the water, so water stays [0, n_water)
+    # and every existing diagnostic keeps its meaning.
+    n_reserve = int(a.reserve)
+    if n_reserve:
+        seed_pt = np.array([[0.5 * (lim - 1.0), 0.35 * lim, 0.20 * lim]], np.float32)
+        water = np.vstack([water, np.repeat(seed_pt, n_reserve, axis=0)])
+        vol = np.full(len(water), h ** 3, dtype=np.float32)
     s = Solver(grid=grid).load_particles(water, vol)
     if s.sort_interval != 0:
         raise RuntimeError("sort_interval must be 0; water is addressed by index range")
@@ -166,6 +181,20 @@ def main():
     dt = (1.0 / fps) / substeps
 
     head_len = float(a.head_len)
+    # Park box: a compact block in the corner of the domain the flow never reaches.
+    # There is nowhere truly outside a warpmpm domain, so this is placed far from
+    # the wetted region and its inertness is TESTED by --reserve-hold, not assumed.
+    park_lo = np.array([0.72 * lim, 0.25 * lim, 0.12 * lim])
+    park_hi = np.array([0.93 * lim, 0.45 * lim, 0.30 * lim])
+    pool = ReservePool(n_water, n_reserve, park_lo, park_hi, dx, lim, seed=a.seed)
+    if n_reserve:
+        pool.build_park()
+        xx, vv0 = s.x(), s.v()
+        pool.pin_parked(xx, vv0)
+        s.set_x(xx); s.set_v(vv0)
+    target_depth = float(a.target_depth) if a.target_depth is not None else float(a.depth)
+    inlet_area = 2.0 * dx * width
+    draw_cap = max(1, int(0.02 * n_reserve)) if n_reserve else 0
     bc = OverfallBC(n_water=n_water, x_in=wall, catch_z=catch_z, bed_top=bed_top,
                     inlet_velocity=a.velocity, dx=dx, grid_lim=lim, x_brink=x_brink,
                     seed=a.seed)
@@ -183,7 +212,7 @@ def main():
     v = s.v(); v[:, 0] += a.velocity; s.set_v(v)
 
     n_sunk_total = 0
-    rows = ["frame,n_caught,q_m2_s,y_b,y_c,ratio,froude_up,reinject_depth,n_sunk,n_head"]
+    rows = ["frame,n_caught,q_m2_s,y_b,y_c,ratio,froude_up,reinject_depth,n_sunk,n_head,n_drawn,n_active"]
     for f in range(a.frames):
         x = s.x(); vv = s.v()
         # SUSTAINED HEAD. Injecting at the inlet only sets a recycled particle's
@@ -202,7 +231,22 @@ def main():
         else:
             n_head = 0
         n = bc.apply(x, vv)
-        if n:
+        # RESERVE. Pin the parked block, retire anything that has fallen past the
+        # catch plane, then top the inlet up toward the target depth. Retirement
+        # uses the SAME test as the outflow, so nothing is counted twice.
+        n_drawn = 0
+        if n_reserve:
+            pool.pin_parked(x, vv)
+            pool.retire_where(x, predicate_z_below=catch_z)
+            if not a.reserve_hold:
+                d_now = bc.reinject_depth_last
+                if np.isfinite(d_now) and d_now < target_depth:
+                    deficit = (target_depth - d_now) * inlet_area
+                    n_drawn = pool.draw(
+                        min(int(deficit / h ** 3), draw_cap), x, vv,
+                        wall, wall + 2.0 * dx, y_lo, y_hi,
+                        bed_top, bed_top + target_depth, a.velocity)
+        if n or n_drawn or n_reserve:
             s.set_x(x); s.set_v(vv)
         # cross-stream containment only; there is no streamwise clamp anywhere
         bc.project_cross_stream(x, vv, y_lo=y_lo, y_hi=y_hi, z_floor=0.0)
@@ -228,7 +272,7 @@ def main():
             "" if not np.isfinite(y_c) else "%.6f" % y_c,
             "" if not np.isfinite(ratio) else "%.6f" % ratio,
             "" if not np.isfinite(fr) else "%.6f" % fr,
-            bc.reinject_depth_last) + ",%d,%d" % (n_sunk, n_head))
+            bc.reinject_depth_last) + ",%d,%d,%d,%d" % (n_sunk, n_head, n_drawn, pool.n_active))
         if f % 20 == 0 or f == a.frames - 1:
             print("frame %3d caught=%4d q=%.5f y_b=%s y_c=%s ratio=%s Fr=%s"
                   % (f, n, q,
@@ -255,6 +299,12 @@ def main():
         "substeps": int(substeps), "dt": float(dt),
         "grade_deg": a.grade_deg, "gravity": gravity,
         "head_len_m": head_len,
+        "n_reserve": n_reserve, "reserve_hold": bool(a.reserve_hold),
+        "target_depth_m": target_depth,
+        "reserve_drawn_total": int(pool.drawn_total),
+        "reserve_retired_total": int(pool.retired_total),
+        "reserve_starved_total": int(pool.starved_total),
+        "reserve_active_final": int(pool.n_active),
         "bed_kind": a.bed, "bed_friction": float(a.bed_friction),
         "bed_res": int(a.bed_res), "bed_thickness_m": 0.40,
         "recycled_total": int(bc.recycled_total),

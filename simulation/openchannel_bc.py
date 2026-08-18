@@ -509,7 +509,206 @@ def _selftest_overfall_bc():
     print("overfall BC selftest: 8 checks PASS (catch, reinject above the bed, no double-recycle)")
 
 
+
+
+class ReservePool:
+    """A spare particle pool, so inflow can differ from outflow.
+
+    WHY THIS EXISTS. Register item 30: every overfall configuration decays to
+    q_last/q_first of 0.25 to 0.29, near-identically across grade, bed friction and
+    grid, because one-in-one-out recycling fixes the total water and makes the
+    channel its own only reservoir. Zhao et al 2019's UNIFORM channel case is
+    expressible that way; their NON-UNIFORM case is not, and a free overfall is
+    non-uniform. This module said so in its first commit. This class is the missing
+    piece.
+
+    HOW. Particles [n_water, n_water + n_reserve) are held out of the flow, parked
+    in a compact block and PINNED every tick (position reset, velocity zeroed).
+    Drawing from the pool activates particles at the inlet; retiring returns them to
+    the park. Inflow and outflow are then independently controlled and the pool
+    absorbs the difference.
+
+    THE HONEST PROBLEM, AND THE CONTROL THAT TESTS IT. Particle volume is fixed at
+    load, so a parked particle still carries h^3 of fluid and still deposits mass on
+    the grid where it sits. There is nowhere in a warpmpm domain that is truly
+    outside the simulation: the grid-edge guard forbids parking near the boundary
+    (solver.py:_update_grid_box), and parking below the floor or outside the walls
+    still writes to nodes. So the park is placed far from the wetted region and
+    pinned, and the claim that it is inert is TESTED, not assumed:
+
+        a reserve that is never drawn from must reproduce the no-reserve run.
+
+    `sim_overfall.py --reserve N --reserve-hold` runs exactly that control. If the
+    held run and the baseline disagree, the park is not inert and this design fails.
+    Do not report a reserve-pool result without having run the control.
+
+    J, again. An activated particle carries whatever J its parked history produced,
+    which for a pinned particle at rest is near hydrostatic-free. It is injected into
+    a column that wants J for the local head. Same transient as OverfallBC, same
+    reason (F has no setter), same order: about 1.8 percent at 0.3 m of head,
+    relaxing in under a frame.
+    """
+
+    def __init__(self, n_water, n_reserve, park_lo, park_hi, dx, grid_lim, seed=0):
+        if n_reserve < 0:
+            raise ValueError("n_reserve must be >= 0")
+        park_lo = np.asarray(park_lo, dtype=np.float64)
+        park_hi = np.asarray(park_hi, dtype=np.float64)
+        if (park_lo < 2.0 * dx).any() or (park_hi > grid_lim - 3.0 * dx).any():
+            raise ValueError(
+                "park box %s..%s violates the P2G edge guard for dx=%.4f, lim=%.4f; "
+                "the engine raises if any particle is within 1.5 dx of the grid edge"
+                % (park_lo, park_hi, dx, grid_lim))
+        self.n_water = int(n_water)
+        self.n_reserve = int(n_reserve)
+        self.lo = self.n_water
+        self.hi = self.n_water + self.n_reserve
+        self.park_lo, self.park_hi = park_lo, park_hi
+        self.rng = np.random.default_rng(seed)
+        # active[i] True means reserve particle i is in the flow, not parked
+        self.active = np.zeros(self.n_reserve, dtype=bool)
+        self.park_xyz = None
+        self.drawn_total = 0
+        self.retired_total = 0
+        self.starved_total = 0          # ticks where the pool could not meet demand
+
+    @property
+    def n_parked(self):
+        return int((~self.active).sum())
+
+    @property
+    def n_active(self):
+        return int(self.active.sum())
+
+    def build_park(self):
+        """Fixed park coordinates, one slot per reserve particle, on a lattice."""
+        n = self.n_reserve
+        if n == 0:
+            self.park_xyz = np.zeros((0, 3), np.float32)
+            return self.park_xyz
+        span = self.park_hi - self.park_lo
+        side = max(int(np.ceil(n ** (1.0 / 3.0))), 1)
+        g = [np.linspace(self.park_lo[k] + span[k] / (2 * side),
+                         self.park_hi[k] - span[k] / (2 * side), side) for k in range(3)]
+        pts = np.stack(np.meshgrid(*g, indexing="ij"), -1).reshape(-1, 3)[:n]
+        if len(pts) < n:                      # ceil can undershoot by rounding
+            pts = np.vstack([pts, np.repeat(pts[-1:], n - len(pts), axis=0)])
+        self.park_xyz = pts.astype(np.float32)
+        return self.park_xyz
+
+    def pin_parked(self, x, v):
+        """Hold every parked particle still. Call once per tick, before stepping."""
+        if self.n_reserve == 0:
+            return 0
+        if self.park_xyz is None:
+            self.build_park()
+        idx = np.flatnonzero(~self.active)
+        if idx.size:
+            x[self.lo + idx] = self.park_xyz[idx]
+            v[self.lo + idx] = 0.0
+        return int(idx.size)
+
+    def draw(self, k, x, v, x_lo, x_hi, y_lo, y_hi, z_lo, z_hi, velocity):
+        """Activate up to k parked particles into the given inlet box.
+
+        Returns the number actually activated, which is less than k when the pool
+        is empty; that shortfall is counted in starved_total rather than hidden,
+        because a silently starved inlet looks exactly like a physical result.
+        """
+        if self.n_reserve == 0 or k <= 0:
+            return 0
+        idx = np.flatnonzero(~self.active)
+        take = min(int(k), idx.size)
+        if take < int(k):
+            self.starved_total += int(k) - take
+        if take == 0:
+            return 0
+        sel = idx[:take]
+        g = self.lo + sel
+        x[g, 0] = self.rng.uniform(x_lo, x_hi, take)
+        x[g, 1] = self.rng.uniform(y_lo, y_hi, take)
+        x[g, 2] = self.rng.uniform(z_lo, z_hi, take)
+        v[g] = (float(velocity), 0.0, 0.0)
+        self.active[sel] = True
+        self.drawn_total += take
+        return take
+
+    def retire_where(self, x, predicate_z_below=None, predicate_x_beyond=None):
+        """Return active particles that have left the domain of interest to the park.
+
+        Retirement is by the SAME test the outflow uses, so a particle is never
+        counted as both outflowing and still in the channel.
+        """
+        if self.n_reserve == 0:
+            return 0
+        act = np.flatnonzero(self.active)
+        if act.size == 0:
+            return 0
+        g = self.lo + act
+        gone = np.zeros(act.size, dtype=bool)
+        if predicate_z_below is not None:
+            gone |= x[g, 2] < predicate_z_below
+        if predicate_x_beyond is not None:
+            gone |= x[g, 0] >= predicate_x_beyond
+        n = int(gone.sum())
+        if n:
+            self.active[act[gone]] = False
+            self.retired_total += n
+        return n
+
+
+def _selftest_reserve():
+    dx, lim = 0.04167, 4.0
+    nw, nr = 500, 300
+    x = np.zeros((nw + nr, 3), np.float32)
+    x[:nw, 2] = 1.6
+    v = np.zeros((nw + nr, 3), np.float32)
+    lo = np.array([3.0, 0.3, 0.3]); hi = np.array([3.7, 1.0, 1.0])
+    p = ReservePool(nw, nr, lo, hi, dx, lim, seed=1)
+    p.build_park()
+    # 1. the park respects the P2G edge guard and its own box
+    assert (p.park_xyz >= lo - 1e-6).all() and (p.park_xyz <= hi + 1e-6).all()
+    assert (p.park_xyz >= 2.0 * dx).all() and (p.park_xyz <= lim - 3.0 * dx).all()
+    # 2. a park box that violates the guard is refused
+    try:
+        ReservePool(nw, nr, [0.01, 0.3, 0.3], hi, dx, lim)
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("guard-violating park box was accepted")
+    # 3. pinning holds every parked particle and touches no water
+    x0 = x.copy()
+    n_pin = p.pin_parked(x, v)
+    assert n_pin == nr and np.array_equal(x[:nw], x0[:nw])
+    assert np.allclose(x[nw:], p.park_xyz) and not v[nw:].any()
+    # 4. drawing activates exactly k and places them in the inlet box
+    k = p.draw(120, x, v, 0.2, 0.3, 1.5, 2.5, 1.5, 1.8, velocity=0.5)
+    assert k == 120 and p.n_active == 120 and p.n_parked == nr - 120
+    g = p.lo + np.flatnonzero(p.active)
+    assert (x[g, 0] >= 0.2).all() and (x[g, 0] <= 0.3).all()
+    assert (x[g, 2] >= 1.5).all() and (x[g, 2] <= 1.8).all()
+    assert np.allclose(v[g], np.array([0.5, 0.0, 0.0], np.float32))
+    # 5. pinning after a draw leaves the ACTIVE ones alone
+    before = x[g].copy()
+    p.pin_parked(x, v)
+    assert np.allclose(x[g], before), "pin_parked moved an active particle"
+    # 6. retirement by the outflow test returns them and is counted
+    x[g[:40], 2] = 0.5
+    n_ret = p.retire_where(x, predicate_z_below=0.8)
+    assert n_ret == 40 and p.n_active == 80, (n_ret, p.n_active)
+    # 7. starvation is counted, not hidden
+    p2 = ReservePool(nw, 10, lo, hi, dx, lim)
+    p2.build_park()
+    got = p2.draw(50, x, v, 0.2, 0.3, 1.5, 2.5, 1.5, 1.8, 0.5)
+    assert got == 10 and p2.starved_total == 40, (got, p2.starved_total)
+    # 8. a zero-size pool is a no-op everywhere, so --reserve 0 is a true baseline
+    p3 = ReservePool(nw, 0, lo, hi, dx, lim)
+    assert p3.pin_parked(x, v) == 0 and p3.draw(5, x, v, 0, 1, 0, 1, 0, 1, 1.0) == 0
+    assert p3.retire_where(x, predicate_z_below=99.0) == 0
+    print("reserve pool selftest: 8 checks PASS")
+
 if __name__ == "__main__":
     _selftest()
     _selftest_overfall()
     _selftest_overfall_bc()
+    _selftest_reserve()

@@ -1421,3 +1421,134 @@ L7. **SKILL DRIFT, RE-VERIFIED, and the previously recorded drift is FIXED.** Fi
     (2) Only then re-run the friction and grid sweeps, holding Froude fixed rather
     than letting it drift with resolution. (3) Do not report a Rouse comparison
     before (1) and (2). The test is currently incapable of passing or failing.
+
+31. **THE HYDROPLANING PAPER IS READ. IT DOES NOT SOLVE BLOCKER B2 FOR US, AND THE
+    REASON IS SCALE, NOT METHOD.**
+
+    Zhou, Zhong, He, Wang, Tang and Li (2025), *Phys. Fluids* 37(8), 083121,
+    `10.1063/5.0276643`. Read in full 2026-08-18 from the CityU green-OA copy that
+    Josie retrieved; four earlier routes had failed and the paper was never on this
+    machine. Author list corrected: **Zhou Changhong, Zhong Qing, He Zhihe, Wang
+    Yixuan, Tang Xianyuan, Li Peilin**, Guilin University of Electronic Technology
+    and City University of Hong Kong. Earlier project notes said "Zhou, Qing and
+    Wang", which turned Zhong Qing's given name into a surname.
+
+    **HOW THEY EXPRESS A PAVEMENT, which is what the handoff wanted.** Not a plane
+    boundary condition and not an SDF collider. The pavement is **rigid MATERIAL
+    POINTS**, one of three single-phase materials (tire, water film, pavement) meeting
+    at contact interfaces, handled by a **multi-material / multi-velocity-field
+    contact algorithm**: contact detected by (P_I^TM - P_I^WM) . n_I^c < 0, nodal
+    normals from the mass gradient, momentum corrected by normal and tangential
+    contact forces with a Coulomb limit, Newton's third law imposed pairwise
+    (their Eqs. 18 to 25, Fig. 3). Their Sec. III.A states the pavement "is assumed
+    to be a rigid structure" and the tire-pavement friction coefficient is
+    **mu = 0.7**.
+
+    **ROUGHNESS IS EXPLICIT GEOMETRY, NOT A PARAMETER.** Their Sec. III.D models
+    "micro-protrusions" as actual pavement relief, and the water film "entirely
+    fills up to a 1 mm line above the peak of the highest roughness". The physical
+    result is that on a rough pavement the tread load is shared between fluid and
+    protrusions so dynamic water pressure falls, whereas on a smooth pavement the
+    film carries all of it.
+
+    **WHY IT DOES NOT TRANSFER, and this is the load-bearing part.** Their domain is
+    a water film **0.3 m long by 0.22 m wide and 0.2 to 1.0 mm thick**, around a
+    205/55R16 tire of 0.64 m diameter at 25.7 to 30.4 m/s. To resolve a 1 mm film
+    and sub-millimetre texture their cell size must be a fraction of a millimetre.
+    This project's domain is **9.42 m with dx = 0.147 m at g64**, three orders of
+    magnitude coarser, and a road texture depth of a few millimetres is under
+    1/50th of one cell. **Pavement-as-material-points with resolved roughness is
+    therefore not available at this project's scale**, and the handoff's expectation
+    that this paper would answer B2 is not met. It establishes that MPM CAN host a
+    real road; it does not show how to do so when the road is 60 times longer than
+    the cell.
+
+    **WHAT DOES TRANSFER, three things.** (a) The multi-material contact framework
+    is an architecture alternative to our grid-BC plane, and it is the same family
+    register A-1 already pointed at via Hu et al 2018. (b) Pavement as a rigid body
+    rather than a boundary condition is validated practice. (c) A contrast worth
+    stating in the paper: they use the **REAL sound speed c_0 = 1480 m/s** with a
+    Grueneisen equation of state (rho_0 = 1000, s = 1.92, gamma_0 = 1.2, their
+    Table I) and did NOT reduce the bulk modulus, where this project runs a reduced
+    modulus giving c = 12.85 m/s. Both are legitimate; item 22 already records that
+    ours sits below the 10x criterion, and this is a live example of the other
+    choice being affordable at small scale.
+
+    **A THIRD NUMBER FOR TIRE-ROAD FRICTION, AND THE LITERATURE DOES NOT AGREE.**
+    Their mu = 0.7 (rolling tire on pavement, hydroplaning context) against Nihei et
+    al's measured 0.30 locked and 0.0242 free-rolling (item 29) against this repo's
+    unsourced 0.55. Three papers, three values, spanning a factor of 29. Any paper
+    text quoting a tire-road friction coefficient must say which condition it means.
+
+32. **THE RESERVE POOL IS IMPLEMENTED, AND ITS KEY CLAIM IS TESTED RATHER THAN
+    ASSERTED.**
+
+    `simulation/openchannel_bc.py` gains `ReservePool`, the piece item 30 identified
+    as the blocker: spare particles held out of the flow so inflow can differ from
+    outflow, which is what Zhao et al's NON-UNIFORM case needs and what one-in-one-out
+    recycling cannot express. Eight self-tests.
+
+    THE HONEST DIFFICULTY. Particle volume is fixed at load, so a parked particle
+    still carries h^3 of fluid and still deposits mass on the grid wherever it sits,
+    and there is nowhere in a warpmpm domain that is truly outside the simulation:
+    the edge guard forbids parking near the boundary, and parking below the floor or
+    outside the walls still writes to nodes. The park is therefore a pinned block
+    placed far from the wetted region, and the claim that it is inert is a
+    **falsifiable control, not an assumption**:
+
+        a reserve that is never drawn from must reproduce the no-reserve run.
+
+    `--reserve-hold` runs exactly that. **JOB 918500 HAS RUN AND BOTH ANSWERS ARE
+    BELOW.**
+
+    **THE CONTROL: INERT LATE, NOT INERT EARLY, AND THE "PASS" IS WEAK.**
+
+    | quantity | A reserve=0 | B held | delta |
+    |---|---:|---:|---:|
+    | q_first  | 0.1726 | 0.1394 | **-19.3%** |
+    | q_last   | 0.0430 | 0.0425 | -1.0% |
+    | Fr_late  | 0.665  | 0.661  | -0.6% |
+    | ratio    | 1.290  | 1.469  | +13.9% |
+
+    The late-time quantities agree to within 1 percent, so a settled parked block is
+    effectively inert. The EARLY discharge does not: q_first differs by 19.3 percent,
+    which is the parked block settling onto the grid before the pin takes hold. And
+    the ratio comparison nominally passes only because B's RUM95 is 0.2275 at n_eff
+    5.0, a band wide enough to hide most disagreements. **Record this as "inert after
+    the transient, not established during it", not as a clean pass.** The fix, if the
+    pool is kept, is to pin from before the settle phase rather than from frame 0 of
+    the run.
+
+    **THE TREATMENT: THE POOL DRAINED AND THE DEPTH STILL COLLAPSED.**
+    Drawn 67467, retired 27467, **starved 164626**, active at the end 40000 of 40000.
+    The pool was completely empty and 164626 further draw requests went unmet. Inlet
+    depth against a 0.350 m target: 0.2582 over the first 30 frames, **0.0833** over
+    the last 30, which is exactly the 2*dx fallback floor, i.e. no standing water at
+    the inlet at all. q_last/q_first is 0.29 against the baseline's 0.25, so the
+    discharge decay is essentially unchanged.
+
+    **WHY, and it is a design fault not a physics result.** Retirement is triggered
+    by the same fall test as the outflow, so a drawn particle only returns to the
+    pool after traversing the channel and going over the brink, which takes on the
+    order of 100 frames. Draws ran at 536 per frame initially. The pool therefore
+    emptied in roughly 75 frames and could never refill fast enough. Adding 40000
+    particles to a 94656-particle scene, 42 percent more water, still did not hold
+    the target depth.
+
+    **WHAT THIS MEANS. The reserve pool is not the fix on its own.** It is
+    mechanically correct, its instrumentation is what made the failure diagnosable
+    (a hidden starvation counter would have left this looking like an unexplained
+    null), and it remains necessary for a non-uniform boundary condition. But the
+    discharge decay is not a shortage of particles. Item 30 attributed it to the
+    recycling closure; that is now too narrow. **Even with an independent supply the
+    channel does not hold depth**, which points at the outflow side: water leaves
+    over the brink faster than any inlet condition tried so far can replace it, and
+    the free-overfall geometry may simply be the wrong first validation case for a
+    domain this size. A uniform channel with a pressure-controlled outlet, Zhao's
+    other case and Remmerswaal's prescribed-traction machinery (item 31), is the
+    cheaper target and should be tried first.
+
+    One more measured detail worth keeping: run C is the only one of the three that
+    passes the stationarity test, at Fr 0.375 and ratio 0.803. It is the most
+    subcritical and the furthest from Rouse's 1.4, 43 percent below. Holding depth
+    with an inlet supply moved the flow AWAY from the target, not toward it.
