@@ -1552,3 +1552,94 @@ L7. **SKILL DRIFT, RE-VERIFIED, and the previously recorded drift is FIXED.** Fi
     passes the stationarity test, at Fr 0.375 and ratio 0.803. It is the most
     subcritical and the furthest from Rouse's 1.4, 43 percent below. Holding depth
     with an inlet supply moved the flow AWAY from the target, not toward it.
+
+33. **LS6 NOW RUNS warpmpm, PINNED TO VISTA, AND IT HOLDS 15.5x VISTA'S REMAINING
+    BUDGET. THE x86 ARCHITECTURE ALSO RETIRES NOTE L-8 ON THAT MACHINE.**
+
+    Measured live 2026-08-18: **Vista 616 SUs on aarch64, LS6 9,539 SUs on x86_64**
+    with no venv, no engine and no warpmpm. Vista is close to exhausted. Standing
+    the stack up on LS6 is therefore worth more than any single physics change, and
+    `scripts/ls6_setup.sh` now does it reproducibly.
+
+    **THE PINS ARE THE POINT.** Left alone, pip installs warp-lang **1.16.0** on LS6
+    while Vista runs **1.15.0**. A cross-machine comparison across two solver
+    versions is not a cross-machine comparison, and the mismatch is silent. All
+    three versions are pinned to values measured on Vista the same day: warp 1.15.0,
+    torch 2.11.0+cu128, mpm-engine **627367e**.
+
+    That engine SHA is VISTA'S working-copy HEAD and is **not** the SHA this repo
+    vendors (`third_party/mpm-engine-544c93dd`). The setup script matches Vista on
+    purpose, because the immediate goal is reproducing Vista's numbers. The
+    vendoring discrepancy is still unresolved and is not closed by this item.
+
+    **L-8 DOES NOT APPLY ON LS6.** That note fixed the engine decision on the
+    grounds that DualSPHysics ships x86-only static libraries, a hard aarch64
+    blocker on GH200. LS6 is x86_64, so the blocker is absent there and the decision
+    was never re-examined for it. **And the literature does not independently confirm
+    the blocker even for aarch64**: a deep search found no source establishing that
+    the package is intrinsically x86-only today, nor any documented ARM-host CUDA
+    build failure (item 34). L-8 may rest on one local build attempt. Re-test rather
+    than inherit it.
+
+    Two traps, both hit: `module load python/3.12.11` does NOT change what `python3`
+    resolves to on LS6, so use `/opt/apps/python/3.12.11/bin/python3`; and
+    `scripts/tacc.sh` refuses commands containing destructive verbs, which is
+    correct and which left an orphaned 3.9.7 venv at `$WORK/.venv312` on LS6.
+    LS6 also exposes **gpu-h100** alongside gpu-a100 and gpu-a100-dev.
+
+34. **THREE DEEP SEARCHES: WHAT THEY SETTLED, AND THREE GAPS THAT ARE
+    CONTRIBUTIONS RATHER THAN OVERSIGHTS.**
+
+    Launched 2026-08-18 into the `Can it ford` Undermind workspace after an audit
+    found the previous prompt asked about a stationary vehicle only, inferred gaps
+    from tag counts rather than content, and ignored compute. 48, 47 and 56 papers.
+
+    **SETTLED, so stop re-deriving these.**
+    - *Wheel contact for a moving vehicle*: Wasfy et al 2015 resolve suspension,
+      wheels, steering, axles, drivetrain and both tire/ground and tire/fluid
+      contact with penalty and asperity friction. Mazhar et al 2018 give the
+      integrator, half-implicit symplectic with a cone-constrained solve. Pazouki
+      et al 2016 apply distributed point-cloud FSI forces.
+    - *An open-source moving-vehicle precedent exists*: Canelas et al 2018 extend
+      **DualSPHysics with Project Chrono's differential variational inequality
+      solver** and it is explicitly open source. Combined with item 33 this is
+      buildable on the machine that has the budget.
+    - *Scaling*: multi-GPU MPM reaches 100 million particles on 4 GPUs and 134
+      million on 8. A 10 to 50 million particle flooded roadway is comfortably a
+      SINGLE-NODE job. Stop treating it as a multi-node problem.
+    - *The ten-times sound-speed rule has NO primary derivation in the retrieved
+      literature.* Item 22 measures this project against a convention, not a
+      derived criterion. Say so wherever it is cited.
+    - *Open-boundary machinery for particle methods exists*: characteristic,
+      buffer, pressure and traction outlet formulations are published, with
+      Tafuni et al 2018 (GPU SPH open boundaries) and Negi et al 2019
+      (non-reflecting outlet for weakly compressible SPH) the two most directly
+      usable for the unsolved outlet in item 32.
+
+    **THREE GAPS. Each is a result, not a hole to be filled by reading harder.**
+    1. **No published speed-depth map for a self-propelled vehicle ENTERING water.**
+       Existing work parks a vehicle in a flow or prescribes a trajectory. This is
+       the project's stated target and it appears to be unoccupied.
+    2. **No study reports the same vehicle-in-floodwater case in two independent
+       solvers with the force-coefficient disagreement.** Existing vehicle studies
+       compare one solver against experiment or against other CFD. A warpmpm
+       versus DualSPHysics-Chrono comparison would be new.
+    3. **No crowned or cambered road has been compared against a flat plane** for a
+       vehicle stability threshold. A 5 percent grade study exists, and terrain
+       slope appears in conceptual models, but the flat-versus-shaped comparison
+       does not. That makes the road-geometry work already in this repo novel
+       territory rather than catch-up.
+
+    **AND ONE NEGATIVE THAT SAVES EFFORT.** Graph-network surrogates trained on MPM
+    rollouts report 5 percent trajectory error and 5000x speedup, but on granular
+    and obstacle problems, and **no retrieved work demonstrates a surrogate
+    preserving a discrete threshold or classification outcome**. This project's
+    output IS a discrete verdict. Do not build the surrogate expecting it to carry
+    the verdict; if it is built, the burden is to show threshold preservation, not
+    trajectory accuracy.
+
+    Also measured, and directly relevant to item 29's friction question: full-scale
+    tests on concrete, gravel and sand find materially different friction
+    coefficients and recommend a worst-case value, but **no retrieved study
+    quantifies the error from substituting an effective roughness for resolved
+    roughness**, which is exactly the substitution this project's cell size forces.
