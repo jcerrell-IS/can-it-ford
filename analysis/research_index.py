@@ -439,6 +439,475 @@ def show(r: dict, verbose: bool = False) -> None:
     print()
 
 
+# ---------------------------------------------------------------------------
+# BIBLIOGRAPHY AUDIT  (--bib-audit)
+# ---------------------------------------------------------------------------
+# WHY THIS EXISTS, and what defect it is built to avoid.
+#
+# This index could not answer a question about itself: "is the corpus a superset
+# of the bibliography the paper actually ships?" It is not. But the reason
+# nobody could check that claim was subtler than the claim itself.
+#
+# The shipped bib carries its DOIs inside `note = {doi: ...}` fields, not `doi =`
+# fields. Exactly ONE of its 15 entries uses a real `doi =` key. So any audit
+# that joins on the `doi` field alone sees one identifier and silently treats the
+# other fourteen works as having no DOI at all. A previous census reported "11 of
+# 14 cited works are absent from the 332" without recording HOW it matched, and
+# that unrecorded matching step is what decided the answer.
+#
+# The defect class this avoids is the opposite of the one `d6-tooling` recorded
+# in `docs/R8_TOOLING_PROVENANCE.md`: a checker whose corpus INCLUDES its own
+# output, so everything self-certifies. Here the risk runs the other way, a
+# checker whose corpus EXCLUDES the bibliography it is meant to audit, so
+# everything reads as a gap. Both produce a confident number that measures the
+# checker's own scope rather than the world.
+#
+# So every row this emits states the ROUTE by which the work was matched or
+# failed to match, and carries the best rejected candidate with its score. A row
+# reading "absent" is worth little. A row reading "absent, searched by DOI, by
+# normalised title against all 332 records and against every catalogue row in all
+# eight reports, and by first-author surname plus year, best candidate 0.31" is
+# auditable by someone who was not here.
+
+BIB_REF_DEFAULT = "overleaf/main:can_it_ford_references_IEEE.bib"
+TEX_REF_DEFAULT = "overleaf/main:conference_101719_1.tex"
+
+# Same-work threshold and related-work threshold, over title token Jaccard.
+# Deliberately two numbers, not one. Anything between them is reported as
+# UNCERTAIN rather than forced into present or absent, because the Shand 2011
+# case is genuinely ambiguous: the corpus holds a 2011 Shand/Smith/Cox/Blacka
+# work that is NOT the AR&R Stage 2 report the paper cites.
+SAME_WORK = 0.75
+RELATED = 0.40
+
+_STOP = {"a", "an", "and", "for", "of", "the", "in", "on", "to", "with", "by",
+         "via", "using", "from", "at", "as", "its", "is", "are", "a", "study"}
+
+_DOI_ANY = re.compile(r"10\.\d{4,9}/[^\s\"'<>)\]},;]+")
+
+
+def _toks(s: str) -> set:
+    words = re.sub(r"[^a-z0-9]+", " ", s.lower()).split()
+    return {w for w in words if len(w) > 2 and w not in _STOP}
+
+
+def _jaccard(a: set, b: set) -> float:
+    if not a or not b:
+        return 0.0
+    return len(a & b) / len(a | b)
+
+
+def _git_show(spec: str) -> str:
+    """Read `rev:path` out of the repo. FATAL if the ref or path is absent."""
+    import subprocess
+    try:
+        out = subprocess.run(["/usr/bin/git", "-C", REPO, "show", spec],
+                             capture_output=True, text=True, timeout=60)
+    except OSError as exc:
+        sys.stderr.write(f"FATAL: cannot run git for {spec!r}: {exc}\n")
+        raise SystemExit(2)
+    if out.returncode != 0:
+        sys.stderr.write(f"FATAL: `git show {spec}` failed rc={out.returncode}\n"
+                         f"{out.stderr.strip()}\n"
+                         "Name the ref explicitly. Bibliography counts differ "
+                         "between origin/main, claude/add-ci-checks and "
+                         "overleaf/main, so a bare count is wrong on two of the "
+                         "three.\n")
+        raise SystemExit(2)
+    if not out.stdout.strip():
+        sys.stderr.write(f"FATAL: {spec} is empty. Refusing to audit against an "
+                         "empty bibliography, which would report every work as "
+                         "absent.\n")
+        raise SystemExit(2)
+    return out.stdout
+
+
+def require_source_reports() -> list:
+    """Load all eight Undermind reports, or exit 2. Never returns partial.
+
+    THIS ASSERTION IS FATAL ON PURPOSE. Seven of the eight reports live under
+    `~/Downloads`. A macOS privacy denial there has previously made recursive
+    search report ZERO hits silently while direct reads errored, and the standing
+    `/usr/bin/grep` fix does not help with that failure mode, because the failure
+    is at the directory-listing layer rather than in the shell `grep` function.
+
+    A partial load would silently reclassify every work in the unread reports
+    from "ingested then dropped" to "never ingested", which is the exact
+    distinction this audit exists to make. So: all eight, non-empty, each parsing
+    to at least one catalogue record, or nothing.
+
+    Reachability is checked AT READ TIME, not at session start. Eight reports
+    readable twenty minutes ago is not eight reports readable now.
+    """
+    loaded, problems = [], []
+    for slug, path in REPORTS:
+        if not os.path.isfile(path):
+            problems.append(f"{slug:20} MISSING      {path}")
+            continue
+        try:
+            txt = open(path, encoding="utf-8", errors="replace").read()
+        except OSError as exc:
+            problems.append(f"{slug:20} UNREADABLE   {path}  ({exc})")
+            continue
+        if not txt.strip():
+            problems.append(f"{slug:20} EMPTY        {path}")
+            continue
+        recs = parse_report(slug, path)
+        if not recs:
+            problems.append(f"{slug:20} ZERO RECORDS {path}")
+            continue
+        loaded.append({"slug": slug, "path": path, "text": txt,
+                       "ntext": txt.lower(), "recs": recs})
+    if problems or len(loaded) != len(REPORTS):
+        sys.stderr.write(
+            "FATAL: the eight source reports are not all reachable, so the "
+            "never-ingested / dropped-in-merge distinction cannot be made.\n"
+            "This is a hard stop, not a warning: a partial read would report "
+            "works from the unread reports as never ingested.\n\n")
+        for p in problems:
+            sys.stderr.write("  " + p + "\n")
+        sys.stderr.write(
+            "\nIf these sit under ~/Downloads, check macOS privacy access for "
+            "the terminal. A denial there returns zero hits silently.\n")
+        raise SystemExit(2)
+    return loaded
+
+
+def parse_bib(text: str) -> list:
+    """Parse BibTeX entries. Tolerant, brace-aware, standard library only."""
+    entries = []
+    for m in re.finditer(r"@(\w+)\s*\{\s*([^,\s]+)\s*,", text):
+        etype, key = m.group(1).lower(), m.group(2).strip()
+        i, depth = m.start(), 0
+        while i < len(text):
+            if text[i] == "{":
+                depth += 1
+            elif text[i] == "}":
+                depth -= 1
+                if depth == 0:
+                    break
+            i += 1
+        entries.append({"type": etype, "key": key,
+                        "fields": _bib_fields(text[m.end():i])})
+    return entries
+
+
+def _bib_fields(body: str) -> dict:
+    out, i = {}, 0
+    while i < len(body):
+        m = re.compile(r"([A-Za-z]+)\s*=\s*").search(body, i)
+        if not m:
+            break
+        name, j = m.group(1).lower(), m.end()
+        if j < len(body) and body[j] == "{":
+            depth, k = 0, j
+            while k < len(body):
+                if body[k] == "{":
+                    depth += 1
+                elif body[k] == "}":
+                    depth -= 1
+                    if depth == 0:
+                        break
+                k += 1
+            val, i = body[j + 1:k], k + 1
+        else:
+            k = body.find(",", j)
+            k = k if k != -1 else len(body)
+            val, i = body[j:k].strip().strip('"'), k + 1
+        out[name] = collapse(val)
+    return out
+
+
+def bib_title(fields: dict) -> str:
+    t = fields.get("title", "")
+    t = re.sub(r"\\[a-zA-Z]+\s*", "", t)
+    t = t.replace("{", "").replace("}", "")
+    t = t.replace("---", " ").replace("--", "-")
+    return collapse(t)
+
+
+def bib_doi(fields: dict) -> str:
+    """DOI from ANY field, not just `doi =`.
+
+    THIS IS THE UNRECORDED MATCHING STEP. Nine of the fifteen shipped entries
+    carry their DOI inside `note = {doi: 10.xxxx/yyyy}`; exactly one uses a real
+    `doi =` key. A join on the `doi` field alone finds 1 of 15 and reports the
+    other 14 as identifier-free, which is how a census can conclude "absent"
+    about works whose DOI is sitting in the file.
+    """
+    for name in ("doi", "note", "url", "howpublished"):
+        m = _DOI_ANY.search(fields.get(name, ""))
+        if m:
+            return m.group(0).lower().rstrip(".,;)")
+    return ""
+
+
+def bib_surname(fields: dict) -> str:
+    a = fields.get("author", "").strip()
+    if not a:
+        return ""
+    if a.startswith("{"):
+        return collapse(a.strip("{} "))
+    first = a.split(" and ")[0]
+    if "," in first:
+        return collapse(first.split(",")[0])
+    parts = first.split()
+    return collapse(parts[-1]) if parts else ""
+
+
+def source_kind(e: dict) -> str:
+    """What KIND of source this is. The explanatory column.
+
+    An Undermind deep search returns peer-reviewed literature and preprints. It
+    does not return a GitHub repository, a government safety campaign page, a
+    crash-test finite-element model, or a 1999 SAE technical report. Absence of
+    those from the corpus is a category boundary, not a sourcing defect, and
+    reporting them in the same bucket as a missed journal paper inflates the gap.
+    """
+    f = e["fields"]
+    blob = " ".join(f.values()).lower()
+    if "arxiv" in blob:
+        return "preprint"
+    if "github.com" in blob:
+        return "software"
+    if e["type"] == "misc" and ("weather.gov" in blob or "howpublished" in f
+                                and "url" in f.get("howpublished", "")):
+        return "webpage"
+    if e["type"] == "misc":
+        return "model-or-dataset"
+    if e["type"] == "techreport":
+        return "techreport-or-standard"
+    return "peer-reviewed"
+
+
+def _best_by_title(want: set, cands: list) -> tuple:
+    """(score, title, tag) of the closest candidate by title token Jaccard."""
+    best = (0.0, "", "")
+    for title, tag in cands:
+        s = _jaccard(want, _toks(title))
+        if s > best[0]:
+            best = (s, title, tag)
+    return best
+
+
+def index_self_defects() -> list:
+    """Defects the index can detect IN ITSELF, without leaving the repo.
+
+    Found while auditing the bibliography, and worth a permanent detector because
+    the failure is silent and it demotes a paper rather than erroring.
+
+    `parse_report` pulls a DOI out of a catalogue row with a `[link](url)` regex.
+    Two things defeat it together: some reports escape the brackets as
+    `\\[link\\]`, and an ASCE-style DOI legitimately CONTAINS parentheses, so a
+    non-greedy match to the first `)` truncates it. The row still becomes a
+    record, but with an empty `doi` and the raw markdown left inside the `title`.
+
+    Why that matters more than it looks. Cited-status is computed as
+    `bool(r["doi"]) and r["doi"] in cited`, so a record with an empty DOI can
+    NEVER be marked cited, however many times the repo cites it. The paper is
+    silently moved into the "no DOI, undiffable" bucket and reads as unreached
+    forever.
+    """
+    idx = load()
+    out = []
+    doi_in_text = re.compile(r"10\.\d{4,9}/\S+")
+    for key, r in sorted(idx["papers"].items()):
+        title = r.get("title", "")
+        if r.get("doi"):
+            continue
+        m = doi_in_text.search(title)
+        if not m:
+            continue
+        import urllib.parse
+        # Strip the markdown tail without eating the DOI's OWN parentheses.
+        # An ASCE DOI legitimately ends in `)`, so a blind rstrip(")") truncates
+        # it. Peel trailing characters only while the parens are UNBALANCED.
+        rec = urllib.parse.unquote(m.group(0)).lower()
+        rec = rec.rstrip("\\")
+        while rec and rec[-1] in ")\\" and rec.count(")") > rec.count("("):
+            rec = rec[:-1].rstrip("\\")
+        out.append({"key": key, "recovered_doi": rec,
+                    "title": re.split(r"\s*\(?\\?\[link", title)[0].strip(),
+                    "reports": ",".join(r.get("reports", []))})
+    return out
+
+
+def audit_bibliography(bib_spec: str, tex_spec: str) -> dict:
+    """Census every shipped bib entry against the corpus AND its source reports.
+
+    Returns a dict with `rows` and `scope`. Every row records the route.
+    """
+    idx = load()
+    papers = idx["papers"]
+    reports = require_source_reports()
+
+    bib_text = _git_show(bib_spec)
+    tex_text = _git_show(tex_spec)
+
+    cited = set()
+    for m in re.finditer(r"\\cite[tp]?\{([^}]+)\}", tex_text):
+        cited |= {k.strip() for k in m.group(1).split(",") if k.strip()}
+
+    idx_by_doi = {r["doi"]: r for r in papers.values() if r.get("doi")}
+    idx_titles = [(r["title"], k) for k, r in papers.items()]
+    rep_titles = {rp["slug"]: [(r.get("title", ""), rp["slug"])
+                               for r in rp["recs"].values()]
+                  for rp in reports}
+
+    rows = []
+    for e in parse_bib(bib_text):
+        f = e["fields"]
+        key = e["key"]
+        title = bib_title(f)
+        doi = bib_doi(f)
+        surname = bib_surname(f)
+        year = f.get("year", "")
+        want = _toks(title)
+        routes, notes = [], []
+
+        # ---- route 1, DOI against the index -------------------------------
+        hit = idx_by_doi.get(doi) if doi else None
+        routes.append("doi-exact-index:" + ("HIT" if hit else
+                                            ("miss" if doi else "n/a-no-doi")))
+
+        # ---- route 2, normalised title against all 332 index records ------
+        it_score, it_title, it_key = _best_by_title(want, idx_titles)
+        routes.append(f"title-jaccard-index:{it_score:.2f}")
+
+        # ---- route 3, first-author surname against the index --------------
+        # SPLIT INTO TWO, because they mean different things. A same-author
+        # SAME-YEAR record may be the same document under a different title, so
+        # it blocks a NEVER_INGESTED verdict. A same-author OTHER-YEAR record
+        # cannot be the same document, but it is the single most informative
+        # thing in this census: it proves the literature search REACHED this
+        # author and did not return this work, which separates a real sourcing
+        # gap from a topic the corpus was never pointed at.
+        same_auth = [r for r in papers.values()
+                     if surname and len(surname) > 3
+                     and surname.lower() in r.get("authors", "").lower()]
+        ay_same_year = [r for r in same_auth if year and r.get("year") == year]
+        ay_other = sorted({r.get("year", "") for r in same_auth
+                           if r.get("year") != year} - {""})
+        routes.append(f"author-index:same-year={len(ay_same_year)},"
+                      f"other-years={len(same_auth) - len(ay_same_year)}")
+
+        # ---- route 4, DOI as a raw string in each of the eight reports ----
+        doi_reports = [rp["slug"] for rp in reports
+                       if doi and doi in rp["ntext"]]
+        routes.append("doi-in-reports:" +
+                      (",".join(doi_reports) if doi_reports else
+                       ("none" if doi else "n/a-no-doi")))
+
+        # ---- route 5, title against every catalogue row in every report ---
+        rt_score, rt_title, rt_slug = 0.0, "", ""
+        for slug, cands in rep_titles.items():
+            s, t, _ = _best_by_title(want, cands)
+            if s > rt_score:
+                rt_score, rt_title, rt_slug = s, t, slug
+        routes.append(f"title-jaccard-reports:{rt_score:.2f}")
+
+        # ---- verdict ------------------------------------------------------
+        in_index = bool(hit) or it_score >= SAME_WORK
+        in_reports = bool(doi_reports) or rt_score >= SAME_WORK
+
+        if in_index:
+            verdict = "IN_CORPUS"
+            how = "doi-exact" if hit else f"title-jaccard {it_score:.2f}"
+        elif in_reports:
+            verdict = "DROPPED_IN_MERGE"
+            how = ("doi in " + ",".join(doi_reports)) if doi_reports \
+                else f"title-jaccard {rt_score:.2f} in {rt_slug}"
+        elif max(it_score, rt_score) >= RELATED or ay_same_year:
+            verdict = "UNCERTAIN_RELATED_WORK"
+            if ay_same_year:
+                how = (f"{len(ay_same_year)} corpus record(s) share this "
+                       f"first-author surname AND the year {year}, so a "
+                       "same-document-different-title match cannot be excluded "
+                       f"(best title score {max(it_score, rt_score):.2f})")
+                notes.append("CANDIDATE(S): " + " || ".join(
+                    f"{r.get('title', '')[:80]} [{r.get('authors', '')[:60]}]"
+                    for r in ay_same_year[:3]))
+            else:
+                how = (f"best candidate {max(it_score, rt_score):.2f}, below the "
+                       f"{SAME_WORK} same-work threshold and above the {RELATED} "
+                       "related-work threshold")
+            notes.append("NOT forced to present or absent. A human must decide "
+                         "whether the candidate is the same document.")
+        else:
+            verdict = "NEVER_INGESTED"
+            how = ("searched by DOI, by normalised title against all "
+                   f"{len(idx_titles)} index records and every catalogue row in "
+                   "all eight reports, and by first-author surname plus year; "
+                   f"best candidate {max(it_score, rt_score):.2f}")
+
+        rows.append({
+            "bib_key": key,
+            "source_kind": source_kind(e),
+            "cited_in_tex": "yes" if key in cited else "no",
+            "year": year,
+            "first_author": surname,
+            "doi": doi or "(none in bib)",
+            "doi_field_used": ("doi" if _DOI_ANY.search(f.get("doi", ""))
+                               else "note" if _DOI_ANY.search(f.get("note", ""))
+                               else "url" if _DOI_ANY.search(f.get("url", ""))
+                               else "(no doi anywhere)"),
+            "verdict": verdict,
+            "matched_how": how,
+            "best_index_score": f"{it_score:.2f}",
+            "best_index_candidate": it_title[:110],
+            "reports_with_doi": ",".join(doi_reports) or "-",
+            "best_report_score": f"{rt_score:.2f}",
+            "best_report_candidate": rt_title[:110],
+            "best_report_slug": rt_slug or "-",
+            "same_author_other_years": ",".join(ay_other) or "-",
+            "routes": " | ".join(routes),
+            "notes": " ".join(notes) or "-",
+            "title": title,
+        })
+
+    return {
+        "rows": rows,
+        "scope": {
+            "bib_ref": bib_spec,
+            "tex_ref": tex_spec,
+            "index_built": idx["built"],
+            "n_index_papers": idx["n_papers"],
+            "n_index_no_doi": idx["n_no_doi_undiffable"],
+            "n_reports_read": len(reports),
+            "same_work_threshold": SAME_WORK,
+            "related_threshold": RELATED,
+            "worktrees_excluded": True,
+        },
+    }
+
+
+TSV_COLUMNS = ["bib_key", "source_kind", "cited_in_tex", "year", "first_author",
+               "doi", "doi_field_used", "verdict", "matched_how",
+               "best_index_score", "best_index_candidate", "reports_with_doi",
+               "best_report_score", "best_report_candidate",
+               "best_report_slug", "same_author_other_years", "routes",
+               "notes", "title"]
+
+
+def write_census_tsv(res: dict, path: str) -> None:
+    sc = res["scope"]
+    with open(path, "w", encoding="utf-8") as fh:
+        fh.write(f"# bibliography-to-corpus census, written by "
+                 f"analysis/research_index.py --bib-audit\n")
+        fh.write(f"# SCOPE, stated with the numbers because it decides them: "
+                 f"bib_ref={sc['bib_ref']} tex_ref={sc['tex_ref']} "
+                 f"index_built={sc['index_built']} "
+                 f"index_papers={sc['n_index_papers']} "
+                 f"reports_read={sc['n_reports_read']}/8 "
+                 f"same_work_threshold={sc['same_work_threshold']} "
+                 f"related_threshold={sc['related_threshold']} "
+                 f".claude/worktrees excluded=yes\n")
+        fh.write("\t".join(TSV_COLUMNS) + "\n")
+        for r in res["rows"]:
+            fh.write("\t".join(str(r[c]).replace("\t", " ")
+                               for c in TSV_COLUMNS) + "\n")
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--build", action="store_true")
@@ -453,7 +922,87 @@ def main() -> int:
     ap.add_argument("--docs", action="store_true",
                     help="search research DOCUMENTS (artifacts, Perplexity, "
                          "Elicit) instead of papers")
+    ap.add_argument("--bib-audit", action="store_true",
+                    help="census the SHIPPED bibliography against this corpus "
+                         "and against the eight source reports, recording the "
+                         "route by which each work matched or failed to match")
+    ap.add_argument("--bib-ref", default=BIB_REF_DEFAULT,
+                    help=f"rev:path of the bibliography (default "
+                         f"{BIB_REF_DEFAULT}). Name it explicitly: the entry "
+                         "count differs between origin/main, "
+                         "claude/add-ci-checks and overleaf/main.")
+    ap.add_argument("--tex-ref", default=TEX_REF_DEFAULT,
+                    help=f"rev:path of the paper source (default "
+                         f"{TEX_REF_DEFAULT})")
+    ap.add_argument("--tsv", help="also write the census as TSV to this path")
     a = ap.parse_args()
+
+    if a.bib_audit:
+        res = audit_bibliography(a.bib_ref, a.tex_ref)
+        sc, rows = res["scope"], res["rows"]
+        print("BIBLIOGRAPHY-TO-CORPUS CENSUS")
+        print(f"  bib ref            {sc['bib_ref']}")
+        print(f"  tex ref            {sc['tex_ref']}")
+        print(f"  index built        {sc['index_built']}  "
+              f"({sc['n_index_papers']} papers, {sc['n_index_no_doi']} with no "
+              "DOI and therefore unmatchable by the DOI route)")
+        print(f"  source reports     {sc['n_reports_read']}/8 read at audit "
+              "time, all non-empty, all parsing to >0 records")
+        print(f"  thresholds         same-work {sc['same_work_threshold']}, "
+              f"related {sc['related_threshold']} (title token Jaccard)")
+        print("  scope              .claude/worktrees/ excluded")
+        print()
+        cited = [r for r in rows if r["cited_in_tex"] == "yes"]
+        print(f"  {len(rows)} bib entries, {len(cited)} of them \\cite'd\n")
+        for v in ("IN_CORPUS", "DROPPED_IN_MERGE", "UNCERTAIN_RELATED_WORK",
+                  "NEVER_INGESTED"):
+            grp = [r for r in rows if r["verdict"] == v]
+            gc = [r for r in grp if r["cited_in_tex"] == "yes"]
+            print(f"  {v:24} {len(grp):2d} entries, {len(gc):2d} cited")
+        print()
+        for v in ("IN_CORPUS", "DROPPED_IN_MERGE", "UNCERTAIN_RELATED_WORK",
+                  "NEVER_INGESTED"):
+            grp = [r for r in rows if r["verdict"] == v]
+            if not grp:
+                continue
+            print(f"--- {v} ---")
+            for r in grp:
+                print(f"  {r['bib_key']:22} [{r['source_kind']:22}] "
+                      f"cited={r['cited_in_tex']}")
+                print(f"      {r['title'][:100]}")
+                print(f"      doi {r['doi']}  (from `{r['doi_field_used']}` "
+                      "field)")
+                print(f"      {r['matched_how']}")
+                if r["best_index_score"] != "0.00":
+                    print(f"      nearest in corpus  {r['best_index_score']}  "
+                          f"{r['best_index_candidate']}")
+                if v != "IN_CORPUS" and r["same_author_other_years"] != "-":
+                    print(f"      SURNAME {r['first_author']!r} also appears "
+                          f"in corpus records for year(s) "
+                          f"{r['same_author_other_years']}. Surname substring "
+                          "only, NOT an author-identity claim, but it means "
+                          "the searches reached that name and returned other "
+                          "work, not this one")
+                if r["notes"] != "-":
+                    print(f"      NOTE {r['notes']}")
+            print()
+        defects = index_self_defects()
+        print("--- INDEX SELF-CHECK ---")
+        if not defects:
+            print("  no records with a recoverable DOI hidden in the title")
+        else:
+            print(f"  {len(defects)} record(s) carry an EMPTY doi while a DOI is "
+                  "still recoverable from the mangled title. Cited-status is "
+                  "gated on bool(doi), so these can never be marked cited "
+                  "however often the repo cites them.")
+            for d in defects:
+                print(f"    {d['key']:22} {d['recovered_doi']}")
+                print(f"      {d['title'][:96]}   [{d['reports']}]")
+        print()
+        if a.tsv:
+            write_census_tsv(res, a.tsv)
+            print(f"wrote {a.tsv}")
+        return 0
 
     if a.build:
         idx = build()
