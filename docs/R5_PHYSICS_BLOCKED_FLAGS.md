@@ -112,6 +112,35 @@ access is required.** Routes tried: ScienceDirect article page (403) and the sci
 
 **Recovery:** open the DOI in a browser, save it beside the Kramer PDF.
 
+**UPDATED 2026-08-18 03:50. The browser route was attempted and the extension is
+DISCONNECTED** (it worked earlier in the session, for the Kramer fetch, so Chrome has
+since closed). Two genuinely different fallbacks were then tried and both failed, which
+narrows the recovery rather than leaving it open:
+
+- **There is no backend route, and this is the key difference from Kramer.** Unpaywall
+  returns exactly **ONE** OA location for the corrigendum, the publisher DOI, with
+  `pdfUrl: null` and no repository mirror. Kramer had **eight**, which is why its DTU
+  *backend* served the file while its front end refused. **Do not spend time hunting a
+  mirror for this one: there is not one.** A browser against the publisher is the only
+  path.
+- **scite has metadata but no full text** for either the corrigendum or the original, so
+  the resolver trick that recovered Kramer's prose does not work here.
+
+**Confirmed while trying, so the next attempt starts warmer** (all read live from scite):
+
+| | value |
+|---|---|
+| authors | Yasuo Nihei, Shiho Onomura, Yoshinori Bando (three, not "et al.") |
+| original | "Full-scale experimental assessment of passenger vehicle stability in flooding flow", Results in Engineering **28** (2025) 107189 |
+| erratum link | the ORIGINAL carries `editorialNotices: has erratum -> 10.1016/j.rineng.2025.107527`, dated 2025-12-01, so the linkage is confirmed at the publisher and not inferred |
+| ScienceDirect PII | original `S259012302503244X`, corrigendum `S2590123025035820` |
+| licence | both gold OA, CC-BY |
+
+**Note the subject matter**: the original is a **full-scale experimental** study of
+passenger-vehicle stability in flood flow, which is unusually close to this project's own
+question. Whatever the corrigendum changes, it is worth reading properly rather than only
+for the brake-state numbers it gates.
+
 ---
 
 ## The general lesson, because it cost time three separate ways
