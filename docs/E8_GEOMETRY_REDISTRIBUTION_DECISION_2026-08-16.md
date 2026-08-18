@@ -225,7 +225,17 @@ publishes a SHA384 per download. Computed locally and compared: [read]
 | `2007-chevrolet-silverado-detailed-v3e.zip` | 27,865,164 | **IDENTICAL** |
 
 **4 of 4, 88,592,238 bytes.** Section 7 previously recorded this as `[inferred]` from
-filenames and contents. It is now **cryptographically established**. The repo does not
+filenames and contents. It is now **cryptographically established**.
+
+**The reference values are recorded, so this is reproducible offline.** CCSA's
+published SHA384s are transcribed into `docs/E8_VERIFY_FIGURES.py` (`CCSA_SHA384`),
+and the script recomputes each archive's hash from `origin/main` and compares. Run
+`./docs/E8_VERIFY_FIGURES.py` and this claim re-verifies in seconds with no network.
+
+That matters because it was, until 2026-08-19, the one finding here that could only be
+re-checked by re-fetching a `ccsa.gmu.edu` page. **The strongest claim in this document
+rested on a webpage that can change or disappear.** Recording the upstream constants is
+what turns it from a conclusion you have to trust into one you can run. The repo does not
 merely host things that resemble the upstream releases; it hosts **the upstream
 releases, bit for bit**.
 

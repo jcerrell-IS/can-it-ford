@@ -31,6 +31,7 @@ It cannot verify the licence positions, which rest on reported permissions and
 on pages fetched at a point in time. See E8_ACTION_INDEX_2026-08-17.md.
 """
 
+import hashlib
 import subprocess
 import sys
 
@@ -65,6 +66,39 @@ EXPECTED = {
     "branches_with_secrets_env": 32,
     "branches_with_flag_doc": 1,
 }
+
+# CCSA's PUBLISHED SHA384 values, transcribed from the two ccsa.gmu.edu model pages
+# on 2026-08-17. These are external reference constants, not derived state: they are
+# the upstream authority the local archives are checked against, and recording them is
+# what makes the byte-identity finding reproducible offline. Without them, re-checking
+# the single strongest E8 claim would mean re-fetching a page that can change or vanish.
+CCSA_SHA384 = {
+    "vehicle_geometry_research/2010-toyota-yaris-coarse-v1l.zip":
+        "4f2b837ba0c85c2ef123a75201ac341c5de6763fb2768b818d41ec4c027af921aabea83f0069bfa8b457a56c44c34ed0",
+    "vehicle_geometry_research/2010-toyota-yaris-detailed-v2j.zip":
+        "f68913788cbe520709323f76214054f16bdbeeb2b7ddd6dad3f4defccb15a2b6e9df62d50146d17809e4155a786082c7",
+    "vehicle_geometry_research/2007-chevrolet-silverado-coarse-v3a.zip":
+        "1874a7fc4709082d80d7c1d4ae2385202e69275568e1f2fe816134178eb784dda9cae8c8274a8a68bbe678a1557898c5",
+    "vehicle_geometry_research/2007-chevrolet-silverado-detailed-v3e.zip":
+        "662312f50a80b7c2e42fa0f5845ea8fa89e275302da1a824f44d3d3bff51a4bb19df7b1c1c4d3f72fa43804109241006",
+}
+
+
+def check_archive_integrity(root):
+    """Recompute SHA384 for each archive and compare to CCSA's published value."""
+    results = []
+    for path, published in CCSA_SHA384.items():
+        blob = subprocess.run(
+            ["git", "-C", root, "show", "origin/main:" + path],
+            capture_output=True,
+        ).stdout
+        if not blob:
+            results.append((path, "MISSING", 0))
+            continue
+        got = hashlib.sha384(blob).hexdigest()
+        results.append((path, "IDENTICAL" if got == published else "DIFFERS", len(blob)))
+    return results
+
 
 # When a figure changes, the next person has to update EVERY reference to it across
 # nine documents. Naming that task without giving the means is how a handoff wastes
@@ -232,8 +266,21 @@ def main():
         return 0
 
     print()
+    print("Archive integrity, local bytes vs CCSA's published SHA384:")
+    integrity_ok = True
+    for path, verdict, size in check_archive_integrity(root):
+        if verdict != "IDENTICAL":
+            integrity_ok = False
+        print(f"  [{'ok  ' if verdict == 'IDENTICAL' else 'FAIL'}] {verdict:<9} {size:>12,} B  {path.split('/')[-1]}")
+    if not integrity_ok:
+        print("  An archive no longer matches upstream. That is a content change, not a")
+        print("  counting error: investigate before touching any document.")
+        failures.append(("archive_integrity", "IDENTICAL", "mismatch"))
+
+    print()
     if not failures:
-        print("All figures match the D2 documents.")
+        print("All figures match the D2 documents, and all four archives are")
+        print("byte-identical to CCSA's published releases.")
         return 0
 
     moved = [f for f in failures if f[0] in EXPECTED_TO_MOVE]
