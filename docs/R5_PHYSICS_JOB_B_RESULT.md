@@ -390,3 +390,91 @@ uncorrected ratio.
 returned when this was written. Its specific brief includes whether the +43.5% prediction
 and the band-corrected ratio share a formula, which would make the agreement circular
 rather than evidential. Settle 8 constructor-only, trimesh 4.12.2, engine 627367e.
+
+## 11. Section 9's headline is REFUTED. The "0.4 point hit" was a window mismatch
+
+A physics-skeptic pass on sections 9 and 10 returned NOT CLEAN with six blocking issues.
+**Section 9's headline is withdrawn.** Sections 9 and 10's tables reproduce to the last
+digit; the inference on top of them does not.
+
+### 11.1 The prediction was evaluated at a submergence outside its own comparison window
+
+Section 8.1's four predictions (+97.4 / +69.1 / +43.5 / +31.7%) all reproduce from a
+**single fixed submergence, sub = 0.07838 m**, which is the g64 frames-500-599 value from
+section 7. **That lies BELOW the matched window's own lower bound of 0.078975 m**, and
+9.6% below the g96 window's mean submergence of 0.086716 m. The band model is a *function*
+of submergence and section 9 froze it at one point, then compared it to a window mean.
+
+Over the window it is actually about:
+
+| | window mean sub | measured | band predicts | miss |
+|---|---|---|---|---|
+| g64 | 0.085088 | +63.20% | +64.49% | -1.30 pp |
+| g96 | 0.086716 | +43.13% | **+40.07%** | **+3.06 pp** |
+
+**The miss is +3.06 points, not 0.4.** The corrected sentence is: *g96 measured
++43.13% +/- 3.02 pp against +40.07% predicted over the same submergence distribution, a
++3.1 point overshoot that sits inside the measurement's own 1 sigma but is not a
+confirmation.*
+
+**And I reported the resolution that landed and omitted the one that missed.** g64
+measured +63.20% against the +69.1% I had quoted: a **-5.86 pp miss**, absent from section
+9. That is exactly what section 8.4 caught section 7 doing.
+
+### 11.2 Section 9 contradicts itself inside one table
+
+The table's band-corrected 1.0230 back-implies a prediction of **+39.91%**; the sentence
+above it claims +43.5%. Both cannot be true. Further, `bc = rat/(1+pred)` is an algebraic
+identity (verified to 2.2e-16), so **"measured vs predicted" and "band-corrected ratio"
+are one measurement presented as two confirmations.**
+
+### 11.3 The discriminating premise was false, so nothing was discriminated
+
+Section 9 refuted the wall leak because "it predicts no dx dependence". **It does predict
+one.** `mpm_solver_warp.py:1955` gates on `dotproduct < 0.0`, so the effective plane is
+the outermost node strictly outside it, and `WALL = 0.100` is **5.333 dx at g64 but
+exactly 8.000 dx at g96** (offsets 0.333 dx against 1.000 dx). The g96 tank floor is
+**2.48% larger**. So "everything else held identical, the only variable is resolution" is
+false, on top of 600 frames against 300.
+
+At least four other O(dx) mechanisms fit the two points (the measured exponent is
+p = 0.9420): the contact band, the h/2 estimator offset, the B-spline stencil half-width
+1.5 dx, and a near-surface kernel-truncation layer on a cap only 4.2 to 6.9 dx deep.
+**The band model is not even the best fit of three tried**, being 8.6% inconsistent
+between runs against a pure-radius model's 2.0%.
+
+### 11.4 "The coupling is not in error" is not established
+
+**30.2% to 66.9% of the 20-point move is the h/2 surface-estimator artifact**, which
+scales with dx and exists before any settling physics: the frame-0 drop alone is 0.718 dx
+at g64 and 0.749 dx at g96. Removing only h/2 refits the band to **0.812 dx and 0.896 dx**,
+10 to 19% off the engine default and 10.3% inconsistent between runs. Section 8.1's
+"engine default to 1.4%" **survives only because a bias section 8.5 itself calls a
+one-line fix was left in**.
+
+### 11.5 Over-precision, again
+
+Blocked SE, both ladders converged: g64 **+63.20 +/- 0.84 pp** (tau_int 19.7 frames,
+N_eff ~ 20, not 391), g96 **+43.13 +/- 3.02 pp** (tau_int 5.4, N_eff ~ 40, not 214).
+Quoting a 0.4-point agreement claims **7.5x more precision than the measurement carries**,
+and g96 is consistent with any band prediction in [37.1, 49.2]%, so it **cannot separate
++43.5% from +40.1%**. Window sensitivity across 18 defensible windows: g96 spans +36.35 to
++44.23%, and the doc quoted the second highest of the 18.
+
+### 11.6 What actually survives
+
+- **The dx dependence is real at 6.4 sigma blocked** (separation 0.20063 +/- 0.03130).
+  Something O(dx) is inflating the reaction. That is a genuine result.
+- **Per-frame band-corrected ratios are consistent with unity**: g64 0.9927 +/- 0.0095
+  (0.8 sigma), g96 1.0218 +/- 0.0218 (1.0 sigma). This is the only surviving quantitative
+  support, and it is a 1 sigma consistency statement, not a confirmation.
+- Everything section 9.1 already conceded still stands, and neither run is stationary.
+
+**The honest position: an O(dx) inflation is measured and real; WHICH O(dx) mechanism it
+is remains unidentified, and the contact band is one candidate among four.** The test that
+would discriminate, a band sweep at fixed dx (g64 predicts +29.69 / +64.49 / +104.78 /
++150.93% at 0.5 / 1.0 / 1.5 / 2.0 dx), has not been run.
+
+Also inherited and unfixed: the sphere JSONs carry no wall clock, job id or scene commit,
+so section 9's "496 s" and "job 917886" are unverifiable from the artifact, and section 7
+attributes the same job id to the g64 run.
