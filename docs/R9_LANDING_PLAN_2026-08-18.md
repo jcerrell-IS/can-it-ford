@@ -68,11 +68,27 @@ else.** MEASURED: that merge is CLEAN.
 
 ---
 
-## 1. Inventory: fifteen branches, not nine
+## 1. Inventory: fifteen branches, not nine. Eighteen by the time I finished.
 
 The dispatch for this slot said nine. Nine is the R8 wave. Six R9 slots (`d11` to `d16`) were
 running while this document was being written, on six more unpushed branches, and one of them
 committed mid-session (section 8). **The exposure is fifteen branches and it is still growing.**
+
+> **ADDENDUM, 00:20, eighteen minutes after the table below was measured.** Re-running the
+> section 9.1 command as a final check returned **eighteen** branches, not fifteen. Three new
+> ones exist that did not exist when I started (`claude/r9-moving-vehicle`, `claude/r9-platform`,
+> `claude/r9-priorcode`, all still at `af62473`), and two more have moved:
+> `claude/r9-kramer-extract` `b6fe951` -> `c2f3592`, `claude/r9-settle` `af62473` -> `0726c18`.
+> I have deliberately **not** rewritten the table to say eighteen. The table is a correct
+> measurement with a timestamp on it, and replacing it would hide the only thing that really
+> needs to be understood about this landing: **the set is not a list, it is a rate.** Any plan
+> that fixes a branch count is wrong before it is read. Section 9.1 is the inventory; section 1
+> is an illustration of what section 9.1 returned at one instant.
+>
+> The ahead/behind counts from the same run make the section 0 point again, and now for
+> eighteen branches: every one of them reads `5` on the left except `claude/r8-licence`, which
+> reads `0` because it is the only branch that already contains `origin/main`. Seventeen of
+> eighteen are behind by the same five merged PRs.
 
 MEASURED at 00:01:14 on 2026-08-19. Re-derive with the script in section 9.1; do not trust the
 tips below, they are a snapshot and at least one of them was already wrong within ten minutes.
