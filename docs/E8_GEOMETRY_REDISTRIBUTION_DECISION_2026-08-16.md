@@ -192,6 +192,52 @@ For proportion, the `.ply` files that the original dispatch scoped this task aro
 are **15,823,688 B (15.82 MB), 9.0% of the tree**, all four of them together. The
 `.key` decks and archives are the other 91.0%.
 
+### Coverage: this audit measured what is PUBLIC, and the local tree holds more
+
+**Prompted by D1 and D3, who both found gitignored authored content as a coverage
+hole in their own scopes. Checked here, and the same hole exists.** [read, 2026-08-19]
+
+Every figure in this document is measured with `git ls-tree origin/main`, which sees
+**tracked files only**. That is the correct scope for an exposure question, because
+gitignored means not committed, not pushed, and therefore **not public**. No figure
+above changes.
+
+**But the local working tree holds substantially more CCSA material than the public
+repository does**, and that is worth stating rather than leaving to be rediscovered:
+
+| | Bytes |
+|---|---|
+| Public, tracked on `origin/main` | 160,322,098 |
+| **Local only, gitignored** | **274,822,319** |
+| Local total | 435,144,417 |
+
+The two excluded files are the **detailed** decks:
+`silverado-detailed-v3e.key` (105,761,312 B) and `yaris-detailed-v2j.key`
+(169,061,007 B). **The unpublished portion is larger than the published portion.**
+This is why section 0 could report the two detailed models as present only inside
+their `.zip`: their extracted decks exist on disk and are simply not committed.
+
+### The rule keeping them out is a credential rule, and it is holding by accident
+
+`git check-ignore -v` gives **`.gitignore:63: *.key`**. That pattern is a
+credential-hygiene rule, the kind written to stop private keys reaching a repo. It
+catches **LS-DYNA keyword decks** because they share the extension, and nothing about
+its intent has anything to do with vehicle geometry.
+
+Two consequences, both worth carrying:
+
+1. **14 `.key` decks are tracked anyway.** `.gitignore` only governs untracked files,
+   so those were added before the rule existed or force-added past it. The rule is not
+   a guard that held; it is a guard 14 files already bypassed.
+2. **Tightening the rule would publish 274.8 MB.** If someone narrows `*.key` to
+   target credentials precisely, which is a reasonable hygiene improvement, these two
+   decks stop being ignored and the next broad `git add` commits them. With permission
+   now reported that is a repository-size problem rather than a licence one, but it is
+   a surprising outcome for a change that looks purely like a security tidy-up.
+
+**Anyone editing `.gitignore:63` should know it is load-bearing for something other
+than what it was written for.**
+
 ### Reconciling three independent counts of the same tree
 
 D3, the coordinator and I each measured this separately and got **160,308,908 B**
