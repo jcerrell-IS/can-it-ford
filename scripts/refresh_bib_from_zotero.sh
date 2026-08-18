@@ -19,7 +19,9 @@
 
 set -euo pipefail
 
-REPO="/Users/josie/can-it-ford"
+# Resolved from the script's own location so this works from a clone, a git
+# worktree, or any CWD. Falls back to the convention in scripts/launch_cif6.sh:3.
+REPO="$(git -C "$(dirname "${BASH_SOURCE[0]}")" rev-parse --show-toplevel 2>/dev/null || echo "$HOME/can-it-ford")"
 TEX_REF="overleaf/main:conference_101719_1.tex"   # canonical source of \cite{} keys
 COLLECTION="6FSSIWN2"                             # "Paper cited - IEEEtran"
 PORT=23119
@@ -63,10 +65,10 @@ fi
 
 # Expected keys come from the paper itself, not a hand-maintained integer.
 CITED=$(git -C "$REPO" show "$TEX_REF" 2>/dev/null \
-        | grep -aoE '\\cite[tp]?\{[^}]*\}' \
-        | sed -E 's/^\\cite[tp]?\{//; s/\}$//' \
+        | grep -aoE '\\[A-Za-z]*cite[A-Za-z]*\*?(\[[^]]*\])*\{[^}]*\}' \
+        | sed -E 's/^\\[A-Za-z]*cite[A-Za-z]*\*?(\[[^]]*\])*\{//; s/\}$//' \
         | tr ',' '\n' | sed 's/^[[:space:]]*//; s/[[:space:]]*$//' \
-        | grep -av '^$' | sort -u) || true
+        | grep -av '^$' | grep -avFx '*' | sort -u) || true
 [ -n "$CITED" ] || die "could not read \\cite{} keys from $TEX_REF (is the overleaf remote fetched?)"
 
 # ---- fetch ------------------------------------------------------------------
@@ -83,8 +85,13 @@ grep -qE '^[[:space:]]*(date|journaltitle) = ' "$RAW" \
 
 # ---- strip and validate -----------------------------------------------------
 
+[ -s "$RAW" ] || die "Better BibTeX returned an empty body. Retry once Zotero has finished loading or syncing."
+
 CLEAN=$(mktemp -t bbtclean)
-grep -vE "$SKIP" "$RAW" > "$CLEAN"
+# grep -v exits 1 when it emits nothing, which under set -e would kill the script
+# with no diagnostic at all. Tolerate the status and assert on the result instead.
+grep -vE "$SKIP" "$RAW" > "$CLEAN" || true
+[ -s "$CLEAN" ] || die "every line was stripped; the SKIP pattern is too broad."
 
 # Line-oriented stripping is only safe while every field value closes on its own
 # line. Assert that rather than assume it.
@@ -137,8 +144,9 @@ fi
 if [ -f "$OUT" ]; then
   cp "$OUT" "$OUT.bak_$STAMP"
   echo "backed up -> $OUT.bak_$STAMP"
-  # Keep only the most recent $KEEP_BACKUPS; these are gitignored under _inbox/
-  # and would otherwise grow without bound.
+  # Keep only the most recent $KEEP_BACKUPS. Backups land next to OUT, wherever
+  # that is, so point OUT at a gitignored path (_inbox/ is one) if you want the
+  # rotation to stay invisible to git.
   ls -t "$OUT".bak_* 2>/dev/null | tail -n "+$((KEEP_BACKUPS + 1))" | while IFS= read -r old; do
     rm -f "$old"
   done
