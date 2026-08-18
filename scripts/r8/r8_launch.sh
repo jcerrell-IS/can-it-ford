@@ -93,13 +93,20 @@ while IFS=$'\t' read -r slot wave branch base tree needs_gpu writes; do
   fi
 
   # One window per slot, started in the slot's own directory.
+  # NOTE, measured: on the first launch of the day the bypassPermissions consent
+  # dialog appears and SWALLOWS the prompt argument. The session comes up idle at
+  # ctx 0 percent with no turn. Deliver the prompt afterwards with r8_send.py
+  # rather than trusting the argument, and check ctx before assuming it landed.
   CMD="claude --model opus --effort max --permission-mode bypassPermissions"
   CMD="$CMD --session-id $SID --add-dir $REPO"
   CMD="$CMD \"\$(cat '$PROMPT')\""
 
   if [ "$GO" = "1" ]; then
     tmux new-window -t "$TMUX_SESSION" -n "$slot" -c "$tree"
-    tmux send-keys -t "$TMUX_SESSION:$slot" "$CMD" C-m
+    # NAMED "Enter", never "C-m". Measured 2026-08-18 21:52: C-m leaves text in
+    # the input and the turn never starts, on the shell line and inside the TUI
+    # alike. Four delivery attempts were lost to this before it was isolated.
+    tmux send-keys -t "$TMUX_SESSION:$slot" "$CMD" Enter
     sleep 2
     ACTUAL=$(tmux display-message -p -t "$TMUX_SESSION:$slot" '#{pane_current_path}' 2>/dev/null)
     if [ "$ACTUAL" != "$tree" ]; then

@@ -125,12 +125,27 @@ def main():
         print(text[:1200])
         return
 
-    # Send as one paste. A long paste needs a separate Enter, learned the hard way.
-    subprocess.run(["tmux", "send-keys", "-t", name, "-l", text], check=True)
-    time.sleep(0.4)
-    subprocess.run(["tmux", "send-keys", "-t", name, "C-m"], check=True)
-    time.sleep(0.3)
-    subprocess.run(["tmux", "send-keys", "-t", name, "C-m"], check=True)
+    # Deliver as a BRACKETED PASTE via a tmux buffer, then one Enter.
+    #
+    # `send-keys -l` with embedded newlines does NOT work here: each newline is
+    # delivered as a separate keypress, the client shows "paste again to expand"
+    # and the turn never starts. Measured on d2-persist at 21:47. load-buffer
+    # plus paste-buffer hands the whole block over as one paste, which is what
+    # the input actually expects.
+    tmpf = os.path.join("/tmp", f"r8_send_{a.slot}.txt")
+    with open(tmpf, "w") as f:
+        f.write(text)
+    for _ in range(3):
+        subprocess.run(["tmux", "send-keys", "-t", name, "C-u"], check=False)
+        time.sleep(0.1)
+    time.sleep(0.2)
+    subprocess.run(["tmux", "load-buffer", "-b", "r8send", tmpf], check=True)
+    subprocess.run(["tmux", "paste-buffer", "-d", "-b", "r8send", "-t", name], check=True)
+    time.sleep(1.2)
+    # NAMED "Enter", not "C-m". Measured 21:52: C-m leaves the text sitting in the
+    # input and the turn never starts; Enter submits it. This cost four attempts.
+    subprocess.run(["tmux", "send-keys", "-t", name, "Enter"], check=True)
+    os.unlink(tmpf)
 
     hashes[h] = a.slot
     per = sent.setdefault("per_slot", {})
