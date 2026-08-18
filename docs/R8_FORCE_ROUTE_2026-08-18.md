@@ -911,3 +911,90 @@ of the Zero-Forcing Surge floor. The z and y decomposition in this section was r
 same re-derivation and was then computed again here from the raw files before being written
 down. Two independent parses of one dataset is not two datasets, and this is recorded as
 arithmetic agreement, not as corroboration of the physics.
+
+---
+
+## 15. THE g96 SETTLE CAP LADDER. IT PARTLY OVERTURNS SECTION 13, AND THE CORRECTION IS AGAINST MY OWN FAVOURABLE NUMBER.
+
+Section 13 left one question and section 13d named it first in the dependency order: **raise
+the g96 settle cap until the gate is met.** Done, 2026-08-18, Vista GH200 c642-071, job
+920212, ascending caps at g96 with everything else held at the section 13a defaults.
+
+### 15a. The gate IS reachable at g96, and it needs 2.9x the cap that was in use
+
+| cap (frames) | frames_run | gate_met | vmax_final | frac_realized | added_mass_ratio |
+|---|---|---|---|---|---|
+| 900 | 900/900 | **False** | 1.237 | 0.6377 | 1.063 |
+| 1800 | 1800/1800 | **False** | 1.018 | 0.6459 | 1.077 |
+| 2700 | **2596**/2700 | **TRUE** | 0.623 | 0.6498 | 1.083 |
+
+`vmax_final` falls monotonically and the quiescence gate trips at **2596 frames**, which is
+**2.9x the 900-frame cap** previously used and **7.3x the 356 frames g64 needed**. So
+`gate_met=False` at g96 was an artifact of the cap choice after all, not a property of the
+configuration. The settle length **is** tunable at g96; it is simply far longer than anyone
+had allowed for.
+
+### 15b. AND THE MEASURED FORCE GETS WORSE THE MORE YOU SETTLE
+
+| cap | gate_met | RATIO measured/analytic | error |
+|---|---|---|---|
+| 900 | False | 0.7574 | -24.26% |
+| 1800 | False | 0.6790 | -32.10% |
+| 2700 | **TRUE** | **0.5431** | **-45.69%** |
+
+The error grows monotonically with settle length and is **worst at the converged settle.**
+`gate_met=True` does **not** mean the measured force has converged: the trend is still moving
+when the gate trips.
+
+### 15c. THE CORRECTION TO SECTION 13, AND IT IS AGAINST MY OWN HEADLINE
+
+Section 13b reported the post-fix swing as **8.5 points** and a **93.7 percent** reduction.
+**That comparison was not like-for-like and the figure is withdrawn.** It paired g64 at a
+**met** gate (356/900) against g96 at an **unmet** gate (900/900). It is the same defect the
+original rung-b work was criticised for, in a new place, and I introduced it.
+
+| comparison | g64 | g96 | swing |
+|---|---|---|---|
+| BEFORE, both unsettled, settle counted in substeps | -18.9% | +115.0% | **133.9 pts**, sign inversion |
+| WITHDRAWN, g64 gate met against g96 gate NOT met | -15.77% | -24.26% | 8.5 pts |
+| **CORRECT, both gates met** | **-15.77%** (356 frames) | **-45.69%** (2596 frames) | **29.9 pts** |
+
+**The honest result: the swing narrows from 133.9 points to 29.9 points, a 77.7 percent
+reduction, not 93.7 percent.** What survives unchanged from section 13b is the qualitative
+half, and it is the more important half: **the sign inversion is gone.** Both grids now
+under-predict analytic buoyancy rather than one sinking while the other rises at 4 g.
+
+### 15d. What this does to the section 12 and 13 verdict
+
+It moves it back toward the pessimistic reading, and the three blockers are now better
+characterised rather than removed:
+
+1. **Added-mass is confirmed structural and settle-independent.** `added_mass_ratio` is
+   1.063, 1.077, 1.083 across the cap ladder, that is, it **rises slightly** with better
+   settling and never approaches the 0.5 warn threshold from below. `VALIDITY FAIL` fires at
+   every cap. Settling harder does not help and cannot.
+2. **`frac_realized` does not converge to the same value on the two grids.** It creeps
+   0.6377, 0.6459, 0.6498 at g96 while g64 sits at 0.5612, so the two grids settle to
+   **different submersion fractions**, both short of the 0.80 target. This is therefore
+   **not** a settle artifact and will not be fixed by longer settling. Until it is understood,
+   a g64-to-g96 difference cannot be attributed to resolution, and section 13c item 3 is
+   upgraded from a caveat to a blocker in its own right.
+3. **The force has not converged even at a met gate**, per 15b, so a single converged-settle
+   run is not yet a defensible rung of any convergence curve.
+
+**Revised bottom line on the `sdf_wrench` route.** Section 13d called it "open pending three
+named tractable fixes". One of the three (settle length at g96) is now shown tractable but
+much more expensive than assumed. The other two are worse than they looked: added-mass is
+structural, and the submersion mismatch is not a settle artifact. The route is **not closed**,
+because the sign inversion is genuinely gone and 29.9 points is a real improvement on 133.9,
+but it is further from a publishable force-convergence curve tonight than section 13 implied.
+
+### 15e. What did not run
+
+The `--settle 3600` rung was launched and was still running when the allocation expired. It
+would have shown whether the error keeps degrading past the met gate. **It is recorded as
+absent, not imputed.** Everything in 15a to 15d rests on the three caps that completed, all
+`rc=0`.
+
+Provenance: `$WORK/r8_rungb/rungb_cap{1800,2700,3600}_g96.{log,json}`, engine **warpmpm**,
+SDF-collider path, not the material-8 path the 17 canonical runs use.
