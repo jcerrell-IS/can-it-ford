@@ -344,6 +344,52 @@ At S = 7.85145 m, the g48 span:
 Every `dx` is FINER than the current ladder at the same `n`, because the domain shrinks. **The
 control is cheaper than the confounded experiment it replaces.**
 
+### 2a-septies. g160: THE VERDICT FLIPS TO STUCK, at exactly 10 particle layers
+
+**MEASURED 2026-08-18, job 918350, five repeats of `g160_m2337`, 90 frames, canonical driver.**
+All five `metrics.csv` bit-distinct.
+
+```
+verdicts     ['STUCK','STUCK','STUCK','STUCK','STUCK']
+joint frames [0, 0, 0, 0, 0]
+margin       [-3, -3, -3, -3, -3]
+dx 0.05889 m   water_layers 10   n_water 906806
+```
+
+| grid | water layers | verdict | margin |
+|---|---|---|---|
+| g48 | 3 | SLIDE 5/5 | 8 |
+| g64 | 4 | SLIDE 5/5 | 6 |
+| g96 | 6 | SLIDE 5/5 | 0 to 1 |
+| g128 | 8 | SLIDE 5/5 | 0 |
+| **g160** | **10** | **STUCK 5/5** | **-3** |
+
+**g160 is the first grid at which the flow depth reaches ~10 particle layers**, which is the
+only depth-based convention the literature offers (Reis et al. 2021,
+`10.1016/j.engstruct.2021.113280`, ~10 per wave height for the non-breaking case). The flip
+lands exactly there. **The prediction was made and written down BEFORE the run**, in the
+sbatch header of 918350, on the argument that coarse resolution over-predicts hydrodynamic
+force and the whole published ladder sat below the convention.
+
+**Consequence, stated plainly: the published 16 SLIDE / 1 STUCK headline does not survive
+refinement to the resolution the literature says is required.** At least for the heaviest
+vehicle, which is the case J15 identified as most fragile.
+
+**The `sustain_frames` fragility VANISHES at g160.** With 0 joint frames the verdict is STUCK
+at every threshold value tested. So the picture is coherent: an UNDER-RESOLVED run gives a
+fragile SLIDE that a one-integer change can flip, and a RESOLVED run gives a robust STUCK.
+
+**THE CONFOUND IS NOT RESOLVED AND THIS RESULT INHERITS IT.** Per 2a-sexies the ladder is a
+sequence of different tanks: `span = lim*(1 - 8/n)` gives 8.9506 m at g160 against 7.8515 m at
+g48, so the tank is LARGEST exactly where the flip occurs. Tank growth lowers the blockage
+ratio and pushes toward STUCK; resolution pushes toward STUCK; the two are co-directional and
+this run cannot separate them. **The pinned-span control is now the single most important
+experiment in the project**, because it decides whether the flip is physics or geometry. Until
+it runs, report this as "the verdict flips under a refinement that also enlarges the tank",
+never as "the verdict flips under refinement".
+
+Still outstanding: g192 (job 918351), one mass only (2337), one depth and velocity.
+
 ### 2a. What this does NOT overturn
 
 J15's refinement trend survives. The `m2337` series collapses 11 to 10 to 4 across g48/g64/g96,
