@@ -196,37 +196,157 @@ def corpus_headings(path):
     return {"path": path, "headings": out}
 
 
+# --- citation resolution -------------------------------------------------
+# A DOI appearing in a file is NOT a citation. corpus_cited_status returned
+# "cited" for exactly that until 2026-08-18, which made the novelty guard a
+# check that could not fail: the act of writing "these four papers are uncited"
+# into docs/ put their DOIs in docs/, which flipped them to "cited".
+# The only thing that means cited is a key inside a \cite command in the
+# submitted LaTeX. Everything else is availability or prose.
+
+CITE_RE = re.compile(r"\\([a-zA-Z]*cite[a-zA-Z]*)\s*(?:\[[^\]]*\])*\s*\{([^}]*)\}")
+BIBKEY_RE = re.compile(r"@\w+\s*\{\s*([^,\s]+)\s*,")
+COMMENT_RE = re.compile(r"(?<!\\)%.*$")
+
+
+def _strip_tex_comments(text):
+    """Drop LaTeX comments so a commented-out \\cite is not counted."""
+    return "\n".join(COMMENT_RE.sub("", ln) for ln in text.splitlines())
+
+
+def _paper_cite_keys():
+    """Keys actually inside a \\cite command in the submitted LaTeX.
+
+    Returns (keys, tex_files, error). `error` is non-None when paper/ could not
+    be read at all, so an unreadable tree is a DISTINCT state rather than a
+    silent "not cited". Absence of evidence from a partial view is not evidence
+    of absence, and this function is the one place that rule can be violated
+    invisibly.
+
+    \\nocite is EXCLUDED on purpose. \\nocite{*} pulls the whole .bib into the
+    bibliography without citing anything, so counting it would restore the very
+    always-true behaviour this function exists to remove.
+    """
+    pdir = os.path.join(REPO, "paper")
+    keys, files = set(), []
+    if not os.path.isdir(pdir):
+        return keys, files, "no such directory: %s" % pdir
+    try:
+        names = sorted(os.listdir(pdir))
+    except OSError as e:
+        return keys, files, "cannot list %s: %s" % (pdir, e)
+    tex = [os.path.join(pdir, n) for n in names if n.endswith(".tex")]
+    if not tex:
+        return keys, files, "no .tex file under %s" % pdir
+    unread = []
+    for p in tex:
+        try:
+            with open(p, "r", errors="replace") as fh:
+                body = _strip_tex_comments(fh.read())
+        except OSError as e:
+            unread.append("%s (%s)" % (p, e))
+            continue
+        files.append(p)
+        for cmd, group in CITE_RE.findall(body):
+            if cmd == "nocite":
+                continue
+            for k in group.split(","):
+                if k.strip():
+                    keys.add(k.strip())
+    if not files:
+        return keys, files, "no .tex file was readable: %s" % "; ".join(unread)
+    return keys, files, ("partially unreadable: %s" % "; ".join(unread)) if unread else None
+
+
+def _bib_entries():
+    """bib key -> raw entry text, for every .bib under paper/."""
+    pdir = os.path.join(REPO, "paper")
+    entries = {}
+    if not os.path.isdir(pdir):
+        return entries
+    for n in sorted(os.listdir(pdir)):
+        if not n.endswith(".bib"):
+            continue
+        try:
+            with open(os.path.join(pdir, n), "r", errors="replace") as fh:
+                body = fh.read()
+        except OSError:
+            continue
+        marks = [(m.start(), m.group(1).strip()) for m in BIBKEY_RE.finditer(body)]
+        for i, (pos, key) in enumerate(marks):
+            end = marks[i + 1][0] if i + 1 < len(marks) else len(body)
+            entries[key] = body[pos:end]
+    return entries
+
+
 @srv.tool(
     "corpus_cited_status",
-    "Is this DOI or citation key already cited anywhere in the repo? "
-    "THIS IS THE NOVELTY GUARD. On 2026-08-14 four vehicle-fording papers "
-    "(Wasfy 2015 DETC2015-47142, Pazouki 2016, Khapane 2014 SAE 2014-01-0936, "
-    "He 2026 10.1115/1.4071177) sat in our own catalogs uncited while the "
-    "project prepared to claim nobody had simulated fording.",
+    "Is this DOI or citation key CITED IN THE PAPER, merely sitting in the "
+    ".bib, or only mentioned in notes? THIS IS THE NOVELTY GUARD. On "
+    "2026-08-14 four vehicle-fording papers (Wasfy 2015 DETC2015-47142, "
+    "Pazouki 2016, Khapane 2014 SAE 2014-01-0936, He 2026 10.1115/1.4071177) "
+    "sat in our own catalogs uncited while the project prepared to claim "
+    "nobody had simulated fording. All four have .bib entries and NONE is "
+    "\\cite'd, so a tool that cannot tell those apart cannot answer the "
+    "question it exists for.",
     {"type": "object",
      "properties": {"needle": {"type": "string",
-                               "description": "DOI, SAE number, or author-year"}},
+                               "description": "DOI, SAE number, author-year, or bib key"}},
      "required": ["needle"]},
 )
 def corpus_cited_status(needle):
+    cite_keys, tex_files, paper_err = _paper_cite_keys()
+    entries = _bib_entries()
+
+    nl = needle.lower()
+    bib_keys = sorted(k for k, v in entries.items() if nl in v.lower())
+    if needle in entries and needle not in bib_keys:
+        bib_keys.append(needle)
+    matched = sorted(set(bib_keys) & cite_keys)
+    if needle in cite_keys and needle not in matched:
+        matched.append(needle)
+
+    # Prose mentions. NOT evidence of citation, reported only so a "not cited"
+    # answer says where the thing does appear.
     # /usr/bin/grep, never the shell function: the shell grep is a ugrep
     # wrapper with --ignore-files and silently skips gitignored paths.
-    cmd = ["/usr/bin/grep", "-rIl", "--", needle, REPO + "/docs",
-           REPO + "/paper", REPO + "/CLAUDE.md"]
+    cmd = ["/usr/bin/grep", "-rIl", "--", needle,
+           os.path.join(REPO, "docs"), os.path.join(REPO, "CLAUDE.md")]
     try:
         r = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
-        repo_hits = [x for x in r.stdout.splitlines() if x.strip()]
+        notes = [x for x in r.stdout.splitlines() if x.strip()]
     except Exception as e:
-        repo_hits = ["<grep failed: %s>" % e]
+        notes = ["<grep failed: %s>" % e]
+
     corpus = corpus_search(needle, max_files=10)
+
+    if paper_err and not tex_files:
+        verdict = ("CANNOT ANSWER: the paper could not be read (%s). "
+                   "This is not a 'not cited' result." % paper_err)
+    elif matched:
+        verdict = "CITED IN THE PAPER as %s" % ", ".join(matched)
+    elif bib_keys:
+        verdict = ("IN THE BIBLIOGRAPHY BUT NEVER \\cite'd (%s). This is the "
+                   "novelty-gate failure case: it will render in no reference "
+                   "list and a reviewer will not see it." % ", ".join(bib_keys))
+    elif notes or corpus["files"]:
+        verdict = ("MENTIONED IN NOTES OR PRESENT IN CORPUS, NOT CITED AND NOT "
+                   "IN THE BIBLIOGRAPHY, investigate")
+    else:
+        verdict = "not found either place"
+
     return {"needle": needle,
-            "cited_in_repo": len(repo_hits) > 0,
-            "repo_files": repo_hits,
+            "cited_in_paper": bool(matched),
+            "cite_keys_matched": matched,
+            "in_bibliography": bool(bib_keys),
+            "bib_keys": bib_keys,
+            "mentioned_in_notes": bool(notes),
+            "note_files": notes,
             "present_in_corpus": len(corpus["files"]) > 0,
             "corpus_files": [f["path"] for f in corpus["files"]],
-            "verdict": ("IN CORPUS BUT NOT CITED, investigate"
-                        if corpus["files"] and not repo_hits else
-                        "cited" if repo_hits else "not found either place")}
+            "tex_files_read": tex_files,
+            "paper_read_error": paper_err,
+            "verdict": verdict}
 
 
 @srv.tool(
