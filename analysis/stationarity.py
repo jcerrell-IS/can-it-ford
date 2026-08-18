@@ -82,7 +82,9 @@ __all__ = [
     "mser_truncation",
     "chodera_equilibration",
     "blocking_error",
+    "reverse_arrangement",
     "reverse_arrangement_z",
+    "RA_MIN_SAMPLES",
     "transient_scan",
     "random_uncertainty_of_mean",
     "analyze",
@@ -241,32 +243,96 @@ def blocking_error(series: Sequence[float]) -> list[tuple[int, float, float]]:
     return out
 
 
-def reverse_arrangement_z(series: Sequence[float]) -> float:
-    """Reverse arrangement test z-score for stationarity (Pan & Patton 2017).
+#: Minimum samples for the reverse-arrangement normal approximation to mean
+#: anything. Below this the test DOES NOT RUN. Note that `mser_truncation` and
+#: `transient_scan` floor their retained window at `min_keep`, which defaults to
+#: the same 10. That coincidence is the only thing keeping the audit off this
+#: cliff, and it is a coincidence, not a guarantee: two independent constants
+#: that happen to be equal. Measured 2026-08-19 over 48 runs and 4 channels, the
+#: shortest retained window is exactly 10, one sample above the floor, with five
+#: run-observable pairs sitting on it. Lower `min_keep` and the audit starts
+#: reporting untested windows as stationary.
+RA_MIN_SAMPLES = 10
+
+
+def reverse_arrangement(series: Sequence[float]) -> dict:
+    """Reverse arrangement test (Pan & Patton 2017), WITH an evaluability flag.
 
     Counts A, the number of pairs i < j with x_i > x_j. Under a stationary,
     independent record A is asymptotically normal with
         mean = n(n-1)/4
         var  = n(2n^2 + 3n - 5)/72
     A |z| above about 1.96 indicates a monotone trend, so the record is not
-    stationary at the 5% level. This test is invariant to a constant offset,
+    stationary at the 5% level. The test is invariant to a constant offset,
     which is why it survives an arbitrary datum choice.
+
+    WHY THIS RETURNS A DICT AND NOT A NUMBER. The test has inputs it cannot
+    evaluate, and the older `reverse_arrangement_z` encoded "could not evaluate"
+    as z = 0.0, which reads as STATIONARY, the PASS value. A 9-sample monotone
+    ramp is the most non-stationary series that exists and it scored z = 0.000,
+    STATIONARY. A check that cannot distinguish "passed" from "was never run" is
+    the failure mode this project has already been bitten by, so evaluability is
+    now reported alongside the verdict instead of being folded into it.
+
+    Two non-evaluable cases, both real:
+
+    1. n < RA_MIN_SAMPLES. The normal approximation does not hold and the old
+       code returned the pass value.
+    2. A CONSTANT series. Here the old code did NOT return 0.0, it returned a
+       large NEGATIVE z (-10.247 for 50 identical samples) and read as strongly
+       NOT stationary. Every pair is a tie, so A = 0 against an expected
+       n(n-1)/4, and the statistic measures the ties rather than a trend. That
+       is a false FAIL rather than a false PASS, so it is the conservative
+       direction, but it is still the test reporting on something it did not
+       measure.
+
+    Ties more generally deflate A, so `tie_fraction` is reported and a caller
+    comparing runs should look at it before trusting a borderline z.
+
+    Returns {"z", "evaluable", "reason", "tie_fraction", "n"}. `z` is None when
+    `evaluable` is False, so an unevaluated record cannot be silently averaged
+    or thresholded.
     """
     xs = _as_floats(series)
     n = len(xs)
-    if n < 10:
-        return 0.0
+    if n < RA_MIN_SAMPLES:
+        return {"z": None, "evaluable": False, "n": n,
+                "reason": f"n={n} < RA_MIN_SAMPLES={RA_MIN_SAMPLES}",
+                "tie_fraction": float("nan")}
     a = 0
+    ties = 0
     for i in range(n - 1):
         xi = xs[i]
         for j in range(i + 1, n):
             if xi > xs[j]:
                 a += 1
+            elif xi == xs[j]:
+                ties += 1
+    npairs = n * (n - 1) / 2.0
+    tie_frac = ties / npairs if npairs else float("nan")
+    if ties == npairs:
+        return {"z": None, "evaluable": False, "n": n,
+                "reason": "constant series, every pair is a tie",
+                "tie_fraction": tie_frac}
     mu = n * (n - 1) / 4.0
     var = n * (2.0 * n * n + 3.0 * n - 5.0) / 72.0
     if var <= 0:
-        return 0.0
-    return (a - mu) / math.sqrt(var)
+        return {"z": None, "evaluable": False, "n": n,
+                "reason": "degenerate test variance", "tie_fraction": tie_frac}
+    return {"z": (a - mu) / math.sqrt(var), "evaluable": True, "n": n,
+            "reason": "", "tie_fraction": tie_frac}
+
+
+def reverse_arrangement_z(series: Sequence[float]) -> float:
+    """DEPRECATED SHAPE. Returns a bare float and CANNOT express "not evaluated".
+
+    Kept because it is a published entry point, but 0.0 from this function is
+    ambiguous: it means either "no trend detected" or "the test did not run".
+    Prefer `reverse_arrangement`, which separates the two. `analyze` uses the
+    dict form.
+    """
+    rep = reverse_arrangement(series)
+    return rep["z"] if rep["evaluable"] else 0.0
 
 
 def transient_scan(series: Sequence[float], min_keep: int = 10
@@ -322,7 +388,8 @@ def analyze(series: Sequence[float], label: str = "series") -> dict:
     window = xs[start:end] if end - start >= 2 else xs
     tau = integrated_autocorrelation_time(window)
     neff = effective_sample_size(window)
-    z = reverse_arrangement_z(window)
+    ra = reverse_arrangement(window)
+    z = ra["z"]
     blocks = blocking_error(window)
     plateau = max((se for _, _, se in blocks), default=0.0)
     return {
@@ -341,7 +408,14 @@ def analyze(series: Sequence[float], label: str = "series") -> dict:
         "std_err_correlated": standard_error_correlated(window),
         "rum_95": random_uncertainty_of_mean(window),
         "reverse_arrangement_z": z,
-        "stationary_at_5pct": abs(z) < 1.96,
+        # THREE STATES, NOT TWO. None means the test could not be evaluated on
+        # this record, which is NOT the same as passing it. Callers must handle
+        # None explicitly; a bare truthiness check silently buckets it as
+        # non-stationary and a bare `== True` silently drops it.
+        "stationary_at_5pct": (abs(z) < 1.96) if ra["evaluable"] else None,
+        "stationarity_evaluable": ra["evaluable"],
+        "stationarity_note": ra["reason"],
+        "tie_fraction": ra["tie_fraction"],
         "blocking_plateau_se": plateau,
         "recommended_discard": max(mser_d, chod_t0, start),
     }
@@ -349,7 +423,10 @@ def analyze(series: Sequence[float], label: str = "series") -> dict:
 
 def format_report(rep: dict) -> str:
     """Human-readable one-observable report."""
-    stat = "STATIONARY" if rep["stationary_at_5pct"] else "NOT STATIONARY"
+    if rep["stationary_at_5pct"] is None:
+        stat = f"NOT EVALUATED ({rep['stationarity_note']})"
+    else:
+        stat = "STATIONARY" if rep["stationary_at_5pct"] else "NOT STATIONARY"
     lines = [
         f"observable            {rep['label']}",
         f"samples               {rep['n_total']}",
@@ -366,7 +443,9 @@ def format_report(rep: dict) -> str:
         f"(of {rep['window_len']} raw samples)",
         f"std err (correlated)  {rep['std_err_correlated']:.6g}",
         f"RUM 95% half-width    {rep['rum_95']:.6g}",
-        f"reverse-arrangement z {rep['reverse_arrangement_z']:.3f}  -> {stat}",
+        (f"reverse-arrangement z {rep['reverse_arrangement_z']:.3f}  -> {stat}"
+         if rep["reverse_arrangement_z"] is not None
+         else f"reverse-arrangement z    n/a  -> {stat}"),
         f"blocking plateau SE   {rep['blocking_plateau_se']:.6g}",
     ]
     return "\n".join(lines)
@@ -429,7 +508,41 @@ def _self_test() -> int:
           abs(reverse_arrangement_z(slow[s0:s1])) >= 1.96,
           "residual trend went undetected, which would defeat the point")
 
-    # 4. correlated error must exceed the naive iid error
+    # 5. THE TEST MUST DISTINGUISH "not stationary" FROM "could not evaluate".
+    #    A check whose failure-to-run is encoded as its pass value is worse than
+    #    no check, because the pass is displayed and looks like evidence. Each
+    #    case below returned a CONFIDENT VERDICT before 2026-08-19.
+    ramp9 = [float(i) for i in range(9)]          # maximally non-stationary
+    r9 = reverse_arrangement(ramp9)
+    check("9-sample ramp is reported NOT EVALUABLE, not stationary",
+          not r9["evaluable"] and r9["z"] is None,
+          f"got evaluable={r9['evaluable']} z={r9['z']}")
+    check("legacy reverse_arrangement_z still returns the ambiguous 0.0 there",
+          reverse_arrangement_z(ramp9) == 0.0,
+          "the deprecated shape is documented as ambiguous; keep it truthful")
+    ramp10 = [float(i) for i in range(10)]
+    r10 = reverse_arrangement(ramp10)
+    check("10-sample ramp IS evaluable and reads NOT stationary",
+          r10["evaluable"] and abs(r10["z"]) >= 1.96,
+          f"got evaluable={r10['evaluable']} z={r10['z']}")
+    rc = reverse_arrangement([3.0] * 50)
+    check("constant series is NOT EVALUABLE rather than 'strongly trending'",
+          not rc["evaluable"] and rc["tie_fraction"] == 1.0,
+          f"got evaluable={rc['evaluable']} z={rc['z']} ties={rc['tie_fraction']}")
+    rep9 = analyze(ramp9, "9-sample ramp")
+    check("analyze() surfaces None, not True, for an unevaluated record",
+          rep9["stationary_at_5pct"] is None
+          and rep9["stationarity_evaluable"] is False,
+          f"got {rep9['stationary_at_5pct']!r}")
+    check("format_report says NOT EVALUATED rather than STATIONARY",
+          "NOT EVALUATED" in format_report(rep9))
+    #    The floor is one sample away in real data: over 48 runs and 4 channels
+    #    the shortest retained window is exactly RA_MIN_SAMPLES.
+    check("RA_MIN_SAMPLES matches the mser/transient_scan min_keep default",
+          RA_MIN_SAMPLES == 10,
+          "if these drift apart the audit silently reports untested windows")
+
+    # 6. correlated error must exceed the naive iid error
     naive = math.sqrt(_variance(ar) / len(ar))
     check("correlated SE > naive SE for AR(1)",
           standard_error_correlated(ar) > naive,

@@ -39,6 +39,9 @@ removed only 5 of 24 do.
 | 5 | A 91-frame record holds 2.84 to 11.0 independent samples. No settle length fixes that | section 7 |
 | 6 | CLAUDE.md's "25 of 25 runs" is 22 distinct records presented as 25, and the true population is 48 | section 8 |
 | 7 | The vertical velocity column does not integrate to the vertical displacement column | section 9 |
+| 8 | The stationarity test reported STATIONARY for records it never evaluated. Fixed, and it moved no number | section 13 |
+| 9 | A count without its PREDICATE fails exactly as a count without its channel does, now four instances | section 14 |
+| 10 | `classify_failure_modes.py` carried six defective citations, not the one assigned | section 15 |
 
 ---
 
@@ -510,6 +513,173 @@ in this worktree, so a worktree run returns an almost-empty audit with no error.
 
 ---
 
+## 13. SELF-AUDIT: can the test tell "not stationary" from "could not be evaluated"?
+
+Asked before publishing, because a 91-frame record with N_eff near 2.9 is close
+to the edge where that distinction stops being academic.
+
+**It could not, and now it can.** `analysis/stationarity.py` had two inputs on
+which it returned a confident verdict without running the test:
+
+| input | old result | why it is wrong |
+|---|---|---|
+| 9-sample monotone ramp | `z = 0.000` -> **STATIONARY** | `n < 10` returned 0.0, and 0.0 is the PASS value. The most non-stationary series that exists scored a pass. |
+| constant series, 50 samples | `z = -10.247` -> **NOT STATIONARY** | every pair is a tie, so A = 0 against an expected n(n-1)/4. The statistic measured the ties, not a trend. |
+
+The first is a false PASS and is the dangerous one: the check is displayed, it
+genuinely returned, and a reader cannot see it never ran. The second is a false
+FAIL, so it errs conservatively, but it is still the test reporting on something
+it did not measure. I predicted the constant series would fail the same way as
+the ramp and it does not, which is why the probe printed the data rather than
+the prediction.
+
+**Did it fire on this data? No, and the margin is one sample.**
+
+Over 48 runs and 4 channels, 190 run-observable pairs, the shortest retained
+window is **exactly 10**, and 0 of 190 fall below it. But that is a coincidence,
+not a safety property: `mser_truncation` and `transient_scan` floor the retained
+window at `min_keep`, which defaults to 10, and the reverse-arrangement test
+refuses below `n = 10`. **Two independent constants that happen to be equal.**
+Five run-observable pairs sit exactly on the floor, all in the `g128_m1609`
+family. Lower `min_keep` and the audit silently starts reporting untested
+windows as stationary.
+
+**The fix.** `reverse_arrangement()` now returns
+`{"z", "evaluable", "reason", "tie_fraction", "n"}` with `z = None` when the test
+cannot run, `analyze()` reports `stationary_at_5pct` as **None** rather than True
+in that case, and the audit prints a third state `n/a` with its own WARNING line
+instead of folding it into either column. The summary counts use
+`is False` deliberately, not a truthiness check, because `not None` is True and
+would bucket an unevaluated record as non-stationary. Seven self-tests cover it.
+The legacy `reverse_arrangement_z` is kept, still returns the ambiguous 0.0, and
+now says so in its own docstring.
+
+**The guard moved no number.** Every figure in this document reproduces
+unchanged after the fix, and no WARNING fires on the current data. It closes a
+latent failure, not an active one. That is the outcome to want, and it is also
+why the defect survived: nothing was visibly wrong.
+
+**N_eff is a separate axis and is not fixed by this.** A 23-sample window with
+N_eff 2.84 has enough raw samples for the test to RUN but only about three
+independent ones. 26 of 190 pairs carry N_eff below 3. Evaluability and power are
+different questions; section 7 is the one about power.
+
+---
+
+## 14. A COUNT WITHOUT ITS PREDICATE FAILS THE SAME WAY AS A COUNT WITHOUT ITS CHANNEL
+
+This document already argues that a verdict count is meaningless without its
+channel. The same structure, with a different missing word, has now produced
+four instances in this project, and one of them I inflicted on myself while
+writing this section.
+
+| quantity | the numbers | the predicate that separates them |
+|---|---|---|
+| `9.80665` in tracked Python | **4** / **8** / **1** | files containing / occurrences / **assignments** |
+| `DRIFT_THRESHOLD` = 0.05 | 22 / 23 / 24 | bare literals or also the CLI default; archive/ in or out (CLAUDE.md item 13) |
+| run records for the settle audit | 51 / 48 / 25 / 22 | on disk / distinct / audited / audited-and-distinct (section 8) |
+| SLIDE out of 24 | 21 / 19 | magnitude channel / surge channel (section 12) |
+
+Every one of those numbers is correct. None of them is meaningful alone.
+
+**The 9.80665 case is the sharpest, because the file-level answer looks like a
+refutation.** A file-level grep for `9.80665` in tracked Python, excluding
+`third_party/`, `.claude/worktrees/`, `archive/` and `__pycache__/`, returns FOUR
+files, which appears to refute CLAUDE.md item 15's "exactly ONE site survives".
+It does not. Exactly one is an ASSIGNMENT,
+`analysis/viability_dashboard_scaffold.py:11`, where G is assigned and never
+read. The others are prose: a stale comment, a correct historical note, and the
+text of the checker rule that exists to stop this very mistake. **The claim is
+true for assignments and false for occurrences.** CLAUDE.md item 15 is correct
+and must not be "corrected".
+
+**The self-inflicted instance, which is the most convincing one.** While fixing
+`analysis/classify_failure_modes.py` I wrote into its docstring that four files
+contain the string "across six occurrences". That was true when I measured it and
+**false by the time I finished writing it**, because the replacement block I was
+writing contains the string three more times. Six became eight inside a single
+edit. The count was invalidated by the act of recording it.
+
+So the fixed comment quotes **no occurrence count at all**. It states the stable
+invariant, exactly one assignment, and ships the command to re-derive it:
+
+```bash
+git ls-files '*.py' | grep -v ^third_party/ | grep -v ^archive/ \
+  | xargs grep -n '^[[:space:]]*[A-Za-z_][A-Za-z_0-9]*[[:space:]]*=[[:space:]]*9\.80665'
+```
+
+Returns exactly one line. **Prefer an invariant plus a re-derivation command over
+a number, wherever the number can be invalidated by editing the text around it.**
+
+---
+
+## 15. `analysis/classify_failure_modes.py`: one assigned fix, six found
+
+Assigned: `:30` stated `G 9.80665, failure_modes.py:14`. Verified live first, and
+the defect is real but not quite as described. `failure_modes.py:14` **is** still
+the `G` assignment, so the LINE was right; the VALUE was stale. That is the
+harder case to spot, because following the citation lands on real, relevant code.
+
+The fork is closed: commit `e495b56` (2026-08-12) set `G = 9.81` and regenerated
+both artifacts in the same commit. And the file's own output already disagreed
+with its own docstring: `classify_failure_modes.py:276` emits `FM.G`, and
+`data/failure_modes_by_run.json` carries `"G_postprocessing": 9.81`. **The code
+was correct and self-updating; only the prose was stale.**
+
+Auditing the other five `failure_modes.py:NN` citations in the same file, all
+verified live, all fixed:
+
+| site | cited | live | kind |
+|---|---|---|---|
+| `:30` | `:14`, value 9.80665 | `:14` is `G = 9.81` | **value stale**, line right |
+| `:36` | `:229-230` | `:230-232` (`reached` / `if not reached` / STUCK return) | off by one, stopped before the return |
+| `:38` | `:232` "reports the last mode" | `:234` `mode = reached[-1]`; **`:232` is the STUCK return** | **points at code contradicting the claim** |
+| `:45` | `:179-185` | `:181-187`, the three `_first_sustained_index` calls | drifted +2 |
+| `:49`, `:275` | `:46,48` for `slide_m`, `float_m` | `:48`, `:50` | drifted +2, both copies |
+| `:61` | `:127` for `np.gradient` | `:129`; `:127` is a bare `else:` | drifted +2 |
+
+The `:38` case is the worst: `:232` is the STUCK return, the none-sustained case,
+which is the opposite of "more than one mode sustains".
+
+The `:127` case is **not confined to this file**. Slot d3-force reported that
+register D6f cites `failure_modes.py:127` for `np.gradient` and that live it is
+`:129`. Same stale citation, two files, which is the propagation CLAUDE.md item
+13 warns about in exactly these words: the stale line numbers "had already
+propagated into a downstream analysis script that cited them verbatim". **This is
+that downstream script.** The register copy is d7-register's, not mine, and is
+untouched.
+
+Every citation is now anchored to a SYMBOL as well as a line
+(`failure_modes.py:48` plus the symbol `slide_m`), so the next drift is detectable rather than
+silently wrong. `scripts/check_claims.py` still passes 0 ERROR 0 WARN, and
+`py_compile` is clean. The script was NOT executed: it rewrites
+`data/failure_modes_by_run*.csv/json`, which are canonical artifacts outside my
+scope.
+
+**A reproduction, and deliberately not called corroboration.** The committed
+`peak_surge_accel_g` column in `data/failure_modes_by_run_classified.csv` matches
+my independently computed frame 0 to 1 surge acceleration for **all 17 canonical
+runs to every digit** (1.9821565 against 1.98, 3.78212353 against 3.78). Two
+consequences. First, the published "peak" surge acceleration occurs in the very
+first frame transition of every canonical run, which is section 6.2's finding
+sitting in a committed artifact. Second, `classify_failure_modes.py:61` already
+concludes those single-frame values "are numerical, not physical", the same
+reading I reached independently.
+
+But this is **reproduction, not corroboration**, and the project's own rule is
+why: both compute the same arithmetic from the same `metrics.csv`, one via
+`np.gradient`, one via a forward difference. Same origin, different tool. It
+confirms my arithmetic; it adds no independent evidence.
+
+**Not touched: `scripts/check_claims.py`.** A handoff in circulation says its
+Rule C6 is stale for asserting 9.80665 appears at two sites. Read live, `:151`
+says "9.80665 survives at exactly ONE site, and it is DEAD CODE" and `:164` says
+"Do NOT write that 9.80665 appears at two sites." **The checker is correct and
+the handoff describing it is what went stale.** The file was opened read-only and
+left byte-unchanged.
+
+---
+
 ## 12. Limitations, and one review that did not happen
 
 **THE ADVERSARIAL REVIEW IS MISSING AND THE CLAIMS HERE ARE UNREVIEWED.** The
@@ -528,6 +698,10 @@ Specific claims that most need an outside check:
    is not verified against the solver.
 3. The 20-frame cutoff separating settling-dominated from flow-driven runs in
    section 5.1 is a judgement call, not a derived threshold.
+4. Section 13's evaluability guard was written and self-tested by me and has had
+   no outside review either. It moved no number, which is reassuring and is also
+   exactly what a guard that does nothing would look like; the seven self-tests
+   are the evidence that it is not that.
 
 **Other limitations.**
 

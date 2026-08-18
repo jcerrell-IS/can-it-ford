@@ -104,6 +104,20 @@ VERDICT_CHANNEL = {
 }
 
 
+def _stat_cell(rep: dict) -> str:
+    """Three states. 'n/a' means the test did not run on this record.
+
+    Never collapse this to two. `stationarity.reverse_arrangement` used to
+    encode "could not evaluate" as z = 0.0, which reads as the PASS value, so a
+    9-sample monotone ramp scored STATIONARY. The distinction is carried all the
+    way to the printed table for that reason.
+    """
+    v = rep["stationary_at_5pct"]
+    if v is None:
+        return "n/a"
+    return "yes" if v else "NO"
+
+
 def load_series(path: str) -> dict[str, list[float]]:
     cols: dict[str, list[float]] = {}
     with open(path, newline="", encoding="utf-8", errors="replace") as fh:
@@ -397,6 +411,8 @@ def main() -> int:
                 "n_eff": round(rep["n_eff"], 2),
                 "window_len": rep["window_len"],
                 "stationary_at_5pct": rep["stationary_at_5pct"],
+                "stationarity_evaluable": rep["stationarity_evaluable"],
+                "stationarity_note": rep["stationarity_note"],
                 "reverse_arrangement_z": round(
                     rep["reverse_arrangement_z"], 3),
                 "mean": rep["mean"],
@@ -411,7 +427,7 @@ def main() -> int:
                   f"{rep['recommended_discard']:5d} "
                   f"{DRIVER_SETTLE_FRAMES:5d} {rep['tau_int']:6.2f} "
                   f"{rep['n_eff']:7.1f} "
-                  f"{'yes' if rep['stationary_at_5pct'] else 'NO':>6} "
+                  f"{_stat_cell(rep):>6} "
                   f"{rep['rum_95']:11.4g}")
 
     print()
@@ -421,6 +437,9 @@ def main() -> int:
     print()
     ch = (f"{'channel':6} {'runs':>5} {'need>8':>7} {'nonstat':>8} "
           f"{'atbound':>8} {'min':>4} {'med':>4} {'max':>4}  what it gates")
+    print("'nonstat' counts records the test EVALUATED and rejected. A record "
+          "the test could\nnot evaluate is reported on its own WARNING line, "
+          "never folded into either column.")
     print(ch)
     print("-" * len(ch))
     for obs in OBSERVABLES:
@@ -429,8 +448,16 @@ def main() -> int:
             continue
         needs = sorted(r["recommended_discard"] for r in head)
         worse = sum(1 for r in head if r["exceeds_driver"])
-        nonstat = sum(1 for r in head if not r["stationary_at_5pct"])
+        # `is False` deliberately, NOT `not r[...]`. None means the test could
+        # not be evaluated on that record, and a truthiness check would bucket
+        # it as non-stationary, which is a verdict the data does not support.
+        nonstat = sum(1 for r in head if r["stationary_at_5pct"] is False)
+        unevl = sum(1 for r in head if r["stationary_at_5pct"] is None)
         bound = sum(1 for r in head if r["at_mser_bound"])
+        if unevl:
+            print(f"  WARNING: {unevl} of {len(head)} {obs} records could NOT be "
+                  f"evaluated for stationarity; they are counted separately and "
+                  f"are NOT included in the nonstat column.")
         print(f"{obs:6} {len(head):5d} {worse:7d} {nonstat:8d} {bound:8d} "
               f"{needs[0]:4d} {needs[len(needs) // 2]:4d} {needs[-1]:4d}  "
               f"{VERDICT_CHANNEL.get(obs, '')}")

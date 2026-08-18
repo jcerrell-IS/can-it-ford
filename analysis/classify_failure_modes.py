@@ -27,26 +27,48 @@ PROVENANCE
   SSF           vehicle_params.get_vehicle('compact_sedan')['ssf'] = 1.42. get_vehicle
                 accepts only compact_sedan|midsize_suv|light_pickup, NOT the AR&R labels
                 in the inventory's `label` column.
-  G             9.80665, failure_modes.py:14 (post-processing only; the solver itself
-                hardcodes 9.81, core/solver.py:167-169, a 0.034 percent fork).
+  G             9.81, failure_modes.py:14 (`G`), matching the solver's hardcoded
+                9.81 at core/solver.py:167-169. CORRECTED 2026-08-19: this block
+                read 9.80665 and described a live 0.034 percent post-processing
+                fork. That fork is CLOSED. Commit e495b56 (2026-08-12) set
+                failure_modes.py `G` to 9.81 and regenerated
+                data/failure_modes_by_run.json and
+                data/failure_modes_by_run_classified.csv in the same commit, so
+                this script's own emitted `G_postprocessing` field has read 9.81
+                since then while this docstring still said 9.80665. The line
+                number was right and the VALUE was stale, which is the harder
+                case to spot. Exactly ONE 9.80665 ASSIGNMENT survives in tracked
+                Python, analysis/viability_dashboard_scaffold.py:11, where G is
+                assigned and never read, so it is dead code. Several other files
+                still CONTAIN the string in prose, including this block, so a
+                file-level or occurrence-level grep returns a larger number that
+                does NOT refute the one-assignment claim. STATE THE PREDICATE
+                WITH ANY SUCH COUNT, exactly as CLAUDE.md item 13 requires for
+                DRIFT_THRESHOLD. Re-derive rather than trusting a number here:
+                  git ls-files '*.py' | grep -v ^third_party/ | grep -v ^archive/ \
+                    | xargs grep -n '^[[:space:]]*[A-Za-z_][A-Za-z_0-9]*[[:space:]]*=[[:space:]]*9\.80665'
+                No occurrence count is quoted above ON PURPOSE: an earlier draft
+                of this very block said "six occurrences" and writing the block
+                made it eight. See CLAUDE.md item 15.
 
 OUTCOME STRUCTURE
   Three possible outcomes per run: SLIDE, TOPPLE, FLOAT. STUCK is not a fourth mode
   scored on its own scale; it is the "none of the three sustained" case
-  (failure_modes.py:229-230) and carries no threshold, ratio-of-record or onset frame.
+  (failure_modes.py:230-232, `reached` / `if not reached`) and carries no threshold, ratio-of-record or onset frame.
   The winning-mode columns are therefore EMPTY on a STUCK row, not zero.
-  When more than one mode sustains, failure_modes.py:232 reports the last in
+  When more than one mode sustains, failure_modes.py:234 (`mode = reached[-1]`) reports the last in
   MODE_SEVERITY = (SLIDE, TOPPLE, FLOAT), i.e. FLOAT > TOPPLE > SLIDE.
 
 CAVEAT LABELS, carried into the CSV consumer's hands deliberately
   triggered_* is the authoritative per-mode outcome. ratio_* is MAGNITUDE ONLY. They
   disagree: sweepV_g64_v0p5 has ratio_slide 1.14 and is STUCK, and sweepV_g64_v3p0 has
   ratio_float 1.07 and is SLIDE, because each mode needs a JOINT displacement-and-speed
-  condition held for 3 consecutive frames (failure_modes.py:179-185), not a peak.
+  condition held for 3 consecutive frames (failure_modes.py:181-187, the three
+  `_first_sustained_index` calls), not a peak.
   Filtering this CSV on ratio >= 1 gives the wrong count.
 
   slide_m = float_m = 0.05 m is an INTERNAL NUMERICAL ONSET DETECTOR
-  (failure_modes.py:46,48). It has no peer-reviewed source, and the attribution to
+  (failure_modes.py:48 `slide_m`, :50 `float_m`). It has no peer-reviewed source, and the attribution to
   Smith, Modra & Felder 2019 Eq. 6 is a misattribution: that equation contains no such
   criterion.
 
@@ -58,7 +80,7 @@ CAVEAT LABELS, carried into the CSV consumer's hands deliberately
   (vehicle_live.py:277-278), so flow strikes the vehicle's side. Do not carry this
   criterion to a scene where the vehicle faces the flow.
 
-  peak_surge_accel_g is np.gradient(vel, t) (failure_modes.py:127) over a 30 Hz rigid-body
+  peak_surge_accel_g is np.gradient(vel, t) (failure_modes.py:129, `accel = np.gradient(vel, t, axis=0)`) over a 30 Hz rigid-body
   trace: single-frame values reach 3.78 g and are numerical, not physical. The
   sustain_frames guard is what keeps TOPPLE from firing. Never quote the raw ratio alone.
 
@@ -272,7 +294,7 @@ def write_json(records: list[dict], ssf: float) -> bool:
             },
             "threshold_caveat": "slide_m = float_m = 0.05 m is an internal numerical "
                                 "onset detector, not a peer-reviewed distance criterion "
-                                "(failure_modes.py:46,48; CLAUDE.md item 13).",
+                                "(failure_modes.py:48 slide_m, :50 float_m; CLAUDE.md item 13).",
             "G_postprocessing": FM.G,
             "notes": "Supersedes renders/yaris_render_s1/failure_modes_result.json, "
                      "which is keyed by AR&R class rather than run id, carries no run "
