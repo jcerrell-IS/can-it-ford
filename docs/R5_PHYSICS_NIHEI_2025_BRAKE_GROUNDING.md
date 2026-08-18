@@ -85,3 +85,56 @@ numbers "unlike typical scaled model tests".
 numbers above are final. FLAG-2b stays open.
 
 **UNREVIEWED**: no physics-skeptic pass on this document.
+
+## 5. Critical sliding velocities at the project's EXACT canonical depth
+
+All **[read]** from section 3.3 of the paper.
+
+**First a correction to section 1 above, before it propagates.** The vehicle in the
+*flooding* experiments is the **Mira e:S X**. The Suzuki Wagon R and Toyota Voxy were the
+*traction-force* tests. I nearly conflated them; the 0.0382 / 0.0206 figures are traction,
+the 0.0250 / 0.0242 washaway figures are the flooding prototype.
+
+**Stability criteria for the sliding mode, from Eq. 8, `V = sqrt(2 mu M g / (rho A_w C_D))`:**
+
+| water depth | critical V, handbrake OFF | critical V, handbrake ON |
+|---|---|---|
+| **0.30 m** | **0.97 m/s** | **3.42 m/s** |
+| 0.40 m | 0.78 m/s | 2.74 m/s |
+
+Measured washaway events, for cross-check: Case 1-2 at **h = 0.289 m, V = 1.10 m/s**, and
+Case 2-4 at **h = 0.294 m, V = 1.06 m/s**, both consistent with a 0.97 m/s criterion at
+0.30 m.
+
+**And the paper states: "the AR&R criteria agree well with the 'without handbrake'
+stability criteria."** That is an external, full-scale corroboration of the AR&R
+thresholds this project uses for L1, and it identifies which brake state they correspond
+to, which the project's own L1 discussion has never specified.
+
+### 5.1 A discrepancy against my own job A, stated but NOT resolved
+
+**0.30 m is exactly the canonical depth of the 17 gated runs**, and `sweepV_g64_v0p5`
+runs at **0.5 m/s**.
+
+- At `mu = 0.55` my run gave **STUCK**. Nihei's braked criterion is **3.42 m/s**, far above
+  0.5, so a braked vehicle should be stable. **Consistent.**
+- At `mu = 0.0250` my run gave **SLIDE**. Nihei's unbraked criterion is **0.97 m/s**, about
+  **twice** the run's 0.5 m/s, so an unbraked vehicle at this depth and velocity should
+  **not** wash away. **The simulation slides at roughly half the experimentally required
+  velocity.**
+
+**I am not calling that a validation failure, and it must not be quoted as one.** At least
+four things differ before any conclusion is available: the vehicle is a Mira e:S X and not
+the Yaris hull; Nihei's criterion is a force-balance closed form (Eq. 8) using measured
+`C_D` and `A_w`, not a simulation; the scene's own numbers are contaminated by the
+reflection window and the leaking tank recorded elsewhere in this branch; and Nihei's
+Eq. 8 explicitly neglects lift and buoyancy, which the simulation does not.
+
+**What it does establish is that a comparison now EXISTS.** Until tonight this project had
+no external number to place its verdicts against at its own depth. It now has one, with a
+brake state attached, and the first look at it is a factor-of-two disagreement in the
+direction of the simulation being less stable than the experiment.
+
+**This is the single most checkable external claim available to this project and it should
+be the next thing reviewed.** UNREVIEWED, and given four of four headlines were overturned
+tonight, treat the factor of two as a lead, not a finding.
