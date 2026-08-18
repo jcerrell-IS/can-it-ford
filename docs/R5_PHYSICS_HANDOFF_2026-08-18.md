@@ -20,8 +20,34 @@ Run the physics-skeptic on anything before it travels. It earned its keep four t
 **Established.** The dominant O(dx) inflation in the sphere scene is the SDF collider's
 contact band (`mpm_solver_warp.py:2627`, gated `:2711`). Band sweep at FIXED dx, g64,
 300 frames: excess **+19.89 / +51.28 / +120.66%** at band_mult 0.5 / 1.0 / 2.0, a
-**100.77 point** move. Rivals predict no band dependence. **UNREVIEWED**, a skeptic pass
-was commissioned and had not returned.
+**100.77 point** move.
+
+**UPDATED: that pass returned, and it made this FOUR headline overreaches in four
+sections. See section 13 of the job B document.** The table survived everything (33 to 49
+sigma separation, predictions correctly evaluated at each arm's own submergence). Four
+sentences on it did not:
+
+- **"rivals refuted" is a non-sequitur.** An experiment that holds a variable fixed has no
+  power over it. The honest claim is that the band dominates **band-dependence**, and the
+  band-independent residual is bounded at -0.147 dx, **opposite in sign** to the rivals.
+- **"no run is stationary" was false**, and in the damaging direction: b0.5 and b1.0 ARE
+  stationary; only **b2.0** is not, and b2.0 carries the headline. Extrapolated to 600
+  frames it reaches +163.89, which flips the over-prediction claim to under-prediction.
+- **The corroborating "sanity check" was one simulation counted twice**: b1.0 and
+  sphere600[:300] are the same config re-run, agreeing to 0.0002 pp.
+- **The over-prediction was inflated by a denominator the band itself raised.**
+  Decontaminated m/p is 0.784 / 0.938 / 0.982.
+
+**Two positives I under-claimed**: the far-field surface rise confirms the mechanism
+**without using the wrench at all**, and run-to-run reproducibility is 2.6e-5 on force.
+
+**And nobody had disclosed this: ~7.4% of the water leaves the domain by frame 299**
+(4.93% below floor, 2.5% outside walls). That is the floor-BC bug in section 5 below,
+appearing as particle loss. **Every number in the job B document was measured in a leaking
+tank.**
+
+**What stands: the band is the dominant source of band-dependence.** Everything stronger
+has been withdrawn at least once.
 
 **Not established.** The magnitude model: `R + band` over-predicts by 12 to 28%
 (measured/predicted 0.718 / 0.861 / 0.884). Do not use it as a correction factor.
