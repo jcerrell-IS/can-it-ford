@@ -724,6 +724,20 @@ public repo, which is the same reasoning that applied to
 `FLAG_CREDENTIAL_EXPOSURE` in section 5. Read the file before authorising the
 branch; do not read the verdict as "a secret was found".
 
+### The SHA upgrade caught a real MOVED branch, 04:26
+
+**read.** `claude/zotero-source-integrations-8c7744` was pushed to again: tip
+`09f7243` to `8eada8e`, **one new commit**, on a branch that was already public.
+**The name-only detector I wrote at 02:41 would have seen nothing**, because the
+branch list did not change. The SHA-tracking version, prompted by D2's "check the
+invariant, not the count", caught it and scanned the new tip: **0
+credential-pattern files, 0 credential-named files.**
+
+That upgrade went from written to catching a real event in 90 minutes, and until
+now it had only ever fired in my own control test. **A mechanism proved on
+synthetic input is a hypothesis; this is the first evidence it works on the
+thing it was built for.**
+
 ### FIRST PUSH OF THE ROUND, 03:57, and the verdict held
 
 **read.** `claude/can-it-ford-round-5-87a6d6` is now **public** on origin at
