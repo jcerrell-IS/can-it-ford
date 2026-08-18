@@ -82,6 +82,7 @@ rest is grouped by what it answers.
 | `R5_RESEARCH_UNCITED_AUDIT_2026-08-17.md` | audit of my own uncited method; it mostly holds |
 | `R5_RESEARCH_HULL_VOLUME_CONFLICT_2026-08-17.md` | **RETRACTED escalation.** Read section 0 only; the rest is kept as a worked error |
 | `data/r5_citation_verify.py` | **runnable**: re-derives every citation count in this dispatch from source, 18/18 PASS. Run it instead of trusting a number |
+| `R5_RESEARCH_UNTRACKED_PAPER_2026-08-19.md` | **for D3**: 28 files of authored paper work are GITIGNORED and invisible to `git status`; and that paper, the most numerically careful, still cites zero MPM method work |
 | `R5_RESEARCH_VALIDATION_PROTOCOL_UNUSED_2026-08-19.md` | **strongest form of the citation finding**: a paper-ready validation protocol was commissioned FOR this project (81 papers, 2026-07-15) and none of its vocabulary reached the paper |
 | `R5_RESEARCH_UNCITED_SHAPE_2026-08-19.md` | **for the novelty statement**: 86% of catalogued V&V literature is uncited while the claimed contribution IS validation; application literature is nearly fully cited |
 | `R5_RESEARCH_MPM_FOUNDATIONS_UNCITED_2026-08-18.md` | **most actionable finding of the dispatch**: the paper cites ZERO MPM method literature. No Sulsky, no GIMP, no review, no benchmark. 37 uncited candidates already in the corpus |
