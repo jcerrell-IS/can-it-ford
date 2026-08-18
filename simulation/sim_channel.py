@@ -47,6 +47,7 @@ from warpmpm.vehicle import FloodHistory, load_vehicle      # noqa: E402
 from openchannel_bc import (                                # noqa: E402
     RecyclingChannelBC, depth_profile, tilted_gravity,
 )
+from image_particles import ImageParticleWall               # noqa: E402
 
 
 def _load_canon(canon_dir=None):
@@ -81,7 +82,7 @@ class ChannelScene:
                  lim=None, bc="recycle", grade_deg=0.0, water_density=1000.0,
                  water_eta=1.0e-3, bulk_modulus=1.5e5, fps=30, floor_friction=0.55,
                  settle_frames=8, device="auto", seed=0, inflow_len=1.5,
-                 prescribe="full"):
+                 prescribe="full", n_image=0, floor_plane=True):
         if bc not in ("closed", "recycle"):
             raise ValueError("bc must be 'closed' or 'recycle'")
         self.bc_mode = bc
@@ -137,9 +138,22 @@ class ChannelScene:
             self.vehicle_mass = 0.0
             self._place = None
 
-        pos = water if truck is None else np.concatenate([water, truck])
-        vol = np.full(len(pos), h ** 3, dtype=np.float32)
+        # Layout is water | images | vehicle. Images are ordinary fluid particles
+        # to the solver, so every diagnostic below addresses water as [0, n_water)
+        # and the vehicle as [n_veh0, n_total). Getting that wrong would fold the
+        # image layer into the free surface and the passthrough fraction.
         self.n_water = len(water)
+        self.n_image = int(n_image)
+        blocks = [water]
+        if self.n_image:
+            img = np.repeat(water[:1], self.n_image, axis=0).astype(np.float32)
+            img[:, 2] = floor - 0.5 * dx
+            blocks.append(img)
+        if truck is not None:
+            blocks.append(truck)
+        pos = np.concatenate(blocks) if len(blocks) > 1 else water
+        vol = np.full(len(pos), h ** 3, dtype=np.float32)
+        self.n_veh0 = self.n_water + self.n_image
         self.n_total = len(pos)
 
         s = Solver(grid=self.grid, device=device).load_particles(pos, vol)
@@ -155,12 +169,18 @@ class ChannelScene:
         s.set_material(newtonian(eta=water_eta, density=water_density,
                                  bulk_modulus=bulk_modulus), g=self.gravity)
         if truck is not None:
-            s.set_material_range(self.n_water, self.n_total, "rigid", obj_id=0,
+            s.set_material_range(self.n_veh0, self.n_total, "rigid", obj_id=0,
                                  density=vehicle_density)
             s.finalize_rigid_bodies()
 
-        s.add_plane((0, 0, floor), (0, 0, 1), "slip", friction=floor_friction,
-                    restitution=0.05)
+        # floor_plane=False is the REPLACEMENT arm: Schulz and Sutmann's image
+        # particles are meant to stand in for the momentum-zeroing wall, not to sit
+        # on top of one. Keeping both tests augmentation; removing the plane tests
+        # whether the image layer alone holds the water up. Both are run.
+        self.floor_plane = bool(floor_plane)
+        if self.floor_plane:
+            s.add_plane((0, 0, floor), (0, 0, 1), "slip", friction=floor_friction,
+                        restitution=0.05)
         # Cross-stream walls in both modes. Streamwise walls ONLY in closed mode:
         # leaving them in would stop every particle before it reached the outflow
         # plane and the recycler would never fire.
@@ -183,6 +203,19 @@ class ChannelScene:
         # Outflow one wall-thickness inside the domain, inflow at the upstream wall.
         self.x_in = wall
         self.x_out = lim - wall
+        self.wall = None
+        if self.n_image:
+            # free_slip mirrors the canonical floor, which is add_plane(..., "slip").
+            self.wall = ImageParticleWall(
+                self.n_water, self.n_image, floor, dx, band_cells=1.0,
+                mode="free_slip",
+                safe_lo=np.array([2.0 * dx, 2.0 * dx, 2.0 * dx], np.float32),
+                safe_hi=np.array([lim - 3.0 * dx, lim - 3.0 * dx, lim - 3.0 * dx],
+                                 np.float32))
+            xx, vv = s.x(), s.v()
+            self.wall.park(xx, vv)
+            s.set_x(xx); s.set_v(vv)
+
         self.bc = None
         if bc == "recycle":
             self.bc = RecyclingChannelBC(
@@ -274,6 +307,10 @@ class ChannelScene:
     def step(self):
         self._project()
         self.n_driven = self._drive()
+        if self.wall is not None:
+            xx, vv = self.solver.x(), self.solver.v()
+            self.wall.apply(xx, vv)
+            self.solver.set_x(xx); self.solver.set_v(vv)
         self.solver.step(self.dt, self.substeps)
         self.time += 1.0 / self.fps
         if self.history is not None:
@@ -298,6 +335,10 @@ def main():
     p.add_argument("--mass", type=float, default=None)
     p.add_argument("--lim", type=float, default=None)
     p.add_argument("--bins", type=int, default=12)
+    p.add_argument("--images", type=int, default=0,
+                   help="image particles mirrored across the floor (0=off)")
+    p.add_argument("--no-floor-plane", action="store_true",
+                   help="drop the grid-BC floor so the image layer IS the wall")
     p.add_argument("--dump-water", type=int, default=0,
                    help="dump water positions every N frames to rollout.npz (0=off)")
     p.add_argument("--prescribe", choices=("full", "streamwise"), default="full",
@@ -326,7 +367,8 @@ def main():
     sc = ChannelScene(depth=a.depth, velocity=a.velocity, n_grid=a.grid, vehicle=veh,
                       vehicle_mass=mass, lim=a.lim, bc=a.bc, grade_deg=a.grade_deg,
                       water_eta=a.eta, floor_friction=a.floor_friction,
-                      settle_frames=a.settle_frames, prescribe=a.prescribe)
+                      settle_frames=a.settle_frames, prescribe=a.prescribe,
+                      n_image=a.images, floor_plane=not a.no_floor_plane)
 
     print("SCENARIO=OPEN_CHANNEL bc=%s grade_deg=%.3f" % (a.bc, a.grade_deg), flush=True)
     print("INSTRUMENT dx=%.6f h=%.6f floor=%.6f lim=%.6f" % (sc.dx, sc.h, sc.floor, sc._lim),
@@ -358,10 +400,10 @@ def main():
             dump_w.append(w.astype(np.float32))
             dump_s.append(np.linalg.norm(vel[:sc.n_water], axis=1).astype(np.float32))
             dump_f.append(f)
-            if sc.n_total > sc.n_water:
-                dump_v.append(x[sc.n_water:].astype(np.float32))
-        if sc.n_total > sc.n_water:
-            veh = x[sc.n_water:]
+            if sc.n_total > sc.n_veh0:
+                dump_v.append(x[sc.n_veh0:].astype(np.float32))
+        if sc.n_total > sc.n_veh0:
+            veh = x[sc.n_veh0:]
             lo_v, hi_v = veh.min(0), veh.max(0)
             frac_max = max(frac_max, float(((w >= lo_v) & (w <= hi_v)).all(axis=1).mean()))
         driven.append(sc.n_driven)
@@ -410,6 +452,10 @@ def main():
         "grid_lim": float(sc._lim), "dx": float(sc.dx), "h": float(sc.h),
         "floor": float(sc.floor), "x_in": float(sc.x_in), "x_out": float(sc.x_out),
         "n_water": int(sc.n_water), "n_total": int(sc.n_total),
+        "n_image": int(sc.n_image), "floor_plane": bool(sc.floor_plane),
+        "image_sources_last": (int(sc.wall.sources_last) if sc.wall else 0),
+        "image_duplicated_last": (int(sc.wall.duplicated_last) if sc.wall else 0),
+        "image_clamped_total": (int(sc.wall.clamped_images) if sc.wall else 0),
         "n_carved": int(sc.n_carved), "vehicle_key": vkey,
         "vehicle_mass_kg": float(sc.vehicle_mass),
         "substeps": int(sc.substeps), "sound_speed_ms": float(sc.sound_speed),

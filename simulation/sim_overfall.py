@@ -50,6 +50,26 @@ from openchannel_bc import (                            # noqa: E402
 )
 
 
+
+def _box_mesh(half):
+    """Axis-aligned box centred on the origin: 8 verts, 12 outward-wound triangles.
+
+    Built by hand rather than via trimesh so the bed geometry is deterministic and
+    has no dependency on the trimesh version, which is version-split on this project
+    for seeded operations.
+    """
+    hx, hy, hz = half
+    v = np.array([[-hx, -hy, -hz], [hx, -hy, -hz], [hx, hy, -hz], [-hx, hy, -hz],
+                  [-hx, -hy, hz], [hx, -hy, hz], [hx, hy, hz], [-hx, hy, hz]], float)
+    f = np.array([[0, 2, 1], [0, 3, 2],           # bottom  (-z)
+                  [4, 5, 6], [4, 6, 7],           # top     (+z)
+                  [0, 1, 5], [0, 5, 4],           # -y
+                  [2, 3, 7], [2, 7, 6],           # +y
+                  [1, 2, 6], [1, 6, 5],           # +x
+                  [3, 0, 4], [3, 4, 7]], np.int32)  # -x
+    return v, f
+
+
 def main():
     p = argparse.ArgumentParser()
     p.add_argument("--label", required=True)
@@ -68,6 +88,13 @@ def main():
     p.add_argument("--grade-deg", type=float, default=0.0)
     p.add_argument("--width", type=float, default=None,
                    help="channel width in m; default is the full domain minus walls")
+    p.add_argument("--head-len", type=float, default=0.0,
+                   help="length of the sustained upstream velocity band, m (0=off)")
+    p.add_argument("--bed", choices=("box", "sdf"), default="sdf",
+                   help="box = add_box velocity overwrite (register 25b, drains); "
+                        "sdf = add_sdf_collider surface contact")
+    p.add_argument("--bed-friction", type=float, default=0.4)
+    p.add_argument("--bed-res", type=int, default=128)
     p.add_argument("--seed", type=int, default=0)
     a = p.parse_args()
 
@@ -101,10 +128,32 @@ def main():
     gravity = tilted_gravity(a.grade_deg)
     s.set_material(newtonian(eta=a.eta, density=1000.0, bulk_modulus=a.bulk), g=gravity)
 
-    # The bed. No floor plane anywhere in this scene.
-    s.add_box(center=(0.5 * x_brink, 0.5 * lim, 0.5 * bed_top),
-              half_size=(0.5 * x_brink, 0.5 * lim, 0.5 * bed_top),
-              velocity=(0.0, 0.0, 0.0))
+    # THE BED. No floor plane anywhere in this scene: past the brink there is
+    # nothing to stand on, which is what a free overfall is.
+    #
+    # add_box was the first choice and it is WRONG for this, measured not guessed.
+    # Its own docstring says "volumetric grid-node velocity overwrite ... for
+    # oriented surface contact with friction modes use add_sdf_collider", and the
+    # measurement agrees: with the box bed, n_sunk averaged 52000 to 62000 of 94656
+    # water particles PER FRAME and the channel collapsed to a film, because a
+    # velocity sink supplies no normal support. Register item 25b.
+    #
+    # The SDF path is the one this project has already validated: register A-2 puts
+    # C1-SDF buoyancy within 7.3 to 7.7 percent of analytic.
+    bed_h = 0.40
+    bed_cy = 0.5 * (y_lo + y_hi)
+    bed_hy = 0.5 * (y_hi - y_lo) + 3.0 * dx
+    if a.bed == "sdf":
+        from warpmpm.geometry import build_sdf
+        bv, bf = _box_mesh((0.5 * x_brink, bed_hy, 0.5 * bed_h))
+        bed_sdf = build_sdf(bv, bf, res=int(a.bed_res), margin_cells=4.0)
+        s.add_sdf_collider(bed_sdf,
+                           center=(0.5 * x_brink, bed_cy, bed_top - 0.5 * bed_h),
+                           surface="separable", friction=float(a.bed_friction))
+    else:
+        s.add_box(center=(0.5 * x_brink, bed_cy, bed_top - 0.5 * bed_h),
+                  half_size=(0.5 * x_brink, bed_hy, 0.5 * bed_h),
+                  velocity=(0.0, 0.0, 0.0))
     for pt, nrm in (((0, y_lo, 0), (0, 1, 0)), ((0, y_hi, 0), (0, -1, 0))):
         s.add_plane(pt, nrm, "slip", friction=0.0, restitution=0.05)
     s.add_domain_walls()
@@ -116,6 +165,7 @@ def main():
     substeps = int(np.ceil(rate / fps))
     dt = (1.0 / fps) / substeps
 
+    head_len = float(a.head_len)
     bc = OverfallBC(n_water=n_water, x_in=wall, catch_z=catch_z, bed_top=bed_top,
                     inlet_velocity=a.velocity, dx=dx, grid_lim=lim, x_brink=x_brink,
                     seed=a.seed)
@@ -133,9 +183,24 @@ def main():
     v = s.v(); v[:, 0] += a.velocity; s.set_v(v)
 
     n_sunk_total = 0
-    rows = ["frame,n_caught,q_m2_s,y_b,y_c,ratio,froude_up,reinject_depth,n_sunk"]
+    rows = ["frame,n_caught,q_m2_s,y_b,y_c,ratio,froude_up,reinject_depth,n_sunk,n_head"]
     for f in range(a.frames):
         x = s.x(); vv = s.v()
+        # SUSTAINED HEAD. Injecting at the inlet only sets a recycled particle's
+        # velocity once; nothing then drives the channel, so on a horizontal bed the
+        # flow decelerates under bed friction and the discharge dies. Measured on the
+        # first SDF-bed runs: q fell 0.043 to 0.008 m2/s over 300 frames while the
+        # brink depth held, i.e. the channel filled and stopped.
+        # Rouse's overfall is fed from a constant-head tank. The analogue here is a
+        # sustained upstream velocity band, which is also what the canonical driver's
+        # _sustain_inflow does. It is a momentum source, not a mass source, and it is
+        # applied ONLY upstream of head_len so the brink section stays unforced.
+        if head_len > 0.0:
+            band = x[:n_water, 0] < (wall + head_len)
+            vv[:n_water][band, 0] = a.velocity
+            n_head = int(band.sum())
+        else:
+            n_head = 0
         n = bc.apply(x, vv)
         if n:
             s.set_x(x); s.set_v(vv)
@@ -163,7 +228,7 @@ def main():
             "" if not np.isfinite(y_c) else "%.6f" % y_c,
             "" if not np.isfinite(ratio) else "%.6f" % ratio,
             "" if not np.isfinite(fr) else "%.6f" % fr,
-            bc.reinject_depth_last) + ",%d" % n_sunk)
+            bc.reinject_depth_last) + ",%d,%d" % (n_sunk, n_head))
         if f % 20 == 0 or f == a.frames - 1:
             print("frame %3d caught=%4d q=%.5f y_b=%s y_c=%s ratio=%s Fr=%s"
                   % (f, n, q,
@@ -189,7 +254,9 @@ def main():
         "bulk_modulus": float(a.bulk), "sound_speed_ms": c,
         "substeps": int(substeps), "dt": float(dt),
         "grade_deg": a.grade_deg, "gravity": gravity,
-        "bed_is_no_slip_box": True,
+        "head_len_m": head_len,
+        "bed_kind": a.bed, "bed_friction": float(a.bed_friction),
+        "bed_res": int(a.bed_res), "bed_thickness_m": 0.40,
         "recycled_total": int(bc.recycled_total),
         "clamped_y": int(bc.clamped_y), "clamped_z": int(bc.clamped_z),
         "bed_reentry_particle_frames": int(n_sunk_total),
