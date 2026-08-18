@@ -55,23 +55,28 @@ Inputs, resolved live at merge time rather than from any pinned SHA:
 |---|---|---|
 | `origin/main` | `c7f0a16` | `28ce0af` |
 | `claude/fork-register-reconcile` | `c1235e5` | `7551d24` |
-| `claude/add-ci-checks` | `59234f9`, then `785650b` | `124dd74` throughout |
+| `claude/add-ci-checks` | `59234f9`, then `785650b`, then `1aa4e19` | `124dd74` throughout |
 
 `merge-base(add-ci-checks, fork-register-reconcile)` is `1a868f3`.
 `git log --merges 1a868f3..claude/add-ci-checks` is empty, so no merge had happened.
 `fork-register-reconcile` is **not** an ancestor of `add-ci-checks`.
 
-**THE TARGET BRANCH MOVED TWICE DURING THIS WORK AND THE MERGE BASE NEVER DID.** The dispatch
+**THE TARGET BRANCH MOVED THREE TIMES DURING THIS WORK AND THE MERGE BASE NEVER DID.** The dispatch
 recorded the public register at `de191b8` / 1644 lines; that was already stale on arrival. The
-branch then went `59234f9` and then `785650b`. **At every one of those tips the register blob was
-`124dd74`**, identical to the base this merge started from and identical to
-`git hash-object` on the working file, two methods agreeing. So none of the movement touched the
-register and no rebase was needed. Re-derived at each step, never assumed.
+branch then went `59234f9`, `785650b`, and `1aa4e19`. **At every one of those tips the register blob
+reads `124dd74`**, identical to the base this merge started from and identical to `git hash-object`
+on the working file, two methods agreeing. So none of the movement touched the register and no
+rebase was needed. Re-derived at each step, never assumed, and read with `git ls-tree` rather than
+`rev-parse <rev>:<path>` because zsh eats the colon as a history modifier even inside double quotes.
 
-That is luck rather than a guarantee, and it is exactly why section 9.2 makes re-checking that one
-blob the first gate before this lands. Note also that `origin/claude/add-ci-checks` was at
-`59234f9` while the local branch was at `785650b`, so "the public copy" and "the branch" were not
-the same thing during this work; section 9.4 carries the consequence for pushing.
+**Three data points is still luck, not a guarantee**, and it is exactly why section 9.2 makes
+re-checking that one blob the first gate before this lands. `1aa4e19` is the sharpest illustration:
+it landed on the target branch *after* this document first claimed the blob was stable, and it
+edited `CLAUDE.md` only. The next commit need not be so considerate.
+
+Note also that `origin/claude/add-ci-checks` sat at `59234f9` while the local branch was at
+`785650b`, so "the public copy" and "the branch" were not the same thing during this work; section
+9.4 carries the consequence for pushing.
 
 ---
 
@@ -308,10 +313,17 @@ provenance:
 Live: `:129` is `accel = np.gradient(vel, t, axis=0)`, `:130` is `force = mass_kg * accel`.
 
 **`D8`'s `:127-128` form is exactly what W7 named.** So W7 and the d3-force routing were pointing
-at two *different* sites of one defect. Each report therefore looked already-known to the other,
-which is precisely how both stayed live. Fixing only the routed site would have left the identical
-defect one entry away from the one being corrected. `ce1cca8` changes exactly 2 lines and leaves 0
-residual `:127` citations.
+at two *different* sites of one defect. Each report therefore made the other look already-known,
+which is precisely how a defect that two people had independently noticed survived both of them.
+
+**THAT IS A FAILURE MODE OF REPORTING, NOT OF MEASUREMENT.** Both measurements were correct. Both
+were written down. The defect survived because the two write-ups were similar enough to be mistaken
+for each other, so each reader discounted the second as a duplicate of the first. No amount of
+additional measuring would have caught it; only comparing the two reports' *targets* did. Fixing
+only the routed site would have left the identical defect one entry away from the one being
+corrected. `ce1cca8` changes exactly 2 lines and leaves 0 residual `:127` citations.
+
+See section 5.4: this is one of three instances in one night, and they share a mechanism.
 
 ### 5.2 Ledger item 16 is CLOSED, not open
 
@@ -350,7 +362,42 @@ corrects". Whoever owns that entry should either restore the verbatim wording or
 quotation marks and attribute it as a paraphrase. **Both forms are recorded above, so no further
 digging is needed.**
 
----
+### 5.4 THREE STALE `file:line` CITATIONS IN ONE NIGHT IS A RATE, NOT A COINCIDENCE
+
+Three were found tonight, by three different routes, in the two canonical files:
+
+| where | was | is | found by |
+|---|---|---|---|
+| register `D6f` | `failure_modes.py:127` | `:129` | d3-force, routed to this slot |
+| register `D8` | `failure_modes.py:127-128` | `:129-130` | this merge, grepping for the same construct |
+| `CLAUDE.md` item 13 | `failure_modes.py:46/:47/:48` | `:48/:49/:50` | adversarial pass on a different slot, fixed at `1aa4e19` |
+
+**They share a mechanism, and it is worse than three independent slips.** Every one is a
+**two-line** drift, in the **same file**, in the **same direction**. That is the signature of a
+single insertion near the top of `simulation/failure_modes.py` staling every citation below it at
+once, in every document that cites it. `1aa4e19`'s own message records the consequence spreading:
+the stale numbers "had already propagated into a downstream analysis script that cited them
+verbatim".
+
+**So the three found are a sample, not the population.** Checking the register's remaining
+`failure_modes.py` citations against live source, two more are shifted by the same two lines:
+
+| entry | cites | for | live |
+|---|---|---|---|
+| `D6c` | `:179-185` | the joint sustained condition | the joint conditions are `:181-186`; `:179` is `driven_upward`, unrelated |
+| `D6d` | `:229-230` | the STUCK "none sustained" early return | that return is `:230-232`; `:229` is a closing paren |
+
+**FLAGGED, NOT FIXED, AND DELIBERATELY SO.** These are outside every authorised decision set in
+this work: `D6c` was a contested entry resolved on content, not citations, and `D6d` was never
+contested at all. Fixing them here would repeat exactly the mistake that holding `D6f` out of
+`704b6b8` avoided. They are recorded with their live targets so the fix is mechanical for whoever
+takes it.
+
+**The general rule this supports.** A `file:line` citation in a canonical document is copied into
+other people's work verbatim, so its blast radius is every document downstream, and it goes stale
+silently whenever anyone edits the cited file above the cited line. Nothing in the repo checks
+these: `register_integrity.py` verifies that a cited *path* resolves, not that the cited *line*
+still contains what the citation claims. **That is the gap, and it is a tractable one.**
 
 ## 6. THREE METHOD DEFECTS FOUND IN THIS PASS, TWO OF THEM MINE
 
@@ -396,15 +443,7 @@ where this project's method rules live.
 
 ## 7. WHAT I COULD NOT VERIFY
 
-- **THE SUBSTANCE OF THE 64 FORK-ONLY AND 7 `add-ci-checks`-ONLY ENTRIES. MERGING IS NOT AUDITING.**
-  This is the most important caveat in the document and it should stay attached to any citation of
-  the 210 figure. Those 71 entries were carried in **because they are additive and exist on exactly
-  one lineage**, which is a statement about provenance, not about truth. Their claims were not
-  re-derived against primary source in this pass. **A merged register is a complete register, not a
-  verified one**, and this document certifies only that nothing was lost, not that anything is
-  right. Three of the entries it does touch, `A2`, `A6` and `G7`, each turned out to contain
-  something false or stale once actually checked, at a rate that should discourage anyone from
-  reading the untouched 71 as sound.
+- **See 7.1 immediately below, which is the single most important caveat in this document.**
 - **Whether items 42 to 44's evidence is reachable.** Item `44b` says so itself: the g128 evidence
   lives on branches that are not merged here, so those numbers are checkable only by someone with
   those branches. That caveat is retained in the entry.
@@ -413,6 +452,36 @@ where this project's method rules live.
 - **The `54aa806` tense discrepancy** is verified as a discrepancy, but I did not determine whether
   any other quotation in the register is a paraphrase presented as a quotation. That is a
   register-wide audit, not a merge task.
+
+---
+
+### 7.1 CARRIED ON PROVENANCE, NOT TRUTH
+
+**This sentence should survive this branch, and it should keep its number beside it, because the
+number is what makes it an argument rather than a caveat.**
+
+64 fork-only and 7 `add-ci-checks`-only entries, **71 in total**, were carried into the merged
+register untouched. They were carried **because each exists on exactly one lineage**, so there was
+nothing to decide between. That is a statement about **provenance, not about truth**. Not one of
+their claims was re-derived against primary source in this pass.
+
+Now the rate. Of the entries this merge actually opened and checked, **three of them, `A2`, `A6`
+and `G7`, each held something false or stale**:
+
+- `A2`: one lineage carried a citation that names the wrong function, and the other carried a
+  mechanism claim its own follow-on entry had already struck out.
+- `A6`: asserted "no code site holds 9.80665" while its own next sentence described the surviving
+  site as dead code. One assignment does survive.
+- `G7`: carried the wrong publication year, 2022 against a resolved 2023.
+
+Add the citation drift in section 5.4, which staled `D6f`, `D8`, and on present evidence `D6c` and
+`D6d` as well.
+
+**A merge preserves; it does not validate.** This document certifies exactly one thing, that
+nothing was lost, and it certifies nothing whatever about whether any surviving entry is correct.
+**Nobody should read the untouched 71 as sound on the grounds that they survived a merge.** They
+were never tested. The defect rate in the small subset that *was* tested is the reason to expect
+otherwise, and auditing them is a different job with a different budget.
 
 ---
 
@@ -451,9 +520,10 @@ that is simultaneously behind on content and ahead on commits.
 
 ### 9.2 What must be re-verified AT THE MOMENT OF MERGING, not now
 
-`claude/add-ci-checks` moved twice while this work was in progress: `59234f9`, then `785650b`.
-**Both times the register blob stayed `124dd74`**, so the merge base never actually moved. That is
-luck, not a guarantee, and it is the thing to check.
+`claude/add-ci-checks` moved three times while this work was in progress: `59234f9`, `785650b`,
+`1aa4e19`. **All three times the register blob stayed `124dd74`**, so the merge base never actually
+moved. That is luck, not a guarantee, and it is the thing to check. Run the check against whatever
+the tip is when you land this, not against `1aa4e19`.
 
 ```
 # 1. THE ONE THAT DECIDES EVERYTHING: has the register moved on the target?
