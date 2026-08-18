@@ -347,3 +347,37 @@
   doi     = {10.3390/en14020269},
   note    = {Approximately 0.3 percent uncertainty at 95 percent confidence. Candidate locked regression case for this project.}
 }
+
+@article{zhou2025hydroplaning,
+  author  = {Zhou, Changhong and Zhong, Qing and He, Zhihe and Wang, Yixuan and Tang, Xianyuan and Li, Peilin},
+  title   = {Analysis of tire-pavement viscous hydroplaning based on the material point method},
+  journal = {Physics of Fluids},
+  volume  = {37},
+  number  = {8},
+  pages   = {083121},
+  year    = {2025},
+  doi     = {10.1063/5.0276643},
+  note    = {Tire-water film-pavement fluid-structure interaction in MPM with a rolling tire; road surface roughness is an explicit variable. Closest published prior art to a vehicle-on-a-real-road MPM scene, and it refutes any claim that MPM cannot host a road surface. AUTHOR NAMES: an earlier project note gave this as Zhou, Qing and Wang; Qing is Zhong Qing's given name, not a family name. Verified against Crossref 2026-08-18.}
+}
+
+@article{zhao2019inoutflow,
+  author  = {Zhao, Xuanyu and Bolognin, Marco and Liang, Dongfang and Rohe, Alexander and Vardon, Philip J.},
+  title   = {Development of in/outflow boundary conditions for {MPM} simulation of uniform and non-uniform open channel flows},
+  journal = {Computers and Fluids},
+  volume  = {179},
+  pages   = {27--33},
+  year    = {2019},
+  doi     = {10.1016/j.compfluid.2018.10.007},
+  note    = {Velocity-controlled inflow and pressure-controlled outflow for MPM, by adding and removing material points with appropriate kinematic properties; implemented in Anura3D. Validated on uniform open channel flow and free overfall, reporting the end-depth ratio against Rouse, who found the critical depth is about 1.4 times the brink depth. NOT Kumar's work; that misattribution was corrected 2026-08-07.}
+}
+
+@article{remmerswaal2024neumann,
+  author  = {Remmerswaal, Guido and Vardon, Philip J. and Hicks, Michael A.},
+  title   = {Inhomogeneous {Neumann} boundary conditions for {MPM} and {GIMP}},
+  journal = {Computers and Geotechnics},
+  volume  = {173},
+  pages   = {106494},
+  year    = {2024},
+  doi     = {10.1016/j.compgeo.2024.106494},
+  note    = {Prescribed-traction boundaries for MPM and GIMP. Open access CC-BY. Same TU Delft lineage as the in/outflow work (Vardon is a co-author of both, and this paper cites it), and it is the machinery for the PRESSURE-controlled half of an outflow condition, which the recycling translation in simulation/openchannel_bc.py does not implement.}
+}
