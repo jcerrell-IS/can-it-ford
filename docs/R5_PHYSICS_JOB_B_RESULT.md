@@ -344,3 +344,49 @@ defect in the buoyancy response.
 
 **UNREVIEWED**: this section has not been through the physics-skeptic. Settle 8
 constructor-only, trimesh 4.12.2, engine 627367e.
+
+## 10. g96 repeat: the +43% reproduces, and what "N=2" here does and does not mean
+
+Second g96 run, 600 frames, fired into the same idev with the SDF now cached. Graded in
+the window **fixed in section 9 and not re-tuned**, 0.07898 to 0.10093 m:
+
+| run | N | ratio | excess |
+|---|---|---|---|
+| g64, 600 frames | 391 | 1.6320 | +63.20% |
+| **g96 draw 1**, 300 frames | 213 | 1.4308 | **+43.08%** |
+| **g96 draw 2**, 600 frames | 237 | 1.4170 | **+41.70%** |
+
+**g96 across two draws: mean 1.4239, spread 0.0138, excess +42.39%, draw-to-draw
+1.38 points**, against the band model's pre-stated **+43.5%**. The prediction sits about
+1.1 points above the two-draw mean, i.e. inside the draw-to-draw variability. The caveat
+in section 9.1, that +43.13% was a single run's mean, is discharged: it reproduces.
+
+### 10.1 The two draws are NOT independent replicates, and the distinction matters
+
+The identical min and max to four decimals in both rows looked wrong, so I checked rather
+than reporting N=2 and moving on. They are **not** bitwise identical: they diverge from
+**frame 1** with a maximum difference of **9.706e-03 N** over the 300-frame overlap, the
+same GPU non-determinism signature the A2 repeats showed.
+
+But 9.7e-03 N against a ~30 N signal means these are **the same trajectory perturbed by
+roundoff**, not two independent samples of a noisy process. The 1.38-point difference
+between them comes mostly from draw 2 contributing **24 more frames** to the window at
+lower submergence, not from independent noise.
+
+**So "N=2, spread 0.0138" is a reproducibility statement, not an error bar.** It shows the
+run is repeatable to roundoff. It does **not** establish a sampling uncertainty on the
++42.39%, and it must not be quoted as one. A genuine error bar needs either a blocked SE
+over the window or runs that differ by more than floating-point associativity.
+
+### 10.2 Standing
+
+The band model predicted +43.5% at g96 before either g96 run existed, and two runs give
++43.08% and +41.70% against a g64 measurement of +63.20%. The dx dependence is real and
+the magnitude matches. **Neither run is stationary**, the nominal criterion still refuses
+both, and the pre-registered measured-surface criterion still reports **FAIL** on the
+uncorrected ratio.
+
+**UNREVIEWED**: a physics-skeptic pass on sections 9 and 10 was commissioned and had not
+returned when this was written. Its specific brief includes whether the +43.5% prediction
+and the band-corrected ratio share a formula, which would make the agreement circular
+rather than evidential. Settle 8 constructor-only, trimesh 4.12.2, engine 627367e.
