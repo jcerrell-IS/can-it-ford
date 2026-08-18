@@ -11,12 +11,10 @@
 #
 #     warp-lang    1.15.0          ($WORK/.venv/bin/python -c "import warp")
 #     torch        2.11.0+cu128    (same)
-#     mpm-engine   544c93dd        (public kks32/mpm-engine main; see ENGINE_PIN below)
+#     mpm-engine   627367e         (jcerrell-IS/mpm-engine main, the project FORK)
 #
-# THE ENGINE PIN IS NOT MATCHED ACROSS MACHINES AND CANNOT BE, YET. Vista runs
-# 627367e, which is Vista-local and unpushed. LS6 can only reach 544c93dd, its
-# ancestor. warp and torch ARE matched. See the ENGINE_PIN block for the exact delta
-# and for what LS6 can and cannot faithfully run until those commits are moved.
+# All three ARE matched across machines as of 2026-08-18. The fork is the canonical
+# remote; upstream kks32/mpm-engine main is 544c93d and lacks this project's work.
 #
 # ARCHITECTURE. LS6 is x86_64, Vista is aarch64. That is why the install takes
 # minutes here with stock wheels. It also means note L-8's DualSPHysics
@@ -39,24 +37,24 @@ ENGINE=$WORK/mpm-engine
 WARP_PIN="1.15.0"
 TORCH_PIN="2.11.0"
 TORCH_INDEX="https://download.pytorch.org/whl/cu128"
-# ENGINE_PIN was "627367e" until 2026-08-18. THAT PIN COULD NEVER HAVE WORKED.
-# 627367e is a VISTA-LOCAL commit: it is one of five commits Vista's $WORK/mpm-engine
-# holds above its own upstream, so `git checkout 627367e` in a fresh public clone of
-# kks32/mpm-engine fails with "Needed a single revision". Verified live 2026-08-18:
-# LS6 sat at 544c93dd, on main, clean, and had never moved.
+# THE ROOT CAUSE OF THE 2026-08-18 PIN FAILURE WAS THE REMOTE, NOT THE SHA.
+# This script used to clone UPSTREAM kks32/mpm-engine and then check out 627367e.
+# That fails with "Needed a single revision", because 627367e is not upstream:
+# upstream main is 544c93d. The commit lives on THIS PROJECT'S FORK, which already
+# carried it. Nothing ever needed pushing; the clone was simply pointed at the wrong
+# repository, and a stale tracking ref on Vista (@{u} = 00bbfb1) made it look like
+# five commits were unpushed when they were not.
 #
-# 544c93dd IS an ancestor of 627367e and the entire delta is ONE FILE,
-# src/warpmpm/vehicle.py, +126/-10, from fd390d6 (dispatch ply loading on content,
-# not on the .ply suffix) and b43c3a2 (solidify_watertight seeding).
+# Verified live 2026-08-18 after the fix: LS6 fetched fork/main, checked out
+# 627367ecc0d022b366f825b1c3f60c37f286f1e2, and now imports warpmpm with
+# solidify_watertight present and callable.
 #
-# CONSEQUENCE, and it is not cosmetic: `solidify_watertight` is ABSENT from 544c93dd,
-# confirmed by grep against third_party/mpm-engine-544c93dd/src/warpmpm/vehicle.py.
-# That is the canonical seeding path for the vehicle hull. So LS6 as configured can
-# run WATER-ONLY cases faithfully and CANNOT reproduce any of the 17 gated vehicle
-# runs. Getting it there needs those three commits moved off Vista, either by pushing
-# them to the jcerrell-IS/mpm-engine fork or by `git bundle` over scp. Neither has
-# been done, so this script pins to what is actually reachable and says so.
-ENGINE_PIN="544c93dd"
+# WHY THE FORK AND NOT UPSTREAM. 544c93dd lacks solidify_watertight, the canonical
+# hull seeding path. On 544c93dd a vehicle run seeds by the OLD path and silently
+# produces a different density, which no gate can catch because G-3 compares against
+# a RHO_REF derived from the same pipeline. Clone the fork.
+ENGINE_REMOTE="https://github.com/jcerrell-IS/mpm-engine.git"
+ENGINE_PIN="627367ecc0d022b366f825b1c3f60c37f286f1e2"
 
 if [ -e "$VENV" ]; then
     echo "[ls6_setup] $VENV already exists; stopping rather than overwriting it." >&2
@@ -77,7 +75,7 @@ echo "[ls6_setup] torch==$TORCH_PIN from $TORCH_INDEX (large download, several m
 
 if [ ! -d "$ENGINE" ]; then
     echo "[ls6_setup] cloning mpm-engine"
-    git clone --quiet https://github.com/kks32/mpm-engine.git "$ENGINE"
+    git clone --quiet "$ENGINE_REMOTE" "$ENGINE"
 fi
 git -C "$ENGINE" checkout --quiet "$ENGINE_PIN"
 

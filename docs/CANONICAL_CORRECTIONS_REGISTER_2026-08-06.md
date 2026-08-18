@@ -1863,9 +1863,36 @@ L7. **SKILL DRIFT, RE-VERIFIED, and the previously recorded drift is FIXED.** Fi
         currently exist in exactly one place.
     (b) `git bundle create` on Vista, scp to LS6, fetch from the bundle. No public
         write, fully reversible, but leaves the single-copy risk standing.
-    Both are remote writes and neither was attempted. (a) is the better one precisely
-    because the single-copy exposure is the larger hazard: five commits including the
-    canonical seeding path exist only on one scratch filesystem.
+    **RESOLVED 2026-08-18, SAME DAY, AND THIS ITEM'S DIAGNOSIS WAS WRONG.** Neither
+    (a) nor (b) was needed, because **there was no single-copy exposure.**
+    `git ls-remote` against `jcerrell-IS/mpm-engine` returns
+    `627367ecc0d022b366f825b1c3f60c37f286f1e2  refs/heads/main`. The commit was on
+    GitHub the whole time. This item said "they are not on GitHub in any form". False.
+
+    **HOW THE ERROR WAS MADE, because it is the interesting part.** The "five unpushed
+    commits" figure came from `git log @{u}..HEAD` on Vista. `@{u}` is VISTA'S OWN
+    CACHED TRACKING REF and it points at `00bbfb1`, which is stale. CLAUDE.md's
+    repo-clone-inventory rule states this exact trap: do not test provenance by asking
+    a clone about its own cached remote ref, resolve the canonical SHA from the LIVE
+    remote first. The rule was in front of me and I used the cached ref anyway. Two of
+    the five "unpushed" commits, `544c93d` and `49a098a`, are Krishna's and were public
+    upstream already.
+
+    **THE REAL ROOT CAUSE WAS THE REMOTE, NOT THE SHA.** `scripts/ls6_setup.sh` cloned
+    UPSTREAM `kks32/mpm-engine`, whose main is `544c93d` and which does not carry this
+    project's engine work. Pointing LS6 at the fork and fetching fixed it in one step.
+
+    **LS6 IS NOW AT 627367e, VERIFIED BY EXECUTION, NOT BY CHECKOUT EXIT CODE.**
+    `rev-parse HEAD` returns the full SHA; `grep -c "def solidify_watertight"` returns
+    1; and `from warpmpm.vehicle import solidify_watertight` imports and is callable
+    under the pinned warp 1.15.0 / torch 2.11.0+cu128 venv. So the split-capability
+    claim above is **withdrawn**: LS6 can now run the vehicle scenes, and the 15.5x
+    budget argument does transfer. `ls6_setup.sh` now clones the fork and pins the full
+    40-character SHA rather than a short one.
+
+    A bundle of Vista's engine history was created anyway and verified complete
+    (913,301 bytes, `git bundle verify` reports a complete history). It is redundant
+    for recovery and is kept only as a cheap second copy.
 
 38. **SINGLE-COPY EXPOSURE: 45 LOCAL BRANCHES HAVE NEVER BEEN PUSHED, AND THE
     LARGEST CARRIES 83 COMMITS.** T1, measured live 2026-08-18 with
@@ -1892,10 +1919,81 @@ L7. **SKILL DRIFT, RE-VERIFIED, and the previously recorded drift is FIXED.** Fi
     deliberately, never by merging the branch wholesale, and re-measure before quoting
     any figure, stating which of the two readings you used.
 
-    **NOT ACTIONED HERE.** Pushing is a remote write and this repo is PUBLIC, so a
-    blanket push is not available: `claude/credential-exposure-2026-08-13-DO-NOT-PUSH`
-    is among the 87 and is named that way for a reason. The safe move is a selective
-    push of the research branches after checking each for credential content, or a
-    `git bundle` of the whole ref set to external storage, which needs no remote write
-    and would close the exposure in one step.
+    **CORRECTED AND CLOSED 2026-08-18, SAME DAY. THE COUNT WAS WRONG AND THE FIX IS
+    DONE.** "45 never pushed" was measured with `%(upstream)`, which reports whether an
+    upstream is CONFIGURED, not whether the commits exist remotely. A branch can be
+    fully published and still have no upstream set. Re-measured the right way, by
+    resolving the 46 live `origin` refs with `ls-remote` and then asking whether each
+    local tip is an ancestor of any of them: **38 branches carry commits not reachable
+    from any live remote ref**, not 45. Same class of error as item 37's, made twice in
+    one session, both times by trusting a local cache instead of the live remote.
+    Also corrected: `claude/can-it-ford-round-5-87a6d6`, the Job B branch, **is** on
+    origin at `fbecf5d` and was never at risk.
 
+    **CLOSED WITHOUT ANY REMOTE WRITE.** `git bundle create --all` captured **167
+    refs** and verifies as a complete history. It was copied to LS6 `$WORK` and the
+    sha256 matches byte-for-byte on both ends
+    (`787eea16686bc0a1987e67a0f3234db7599ded564d529bcd84dcbeccb4ff373c`), so all 167
+    refs now exist on two machines. Permissions set to 600 so the shared TACC
+    filesystem does not expose it to the group.
+    A bundle sitting next to the repo on the same laptop would NOT have closed this;
+    the off-machine copy is the part that does.
+
+    **WHY BUNDLE RATHER THAN PUSH, on evidence.** `docs/CREDENTIAL_EXPOSURE_2026-08-13.md`
+    was scanned on both the working tree and the branch for live secret values, by
+    pattern rather than by eye: `ghp_`, `github_pat_`, `olp_`, `sk-`, `AKIA` and
+    40-hex forms all return **zero**. It documents exposures by path and type, never by
+    value, so nothing live would have leaked. It is still a map of where credentials
+    were, and publishing a map on a PUBLIC repo is a bad trade when a bundle closes the
+    same risk at zero disclosure. The bundle also covers all 38, including that one,
+    which a selective push deliberately could not.
+
+39. **THE CROSS-MACHINE DIVERGENCE GROWS WITH RECORD LENGTH, AND THE INTEGER COUNTS
+    STOP MATCHING. ITEM 35's "17 OF 17 IDENTICAL" IS RECORD-LENGTH-SPECIFIC AND DOES
+    NOT GENERALISE.**
+
+    Item 35 reports the LS6/Vista water-only reproduction at 90 frames: all 17
+    integer quantities identical, worst relative float difference 1.852e-05. I
+    measured that at ONE record length and reported it without testing whether it
+    held. It does not. LS6 job 3373051 repeats the identical configuration at 300
+    frames against Vista's `long_grade0p0`:
+
+    | quantity | Vista GH200 | LS6 A100 | delta |
+    |---|---:|---:|---:|
+    | driven_total          |   48129 |   48127 | **2** |
+    | recycled_total        |   48129 |   48127 | **2** |
+    | clamped_y             |  183393 |  183417 | **24** |
+    | clamped_z             | 2253695 | 2253410 | **285** |
+    | leaked_particle_frames| 2412228 | 2411952 | **276** |
+
+    **Five of 17 integer counts now differ**, where at 90 frames none did. The worst
+    relative float difference goes **1.852e-05 to 5.242e-04, a factor of 28.3**,
+    while the record only grew 3.33x. So the divergence accumulates FASTER than
+    linearly in frame count. Two points is not a law, but the direction is not in
+    doubt and the growth is clearly superlinear.
+
+    **IT IS STILL FAR BELOW WHAT THE MEASUREMENT CAN RESOLVE.** The absolute slope
+    delta is 3.390e-06 against item 30's RUM95 of 0.00090 on that quantity, so the
+    two machines disagree **265x inside the uncertainty band**. No verdict is
+    threatened at these record lengths. A crude extrapolation of the observed
+    exponent (about frames^2.8) puts the divergence at the RUM95 near 2000 frames,
+    which is worth knowing before anyone runs one, and is an extrapolation from two
+    points and should be treated as such.
+
+    **WHAT TO SAY, AND WHAT NOT TO SAY.** Say: at the record lengths used here the
+    two machines agree far inside the measurement uncertainty. Do NOT say the
+    reproduction is exact, and do not quote "17 of 17 identical" without "at 90
+    frames" attached. Item 36 already establishes the frame that matters: cross
+    architecture agreement is evidence of ROBUSTNESS, not of physical validity,
+    precisely because rounding and parallel reduction order alter trajectories. This
+    item is that mechanism showing up in the project's own numbers.
+
+    **ONE CONFOUND, AND IT IS MINE.** The two runs did NOT use the same driver
+    version. The LS6 summary carries `n_image`, `floor_plane`,
+    `image_sources_last`, `image_duplicated_last` and `image_clamped_total`; the
+    Vista run predates the image-particle work and carries none of them. The LS6 run
+    used `n_image = 0` and `floor_plane = True`, which is the same physics path, so
+    the comparison is defensible but is NOT a clean matched pair. A rerun of the
+    Vista side on the current driver would remove the doubt and has not been done.
+    Recording it because an unstated version difference is exactly the kind of thing
+    that makes a reproduction claim collapse later.
