@@ -1,0 +1,249 @@
+{
+  "produced": "2026-08-18",
+  "target": {
+    "value": 1.4,
+    "quantity": "critical depth / brink depth",
+    "source": "Rouse, as quoted in Zhao et al 2019 doi:10.1016/j.compfluid.2018.10.007, retrieved via Scite full-text search because the PDF is not obtainable",
+    "applies_only_when": "the approach flow is SUBCRITICAL (Fr < 1)"
+  },
+  "status": "NOT VALIDATED. See caveats.",
+  "caveats": [
+    "Round v2 used an add_box bed. add_box is a volumetric grid-node velocity overwrite with no normal support; its own docstring points to add_sdf_collider for surface contact. The channel fell into its own bed, ~32000 re-entries per frame, and every number from that round is void.",
+    "Round v3 (SDF bed, no sustained head) is in the right regime but its discharge decays from 0.28 to 0.009 m2/s, so the ratio is swept through rather than held.",
+    "Round v4 (SDF bed + head at 0.8 m/s) holds discharge steady but drives the approach SUPERCRITICAL (Fr 1.13 to 1.64), where the Rouse ratio does not apply.",
+    "A ratio read off a decaying transient, or off a supercritical approach, is not a validation. Neither round establishes the 1.4x test as passed or failed."
+  ],
+  "rounds": {
+    "v2_boxbed_broken/ovf2_v0p5": {
+      "bed_kind": "box",
+      "head_len_m": 0.0,
+      "inlet_velocity_ms": 0.5,
+      "frames": 300,
+      "n_water": 94656,
+      "h": 0.020833333333333332,
+      "grid": 96,
+      "bed_reentry_per_frame": 42407.77333333333,
+      "ratio_min": 0.187899,
+      "ratio_max": 81.751491,
+      "ratio_in_subcritical_window": {
+        "n_frames": 31,
+        "mean": 1.327147387096774,
+        "min": 0.187899,
+        "max": 1.797887
+      },
+      "froude_late_60": NaN,
+      "q_first30": 0.21176938566666664,
+      "q_last30": 0.09564887266666665
+    },
+    "v2_boxbed_broken/ovf2_v0p7": {
+      "bed_kind": "box",
+      "head_len_m": 0.0,
+      "inlet_velocity_ms": 0.7,
+      "frames": 300,
+      "n_water": 94656,
+      "h": 0.020833333333333332,
+      "grid": 96,
+      "bed_reentry_per_frame": 42248.26666666667,
+      "ratio_min": 0.180752,
+      "ratio_max": 124.565864,
+      "ratio_in_subcritical_window": {
+        "n_frames": 32,
+        "mean": 1.3604995937500002,
+        "min": 0.180752,
+        "max": 1.924489
+      },
+      "froude_late_60": NaN,
+      "q_first30": 0.23495370433333337,
+      "q_last30": 0.10987232400000001
+    },
+    "v2_boxbed_broken/ovf2_v0p9": {
+      "bed_kind": "box",
+      "head_len_m": 0.0,
+      "inlet_velocity_ms": 0.9,
+      "frames": 300,
+      "n_water": 94656,
+      "h": 0.020833333333333332,
+      "grid": 96,
+      "bed_reentry_per_frame": 43770.73,
+      "ratio_min": 0.169719,
+      "ratio_max": 85.313653,
+      "ratio_in_subcritical_window": {
+        "n_frames": 30,
+        "mean": 1.3375814,
+        "min": 0.169719,
+        "max": 2.048054
+      },
+      "froude_late_60": 9.844132814814817,
+      "q_first30": 0.2590693723333333,
+      "q_last30": 0.097457321
+    },
+    "v3_sdfbed_nohead/ovf3_box": {
+      "bed_kind": "box",
+      "head_len_m": 0.0,
+      "inlet_velocity_ms": 0.7,
+      "frames": 200,
+      "n_water": 94656,
+      "h": 0.020833333333333332,
+      "grid": 96,
+      "bed_reentry_per_frame": 31903.1,
+      "ratio_min": 0.180752,
+      "ratio_max": 7.877008,
+      "ratio_in_subcritical_window": {
+        "n_frames": 32,
+        "mean": 1.36047028125,
+        "min": 0.180752,
+        "max": 1.923199
+      },
+      "froude_late_60": 6.95422875,
+      "q_first30": 0.23495370433333337,
+      "q_last30": 0.08469871200000001
+    },
+    "v3_sdfbed_nohead/ovf3_sdf_v0p5": {
+      "bed_kind": "sdf",
+      "head_len_m": 0.0,
+      "inlet_velocity_ms": 0.5,
+      "frames": 300,
+      "n_water": 94656,
+      "h": 0.020833333333333332,
+      "grid": 96,
+      "bed_reentry_per_frame": 1063.2266666666667,
+      "ratio_min": 0.118461,
+      "ratio_max": 1.522438,
+      "ratio_in_subcritical_window": {
+        "n_frames": 295,
+        "mean": 0.8925904779661019,
+        "min": 0.118461,
+        "max": 1.522438
+      },
+      "froude_late_60": 0.09776553333333333,
+      "q_first30": 0.19067382666666666,
+      "q_last30": 0.009385850999999999
+    },
+    "v3_sdfbed_nohead/ovf3_sdf_v0p7": {
+      "bed_kind": "sdf",
+      "head_len_m": 0.0,
+      "inlet_velocity_ms": 0.7,
+      "frames": 300,
+      "n_water": 94656,
+      "h": 0.020833333333333332,
+      "grid": 96,
+      "bed_reentry_per_frame": 1094.3166666666666,
+      "ratio_min": 0.109744,
+      "ratio_max": 1.638489,
+      "ratio_in_subcritical_window": {
+        "n_frames": 295,
+        "mean": 0.8853757084745763,
+        "min": 0.109744,
+        "max": 1.638489
+      },
+      "froude_late_60": 0.1056649,
+      "q_first30": 0.21210394933333332,
+      "q_last30": 0.008282696666666665
+    },
+    "v3_sdfbed_nohead/ovf3_sdf_v0p9": {
+      "bed_kind": "sdf",
+      "head_len_m": 0.0,
+      "inlet_velocity_ms": 0.9,
+      "frames": 300,
+      "n_water": 94656,
+      "h": 0.020833333333333332,
+      "grid": 96,
+      "bed_reentry_per_frame": 1316.2233333333334,
+      "ratio_min": 0.105242,
+      "ratio_max": 1.690323,
+      "ratio_in_subcritical_window": {
+        "n_frames": 289,
+        "mean": 0.8617020519031142,
+        "min": 0.105242,
+        "max": 1.690323
+      },
+      "froude_late_60": 0.09214833333333333,
+      "q_first30": 0.2354058143333333,
+      "q_last30": 0.008780019666666668
+    },
+    "v4_sdfbed_head0p8/ovf4_head1p0": {
+      "bed_kind": "sdf",
+      "head_len_m": 1.0,
+      "inlet_velocity_ms": 0.8,
+      "frames": 300,
+      "n_water": 94656,
+      "h": 0.020833333333333332,
+      "grid": 96,
+      "bed_reentry_per_frame": 267.33,
+      "ratio_min": 0.107842,
+      "ratio_max": 2.639484,
+      "ratio_in_subcritical_window": {
+        "n_frames": 89,
+        "mean": 1.2591841460674158,
+        "min": 0.107842,
+        "max": 1.461922
+      },
+      "froude_late_60": 1.4782446666666664,
+      "q_first30": 0.22539605033333338,
+      "q_last30": 0.19525824666666666
+    },
+    "v4_sdfbed_head0p8/ovf4_v0p6": {
+      "bed_kind": "sdf",
+      "head_len_m": 0.6,
+      "inlet_velocity_ms": 0.6,
+      "frames": 300,
+      "n_water": 94656,
+      "h": 0.020833333333333332,
+      "grid": 96,
+      "bed_reentry_per_frame": 276.60333333333335,
+      "ratio_min": 0.117218,
+      "ratio_max": 2.379061,
+      "ratio_in_subcritical_window": {
+        "n_frames": 186,
+        "mean": 1.491804129032258,
+        "min": 0.117218,
+        "max": 2.028127
+      },
+      "froude_late_60": 0.9792621999999999,
+      "q_first30": 0.2013436773333334,
+      "q_last30": 0.11782949933333335
+    },
+    "v4_sdfbed_head0p8/ovf4_v0p8": {
+      "bed_kind": "sdf",
+      "head_len_m": 0.6,
+      "inlet_velocity_ms": 0.8,
+      "frames": 300,
+      "n_water": 94656,
+      "h": 0.020833333333333332,
+      "grid": 96,
+      "bed_reentry_per_frame": 278.05333333333334,
+      "ratio_min": 0.107841,
+      "ratio_max": 2.458727,
+      "ratio_in_subcritical_window": {
+        "n_frames": 106,
+        "mean": 1.2930712547169811,
+        "min": 0.107841,
+        "max": 1.58572
+      },
+      "froude_late_60": 1.16933485,
+      "q_first30": 0.22452799433333334,
+      "q_last30": 0.16555447166666667
+    },
+    "v4_sdfbed_head0p8/ovf4_v1p0": {
+      "bed_kind": "sdf",
+      "head_len_m": 0.6,
+      "inlet_velocity_ms": 1.0,
+      "frames": 300,
+      "n_water": 94656,
+      "h": 0.020833333333333332,
+      "grid": 96,
+      "bed_reentry_per_frame": 291.1066666666667,
+      "ratio_min": 0.103052,
+      "ratio_max": 2.463024,
+      "ratio_in_subcritical_window": {
+        "n_frames": 99,
+        "mean": 1.293394424242424,
+        "min": 0.103052,
+        "max": 1.638058
+      },
+      "froude_late_60": 1.1750440666666668,
+      "q_first30": 0.2489782253333333,
+      "q_last30": 0.179497613
+    }
+  }
+}
