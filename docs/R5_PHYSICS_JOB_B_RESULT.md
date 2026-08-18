@@ -534,3 +534,84 @@ ballpark, but different run lengths and windows, so it is consistency, not repli
 **UNREVIEWED**: no physics-skeptic pass on this section. Given that three of my headlines
 were overturned tonight, treat section 12 as the least-checked claim in this document.
 Settle 8 constructor-only, trimesh 4.12.2, engine 627367e, h/2 fix active.
+
+## 13. Section 12 audited: the table survives, the sentences on it do not. Again.
+
+Fourth headline in four sections to overreach. **The central table is the most solidly
+reproduced result in this document**: all three excesses, all three N, and all three
+predictions reproduce exactly, the predictions were evaluated at each arm's OWN window
+submergence (the error that sank section 9 is NOT repeated), and the arms are separated at
+**33 to 49 sigma** blocked. Four sentences built on it are wrong.
+
+### 13.1 BLOCKING. "Every one of them is refuted" is a non-sequitur
+
+**An experiment that holds a variable fixed has zero power over it.** The four rivals were
+introduced to explain the **dx** dependence; at fixed dx they contribute an unobserved
+additive constant. Their prediction was never "no dependence on band".
+
+And "held constant by construction" is false for the compared quantity: the excess is
+nonlinear in surface, so the constant 4.6875 mm h/2 bias contributes **arm-dependently**,
+moving the headline by **9.081 pp, 9.0% of the 100.77**.
+
+**Correct statement:** the band is the dominant source of **band-dependence**. Inverting
+the cap law leaves a roughly band-independent offset of **-2.75 mm = -0.147 dx**, so the
+rivals are not refuted but **bounded at about 15%, with the opposite sign** to what they
+were accused of. That is a better result than section 12 claimed, and a different one.
+
+### 13.2 BLOCKING. "No run here is stationary" is false, in the damaging direction
+
+By the project's own `blocking.stationarity()`: **b0.5 and b1.0 are stationary=True** on
+both the graded window and all 300 frames. **Only b2.0 fails** (halves 5.10 sigma, trend
+4.25 sigma) and **b2.0 is the arm carrying the 100-point headline**. Its +120.66 is a
+snapshot of a rising series: quartiles +113.19 / +118.98 / +125.13 / +125.04, and
+extrapolated to 600 frames **+163.89**, which would make m/p 1.200 and **flip 12.1's sign
+from over- to under-prediction**. A blanket disclaimer understated two arms and hid which
+one is actually the problem.
+
+### 13.3 BLOCKING. The 12.2 "sanity check" is one simulation counted twice
+
+b1.0 and `sphere600[:300]` are **the same configuration re-executed** (`band=None`
+defaults to dx): max |dfz| **2.639e-03 N**, max |d surface| 5.901e-06 m. At matched
+submergence they agree to **0.0002 pp**. So it is replication, not "consistency", and it
+carries **zero independent information**. The +51.28 against +47.41 gap was a pure window
+artifact. This is exactly the defect section 11.2 caught in section 9.
+
+### 13.4 BLOCKING. The over-prediction is inflated by a denominator the band itself raised
+
+The inflated body displaces more water and **raises the far-field surface**, which is the
+denominator. Decontaminating gives m/p **0.784 / 0.938 / 0.982**, not 0.718 / 0.861 /
+0.884. "Overshoots by 12 to 28%" becomes **2 to 22%, and within 2% at 2dx**. The bias runs
+against the headline, so the mechanism claim was conservative, but 12.1's magnitude story
+is roughly half what was stated. Its "partially rigid shell" explanation also has the
+**wrong shape**: fixed rigidity predicts constant m/p, and m/p rises toward 1, which is a
+fixed subtractive offset. And b1.0 vs b2.0 differ by only **1.29 sigma**, so "systematic
+across three points" is one low point and two indistinguishable ones.
+
+### 13.5 Two positives section 12 under-claimed
+
+- **The far-field surface rise confirms the mechanism WITHOUT using the wrench at all.**
+  The inter-arm surface difference matches the inflated body's extra displaced volume at
+  0.79 to 1.02 of prediction. That is independent corroboration and the best evidence in
+  the sweep; section 12 never made the argument.
+- **Run-to-run reproducibility is 2.6e-5 relative on force**, from the b1.0/sphere600 pair.
+
+### 13.6 Not disclosed, and it affects every number above
+
+**Roughly 7.4% of the water leaves the domain by frame 299 in all three arms**: 4.93%
+below the floor, 2.5% outside the walls, `occupied_volume_m3` falling 0.518 to 0.4918.
+Shared across arms so it does not differentially explain the sweep, but every number here
+is measured in a leaking tank. This is the floor-BC bug of section 8.3 showing up as
+particle loss.
+
+Also: section 12 never states its submergence window (it silently inherits one defined for
+a different comparison, whose lower bound binds on no arm); it silently re-derived the
+predictions 1.9 to 13.7 pp below section 11.6's pre-registration; and
+`sphere_heave.py:428-429` reports `sdf_band_clearance` normalised by **dx rather than the
+actual band**, so the true clearances are 4.277 / 2.139 / **1.069**, and the b2.0 arm
+clears the engine guard by 0.65 SDF cells while exceeding the 1.5 dx B-spline half-width.
+Treat b2.0 as a different regime, not a third point on one curve.
+
+### 13.7 What stands after four audits
+
+**The band is the dominant source of band-dependence in this scene.** That survives.
+Everything stronger than that sentence has been withdrawn at least once.
