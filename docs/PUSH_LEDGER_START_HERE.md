@@ -30,15 +30,15 @@ Work on Vista and LS6 that was never fetched here is also outside all of this
       watch_register_merge.sh                  <- guards the merge (watch_side_a.sh retired)
       refresh_log.tsv                          <- every artifact, bytes + sha256 + verdict
       2026-08-17/
-        ALL-refs-2251.bundle                   507,891,648 B  142 refs  self-contained
-        ALL-refs-MINUS-credentials-2251.bundle 507,831,989 B  123 refs  no credential branch
+        ALL-refs-<HHMM>.bundle                 ~508 MB  self-contained
+        ALL-refs-MINUS-credentials-<HHMM>.bundle ~508 MB  no credential branch
         INCREMENTAL-all-branches-2341.bundle     8,372,242 B   33 refs  needs origin, NEWEST
         uncommitted-2341/                      dirty worktrees, patches + tarballs, mode 0700
         incoming/                              captured from Vista, mode 0700
 
 Current at **391 at-risk commits** (commits that exist on no remote) across 33
 branches, as of the 23:41 refresh. That number climbs all evening; re-run the
-refresh rather than trusting it. **`ALL-refs-2251.bundle` is the only one that
+refresh rather than trusting it. **The `ALL-refs-*` bundle is the only one that
 stands alone**; the incremental restores only alongside a copy of `origin`, and
 the pair together reconstructs current state (section 1).
 
@@ -67,7 +67,7 @@ verifying a **transfer** (section 1).
 
     git init --bare /path/to/recovered.git
     git -C /path/to/recovered.git fetch \
-        /Users/josie/can-it-ford-bundles/2026-08-17/ALL-refs-2251.bundle 'refs/heads/*:refs/heads/*'
+        "$(ls -1t /Users/josie/can-it-ford-bundles/*/ALL-refs-[0-9]*.bundle | head -1)" 'refs/heads/*:refs/heads/*'
     git -C /path/to/recovered.git fetch \
         /Users/josie/can-it-ford-bundles/2026-08-17/INCREMENTAL-all-branches-2341.bundle 'refs/heads/*:refs/heads/*'
     git clone /path/to/recovered.git /path/to/work -b <branch>
@@ -148,11 +148,12 @@ Three rights holders, three artifacts still to file.
 
 That leaves the credential axis alone, and it splits cleanly:
 
-- **`ALL-refs-MINUS-credentials-2251.bundle`** (507,831,989 B, 123 refs,
-  controlled to exclude `CREDENTIAL_EXPOSURE`) is **clear on both axes and
-  shippable to an ordinary destination tonight.** Restore test must print **76**.
-- **`ALL-refs-2251.bundle`** (507,891,648 B, 142 refs) needs **a private
-  encrypted destination. That is now its ONLY route**: credentials are reported
+- **`ALL-refs-MINUS-credentials-*.bundle`** (newest, ~508 MB, controlled to
+  exclude `CREDENTIAL_EXPOSURE`) is **clear on both axes and shippable to an
+  ordinary destination.** It restores one fewer branch than the full bundle, and
+  that difference is the check that the exclusion held.
+- **`ALL-refs-*.bundle`** (newest, ~508 MB) needs **a private encrypted
+  destination. That is now its ONLY route**: credentials are reported
   DEFERRED, not resolved (12 named, 0 rotated), so "the credentials dead first"
   is not a near-term option. Restore test must print **77**.
 
@@ -160,11 +161,25 @@ That leaves the credential axis alone, and it splits cleanly:
 MINUS-credentials variant. It exists so a credential decision never has to gate
 a backup.
 
-    cp .../ALL-refs-2251.bundle /Volumes/<NAME>/canford-2026-08-17/
-    shasum -a 256 /Volumes/<NAME>/canford-2026-08-17/ALL-refs-2251.bundle
-    # MUST print 655aca8e583e75e8935bc1963f177358fbda83f54737b88240ee579487231d9e
-    git clone --mirror <copied bundle> /tmp/restore-check
-    git -C /tmp/restore-check for-each-ref refs/heads | wc -l     # MUST print 77
+**Do not copy the filenames out of this page.** They change on every refresh,
+and they have changed five times tonight. Let the shell pick the newest and take
+the checksum from the log the refresh wrote:
+
+    B=/Users/josie/can-it-ford-bundles
+    # pick ONE of these two, see the choice above
+    SRC=$(ls -1t $B/*/ALL-refs-MINUS-credentials-*.bundle | head -1)   # ships anywhere
+    # SRC=$(ls -1t $B/*/ALL-refs-[0-9]*.bundle | head -1)              # private+encrypted only
+
+    cp "$SRC" /Volumes/<NAME>/
+    # the refresh logged this file's sha256 when it made it; compare, do not retype
+    grep "$(basename "$SRC")" $B/refresh_log.tsv | cut -f5
+    shasum -a 256 "/Volumes/<NAME>/$(basename "$SRC")" | cut -d' ' -f1
+    # the two lines above MUST match
+
+    git clone --mirror "/Volumes/<NAME>/$(basename "$SRC")" /tmp/restore-check
+    git -C /tmp/restore-check for-each-ref refs/heads | wc -l
+    # MINUS-credentials prints one FEWER branch than the full bundle; that
+    # difference is the check that the exclusion held.
 
 `cp` exiting 0 is not evidence the bytes landed. If the sha256 differs, delete
 and redo (section 1).
