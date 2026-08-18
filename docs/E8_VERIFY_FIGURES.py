@@ -59,13 +59,26 @@ EXPECTED = {
     "wrl_files": 3,
     "assets_cc0_bytes": 11_205_063,
     "assets_cc0_files": 6,
-    # Measurements EXPECTED to change as the repo grows.
-    "public_branches": 36,
-    "branches_with_14_decks": 36,
-    "branches_with_token_template": 35,
-    "branches_with_secrets_env": 33,
-    "branches_with_flag_doc": 1,
 }
+
+# Per-branch counts are deliberately NOT in EXPECTED. They moved 30 -> 35 -> 36 in
+# three days, and each move cost a sweep of five documents to chase a number that was
+# never the finding. What is actually claimed is an INVARIANT: every public branch
+# carries the full set of decks, however many branches there are. That statement does
+# not go stale when someone pushes a branch, so it is checked as a relation rather
+# than compared to a constant. The counts are still printed, as observations.
+INVARIANTS = [
+    (
+        "every public branch carries all 14 CCSA decks",
+        lambda m: m["branches_with_14_decks"] == m["public_branches"],
+        lambda m: f'{m["branches_with_14_decks"]} of {m["public_branches"]}',
+    ),
+    (
+        "the credential FLAG document is public on exactly one branch",
+        lambda m: m["branches_with_flag_doc"] == 1,
+        lambda m: f'{m["branches_with_flag_doc"]} of {m["public_branches"]}',
+    ),
+]
 
 # CCSA's PUBLISHED SHA384 values, transcribed from the two ccsa.gmu.edu model pages
 # on 2026-08-17. These are external reference constants, not derived state: they are
@@ -129,13 +142,9 @@ LOCATORS = {
     "assets_cc0_files": r"6 files",
 }
 
-EXPECTED_TO_MOVE = {
-    "public_branches",
-    "branches_with_14_decks",
-    "branches_with_token_template",
-    "branches_with_secrets_env",
-    "branches_with_flag_doc",
-}
+# Nothing in EXPECTED is expected to move any more: the values that grow are checked
+# as invariants above instead. Kept so a future figure can be marked as growth.
+EXPECTED_TO_MOVE = set()
 
 
 def repo_root():
@@ -264,6 +273,20 @@ def main():
 
     if show_only:
         return 0
+
+    print()
+    print("Invariants (these do not go stale when a branch is pushed):")
+    for label, test, fmt in INVARIANTS:
+        held = test(m)
+        if not held:
+            failures.append((label, "invariant", fmt(m)))
+        print(f"  [{'ok  ' if held else 'FAIL'}] {label}: {fmt(m)}")
+    print()
+    print("Observed counts (informational, expected to grow, not checked):")
+    for k in ("public_branches", "branches_with_14_decks",
+              "branches_with_token_template", "branches_with_secrets_env",
+              "branches_with_flag_doc"):
+        print(f"        {k:<32} {m[k]}")
 
     print()
     print("Archive integrity, local bytes vs CCSA's published SHA384:")
