@@ -480,7 +480,8 @@ class SphereTank:
 
     def __init__(self, n_grid, lim, depth, h0_over_d=0.1, diameter=D_SPHERE,
                  mass=M_SPHERE, seed=0, device="auto", sdf_res=96,
-                 sdf_band_safety=2.0, free=True, sdf_cache=None, band_mult=1.0):
+                 sdf_band_safety=2.0, free=True, sdf_cache=None, band_mult=1.0,
+                 n_ghost_layers=0):
         from warpmpm.core.solver import GridConfig, Solver
         from warpmpm.materials import newtonian
 
@@ -489,6 +490,7 @@ class SphereTank:
         self.dx = self.lim / self.n_grid
         self.h = self.dx / 2.0
         self.free = bool(free)
+        self.n_ghost_layers = int(n_ghost_layers)
         self.diameter = float(diameter)
         self.radius = 0.5 * self.diameter
         self.depth = float(depth)
@@ -524,9 +526,35 @@ class SphereTank:
         rng = np.random.default_rng(seed)
         span_lo, span_hi = self.WALL, self.lim - self.WALL
         n_lat = int(round((span_hi - span_lo) / self.h))
-        n_z = int(round(self.depth / self.h))
+        # SACRIFICIAL SUB-FLOOR LAYERS, default OFF so nothing changes unless asked.
+        #
+        # The floor leak is a kernel-truncation density deficiency, diagnosed in
+        # docs/R5_PHYSICS_FLOOR_BC_DIAGNOSIS.md: the B-spline half-width is 1.5 dx, so a
+        # near-floor particle has stencil support on nodes BELOW the plane, those nodes
+        # carry no particle mass because no particles exist there, and the resulting
+        # pressure gradient points INTO the boundary.
+        #
+        # The literature remedy is a ghost-particle wall. This engine exposes no way to
+        # freeze particles (no pin/freeze/particle_selection API, and stationary material
+        # 7 is unreachable from set_material_range), so frozen ghosts are impossible from
+        # the scene. But the deficiency is missing MASS, and mass does not have to be
+        # frozen: seeding extra REAL fluid below the nominal floor supplies the same
+        # density support, with the plane moved down to catch it. Those layers are
+        # sacrificial. They may themselves leak; the point is that the water at the
+        # NOMINAL floor is then interior fluid with full stencil support, not a free
+        # surface against a mass-empty half-space.
+        #
+        # Cost is n_ghost * (span/h)^2 extra particles. 3 layers covers 1.5 dx exactly,
+        # since h = dx/2.
+        #
+        # UNTESTED ON GPU. Default 0 preserves every earlier run bit-for-bit, so this
+        # cannot silently change a comparison. Anyone enabling it must re-measure the
+        # surface, because the seeded column changes.
+        n_ghost = int(self.n_ghost_layers)
+        floor_seed = self.FLOOR - n_ghost * self.h
+        n_z = int(round(self.depth / self.h)) + n_ghost
         ax = span_lo + (np.arange(n_lat) + 0.5) * self.h
-        az = self.FLOOR + (np.arange(n_z) + 0.5) * self.h
+        az = floor_seed + (np.arange(n_z) + 0.5) * self.h
         gx, gy, gz = np.meshgrid(ax, ax, az, indexing="ij")
         w = np.stack([gx.ravel(), gy.ravel(), gz.ravel()], axis=1)
         w += rng.uniform(-0.2 * self.h, 0.2 * self.h, size=w.shape)
@@ -630,6 +658,8 @@ class SphereTank:
             "z0_m": self.z0, "free": self.free,
             "n_water": self.n_water, "n_carved": self.n_carved,
             "band_mult": self.band_mult, "band_m": self.band_mult * self.dx,
+            "n_ghost_layers": self.n_ghost_layers,
+            "ghost_depth_m": self.n_ghost_layers * self.h,
             "substeps": self.substeps, "dt_substep_s": self.dt, "dt_tick_s": self.tick,
             "sphere_cells_across": self.diameter / self.dx,
             "depth_over_dx": self.depth / self.dx,
@@ -796,7 +826,8 @@ def run(args):
     tank = SphereTank(n_grid=args.n_grid, lim=args.lim, depth=args.depth,
                       h0_over_d=args.h0_over_d, seed=args.seed, device=args.device,
                       sdf_res=args.sdf_res, free=not args.fixed,
-                      sdf_cache=args.sdf_cache, band_mult=args.band_mult)
+                      sdf_cache=args.sdf_cache, band_mult=args.band_mult,
+                      n_ghost_layers=args.ghost_layers)
     cfg = tank.config()
     cfg["mode"] = "fixed" if args.fixed else "free"
     cfg["seed"] = args.seed
@@ -842,6 +873,10 @@ def main():
     p.add_argument("--fixed", action="store_true",
                    help="pin the sphere and measure the steady reaction (hydrostatic control)")
     p.add_argument("--sdf-res", type=int, default=96)
+    p.add_argument("--ghost-layers", type=int, default=0,
+                   help="sacrificial sub-floor fluid layers against the kernel-truncation "
+                        "density deficiency; 3 covers the 1.5 dx B-spline support. "
+                        "DEFAULT 0 reproduces every earlier run exactly")
     p.add_argument("--band-mult", type=float, default=1.0,
                    help="collider contact band as a multiple of dx; 1.0 is the engine "
                         "default. Sweeping this at FIXED dx is the only test that "
