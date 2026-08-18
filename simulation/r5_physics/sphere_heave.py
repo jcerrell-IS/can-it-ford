@@ -626,7 +626,71 @@ class SphereTank:
         r = np.hypot(x[:, 0] - cx, x[:, 1] - cy)
         far = r > 2.0 * self.radius
         z = x[far, 2] if far.any() else x[:, 2]
-        return float(np.percentile(z, 99.0))
+        # THE h/2 OFFSET, ADDED 2026-08-18. Particle CENTRES sit h/2 below the fill line
+        # of the layer they occupy, so a percentile of particle z under-reads the free
+        # surface by h/2 = dx/4 systematically, at every resolution.
+        #
+        # This is not cosmetic and it is not small. An audit measured that this single
+        # bias accounts for 30.2% (rigorous, h/2 alone) to 66.9% (empirical, using the
+        # measured frame-0 drop) of the 20-point excess difference between g64 and g96,
+        # BECAUSE IT SCALES WITH dx AND SO MIMICS EXACTLY THE RESOLUTION DEPENDENCE THAT
+        # WAS BEING ATTRIBUTED TO THE COLLIDER'S CONTACT BAND. Leaving it in is what made
+        # a fitted band of 0.984/1.068 dx look like the engine's default of 1.0 dx; with
+        # it removed the fit moves to 0.812/0.896 dx. Sensitivity is steep: 1 mm of
+        # surface error is 2.28% of the reported ratio, and h/2 is 4.69 mm at g64.
+        #
+        # Runs before this commit are biased LOW on the surface and therefore HIGH on
+        # fz_over_analytic_measured. Do not pool them with later runs.
+        return float(np.percentile(z, 99.0)) + 0.5 * self.h
+
+    def water_budget(self):
+        """Where the water went: leakage against compaction, separated.
+
+        WHY THIS EXISTS. Job 918043 measured the free surface falling 6.055 cm from the
+        design waterline of FLOOR + depth, monotonically, still falling at the last frame
+        at 19.98 sigma under blocking.stationarity. Compression cannot be the cause: it is
+        a BOUNDED one-time effect. K = rho c^2 = 165000 Pa against a mean hydrostatic
+        pressure rho*g*d/2 = 2448 Pa is a strain of 1.4837 percent, so the column shortens
+        0.7418 cm and then stops. The unexplained fraction therefore GREW from 76.0 percent
+        at the 3.09 cm inferred in 917909 to 87.7 percent at the 6.055 cm measured here,
+        purely because the run got longer.
+
+        The particle COUNT is fixed at load and no particle is created or destroyed, so
+        this is a volume question, not a mass one. Two mechanisms remain, and nothing in
+        the output could tell them apart:
+
+          LEAKAGE   particles pass the floor plane or the wall bands and stop contributing
+                    to the column. n_below_floor and n_outside_walls GROW.
+          COMPACTION the jittered seed lattice settles denser than it was created. Counts
+                    stay flat while occupied_volume_m3 falls.
+
+        occupied_volume_m3 is a voxel-occupancy measure, not a sum of particle volumes:
+        it counts distinct dx-sized cells holding at least one water particle and
+        multiplies by dx^3. A sum of per-particle volumes is CONSTANT by construction here
+        (vol is set once at :516 and never rewritten), so it could not detect compaction.
+        This is the whole point: measure the thing that would move, not a quantity that is
+        fixed by construction and would report success no matter what happened.
+        """
+        x = self.solver.x()[: self.n_water]
+        lo, hi = self.WALL, self.lim - self.WALL
+        below = int(np.count_nonzero(x[:, 2] < self.FLOOR))
+        outside = int(np.count_nonzero(
+            (x[:, 0] < lo) | (x[:, 0] > hi) | (x[:, 1] < lo) | (x[:, 1] > hi)))
+        # Voxel occupancy at the grid scale. Integer-floor into dx cells, then count
+        # distinct triples. np.unique on a packed int64 key is far cheaper than axis=0.
+        idx = np.floor(x / self.dx).astype(np.int64)
+        idx -= idx.min(axis=0)
+        span = idx.max(axis=0) + 1
+        key = (idx[:, 0] * span[1] + idx[:, 1]) * span[2] + idx[:, 2]
+        occupied = int(np.unique(key).size)
+        return {
+            "n_below_floor": below,
+            "n_outside_walls": outside,
+            "water_z_min_m": float(x[:, 2].min()),
+            "water_z_max_m": float(x[:, 2].max()),
+            "occupied_cells": occupied,
+            "occupied_volume_m3": occupied * self.dx ** 3,
+        }
 
     def buoyancy_at(self, surface_z):
         """Analytic buoyancy for the sphere's CURRENT pose against a GIVEN surface."""
@@ -676,6 +740,10 @@ class SphereTank:
             "submerged_depth_m": sub,
             "submerged_cap_m3": cap,
             "analytic_buoyancy_at_measured_surface_N": fb_meas,
+            # Separates leakage from compaction as the cause of the falling surface.
+            # See water_budget(): counts grow under leakage, occupied volume falls under
+            # compaction, and the two are independent so one run distinguishes them.
+            **self.water_budget(),
             "fz_over_analytic_measured": (fz / fb_meas) if fb_meas > 0 else float("nan"),
             "fz_over_analytic_nominal": fz / (RHO_W_BENCHMARK * G_ENGINE
                                               * (2.0 / 3.0 * math.pi * self.radius ** 3)),
