@@ -160,8 +160,13 @@ not by file read from the Mac, see the item for its evidence path.
    this wrapper's own hardcoded value. sim_standing.py:127 calls
    set_material(newtonian(...)) and newtonian() carries no g key to
    override it. All 17 gated runs ran at exactly 9.81 m/s^2.
-   gates_all_runs.py:12 (G=9.81) matches; failure_modes.py:14
-   (G=9.80665) is a 0.034 percent fork, numerically immaterial.
+   gates_all_runs.py:12 (G=9.81) matches. failure_modes.py:14 was ALSO
+   unified to 9.81 by commit e495b56 on 2026-08-12, so the 0.034 percent
+   post-processing fork this line used to record is CLOSED. Corrected
+   2026-08-18. The only surviving 9.80665 is
+   analysis/viability_dashboard_scaffold.py:11, where G is assigned and
+   never read anywhere in that file, so it is dead code and cannot reach
+   a verdict.
 
 4. inertia_kg_m2, cg_height_m and ssf in vehicle_params.py never reach the
    solver. Only mass does, via vehicle_density = vehicle_mass /
@@ -373,21 +378,33 @@ not by file read from the Mac, see the item for its evidence path.
     into a distance and change SLIDE verdicts, which are the 16 of 17
     published outcomes. Deduplicate by NAME and UNIT, never by value.
 
-14. EXT_REF at gates.py:12 differs from bbox_m at vehicle_params.py:89
+14. EXT_REF at gates.py:12 differs from bbox_m at vehicle_params.py:131
     by 3.3 percent in height and 2.7 percent in width, both larger than
-    gate G-1's own 2 percent tolerance.
+    gate G-1's own 2 percent tolerance. LINE NUMBER CORRECTED 2026-08-18
+    from :89, which is docstring prose and does not contain the value.
+    Both percentages were re-derived live the same day and both still
+    hold, so the citation was wrong, not the finding.
 
 15. PARTLY WITHDRAWN 2026-08-07. This item used to read "Gravity is
     UNKNOWN in the solver but 9.81 is assumed in post-processing. State
     both separately, never merge them." The UNKNOWN half is withdrawn:
     the solver value is 9.81 and is not in question, see item 3 and
     register A2 for the primary source.
-    The OTHER half was NOT stale and is retained: post-processing is
-    forked. 9.80665 at simulation/failure_modes.py:14 and
+    The OTHER half was retained until 2026-08-18 and is now itself
+    WITHDRAWN. It read: "post-processing is forked. 9.80665 at
+    simulation/failure_modes.py:14 and
     analysis/viability_dashboard_scaffold.py:11, against 9.81 at five
     sites including gates_all_runs.py:12. TWO sites at 9.80665, not
-    one. Full inventory and the reason this nearly vanished is
-    register A6. The original withdrawal note pointed at register A2
+    one." That was true when written and is now FALSE on both halves.
+    Measured live 2026-08-18: failure_modes.py:14 reads G = 9.81,
+    unified by e495b56, so exactly ONE 9.80665 site survives,
+    analysis/viability_dashboard_scaffold.py:11, where G is assigned and
+    never read. It is dead code and cannot reach a verdict. The "five
+    9.81 sites" figure is stale too: a /usr/bin/grep for 9.81
+    assignments in tracked Python, excluding third_party/,
+    .claude/worktrees/, archive/ and __pycache__/, returns 14. State the
+    scope with any such count, per item 13's rule.
+    Full inventory and the reason this nearly vanished is register A6. The original withdrawal note pointed at register A2
     for these constants and A2 did not contain them; that dangling
     pointer is why A6 exists. Because the classifier has now run on all
     17 runs, 9.80665 fed the published verdicts, so this fork is live,
@@ -401,10 +418,25 @@ not by file read from the Mac, see the item for its evidence path.
     (surge_accel_g) and :174 (weight_n), and the classifier HAS since
     been run on all 17 runs (item 12, register D6 and D6b), so 9.80665
     fed the published 16 SLIDE / 1 STUCK verdicts. The fork is 0.034
-    percent and no verdict is known to turn on it, but that has NOT
-    been tested. To close: set failure_modes.py:14 to 9.81, re-run
-    analysis/classify_failure_modes.py, and confirm the verdicts are
-    byte-identical. Do not close it by assertion.
+    percent and no verdict is known to turn on it.
+    CLOSED 2026-08-18, and not by assertion. Commit e495b56 on
+    2026-08-12 set failure_modes.py:14 to 9.81 and regenerated
+    data/failure_modes_by_run.json and
+    data/failure_modes_by_run_classified.csv in the same commit. That
+    CSV was re-counted live on 2026-08-18 and still reads 16 SLIDE /
+    1 STUCK across 17 rows. That count is THRESHOLD-DEPENDENT and must
+    never be quoted bare: it rests on failure_modes.py slide_m=0.05 m,
+    slide_speed_ms=0.05 m/s and float_m=0.05 m, which are three literals
+    sharing one numeral across two units, exactly the trap item 13
+    records. analysis/probabilistic_verdict.py exists because a single
+    deterministic cut is not defensible, and its own docstring cites the
+    published finding that vehicle stability thresholds "vary over a
+    relatively wide range". Quote the thresholds with the count. NOTE the close-out as originally written
+    asked for byte-identical artifacts, and that is NOT what happened:
+    e495b56 changed 34 lines of the CSV and 104 of the JSON, and its own
+    message records "the one figure that moved". The VERDICTS are
+    unchanged; the figures are not. Do not write that the artifacts came
+    back byte-identical.
 
 16. gates.py:16-31 forks the AR&R table and L1_verdict instead of
     importing from vehicle_params, while gates_all_runs.py:10 and
