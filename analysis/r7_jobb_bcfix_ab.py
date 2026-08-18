@@ -21,19 +21,27 @@ So there are three graded outcomes and this script names which one fired:
     OVERTURNED   leak vanishes, the mass-deficiency story was wrong
 
 THE ACCESSOR. `fz_over_analytic_measured`. The designation is a source comment reading
-"is the number job B should actually be graded on". It is at sphere_heave.py:804-805
-(the field itself at :818) on branch claude/r5-physics, NOT at :669-670 as the round-7
-handoff and task text both state. Verified live 2026-08-18 by
-`/usr/bin/grep -n fz_over_analytic_measured`; the line numbers had drifted.
+"is the number job B should actually be graded on", at sphere_heave.py:804-805, with the
+quoted "a falling free surface no longer masquerades" sentence at :806-807 and the field
+itself at :818, on branch claude/r5-physics. NOT at :669-670 as the round-7 handoff and task
+text both state: :669 is "mach_peak" and measure_surface begins at :676. Verified live
+2026-08-18; the line numbers had drifted.
 
 BANDS, from R5_PHYSICS_BATCH_MANIFEST.md criterion 3: within 10 percent PASS, 10 to 25
 REPORTABLE PARTIAL, beyond 25 FAIL. "These bands are set now and will not be moved."
 
-DO NOT REPORT NOT GRADEABLE. grade_job_b.py refuses the series for non-stationarity, but
-manifest criterion 5 says in terms that a NOT-STATIONARY verdict here is "expected, not
-disqualifying", and requires it be REPORTED with its drift ratio rather than used to
-refuse a grade. This script therefore always produces a band verdict and reports
-stationarity beside it as context.
+DO NOT REPORT NOT GRADEABLE. grade_job_b.py sets its TOP-LEVEL `band` key to NOT GRADEABLE
+by refusing fz_N for non-stationarity, but manifest criterion 5 says in terms that a
+NOT-STATIONARY verdict here is "expected, not disqualifying". This script therefore always
+produces a band verdict and reports stationarity beside it as context.
+
+CORRECTED 2026-08-18, and an earlier version of this docstring implied otherwise: grade_job_b.py
+DOES compute and band the designated accessor. It emits it on the refusal path, under
+`measured_surface_criterion`, with the same FAIL and the same +50.06 / +34.35 percent this
+script produces. grade_job_b.py:199-205 records that defect as already found and already fixed
+("It is emitted on the refusal path too now."). The remaining defect is narrow: only the
+TOP-LEVEL band key is nominal-derived, so a machine reading `band` misses the FAIL. Do not
+repeat the claim that this tool never reaches the designated accessor; run it instead.
 
 Needs numpy. No system python on this Mac has it:
     /opt/homebrew/bin/uv run --with numpy python3 analysis/r7_jobb_bcfix_ab.py \\
