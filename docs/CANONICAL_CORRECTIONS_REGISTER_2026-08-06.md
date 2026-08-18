@@ -1764,9 +1764,12 @@ L7. **SKILL DRIFT, RE-VERIFIED, and the previously recorded drift is FIXED.** Fi
     "LS6 may carry work comparable to Vista's". It licenses nothing about whether
     either machine's answer is right.
 
-    **SCOPE.** 90 frames only. Whether the divergence grows with record length is
-    UNTESTED; do not extrapolate to the 200 to 300 frame runs, where it would have to
-    grow by more than 15x to reach the RUM95 on that same slope.
+    **SCOPE.** 90 frames only. **ANSWERED BY ITEM 39, and the answer is that it does
+    grow: superlinearly, roughly as frames^2.8, and at 300 frames FIVE of the 17
+    integer counts stop matching.** Never quote "17 of 17 identical" without "at 90
+    frames" attached. It remains 265x inside the RUM95 band at these record lengths,
+    so no verdict is threatened, but the exactness claim is record-length-specific and
+    this item as first written did not say so.
 
 36. **HOW COMPUTATIONAL SCIENTISTS ACTUALLY AUDIT WORK LIKE THIS, AND WHAT IT SAYS
     ABOUT RESULTS THIS PROJECT ALREADY HOLDS.** T2, Undermind deep search
@@ -2051,7 +2054,7 @@ L7. **SKILL DRIFT, RE-VERIFIED, and the previously recorded drift is FIXED.** Fi
     was lost: `analysis/summary_compare.py` surfaced it only because that tool
     refuses to skip non-numeric fields.
 
-39. **THE MANUFACTURED-SOLUTIONS TIER IS BLOCKED BY EXACTLY ONE MISSING API, AND THE
+41. **THE MANUFACTURED-SOLUTIONS TIER IS BLOCKED BY EXACTLY ONE MISSING API, AND THE
     FIX IS ONE KERNEL.** T1, read live 2026-08-18 against
     `third_party/mpm-engine-544c93dd-solver-core/`, plus T2 from Negi and
     Ramachandran 2021 `10.1063/5.0072383` read from the arXiv v2 full text.
