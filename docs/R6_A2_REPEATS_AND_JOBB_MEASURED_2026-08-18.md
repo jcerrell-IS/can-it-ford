@@ -182,6 +182,37 @@ integer being right, and nothing in the project says why it is 3.
 This does not overturn J15, it sharpens it: J15 said the margin closes with refinement and
 asked for g128. The answer is that it closes **to zero**.
 
+### 2a-quater. The complete series, N=5 at every grid
+
+**Jobs 918247 to 918250**, five repeats of `g96_m2337`'s configuration at each of four grids,
+90 frames, canonical driver, job-id-keyed paths. All 20 `metrics.csv` bit-distinct.
+
+| grid | verdict | joint frames | margin | published single draw (a6a707c) |
+|---|---|---|---|---|
+| g48 | 5 SLIDE | 11, 11, 11, 11, 11 | 8, 8, 8, 8, 8 | 8 |
+| g64 | 5 SLIDE | 9, 9, 9, **10**, 9 | 6, 6, 6, **7**, 6 | **7** |
+| g96 | 5 SLIDE | 3, **4**, 3, **4**, 3 | 0, **1**, 0, **1**, 0 | **1** |
+| g128 | 5 SLIDE | 3, 3, 3, 3, 3 | 0, 0, 0, 0, 0 | 0 (their own data) |
+
+**The verdict is robust and the margin is not.** SLIDE in 20 of 20. But the published series
+8, 7, 1 is three single draws, and **two of the three are the MINORITY value**: g64 gives 7
+in 1 of 5 (mode 6), and g96 gives 1 in 2 of 5 (mode 0). Only g48 has zero spread.
+
+**`sustain_frames` sensitivity, and it is entirely a fine-grid problem:**
+
+| grid | sf=3, published | sf=4 | sf=5 |
+|---|---|---|---|
+| g48 | 5S / 0K | 5S / 0K | 5S / 0K |
+| g64 | 5S / 0K | 5S / 0K | 5S / 0K |
+| g96 | 5S / 0K | 2S / **3K** | 0S / **5K** |
+| **g128** | 5S / 0K | **0S / 5K** | 0S / 5K |
+
+At g48 and g64 the verdict is completely insensitive to the threshold. At g128 a
+**one-integer change to a value with no provenance flips all five runs**. So the exposure
+is not uniform across the study: it is concentrated exactly where the refinement argument
+lives. Any claim that the verdict survives refinement must state `sustain_frames` alongside
+it, because at the finest grid that integer IS the verdict.
+
 ### 2a. What this does NOT overturn
 
 J15's refinement trend survives. The `m2337` series collapses 11 to 10 to 4 across g48/g64/g96,
@@ -465,6 +496,41 @@ wall bands, not surface-derived quantities.
 **Open, and now sharply posed:** does the leak fraction fall when the walls move away at held
 dx? Job `918251` runs the same scene at `lim` 2.2 / `n_grid` 117 (dx 0.018803 against
 0.018750, so dx is held and only the domain grows) to answer exactly that.
+
+### 4d-ter. Domain-size control: two mechanisms separated, and the FAIL survives
+
+**Job 918251**, the same scene at `lim` 2.2 / `n_grid` 117 (dx 0.018803 against 0.018750, so
+dx is held to 0.28 percent and only the domain grows), 4x the water plan area, 2,396,211
+particles against 598,505. COMPLETED 00:08:22, rc=0.
+
+| quantity at the last frame | lim 1.2, 1.0 m2 | lim 2.2, 4.0 m2 | ratio | predicted |
+|---|---|---|---|---|
+| `n_below_floor` | 4.505 % | 3.796 % | 1.19 | **1.00** if area-distributed |
+| `n_outside_walls` | 2.410 % | **1.231 %** | **1.96** | **2.00** if perimeter-driven |
+| combined leak | 6.915 % | 5.026 % | 1.38 | |
+| surface drop | 5.587 cm | 4.125 cm | 1.35 | |
+| `fz_over_analytic_measured` | 1.4790 | 1.4654 | **1.01** | |
+
+**The wall leak is a boundary artifact, quantitatively.** For a square of side L the
+perimeter-to-area ratio is 4L / L^2 = 4/L, so doubling L must HALVE a perimeter-driven leak
+fraction. Measured 1.96 against a predicted 2.00, agreement to 2 percent. That is a
+prediction made from geometry before the run and matched by it, not a curve fitted after.
+
+**The floor leak is NOT.** The floor area scales WITH the domain, so an area-distributed
+floor loss should give a fraction independent of L, ratio 1.00. Measured 1.19. It barely
+moves, which is the signature of a loss spread over the whole floor rather than concentrated
+at an edge. So the two leaks in section 4d-bis are two DIFFERENT mechanisms and should never
+be quoted as one number again.
+
+**THE HEADLINE: Job B's FAIL is not a bounded-domain artifact.** Quadrupling the plan area
+moves the graded ratio by 1 percent, 1.4790 to 1.4654. The most obvious alternative
+explanation for a +48 percent overshoot, that the tank is too small, is **refuted by direct
+measurement**. Whatever is wrong is not the domain.
+
+This also sharpens what the other session's B3 result does and does not transfer. `be1b138`
+measured a closed box manufacturing false free-surface slope in a CHANNEL, and that IS a
+boundary effect. The wall component here behaves the same way. But the dominant term in this
+scene is the floor, and it does not scale like a boundary at all.
 
 ### 4e. One hypothesis tested and largely refuted, by reading the code
 
