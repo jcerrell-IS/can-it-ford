@@ -26,9 +26,26 @@ the paper.
 - **Why I stopped**: the Elsevier landing page carries `tdm-reservation: 1`, a
   machine-readable opt-out from automated retrieval. Going further would be
   circumventing a stated access control.
-- **UNBLOCK**: open `https://doi.org/10.1016/j.rineng.2025.107527` in a browser.
-  About one minute. It is CC-BY once open. Report whether any numeric value
-  changed.
+- **UNBLOCK, REVISED 2026-08-19 (unit 70).** My original advice, "open it in a
+  browser, about one minute", is **no longer good advice**: D4 reports at
+  `451b0ce` that the browser route was attempted and **the extension is down,
+  with no mirror to fall back on**.
+- **The route that actually worked on the sibling paper is a HUMAN-SUPPLIED PDF.**
+  D4 obtained the *original* (`10.1016/j.rineng.2025.107189`) from a supplied PDF
+  and recorded its sha256, then read section 3.3 directly. **So the realistic
+  unblock for the corrigendum is to ask Josie to download it**, not to automate
+  anything.
+- **INDEPENDENTLY CONFIRMED STILL OPEN.** D4's
+  `docs/R5_PHYSICS_NIHEI_2025_BRAKE_GROUNDING.md:83-84` (branch
+  `claude/r5-physics`, commit `80a5ea4`) states: "this is the ORIGINAL. The
+  **corrigendum** (doi:10.1016/j.rineng.2025.107527) is still unfetched, and until
+  it is read none of the..." **Two sessions, independent attempts, same wall.**
+- **What D4 got from the original, which raises the value of the corrigendum:**
+  critical sliding velocity at h = 0.30 m, the project's exact canonical depth, is
+  **0.97 m/s handbrake OFF and 3.42 m/s ON**; washaway at h = 0.289 m / 1.10 m/s
+  and h = 0.294 m / 1.06 m/s. **The rolling-resistance figures 0.0250 and 0.0242
+  that FLAG-1 calls provisional are load-bearing in that analysis**, so a numeric
+  change in the corrigendum would propagate.
 
 ## FLAG-2. Three closed-access full texts
 
