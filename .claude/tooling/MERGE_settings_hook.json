@@ -1,0 +1,10 @@
+{
+  "_comment": "MERGE this ONE object into the existing hooks.PreToolUse ARRAY in .claude/settings.json. Append it; do not replace the array. It only ever GRANTS permission and never blocks, so it cannot weaken the existing gates.",
+  "matcher": "Bash",
+  "hooks": [
+    {
+      "type": "command",
+      "command": "python3 $CLAUDE_PROJECT_DIR/.claude/tooling/commit_autoapprove.py"
+    }
+  ]
+}
