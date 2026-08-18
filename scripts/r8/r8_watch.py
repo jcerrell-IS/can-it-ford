@@ -174,7 +174,13 @@ def session_view(row, sid):
         v["mtime"] = os.path.getmtime(tp)
     except OSError:
         v["mtime"] = 0
-    v["pending_tool"] = pending
+    # pending_tool goes stale: if a session abandons a tool call (a refusal, an
+    # error, a size guard) the transcript's last event is a tool_use with no
+    # result, and the flag then pins the session as busy forever. Measured
+    # 2026-08-18 22:19: d3-force sat at an empty prompt with no spinner for six
+    # minutes while the detector reported idle=False. So the flag only holds for
+    # a bounded window; past that the pane check is the authority.
+    v["pending_tool"] = pending and (time.time() - os.path.getmtime(tp) < 300)
     return v
 
 
