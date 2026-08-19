@@ -260,6 +260,45 @@ def offline(dirpath: str) -> None:
     print("  band-sweep arms, and per job B result section 13.1 an experiment that holds")
     print("  dx fixed has no power over a dx-scaling rival. The honest comparison is the")
     print("  band_mult = 1.0 subset, and there the two models are near-degenerate.")
+    # --- how demanding is E1, given a ceiling that already exists in the payloads? ------
+    # water_z_max_m is the single highest water particle anywhere, INCLUDING the annulus the
+    # estimator discards. It is therefore a hard CEILING on any near-field surface: a 99th
+    # percentile over a subpopulation cannot exceed the population maximum. It is an
+    # EXTREMAL quantity, so per CLAUDE.md it is used only as a bound here, never for a
+    # trend and never for a convergence claim.
+    ceil = []
+    for f in sorted(glob.glob(os.path.join(dirpath, "**", "*.json"), recursive=True)):
+        try:
+            p = json.loads(Path(f).read_text())
+        except (ValueError, OSError):
+            continue
+        rows = p.get("rows", [])
+        if not rows or "water_z_max_m" not in rows[-1] or "surface_z_measured_m" not in rows[-1]:
+            continue
+        cfg = p["config"]
+        if cfg.get("mode") != "fixed" or float(cfg.get("band_mult", 1.0)) != 1.0:
+            continue
+        w = rows[-50:]
+        gap = st.mean(x["water_z_max_m"] - x["surface_z_measured_m"] for x in w)
+        ceil.append((os.path.relpath(f, dirpath), cfg["n_grid"], cfg["dx_m"], gap))
+    if ceil:
+        print("\n=== HOW DEMANDING IS E1? a ceiling that already exists in the payloads ===")
+        print("water_z_max is the single highest particle ANYWHERE, so the near-field 99th")
+        print("percentile cannot exceed it. EXTREMAL: a bound only, never a trend.\n")
+        hdr2 = (f"{'run':42s} {'n_grid':>6} {'E1 needs':>9} {'ceiling':>9} "
+                f"{'needs/ceiling':>14}")
+        print(hdr2)
+        print("-" * len(hdr2))
+        for name, n_grid, dx, gap in ceil:
+            need = SURF_OFFSET_FITTED_DX * dx
+            flag = "  IMPOSSIBLE" if need > gap else ""
+            print(f"{name:42s} {n_grid:6d} {need*1000:8.2f}mm {gap*1000:8.2f}mm "
+                  f"{need/gap:14.2f}{flag}")
+        print("\nE1 is not ruled out by this ceiling, but it requires the annulus 99th")
+        print("percentile to reach that fraction of the way to the tank's highest single")
+        print("particle, which is a flat elevated shelf and not a splash. The run measures")
+        print("the percentile directly, so this bound is superseded the moment it lands.")
+
     print("\nPRE-REGISTERED, fixed before the run, from --run's near-field surface:")
     print(f"  E1 (estimator) is supported if ratio_nearfield < {PREDICT_E1_RATIO_BELOW}")
     print(f"  E3 (contact band) is supported if ratio_nearfield > {PREDICT_E3_RATIO_ABOVE}")
