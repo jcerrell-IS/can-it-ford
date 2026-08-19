@@ -1886,6 +1886,27 @@ def main() -> int:
             f"{_no_abs} of {len(pool)} searched records have NO abstract and were "
             f"matched on title and authors only. A paraphrase will miss. Do not "
             f"read 0 matches as absence without a second route.]\n")
+        # A ZERO IS THE DANGEROUS RESULT, SO SAY SO AT THE MOMENT IT HAPPENS.
+        # Three separate sessions have read a zero from this flag as evidence
+        # the corpus lacks a paper, most recently on 2026-08-20, when all six
+        # of the prior-art DOIs it was taken to rule out were in fact present.
+        # A caveat in a skill file is read once; this prints exactly when the
+        # mistake is about to be made.
+        if not sel:
+            print("0 matches. THIS IS NOT AN ABSENCE CLAIM.")
+            print("  --query never matches a DOI, a journal or a method tag,")
+            print("  and on any ref older than 2026-08-19 it never matched an")
+            print("  author either, which is how three sessions concluded this")
+            print("  corpus lacked its own prior art while it held all six DOIs.")
+            print("  Before writing that the corpus lacks a work:")
+            print("    python3 analysis/research_index.py --doi 10.xxxx/yyyy")
+            print("    python3 analysis/research_index.py --identifier-audit")
+            print("    python3 analysis/research_index.py --source-audit")
+            print("  The last one exits 1 while any completed deep search "
+                  "reaches the corpus by no route,")
+            print("  and 13 of 21 do, so this index is not the project's "
+                  "research and a miss here proves nothing.")
+            return 0
     if a.doi:
         d = a.doi.lower().strip()
         sel = [r for r in sel if r["doi"] == d or d in r["doi"]]

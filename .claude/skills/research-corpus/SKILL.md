@@ -23,6 +23,38 @@ description: Query the project's own external research index (332 records, 319 d
 > against records that carry no DOI. Before you write "the corpus has nothing on
 > X", say which predicate you used and whether it COULD have returned a hit.
 > This applies to your own numbers, not only to numbers you are checking.
+>
+> **A MISS IS NOT AN ABSENCE, AND HERE IS THE WORKED EXAMPLE THAT HAS NOW FOOLED
+> THREE READERS.** `--query "Al-Qadami"` returns **0**. Three separate sessions
+> have taken that zero as evidence the corpus is silent on this project's
+> closest prior art, and the third escalated it to "the index cannot answer
+> questions about its own prior art". **Measured live 2026-08-20, all six of the
+> closest prior-art DOIs are PRESENT, 6 of 6:**
+>
+> ```
+> 10.1111/jfr3.12828              Al-Qadami 2022, numerical moving vehicle
+> 10.1007/s11069-021-04949-6      Al-Qadami 2021, full-scale experimental
+> 10.3390/su151713262             Al-Qadami 2023, 3D CFD
+> 10.1111/jfr3.12527              Smith, Modra and Felder 2019
+> 10.1115/DETC2015-47142          Wasfy 2015
+> 10.4271/2003-01-0966            Allen 2003
+> ```
+>
+> Five records carry Al-Qadami in `authors`. The zero is **structurally
+> guaranteed**, not measured: on `claude/add-ci-checks` and every other ref,
+> `--query` matches `title` and `abstract` only and never `authors`. **The index
+> CAN answer by DOI and CANNOT answer by author, and the conclusion drawn from
+> the zero was the exact opposite of the truth.** Check a DOI before reporting
+> that the corpus lacks a paper.
+
+> **DO NOT QUOTE A COUNT FROM THIS FILE. RUN THE CHECK.** Every number here is a
+> snapshot and this file has been wrong three times in two days by standing
+> still while the world moved: the deep-search total went 19, 20, 21 within
+> about thirty hours, and two write-ups that were correct when committed were
+> stale within five. A constant cannot notice the twenty-second search; a check
+> can. `--source-audit` re-derives the list, prints the connector call that
+> proves it, and **exits 1** when a completed search reaches the corpus by no
+> route. Wire that into preflight and quote its output, not this paragraph.
 
 This project's index holds **332 records** across eight Undermind deep-research
 reports, 37 Claude artifacts, five Perplexity reports and two Elicit extracts.
@@ -171,8 +203,24 @@ tracked tree only, **`.claude/worktrees/` excluded**, bibliography read at
 | **3** | are `\cite`d, so they **print in the reference list** | census against the 14 distinct cite keys |
 
 **"REACH" IS NOT "CITED", AND THIS FILE USED TO SAY IT WAS.** Corrected
-2026-08-19. This section previously read "43 of the 332 reach a reader-facing
-document, and **256 are cited nowhere at all**". That clause is **WITHDRAWN**. It
+2026-08-19.
+
+> WITHDRAWN QUOTE, DO NOT CITE THE NEXT LINE AS THIS FILE'S CLAIM. It is
+> reproduced only so the retraction is findable by anyone who met the old
+> wording elsewhere:
+>
+> ~~"43 of the 332 reach a reader-facing document, and 256 are cited nowhere at
+> all"~~
+
+A cross-session reader grepped this file for that string on 2026-08-20, hit the
+two occurrences inside this retraction, and filed the skill as still asserting
+it. **It does not, and has not since 2026-08-19.** The lesson is not that the
+reader was careless: a retraction that quotes its own retracted text in bold is
+indistinguishable from an assertion in a grep hit or a three-line excerpt.
+Hence the marker above. **If you are checking whether a document still makes a
+claim, read the surrounding sentence, not the matching line.**
+
+Why the clause was withdrawn: it
 took the complement of *reach* and reported it as *cited*, which is a different
 predicate measured a different way. The arithmetic is **332 - 76 = 256**, so the
 number is the complement of the **76** rung, DOI-string-appears-anywhere, and it
@@ -271,9 +319,20 @@ carry Al-Qadami in `authors`, including `10.1111/jfr3.12828`, the moving
 full-scale vehicle paper this project's own prior-art section cites. A
 coordinating session used that zero as evidence the corpus was silent on the
 project's closest prior art. It was not: 4 of the 6 flood-vehicle DOIs in that
-check were present. **Fixed**, `--query` now searches authors too. If you are
-reading an older checkout, search the authors field directly before concluding
-absence.
+check were present. **Fixed on `claude/r9-corpus-bib` ONLY, and that fix is
+UNMERGED.** Name the ref before you trust a query:
+
+| ref | `--query` searches | `--query "Al-Qadami"` |
+|---|---|---|
+| `origin/main` | the tool does not exist there at all | n/a |
+| `claude/add-ci-checks` (the main checkout) | title + abstract | **0**, structurally |
+| `claude/r9-corpus-bib` | title + abstract + authors | 5 |
+
+**So the zero is REAL on the checkout most sessions are using, and it will keep
+being real until this branch merges.** That is why a third session hit it on
+2026-08-20. On this branch a zero result now prints its own warning naming the
+DOI route; on the others nothing warns you. Search the `authors` field directly,
+or check a DOI, before concluding absence.
 
 **2. `--query` is a LITERAL SUBSTRING match, and for a third of the corpus it is
 title-only.** It does not stem and does not survive a paraphrase. **110 of the
