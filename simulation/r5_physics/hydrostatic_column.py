@@ -70,6 +70,34 @@ BAND_PASS = 0.05
 BAND_PARTIAL = 0.15
 EXPECTED_COMPRESSIBLE_EXCESS = 0.01632   # see module docstring
 
+# GATES ADDED 2026-08-19 AFTER JOB 922619, WHICH THIS CRITERION GRADED WRONG TWICE.
+#
+# Run 922619 printed "PASS" at a mean of -0.73 percent against a 5 percent band while the
+# graded window spanned 113.3 points at g64 and 60.2 at g96. The first version of this
+# criterion named a quantity, a denominator, a window and a band and NO uncertainty
+# treatment at all, which is the same structural hole as the criterion it was written to
+# investigate: criterion 3 named a denominator and no window.
+#
+# I then over-corrected and called the run NOT GRADEABLE on the raw standard deviation.
+# That was also wrong. THE PROJECT ALREADY HAS THE RIGHT TOOL AND CRITERION 3 ALREADY
+# MANDATES IT: blocking.blocked_se, "a blocked standard error from blocking.py, not a raw
+# standard deviation" (manifest criterion 3). The scatter here is zero-mean acoustic
+# ringing, not drift: measured tau_int is 1.78 frames at g64 and 2.51 at g96, against an
+# acoustic round trip of 2H/c = 4.895 frames at c = sqrt(K/rho) = 12.2585 m/s. A mean over
+# many ringing periods is an unbiased estimator and blocking is exactly how its error bar
+# is computed. Raw std is the wrong statistic and rejecting on it was an error.
+#
+# THE GATE, and it is the direct analogue of criterion 3's window-robustness gate: the
+# verdict must not change within +/- 1 BLOCKED standard error. If mean-SE and mean+SE fall
+# in different bands the run is NOT GRADEABLE ON PRECISION and that is reported, never
+# resolved by quoting the point estimate alone.
+#
+# SECOND GATE, on the shape rather than the slope, because a correct gradient can still sit
+# on a bent profile: the maximum residual of the linear fit must stay inside the curvature
+# budget set by the EOS self-compression, 3.2641 percent of the fitted pressure span.
+GATE_VERDICT_STABLE_WITHIN_1_BLOCKED_SE = True
+CURVATURE_BUDGET_FRAC = 0.032641
+
 
 def substeps_and_dt(dx, c=None):
     """Same acoustic CFL rule sphere_heave.py uses, reproduced for independence."""
@@ -194,7 +222,53 @@ def run(a):
 
     tail = rows[len(rows) // 2:]
     rel = np.array([r["dpdz_rel_error"] for r in tail], float)
+
+    # Blocked SE via the project's own machinery, which criterion 3 mandates and the first
+    # version of this file did not use. Optional import so the script still runs standalone.
+    try:
+        import blocking
+        b = blocking.blocked_se(rel)
+        se = float(b["se_blocked"])
+        st = blocking.stationarity(rel, n_sigma=3.0)
+        blk = {"se_blocked": se, "se_naive": float(b["se_naive"]),
+               "inflation_vs_naive": float(b["inflation_vs_naive"]),
+               "tau_int_frames": float(b["tau_int_frames"]),
+               "converged": bool(b["converged"]),
+               "stationary_3sigma": bool(st.get("stationary", False))}
+    except Exception as exc:                                   # pragma: no cover
+        se, blk = float("nan"), {"blocking_unavailable": repr(exc)}
+
+    m = float(rel.mean())
+    lo_band, hi_band = band_of(m - se), band_of(m + se)
+    gradeable = (lo_band == hi_band) if np.isfinite(se) else False
+
+    # curvature limb, on the window-averaged profile
+    nb = len(tail[0]["bin_z_m"])
+    Z = np.array([r["bin_z_m"] for r in tail if len(r["bin_z_m"]) == nb], float)
+    P = np.array([r["bin_p_Pa"] for r in tail if len(r["bin_p_Pa"]) == nb], float)
+    curv = {}
+    if len(Z) and nb > 8:
+        zm, pm = Z.mean(0), P.mean(0)
+        i = slice(2, -2)
+        sl, ic = np.polyfit(zm[i], pm[i], 1)
+        resid = pm[i] - (sl * zm[i] + ic)
+        span = float(pm[i].max() - pm[i].min())
+        budget = CURVATURE_BUDGET_FRAC * span
+        curv = {"profile_dpdz_Pa_per_m": float(sl),
+                "resid_rms_Pa": float(resid.std()),
+                "resid_max_abs_Pa": float(np.abs(resid).max()),
+                "pressure_span_Pa": span, "curvature_budget_Pa": float(budget),
+                "within_budget": bool(np.abs(resid).max() <= budget)}
+
     verdict = {
+        "blocked": blk,
+        "blocked_se_pct": se * 100.0 if np.isfinite(se) else None,
+        "band_at_minus_1se": lo_band, "band_at_plus_1se": hi_band,
+        "gradeable_on_precision": gradeable,
+        "not_gradeable_reason": None if gradeable else (
+            "the band is not the same at mean-1SE and mean+1SE, so the verdict is not "
+            "stable within one blocked standard error"),
+        "curvature": curv,
         "window": "last 50 percent of frames",
         "n_frames_in_window": len(tail),
         "mean_dpdz_Pa_per_m": float(np.mean([r["fit_dpdz_Pa_per_m"] for r in tail])),
