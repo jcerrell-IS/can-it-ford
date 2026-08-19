@@ -59,7 +59,7 @@ import os
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from stationarity import analyze  # noqa: E402
+from stationarity import analyze, effective_sample_size  # noqa: E402
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -344,6 +344,259 @@ def verdict_sensitivity(runs: list[tuple[str, str]]) -> int:
         print("    none below 2.0 m/s")
     return 0
 
+
+# ---------------------------------------------------------------------------
+# THE ASYMMETRIC RULE, QUANTIFIED ON BOTH SIDES
+#
+#   FULL RECORD for a verdict.
+#   DEMONSTRATED-STATIONARY WINDOW for a convergence or uncertainty claim.
+#
+# One rule applied to both cases gives a wrong answer in one of them, and this
+# function measures how wrong, in runs, in each direction. It exists because
+# "use the stationary window" and "use the whole record" are each defensible in
+# isolation and the choice between them is not a matter of taste: the two cases
+# ask about different quantities.
+#
+#   verdict side       incipient motion is an EVENT. Trimming the transient
+#                      removes the event the gate exists to detect, so the
+#                      window rule DELETES verdicts that physically happened.
+#   uncertainty side   a 91-frame record holds far fewer than 91 independent
+#                      samples. Using N = 91 makes every error bar too small by
+#                      sqrt(N / N_eff), so the full-record rule OVERSTATES
+#                      precision.
+#
+# Scope is deliberately probabilistic_verdict.py's own: os.walk of `renders/`
+# for `metrics.csv`, minus records too short to assess. That reproduces the
+# published "24 local runs" so the control below can be exact rather than
+# approximate.
+#
+# EVERY CELL SEPARATES "did not move" FROM "could not be evaluated". A record
+# whose stationarity test cannot run is counted in its own bucket and never in
+# the "unchanged" bucket, because `not None` is True and would silently score an
+# unevaluated record as agreement. That is the defect this module found in its
+# own reverse_arrangement() on 2026-08-19; the fix is only worth anything if new
+# code obeys it too.
+PV_SLIDE_M = 0.05
+PV_SLIDE_SPEED_MS = 0.05
+PV_FRAMES_REQUIRED = 3
+
+
+def _episodes(mask: list[bool]) -> list[int]:
+    """Lengths of the maximal runs of True. Mirrors probabilistic_verdict."""
+    out, run = [], 0
+    for m in mask:
+        if m:
+            run += 1
+        elif run:
+            out.append(run)
+            run = 0
+    if run:
+        out.append(run)
+    return out
+
+
+def _slide(d: list[float], v: list[float], strict: bool = True) -> bool:
+    """SLIDE when drift and speed are BOTH over gate for >= 3 consecutive frames.
+
+    `strict` selects the comparison operator, and it is exposed rather than
+    hardcoded because the two committed implementations disagree:
+    probabilistic_verdict.py:146 uses `>`, failure_modes.py uses `>=`. On this
+    data the choice moves nothing (asserted in the caller), but an undocumented
+    operator difference between two scripts that are supposed to implement one
+    published rule is exactly the kind of fork this repo keeps finding, so it is
+    measured rather than assumed away.
+    """
+    if strict:
+        mask = [(a > PV_SLIDE_M and b > PV_SLIDE_SPEED_MS) for a, b in zip(d, v)]
+    else:
+        mask = [(a >= PV_SLIDE_M and b >= PV_SLIDE_SPEED_MS) for a, b in zip(d, v)]
+    eps = _episodes(mask)
+    return (max(eps) if eps else 0) >= PV_FRAMES_REQUIRED
+
+
+def asymmetry(root: str) -> int:
+    renders = os.path.join(root, "renders")
+    runs = []
+    for base, _d, files in os.walk(renders):
+        if "metrics.csv" in files:
+            runs.append((os.path.relpath(base, renders),
+                         os.path.join(base, "metrics.csv")))
+    runs.sort()
+
+    print("THE ASYMMETRIC RULE, MEASURED IN BOTH DIRECTIONS")
+    print("=" * 72)
+    print("Scope: probabilistic_verdict.py's own, os.walk(renders/) for "
+          "metrics.csv.")
+    print(f"metrics.csv found under renders/: {len(runs)}")
+    print()
+
+    chans = [("dmag", "vmag", "magnitude, read by probabilistic_verdict.py"),
+             ("dx", "vx", "surge, the channel failure_modes.py gates SLIDE on")]
+
+    rows = []
+    n_assessed = 0
+    op_disagree = 0
+    for name, path in runs:
+        cols = load_series(path)
+        rec = {"run": name, "chan": {}}
+        ok_any = False
+        for dk, vk, _lab in chans:
+            if dk not in cols or vk not in cols:
+                rec["chan"][dk] = {"evaluable": False,
+                                   "reason": f"no {dk}/{vk} column"}
+                continue
+            d, v = cols[dk], cols[vk]
+            n = min(len(d), len(v))
+            d, v = d[:n], v[:n]
+            if n < 12:
+                rec["chan"][dk] = {"evaluable": False,
+                                   "reason": f"record too short, n={n}"}
+                continue
+            ok_any = True
+            full = _slide(d, v)
+            if _slide(d, v, strict=False) != full:
+                op_disagree += 1
+            rep = analyze(d, f"{name}:{dk}")
+            start = min(rep["recommended_discard"], n - 12)
+            win = _slide(d[start:], v[start:])
+            rec["chan"][dk] = {
+                "evaluable": True,
+                "full": full,
+                "window": win,
+                "moved": full != win,
+                "start": start,
+                "n": n,
+                "neff_full": effective_sample_size(d),
+                "neff_win": rep["n_eff"],
+                "stationary": rep["stationary_at_5pct"],
+            }
+        if ok_any:
+            n_assessed += 1
+        rows.append(rec)
+
+    print(f"records assessable on at least one channel: {n_assessed}")
+    print("  (this is the published '24 local runs')")
+    print()
+
+    # ---- VERDICT SIDE -----------------------------------------------------
+    print("-" * 72)
+    print("VERDICT SIDE: what the WRONG rule (stationary window) does to a "
+          "verdict")
+    print("-" * 72)
+    print(f"{'channel':10} {'SLIDE full':>11} {'SLIDE window':>13} "
+          f"{'MOVED':>7} {'not eval':>9}")
+    for dk, vk, lab in chans:
+        cells = [r["chan"].get(dk) for r in rows]
+        ev = [c for c in cells if c and c.get("evaluable")]
+        ne = [c for c in cells if c and not c.get("evaluable")]
+        nfull = sum(1 for c in ev if c["full"])
+        nwin = sum(1 for c in ev if c["window"])
+        nmov = sum(1 for c in ev if c["moved"])
+        print(f"{dk:10} {nfull:>4} of {len(ev):<4} {nwin:>6} of {len(ev):<4} "
+              f"{nmov:>7} {len(ne):>9}")
+        print(f"           {lab}")
+        for r in rows:
+            c = r["chan"].get(dk)
+            if c and not c.get("evaluable"):
+                print(f"           not evaluable: {r['run']} "
+                      f"({c['reason']})")
+    print()
+    # MEASURE THE DIRECTION, DO NOT ASSERT IT. The first version of this
+    # function PRINTED "a verdict is only ever deleted, never created" as
+    # narration while the code counted only `moved`, so the sentence could not
+    # have been contradicted by any input. That is the same defect this module
+    # found in reverse_arrangement() and it reappeared here, in new code, in the
+    # function written to demonstrate the rule. Both directions are now counted
+    # and printed separately, so a future dataset that creates a verdict says so.
+    deleted = created = 0
+    for dk, _vk, _lab in chans:
+        for r in rows:
+            c = r["chan"].get(dk)
+            if not (c and c.get("evaluable") and c["moved"]):
+                continue
+            if c["full"] and not c["window"]:
+                deleted += 1
+            elif c["window"] and not c["full"]:
+                created += 1
+    print(f"  DIRECTION, counted over both channels: {deleted} moves DELETE a "
+          f"SLIDE\n  (full record SLIDE, stationary window not), {created} "
+          f"CREATE one.")
+    if created == 0:
+        print("  The wrong rule never manufactures a verdict on this data, it "
+              "only erases\n  them, which is why the error is silent: it reads "
+              "as a cleaner, more\n  conservative analysis.")
+    print(f"  Gate operator control, `>` against `>=`: {op_disagree} of "
+          f"{2 * n_assessed} channel-records disagree.")
+    print()
+
+    # ---- UNCERTAINTY SIDE -------------------------------------------------
+    print("-" * 72)
+    print("UNCERTAINTY SIDE: what the WRONG rule (full record, N frames) does "
+          "to an error bar")
+    print("-" * 72)
+    print(f"{'channel':10} {'N':>5} {'N_eff med':>10} {'x too small':>12} "
+          f"{'>2x':>5} {'>3x':>5}")
+    for dk, vk, lab in chans:
+        ev = [c for c in (r["chan"].get(dk) for r in rows)
+              if c and c.get("evaluable")]
+        if not ev:
+            continue
+        facs = sorted((c["n"] / c["neff_win"]) ** 0.5 for c in ev
+                      if c["neff_win"] > 0)
+        neffs = sorted(c["neff_win"] for c in ev)
+        ns = sorted(c["n"] for c in ev)
+        med = facs[len(facs) // 2]
+        print(f"{dk:10} {ns[len(ns) // 2]:>5} {neffs[len(neffs) // 2]:>10.2f} "
+              f"{med:>11.2f}x {sum(1 for f in facs if f > 2):>5} "
+              f"{sum(1 for f in facs if f > 3):>5}")
+    print()
+    print("  'x too small' is sqrt(N / N_eff): the factor by which an error bar "
+          "computed\n  from the frame count understates the true random "
+          "uncertainty of the mean.")
+    # STATE THE PAIRING. N is the full record, N_eff is measured on the RETAINED
+    # window, so the ratio mixes two windows. Tested rather than assumed: pairing
+    # N with the FULL-record N_eff instead gives a LARGER median factor, so the
+    # figure printed above is the conservative choice and the conclusion does not
+    # turn on it. Printed because a factor without its predicate is the same
+    # defect as a count without its scope.
+    for dk, _vk, _lab in chans:
+        ev = [c for c in (r["chan"].get(dk) for r in rows)
+              if c and c.get("evaluable")]
+        if not ev:
+            continue
+        fw = sorted((c["n"] / c["neff_win"]) ** 0.5
+                    for c in ev if c["neff_win"] > 0)
+        ff = sorted((c["n"] / c["neff_full"]) ** 0.5
+                    for c in ev if c["neff_full"] > 0)
+        print(f"    {dk:6} N_eff on retained window {fw[len(fw) // 2]:.2f}x  "
+              f"vs N_eff on full record {ff[len(ff) // 2]:.2f}x  (median)")
+    print()
+
+    # ---- THE COLLISION ----------------------------------------------------
+    print("-" * 72)
+    print("BOTH RULES APPLIED TO BOTH CASES, so the cost of picking one is "
+          "explicit")
+    print("-" * 72)
+    ev_d = [c for c in (r["chan"].get("dmag") for r in rows)
+            if c and c.get("evaluable")]
+    ev_x = [c for c in (r["chan"].get("dx") for r in rows)
+            if c and c.get("evaluable")]
+    for lab, ev in (("magnitude", ev_d), ("surge", ev_x)):
+        if not ev:
+            continue
+        nmov = sum(1 for c in ev if c["moved"])
+        facs = sorted((c["n"] / c["neff_win"]) ** 0.5 for c in ev
+                      if c["neff_win"] > 0)
+        print(f"  {lab:10} verdict rule wrong -> {nmov} of {len(ev)} verdicts "
+              f"change")
+        print(f"  {' ':10} uncertainty rule wrong -> every one of {len(ev)} "
+              f"error bars too small,\n  {' ':10}   median {facs[len(facs) // 2]:.2f}x, "
+              f"worst {facs[-1]:.2f}x")
+    print()
+    print("  There is no single rule that is right in both columns.")
+    return 0
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--root", default=REPO,
@@ -358,9 +611,16 @@ def main() -> int:
     ap.add_argument("--verdict-sensitivity", action="store_true",
                     help="measure whether the settle residual could change "
                          "a SLIDE verdict, on the surge channel")
+    ap.add_argument("--asymmetry", action="store_true",
+                    help="quantify the asymmetric rule: full record for a "
+                         "verdict, demonstrated-stationary window for an "
+                         "uncertainty claim, with the runs that move under each")
     ap.add_argument("--observable", default="dx",
                     help="observable for the headline table")
     args = ap.parse_args()
+
+    if args.asymmetry:
+        return asymmetry(args.root)
 
     runs, dropped = find_runs(args.root, args.glob, args.scope,
                               args.keep_duplicates)
@@ -490,7 +750,20 @@ def main() -> int:
           "EVENT, and trimming the\ntransient before a SLIDE test removes the "
           "very frames the test exists to find.\nUse a demonstrated-stationary "
           "window for any CONVERGENCE or UNCERTAINTY claim.\nApplying either "
-          "rule to both cases gives a wrong answer in one of them.")
+          "rule to both cases gives a wrong answer in one of them.\n"
+          "\nMeasured on the 24 local runs, `--asymmetry` prints the working:\n"
+          "  wrong rule on a verdict     16 of 24 verdicts change on the "
+          "magnitude channel,\n"
+          "                              14 of 24 on the surge channel. All 30 "
+          "moves DELETE\n"
+          "                              a SLIDE and none creates one, so the "
+          "error reads as a\n"
+          "                              cleaner analysis rather than as a "
+          "mistake.\n"
+          "  wrong rule on an error bar  24 of 24 too small, median 4.32x, "
+          "worst 5.64x,\n"
+          "                              because 91 frames carry a median "
+          "N_eff of 5.")
 
     if args.csv:
         with open(args.csv, "w", newline="", encoding="utf-8") as fh:

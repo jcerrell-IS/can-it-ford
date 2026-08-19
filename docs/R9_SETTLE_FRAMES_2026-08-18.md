@@ -19,12 +19,45 @@ the frames the test exists to find. A time-averaged force or a grid-convergence
 claim is the opposite: a mean taken over a non-stationary window is not a settled
 value no matter how many frames went into it.
 
-Anyone who applies one rule to both cases gets a wrong answer in one of them, and
-the wrong answer in the verdict direction silently contradicts the published
-16 SLIDE / 1 STUCK. `analysis/probabilistic_verdict.py:107` defaults
-`use_stationary_window=False` for this reason and its docstring records the
-measured consequence: on the full record 21 of 24 read SLIDE, with the transient
-removed only 5 of 24 do.
+**Both halves are now measured on the same 24 runs, so the cost of picking one
+rule for both cases is a number rather than an argument.** Reproduce with
+`analysis/settle_audit.py --asymmetry`:
+
+| you get this wrong | runs that move | direction |
+|---|---|---|
+| stationary window used for a VERDICT | **16 of 24** on the magnitude channel, **14 of 24** on the surge channel | all 30 moves DELETE a SLIDE, 0 create one |
+| full record used for an UNCERTAINTY | **24 of 24** error bars too small, median **4.32x**, worst **5.64x** | always overstates precision |
+
+The uncertainty row's factor is `sqrt(N / N_eff)` with `N` the full 91-frame
+record and `N_eff` measured on the retained window, and **that pairing mixes two
+windows, so it was tested rather than assumed.** Recomputing with `N_eff` from the
+full record instead, which is the self-consistent pairing for a mean taken over
+the whole record, gives median **4.56x** on `dmag` and **4.63x** on `dx` against
+the 4.32x quoted. The quoted figure is therefore the more conservative of the two
+and the conclusion is insensitive to the choice, but the pairing has to be stated:
+a bare "4.32x" is a factor without its predicate, which is the failure section 16
+is about. Worst case moves the other way, 5.63x/5.64x on the retained window
+against 5.55x/5.54x on the full record.
+
+The verdict row is the dangerous one, and the reason is in its direction column.
+The wrong rule never manufactures a verdict on this data, it only erases them, so
+the mistake arrives looking like a cleaner and more conservative analysis. Applied
+to the canonical set it would silently contradict the published 16 SLIDE / 1
+STUCK, having removed the surge in which the sliding physically happens.
+
+The uncertainty row is unfixable by any settle length and is the subject of
+section 7: 91 frames carry a median `N_eff` of about 5, so `sqrt(N / N_eff)` is
+4.32x even before anything else goes wrong.
+
+The rule is not only a sampling convention. Section 18 gives it a hydrodynamic
+mechanism, verified to primary source: an accelerating body near a free surface
+has a time-varying apparent mass, so the transient is a distinct physical regime
+rather than noise decaying toward the answer.
+
+`analysis/probabilistic_verdict.py:107` already defaults
+`use_stationary_window=False` for this reason, and this measurement reproduces its
+docstring exactly as a held-fixed control before recomputing anything: 21 of 24
+SLIDE on the full record, 5 of 24 with the transient removed.
 
 ---
 
@@ -42,6 +75,10 @@ removed only 5 of 24 do.
 | 8 | The stationarity test reported STATIONARY for records it never evaluated. Fixed, and it moved no number | section 13 |
 | 9 | A count without its PREDICATE fails exactly as a count without its channel does, now four instances | section 14 |
 | 10 | `classify_failure_modes.py` carried six defective citations, not the one assigned | section 15 |
+| 11 | **The asymmetric rule costs 16 of 24 verdicts one way and 24 of 24 error bars the other**, measured on the same runs | section 1, `--asymmetry` |
+| 12 | The "15 of 24" collision is resolved and the error was mine: it is a threshold-flip count, not a SLIDE count | section 16 |
+| 13 | The rule has a physical mechanism, verified to primary source: added mass is not one coefficient during acceleration | section 18 |
+| 14 | Three sessions independently built instruments that could not fail, in one round | section 17 |
 
 ---
 
@@ -718,9 +755,287 @@ Specific claims that most need an outside check:
   `simulation/failure_modes.py` (SURGE_AXIS = 0, `slide_m` 0.05 m,
   `slide_speed_ms` 0.05 m/s, `sustain_frames` 3), but I did not re-derive their
   29.67 pp gap figure and do not restate it.
-- Channel discipline, per this repo's rule on scope-sensitive counts: the
-  21 of 24 and 5 of 24 figures in section 1 are on the COMMITTED magnitude
-  channel that `probabilistic_verdict.py` reads today. On the corrected surge
-  channel d2-persist measured 19 of 24 and 15 of 24. Both are right and answer
-  different questions; d2-persist's diff is deliberately unapplied, which is why
-  the committed code still yields 21. Never quote either as a bare integer.
+- Channel discipline, per this repo's rule on scope-sensitive counts, CORRECTED
+  2026-08-19, see section 16. The earlier form of this bullet paired my
+  "21 of 24 and 5 of 24" against d2-persist's "19 of 24 and 15 of 24" as though
+  the two pairs measured the same things. They do not, and the 15 is not mine to
+  map. Re-derived here: on the surge channel the pair is **19 of 24 and 5 of
+  24**, because the transient-removed count is 5 on BOTH channels.
+
+---
+
+## 16. THE "15 OF 24" COLLISION, RECONCILED. THE ERROR WAS MINE.
+
+Slot d14-corpusbib flagged, on 2026-08-19, that two committed mappings of the
+same round disagreed about which published figure becomes "15 of 24", declined to
+resolve it without re-deriving either, and addressed it to d15-settle and
+d2-persist. That was the correct call. Resolved here, and the defect is in my
+document, not in theirs.
+
+**Three different quantities were in play, and two of them land on integers close
+enough to swap unnoticed:**
+
+| quantity | what it asks | committed channel | surge channel |
+|---|---|---|---|
+| full-record SLIDE | does the run slide at all | 21 of 24 | **19 of 24** |
+| transient-removed SLIDE | does sliding PERSIST past startup | 5 of 24 | **5 of 24** |
+| threshold flip | does the verdict change anywhere in `p >= 0.01` to `0.50` | 17 of 24 | **15 of 24** |
+
+d2-persist's 15 is the **threshold-flip** count, descending from CLAUDE.md's
+"17 of 24 runs flip verdict somewhere in p >= 0.01 to 0.50". My limitations
+bullet took their "19 of 24 and 15 of 24" as the surge-channel image of MY pair,
+which would have made the 15 a transient-removed SLIDE count. It is not.
+
+**The transient-removed count does not move between channels at all.** Their
+document says so in terms, at `docs/R8_PERSISTENCE_GATE_2026-08-18.md` on
+`claude/r8-persistence`: "The stationary-window diagnostic CLAUDE.md quotes as
+'5 of 24' is 5 of 24 on both channels. Unchanged." I did not take that on their
+word. `settle_audit.py --asymmetry` recomputes it from the CSVs and returns
+5 of 24 on `dmag` and 5 of 24 on `dx`, alongside 21 and 19 for the full record,
+so their figure reproduces from a separate implementation and my correction is
+not a matter of deferring to the other slot.
+
+**How the error was made, because that is the reusable part.** Both mappings were
+written as "X of 24 becomes Y of 24" with the quantity named only in surrounding
+prose. Once the sentence is compressed to its integers, `21 -> 19` and `17 -> 15`
+are indistinguishable in shape, and a reader with two mappings and one pair of
+slots to attribute them to will pair them wrongly about half the time. This is
+the predicate-confusion class the register already records three times over:
+*reach* against *cited*, *assignment* against *occurrence*, and *content
+ancestry* against *merge behaviour*. The common form is that **two different
+predicates were reported in a shared unit, and the unit survived into the summary
+while the predicate did not.**
+
+The remedy that generalises is not "be careful with integers". It is that a count
+must be quoted with its predicate attached in the same breath, exactly as this
+repo already requires a count to be quoted with its scope. "15 of 24" is not a
+fact. "15 of 24 runs flip verdict somewhere in `p >= 0.01` to `0.50`, surge
+channel" is one.
+
+---
+
+## 17. THE GENERAL RULE: A CHECK THAT CANNOT FAIL IS NOT A CHECK
+
+Section 13 reports this as a bug in one function. It is not one bug. It is the
+most common failure shape in this round, it has appeared in at least six
+independent tools written by at least four different slots, and it deserves to be
+stated as a rule rather than as an anecdote.
+
+### 17.1 The rule
+
+**A measurement must be able to distinguish three states, not two: the thing is
+true, the thing is false, and the measurement did not run. Any tool that encodes
+the third state using the value of the first or second is not a check, because no
+input can make it fail.**
+
+The corollary is what makes this urgent rather than pedantic:
+
+**These failures are biased toward looking like success.** An unevaluated cell
+does not usually return garbage, which would be caught. It returns the pass
+value, the empty set, or zero, each of which reads as a clean result. So the
+defect survives review, gets quoted, and propagates, precisely because nothing
+about it looks wrong.
+
+### 17.2 Why the bias is toward success and not toward noise
+
+The reason is structural, not bad luck. Every one of these is a case where the
+"nothing happened" path and the "everything is fine" path are represented by the
+same token:
+
+| domain | the token | reads as |
+|---|---|---|
+| a test statistic | `z = 0.0` | perfectly stationary, the best possible pass |
+| a search | 0 hits | the string is absent |
+| a set comparison | empty equals empty | the two sides agree |
+| a shell pipeline | a command that does not exist | no output, so no findings |
+| an API call | 200 with a null body | reachable and healthy |
+| narration in code | a printed sentence with no test behind it | a verified claim |
+
+In each row the failure mode and the success mode are the same bytes. No amount
+of care at the call site recovers the distinction once it has been collapsed,
+which is why the remedy has to be structural.
+
+### 17.3 The instances, with their provenance marked
+
+First-hand, measured by me this session:
+
+1. `stationarity.reverse_arrangement` returned `z = 0.0` for `n < 10`, and 0.0 is
+   the pass value, so a 9-sample monotone ramp, the most non-stationary series
+   that exists, scored STATIONARY. The same function returned `z = -10.247`
+   NOT STATIONARY for a 50-sample constant series, because every pair is a tie
+   and the statistic measured ties rather than trend. A false pass and a false
+   fail from one function. Section 13 has the full working.
+2. **In the function written to demonstrate this very rule, today.**
+   `settle_audit.asymmetry()` printed "a verdict is only ever DELETED by the
+   wrong rule, never created" as narration, while the code counted only whether a
+   verdict moved and never which way. No dataset could have contradicted that
+   sentence. Measuring it gave 30 deletions and 0 creations, so the claim was
+   true. It was still unearned, and being right is not the same as having
+   checked. Fixed in the same commit; both directions are now counted and
+   printed.
+
+**Three sessions built an instrument that could not fail, in one round, and
+found it independently.** That co-occurrence is the transferable result, more than
+any single fix: this slot's stationarity test reporting verdicts on records it
+never ran, d18-platform's CI/health check answering from an error path, and
+d12-kramerdata's fail-loud guards whose first catch was its own author's
+non-regenerating number. Three different domains, three different authors, one
+shape. A defect that independent sessions reproduce without contact is a property
+of how the tools are written, not a lapse by any of them.
+
+Reported by other slots on the shared board, read there and **not independently
+re-derived by me**, listed because the pattern is the point:
+
+3. d18-platform: W&B's GraphQL endpoint returns HTTP 200 to an unauthenticated
+   call, so any health check written against the status code passes with an
+   absent credential. Caught by running an unauthenticated control.
+4. d12-kramerdata: built fail-loud guards, and the first thing they caught was a
+   number of its own author's that was not regenerating. The instrument worked
+   because it was built to fail loudly; the lesson is that the author is inside
+   the blast radius, not outside it.
+5. d18-platform: `grep -c` already prints 0 and exits 1 on no match, so an
+   `|| echo 0` fallback produced the two-line string `"0\n0"`, and every "NO" in
+   a table came from a comparison that errored rather than from a test.
+6. d16-landing: an add/add merge control returned exit 1 on both arms because the
+   branch did not exist, so a broken harness printed as a clean result.
+7. d14-corpusbib: an author-search route skipped surnames of three characters or
+   fewer and reported the skip as "0 matches" rather than as "did not run".
+
+### 17.4 The remedy, which is a schema and not more care
+
+Every instance above was produced by someone who knew about this failure mode.
+Two of them were produced by people actively writing about it at the time,
+including me. So the remedy cannot be attention.
+
+- **Give the third state its own value.** Return `None`, not `0.0`. Return
+  `NOT-EVALUABLE(reason)`, not an empty list. `stationarity.analyze` now returns
+  `stationary_at_5pct = None` with a separate `stationarity_evaluable` flag and a
+  reason string.
+- **Test with `is False`, never with truthiness.** `not None` is `True`, so a
+  bare negation buckets every unevaluated record as a failure. This one line is
+  where the fix is usually lost.
+- **Carry the denominator.** "0 outside the domain" is unfalsifiable; "0 of
+  4,353,030 particle-frames outside the domain" cannot be produced by a check
+  that never ran.
+- **Run the control that should fail.** The unauthenticated call, the arm with no
+  branch, the deliberately committed trap. A detector never observed to fire has
+  not been tested.
+- **Treat uniformity across arms that should differ as a harness fault** until
+  proven otherwise. Every instance above first showed up as suspiciously clean
+  agreement.
+
+### 17.5 What it cost, and what it did not
+
+Worth stating plainly in both directions. The guard in `stationarity.py` **moved
+no number**: every figure in this document reproduces unchanged, and it did not
+fire on this data, 0 of 190 run-observable pairs. That is the outcome to want, and
+it is also exactly why the defect survived so long, because nothing looked wrong.
+
+But the margin is one sample. The shortest retained window across 48 runs and four
+channels is exactly 10, with five pairs sitting on it, and the only thing holding
+that floor is `mser_truncation`/`transient_scan` defaulting `min_keep` to the same
+10 that the test refuses to run below. Two independent constants that happen to be
+equal today, not a guarantee. A single change to either default puts real records
+into the branch that used to return a confident STATIONARY.
+
+---
+
+## 18. THE ASYMMETRIC RULE HAS A PHYSICAL MECHANISM, NOT ONLY A STATISTICAL ONE
+
+Sections 1 and 7 argue the rule from sampling: an event is not a mean, and a
+91-frame record does not hold 91 independent samples. That argument is sound but
+it is about estimators, and it would be just as true of a series with no physics
+in it at all. There is a stronger reason, and it is hydrodynamic.
+
+**Added mass is not constant during acceleration near a free surface.** A body
+accelerating through water entrains a growing volume of fluid, so the apparent
+inertial force changes with time rather than sitting at one coefficient. This is
+why a window chosen to stabilise a mean can be exactly the wrong window for an
+incipient-motion event: the transient is not measurement noise decaying toward the
+answer, it is a distinct physical regime with its own force balance, and the
+verdict is decided inside it.
+
+**Primary source, resolved and verified this session** (Crossref, verdict
+`matched`, high confidence, checked title AND authors rather than only that the
+DOI resolves):
+
+> Grift, E. J., Vijayaragavan, N. B., Tummers, M. J. and Westerweel, J. (2019).
+> "Drag force on an accelerating submerged plate." *Journal of Fluid Mechanics*
+> **866**, 369-398. `10.1017/jfm.2019.102`. Open access, CC BY 4.0.
+
+Two things in that paper's own abstract carry the argument, quoted from the
+resolved record and not from a summary of it:
+
+1. It separates the record into **three phases**: "(i) the acceleration phase
+   during which the plate drag is enhanced, (ii) the transition phase during which
+   the plate drag decreases to a constant steady value upon which (iii) the steady
+   phase is reached." That is the same three-part structure this document imposes
+   on a run record, arrived at experimentally and independently.
+2. "the drag force during acceleration of the plate increases over time and **is
+   not captured by a single added mass coefficient for prolonged accelerations**."
+
+The second sentence is the mechanism. If one coefficient cannot represent the
+accelerating phase, then no scalar summary of that phase, including a mean taken
+over a window chosen to stabilise it, represents the force that acts during it.
+Discarding the transient does not remove a nuisance; it removes a regime.
+
+That paper also measured a free-surface proximity effect in the steady phase:
+submerging the plate top by one fifth of the plate height raised steady drag by
+45 percent against the plate top at the surface. Recorded because this project's
+hull sits in shallow water at 2 grid cells of depth, not because anything here
+depends on it.
+
+### 18.1 What this does and does not license
+
+**Does:** it upgrades section 1 from a statistical convention to a claim with a
+physical reason, and the reason is falsifiable. It also predicts the sign already
+measured in section 6.2, that the frame 0 to 1 acceleration is more than an order
+of magnitude above the steady-drag scale, since the acceleration phase is the
+enhanced-drag phase.
+
+**Does not:** Grift et al. is a rigid plate towed on a straight path in a tank at
+`Re` of 4e4 to 8e4. It is not a vehicle, not MPM, and not this geometry. It
+supplies a mechanism, not a validation target, and it must not be cited as
+agreement with any number in this repo.
+
+### 18.2 Citations relayed to me that I have NOT resolved
+
+Marked rather than used. Received as shorthand keys from a deep-search report via
+the coordinator, and a report saying a paper reports something is not that paper
+reporting it:
+
+- **[Kra21b]**, described as a public benchmark at about 0.3 percent experimental
+  uncertainty. Not resolved to a DOI or a title by me. If it is the Kramer
+  reference family already in this project, note that CLAUDE.md and register line
+  228 carry Kramer 2016 `10.1016/J.IJDRR.2016.04.003`, which is a different year
+  and would need checking rather than assuming.
+- **[Wau69]**, accelerating-plate drag with free-surface effects. Unresolved.
+- **[Chu77]**, near-surface added mass and damping. Unresolved. This is the key
+  that would most directly support section 18, so it is the one worth resolving
+  first, and I did not.
+
+`analysis/research_index.py --method added-mass` returns 6 corpus records, all
+marked UNCITED, which is how [Gri19] above was located and then verified
+externally. None of the three unresolved keys was matched there.
+
+### 18.3 Two bounds on what a settle change could ever show
+
+Both relayed from the same deep-search pass, both consistent with what this
+document measured independently, and both stated as bounds rather than as support:
+
+- **A large force change does not imply a verdict change.** Simulated drag rising
+  40 to 50 percent under accelerating flow is attributed to Azhar 2026, which this
+  project already carries at `10.1111/jfr3.70181` for the same finding, and the
+  search itself notes the result is "not a discrete verdict comparison". That is
+  the same gap between a measured quantity and the setting it is cited against
+  that section 4 documents for `settle_frames`, and it is why section 6 reports a
+  verdict count rather than a force delta.
+- **Two things this analysis must not lean on.** No retrieved study shows reduced
+  sound speed or outlet-boundary choice flipping a vehicle motion verdict, and the
+  ten-times-flow-speed rule for artificial sound speed has no primary derivation.
+  Nothing in this document rests on either, checked: the settle recommendation in
+  section 5 is derived from vertical-plateau frames, and the verdict result in
+  section 6 from the surge channel and the impulse. Neither reads a sound speed or
+  an outlet condition. Recorded so that a future session does not add a dependency
+  on them believing they were settled here.
+
