@@ -174,6 +174,11 @@ licenses quoting `final_disp_mag_m` as converged.
 | 12b | **`5 of 24` is channel-invariant member-for-member**, the only entry in the family safe to quote without a channel | section 16.1 |
 | 13 | The rule has a physical mechanism, verified to primary source: added mass is not one coefficient during acceleration | section 18 |
 | 14 | Three sessions independently built instruments that could not fail, in one round | section 17 |
+| 15 | **400 frames costs 21 seconds.** The record-length finding was never blocked on GPU time | section 20.1 |
+| 16 | **Velocity equilibrates, displacement cannot.** `N_eff` scales 3.06x on `vx` and saturates at 0.12x on `dx` | section 20.5 |
+| 17 | The SLIDE verdict is unchanged at 400 frames, so the full-record rule is right for the right reason | section 20.6 |
+| 18 | The same config reports 0.657 m or 0.291 m of displacement depending only on when you stop | section 20.4 |
+| 19 | The canonical free-rigid path is NON-DETERMINISTIC: 7.8e-08 at frame 0 grows to 1.9e-02 by frame 26 | section 20.3 |
 
 ---
 
@@ -405,6 +410,18 @@ margin, and that is worth re-testing when the g128 set is complete.
 ---
 
 ## 7. What NO settle length can fix
+
+> **PARTLY WITHDRAWN 2026-08-19 by measurement, see section 20.5.** The
+> unqualified claim "the record is too short" is now known to be **correct for
+> velocity and wrong for displacement.** At 400 frames `N_eff` on `vx` reaches
+> 58.92 against a linear prediction of 19.23, so velocity gains independent
+> samples faster than linearly; but `dx` reaches 3.50 against 28.44, which is
+> LOWER than its own value at 90 frames. Displacement is the integral of
+> velocity, so if velocity settles to any non-zero mean, displacement drifts
+> forever and no window of it is stationary at any length. Running longer fixes
+> the velocity statistic and cannot fix the displacement one. The section below
+> is retained because its measurements stand; only the unqualified framing is
+> withdrawn.
 
 **The record is too short.** Effective sample size over the retained window, 48
 distinct runs, four channels, 190 run-observable pairs:
@@ -1296,4 +1313,219 @@ distribution, it cannot separate grid effects from length effects, and a single
 non-stationary result at 400 frames would not prove non-stationarity at 2000. It
 also does not change `settle_frames`, which runs before recording starts and is
 not what this measures, per section 4.
+
+---
+
+## 20. THE LONG-RECORD TEST, RESULT. Vista job 922622.
+
+Graded against section 19's thresholds, which were committed in `ee6a0bc`
+**before** the job was submitted. Nothing below was chosen after seeing the data.
+
+### 20.1 THE COST FINDING, WHICH INVALIDATES THE PREMISE OF THE WHOLE SECTION 7
+
+| arm | frames | wall | s/frame | RC |
+|---|---|---|---|---|
+| `probe_f10` | 10 | 11 s | 1.100 | **1** |
+| `control_f90` | 90 | 9 s | 0.100 | 0 |
+| `long_f400` | 400 | **21 s** | 0.052 | 0 |
+
+**Four hundred frames cost twenty-one seconds.** The "record is too short"
+finding, 25 of 25 runs needing more than 8 frames discarded, `N_eff` between 2.84
+and 11.0, 12 of 25 retained windows non-stationary, has been carried all round as
+if it were blocked on GPU time. **It was never blocked on anything.** Marginal
+cost from the 90 and 400 arms is `(21 - 9) / (400 - 90) = 0.0387 s/frame` with
+about 5.5 s of startup.
+
+The per-frame rate falls 21x from the probe to the long run. That is startup
+amortisation, so **short probe runs are the expensive ones per frame** and a long
+record is nearly free once the process is up. Do not size an arm from a probe's
+rate, which is what the 1.100 figure would have led me to do.
+
+### 20.2 GATE 0: PASSES, so the 400-frame numbers may be reported
+
+| criterion, fixed in advance | required | measured | verdict |
+|---|---|---|---|
+| SLIDE verdict matches canonical `g64_m1100` | SLIDE | **SLIDE** | pass |
+| `final_disp_mag_m` within 20 percent of 0.658537 m | 0.527 to 0.790 | **0.656813 m**, off by 0.26 percent | pass |
+
+Onset frame is 3 against the committed classification's 2. One frame, not part of
+Gate 0 as written, and explained by 20.3.
+
+### 20.3 THE RUNS ARE NOT ONE TRAJECTORY, AND THAT IS ITSELF A FINDING
+
+Only `--frames` changed, so I expected frames 0 to 90 to be identical between the
+two arms. **They are not.** Max absolute difference over the first 91 rows and six
+channels is `1.94e-02` at `vz[26]`.
+
+Traced rather than assumed. The divergence is present at frame 0 at `7.8e-08` in
+`vz`, which is float32 epsilon, and grows:
+
+```
+frame    0    1    2     5      20      26
+|dvz| 7.8e-08 3.8e-07 3.0e-08 1.2e-03 7.7e-03 1.9e-02
+```
+
+Five orders of magnitude in 26 frames. **This is chaotic amplification of
+floating-point non-determinism, not a `--frames` dependency**, and it means the
+canonical free-rigid path is non-deterministic at fixed configuration. d17-moving
+measured the SDF-collider path as effectively deterministic at 4.7e-6 relative
+spread; that result does not transfer to this path.
+
+Consequence, stated because it limits everything after it: **the two arms are two
+draws, not one trajectory truncated twice.** Any cross-arm comparison conflates
+record length with run-to-run variation. The findings in 20.5 survive this only
+because they are measured WITHIN the 400-frame run.
+
+### 20.4 THE TERMINAL-FRAME QUANTITY, DEMONSTRATED RATHER THAN ARGUED
+
+Section 1.1 argued that `final_disp_mag_m` obeys neither rule because it is a
+single terminal frame. The long record demonstrates it:
+
+- `long_f400` `dmag` **peaks at 0.667127 m at row 64**, then ends at
+  **0.290845 m**, which is **43.6 percent of its own peak**.
+- `control_f90` ends at 0.656813 m, near that peak, because 90 frames happens to
+  stop close to row 64.
+
+**The same configuration reports 0.657 m or 0.291 m depending only on when you
+stop looking.** The vehicle moves downstream and then comes back; net displacement
+is not monotonic. CLAUDE.md item 5's non-monotone `final_disp_mag_m` across
+g48/g64/g96, +87.8 percent then -59.2 percent, now has a mechanism: those runs are
+sampling a non-monotonic trajectory at an arbitrary time. Item 5's standing
+instruction to cite the verdict and never the displacement magnitude is correct
+and this is the direct evidence for it.
+
+### 20.5 Q1 AND Q2: BOTH SPLIT, AND THEY SPLIT THE SAME WAY
+
+This is the result. It is a within-run comparison, so 20.3 does not touch it.
+
+| arm | channel | n | discard | window | `N_eff` | stationary at 5 pct |
+|---|---|---|---|---|---|---|
+| control_f90 | `dx` | 91 | 47 | 33 | 6.40 | yes |
+| control_f90 | `dmag` | 91 | 47 | 33 | 6.42 | yes |
+| control_f90 | `vx` | 91 | 52 | 32 | 4.33 | NO |
+| control_f90 | `vmag` | 91 | 49 | 42 | 4.12 | NO |
+| **long_f400** | `dx` | 401 | **389** | **11** | **3.50** | **NO** |
+| **long_f400** | `dmag` | 401 | **388** | **11** | **5.59** | **NO** |
+| **long_f400** | `vx` | 401 | 195 | 216 | **58.92** | **yes** |
+| **long_f400** | `vmag` | 401 | 165 | 236 | **201.80** | **yes** |
+
+**Q1, pre-registered threshold 75 percent of channels stationary at 400: FAILS,
+at 2 of 4, 50 percent.** By the letter of section 19 my recommendation changes
+from "run longer" to "displacement is not a stationary observable at any
+affordable length". The data says something more useful than the binary allowed
+for, and the extra structure is what makes it worth having.
+
+**Q2, pre-registered `N_eff` prediction 22.0 from linear scaling:**
+
+| channel | `N_eff` at 90 | at 400 | linear prediction | ratio | pre-registered band |
+|---|---|---|---|---|---|
+| `dx` | 6.40 | 3.50 | 28.44 | **0.12** | **SATURATION** |
+| `dmag` | 6.42 | 5.59 | 28.51 | **0.20** | **SATURATION** |
+| `vx` | 4.33 | 58.92 | 19.23 | **3.06** | **SCALING** |
+| `vmag` | 4.12 | 201.80 | 18.33 | **11.01** | **SCALING** |
+
+**The split is by channel family and it is enormous, a factor of 25 between `dx`
+and `vx`.** Run-to-run variation cannot plausibly produce that, and it is a
+within-run measurement in any case.
+
+**VELOCITY EQUILIBRATES. DISPLACEMENT DOES NOT, AND CANNOT.** That is not a
+solver defect, it is arithmetic: displacement is the time integral of velocity, so
+if velocity settles to any non-zero mean, displacement drifts forever and no window
+of it is ever stationary. `dx`'s retained window at 400 frames is 11 rows out of
+401, and its `N_eff` at 400 is **lower** than at 90. Running longer makes the
+displacement statistic worse, not better.
+
+So the honest answers are channel-dependent, and both halves matter:
+
+- **For any velocity-based convergence or uncertainty claim**, longer records buy
+  independent samples faster than linearly: `N_eff` goes 4.33 to 58.92 on `vx`
+  for a 4.4x longer record. Register D9's 250-frame conclusion is supported and
+  exceeded, and this reaches it by a third route.
+- **For any displacement-based claim**, longer records buy nothing at all.
+  Section 7's "the record is too short" is **correct for velocity and wrong for
+  displacement**, and I am withdrawing the unqualified form.
+
+Section 19 pre-committed that a non-stationary result at 400 would mean
+"convergence claims must move to a different observable entirely". The data has
+now named that observable: **velocity, not displacement.**
+
+### 20.6 Q3: THE VERDICT SURVIVES
+
+`long_f400` reads **SLIDE with onset at frame 3**, identical to `control_f90`, on
+a record 4.4x longer. The prediction in section 19 was SLIDE with unchanged onset,
+on the section 6.2 grounds that 43 of 47 runs reach half their peak surge speed by
+frame 1, and that is what happened.
+
+**The full-record rule is right for the right reason, not right by luck.** The
+verdict is set in the first handful of frames and 310 further frames do not touch
+it, including 310 frames during which net displacement falls to 43.6 percent of
+its peak. A quantity that moves that much while the verdict does not is the
+cleanest available statement of why section 1.1 separates them.
+
+### 20.7 `probe_f10` EXITED 1 AND STILL WROTE PLAUSIBLE OUTPUT
+
+`metrics.csv` holds 12 lines, 11 rows for 10 frames, exactly what a healthy run
+would produce. A reader checking that the file exists, or counting its rows, grades
+a crashed arm as a good one. This round's own instrument-failure pattern, in my
+directory, in a job I wrote to test something else.
+
+Cause, read from the traceback and not guessed:
+
+```
+File ".../render_s2/sim_standing.py", line 333, in main
+  veh_check_45=checkpoints["45"], ...
+KeyError: '45'
+```
+
+The driver records a checkpoint only at `f in (0, 45, a.frames - 1)`, then indexes
+`checkpoints["45"]` unguarded. **Any run with `frames < 46` crashes after writing
+`metrics.csv`.** The simulation itself completed; only `rollout.npz` and
+`summary.json` are missing, which is why the wreckage looks healthy.
+
+**I wrote the hazard into my own job.** `scripts/r9_settle_longrecord.sbatch`
+states "f=45 exists at every length used here and the npz write cannot KeyError".
+I checked the 400 arm and the 90 arm and did not check the 10-frame arm I had
+myself added. The Mac canonical driver already carries the fix,
+`f_check = min(45, a.frames - 1)`, with a comment describing this exact bug; the
+Vista `5215c38b` driver that produced the 17 gated runs does not.
+
+Gated in `scripts/r9_canonical_400.sbatch`: every arm's RC is recorded next to its
+row count, **both** are printed because neither alone is sufficient, and the job
+exits non-zero if any arm failed.
+
+### 20.8 PRICING THE FULL CANONICAL SET AT 400 FRAMES
+
+Measured anchor: one g64 400-frame run is 21 s, of which about 5.5 s is startup
+and 15.5 s is compute. Grid mix of the 17, read from
+`data/all_runs_inventory.csv`: **11 at g64, 3 at g48, 3 at g96.**
+
+Cost is taken as `grid^4`, since particle count goes as `grid^3` and the substep
+count goes as `grid` through the acoustic CFL. That gives g48 at 0.32 and g96 at
+5.06 g64-equivalents.
+
+| quantity | value |
+|---|---|
+| g64-equivalents per full pass | `11 + 3(0.32) + 3(5.06)` = **27.1** |
+| compute per pass | 27.1 x 15.5 s = **420 s** |
+| startup, 17 runs | 17 x 5.5 s = **94 s** |
+| **one pass of all 17 at 400 frames** | **about 8.6 minutes** |
+| three draws per cell, 51 runs | **about 26 minutes** |
+
+A `grid^3` model instead of `grid^4` gives 7.4 minutes per pass, so the estimate
+is not sensitive to that choice.
+
+**What it takes: one gh node, one job, `-t 00:40:00`, and no code changes.**
+`--frames` is an existing CLI argument. Submitted as job **923186**,
+`scripts/r9_canonical_400.sbatch`, writing to a new tree
+`$WORK/r9_canonical_400`. **No canonical artifact is read, written or moved, and
+these runs are not part of the 17 gated set.**
+
+Three draws rather than one because 20.3 measured that this path is
+non-deterministic. A single draw per cell would not be a result.
+
+**On the walltime**: job 922622 requested 2:00:00 and ran 00:01:06, a 109x
+over-request that queued behind 139 jobs, because Slurm backfills short requests
+into gaps a long one cannot fit. 923186 asks 00:40:00 against a 26-minute
+estimate, sized from the measured 0.0387 s/frame rather than from a
+comfortable-looking round number.
 
