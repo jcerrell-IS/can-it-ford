@@ -1367,3 +1367,111 @@ and solved it by making the optimisation wait rather than by shortening the sett
   visualisation tooling and is the obvious second read.
 - Nothing here is adversarially reviewed; `physics-skeptic` is dead fleet-wide per
   `c621931`, verified at `CLAUDE.md:925`.
+
+---
+
+# ADDENDUM 8: THE LADDER LANDED AND IT REFUTES MY OWN "DOES NOT CONVERGE"
+
+## 33. Four points, non-monotone, and it CONVERGES
+
+Batch job **922515** completed in 2:43 on `c612-151`, all four rungs `rc=0`.
+**With `dt` scaled to spacing, the two rungs that previously died now run**, which
+confirms the CFL diagnosis in addendum 2 was correct. Settle-window mean `Fz`
+against analytic `rho g V` = 50.2272 N: **[read]**
+
+| spacing | `dt` | n | mean Fz [N] | sd Fz | ratio | **error** | change |
+|---|---|---|---|---|---|---|---|
+| 0.030 | 1.000e-4 | 125 | 74.355 | 10.778 | 1.4804 | **+48.04 %** | |
+| 0.020 | 6.667e-5 | 188 | 79.332 | 13.681 | 1.5795 | **+57.95 %** | **+9.91** |
+| 0.015 | 5.000e-5 | 250 | 65.064 | 5.676 | 1.2954 | **+29.54 %** | **-28.41** |
+| 0.010 | 3.333e-5 | 375 | 58.125 | 3.711 | 1.1572 | **+15.72 %** | **-13.82** |
+
+**My claim that this code "does not converge the buoyant force under refinement"
+is REFUTED by my own ladder.** It converges. The error falls from +58.0 percent to
++15.7 percent and is still falling at the finest rung. What it does *not* do is
+converge **monotonically**: it rises on the first refinement step, then falls
+steeply.
+
+**The scatter converges cleanly and monotonically after the first step**: sd goes
+10.78, 13.68, 5.68, 3.71. So the *noise* behaves better than the *mean*, which is
+worth knowing for anyone choosing a resolution on the basis of how clean a trace
+looks.
+
+**This is the third time tonight a two-point result of mine died to a third
+point, and the pattern is the lesson.** I said explicitly in addendum 2 that two
+points cannot separate divergence from non-monotonicity and that I had no right to
+exclude the latter. That caveat was correct and it is exactly what happened. It
+also independently reproduces the structure of CLAUDE.md item 5, our own
+g48/g64/g96 ladder being non-monotone: **a non-monotone convergence ladder is now
+observed in two unrelated codes on the same class of problem.**
+
+## 34. THE INPUT THAT MAKES THE CHECK FAIL, named as `e81bc9c` requires
+
+The rule asks for the input at which two codes' errors diverge rather than
+converge. For this comparison it is a single number:
+
+> **Spacing 0.020.** That rung is the peak of the error curve (+57.95 percent).
+> Any resolution study that stops at or before 0.020 sees a rising error and
+> concludes divergence. Any study that reaches 0.015 sees it fall.
+
+So the check fails on **a resolution sample that terminates on the rising limb**,
+and the minimum sufficient ladder here is **four rungs spanning at least 3x in
+spacing**. Two rungs is not a convergence study, and three rungs at 0.030, 0.020,
+0.015 would have been ambiguous.
+
+## 35. +48 VERSUS +50: THE COINCIDENCE IS REAL BUT THE RESOLUTION DEPENDENCE BREAKS IT
+
+The comparison asked for, with provenance separated because the two halves are not
+equally sourced.
+
+| quantity | value | source |
+|---|---|---|
+| Chrono::FSI-SPH buoyancy error, spacing 0.030 | **+48.04 %** | **[read]** mine, this session |
+| Chrono::FSI-SPH buoyancy error, spacing 0.010 | **+15.72 %** | **[read]** mine, this session |
+| Job B measured accessor, canonical | **+50.06 %** | **[recv]** not verified by me |
+| Job B, span across 24 gradings | **+34.4 to +64.2 %** | **[recv]** not verified by me |
+
+**At spacing 0.030 the two agree strikingly**: +48.04 against +50.06, and the
+Chrono value sits inside d11's +34.4 to +64.2 span. A different code, different
+method, different team, different quantity, missing analytic by the same order in
+the same direction.
+
+**But the agreement is an artifact of which rung I quote, and that is the finding.**
+My +48.04 is not a property of Chrono; it is a property of Chrono **at spacing
+0.030**. The same code gives +15.72 percent at 0.010 and is still falling.
+**Quoting "+48 versus +50" as a coincidence worth explaining requires pinning the
+Chrono number to a resolution, and once pinned it stops being a constant.**
+
+**The discriminator, and it is cheap.** If the two excesses share a cause, the
+shared cause is almost certainly coarse resolution, and then **d11's number must
+move under refinement the way mine does.** So:
+
+- **If Job B's excess falls toward zero as the sphere-heave resolution is refined**,
+  shared cause is supported and the right statement is "both codes over-predict
+  buoyant force at coarse resolution", which is a real and citable result.
+- **If Job B's excess is resolution-invariant**, the two are unrelated, the numeric
+  agreement at one rung is a coincidence, and d11's FAIL localises to something
+  specific to the accessor rather than to particle-method resolution.
+
+**That test is the whole value of putting the numbers side by side, and neither
+session has run it.** It requires a resolution ladder on the sphere-heave case,
+which is d11's to run, not mine. **I am explicitly not claiming a shared cause.**
+Two numbers agreeing at one resolution, where one of them is known to be strongly
+resolution-dependent, is exactly the coincidence this project's rules warn about,
+and I have not verified d11's figures at first hand.
+
+**One asymmetry worth flagging.** Mine is a **static hydrostatic** quantity,
+buoyancy on a stationary submerged box, with an exact closed form. Job B is a
+**heave force ratio** on a sphere. These are not the same physical quantity, and a
+shared "+50 percent" across two different quantities is weaker evidence than the
+same quantity twice. **If anyone writes this up, that difference must be stated in
+the same sentence as the agreement.**
+
+## 36. Status of the vehicle-fording build
+
+Batch job **922601** submitted, `PENDING`, 1:30:00 on `gh`, reconfiguring with
+`-DCH_ENABLE_MODULE_VEHICLE_MODELS=ON` plus `_VEHICLE` and `_COSIM`, then building
+`demo_VEH_Cosim_WheeledVehicle_SPH`. **It configures into a NEW directory
+`build_veh`, deliberately not `build_fsi`**, because `build_fsi` is what every
+buoyancy number above was produced against and reconfiguring it in place could
+invalidate published results for the cost of some disk.
