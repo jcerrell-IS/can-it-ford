@@ -256,6 +256,109 @@ graded independently of the band test, and either may fail without the other.**
 
 ---
 
+---
+
+## 5. Do the ladder's pre-registered criteria still mean what they meant when written?
+
+Added 2026-08-20 at the coordinator's request, after reading `3f4c1ec` and `d826c8a` on
+`claude/r9-jobb-route`. **Short answer: NO, for three reasons, and one thing that DOES
+survive unchanged is the ladder-stop itself.**
+
+### 5.1 What survives: the stop is still correct at the resolution Job B was specified at
+
+Job B is specified `--n-grid 64 --lim 1.2`. d21's dx arms are 18.75, 12.50 and 9.375 mm,
+and `1.2 / 64 = 18.75 mm`, so **Job B is the coarsest arm of that sweep**. At matched
+submergence with the trend regressed out, d21 measures the excess there as **+46.17 percent
++/- 8.04**. Criterion 3's FAIL band is "beyond 25 percent". **FAIL stands, the ladder-stop
+stands, and nothing in section 1 of this document is weakened.**
+
+### 5.2 What broke: criterion 3 grades a quantity now known to be dominated by dx
+
+d21's grid prong, same engine, PPC 8, matched submergence:
+
+| dx | excess at 130 mm | +/- |
+|---|---|---|
+| 18.75 mm (**g64, = Job B**) | +46.17 pct | 8.04 |
+| 12.50 mm | +28.11 pct | 6.14 |
+| 9.375 mm | +21.50 pct | 10.55 |
+
+Linear in dx, `excess = 2.669*dx_mm - 4.217`, extrapolating to **-4.2 percent at dx -> 0**.
+
+Criterion 3's bands are anchored, in the manifest's own words, to "this project's box-SDF
+buoyancy agreement of 7.3 to 7.7 percent, rounded outward", and are explicitly "a PROJECT
+CHOICE, not a literature tolerance". **That anchor carries no resolution.** Grading a
+quantity whose value is mostly a function of dx against a band imported from a different
+path at an unstated resolution is a category error, and it is the same one this slot
+documented for the 0.3 percent figure in section 12 of
+`R9_KRAMER_FULL_EXTRACT_2026-08-18.md`: **a ratio is meaningless against a band derived
+under a different normalisation or operating point.** Two slots found the same defect shape
+in two different criteria on the same night.
+
+**So a FAIL at g64 is a statement about g64's discretisation error, not about the solver's
+physics.** It was written to be the latter.
+
+### 5.3 What is still missing: criterion 3 names no OPERATING POINT
+
+`d11-accessor` amended criterion 3 to name **which quantity** and **over what window**,
+because a comment was silently doing that job. **It still does not name a submergence.**
+
+That is now the load-bearing omission, and d21 measured why: the arms sat at 67.9 to 125.4
+mm submergence because a coarser lattice drains more, and reading them as though they were
+the same state **inverted a trend**. Their own words: the `k` rise to 0.829 at PPC 64 "is an
+ARTIFACT of the unmatched operating point and does not survive". They withdrew their own
+published non-convergence claim over it.
+
+**The same run can therefore be graded to different values depending on a parameter the
+criterion does not fix.** That is exactly the defect d11 repaired one level up, still open
+one level down. **Criterion 3 needs a third specifier: quantity, window, and submergence.**
+
+### 5.4 The verdict is resolution-dependent, and at the finest arm it is not a FAIL
+
+At dx 9.375 mm the excess is **+21.50 percent**, which sits inside criterion 3's **10 to 25
+percent REPORTABLE PARTIAL** band, not the FAIL band. The error bar spans 10.95 to 32.05,
+so it straddles PARTIAL and FAIL.
+
+**"Job B FAILED" is a property of g64, not of the solver.** Anyone restating the ladder-stop
+should say at which resolution.
+
+**Stated limits, because this is the weakest link in the argument above.** The grid prong is
+**1.86 sigma end-to-end, below this project's 3 sigma bar**, the finest point rests on 35
+frames, and d21 calls it "suggestive and not established". Vista job 923291 (g192, dx 6.25
+mm) is pre-registered to settle it: the O(dx) line predicts +12.5 percent, and a value near
+21.5 percent or above restores a non-zero asymptote. **Until that lands, 5.2 and 5.4 are
+provisional and 5.3 is not**, because 5.3 is a defect in the criterion's wording rather than
+a claim about the data.
+
+There is also an unresolved tension d21 flagged and did not close: Wal07's own analytic
+reference (Vshivkov) predicts **h^2** while the measured fit is linear in **h**. Not mine.
+
+### 5.5 WHAT THIS DOES TO MY OWN PRE-REGISTRATION, which is the part I owe
+
+**Section 3 grades the first damped PERIOD, and the period is not immune to this.** The
+natural period is set by the restoring stiffness, which is set by the waterplane at the
+equilibrium submergence. If a coarser lattice drains more, the equilibrium submergence
+differs, and the period differs **for a discretisation reason rather than a physical one**.
+**A period compared at unmatched equilibrium submergence is the same error d21 just
+withdrew, and my falsifier as written does not exclude it.**
+
+**AMENDMENT, made before any run exists and therefore inside the rules:**
+
+1. **Every period reported must travel with the achieved equilibrium submergence**, in mm,
+   and with the analytic half-draft it should have reached. The benchmark sphere is
+   ballasted to float at its equator, so the target is unambiguous.
+2. **A period is not gradeable against the band in section 3.3 unless its equilibrium
+   submergence is within a stated tolerance of half draft.** I fix that tolerance now, before
+   any data: **+/- 5 percent of the sphere radius**. Outside it, the run is reported as
+   UNGRADEABLE ON OPERATING POINT, which is a real outcome and not a failure to measure.
+3. **The direction test of section 3.4 survives this and becomes the more robust of the
+   two**, because it asks whether the period RISES across three drops run at one resolution,
+   where the equilibrium submergence is common to all three and largely cancels.
+
+**This makes my own pre-registration harder to pass, and I am recording it before the run
+rather than after seeing one.** That is the whole point of the instrument.
+
+---
+
 ## 4. Review status
 
 **UNREVIEWED by a second party.** The `physics-skeptic` subagent is dead fleet-wide,

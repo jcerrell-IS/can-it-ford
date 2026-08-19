@@ -1538,6 +1538,126 @@ def _p_thresholds(t):
               "on it.")
 
 
+# --------------------------------------------------------------------------------------
+# 9. THE TRANSCRIPTION GATE
+# --------------------------------------------------------------------------------------
+# The known-benign difference: the transcription silently normalises the archive's own
+# typo. Allow-listed BY EXACT VALUE PAIR, never by field name, so that any OTHER change to
+# RANS5.institution still fails. An allow-list keyed on the field would have blessed the
+# whole field forever, which is how a gate quietly stops gating.
+KNOWN_BENIGN = {
+    ("RANS5", "institution",
+     "Budapest Univeristy of Technology and Economics",     # in the sheet, with the typo
+     "Budapest University of Technology and Economics"),    # in CODE_META, corrected
+}
+
+
+def gate_transcription(mt: dict | None = None) -> dict:
+    """Turn the CODE_META audit into something that can FAIL, and that cannot fake a pass.
+
+    WHY THIS EXISTS. `audit_code_meta` reports drift and returns; a reporting function that
+    exits 0 whatever it finds is not a gate, and `kramer_benchmark.py` claimed for two days
+    that nothing in it was transcribed while carrying a hand-typed `CODE_META`.
+
+    THREE VERDICTS, NOT TWO, and the third is the point. `UNVERIFIABLE` is returned when the
+    source workbook is absent, which is the normal state on Vista where the archive is
+    deliberately outside the repo. It must never be reported as a pass: a check that cannot
+    evaluate and says PASS is the failure this project logged eight times in one round.
+
+    THE INPUT THAT MAKES THIS FAIL, named as the register now requires: change any of the 44
+    transcribed fields in `kramer_benchmark.CODE_META` so it no longer matches the cell it
+    came from, and this returns `DRIFT` and exits 1. The self-test does exactly that, by
+    rewriting LPF0's `group`, which is the field the whole inter-code envelope is partitioned
+    on. Restoring the archive's typo at D11 does NOT fail, because that one difference is
+    allow-listed by exact value pair.
+    """
+    if not MODEL_XLSX.exists():
+        return {"verdict": "UNVERIFIABLE",
+                "reason": f"source workbook absent at {MODEL_XLSX}",
+                "note": ("This is NOT a pass. The archive is held outside the repo, so this "
+                         "gate cannot run on a machine without it. Report it as unverified."),
+                "fields_checked": 0, "drift": [], "benign": []}
+    mt = mt or model_table()
+    a = audit_code_meta(mt)
+    _require(a.get("available", True),
+             "transcription gate could not import kramer_benchmark",
+             f"{a.get('error')}. This is NOT a pass: the gate cannot compare what it "
+             f"cannot load.")
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "simulation" / "r5_physics"))
+    import kramer_benchmark as kb
+    drift, benign = [], []
+    for f in a["findings"]:
+        key = (f["code"], f["field"], f.get("in_sheet") or f.get("from_sheet_description"),
+               f.get("in_code_meta"))
+        (benign if key in KNOWN_BENIGN else drift).append(f)
+    _require(a["n_fields_checked"] > 0,
+             "transcription gate checked ZERO fields",
+             "the audit returned no comparisons, so this gate has nothing to stand on and "
+             "must not report a verdict")
+
+    # SECOND PRONG, and the reason this gate exists at all. `audit_code_meta` compares four
+    # fields per code (institution, author, software, turbulence). `group` is a FIFTH
+    # transcribed field and it was NOT covered, which the self-test found by bending
+    # LPF0.group and watching the gate return VERIFIED. That field is the one the whole
+    # inter-code envelope is partitioned on and the one with no independent source cell, so
+    # it was simultaneously the most load bearing and the least checked.
+    #
+    # CHECK THE PARTITION, NOT THE LABEL. The group values are short aliases ("Kramer",
+    # "Plymouth") that deliberately do not equal the sheet's author strings, so a string
+    # comparison would fail on a harmless rename. What must hold is that grouping by
+    # `CODE_META.group` induces the SAME partition of the eleven codes as grouping by the
+    # sheet's Author column with its ditto marks resolved.
+    gp = {}
+    for code, meta in kb.CODE_META.items():
+        gp.setdefault(meta.get("group"), set()).add(code)
+    sheet_author = {}
+    for r in (mt or model_table())["rows"]:
+        if r["has_directory"]:
+            sheet_author.setdefault(r["author"], set()).add(r["dir_name"])
+    part_meta = {frozenset(v) for v in gp.values()}
+    part_sheet = {frozenset(v) for v in sheet_author.values()}
+    _require_nonempty(part_meta, "CODE_META group partition", "kramer_benchmark.CODE_META")
+    _require_nonempty(part_sheet, "sheet author partition", str(MODEL_XLSX))
+    partition_ok = part_meta == part_sheet
+    if not partition_ok:
+        drift.append({"code": "*", "field": "group",
+                      "in_code_meta": sorted(sorted(x) for x in (part_meta - part_sheet)),
+                      "in_sheet": sorted(sorted(x) for x in (part_sheet - part_meta))})
+
+    return {"verdict": "DRIFT" if drift else "VERIFIED",
+            "fields_checked": a["n_fields_checked"] + len(kb.CODE_META),
+            "group_partition_matches_sheet_author": bool(partition_ok),
+            "n_groups": len(part_meta),
+            "drift": drift, "benign": benign,
+            "known_benign_allowed": len(benign)}
+
+
+def _p_gate(g):
+    print()
+    print("=" * 86)
+    print("TRANSCRIPTION GATE: kramer_benchmark.CODE_META against its source workbook")
+    print("=" * 86)
+    print(f"  verdict        {g['verdict']}")
+    print(f"  fields checked {g['fields_checked']}")
+    if g["verdict"] == "UNVERIFIABLE":
+        print(f"  reason         {g['reason']}")
+        print(f"  {g['note']}")
+        return
+    print(f"  allow-listed   {g['known_benign_allowed']} "
+          f"(the archive's own D11 typo, matched by exact value pair)")
+    print(f"  group partition matches the sheet's Author column: "
+          f"{g['group_partition_matches_sheet_author']}  ({g['n_groups']} groups)")
+    for f in g["drift"]:
+        print(f"  [DRIFT] {f['code']}.{f['field']}")
+        print(f"      in CODE_META : {f.get('in_code_meta')}")
+        print(f"      in the sheet : {f.get('in_sheet') or f.get('from_sheet_description')}")
+    if g["verdict"] == "VERIFIED":
+        print("  Every transcribed field matches its cell, or is the one allow-listed typo.")
+    else:
+        _fail("CODE_META HAS DRIFTED FROM ITS SOURCE. The inter-code envelope is partitioned "
+              "on these fields; do not quote a grouped result until this is resolved.")
+
+
 def self_test() -> dict:
     """Prove every guard FIRES. An assertion nobody has seen fail is not a check.
 
@@ -1661,6 +1781,27 @@ def self_test() -> dict:
     case("threshold_sensitivity with no group above the threshold", c8,
          "at or above 1 pct")
 
+    # 9. THE NAMED FAILING INPUT for the transcription gate. Rewrite LPF0's group, which
+    #    is the field the entire inter-code envelope is partitioned on, and require the gate
+    #    to return DRIFT. A gate nobody has watched reject a bad input is decoration.
+    def c9():
+        import kramer_benchmark as kb
+        saved = kb.CODE_META["LPF0"]["group"]
+        kb.CODE_META["LPF0"]["group"] = "Some Other Author"
+        try:
+            g = gate_transcription()
+            if g["verdict"] == "UNVERIFIABLE":
+                raise ExtractionError(
+                    "transcription gate is UNVERIFIABLE, source workbook absent; "
+                    "this case cannot run here and is NOT a pass")
+            if g["verdict"] != "DRIFT":
+                return                      # returns normally => self-test records FAILURE
+            raise ExtractionError(
+                "transcription gate caught injected drift in LPF0.group, as required")
+        finally:
+            kb.CODE_META["LPF0"]["group"] = saved
+    case("transcription gate on an injected CODE_META drift", c9, "injected drift")
+
     n_fired = sum(1 for r in results if r["fired"])
     n_matched = sum(1 for r in results if r["matched"])
     return {"n_cases": len(results), "n_fired": n_fired, "n_matched": n_matched,
@@ -1703,11 +1844,17 @@ def main():
                     help="the 0.3 pct figure, its statistic, and the envelope on one scale")
     ap.add_argument("--thresholds", action="store_true",
                     help="sweep the one bare threshold in this module")
+    ap.add_argument("--gate-transcription", action="store_true",
+                    help="FAIL (exit 1) if CODE_META has drifted from its sheet")
     ap.add_argument("--self-test", action="store_true",
                     help="prove every fail-loud guard actually fires")
     ap.add_argument("--all", action="store_true")
     ap.add_argument("--json", action="store_true")
     a = ap.parse_args()
+    if a.gate_transcription:
+        g = gate_transcription()
+        _p_gate(g)
+        raise SystemExit(0 if g["verdict"] == "VERIFIED" else 1)
     if a.self_test:
         t = self_test()
         _p_selftest(t)
