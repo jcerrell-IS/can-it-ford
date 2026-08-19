@@ -77,8 +77,8 @@ REPO = "/Users/josie/can-it-ford"
 # then committed 159bf7d and the table grew to 348 rows, adding the five-seed
 # surface (M1s*) that this dataset is now built around. Re-pin deliberately and
 # re-run; do not let the pin drift silently.
-SOURCE_BLOB = "7eee079a7085c98e140ca61ea708ebb70003d71e"
-SOURCE_COMMIT = "159bf7d"
+SOURCE_BLOB = "9afb3c7433ccac366e7658ea5a8e4432cfea5bfc"
+SOURCE_COMMIT = "498f1ad"
 SOURCE_BRANCH = "claude/r9-moving-vehicle"
 SOURCE_PATH = "data/r9_speed_surface.tsv"
 

@@ -51,10 +51,29 @@ ARC_CELLS = ["A0", "A1", "A2", "A3", "A4"]
 
 
 def read_surface(path: str) -> list[dict]:
-    if not path or not os.path.exists(path):
-        return []
+    """Read the surface table, distinguishing ABSENT from EMPTY.
+
+    This used to return [] for a missing file, which is indistinguishable
+    downstream from a file that exists and holds nothing, and both are
+    indistinguishable from a schema mismatch. All three now raise.
+    """
+    if not path:
+        raise RuntimeError("no surface path given")
+    if not os.path.exists(path):
+        raise RuntimeError(f"surface table absent: {path}\n"
+                           "  run hf_space/ingest_speed_surface.py first")
     with open(path, newline="", encoding="utf-8") as fh:
-        return list(csv.DictReader(fh))
+        rows = list(csv.DictReader(fh))
+    if not rows:
+        raise RuntimeError(f"surface table {path} exists but holds no rows")
+    required = {"family", "v_car_ms", "v_water_ms", "force_horiz_mag_N"}
+    missing = required - set(rows[0].keys())
+    if missing:
+        raise RuntimeError(
+            f"surface table {path} is missing columns {sorted(missing)}.\n"
+            "  This is a SCHEMA MISMATCH, not an empty result. Aggregating it\n"
+            "  would silently produce zero cells and log an empty W&B run.")
+    return rows
 
 
 def _f(row, key):
@@ -64,19 +83,37 @@ def _f(row, key):
         return None
 
 
-def aggregate(rows: list[dict]) -> list[dict]:
-    """Group repeat draws by cell and summarise WITHOUT overstating the sample."""
+# The five-seed settled surface. Pooling other families would mix measurement
+# windows and, worse, mix hulls: the fidC/fidF rows are Silverado, not the Yaris.
+SURFACE_FAMILIES = ("M1s0", "M1s1", "M1s2", "M1s3", "M1s4")
+
+
+def aggregate(rows: list[dict], families=SURFACE_FAMILIES) -> list[dict]:
+    """Group repeat draws by cell and summarise WITHOUT overstating the sample.
+
+    Draws here are SEEDS, which is the only spread in this data that is a random
+    error bar. The split spread and the window spread are systematic and are
+    reported separately; do not let a reader mistake one for another.
+    """
     cells: dict[tuple, list[float]] = {}
     meta: dict[tuple, dict] = {}
+    want = set(families)
     for r in rows:
+        if r.get("family") not in want:
+            continue
         vc, vw = _f(r, "v_car_ms"), _f(r, "v_water_ms")
-        fh = _f(r, "F_horiz_N")
+        fh = _f(r, "force_horiz_mag_N")
         if vc is None or vw is None or fh is None:
             continue
         key = (round(vc, 6), round(vw, 6))
         cells.setdefault(key, []).append(fh)
-        meta.setdefault(key, {"cell_id": r.get("cell_id", ""),
+        meta.setdefault(key, {"cell_id": f"vc{vc:g}_vw{vw:g}",
                               "n_grid": r.get("n_grid", "")})
+    if not cells:
+        raise RuntimeError(
+            f"aggregate() matched ZERO cells for families {sorted(want)}.\n"
+            "  The table was readable, so this is a selection failure, not an\n"
+            "  empty dataset. Refusing to return [] and let a caller log nothing.")
 
     out = []
     for (vc, vw), vals in sorted(cells.items()):
@@ -112,26 +149,49 @@ def aggregate(rows: list[dict]) -> list[dict]:
     return out
 
 
-def iso_vrel_criterion(agg: list[dict]) -> tuple[float | None, str]:
-    """Pre-registered C2: spread across the iso-|v_rel| arc, computed only if complete."""
-    by_id = {a["cell_id"]: a for a in agg if a["cell_id"] in ARC_CELLS}
-    missing = [c for c in ARC_CELLS if c not in by_id]
-    if missing:
-        return None, (f"C2 NOT COMPUTABLE: missing arc cells {missing}. "
-                      "All five are required; a partial arc gives no verdict.")
-    means = [by_id[c]["F_horiz_mean_N"] for c in ARC_CELLS]
-    m = statistics.fmean(means)
-    if m == 0:
-        return None, "C2 NOT COMPUTABLE: mean |F_horiz| is zero."
-    s = (max(means) - min(means)) / m
+def iso_vrel_criterion(rows: list[dict]) -> tuple[float | None, str]:
+    """Pre-registered C2: spread across each iso-|v_rel| arc.
+
+    REWRITTEN 2026-08-19. This used to look for cell ids 'A0'..'A4' from a
+    placeholder schema. Those ids do not exist in the real data, so it returned
+    NOT COMPUTABLE every time and would have done so forever, while looking like
+    a criterion that was being evaluated. The arcs are the M3m* families.
+
+    Takes the raw records, NOT the aggregate: the aggregate is the g64 surface,
+    and the arcs are a different family. Passing the aggregate here is what made
+    the old version unable to fire.
+    """
+    arcs: dict = {}
+    for r in rows:
+        if not str(r.get("family", "")).startswith("M3m"):
+            continue
+        mag, val = _f(r, "v_rel_mag_ms"), _f(r, "force_horiz_mag_N")
+        if mag is None or val is None:
+            continue
+        arcs.setdefault(round(mag, 3), []).append(val)
+    if not arcs:
+        return None, ("C2 NOT COMPUTABLE: no M3m* iso-|v_rel| arcs in the table. "
+                      "This is an absent family, not a null result.")
+    parts, worst = [], None
+    for mag in sorted(arcs):
+        vals = arcs[mag]
+        m = statistics.fmean(vals)
+        if not m:
+            continue
+        s = (max(vals) - min(vals)) / m
+        worst = s if worst is None else max(worst, s)
+        parts.append(f"|v_rel|={mag:g} m/s: S={s:.4f} (n={len(vals)})")
+    if worst is None:
+        return None, "C2 NOT COMPUTABLE: every arc had a zero mean."
     reading = ("SPLIT MATTERS: S is the size of what collapsing the two speeds omits"
-               if s >= 0.10 else
+               if worst >= 0.10 else
                "SCALAR DEFENSIBLE: collapsing v_car and v_water is defensible "
                "(a negative result, and it is reported as one)")
-    return s, f"C2: S = {s:.4f} against the pre-registered 0.10. {reading}."
+    return worst, (f"C2 against the pre-registered 0.10. {reading}. "
+                   + "; ".join(parts))
 
 
-def render_report(agg: list[dict]) -> str:
+def render_report(agg: list[dict], rows: list[dict]) -> str:
     lines = ["", "CELL SUMMARY (range and count, sigma only where n >= "
              f"{MIN_N_FOR_SIGMA})", ""]
     lines.append(f"{'cell':6s} {'v_car':>6s} {'v_wat':>6s} {'|vrel|':>7s} "
@@ -143,7 +203,7 @@ def render_report(agg: list[dict]) -> str:
             f"{a['cell_id']:6s} {a['v_car_ms']:6.2f} {a['v_water_ms']:6.2f} "
             f"{a['v_rel_mag_ms']:7.3f} {a['n_draws']:3d} {a['F_horiz_mean_N']:12.4f} "
             f"{a['F_horiz_range_N']:10.4f} {rp:>8s} {sig:>10s}")
-    _, msg = iso_vrel_criterion(agg)
+    _, msg = iso_vrel_criterion(rows)
     lines += ["", msg, ""]
     return "\n".join(lines)
 
@@ -160,7 +220,7 @@ def coverage(agg: list[dict]) -> str:
     return "\n".join(lines)
 
 
-def log_to_wandb(agg: list[dict], entity: str, project: str, group: str) -> int:
+def log_to_wandb(agg: list[dict], rows: list[dict], entity: str, project: str, group: str) -> int:
     try:
         import wandb
     except ImportError:
@@ -190,7 +250,7 @@ def log_to_wandb(agg: list[dict], entity: str, project: str, group: str) -> int:
         for i, v in enumerate(a["draws"]):
             draws.add_data(a["cell_id"], a["v_car_ms"], a["v_water_ms"], i, v)
 
-    s, msg = iso_vrel_criterion(agg)
+    s, msg = iso_vrel_criterion(rows)
     run.log({"load_surface_cells": table, "load_surface_draws": draws})
     run.summary["c2_iso_vrel_spread_S"] = s
     run.summary["c2_reading"] = msg
@@ -293,10 +353,10 @@ def main() -> int:
         print("that was never made, so this exits without creating one.")
         return 0
 
-    print(render_report(agg))
+    print(render_report(agg, rows))
 
     if args.log:
-        return log_to_wandb(agg, args.entity, args.project, args.group)
+        return log_to_wandb(agg, rows, args.entity, args.project, args.group)
     print("DRY RUN. Nothing was written to Weights and Biases. Pass --log to write.")
     return 0
 

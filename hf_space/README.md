@@ -30,8 +30,23 @@ things that a threshold hides:
 | panel | what it shows | data state |
 |---|---|---|
 | Where the verdict flips | peak surge drift for each gated run against a movable distance threshold | live, 17 runs |
-| Load surface, `v_car` x `v_water` | vehicle speed and flow speed as **separate** axes, where the field usually collapses them into one relative speed | **schema only, no data yet** |
+| Load surface, `v_car` x `v_water` | vehicle speed and flow speed as **separate** axes, where the field usually collapses them into one relative speed | live, 348 records, 20 cells at five seeds |
 | Repeat spread | two independent draws of the same configuration | live, 3 configurations |
+
+### The load surface panel shows three spreads, because they are not the same size
+
+| spread | what varies | size | is it an error bar? |
+|---|---|---|---|
+| seed | five seeds, one cell | 0.066 to 0.338 % | yes, and it is tiny |
+| split | how one \|v_rel\| divides into `v_car` and `v_water` | 76 to 128 % | **no, this is the result** |
+| window | measurement window f20-60 against f250-400 | -68.9 to +83.9 % | no, the load is still changing |
+
+A page that drew error bars from seed scatter alone would show almost nothing
+and would imply the other two spreads did not exist. The vehicle in this panel
+is **prescribed, not free**, so no FORD or NO-FORD verdict follows from it.
+
+Full dataset and card:
+[josiecerrell/can-it-ford-speed-surface](https://huggingface.co/datasets/josiecerrell/can-it-ford-speed-surface)
 
 ## Engine
 

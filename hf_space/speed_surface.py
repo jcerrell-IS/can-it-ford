@@ -41,7 +41,7 @@ DATA_DIR = os.path.join(HERE, "data")
 
 CANONICAL_SURFACE_FAMILIES = ["M1s0", "M1s1", "M1s2", "M1s3", "M1s4"]
 PUBLISHED_TRANSIENT_FAMILY = "c3full"
-G96_SURFACE_FAMILY = "M2s0"
+G96_SURFACE_FAMILIES = ["M2s0", "M2s1"]
 YARIS_HULL = "yaris_coarse_v1l_watertight"
 
 # The pair d17's R5 states as "the contribution stated as a number".
@@ -283,30 +283,47 @@ def three_spreads(rows: list[dict] | None = None) -> dict:
 
 
 def resolution_check(rows: list[dict] | None = None) -> dict:
-    """g64 five-seed surface against the single-seed g96 surface, where cells match."""
+    """g64 surface against the g96 surface, cell by cell, both averaged over seeds.
+
+    Reports the SIZE of the resolution effect. It is not a convergence claim and
+    two grids cannot make one: a grid-convergence statement needs a
+    time-averaged observable on a demonstrated-stationary window with a GCI, and
+    this project's own record shows the displacement measure is non-monotone
+    under refinement.
+    """
     rows = rows if rows is not None else load_records()
     settled = {(c["v_car_ms"], c["v_water_ms"]): c for c in canonical_surface(rows)}
-    g96 = {}
-    for r in _select(rows, [G96_SURFACE_FAMILY]):
+    g96_draws: dict = {}
+    for r in _select(rows, G96_SURFACE_FAMILIES):
         c = _cell(r)
         v = _f(r, "force_horiz_mag_N")
         if c is not None and v is not None:
-            g96[c] = v
-    if not g96:
-        raise NoDataError(f"{G96_SURFACE_FAMILY} absent; no resolution check possible")
+            g96_draws.setdefault(c, []).append(v)
+    if not g96_draws:
+        raise NoDataError(
+            f"none of {G96_SURFACE_FAMILIES} present; no resolution check possible")
     diffs = []
-    for c, v in g96.items():
+    g96_rel_sd = []
+    for c, vals in g96_draws.items():
+        m96 = statistics.mean(vals)
+        if len(vals) > 1 and m96:
+            g96_rel_sd.append(100.0 * statistics.stdev(vals) / m96)
         if c in settled and settled[c]["F_horiz_mean_N"]:
-            diffs.append(100.0 * (v - settled[c]["F_horiz_mean_N"])
+            diffs.append(100.0 * (m96 - settled[c]["F_horiz_mean_N"])
                          / settled[c]["F_horiz_mean_N"])
     if not diffs:
         raise NoDataError("no overlapping cells between g64 and g96 surfaces")
+    seeds = sorted({len(v) for v in g96_draws.values()})
     return {
         "cells_compared": len(diffs),
+        "g96_seeds_per_cell": seeds,
+        "g96_seed_rel_sd_pct": (
+            {"min": round(min(g96_rel_sd), 4), "max": round(max(g96_rel_sd), 4)}
+            if g96_rel_sd else None),
         "g96_minus_g64_pct": {"min": round(min(diffs), 3), "max": round(max(diffs), 3),
                               "median": round(statistics.median(diffs), 3)},
-        "reading": ("a single-seed g96 surface against a five-seed g64 surface; "
-                    "reports the size of the resolution effect, NOT convergence"),
+        "reading": ("the size of the resolution effect between two grids, NOT a "
+                    "convergence result; no grid-converged claim follows from it"),
     }
 
 

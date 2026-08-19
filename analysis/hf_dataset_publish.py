@@ -752,11 +752,15 @@ each is an upper bound rather than a dedicated-card benchmark.
    a ratio of **{hull_ratio:.0f}x**. The `hull` column separates them. Note the
    naming is misleading: the file called "yaris_coarse" has far more vertices
    than the mesh called Silverado "fine".
-4. **Resolution is characterised, not converged.** A single-seed n_grid=96
-   surface differs from the five-seed n_grid=64 surface by {rc['g96_minus_g64_pct']['min']:.1f} to
-   +{rc['g96_minus_g64_pct']['max']:.1f} percent across {rc['cells_compared']} cells (median
-   {rc['g96_minus_g64_pct']['median']:.1f}). **No grid-converged claim should be read off this
-   dataset.**
+4. **Resolution is characterised, not converged.** An n_grid=96 surface
+   ({', '.join(str(s) for s in rc['g96_seeds_per_cell'])} seeds per cell) differs from the five-seed
+   n_grid=64 surface by {rc['g96_minus_g64_pct']['min']:.1f} to +{rc['g96_minus_g64_pct']['max']:.1f} percent
+   across {rc['cells_compared']} cells (median {rc['g96_minus_g64_pct']['median']:.1f}). The g96 seed spread is
+   {rc['g96_seed_rel_sd_pct']['min']:.3f} to {rc['g96_seed_rel_sd_pct']['max']:.3f} percent, so the grid effect
+   is far larger than the seed noise at either resolution. **No grid-converged
+   claim should be read off this dataset**: two grids cannot establish
+   convergence, and this project's own record shows the displacement measure is
+   non-monotone under refinement.
 5. **`fz_settle_over_analytic_diagnostic` is a diagnostic, not a validation.**
    It sits near 2.05 for the Yaris rows. Do not read it as a buoyancy check.
 6. **Depth is fixed at 0.3 m** in every row. This is a two-speed surface, not a

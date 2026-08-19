@@ -14,6 +14,7 @@
     "M1s3",
     "M1s4",
     "M2s0",
+    "M2s1",
     "M3m1.0",
     "M3m2.0",
     "M3m3.0",
@@ -70,7 +71,7 @@
   ],
   "force_magnitude_consistency": {
     "meaning": "force_horiz_mag_N vs hypot(force_mean_x_N, force_mean_y_N)",
-    "rows_checked": 348,
+    "rows_checked": 368,
     "worst_relative_mismatch": 2.1349954213019968e-16
   },
   "hulls": [
@@ -83,16 +84,16 @@
     "torque in the source is about the collider centre, not the CG",
     "fz_settle_over_analytic is a diagnostic, not a buoyancy validation"
   ],
-  "records": 348,
+  "records": 368,
   "source": {
-    "blob": "7eee079a7085c98e140ca61ea708ebb70003d71e",
+    "blob": "9afb3c7433ccac366e7658ea5a8e4432cfea5bfc",
     "branch": "claude/r9-moving-vehicle",
-    "commit": "159bf7d",
+    "commit": "498f1ad",
     "crlf": false,
     "mode": "git-blob",
     "path": "data/r9_speed_surface.tsv",
     "repo": "/Users/josie/can-it-ford",
-    "sha256_of_text": "cd43a6cb4eb9c3377d929b8563bcca5c56ec41a07dbebe938c445f3c46dbb13a",
+    "sha256_of_text": "7349656cf9c75d55df98e8785d25b1a130df53a1f14ebf2eeba6e4443899228b",
     "sha_pinned": false
   },
   "windows": [
