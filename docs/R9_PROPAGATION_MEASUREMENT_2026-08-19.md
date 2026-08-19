@@ -96,3 +96,95 @@ dead for every child `claude` process, not only the Agent tool. Self-measured on
   Seven candidates were inspected individually and all seven are `v1`/`v2`/`A2` matches.
 - Result 3 dies if `51c158b` predates `866238a`, which would make it independent rather than
   responsive. It does not: 18:34 then 19:03.
+
+---
+
+# Second measurement, 23:50 BST: deliberate relaying. Same method, so the windows compare.
+
+Between the first measurement and this one the coordinator relayed findings between slots
+deliberately: Wallstedt and Zhao to d21, Quinlan to d11, the mesh search to d13, the realism
+ranking to d17, and d11's own correction back out to d21 and to a board Josie reads. This
+measures whether that changed anything, using the identical method and regex.
+
+## The rate did not move. This is a null and it is the honest headline.
+
+| window | span | commits | with a cross-slot reference | proportion |
+|---|---|---|---|---|
+| W1 pre-readout | wave start to 18:52 | 102 | 41 | **0.402** |
+| W2 post-readout | 18:52 to 20:12 | 43 | 20 | **0.465** |
+| W3 deliberate relay | 20:12 to 23:50 | 22 | 9 | **0.409** |
+
+    W1 -> W2   z = +0.70
+    W2 -> W3   z = -0.43
+    W1 -> W3   z = +0.06
+
+**W3 sits on top of W1.** Deliberate relaying did not raise the rate at which sessions
+reference each other, and the small W2 bump did not survive. z = +0.06 across the whole
+evening is as close to no effect as this measure can produce.
+
+## But the rate is the wrong test, and the right one says four of six relays landed
+
+Rate measures whether sessions talk about each other. It cannot see whether a specific
+relayed item was used. Testing each relay against its named recipient's own commits in W3:
+
+| relay | recipient | landed? | evidence |
+|---|---|---|---|
+| Wallstedt (`Wal07`) | d21-jobb | **YES** | `d826c8a`, tested and partly refuted |
+| d11's correction | d21-jobb | **YES** | `d826c8a`, 2 of 3 commits |
+| Quinlan | d11-accessor | **YES** | `f673c45`, `c692b21`, cited with full reference, Computers & Fluids 177:33-45, 2018 |
+| mesh search | d13-renders | **YES** | `cdcc4a0`, "Read the deep search Simulation Ready Vehicle Mesh Assets directly" |
+| Zhao locking / F-bar | d21-jobb | no trace | the work exists but on `add-ci-checks` (`754af7f`), not on d21's branch |
+| realism ranking | d17-moving | no trace | 0 of 3 commits |
+
+**A false negative of my own, recorded because it is the round's signature.** My first pass
+scored the Wallstedt relay as 0 of 3. It landed; d21 cites the paper as `Wal07`, not by
+author surname, and my regex only matched the surname. The corrected pattern found it. A
+search that cannot match returns zero, and a zero from it is not an absence, which is the
+rule this project already has and which I broke while measuring compliance with it.
+
+## The finding that matters is fidelity, not delivery
+
+Delivery worked, 4 of 6. **Fidelity did not.** Two of the relayed claims about Wallstedt and
+Guilkey did not survive the recipient reading the paper, and both were widenings:
+
+- **"For a body held fixed the projection error becomes a constant systematic bias rather
+  than noise" is not in the paper.** The paper says accuracy "is strongly dependent on
+  particle density and location", and its section 2 carries the opposite emphasis. It would
+  not have applied here anyway: the body is fixed, the water particles are not. Withdrawn.
+- **The plateau's "O(h)" scaling is not a stated result.** The plateau is real and was quoted
+  correctly; its scaling was read off Figure 10 by eye, while the paper's own analytic
+  reference is Vshivkov 1996 whose grid term is h^2. It is grid-set, never O(h).
+
+**The chain, which is the structural point.** The first claim originated in a PDF-reading
+subagent's own "Application to a Fixed Rigid Body" *reasoning* section, not in the paper's
+text. It then went to the coordinator, who passed it to two sessions and to a board Josie
+reads. That is **paper, subagent reasoning, coordinator, recipients**: three removes, and the
+break happened at the first one, where a subagent's inference was read as the paper's
+finding.
+
+**Both were caught by d21-jobb reading the primary source instead of accepting the relay**
+(`d826c8a`, 23:42), and the coordinator then owned both in `ac0f0d8` at 23:48, before this
+document was written. Credit where it is due: the correction did not need an auditor.
+
+## What the two measurements together license
+
+**Relaying works as a delivery mechanism and failed as a fidelity mechanism.** Four of six
+items reached their recipient; two of the claims carried were wider than their source. The
+value in W3 came from the recipient **distrusting** the relay and going to the paper, not
+from the relay being right.
+
+That inverts the obvious lesson. The instruction should not be "relay more"; the rate shows
+relaying more does not move anything. It should be **carry the scope with the claim, name the
+remove it came from, and expect the recipient to check it.** A relay that says "Wal07 says X"
+and a relay that says "a subagent reading Wal07 inferred X" are different objects, and only
+the second one warns the recipient what to verify.
+
+## Unchanged from the first measurement
+
+Generic cross-slot propagation was already working at 40 percent before any intervention and
+remains there. Nothing in either measurement supports the claim that the coordination layer
+improved. What improved, once, was that a named finding got closed (C-1). What improved
+again, tonight, is that a wrong relayed claim got caught in under two hours.
+
+**Unreviewed.** Every child `claude` process on this machine is still dead, so no adversarial
+pass was possible. Self-measured only.
