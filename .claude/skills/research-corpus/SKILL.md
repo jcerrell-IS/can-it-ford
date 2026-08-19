@@ -175,9 +175,31 @@ designations exactly.
 
 **HARD NEGATIVE from that search:** no citable, publicly redistributable OBJ /
 PLY / glTF / USD conversion of the Yaris, Silverado or Rogue models is verified
-to exist anywhere. This repo's `.ply` hulls are its own conversions and
-`vehicle_mesh_pipeline.py` (untracked, in `~/Downloads/vehicle_meshes/`) is the
-only provenance any hull has.
+to exist anywhere, including GitHub, Kaggle and Hugging Face. This repo's `.ply`
+hulls are its own conversions, there is no external artifact to check them
+against, and `vehicle_mesh_pipeline.py` (untracked, in
+`~/Downloads/vehicle_meshes/`, with `_v5` and `_v6` revisions) is the only
+provenance any hull has.
+
+**Measured hull fidelity. Re-verified live 2026-08-20 by reading `element
+vertex` from each PLY header, not carried from another session's write-up; all
+five match.**
+
+    yaris_coarse_v1l_watertight.ply                  327,212   in use
+    rogue_g96_pd6_coarse_watertight.ply               31,357   in use
+    silverado_g32_pd8_dq0.02_coarse_watertight.ply     2,108   in use
+    rogue_coarse_watertight.ply                       66,987   UNUSED
+    silverado_coarse_watertight.ply                   48,706   UNUSED
+
+The last two sit unused in `~/Downloads/vehicle_meshes/` (41 PLY files there).
+**State the within-vehicle ratio, not the cross-vehicle one.** The Silverado
+hull in use is **23.1x coarser than the Silverado hull already on disk**, and
+the Rogue's is 2.14x coarser than its own better copy. The "155x coarser" figure
+that has circulated is Yaris-against-Silverado, which compares two different
+vehicles and therefore cannot support a claim about either one's resolution. A
+fixed `n_grid` across vehicles already changes `dx` and the realised water depth
+because `grid_lim` follows the loaded hull's extent, so a cross-vehicle mesh
+comparison confounds two things at once.
 
 **Ingesting that search's 36 papers would NOT have prevented the loss**, which
 is worth knowing before anyone proposes it as the fix. Measured 2026-08-19: 22

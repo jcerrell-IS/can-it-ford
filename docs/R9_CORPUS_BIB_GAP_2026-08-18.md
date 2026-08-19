@@ -1381,3 +1381,222 @@ treatment should read `[Sch19e]` before the refutation is treated as settled.
   during this unit. Everything in section 29 is from `--out` builds.
 - **`data/deep_searches/` is still gitignored** by `data/*` and needs an
   un-ignore pair. Section 26. Every export still needs `git add -f`.
+
+---
+
+# PART 5, 2026-08-20: WHAT IT WOULD TAKE TO LAND THIS BRANCH ONTO `claude/add-ci-checks`
+
+**SCOPE ONLY. NOTHING IN THIS PART HAS BEEN EXECUTED.** No merge, no rebase, no
+push, no branch created. Every command below is written to be read before it is
+run.
+
+## 32. Why it is urgent, measured across all 36 worktrees
+
+The corrections do not propagate, and the damage is timed. `--query` was fixed
+at 00:21 on 2026-08-19; `d17-moving` committed the pre-fix claim at 00:43.
+
+Measured live 2026-08-20 by content hash over every worktree:
+
+| content | lines | copies | what it is |
+|---|---|---|---|
+| `05eff121` | 670 | **1** | this branch, the only corrected copy |
+| `c8e98889` | 249 | 3 | `faf53d1`, the coordinator's version |
+| `057e5d6d` | 152 | 9 | the **pre-`faf53d1` base**, corrected by nobody |
+| absent | 0 | 23 | the branch has no such file |
+
+**And the root of it: `origin/main` carries NEITHER `analysis/research_index.py`
+NOR `.claude/skills/research-corpus/SKILL.md` NOR
+`data/research_corpus_index.json`.** Verified by `git ls-tree`, all three return
+nothing. So a fresh clone has no corpus tool at all, and the landing target
+`claude/add-ci-checks` has a half-fixed one: 88 commits ahead of `origin/main`
+and still author-blind in `--query`.
+
+This is not a documentation problem. Nine worktrees are sitting on a copy that
+predates even the coordinator's corrections, and no amount of writing in my copy
+reaches them.
+
+## 33. What actually conflicts is ONE file, and it is smaller than reported
+
+Merge base `af62473`, which is a commit on this branch. Since then:
+`claude/add-ci-checks` has 23 commits, this branch 9.
+
+**This branch touches 6 files. `claude/add-ci-checks` has touched exactly 1 of
+them.**
+
+| file | their side since the base | resolution |
+|---|---|---|
+| `analysis/research_index.py` | **untouched, blob `b775b31` identical to base** | clean take-mine |
+| `docs/R9_CORPUS_BIB_GAP_2026-08-18.md` | does not exist there | clean add |
+| `data/r9_bib_corpus_census.tsv` | does not exist there | clean add |
+| `data/deep_searches/*.json` (2) | do not exist there | clean add, but see 35 |
+| `.claude/skills/research-corpus/SKILL.md` | **101 lines added** | the only real merge |
+
+`research_index.py` being byte-identical to the merge base on their side is the
+single most useful fact here: **the file that fixes `--query` lands without a
+conflict at all.**
+
+### The SKILL.md union, re-measured after this turn
+
+`d16` measured SKILL.md as a genuine union where neither side is a superset, all
+of `add-ci-checks`' added lines absent from mine. **That was true when measured
+and it is no longer true, because I closed the gap in this turn.**
+
+Line-level, their 101 added lines are 70 substantive, of which 54 do not appear
+verbatim in mine. That number is misleading on its own: a line-level diff cannot
+see rewording, and I rewrote most of that material. Checked **by theme** instead,
+which is what actually decides a merge:
+
+**13 of 13 themes from `claude/add-ci-checks` are now carried here**, including
+the CCSA/NCAC vehicle answer, the hard negative on public PLY conversions, the
+workspace query recipe, and the physics-regression-test correction.
+
+The last gap was the **measured hull vertex counts**, which existed only on their
+side. I did not copy them. I re-read `element vertex` from all five PLY headers
+on 2026-08-20 and **all five match**: yaris 327,212, rogue_g96 31,357,
+silverado_g32 2,108, and the two unused hulls at 66,987 and 48,706. Added here
+with one correction: the circulating "155x coarser" is Yaris-against-Silverado,
+a **cross-vehicle** comparison that cannot support a claim about either vehicle's
+resolution. The within-vehicle figures are **23.1x** for the Silverado and
+**2.14x** for the Rogue, against better hulls already sitting on disk.
+
+**So the merge is now take-mine on both files, not a union.** That is a
+consequence of work done this turn and it should be re-verified rather than
+trusted: the acceptance test in section 36 is exactly that check.
+
+**DO NOT take `add-ci-checks`' SKILL.md content in the merge.** Eight of its
+added lines are claims this branch refuted with evidence: the withdrawn "256 are
+cited nowhere", "nineteen completed deep searches" against the measured 21, and
+`df52bee` as the commit that added `tests/test_physics_gates.py` when
+`git log --diff-filter=A` returns `50b70c0`. **A `-X theirs` or a naive union
+would reintroduce all three and undo the reason for landing.**
+
+## 34. The procedure, if a human says go
+
+Written for review, not for pasting unread. Steps 4 and 6 are the ones that can
+lose work.
+
+```
+# 1. Confirm nobody else is mid-write on the target.
+git -C /Users/josie/can-it-ford status --porcelain
+tmux list-panes -a | grep add-ci-checks
+
+# 2. Record the pre-state so the acceptance test has a baseline.
+git -C /Users/josie/can-it-ford rev-parse claude/add-ci-checks
+git -C /Users/josie/can-it-ford ls-tree claude/add-ci-checks -- analysis/research_index.py
+
+# 3. Work on a throwaway branch, never on add-ci-checks directly.
+git -C /Users/josie/can-it-ford branch land-corpus-trial claude/add-ci-checks
+
+# 4. Merge. EXPECT A CONFLICT IN SKILL.md AND ONLY THERE.
+git -C /Users/josie/can-it-ford merge --no-commit --no-ff claude/r9-corpus-bib
+
+# 5. Resolve SKILL.md by taking THIS branch's copy wholesale, having first
+#    re-run the acceptance test in section 36 to prove it is a superset.
+git -C /Users/josie/can-it-ford checkout claude/r9-corpus-bib -- \
+    .claude/skills/research-corpus/SKILL.md
+
+# 6. The two exports are gitignored by data/*, so a merge will NOT carry them
+#    silently. Add explicitly, or they vanish without a warning.
+git -C /Users/josie/can-it-ford add -f \
+    data/deep_searches/buoyancy-overestimation.json \
+    data/deep_searches/vehicle-mesh-assets.json
+
+# 7. Commit the merge, then run every check before anything is pushed.
+```
+
+## 35. Five hazards, each one measured rather than anticipated
+
+1. **A CONFLICTED MERGE IS REFUSED BY THE PRE-COMMIT HOOK.** Verified live:
+   `.git/hooks/pre-commit` refuses more than 8 staged files, and there is **no
+   `pre-merge-commit` hook**. So a CLEAN merge of any size passes, while a
+   CONFLICTED merge runs `pre-commit` against a large staged set and is blocked.
+   This merge stages 6+ files. **Expect the commit to be refused and do not
+   interpret that as a merge failure.**
+2. **`data/deep_searches/` is gitignored** by the `data/*` rule. Re-derive it
+   with `git check-ignore -v <path>`, never by line number. Without step 6 the
+   exports are dropped silently, which is the exact failure mode section 26
+   records.
+3. **`git checkout <branch> -- <path>` in step 5 is a wholesale overwrite.** It
+   is correct ONLY if the acceptance test passes first. If it does not, the
+   resolution is a hand-merge and this plan is void.
+4. **`claude/add-ci-checks` is a live branch with 23 commits since the base and
+   other sessions on it.** Its HEAD may move between reading this and running
+   it. Step 2 exists so a moved HEAD is detected rather than merged over.
+5. **THE REPO IS PUBLIC and `pre-push` requires `PUSH_OK=1`.** Nothing in this
+   plan pushes. A push is a separate decision and needs its own confirmation.
+
+## 36. The acceptance test, which is falsifiable and runs before the merge
+
+The claim the whole plan rests on is "this branch's SKILL.md is a superset". Test
+it, do not trust section 33:
+
+```
+python3 - <<'EOF'
+import subprocess, re
+R = "/Users/josie/can-it-ford"
+def show(ref):
+    return subprocess.run(["git","-C",R,"show",
+        ref + ":.claude/skills/research-corpus/SKILL.md"],
+        capture_output=True, text=True).stdout
+theirs, mine = show("claude/add-ci-checks"), show("claude/r9-corpus-bib")
+norm = lambda s: re.sub(r"[^a-z0-9]+", " ", s.lower()).strip()
+mn = norm(mine)
+missing = [l for l in theirs.split("\n")
+           if len(norm(l).split()) >= 5 and norm(l) not in mn]
+print(f"{len(missing)} substantive lines of theirs absent VERBATIM from mine")
+for l in missing[:60]: print("   ", l[:100])
+EOF
+```
+
+A non-zero count is expected and is not a failure: I rewrote that material. The
+test is to read the list and confirm every entry is either **(a)** present in
+reworded form or **(b)** a claim this branch refuted, listed in section 33.
+**Any line that is neither must be carried across before the merge.** As of
+2026-08-20 the answer is 13 of 13 themes present and the only unique content was
+the hull counts, now carried.
+
+Then, after merging and before pushing:
+
+```
+python3 analysis/research_index.py --query "Al-Qadami"      # must be 5, not 0
+python3 analysis/research_index.py --identifier-audit       # 272 / 57 / 3
+python3 analysis/research_index.py --source-audit; echo $?  # must exit 1
+python3 analysis/research_index.py --bib-audit              # exit 0
+python3 .claude/checks/count_claims_check.py                # 0 in a full checkout
+grep -c "WITHDRAWN QUOTE" .claude/skills/research-corpus/SKILL.md   # must be 1
+```
+
+**`--query "Al-Qadami"` returning 5 rather than 0 is the single check that
+proves the landing did what it was for.**
+
+## 37. What needs a human, and what I will not decide
+
+- **Whether to land onto `claude/add-ci-checks` at all, or to wait and land both
+  onto `origin/main` together.** `origin/main` has none of this tooling, so
+  landing on `add-ci-checks` fixes 3 of 36 worktrees now and the rest only when
+  they rebase. That is a real improvement and it is not the fix.
+- **Whether to rebuild the index as part of the landing.** Part 4 measured what
+  a rebuild changes: 332 to 319 papers, cited-anywhere 76 to 66, and a
+  reader-facing 43 to 52 that is a measurement change rather than new research.
+  `CLAUDE.md` publishes those rungs. **My recommendation is to land the tooling
+  WITHOUT rebuilding**, so the code fix and the number change are separately
+  reviewable and separately revertable.
+- **Whether `data/deep_searches/` gets an un-ignore pair in `.gitignore`.**
+  Outside my scope, and every export needs `-f` until it happens.
+- **The 11 unexported searches.** Roughly 40 connector calls. `--source-audit`
+  exits 1 naming each, so this stays loud.
+
+## 38. One thing this exercise showed that is worth keeping
+
+`d16` measured the merge honestly and reported neither side a superset. That was
+correct. Acting on it directly would have meant a hand-built union of two large
+files, which is the highest-risk operation available here and the one most likely
+to reintroduce a withdrawn claim.
+
+**The cheaper move was to make the measurement false**: find the content that was
+genuinely unique, verify it independently rather than copying it, and carry it
+across, until the union collapsed to a take-mine. It cost five PLY header reads.
+
+The general form: when two documents conflict, check whether the conflict can be
+**dissolved by making one of them complete** before planning how to resolve it.
+A merge you no longer have to make cannot go wrong.
