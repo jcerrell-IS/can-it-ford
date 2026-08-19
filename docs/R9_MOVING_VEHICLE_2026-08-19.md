@@ -1303,3 +1303,17 @@ the location of the worst-case split is not a reportable quantity at any
 resolution reached here. The EXISTENCE and SCALE of the split-dependence, which
 is the actual claim, are unaffected: S is between 0.61 and 1.19 across every
 grid and every BC rate tried, against a repeatability floor of 0.076 percent.
+
+### T15a. The g128 collapse reproduces on a second seed
+
+A second g128 arc landed in the last minutes of the window. The two draws:
+
+| draw | S | mean `\|F_h\|` |
+|---|---|---|
+| seed 0 | 0.6065 | 1659.7 N |
+| seed 1 | 0.6076 | 1657.6 N |
+
+They agree to **0.18 percent on S and 0.13 percent on load**. So the collapse
+from S ~1.07 at g64 to S ~0.61 at g128 is not a single-draw fluke, and neither
+is the 47 percent drop in load. The finest rung is still only two draws, and the
+queued batch job takes it to five.
