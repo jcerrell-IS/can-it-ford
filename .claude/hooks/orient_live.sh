@@ -78,7 +78,7 @@ fi
       [ -f "$wf" ] || continue
       b=$(basename "$wf")
       git -C "$REPO" cat-file -e "origin/main:.github/workflows/$b" 2>/dev/null \
-        || echo "  CI NOT LIVE: .github/workflows/${b} is not on origin/main, so it runs nowhere"
+        || echo "  CI: .github/workflows/${b} is ABSENT FROM origin/main, but it RUNS on push from other branches (7 green runs) and count_claims can exit 1 inside a green job. Absent-from-main and runs-nowhere are different claims; only the first is true."
     done
   fi
 

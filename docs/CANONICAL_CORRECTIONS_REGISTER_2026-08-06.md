@@ -2184,3 +2184,49 @@ L7. **SKILL DRIFT, RE-VERIFIED, and the previously recorded drift is FIXED.** Fi
     on aarch64. The paper tests no ARM, so that is absence of the known blocker and
     not a port report; say it that way.
 
+
+
+---
+
+## COORDINATOR CORRECTIONS, 2026-08-19, from the R9 cross-session readout section 5.4
+
+Three rows in this register asserted things this register or a sibling had already
+refuted. Recorded here rather than edited in place, so the retraction is visible.
+
+**A2 is RETRACTED.** It read "None of these six papers is in the 332-paper corpus index.
+`--query "Al-Qadami"` returns zero." Both halves are false. `--query` matched title and
+abstract only and NEVER authors, so an author query could not succeed; d14-corpusbib fixed
+it in `8bad9b4` and the same query now returns 5. Four of the six ARE in the corpus,
+including `10.1111/jfr3.12828`. The coordinator withdrew this VERBALLY on a board row at
+17:44 and never updated this file, which is exactly the failure this register exists to
+prevent: the corrections authority served a claim its own author had withdrawn.
+
+**B1 is CLOSED.** It was listed "OPEN, UNOWNED". It is closed on `r9-corpus-bib`
+(`8bad9b4`) and on `add-ci-checks` itself (`faf53d1`), where the skill now reads
+"DO NOT SAY 256 ARE CITED NOWHERE". The register listed as open an item its own branch
+had fixed.
+
+**B7 is RE-SCOPED, not open-unowned.** Fixed on `r9-settle` (`0861b52`, which reads 9.81
+with a dated correction block). Still stale on the landing target, where
+`classify_failure_modes.py:30` reads 9.80665. The row was right about the target and wrong
+that nobody owns it.
+
+## THE FALSIFIER RULE, 2026-08-19, from readout section 5.9
+
+Eight instrument failures were found in one round, every one with the same signature:
+**a code path that returns a value indistinguishable from a measurement when it could not
+measure.** `stationarity.py` returning 0.0 where 0.0 is also the pass value; a
+`grep -c ... || echo 0` producing "0\n0" so the integer comparison errored and fell to
+else; `all([])` returning True over zero data; a two-arm control where both arms failed
+because the branch did not exist; `--query` unable to match an author so zero was
+unreachable rather than absent; a preflight that checks CLAUDE.md and silently ignores the
+authority skill; `gh run view --json jobs` reporting `conclusion: success` on a step that
+exited 1; and mesh acceptance checks passing watertight, edge-manifold and correct-bbox on
+a mesh with one blob per particle. Six of the eight were caught by their own authors, all
+after publication.
+
+**RULE: any commit that adds a check must name, in the commit message, the input that
+makes that check FAIL.** If no such input can be named, the check cannot fail and is not a
+check. `analysis/r9_session_reader.py --self-test` demonstrates the cheap form: assert that
+each guard fires, and assert a known limitation explicitly so a later "fix" cannot silently
+remove the caveat.
