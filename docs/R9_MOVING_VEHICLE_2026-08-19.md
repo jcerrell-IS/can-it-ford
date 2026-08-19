@@ -2282,3 +2282,139 @@ T1**, and T1 supersedes R5's table for every purpose. R5 is retained as the
 record of what was originally claimed, with its withdrawal note, and should not
 be read as a current result. Anyone quoting a force from R5 is quoting a
 transient-window number from a single seed.
+
+---
+
+# T36. THE GENERAL FORM: a comparison whose operating point moved
+
+This is the transferable part, and it is worth more than the camber number that
+produced it. Three slots hit the same failure on the same night with three
+unrelated quantities, which is what makes it a pattern rather than three bugs.
+
+| slot | swept variable | the quantity that moved with it | outcome |
+|---|---|---|---|
+| d21-jobb | resolution | the ladder's operating point | a non-convergence claim was withdrawn |
+| d15-settle | window length | accumulated displacement, which integrates velocity | velocity had to be split from displacement |
+| **this slot** | road cross slope | **depth at the vehicle** | **the difference REVERSES SIGN when matched** |
+
+### The general statement
+
+> **When you sweep X to compare two conditions, check whether X also moves a
+> second quantity Y that the outcome depends on. If it does, the measured
+> difference is the effect of X PLUS the effect of the induced change in Y, and
+> those two terms can have OPPOSITE SIGNS. Report the comparison in both
+> framings, Y free and Y matched, and never present either one alone as "the
+> effect of X".**
+
+### The diagnostic, and why the sign reversal is the useful case
+
+A moved operating point is usually invisible: it inflates or deflates a
+difference and the result still looks sensible, so nobody checks. **The sign
+reversal is the tell.** If matching Y flips the sign of the comparison, then the
+two terms are comparable in magnitude and opposed, and **no single number is the
+effect of X**. The camber case reverses at 4 percent, from -18.6 to +6.0 percent,
+which is why it is the cleanest worked example of the three: the failure is not
+subtle there, it is a change of direction.
+
+### The part that is easy to get wrong on the second pass
+
+**Matching Y usually moves a third quantity Z, and then the matched comparison is
+not clean either.** Measured here: matching the depth at the vehicle required
+deepening the flood at the road edges, which raised the total water in the domain
+from 41,648 particles to 45,129 and 58,733. The 4 percent matched arm carries 41
+percent more water than its own reference, and that extra water at the sides is
+the obvious candidate for the sign flip.
+
+So the honest structure is not "the free framing is wrong and the matched framing
+is right". It is:
+
+> **The two framings BRACKET the effect. A fully isolated single-variable term
+> may not be constructible at all on a fixed domain, and when it is not, say so
+> and report the bracket rather than picking an end.**
+
+That is the form I would want a reader outside this project to take away. The
+camber numbers below are the evidence for it, not the point of it.
+
+# T37. CONTRIBUTION: a crowned road against a flat plane
+
+Consolidated, because the design is the thing a reader will check first and it
+was previously spread across T27, T31 and T32.
+
+### The gap
+
+An Undermind deep search commissioned **2026-08-18**, titled **"which realism
+effects change a flood vehicle stability verdict"**, reports that **no retrieved
+study quantifies a crowned or cambered road against a flat plane.** Its goal text
+describes this project's configuration, including the 0.15 m cell against
+millimetre road texture and the c = 13 m/s sound speed. The same search finds
+that air entrainment, spray, surface tension, turbulence closure, reduced sound
+speed and outlet boundary choice have **no** demonstrated verdict shift, and that
+bed condition, road slope and watertightness do.
+
+**This is a secondary source.** I have read none of the retrieved papers, and a
+search failing to retrieve is not proof that nothing exists.
+
+### The design, stated explicitly because a single arm would not fill the gap
+
+**Five arms, three seeds each, 9 angles each: 135 runs.** The flat arm is
+measured, not assumed, and is the same code path as the crowned arms (see the
+gate below).
+
+Held identical across every arm:
+
+| | |
+|---|---|
+| relative speed and sweep | `\|v_rel\|` = 3.0 m/s, 9 angles from broadside to axial |
+| grid, domain, resolution | g64, `lim` 9.421742 m, dx 0.1472147 m |
+| frames, discard, settle | 400, 250, 30 |
+| applied `bc_per_frame` | 4 (auto 2) on every arm |
+| hull and placement | Yaris, `hull_y_m` 4.710871156863869 |
+| seeds | 0, 1, 2 |
+
+Varied, and nothing else: **the cross slope**, and in the second framing **the
+flood depth**, set so the crown carries exactly 0.30 m.
+
+### The equivalence gate, which is why the flat arm is trustworthy
+
+`--road-cross-slope 0.0` runs the crowned code path over a flat profile, so the
+flat reference is produced by the same clamp as the crowned arms rather than by
+the older scalar path. It agrees with the independent scalar-path arm to **0.159,
+0.254 and 0.219 percent** across three seeds, with `n_water` identical at 41,648
+and every recorded numeric field identical. **I predicted byte-identical and it
+is not**; 0.254 percent is about three times the fixed-seed nondeterminism floor
+and the residual is **unexplained**, not explained away. It is 140 times smaller
+than the effect it gates.
+
+### The result, both framings
+
+| framing | camber | crown height | depth at vehicle | n_water | mean `\|F_h\|` | vs flat |
+|---|---|---|---|---|---|---|
+| reference | 0 | 0.0000 m | 0.300 m | 41,648 | 3119.7 N | |
+| **flood level fixed** | 2 pct | 0.0942 m | 0.206 m | 34,946 | 1979.8 N | **-36.5 pct** |
+| flood level fixed | 4 pct | 0.1884 m | 0.112 m | 28,340 | 1563.6 N | **-49.9 pct** |
+| **vehicle depth fixed** | 2 pct | 0.0942 m | 0.300 m | 45,129 | 2539.6 N | **-18.6 pct** |
+| vehicle depth fixed | 4 pct | 0.1884 m | 0.300 m | 58,733 | 3307.4 N | **+6.0 pct** |
+
+### What is claimed
+
+1. **At a fixed flood level, a standard 2 percent camber reduces the horizontal
+   hydrodynamic load on the vehicle by 36.5 percent**, and a 4 percent camber by
+   49.9 percent, in this model. Paired, three seeds, only the cross slope varying.
+2. **The effect is not only the shallower water.** With the vehicle standing in
+   exactly the same 0.30 m as on the flat road, 18.6 of those 36.5 points survive
+   at 2 percent camber.
+3. **It is not a single monotone mechanism.** The depth-matched difference
+   reverses sign by 4 percent camber, and the matched arms carry more total water
+   than their reference, so the two framings bracket the effect rather than
+   isolating it. See T36.
+
+### What is NOT claimed
+
+**No verdict, on either side.** The body is prescribed and cannot be swept away,
+so this is a paired LOAD comparison and not a paired stability comparison.
+Closing the gap fully needs a free body, which `RigidBody6DOF` refuses at a
+non-zero COM offset. **No converged magnitude**: T28 shows the resolution ladder
+does not converge, so every force here carries its grid. **No isolated geometry
+term**, per T36. **And no independent review**: per T24 no adversarial subagent
+reviewed any number in this document, and subagent calls fail account-wide
+tonight, so this remains self-checked rather than reviewed.
