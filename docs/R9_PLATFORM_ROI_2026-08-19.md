@@ -433,3 +433,224 @@ costume of the same zsh property the register already documents twice. Quote URL
 no licence audit beyond one sentence from Josie about which licence covers the data, and
 it produces the single artifact a paper can actually cite. Everything else on this list is
 either built and waiting, or a negative.
+
+---
+
+# PART 2, 2026-08-19 evening. Published, and one rule that would have prevented my worst mistake of the night.
+
+## 13. READ BEFORE YOU WRITE TO A PUBLIC TARGET. One command.
+
+**This is the most transferable thing in this document and it exists because I
+broke a public page.**
+
+Before any upload to a public target, read what is already there and diff it
+against what you are about to send:
+
+```bash
+# Hugging Face, any repo type. Do this BEFORE `hf upload`.
+curl -s "https://huggingface.co/api/spaces/<owner>/<name>" \
+  | python3 -c "import json,sys; print([s['rfilename'] for s in json.load(sys.stdin)['siblings']])"
+# then, for any filename you are about to overwrite:
+curl -s "https://huggingface.co/spaces/<owner>/<name>/raw/main/<file>" -o /tmp/live_<file>
+diff /tmp/live_<file> <your local file>
+```
+
+**What it would have caught.** The public Space `josiecerrell/can-it-ford` was
+serving `origin/main:hf_space/app.py`, a 125-line **AR&R stationary-vehicle
+verdict calculator** carrying `f6348c7` and PR #11, *"Space L1 used the Large
+4WD threshold for a Yaris and dropped two of three conditions"*. That is a
+**published physics fix**. My branch has a completely different application at
+the same path. I uploaded mine over it and silently reverted the correction on a
+public page.
+
+**A filename collision is not a merge conflict.** Nothing warned me, because
+nothing was merging. Two applications shared one name and the second one won.
+
+The repair is in `bef6da0`: both applications now ship, the AR&R logic lives in
+`hf_space/arr_verdict.py` **copied verbatim rather than re-implemented**, and the
+extraction was checked byte-for-byte against `origin/main` from `AR_R` onward.
+Re-implementing would have been precisely the mistake PR #11 exists to fix,
+since a paraphrase of that rule was already wrong once.
+
+**Credit where it belongs:** d16-landing found this by testing feature branches
+against the integration target, wrote it on the board with the three options and
+their consequences, and recommended the one I ended up taking. I had already
+executed the option their plan labels *"do not choose without a deliberate
+decision"* before I read their row.
+
+### How the repair was verified, method attached
+
+Not "verified live". Specifically:
+
+| step | method | result |
+|---|---|---|
+| the fix is real, not cosmetic | recomputed the joint rule against the superseded hazard-product-alone form at the Large 4WD limit | **4 of 5 test cases flip** from FORD to NO-FORD |
+| the function is not stuck on one answer | positive/negative control | 0.05 m at 0.5 m/s -> FORD; 1.20 m at 3.5 m/s -> NO-FORD |
+| the extraction is faithful | string equality of the functional segment against `origin/main:hf_space/app.py` | identical |
+| the app actually builds | **real gradio 6.24.0**, not a stub | `app.build()` returns a `Blocks` |
+| the tab populates on load, not on tab click | read the built `demo.config['dependencies']` | 7 deps, all `(0, 'load')`, `trigger_mode once` |
+| it is live on the public page | fetched `/raw/main/arr_verdict.py` from the Hub | HTTP 200, joint rule present |
+
+The four flipping cases, for a `small_passenger` Yaris:
+
+| D (m) | V (m/s) | D x V | joint rule | old D x V vs 0.60 |
+|---|---|---|---|---|
+| 0.35 | 1.00 | 0.350 | NO-FORD | FORD **wrong** |
+| 0.20 | 2.00 | 0.400 | NO-FORD | FORD **wrong** |
+| 0.45 | 1.20 | 0.540 | NO-FORD | FORD **wrong** |
+| 0.30 | 1.50 | 0.450 | NO-FORD | FORD **wrong** |
+| 0.30 | 3.00 | 0.900 | NO-FORD | NO-FORD |
+
+## 14. What is live now, and how each was confirmed
+
+Every one confirmed by re-reading the remote, never by a command exiting 0.
+
+| artifact | URL | confirmation |
+|---|---|---|
+| dataset | `huggingface.co/datasets/josiecerrell/can-it-ford-speed-surface` | **unauthenticated** HTTP 200 listing 5 files, which also proves public visibility |
+| Space | `huggingface.co/spaces/josiecerrell/can-it-ford` | 10 files, `RUNNING_BUILDING`, joint rule fetched from `/raw/main/` |
+| W&B run | `wandb.ai/.../can-it-ford/runs/3w9sk50e` | API read: state `finished`, 20 cells, **100 draws**, sigma on all 20, C2 S = 1.2809 |
+| placeholder | `huggingface.co/datasets/josiecerrell/can-it-ford-sweep-v1` | README present, still 22 downloads, still public |
+
+## 15. The `can-it-ford-sweep-v1` decision, options and what I chose
+
+The repo is public, was empty but for `.gitattributes`, created 2026-07-14, and
+has **22 downloads**. Its name belongs to the **superseded box-proxy lineage**.
+
+| option | consequence |
+|---|---|
+| delete it | breaks whatever is behind 22 downloads, silently. Irreversible. |
+| rename it | HF leaves a redirect, but the name still reads as canonical, and it moves a public identifier Josie did not choose to move |
+| populate it with hull data | attaches **correct data to a wrong name**, which is this project's signature failure: a number travelling without its scope |
+| **publish elsewhere and label this one** | two public names exist, but only one is canonical and the other says so |
+
+**Chosen: label it.** It now carries a README stating it holds no data, that
+`sweep-v1` names the superseded box-proxy lineage, and where the current data
+is. It explicitly says the **referent of the name is inferred from the naming
+convention, not read from contents, because there are no contents** to read.
+Nothing was deleted or renamed. Reversible in one commit.
+
+## 16. A published surface is the transient one, and the settled one inverts its headline pair
+
+Found while ingesting d17-moving's data, and **it is not mine to close**.
+
+d17's R5 publishes a 20-cell surface measured over frames 20-60. The same 20
+cells at frames 250-400 are in the same shipped table, as `L2full` (one seed)
+and `M1s0..M1s4` (five seeds). `/usr/bin/grep` for `L2full`, `5028`, `5534`,
+`9577` and `30211` in their document returns **zero**.
+
+R5 states as *"the contribution stated as a number"* that (v_car 2.20, v_water
+3.00) at |v_rel| 3.720 carries 2.3x the load of (v_car 4.50, v_water 0.50) at
+|v_rel| 4.528.
+
+| window | lower-|v_rel| cell | higher-|v_rel| cell | ratio | seeds |
+|---|---|---|---|---|
+| transient f20-60 (**published**) | 8621.4 N | 3811.1 N | **2.262** | 1 |
+| settled f250-400 | 5176.5 +/- 4.0 N | 5675.3 +/- 13.0 N | **0.912** | 5 |
+
+The ratio crosses 1, so the direction of that specific comparison reverses.
+Per-cell seed spread is 0.066 to 0.338 percent, so it is not noise.
+
+**The general claim survives and strengthens.** S = (max-min)/mean across an
+iso-|v_rel| arc is 0.76, 0.97, 1.07, 1.12, 1.28 at |v_rel| 1.0, 2.0, 3.0, 4.5,
+6.0 m/s. The split matters at every magnitude measured, and the effect **grows
+with speed**. Only the specific pair fails.
+
+Same hull, grid and depth in both windows: `fz_settle_N` 9149.19 and
+`f_buoy_analytic_N` 4468.622 in both, and those DO discriminate elsewhere in the
+same file (fidC 9966/2529.5, fidF 14512/2476.0, g96 7494). The one confound I
+could **not** close: `hull_y_m` is empty in `c3full`, which I read as *not
+recorded* rather than as a different placement.
+
+**Reviewed by nobody.** The `physics-skeptic` subagent was unavailable this
+session: three launches, all terminated on the same model API error, including
+one with an explicit model override. These numbers are self-verified and
+**unreviewed**, and I am saying so rather than substituting a review that did
+not happen.
+
+## 17. Connector and capability audit, tested not assumed
+
+Only what I actually exercised this session appears with a verdict. The rest is
+listed as untested, because an untested connector reported as working is the
+same defect this document is about.
+
+| capability | verdict | evidence | effort to use |
+|---|---|---|---|
+| **`hf` CLI + Hub API** | **WORTH IT** | created a dataset, uploaded 3 repos, verified each by re-reading | minutes; already authenticated, write scope |
+| **Weights and Biases** | **WORTH IT, and the gap is now filled** | run `3w9sk50e`, 20 cells x 5 seeds = 100 draws logged as a distribution table | ~20 min; the script existed, only its column names were stale |
+| **Scholar Sidekick** | **WORTH IT, and it earned its keep immediately** | `checkRetraction` on the Nihei DOI returned the correct title and surfaced an **erratum** I would otherwise have cited past | seconds per citation, works anonymously |
+| **DeepWiki** | **WORTH IT as a hypothesis generator** | answered a `gr.Blocks`/`gr.Tab` load-event question; I then **verified it against the built config** rather than trusting it | seconds, but always budget the verification |
+| **HF Spaces** | **WORTH IT** | Space builds and serves two applications | ~1 h including the mistake and its repair |
+| **`physics-skeptic` subagent** | **UNAVAILABLE THIS SESSION** | 3 launches, all failed on the same model API error; a `model:` override did not displace it | blocked, not a cost question |
+| **Zenodo DOI** | **WORTH IT, still the cheapest high-value item** | verified earlier: Zenodo mints a DOI for a **restricted** record, so citability does not require publishing | ~1 h, not yet done |
+| GitHub Releases | **NOT WORTH IT yet** | a Release is a public publication and the credential exposure is unrotated; d16-landing owns bundles | n/a |
+| GitHub Pages | **NOT WORTH IT** | the Space already does the interactive job, better | n/a |
+| HF model hosting / Inference | **NOT WORTH IT** | there is no model; this is a simulation dataset | n/a |
+| Zotero, Undermind, Scite, Wolfram, Consensus, Elicit | **UNTESTED this session** | not exercised, so no verdict claimed | unknown |
+
+## 18. SIX instruments that reported without evaluating, in one round, and now one is the CI
+
+This is the pattern worth carrying past tonight. In every case the instrument
+produced output that **looked like a result** and could not have produced any
+other answer.
+
+| # | slot | the instrument | why it could not fail |
+|---|---|---|---|
+| 1 | **d18 (mine)** | connector health table | `c=$(grep -c ... \|\| echo 0)` made `c` the two-line string `"0\n0"`; `[ "0\n0" -gt 0 ]` **errors**, the `if` fell to `else`, and every "NO" was printed by a failed comparison rather than a test. **Correct by luck**; reversed branch order would have printed the opposite conclusion with equal confidence. |
+| 2 | **d15-settle** | `asymmetry()` | **printed** "a verdict is only ever DELETED, never created" as narration while the code counted only whether a verdict *moved*. No input could have contradicted the sentence. Measuring it properly gave 30 deleted, 0 created. |
+| 3 | **d12-kramerdata** | `--uncertainty` mode | a loop variable `c` shadowed the parameter `c`, so it crashed **after** printing the header. The author had already declared the mode working from a `sed -n '20,36p'` read that stopped before the crash. |
+| 4 | **d18 (mine, tonight)** | `iso_vrel_criterion` | searched for cell ids `A0..A4` from a placeholder schema that the real data does not use. It printed "C2 NOT COMPUTABLE" **every time, forever**, while reading as a criterion under evaluation. Now reads the real families and returns a verdict. |
+| 5 | **d18 (mine, tonight)** | `read_surface` / `surface.py` Panel 2 | returned `[]` for a missing file, which downstream is indistinguishable from present-but-empty **and** from a schema mismatch. Panel 2 would have reported "not computable" forever without ever saying it could not read the file. |
+| 6 | **THE CI ITSELF** | `canford-checks` | see below |
+
+### 18a. The CI is instance six, and it is the worst kind
+
+Measured live, two independent origins:
+
+- d16-landing read the **CI log**: the job is green, and inside it `count_claims`
+  emits **25 BLOCK lines** and `##[error]Process completed with exit code 1`.
+- I ran the checker **locally in this worktree**: 25 BLOCK lines, and the
+  script's **true exit code is 1**. It fails correctly.
+
+So the checker is not broken. The masking is at
+`.github/workflows/canford-checks.yml:25`, `continue-on-error: true`, commented
+*"accepts 22/23/24 by scope, see CLAUDE.md item 13"*.
+
+**And that comment's rationale no longer describes what happens.** In a
+tracked-only checkout the checker computes defensible totals of **16 and 17**,
+not 22/23/24, because `_inbox/` and `data/` are physically absent from a
+worktree or a fresh CI clone, so declaration sites are undercounted. The
+tolerance the comment claims is being applied is not the tolerance in play.
+
+**This changes the recommendation.** Making the CI *execute* was never the gap;
+it runs and reports success. Making it **able to fail** is the gap. A workflow
+that never ran gives no assurance. A workflow that runs, swallows a failing
+check, and reports green gives **false** assurance, which is worse.
+
+Two fixes, and they are not the same:
+1. Remove `continue-on-error` from `count_claims` **only after** the
+   tracked-only undercount is fixed, or every CI run goes red for a reason that
+   is not a real defect.
+2. Fix the undercount first: the checker needs to state the **scope it actually
+   measured**, so a 16/17 result in a partial view is reported as *"could not
+   see `_inbox/` and `data/`"* rather than as a defensible total.
+
+That second fix is the same rule as everything else in this section: **an
+instrument must distinguish "measured" from "could not measure".**
+
+`.github/workflows/` belongs to d16-landing this round, so this is written as a
+finding and not acted on.
+
+### 18b. And once more in my own hands, tonight, while writing this
+
+Checking the CI claim, I ran the checker through `tail` and read `$?`, which is
+**`tail`'s** exit code, not the script's. It printed `rc=0` next to the words
+"blocking defects 25". I nearly wrote that the checker exits 0. Re-measured with
+the pipeline removed, the true code is 1.
+
+Three separate defences caught things tonight, and they generalise:
+- **a positive control**: a check that never returns the other answer is not a check
+- **a negative control**: an empty selection must raise, not return `[]`
+- **compare at the level you claim**: my first CRLF/LF comparison normalised away
+  the exact thing that differed and printed "no columns differ". `cmp` found it
+  at byte 513.

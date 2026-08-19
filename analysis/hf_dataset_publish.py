@@ -736,9 +736,18 @@ each is an upper bound rather than a dedicated-card benchmark.
 
    | condition | coefficient | source |
    |---|---|---|
-   | free-rolling rolling resistance, handbrake disengaged | mu_R = 0.0242 to 0.0250 | Nihei et al, full-scale prototype vehicles |
+   | free-rolling rolling resistance, handbrake disengaged | mu_R = 0.0242 to 0.0250 | Nihei et al 2025 |
    | locked-wheel static, sand and gravel worst case | mu_s ~ 0.30 | Smith, Modra and Felder 2019 |
    | locked-wheel static, wet AND dry concrete | ~0.78 | Smith, Modra and Felder 2019 |
+
+   Nihei et al 2025, "Full-scale experimental assessment of passenger vehicle
+   stability in flooding flow", `10.1016/j.rineng.2025.107189`. Title and
+   standing checked against the Crossref record rather than assumed from a
+   resolving link. **It carries an erratum**, `10.1016/j.rineng.2025.107527`
+   (2025-10-01), which has not been read for this card; the figures above are
+   from the original article. Not retracted. The same paper reports
+   C_D = 1.38 +/- 0.18 and that mu_R decays to about 40 percent of its initial
+   maximum, so a criterion built on peak mu_R is unconservative.
 
    Sliding friction and rolling resistance are **different physical
    quantities**; the span from 0.0242 to 0.78 is a factor of 32 **across
