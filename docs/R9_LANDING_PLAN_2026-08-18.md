@@ -18,6 +18,21 @@ are errors in my own earlier revisions, not staleness.**
 | 3 | Section 6.1 said the CI "runs nowhere". It has run **seven times on GitHub, all green**, because its trigger has no branch filter. | WRONG when written, not stale |
 | 4 | Section 0's "64 ahead" carried a 2026-08-18 22:49 measurement under a 17:12 date. Live it is **67**. | stale, and mis-dated |
 
+## REVISION 4, 2026-08-19 19:05 BST
+
+Triggered by the coordinator's request for a mechanism-classified conflict table, a public-write
+section, and the CI item reframed. Four substantive changes, and **two more of them are
+corrections to me**:
+
+| # | change | where |
+|---|---|---|
+| 1 | Conflicts classified by mechanism: **2 add/add** (merge-base absence) and **4 content**, which need different resolution AND different verification | 3.0, and the table above it |
+| 2 | **`hf_space/` did NOT lose the joint rule.** `d18-platform` executed option A, not C. Verified five ways against the LIVE public Space, including reachability | 3.5 |
+| 3 | **Five public surfaces, not two**, three written today, one of them a 36-run public model repo with a 15-byte README that nobody has named | 5.5, 5.5a |
+| 4 | CI reframed: the goal is not "make it execute", it is **"make it able to fail"** | 6.2a |
+| 5 | I asserted a merge mechanism from plausibility and it was refuted in one command | 3.0 |
+| 6 | My "scope difference" attribution on the `make_phase_space.py` count was wrong; the reader's structural mechanism is right and I confirmed it independently | 12.1(b) |
+
 Item 3 has a compensation worth stating: section 6.2 predicted, from a local `git archive`
 simulation, that `count_claims` would exit 1 with 25 blocking defects and be masked by
 `continue-on-error`. The real CI log says **exactly that**, 25 BLOCK lines and
@@ -438,15 +453,88 @@ git merge-tree --write-tree <tip> claude/r8-persistence
 # -> exit 1 at all four:  .gitignore  simulation/openchannel_bc.py
 ```
 
-The five conflicting files, MEASURED against live tips at 18:20:
+The five conflicting files, MEASURED against live tips at 18:53, **classified by mechanism,
+because the two kinds need different handling and different verification.** The test is one
+command per row, `git ls-tree $(git merge-base A B) -- <path>`: if the path is absent from the
+merge base, git has no base blob and the conflict is add/add.
 
-| # | file | merge | kind | resolution |
-|---|---|---|---|---|
-| 1 | `simulation/openchannel_bc.py` | step 7, `r8-bc-merge` | add/add | 3.1: take `61afb193` |
-| 2 | `simulation/openchannel_bc.py` | step 8, `r8-persistence` | add/add, again | 3.1: keep `61afb193` |
-| 3 | `.gitignore` | step 8, `r8-persistence` | both appended | 3.3: union |
-| 4 | `.claude/skills/research-corpus/SKILL.md` | step 14, `r9-corpus-bib` | both edited | 3.4: union, and one number is wrong |
-| 5 | `hf_space/README.md` + `hf_space/app.py` | step 19, `r9-platform` | two different apps | 3.5: **a decision, not a merge** |
+| # | file | merge (branch pair) | merge base | in base? | mechanism | resolution |
+|---|---|---|---|---|---|---|
+| 1 | `simulation/openchannel_bc.py` | `add-ci-checks` + `r8-bc-merge` | `1a868f3` | **ABSENT** | **add/add** | 3.1: take `61afb193` whole |
+| 2 | `simulation/openchannel_bc.py` | `add-ci-checks` + `r8-persistence` | `1a868f3` | **ABSENT** | **add/add** | 3.1: keep `61afb193` whole |
+| 3 | `.gitignore` | `add-ci-checks` + `r8-persistence` | `1a868f3` | present | **content** | 3.3: union, then assert `check-ignore` |
+| 4 | `.claude/skills/research-corpus/SKILL.md` | `add-ci-checks` + `r9-corpus-bib` | `af62473` | present | **content** | 3.4: union, and fix 19 to 20 |
+| 5a | `hf_space/README.md` | `add-ci-checks` + `r9-platform` | `af62473` | present | **content** | 3.5: hand-merge |
+| 5b | `hf_space/app.py` | `add-ci-checks` + `r9-platform` | `af62473` | present | **content** | 3.5: take `r9-platform` whole |
+
+`hf_space/arr_verdict.py` is ABSENT from the base too, but only one side adds it, so it is a
+plain add and merges clean. **Add/add needs two sides adding, not one.**
+
+### 3.0 The two mechanisms need different handling, and the difference is where the wrong answers hide
+
+**Add/add (rows 1 and 2). Git has no base blob, so it cannot three-way merge at all.** It marks
+the entire file. There is nothing it silently decided for you, and no per-hunk resolution is
+meaningful because there is no common ancestor to attribute a hunk to. So:
+
+- **Resolve by choosing a whole blob**, never by editing hunks together.
+- **Verify by whole-blob containment**, which is what section 3.1 does: `grep -Fxv` in both
+  directions establishes which version is a superset. There is no base to diff against, so
+  containment is the only available proof.
+- The failure mode is choosing the wrong blob, which is loud: the file is either right or it is
+  visibly short.
+
+**Content conflict (rows 3, 4, 5a, 5b). Git auto-merged every non-overlapping hunk and only
+showed you the overlaps.** That is the dangerous kind, and it is dangerous in the opposite
+direction:
+
+- **The parts git did NOT ask about are the ones to check.** A content conflict means git already
+  made decisions on your behalf everywhere the two sides did not textually collide, and those
+  decisions are invisible in the conflict markers.
+- **Verify against the BASE, not against either side.** `git diff <merge-base> <resolved>` shows
+  everything that changed, including what was auto-merged. Diffing the resolution against either
+  parent hides exactly the half that parent contributed silently.
+- The failure mode is semantic rather than textual: two non-overlapping edits can both apply
+  cleanly and still contradict each other, and git reports nothing.
+
+**A claim I wrote here ten minutes ago, tested, and had refuted. Left in because the refutation is
+the useful part.** I wrote: "row 4's 19-versus-20 pair sits in different, non-overlapping parts of
+the file, so git will merge it without a marker and the result will state both numbers." **That is
+FALSE.** MEASURED, by taking the actual conflicted tree from step 14 and asking, for every line
+mentioning either number, whether it falls inside a conflict marker:
+
+```
+INSIDE-MARKERS  line  44  ## READ THIS FIRST: the index holds 8 of the project's 20 deep searches
+INSIDE-MARKERS  line 535  ...The Undermind workspace holds **19 completed deep
+INSIDE-MARKERS  line 546  The nineteen, with what each actually settles:
+```
+
+**All three are inside the markers. Git does surface this one**, because both sides happened to
+rewrite overlapping regions. A human resolving step 14 will see 19 and 20 side by side, which is
+the good case. I asserted a mechanism from its plausibility instead of running the one command
+that decides it, in a document whose whole argument is that you must not do that.
+
+**What survives, and it is stronger than what I claimed, because it is measured:**
+
+```
+merged SKILL.md: 639 lines, 322 inside conflict markers,
+                 317 AUTO-MERGED AND NEVER SHOWN (49.6 percent)
+```
+
+**Half the merged file is decided for you and never appears in a conflict marker.** Line 3 is a
+concrete instance: base and `add-ci-checks` both read "the project's 332-paper external research
+index", `r9-corpus-bib` reads "external research index (332 records, 319 distinct works)", and git
+silently takes the latter. That particular one is a legitimate one-sided edit rather than a
+disagreement, which is exactly why it is a good illustration: **you cannot tell the legitimate
+silent changes from the dangerous ones without looking, and the conflict markers will not show you
+either.**
+
+So the verification rule stands, for a general reason rather than the specific one I invented:
+**diff the resolution against the merge base, not against either parent.** Against a parent you
+see only what the other side contributed; against the base you see all 639 lines, including the
+317 nobody was asked about.
+
+That is the reason to classify at all. For add/add there is no silent half, because there is no
+base; for a content conflict the silent half here is 49.6 percent.
 
 The original pairwise table is retained below because it is still correct about what it tested,
 and because keeping it makes the hole visible:
@@ -684,59 +772,67 @@ into it, and change `19`/`nineteen` to `20`/`twenty` in the grafted block. `r9-c
 base rather than the graft because its scope is this file and it is the larger, later-measured
 side.
 
-### 3.5 `hf_space/`, step 19: NOT a merge conflict. Two different applications sharing one filename
+### 3.5 `hf_space/`, step 19: the decision was taken by execution, and the outcome was the safe option
 
-**Do not resolve this one mechanically. It is a product decision and it is Josie's.**
+**REVISION 4, 2026-08-19 18:55. Revision 3 set out options A, B and C and marked C "do not choose
+without a deliberate decision". `d18-platform` then wrote to the public Space before reading that
+row. I was told the overwrite had been executed. I checked the live public artifact rather than
+relay it, and the report is wrong about the outcome:**
 
-MEASURED, `git ls-tree` on each side:
+> **`d18-platform` executed option A, not option C. The AR&R joint-rule fix is LIVE, REACHABLE and
+> WIRED on the public Space.** They resolved it themselves, correctly, by moving the rule into a
+> new module.
 
-| | `origin/main` | `claude/r9-platform` |
-|---|---|---|
-| `hf_space/app.py` | 125 lines | 249 lines |
-| `hf_space/README.md` | 69 lines | 108 lines |
-| other files | `requirements.txt` | `requirements.txt`, `surface.py`, `data/canonical_runs.csv`, `data/load_surface.csv` |
+MEASURED against the live public artifact, not against the repo:
 
-The two `app.py` files are not two edits of one program. MEASURED by reading both:
+```
+curl -s https://huggingface.co/api/spaces/josiecerrell/can-it-ford
+# private: False   sha e7a9ca9b   lastModified 2026-08-19T17:46:50Z
+# siblings include:  app.py  arr_verdict.py  surface.py  speed_surface.py  data/...
+```
 
-- **`origin/main`'s** is the AR&R verdict calculator: an `AR_R` class table, `l0_depth_threshold`,
-  `l1_verdict` with a docstring reading "Joint rule. Identical to `vehicle_params.L1_verdict` and
-  `gates.py:23`", and depth/velocity sliders. It arrives via phase 1 and carries `f6348c7`,
-  merged PR **#11**, "Space L1 used the Large 4WD threshold for a Yaris and dropped two of three
-  conditions".
-- **`claude/r9-platform`'s** is a different Gradio app: a verdict-flip explorer with a `slide_m`
-  threshold slider, a load surface, and repeat distributions. It imports only `gradio`, `plotly`
-  and a new local `surface` module. It carries `6d761e7`, "The Space claimed Genesis, a superseded
-  density and no verdict, and all three were wrong".
-
-**MEASURED, and this is the part that makes it a decision rather than a merge: `r9-platform`'s
-`app.py` contains no `AR_R`, no `l1_verdict` and no `l0_depth_threshold`.** Neither side is a
-superset of the other (of `origin/main`'s 78 added `app.py` lines, 76 are absent from
-`r9-platform`; of its 22 added README lines, all 22 are absent). So:
-
-> **Merging `r9-platform`'s `hf_space/` over `origin/main`'s would remove the L1 joint-rule fix
-> from a PUBLIC artifact.** That fix corrected a Yaris being graded against the Large 4WD
-> threshold with two of three conditions dropped. Landing this wrong republishes a wrong physics
-> claim under the project's name.
-
-Both fixes are real and they fix different defects in the same file. The options, with the
-consequence of each stated rather than a recommendation smuggled in:
-
-| option | consequence |
+| test | result |
 |---|---|
-| **A. Keep both, as two tabs** | Correct on the merits, most work. The calculator keeps the joint-rule fix; d18's explorer becomes a second tab. Requires someone to write the composition. |
-| **B. `origin/main`'s app only** | Safe, loses d18-platform's work from the Space, which stays on the branch and is not lost. |
-| **C. `r9-platform`'s app only** | **Do not choose this without a deliberate decision.** It silently reverts PR #11 on a public page. |
+| `AR_R` table in live `arr_verdict.py` identical to `origin/main`'s | **True** |
+| `l1_verdict` body identical to `origin/main`'s | **True** |
+| live `app.py` imports it | **yes**, line 20 `import arr_verdict as AV` |
+| it is reachable from the UI | **yes**, `gr.Tab("AR&R verdict calculator")`, `AV.evaluate` wired to three inputs and `demo.load` |
+| repo branch matches the live Space | **identical** on `app.py`, `arr_verdict.py`, `surface.py`, `speed_surface.py` |
 
-**My recommendation is A, and if A is not affordable today, B.** The asymmetry is the point: B
-defers work, C reverts a published correctness fix, and only one of those is recoverable by
-noticing later. **This is the one item in this plan I am flagging rather than resolving**, under
-the standing rule about a genuine disagreement needing a judgment call, and because the artifact
-is public.
+The reachability test is the one that matters and is the one an inspection would skip. A module
+that exists but is never imported is dead code, and the Space would then be d18's explorer with
+the calculator silently gone. It is imported and wired, so it is not.
 
-Whatever is chosen, verify it against the repo's own verdict path afterwards rather than by
-reading the diff. `origin/main`'s docstring claims parity with `vehicle_params.L1_verdict` and
-`gates.py:23`; that claim is testable and should be tested, because a Space that disagrees with
-the repo is worse than no Space.
+**Two claims here, and only one of them is true. Keep them apart:**
+
+1. **"A published correctness fix was reverted on a public page."** **FALSE.** Tested five ways
+   above. PR #11's joint rule is byte-identical and live.
+2. **"A public write happened before the decision it needed was taken."** **TRUE**, and it is
+   the finding. The write landed at 17:46:50Z; revision 3's board row naming the hazard was
+   posted at 18:30. The right answer was reached, and it was not reached *by the process*. See
+   section 5.5.
+
+**Revised resolution, and it is now simpler than revision 3's.** The conflict at step 19 is still
+live (`hf_space/README.md` and `hf_space/app.py`, both content conflicts, base `af62473`), because
+phase 1 brings `origin/main`'s calculator `app.py` in and `r9-platform` replaced that file
+wholesale. But the decision no longer has to be made at the conflict marker:
+
+- **`hf_space/app.py`: take `claude/r9-platform`'s version whole.** MEASURED lossless on the
+  physics by the containment method of section 3.1: of `origin/main`'s 125 lines, **20 are absent**
+  from `r9-platform`'s `app.py` + `arr_verdict.py` combined, and **all 20 are superseded UI
+  scaffolding**, the old top-level `gr.Blocks`, the sliders, the radio and their `.change`
+  wiring, all reimplemented inside the calculator tab under `arr_depth` / `arr_vel` / `arr_class`
+  / `AV.evaluate`. **Zero lines of `AR_R`, `l0_depth_threshold`, `l1_verdict`, `evaluate` or
+  `_row` are lost.**
+- **`hf_space/README.md`: hand-merge.** Both sides added; neither is a superset (all 22 of
+  `origin/main`'s added lines are absent from `r9-platform`). This one still needs reading.
+- **`hf_space/arr_verdict.py` merges clean**, one-sided add.
+
+**Verify after resolving, and verify the claim rather than the file.** `origin/main`'s docstring
+asserts parity with `vehicle_params.L1_verdict` and `gates.py:23`. That is testable and should be
+tested, because a Space that disagrees with the repo is worse than no Space. I did not test it:
+I established that the live rule is identical to the one `origin/main` shipped, which is a
+different and weaker claim than that either is correct.
 
 ---
 
@@ -904,6 +1000,78 @@ commits remain on the branch and in the bundle, reachable, and can be merged lat
 **Do not treat "it is committed" as "it was reviewed".** Six other slots' tips are their own
 authored work; these two are not, and the difference is invisible in `git log --oneline`.
 
+### 5.5 Public writes: there are FIVE public surfaces, three were written today, and none of the writes had a decision attached
+
+**This section exists because two public writes happened during this round without the decision
+they needed being taken, and in both cases the write was discovered afterwards rather than
+proposed beforehand.** Neither did harm. That is not the same as the process working.
+
+**The inventory is five surfaces, not the two that have been named.** MEASURED live 2026-08-19
+18:57 against the Hugging Face API and `git ls-remote`, not from any summary:
+
+| # | surface | visibility | last written | state |
+|---|---|---|---|---|
+| 1 | `github.com/jcerrell-IS/can-it-ford` | **PUBLIC** | `c7f0a16`, 2026-08-17 | 46 remote heads |
+| 2 | Space `josiecerrell/can-it-ford` | **PUBLIC** | **2026-08-19T17:46:50Z** | app replaced, section 3.5 |
+| 3 | dataset `josiecerrell/can-it-ford-sweep-v1` | **PUBLIC** | **2026-08-19T17:33:22Z** | EMPTY: `.gitattributes` + README only |
+| 4 | dataset `josiecerrell/can-it-ford-speed-surface` | **PUBLIC** | **2026-08-19T17:48:29Z** | 4 CSVs of real data |
+| 5 | model `josiecerrell/can-it-ford-sweep-v1` | **PUBLIC** | unstamped | **36 timeseries CSVs + manifest, README 15 bytes** |
+
+Surface 5 has not been named by anyone this round and is the one I would look at first.
+MEASURED, by parsing its live `manifest.csv`:
+
+- **36 rows, three vehicle classes**: sedan 12, suv 12, pickup 12, at `target_length_m` 4.6 / 4.8
+  / 5.5.
+- **`n_grid` is 64 on all 36 rows**, presented as a single column with no other resolution field.
+  `CLAUDE.md` records that `grid_lim` is taken from the loaded hull's extent, so a fixed `n_grid`
+  across different vehicle lengths is **not** a fixed `dx` and **not** a fixed realised depth.
+  A reader of this manifest has no way to know that, and the column invites exactly the reading
+  the project has already ruled out.
+- **`density_plausible` is `False` on all 36 rows**, densities 306.51 to 482.61 kg/m3.
+- **The README is 15 bytes.** There is no provenance, no licence, no caveat, and nothing that
+  says what `density_plausible: False` means to someone who did not write it.
+
+I am not claiming these runs are wrong. I am claiming a public artifact is serving a
+cross-vehicle sweep with a resolution column that cannot be read at face value, a plausibility
+flag that is False everywhere, and no README to say either thing. **That is a publication, and
+nobody decided to make it.**
+
+### 5.5a What a deliberate decision looks like
+
+Not a checklist for its own sake. Each item is here because something in this round would have
+been caught by it.
+
+1. **Name the surface and its visibility before writing, by querying it, not by recalling it.**
+   Surface 3 was described this round as "a public empty dataset nobody has mentioned"; surfaces
+   4 and 5 were not mentioned at all, and 5 is the one carrying data. `curl -s
+   https://huggingface.co/api/{models,datasets,spaces}?author=josiecerrell` takes one second.
+2. **Say what a reader could conclude that is false.** Not "is it correct" but "what will someone
+   who did not write this take away". Surface 5's `n_grid` column fails this and its numbers are
+   all individually true.
+3. **State what the write would overwrite, and check it.** Section 3.5's whole risk was that
+   replacing `app.py` might drop PR #11's joint rule. The test is five commands and takes under a
+   minute: is the rule present, is it identical, is the module imported, is it reachable from the
+   UI, does the repo match what is live. **Reachability is the one that gets skipped**, and a
+   module that exists but is never imported is dead code.
+4. **Write it down before, not after.** The write at 17:46:50Z was correct. The board row naming
+   the hazard was posted at 18:30. Correct-then-documented and documented-then-correct look
+   identical in the artifact and are completely different processes, and only one of them is
+   repeatable.
+5. **Assume it is permanent.** `CLAUDE.md` records that GitHub served a removed credential blob by
+   SHA even after the scrub that was supposed to remove it. Deleting a public HF repo does not
+   unpublish what was already fetched. So the reversibility question is not "can I take it down",
+   it is "am I willing for this to be the permanent record".
+6. **A licence question that is open blocks a DATA write specifically.** Register E8's question
+   about the derived hull is unresolved. Surface 5 carries derived run data behind a 15-byte
+   README; surface 4 carries four CSVs. Neither states a licence.
+
+**Applied to this plan:** the landing itself writes to surface 1 only, and section 5.1's rotation
+question gates it. Sections 3.5 and 5.5 concern surfaces 2 to 5, which the landing does not touch,
+**except for one thing.** `sync-to-hub.yml` is already on `origin/main` and syncs `hf_space/` to
+surface 2 on a merge into `main`. **So landing this plan and updating the remote WILL write to a
+public surface as a side effect, with nobody typing an `hf` command.** That is precondition zero
+for step 8 of section 9.4, and it is not currently in section 5.1.
+
 ---
 
 ## 6. The CI question: it already runs, and it goes green while a check inside it fails
@@ -1040,6 +1208,34 @@ exercised.
 macOS; CI would run 3.11 on Ubuntu. Both could change a result. What the simulation reproduces
 faithfully is the dominant factor, tracked-files-only visibility, and that is what produced both
 caveats above.
+
+### 6.2a Reframed: the goal is not "make CI execute", it is "make CI able to fail"
+
+**The round's framing of this item was "the CI is not on main, so make it run". That framing is
+retired.** It runs. It has run seven times. The correct framing, and it inverts the priority:
+
+> **`canford-checks` is an instrument that reports success without being able to fail.** One of
+> its six checks exits 1 on every run and is masked; two more carry `continue-on-error` and could
+> fail the same way tomorrow without anyone noticing. Half the workflow cannot return a negative.
+
+**That is worse than never having run**, and the reason is specific rather than rhetorical: a
+workflow that has never run supplies no assurance and everyone knows it. This one has supplied
+**false assurance for two days**, and it is the kind that is quoted. It sits behind a green tick
+on a public repository.
+
+This is the same failure the project has logged before under "a comparison where both arms failed
+and the empty results matched, so the check printed a clean PASS". The general form is:
+
+> **A check must be able to distinguish "passed" from "could not evaluate" and from "failed but
+> was ignored". If it cannot, its green result is not evidence.**
+
+`continue-on-error: true` converts a check into exactly that. And section 6.1a establishes it is
+worse than it looks: the GitHub API reports `conclusion: success` for the masked step, so the
+degradation is invisible to every consumer except someone reading the raw log.
+
+**Priority consequence for whoever owns CI:** landing `canford-checks.yml` on `main` without
+section 6.3 item 1 does not turn CI on, it extends a broken instrument's reach from six branches
+to the trunk and to every pull request. **Item 1 should land with it or before it, not after.**
 
 ### 6.3 Three changes worth making before it lands, none of them blocking
 
@@ -1482,3 +1678,66 @@ was against a 19-branch set (9.1 step 4).
 at merge time rather than pinning it."** Section 9.1 is rewritten as a discovery procedure that
 takes no branch name from this document. The set moved twice while revision 3 was being written,
 so this is not a stylistic preference.
+
+### 12.1 Revision 4, 2026-08-19 19:05: three corrections, two of them to me
+
+**(a) I asserted a merge mechanism from its plausibility and it was refuted in one command.**
+Section 3.0 carried, for about ten minutes, the claim that the 19-versus-20 disagreement would be
+silently auto-merged. It is not: all three lines fall inside the conflict markers. The correction
+and the measurement that produced it are left in section 3.0 in place, along with what actually
+survives, which is stronger and which I only found because the refutation forced me to measure:
+**49.6 percent of that merged file, 317 of 639 lines, is auto-merged and never shown.**
+
+**(b) The `make_phase_space.py` copy count: my "scope difference" attribution was WRONG, and the
+reader's mechanism is right.** Register C2 said 70 copies, 35/35. I measured 58, 29/29, and wrote
+that the gap was "a scope difference rather than a disagreement" although both statements declared
+the identical scope. The reader measured 60, 30/30 at 18:35. **All of them are right and none of
+it is scope.** MEASURED independently by me at 19:02:
+
+```
+find /Users/josie/can-it-ford -name make_phase_space.py -not -path '*/.git/*' | wc -l
+# -> 62
+#    31  analysis/make_phase_space.py                    (haz > 0.60)
+#    31  designsafe-staging/scripts/make_phase_space.py  (h <= 0.60)
+```
+
+**There are exactly TWO tracked paths and every checkout contains BOTH.** So the total is
+`2 x (checkouts carrying the file)`, the split is FORCED to be exactly half, and 70 / 58 / 60 / 62
+are four readings of a moving checkout count: 35 trees at 00:19, 29 at 17:15, 30 at 18:35, 31 at
+19:02. **It is a time difference.** Note `git worktree list` currently returns 35 while only 31
+carry the file, so do not compute this as `2 x worktree-count` either; count the files.
+
+The register's "35 read one form, 35 read the other" invites reading two POPULATIONS of checkouts
+when the truth is two FILES inside every checkout, and the two forms are the same boundary rule
+inverted, so there is no operator fork between trees at all. **That framing is what needs
+correcting, more than the integer.** The sting is that `ba1abbb`, in this document, established
+that this class of object "is not a list, it is a rate", and I did not apply my own finding to
+the next count I made. A rule you state and do not apply is not a rule.
+
+**(c) The branch set: I report 21 by pattern, and I am not adopting "thirteen".** MEASURED
+2026-08-19 18:51:
+
+```
+git for-each-ref --format='%(refname:short)' \
+  'refs/heads/claude/r8-*' 'refs/heads/claude/r9-*' 'refs/heads/claude/add-ci-checks' | wc -l
+# -> 21     (1 add-ci-checks + 9 r8-* + 11 r9-*)
+```
+
+`claude/r9-reader` and `claude/r9-jobb-route` are both new and both real, which is the substance
+and which I confirm. The count differs from "thirteen" by whichever scope that figure uses; since
+mine names its pattern and its command, use mine or restate the other with its scope, per item
+13's rule. **Two structural facts about the new pair that a count does not carry:**
+
+- **`claude/r9-jobb-route` is NOT cut from `add-ci-checks`.** It sits at `6ed163e`, which is
+  exactly `claude/r5-physics`, and its merge base with `add-ci-checks` is `777567a`, the same base
+  that `r8-kramer` and `r8-force` share. **It belongs in phase 5, the `simulation/r5_physics/`
+  lineage, not in the R9 tail**, and it will share files with those two once it has commits of its
+  own. It does carry `canford-checks.yml`, so it is inside the CI blast radius.
+- **`claude/r9-reader` had no commits of its own when first measured** and was contained in
+  `add-ci-checks`; it has since gained work. Re-derive rather than reusing either state.
+
+**(d) Accepted without reservation:** the coordinator's read that my CI log analysis supersedes
+the `gh run list` summary, and the skill-version check added to the preflight at `c621931`. The
+union merge for `SKILL.md` (section 3.4) is mine to land and the reader's finding that the skill
+exists in four states across live worktrees makes it more urgent, not less: **most sessions are
+loading a copy that still asserts a claim `CLAUDE.md` has withdrawn.**
