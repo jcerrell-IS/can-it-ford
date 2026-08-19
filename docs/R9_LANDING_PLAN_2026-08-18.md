@@ -1,10 +1,31 @@
-# R9 landing plan: getting nineteen local-only branches onto a remote, and making the CI run
+# R9 landing plan: getting nineteen branches onto a remote, and making the CI run honestly
 
 Slot `d16-landing`, branch `claude/r9-landing`, worktree `.claude/worktrees/r9-landing`.
-Written 2026-08-18 23:40 to 2026-08-19 00:20 BST, then revised 2026-08-19 17:12 BST after a
-seventeen-hour gap (the session crossed midnight and then resumed; the filename keeps the
-dispatch date). Section 1's two addenda record what moved in between, and the whole simulation
-was re-run at 17:12 rather than patched.
+Written 2026-08-18 23:40 to 2026-08-19 00:20 BST, revised 2026-08-19 17:12 BST after a
+seventeen-hour gap, and revised again 2026-08-19 18:20 BST (the filename keeps the dispatch
+date). Each revision re-ran the whole simulation rather than patching the previous numbers.
+
+## REVISION 3, 2026-08-19 18:20 BST: what changed, and what I got wrong
+
+Read this before anything below it. Revision 3 was triggered by the coordinator accepting
+`8c07765` and supplying three updates. Re-deriving them turned up four things, and **two of them
+are errors in my own earlier revisions, not staleness.**
+
+| # | change | status of the earlier text |
+|---|---|---|
+| 1 | The title said "local-only". `claude/add-ci-checks` **is on `origin`** and was pushed at 17:51 today. | WRONG when written, not stale |
+| 2 | Section 3 said "**exactly one** conflicting file". There are **five**, across four merges. `.gitignore` conflicted at every tip I ever measured, including both I claimed against. | WRONG when written, not stale |
+| 3 | Section 6.1 said the CI "runs nowhere". It has run **seven times on GitHub, all green**, because its trigger has no branch filter. | WRONG when written, not stale |
+| 4 | Section 0's "64 ahead" carried a 2026-08-18 22:49 measurement under a 17:12 date. Live it is **67**. | stale, and mis-dated |
+
+Item 3 has a compensation worth stating: section 6.2 predicted, from a local `git archive`
+simulation, that `count_claims` would exit 1 with 25 blocking defects and be masked by
+`continue-on-error`. The real CI log says **exactly that**, 25 BLOCK lines and
+`##[error]Process completed with exit code 1`, on a job reported green. Those are two genuinely
+separate origins, so section 6.2's finding is now corroborated rather than merely simulated.
+
+Everything the coordinator sent was checked rather than adopted; update 1 needed narrowing, and
+updates 2 and 3 reproduced exactly. See section 12.
 
 **This is a plan for Josie to approve. Nothing in it has been executed against the repository.**
 No branch was merged, no ref was moved, nothing was pushed, nothing was deleted. Every merge
@@ -20,14 +41,64 @@ and got a different answer, the difference is stated as a difference, not silent
 
 ## 0. The thing to fix first, because every other number in this plan sits on top of it
 
-**`claude/add-ci-checks` is 64 commits ahead of `origin/main` AND 5 commits BEHIND it.**
+**`claude/add-ci-checks` is 67 commits ahead of `origin/main` AND 5 commits BEHIND it.**
 
-MEASURED:
+MEASURED 2026-08-19 18:15:
 
 ```
 git -C /Users/josie/can-it-ford rev-list --left-right --count origin/main...claude/add-ci-checks
-# -> 5	64        (left = behind, right = ahead)
+# -> 5	67        (left = behind, right = ahead)
 ```
+
+**CORRECTION TO THIS DOCUMENT, and it is the kind this document exists to catch.** Revisions 1
+and 2 printed `5	64` and revision 2 presented it as re-derived "at 17:12 on 2026-08-19". It was
+not. MEASURED, walking the branch reflog and re-running the count at each tip:
+
+| tip | when the tip was created | behind / ahead |
+|---|---|---|
+| `af62473` | 2026-08-18 22:49 | 5 / **64** |
+| `e0d2beb` | 2026-08-19 00:19 | 5 / **65** |
+| `faf53d1` | 2026-08-19 17:46 | 5 / **66** |
+| `7a0d08a` | 2026-08-19 18:11 | 5 / **67** |
+
+At 17:12 the tip was `e0d2beb`, which reads **65**. The *behind* half genuinely was re-measured
+at 17:12 and was right. The *ahead* half was carried from the previous night and re-dated. **A
+number and its timestamp have to be re-derived together or neither is re-derived.** The behind
+half is the load-bearing one and it is unchanged at 5, so no conclusion below moves; the defect
+is in the evidence, not the finding.
+
+### 0a. `claude/add-ci-checks` is NOT local-only. It is on `origin`, and was pushed today
+
+MEASURED, a live network read, not the cached remote-tracking refs (which are stale by
+construction, per the register's own warning about interrogating a clone about itself):
+
+```
+git -C /Users/josie/can-it-ford ls-remote --heads origin | wc -l          # -> 46 remote heads
+git -C /Users/josie/can-it-ford ls-remote --heads origin | grep -E 'r8-|r9-'   # -> nothing
+git -C /Users/josie/can-it-ford reflog show origin/claude/add-ci-checks
+# -> faf53d1 ... update by push   2026-08-19 17:51:13 +0100
+# -> 59234f9 ... update by push   2026-08-18 21:52:34 +0100
+# -> de191b8 ... update by push   2026-08-18 06:07:44 +0100
+```
+
+So the correct statement is narrower than "nothing is pushed", and the narrower version is the
+one that matters:
+
+- **`claude/add-ci-checks` is on `origin` at `faf53d1`.** Three pushes, the most recent ten
+  minutes before revision 3 began.
+- **Its local tip `7a0d08a` is one commit AHEAD of the remote copy** and that commit is unpushed:
+  `7a0d08a` "Register C1 was wrong about git: content ancestry and merge behaviour are
+  independent". So the branch is *partly* landed, which is the state most likely to be misread in
+  either direction.
+- **No `r8-*` or `r9-*` branch exists on `origin` at all.** That half of the dispatch premise is
+  correct and is what the rest of this plan addresses.
+- `claude/r5-research`, `r5-physics`, `r5-safekeeping` and `r5-exposure` are also on `origin`, so
+  "this wave's work has never reached a remote" is true of R8 and R9 and false of R5.
+
+Two consequences. First, the disk-loss exposure is smaller than stated but not small: eighteen of
+nineteen branches exist on one disk. Second, and this is section 6's whole story, **the CI file
+reached GitHub the moment `add-ci-checks` was first pushed**, which is why the workflow has been
+running for two days while every summary in the project said it could not.
 
 Every prior statement of this relationship in the project, including the one the session-start
 banner prints, gives only the ahead half. The behind half is the one that matters for a landing,
@@ -72,7 +143,16 @@ else.** MEASURED: that merge is CLEAN.
 
 ---
 
-## 1. Inventory: fifteen branches, not nine. Eighteen by the time I finished, nineteen a day later.
+## 1. Inventory: fifteen branches, not nine. Eighteen by the time I finished, nineteen a day later. Do not read a tip out of this section.
+
+**REVISION 3 STATUS: the count is still 19 and the tips below are stale.** Two branches moved
+during revision 3 (`claude/add-ci-checks`, `claude/r9-priorcode`), one of them between two
+consecutive commands. Section 2 carries the 18:20 tips and section 9.1 carries the procedure that
+makes both sections unnecessary. **This section is kept for its structure, the base layers and
+the containment relations, not for its SHAs.** Live count, MEASURED 2026-08-19 18:15:
+`git for-each-ref 'refs/heads/claude/r8-*' 'refs/heads/claude/r9-*' 'refs/heads/claude/add-ci-checks' | wc -l`
+returns **19**. The whole repository holds **105** local branches, **84** of them ahead of
+`origin/main`; the wave is the subset this plan is about.
 
 The dispatch for this slot said nine. Nine is the R8 wave. Six R9 slots (`d11` to `d16`) were
 running while this document was being written, on six more unpushed branches, and one of them
@@ -251,38 +331,46 @@ section 9.1 on `claude/r8-register`, and the reason given there is specific and 
 MEASURED, the whole order below was simulated end to end. Script:
 `scratchpad/simfinal.sh`, reproduced in section 9.3.
 
-| phase | branch | result | files | hook |
-|---|---|---|---|---|
-| 1 | `origin/main` into `claude/add-ci-checks` | CLEAN | 7 | none fires |
-| 2 | `claude/r8-register` | CLEAN | 2 | none fires |
-| 3 | `claude/r8-licence` | CLEAN | 4 | none fires |
-| 3 | `claude/r8-tooling` | CLEAN | 19 | none fires |
-| 3 | `claude/r8-naming` | CLEAN | 9 | none fires |
-| 3 | `claude/r8-priorart` | CLEAN | 10 | none fires |
-| 4 | `claude/r8-bc-merge` | **CONFLICT**, 1 file | 2 | `pre-commit` ok |
-| 4 | `claude/r8-persistence` | **CONFLICT**, 1 file | 13 | **`pre-commit` REFUSES** |
-| 5 | `claude/r8-kramer` | CLEAN | 31 | none fires |
-| 5 | `claude/r8-force` | CLEAN | 2 | none fires |
-| 5 | `claude/r9-accessor` | CLEAN | 4 | none fires |
-| 5 | `claude/r9-kramer-extract` | CLEAN | 2 | none fires |
-| 6 | `claude/r9-landing` | CLEAN | 1 | none fires |
-| 6 | `claude/r9-corpus-bib` | CLEAN | 4 | none fires |
-| 6 | `claude/r9-renders` | CLEAN | 2 | none fires |
-| 6 | `claude/r9-settle` | CLEAN | 4 | none fires |
-| 6 | `claude/r9-moving-vehicle` | CLEAN | 3 | none fires |
-| 6 | `claude/r9-priorcode` | CLEAN | 2 | none fires |
-| 6 | `claude/r9-platform` | no-op, contained | - | - |
+**REVISION 3 TABLE, MEASURED 2026-08-19 18:20 against live tips.** The simulation applies
+section 3.1's resolution at step 7, so a conflict shown at step N is a real new conflict and not
+step 7's carried forward. Script: `scratchpad/simres.sh`, reproduced in section 9.3. It runs
+entirely inside a throwaway hardlinked mirror clone and writes nothing to the repository.
 
-This table is the **17:12 on 2026-08-19 re-run**, not the original 00:01 one. Phases 5 and 6
-changed: at 00:01 those seven R9 branches were no-ops sitting at their base, and they have since
-committed real work. Every one of them still merges CLEAN, so the order did not have to change,
-only the evidence for it got stronger. **Section 1.2's containment relations are the part that
-went stale fastest and must be re-derived**: `claude/r9-accessor` is no longer an ancestor of
-`claude/r8-force`, and `claude/r9-kramer-extract` is no longer identical to `claude/r8-kramer`.
+| step | incoming | tip | result | files changed | `pre-commit` |
+|---|---|---|---|---|---|
+| 1 | `origin/main` | `c7f0a16` | CLEAN | 7 | not invoked |
+| 2 | `claude/r8-register` | `e473e7d` | CLEAN | 2 | not invoked |
+| 3 | `claude/r8-licence` | `cca97f2` | CLEAN | 4 | not invoked |
+| 4 | `claude/r8-tooling` | `ff9d605` | CLEAN | 19 | not invoked |
+| 5 | `claude/r8-naming` | `7697695` | CLEAN | 9 | not invoked |
+| 6 | `claude/r8-priorart` | `969955d` | CLEAN | 10 | not invoked |
+| 7 | `claude/r8-bc-merge` | `598792e` | **CONFLICT** 1 file | 2 | passes |
+| 8 | `claude/r8-persistence` | `a363dbf` | **CONFLICT** 2 files | 12 | **REFUSES** |
+| 9 | `claude/r8-kramer` | `b6fe951` | CLEAN | 31 | not invoked |
+| 10 | `claude/r8-force` | `ec968e6` | CLEAN | 2 | not invoked |
+| 11 | `claude/r9-accessor` | `06c7786` | CLEAN | 4 | not invoked |
+| 12 | `claude/r9-kramer-extract` | `1f126dc` | CLEAN | 2 | not invoked |
+| 13 | `claude/r9-landing` | `8c07765` | CLEAN | 1 | not invoked |
+| 14 | `claude/r9-corpus-bib` | `6ecf4e5` | **CONFLICT** 1 file | 4 | passes |
+| 15 | `claude/r9-renders` | `d55ac14` | CLEAN | 4 | not invoked |
+| 16 | `claude/r9-settle` | `0861b52` | CLEAN | 4 | not invoked |
+| 17 | `claude/r9-moving-vehicle` | `98d4d9d` | CLEAN | 4 | not invoked |
+| 18 | `claude/r9-priorcode` | `0a83b75` | CLEAN | 3 | not invoked |
+| 19 | `claude/r9-platform` | `f988882` | **CONFLICT** 2 files | 9 | **REFUSES** |
 
-Final simulated integration head at the 17:12 re-run: **1033 files** (1019 at 00:01),
-`canford-checks.yml` present, `simulation/openchannel_bc.py` at the resolved blob `61afb193`,
-register blob `1c900e5` (the `r8-register` merged product, not `add-ci-checks`'s `124dd74`).
+Final simulated integration head: **1044 files**, `canford-checks.yml` present,
+`simulation/openchannel_bc.py` at the resolved blob `61afb193`.
+
+**What moved since the 17:12 table, and why the order still holds.** Three branches committed
+real work in between (`r9-corpus-bib`, `r9-platform`, `r9-priorcode`) and two of the three now
+conflict. `r9-platform` is no longer a contained no-op; it carries 9 files of change. The
+*order* does not have to change, because both new conflicts are at the tail and neither blocks
+anything downstream of it. What changes is that **four merges now need a human, not two**, and
+**two now need a `--no-verify` override, not one**.
+
+**`claude/r9-priorcode` moved twice during this revision**, from `a863ee7` to `f31a71f` to
+`0a83b75`, the second time between two of my own commands. That is the section 1 point made
+concrete: do not read the tips out of this table. Re-derive them with section 9.1.
 
 ### 2.1 Why `r8-register` goes second, and this is the one place I disagree with its own document
 
@@ -329,8 +417,39 @@ the shorter one first makes the second merge's diff easier to read if something 
 
 ## 3. The conflicts, named, with resolutions
 
-**There is exactly one conflicting file across all fifteen branches.** MEASURED, every pair that
-shares a path was simulated:
+**RETRACTED, 2026-08-19 18:20. This section previously opened: "There is exactly one conflicting
+file across all fifteen branches." That is FALSE. There are five, across four merges.** The
+sentence stayed wrong through two revisions because of a specific methodological hole, and the
+hole is more useful than the correction:
+
+> **The pairwise table below tests feature branch against feature branch. It never tests a
+> feature branch against the integration target.** `.gitignore` conflicts between
+> `claude/add-ci-checks` and `claude/r8-persistence`, which is not a pair this table contains,
+> so no amount of re-running it could ever have surfaced it.
+
+MEASURED, and this is what makes it an error rather than staleness: the `.gitignore` blob on
+`add-ci-checks` is `e0531b98` at **every** tip the branch has had, `af62473`, `e0d2beb`,
+`faf53d1` and `7a0d08a`, and the conflict fires at all four. It was there at 00:01, it was there
+at 17:12, and both revisions asserted it was not.
+
+```
+git ls-tree <tip> -- .gitignore        # e0531b98 at all four tips, 131 lines
+git merge-tree --write-tree <tip> claude/r8-persistence
+# -> exit 1 at all four:  .gitignore  simulation/openchannel_bc.py
+```
+
+The five conflicting files, MEASURED against live tips at 18:20:
+
+| # | file | merge | kind | resolution |
+|---|---|---|---|---|
+| 1 | `simulation/openchannel_bc.py` | step 7, `r8-bc-merge` | add/add | 3.1: take `61afb193` |
+| 2 | `simulation/openchannel_bc.py` | step 8, `r8-persistence` | add/add, again | 3.1: keep `61afb193` |
+| 3 | `.gitignore` | step 8, `r8-persistence` | both appended | 3.3: union |
+| 4 | `.claude/skills/research-corpus/SKILL.md` | step 14, `r9-corpus-bib` | both edited | 3.4: union, and one number is wrong |
+| 5 | `hf_space/README.md` + `hf_space/app.py` | step 19, `r9-platform` | two different apps | 3.5: **a decision, not a merge** |
+
+The original pairwise table is retained below because it is still correct about what it tested,
+and because keeping it makes the hole visible:
 
 ```
 r8-persistence + r8-priorart    CLEAN
@@ -343,6 +462,12 @@ r8-tooling     + r8-naming      CLEAN
 r8-register    + r8-naming      CLEAN
 r8-licence     + r8-tooling     CLEAN
 ```
+
+**Generalisable rule, and it is the reason to write this up rather than just fix it:** a
+pairwise conflict matrix over N sources is not a conflict analysis of a landing. A landing is
+N merges into a moving target, and the target is a source too. **Always include the integration
+branch as a row.** The same shape as *reach* versus *cited*, and *lineage* versus *merges
+cleanly* in 3.1a: two predicates that feel identical and are measured differently.
 
 ### 3.1 `simulation/openchannel_bc.py`, add/add, three lineages
 
@@ -442,8 +567,20 @@ That matters, because git invokes `pre-merge-commit` for an automatic merge comm
 
 - Every **clean** merge in section 2 bypasses the 8-file limit entirely, including the 31-file
   `r8-kramer` merge. No hook fires.
-- The two **conflicted** merges are completed with `git commit`, which does fire `pre-commit`.
-  `r8-bc-merge` stages 2 files and passes. **`r8-persistence` stages 13 files and is REFUSED.**
+- The four **conflicted** merges are completed with `git commit`, which does fire `pre-commit`.
+  MEASURED against live tips at 18:20, in the section 2 order:
+
+  | conflicted merge | files staged | `pre-commit` |
+  |---|---|---|
+  | step 7 `r8-bc-merge` | 2 | passes |
+  | step 8 `r8-persistence` | 12 | **REFUSES** |
+  | step 14 `r9-corpus-bib` | 4 | passes |
+  | step 19 `r9-platform` | 9 | **REFUSES** |
+
+  **Two overrides are now needed, not one.** The staged count is order-dependent: merging
+  `r8-persistence` straight into `add-ci-checks + origin/main` instead stages 21 files, not 12.
+  Re-derive the count at the moment of the merge and read the list; do not carry a number from
+  this table into a `--no-verify`.
 
 The hook is doing its job: it exists because a shared working tree lets another session's staged
 work ride along on a bare commit. Here the 13 files are all genuinely from the merge, so the
@@ -456,7 +593,150 @@ git -C /Users/josie/can-it-ford commit --no-verify            # the ONLY --no-ve
 ```
 
 If that list contains anything not attributable to `claude/r8-persistence`, stop: another session
-has staged work in the shared index, and committing would sweep it in.
+has staged work in the shared index, and committing would sweep it in. The same check applies
+verbatim to step 19 `r9-platform`, the second override.
+
+### 3.3 `.gitignore`, step 8, both sides appended to the same region
+
+MEASURED, blob sizes about the merge base `1a868f3`:
+
+| side | blob | lines |
+|---|---|---|
+| base `1a868f3` | `213172da` | 104 |
+| `claude/add-ci-checks` | `e0531b98` | 131 |
+| `claude/r8-persistence` | `fe6040b6` | 112 |
+
+Both sides added lines to a file whose additions land at the end, so the regions overlap and git
+cannot tell them apart. Five commits on `add-ci-checks` touched it (`46282bc`, `a677a59`,
+`4dac5f0`, `be1b138`, `e2f985e`); one on `r8-persistence` did (`a6e534a`).
+
+**Resolution: union, keeping both sets of added lines, then re-run the tracked-file census.**
+This file is not ordinary. `CLAUDE.md`'s standing rules say twice, in two separate places, never
+to cite `.gitignore` by line number because it is edited too often, and the walk-down carve-out
+for `renders/yaris_render_s1/*` is the mechanism that decides which files the shell `grep`, and
+therefore several audits, can see at all. A union merge is safe **only** if the carve-out's
+ordering survives, because `.gitignore` is order-sensitive: a later broad rule re-ignores what an
+earlier `!` exception un-ignored.
+
+Verification to run after resolving, and it is a real test rather than an inspection:
+
+```
+git -C /Users/josie/can-it-ford check-ignore -v renders/yaris_render_s1/sim_standing.py   # expect: NOT ignored
+git -C /Users/josie/can-it-ford check-ignore -v renders/yaris_render_s1/_incoming/sim_standing.py  # expect: ignored
+git -C /Users/josie/can-it-ford check-ignore -v data/track1_sweep_v2/                     # expect: NOT ignored
+```
+
+If the first or third comes back ignored, the union re-ordered a rule and the resolution is
+wrong. Those three are the cases `CLAUDE.md` names explicitly, so they are the ones a regression
+would be quoted against.
+
+### 3.4 `.claude/skills/research-corpus/SKILL.md`, step 14: the same defect fixed twice, and the two fixes disagree by one
+
+This is the most interesting conflict in the set and the least mechanical. MEASURED, both sides
+about the merge base `af62473`:
+
+| side | commits touching the file | diff |
+|---|---|---|
+| `claude/add-ci-checks` | `faf53d1` (17:46) | +101 / -4 |
+| `claude/r9-corpus-bib` | `8bad9b4`, `026f931`, `7647e6d`, `6ecf4e5` (through 17:35) | +262 / -15 |
+
+`faf53d1` is titled "The research index never contained the project's own deep searches, and the
+skill said so wrongly". `6ecf4e5` is titled "The builder cannot see 12 of the project's 20 deep
+searches, and never could". **Those are the same finding, reached independently, eleven minutes
+apart, and written into the same file on two branches.** The merge conflict is the symptom; the
+duplicated work is the disease, and it is a coordination finding rather than a git one.
+
+**Resolution: union, not take-one-side, and I checked rather than assumed.** MEASURED with the
+same line-containment method section 3.1 used for `openchannel_bc.py`
+(`/usr/bin/grep -Fxv` in both directions):
+
+- `faf53d1` adds **75** lines relative to the base. **All 75 are absent from `r9-corpus-bib`.**
+- `r9-corpus-bib` adds far more, and its additions are absent from `faf53d1`.
+
+So neither side is a superset, and the openchannel resolution ("take the strict superset
+verbatim") **does not transfer**. Taking `r9-corpus-bib` wholesale would drop the deep-search
+table and the "DO NOT SAY 256 ARE CITED NOWHERE" retraction, which is itself a correction of a
+published error.
+
+**One number differs between the two sides and one of them is wrong.**
+
+| side | claim |
+|---|---|
+| `claude/add-ci-checks`, `faf53d1` | "The Undermind workspace holds **19 completed deep searches**", then lists "The nineteen" |
+| `claude/r9-corpus-bib`, `6ecf4e5` | "the index holds 8 of the project's **20** deep searches" |
+
+MEASURED, live, by querying the workspace directly rather than by preferring an author:
+`mcp__undermind__inspect_deep_searches(workspace_id='17299f2a-8dc8-438b-8c84-5abf19395e2c',
+names=[], status_only=True)` returns **20 searches, all `completed`**.
+
+**`20` is correct. `19` is wrong, and the mechanism is datable rather than a slip.** The twentieth,
+`/moving vehicle floodwater simulation open source implementations`, was created **2026-08-19
+16:29** and completed **16:31**. `faf53d1` was committed at **17:46**. So 19 was true when it was
+measured and false by the time it was written, which is the same failure as section 0's `64`, in
+a different file, on the same day.
+
+**The dispatch that commissioned this slot also says "nineteen Undermind deep searches". That is
+wrong too, for the same reason.** Whoever resolves this conflict should write 20 and give it a
+timestamp, because it will be 21 soon enough.
+
+Resolution, concretely: take `r9-corpus-bib`'s file as the base, graft `faf53d1`'s 75 added lines
+into it, and change `19`/`nineteen` to `20`/`twenty` in the grafted block. `r9-corpus-bib` is the
+base rather than the graft because its scope is this file and it is the larger, later-measured
+side.
+
+### 3.5 `hf_space/`, step 19: NOT a merge conflict. Two different applications sharing one filename
+
+**Do not resolve this one mechanically. It is a product decision and it is Josie's.**
+
+MEASURED, `git ls-tree` on each side:
+
+| | `origin/main` | `claude/r9-platform` |
+|---|---|---|
+| `hf_space/app.py` | 125 lines | 249 lines |
+| `hf_space/README.md` | 69 lines | 108 lines |
+| other files | `requirements.txt` | `requirements.txt`, `surface.py`, `data/canonical_runs.csv`, `data/load_surface.csv` |
+
+The two `app.py` files are not two edits of one program. MEASURED by reading both:
+
+- **`origin/main`'s** is the AR&R verdict calculator: an `AR_R` class table, `l0_depth_threshold`,
+  `l1_verdict` with a docstring reading "Joint rule. Identical to `vehicle_params.L1_verdict` and
+  `gates.py:23`", and depth/velocity sliders. It arrives via phase 1 and carries `f6348c7`,
+  merged PR **#11**, "Space L1 used the Large 4WD threshold for a Yaris and dropped two of three
+  conditions".
+- **`claude/r9-platform`'s** is a different Gradio app: a verdict-flip explorer with a `slide_m`
+  threshold slider, a load surface, and repeat distributions. It imports only `gradio`, `plotly`
+  and a new local `surface` module. It carries `6d761e7`, "The Space claimed Genesis, a superseded
+  density and no verdict, and all three were wrong".
+
+**MEASURED, and this is the part that makes it a decision rather than a merge: `r9-platform`'s
+`app.py` contains no `AR_R`, no `l1_verdict` and no `l0_depth_threshold`.** Neither side is a
+superset of the other (of `origin/main`'s 78 added `app.py` lines, 76 are absent from
+`r9-platform`; of its 22 added README lines, all 22 are absent). So:
+
+> **Merging `r9-platform`'s `hf_space/` over `origin/main`'s would remove the L1 joint-rule fix
+> from a PUBLIC artifact.** That fix corrected a Yaris being graded against the Large 4WD
+> threshold with two of three conditions dropped. Landing this wrong republishes a wrong physics
+> claim under the project's name.
+
+Both fixes are real and they fix different defects in the same file. The options, with the
+consequence of each stated rather than a recommendation smuggled in:
+
+| option | consequence |
+|---|---|
+| **A. Keep both, as two tabs** | Correct on the merits, most work. The calculator keeps the joint-rule fix; d18's explorer becomes a second tab. Requires someone to write the composition. |
+| **B. `origin/main`'s app only** | Safe, loses d18-platform's work from the Space, which stays on the branch and is not lost. |
+| **C. `r9-platform`'s app only** | **Do not choose this without a deliberate decision.** It silently reverts PR #11 on a public page. |
+
+**My recommendation is A, and if A is not affordable today, B.** The asymmetry is the point: B
+defers work, C reverts a published correctness fix, and only one of those is recoverable by
+noticing later. **This is the one item in this plan I am flagging rather than resolving**, under
+the standing rule about a genuine disagreement needing a judgment call, and because the artifact
+is public.
+
+Whatever is chosen, verify it against the repo's own verdict path afterwards rather than by
+reading the diff. `origin/main`'s docstring claims parity with `vehicle_params.L1_verdict` and
+`gates.py:23`; that claim is testable and should be tested, because a Space that disagrees with
+the repo is worse than no Space.
 
 ---
 
@@ -588,27 +868,127 @@ the slot's own note applies: rebuilding locally does not unpublish what GitHub h
 Felder 2019 set (16 files, 6,215,623 B) is closed access. `claude/r8-licence` is in the merge set
 at phase 3, so approving this plan approves landing that text.
 
+### 5.4 Two commits at branch tips were authored by no session, and neither has been reviewed
+
+MEASURED, `git log -1` and `git branch --contains` on each:
+
+| commit | branch | position | files | change | authored |
+|---|---|---|---|---|---|
+| `98d4d9d` | `claude/r9-moving-vehicle` | **tip** | 4 | +493 / -9 | 2026-08-19 17:45:22 |
+| `d55ac14` | `claude/r9-renders` | **tip** | 2 | +621 / -0 | 2026-08-19 17:45:22 |
+
+Both are titled "RECOVERED from a crashed session", and `d55ac14`'s own subject ends **"the
+Blender Cycles path, untested"**. They preserve work from the tmux-server crash rather than
+representing a slot's reviewed output. `98d4d9d` touches `analysis/r9_speed_surface.py`,
+`data/r9_speed_surface.tsv`, `docs/R9_MOVING_VEHICLE_2026-08-19.md` and
+`simulation/moving_vehicle_channel.py`; `d55ac14` adds `analysis/cycles_render.py` and
+`analysis/prep_cycles_scene.py`, 621 lines of new code by its author's own note untested.
+
+**Precondition: both need their authoring slot's sign-off before the merge that carries them.**
+They are at the tips, so merging `claude/r9-moving-vehicle` (step 17) or `claude/r9-renders`
+(step 15) lands them and nothing in the merge makes that visible. Neither conflicts, which is
+exactly why this needs to be a written precondition rather than something the merge will surface.
+
+Concretely, before steps 15 and 17:
+
+```
+git -C /Users/josie/can-it-ford show --stat d55ac14
+git -C /Users/josie/can-it-ford show --stat 98d4d9d
+```
+
+and ask `d17-moving` and `d13-renders` to confirm the content is theirs and is what they intended
+to commit. If a slot cannot confirm, the fallback is to merge its branch at the commit *before*
+the recovery commit (`056ba10` and `256d013` respectively), which loses nothing: the recovery
+commits remain on the branch and in the bundle, reachable, and can be merged later.
+
+**Do not treat "it is committed" as "it was reviewed".** Six other slots' tips are their own
+authored work; these two are not, and the difference is invisible in `git log --oneline`.
+
 ---
 
-## 6. The CI question: what it would take to run, and what it would do
+## 6. The CI question: it already runs, and it goes green while a check inside it fails
 
-### 6.1 It runs nowhere today, confirmed
+### 6.1 RETRACTED: it does NOT "run nowhere". It has run seven times, all green
 
-MEASURED:
+**This subsection previously read "It runs nowhere today, confirmed" and concluded that the only
+thing needed was for the file to reach `origin`. The premise was right and the conclusion was
+wrong.** So is the identical claim printed by `scripts/orient_live.sh` at every session start, and
+the one in the dispatch that commissioned this document.
+
+The premise, still true, MEASURED 2026-08-19 18:16:
 
 ```
 git -C /Users/josie/can-it-ford ls-tree -r --name-only origin/main -- .github/workflows/
 # -> csv-check.yml, physics-consistency-review.yml, sync-to-hub.yml
-# canford-checks.yml is ABSENT
+# canford-checks.yml is ABSENT from origin/main
 ```
 
-`.github/workflows/canford-checks.yml` exists only on `claude/add-ci-checks` and the branches cut
-from it. GitHub Actions only ever reads workflows from the repository on GitHub. **What it takes
-for it to run is exactly one thing: the file has to reach `origin`.** Section 2's phase 1 plus the
-final `add-ci-checks` to `main` merge does that, and nothing else is required. There is no
-runner configuration, secret, or permission to arrange first.
+The conclusion, false, MEASURED:
 
-### 6.2 What it would do the first time, measured rather than predicted
+```
+gh run list --repo jcerrell-IS/can-it-ford --limit 20
+```
+
+| run id | branch | event | when (UTC) | result |
+|---|---|---|---|---|
+| `32278287331` | `claude/add-ci-checks` | push | 2026-08-19T16:51:19Z | success, 43s |
+| `32184701961` | `claude/add-ci-checks` | push | 2026-08-18T20:52:36Z | success, 1m43s |
+| `32101688862` | `claude/r5-research` | push | 2026-08-18T05:07:48Z | success |
+| `32101687314` | `claude/r5-physics` | push | 2026-08-18T05:07:47Z | success |
+| `32101687242` | `claude/r5-safekeeping` | push | 2026-08-18T05:07:47Z | success |
+| `32101686913` | `claude/add-ci-checks` | push | 2026-08-18T05:07:47Z | success |
+| `32101686894` | `claude/r5-exposure` | push | 2026-08-18T05:07:47Z | success |
+
+**Seven is the complete history, not the first page.** The table above came from
+`gh run list --limit 20`, which could have truncated. Re-derived with an explicit workflow filter,
+`gh run list --workflow canford-checks.yml --limit 100` returns exactly **7 rows**, all `success`.
+Stated because a count taken off a paginated listing is the kind of number this document keeps
+catching elsewhere.
+
+**Mechanism, READ from the workflow itself:** the trigger is a bare `on: push:` with **no branch
+filter**, so GitHub runs it from whatever branch was pushed, and `canford-checks.yml` is present
+on every branch cut from `add-ci-checks`. Section 0a establishes that `add-ci-checks` reached
+`origin` on 2026-08-18 06:07.
+
+**"Absent from `origin/main`" and "runs nowhere" are different claims and only the first is
+true.** The error is the same shape as *reach* versus *cited* and *lineage* versus *merges
+cleanly*: a true measurement carried one step too far into a conclusion nobody re-derived.
+
+**What actually changes when it lands on `main`:** it starts gating `main` and pull requests
+against `main`, and it starts appearing as a status check on PRs. Those are the things it does
+not do today. That is a smaller change than "turning CI on", and it is worth saying plainly
+because the plan was about to claim credit for switching something on that has been on for two
+days.
+
+### 6.1a A green run is not a passing check, and this one proves it
+
+**MEASURED from the real CI log, not a simulation.** `gh run view 32278287331 --log`:
+
+| step | API `conclusion` | what the log actually says |
+|---|---|---|
+| `params_check` | success | exit 0, 11 warnings |
+| `register_integrity` | success | exit 0, 52 warnings |
+| `count_claims` | **success** | **25 `BLOCK` lines and `##[error]Process completed with exit code 1`** |
+| `stationarity` self-test | success | exit 0 |
+| `research_index --stats` | success | exit 0 |
+| physics gates | success | exit 0 |
+
+**`gh run view --json jobs` reports `conclusion: success` for a step that exited 1.** That is
+what `continue-on-error: true` does, and it means the step-conclusion field cannot distinguish
+"passed" from "failed and was masked". **Only the log can.** Anyone auditing this workflow from
+the API alone will get a clean bill of health for a check that fails on every single run.
+
+This is the "a check that cannot fail is not a check" family the project has logged before, and
+it is the reason section 6.3 item 1 is the highest-value change in this plan.
+
+### 6.2 What it does, simulated in revision 2 and since CONFIRMED against the real run
+
+**Revision 2 wrote this subsection from a local `git archive` simulation, before knowing the
+workflow had ever executed. Section 6.1a has now compared it against the real GitHub log. It
+holds, including the specific number.** The simulation predicted `count_claims` exit 1 with **25
+blocking defects**, masked; the CI log shows 25 `BLOCK` lines and exit 1, masked. Those are two
+separate origins, a macOS Python 3.14 export and an Ubuntu Python 3.11 runner, so this is
+corroboration rather than one source cited twice. The rest of the subsection stands as written.
 
 READ, the workflow: six steps, `on: push` and `on: pull_request`, `ubuntu-latest`,
 `actions/setup-python@v5` at 3.11, **no dependency install step at all**.
@@ -663,9 +1043,42 @@ caveats above.
 
 ### 6.3 Three changes worth making before it lands, none of them blocking
 
-1. Add `--register` style explicitness or drop `continue-on-error` from `count_claims` and instead
-   teach it that a tracked-only tree is a different scope. Masking a real failure is worse than
-   not running the check, because the green tick is then evidence for a proposition nobody tested.
+1. **Fix `count_claims` in CI, and the fix is a third scope axis, not a threshold tweak.** This is
+   the highest-value change in this plan, because today the workflow's green tick is evidence for
+   a proposition nobody tested (section 6.1a).
+
+   MEASURED, the cause, by enumerating every declaration site and asking git whether each is
+   tracked (`/usr/bin/grep -rn --include='*.py'` for the five names, excluding `.git/`,
+   `third_party/`, `.claude/worktrees/`, `__pycache__` and `.bak*`, then
+   `git ls-files --error-unmatch` on each hit):
+
+   **24 sites in the working tree: 17 TRACKED, 7 UNTRACKED.**
+
+   The 7 invisible to CI are `renders/yaris_render_s1/gates.py`, `gates_all_runs.py` and
+   `gates_both_scenarios.py`; the three duplicated
+   `deliverables/.../make_poster_figures_accessible.py` copies; and
+   `docs/session_notes/archive/mu_sweep_recovered_from_staging.py`. The first three are exactly
+   the files `CLAUDE.md` item 13 warns are "un-ignored but still UNTRACKED", so this is that
+   documented trap arriving through a new door.
+
+   Local run: totals **22/23/24**, 0 blocking defects, exit 0. CI run: totals **16/17**, 25
+   blocking defects, exit 1. **17 tracked sites is exactly what CI's 16/17 band reflects.** The
+   check is measuring a different population and grading it against `CLAUDE.md` item 13's
+   working-tree band.
+
+   `CLAUDE.md` item 13 says the total is scope-sensitive and names **two** binary choices
+   (archive in or out, `gp_surrogate`'s CLI default in or out), giving four defensible totals.
+   **There is a third: tracked-only versus whole working tree.** That makes eight, and the
+   tracked-only pair is 16/17. Item 13 does not currently contain them, which is why CI cannot
+   pass. Two acceptable fixes, and the choice belongs to whoever owns item 13, not to this plan:
+
+   - teach `count_claims_check.py` to detect a tracked-only tree and accept 16/17 there, or
+   - have CI run it with an explicit `--scope tracked` and add 16/17 to item 13's table.
+
+   Either way, **drop `continue-on-error` afterwards.** Leaving it masks the next real failure
+   too. Do not simply widen the accepted band to include 16/17 unconditionally: that would let a
+   genuine loss of six declaration sites pass silently in the full tree, which is the exact
+   defect the check exists to catch.
 2. `on: push` has no branch filter. With 102 local branches, if a batch of them is ever pushed,
    this fires once per branch per push, plus again for any pull request. Consider
    `on: push: branches: [main]` plus `pull_request`.
@@ -676,12 +1089,45 @@ caveats above.
 
 ---
 
-## 7. The bundle: verified, and it went stale while this was being written
+## 7. The bundle: independently restore-tested at 18:19, and stale on two heads by 18:21
 
-MEASURED. `/Users/josie/can-it-ford-bundles/2026-08-18/R8R9-all-heads-2350.bundle`, 493,615,746 B,
-mtime 23:41. `git bundle verify` reports "The bundle records a complete history" and lists **16
-refs**. I restore-tested it independently: `git clone --mirror` into a scratch directory, then
-compared all 16 restored heads against the live tips. All 16 matched at 23:50.
+**REVISION 3, and the coordinator's update 3 reproduces.** MEASURED rather than accepted:
+`/Users/josie/can-it-ford-bundles/2026-08-19/R9-post-crash-1748-FINAL.bundle`, **493,971,980 B**,
+mtime 2026-08-19 17:45.
+
+```
+git -C /Users/josie/can-it-ford bundle verify <bundle>   # "The bundle records a complete history"
+git -C /Users/josie/can-it-ford bundle list-heads <bundle> | wc -l    # -> 19
+git clone --mirror <bundle> <scratch>                    # virgin clone, no reference to the repo
+git -C <scratch> fsck                                    # rc 0
+```
+
+**19 heads, all 19 restored at exactly the listed SHAs** (`diff` of the bundle listing against
+`for-each-ref` on the restored mirror: identical). `fsck` clean. Both recovery commits from
+section 5.4, `98d4d9d` and `d55ac14`, are present and readable from the restored clone. So update
+3's claim holds on every part I could test.
+
+**Two caveats the restore test surfaced that the claim does not carry.**
+
+**(a) The bundle contains no `main`.** `fsck` on the restored mirror emits "HEAD points to an
+unborn branch (main)", and all 19 refs are `claude/*`. Restoring from this bundle alone gives you
+the wave and not the trunk. That is acceptable because `main` is on GitHub, but it means this
+bundle is not a whole-project backup and should not be described as one.
+
+**(b) It went stale on two heads within two minutes of my checking it**, MEASURED at 18:21:
+
+```
+add-ci-checks: bundle e0d2beb -> live 7a0d08a,  2 commits NOT in bundle
+r9-priorcode:  bundle a863ee7 -> live 0a83b75,  2 commits NOT in bundle
+```
+
+`r9-priorcode` moved twice during this revision. One of the two uncaptured `add-ci-checks`
+commits is `7a0d08a`, the register C1 correction, which is a retraction: the same preferential
+loss of the newest work described below.
+
+**The superseded revision-2 text is retained for the record:**
+`/Users/josie/can-it-ford-bundles/2026-08-18/R8R9-all-heads-2350.bundle`, 493,615,746 B,
+mtime 23:41, "complete history", **16 refs**, restore-tested at 23:50 with all 16 matching.
 
 `origin/main` (`c7f0a16`) and all five PR commits are present as objects inside it, reachable via
 `claude/r8-licence`, which is the only branch in the set that contains `origin/main`. So the
@@ -741,21 +1187,55 @@ lands the corrected state. Reading the board top-down and stopping early does no
 
 ## 9. Executable procedure
 
-### 9.1 Re-derive everything before starting. Do not trust section 1.
+### 9.1 Re-derive everything before starting. Do not trust section 1, or section 2, or this one.
+
+**The merge set is a rate, not a list.** During revision 3 alone, `claude/r9-priorcode` moved
+twice, once between two consecutive commands of mine, and `claude/add-ci-checks` gained a commit
+while I was measuring it. **Never type a branch name or a SHA out of this document into a merge
+command.** Everything below discovers the set by pattern and reads its tips at the moment of use.
 
 ```bash
 R=/Users/josie/can-it-ford
-B=/Users/josie/can-it-ford-bundles/2026-08-18/R8R9-all-heads-2350.bundle   # or the newest
 
-# every branch tip, live
-git -C $R for-each-ref --format='%(objectname:short=7) %(refname:short)' \
-    'refs/heads/claude/r8-*' 'refs/heads/claude/r9-*' 'refs/heads/claude/add-ci-checks'
+# 1. DISCOVER the set by pattern. Do not maintain a list; the list is what goes stale.
+#    This is the definition of "the wave": add-ci-checks plus every r8-* and r9-* branch.
+git -C $R for-each-ref --format='%(refname:short)' \
+    'refs/heads/claude/r8-*' 'refs/heads/claude/r9-*' 'refs/heads/claude/add-ci-checks' \
+    | sort > /tmp/wave.txt
+wc -l < /tmp/wave.txt          # revision 3 measured 19. If this is not 19, the set MOVED.
 
-# the ahead AND behind counts, both halves, for every branch
-for b in $(git -C $R for-each-ref --format='%(refname:short)' 'refs/heads/claude/r8-*' 'refs/heads/claude/r9-*'); do
-  printf '%-28s %s\n' "$b" "$(git -C $R rev-list --left-right --count origin/main...$b)"
+# 2. Tips and BOTH halves of the count, for everything discovered in step 1.
+while read b; do
+  printf '%-30s %-9s %s\n' "$b" \
+    "$(git -C $R rev-parse --short $b)" \
+    "$(git -C $R rev-list --left-right --count origin/main...$b)"   # behind <TAB> ahead
+done < /tmp/wave.txt
+
+# 3. Push state, LIVE. The cached refs/remotes/ copies are stale by construction:
+#    they are the clone's own record of what it last saw, not what the remote holds.
+git -C $R ls-remote --heads origin | wc -l
+while read b; do
+  r=$(git -C $R ls-remote --heads origin "refs/heads/$b" | cut -f1)
+  printf '%-30s local %s remote %s\n' "$b" \
+    "$(git -C $R rev-parse --short $b)" "${r:0:7}"
+done < /tmp/wave.txt
+
+# 4. Bundle freshness, against the set discovered in step 1 rather than against the bundle.
+#    A bundle can be complete and still be missing the branch that matters.
+B=$(ls -t /Users/josie/can-it-ford-bundles/*/*.bundle | head -1)
+git -C $R bundle list-heads "$B" | while read sha ref; do
+  b=${ref#refs/heads/}; live=$(git -C $R rev-parse $b 2>/dev/null)
+  n=$(git -C $R rev-list --count $sha..$live 2>/dev/null)
+  [ "${n:-0}" -gt 0 ] && echo "STALE $b: $n commit(s) not in bundle"
 done
+# and separately: is any branch from step 1 ABSENT from the bundle entirely?
+comm -23 /tmp/wave.txt <(git -C $R bundle list-heads "$B" | sed 's|.*refs/heads/||' | sort)
 ```
+
+Step 4's second half is the one people skip. Revision 2's bundle listed 16 refs against a set of
+19; comparing the bundle to itself says "complete history" and comparing restored heads to listed
+heads says "all matched". **Neither of those detects a branch the bundle never contained.** Only
+the `comm` against an independently discovered set does.
 
 ### 9.2 Verification rules, which are the part most likely to be got wrong
 
@@ -826,25 +1306,50 @@ merged=$(git -C $R rev-parse HEAD^2)
 ### 9.3 The dry run, which touches nothing and should be re-run before executing
 
 The whole order in section 2 was simulated with `git merge-tree --write-tree`, which writes no
-ref, no index and no working tree, chained inside a throwaway mirror clone of the bundle. Re-run
-it after re-deriving tips; if any branch that was CLEAN comes back CONFLICT, the plan's order is
-stale and section 3 needs redoing before anything is merged. Scripts are in the session
-scratchpad: `verify_bundle.sh`, `simfinal.sh`.
+ref, no index and no working tree, chained inside a throwaway mirror clone. Re-run it after
+re-deriving tips; if any branch that was CLEAN comes back CONFLICT, the plan's order is stale and
+section 3 needs redoing before anything is merged. **In revision 3 exactly that happened: two
+branches that were CLEAN at 17:12 came back CONFLICT at 18:20.** Scripts are in the session
+scratchpad: `verify_bundle.sh`, `simfinal.sh` (revisions 1 and 2), `simrun.sh` and `simres.sh`
+(revision 3).
+
+The revision-3 script differs from its predecessors in one way that matters, and the difference
+is the reason it found three conflicts they missed:
+
+- Build the throwaway with `git clone --mirror --local <repo> <scratch>`. Hardlinked, seconds,
+  and it isolates the simulation from the shared repository completely.
+- Seed the chain at `claude/add-ci-checks`, merge `origin/main` FIRST, then each branch in order,
+  carrying the result forward with `git commit-tree` so every step merges into the accumulated
+  tree rather than into the base. **A per-branch simulation against the base is not a simulation
+  of a landing.**
+- **Apply section 3.1's resolution at step 7 before continuing.** Without it, step 7's unresolved
+  `openchannel_bc.py` conflict propagates and every later conflict report is contaminated. This
+  is what separates a real new conflict from a carried-forward one, and without it `.gitignore`
+  at step 8 is indistinguishable from noise.
 
 ### 9.4 Order of operations on the day
 
-1. Re-derive tips (9.1). Re-verify the bundle (9.1). Re-run the dry run (9.3).
-2. Answer the four preconditions in section 5. **Rotation is the one that gates pushing.**
-3. Phase 1 to 6 locally, on `claude/add-ci-checks`, verifying each merge with `HEAD^2` (9.2).
-4. Only `claude/r8-persistence` needs `commit --no-verify`, and only after reading the staged list
-   (3.2).
-5. Verify the register by entry (9.2). Run the six CI checks locally against a `git archive`
+1. Re-derive the set and tips (9.1, all four steps). Re-verify the bundle (9.1 step 4). Re-run
+   the dry run (9.3).
+2. Answer the **five** preconditions in section 5. **Rotation is the one that gates pushing.**
+   Section 5.4's recovery-commit sign-off is the one that gates steps 15 and 17 specifically, and
+   it is the only precondition no merge will surface on its own.
+3. Decide section 3.5 before starting. It is a product decision about a public page and it should
+   not be made at 2am with a conflict marker on screen.
+4. Steps 1 to 19 locally, on `claude/add-ci-checks`, verifying each merge with `HEAD^2` (9.2).
+5. **Four merges stop for a human**, not one: steps 7, 8, 14 and 19. **Two need
+   `commit --no-verify`**, steps 8 and 19, and only after reading the staged list (3.2). Re-derive
+   the staged count at the merge; it is order-dependent.
+6. Verify the register by entry (9.2). Run the six CI checks locally against a `git archive`
    export, not against the working tree, or you will get the full-tree answer and not the CI one
-   (6.2).
-6. Merge `claude/add-ci-checks` into `main` locally.
-7. **Stop. Pushing is a separate authorisation** and requires `PUSH_OK=1`, an answered rotation
+   (6.2). Expect `count_claims` to exit 1 until section 6.3 item 1 is done; that is the known
+   state, not a new failure.
+7. Merge `claude/add-ci-checks` into `main` locally.
+8. **Stop. Pushing is a separate authorisation** and requires `PUSH_OK=1`, an answered rotation
    question, and confirmation afterwards that the remote actually moved (`git ls-remote origin`),
    because a command exiting 0 is not evidence the remote updated.
+9. After the push, **read the CI log, not the badge** (6.1a). A green `canford-checks` is
+   compatible with `count_claims` exiting 1.
 
 ---
 
@@ -855,15 +1360,29 @@ scratchpad: `verify_bundle.sh`, `simfinal.sh`.
   `pre-commit` prediction in 3.2 is INFERRED from reading the hook and from git's documented rule
   that `pre-merge-commit` covers automatic merge commits, and there is no `pre-merge-commit` hook
   here. I did not run a real merge to confirm it, because I am not authorised to merge.
-- **The CI result on the real runner.** Simulated on Python 3.14.6 / macOS against 3.11 / Ubuntu
-  (6.2). A workflow that has never executed is not known to pass, and mine is a simulation, not an
-  execution.
-- **Whether the R9 tips in section 1 are still current.** They are certainly not; one moved during
-  writing. That is why section 9.1 exists.
+- ~~**The CI result on the real runner.** Simulated on Python 3.14.6 / macOS against 3.11 /
+  Ubuntu (6.2). A workflow that has never executed is not known to pass, and mine is a simulation,
+  not an execution.~~ **RESOLVED in revision 3.** It has executed seven times; the real log
+  confirms the simulation including the 25-defect count (6.1, 6.1a).
+- **Whether the R9 tips in section 1 or 2 are still current.** They are certainly not; two moved
+  during revision 3 and one moved between two consecutive commands. That is why section 9.1 is a
+  discovery procedure and not a list.
 - **The credential question beyond the landing range.** Section 5.2 bounds what the landing adds.
   It says nothing about what is already public.
-- **Anything about the four R9 branches' content.** Three were still no-ops at 00:01 and one had
-  one commit. Their merges are predicted from structure, not measured against real work.
+- **Whether the two recovery commits (5.4) contain what their slots intended.** I read their
+  diffstats, not their content. `d55ac14` says of itself that it is untested. Only the authoring
+  slots can close this.
+- **Whether a union resolution of `.gitignore` (3.3) preserves the carve-out ordering.** I gave
+  three `check-ignore` assertions that would detect a regression. I could not run them, because
+  the resolution does not exist yet.
+- **The `hf_space` decision (3.5).** Not a verification gap, a decision gap. I established that
+  neither side is a superset and that one option reverts PR #11; which app the public Space should
+  serve is not mine to settle.
+- **That the seven canford-checks runs were all on the same workflow content.** I read the
+  per-step log for `32278287331` only. The six older runs are reported green at job level; I did
+  not open their logs, so "green" for those six is a run-level fact and, per 6.1a, that is exactly
+  the fact which does not imply the checks passed. The *count* of seven is confirmed complete
+  (workflow-filtered, limit 100); it is the six older runs' *contents* that are unread.
 
 - **The 0.60 boundary operator, and which view I searched**, because
   `docs/R9_DISCREPANCY_REGISTER_2026-08-19.md` row C2 asks for the scope to be stated. **Scope:
@@ -897,11 +1416,69 @@ Treat any number here that does **not** carry a command as unreviewed.
 Per the operating protocol, flagged rather than silently passed:
 
 1. **Unrotated credential exposure gating a push to a public repo** (5.1). Hard-stop class.
-   Josie's decision. Everything up to and including step 6 of 9.4 proceeds without it.
+   Josie's decision. Everything up to and including step 7 of 9.4 proceeds without it.
 2. **Two false statements already public in the poster on `origin/main`** (5.3). Not created by
    this landing. Named because a landing is the moment to decide.
-3. **A masked CI failure** (6.2, caveat 1). Not blocking; the job goes green either way, which is
-   the problem.
-4. I did **not** flag the `openchannel_bc.py` conflict as a disagreement between slots. It is not
+3. **A masked CI failure** (6.1a, 6.2 caveat 1, 6.3 item 1). **Escalated in revision 3 from
+   "simulated" to "measured in production":** it has been failing on every run for two days
+   behind a green tick. Still not blocking the landing; it is the reason the landing should not
+   be reported as "CI now passes".
+4. **`hf_space/`: two different applications, and one option silently reverts a public physics
+   fix** (3.5). NEW in revision 3. This is the one item I am flagging rather than resolving, on
+   both protocol grounds: a genuine disagreement needing a judgment call, and a public artifact.
+5. **Two unreviewed recovery commits at branch tips** (5.4). NEW in revision 3. Not a hard stop;
+   it needs two slots to confirm their own work, and the fallback loses nothing.
+6. I did **not** flag the `openchannel_bc.py` conflict as a disagreement between slots. It is not
    one: `d4-bcmerge`'s document and my independent line-containment check agree, and the third
-   version is a common ancestor of both.
+   version is a common ancestor of both. The coordinator's register row C1 has since been
+   rewritten to match (`7a0d08a`), so this is now settled on both sides.
+7. I did **not** flag the `19` versus `20` deep-search disagreement (3.4), because it was
+   resolvable by going and getting the data rather than by a judgment call. Answer: **20**,
+   read live from the workspace, with the twentieth search timestamped after the losing claim was
+   measured.
+
+---
+
+## 12. Audit of the three updates supplied with the revision-3 go-ahead
+
+Each was checked rather than adopted, per the standing rule that a claim from another session is
+not a second source. Two reproduced exactly. One needed narrowing, and the narrowing matters.
+
+**Update 1: "`claude/add-ci-checks` IS NOW PUSHED and verified by `ls-remote`, and has since moved
+to `7a0d08a`. Re-derive both counts; your 64 ahead is stale in the ahead direction."**
+
+PARTLY CONFIRMED, and narrowed. MEASURED:
+
+- Pushed: **YES**, and earlier than "now". `refs/remotes/origin/claude/add-ci-checks` records
+  three pushes, 2026-08-18 06:07:44, 2026-08-18 21:52:34, and 2026-08-19 17:51:13. The branch has
+  been on `origin` for two days, not since today.
+- Moved to `7a0d08a`: **YES**.
+- **But the remote is at `faf53d1`, not `7a0d08a`.** `git ls-remote` live: `faf53d1`. The local
+  branch is **1 commit ahead of its own remote copy**, and that commit is `7a0d08a` itself, the
+  register C1 correction. So "is pushed" and "is at `7a0d08a`" are both true and are not true of
+  the same ref. This matters for section 6: `7a0d08a` has **not** triggered a CI run, and will
+  not until it is pushed.
+- 64 stale: **YES**, and worse than stale. It was mis-dated as well; see section 0.
+
+**Update 2: "TWO RECOVERY COMMITS exist that no session authored: `98d4d9d` on r9-moving-vehicle
+and `d55ac14` on r9-renders. Flag both as needing their authors' sign-off."**
+
+CONFIRMED in full, and acted on as section 5.4. Both are at branch **tips**, which the update did
+not say and which is the operative detail: they will be landed by steps 15 and 17 with nothing in
+the merge to surface them. `d55ac14` describes itself as "untested" and is 621 lines of new code.
+
+**Update 3: "`R9-post-crash-1748-FINAL.bundle` has 19 heads and was restore-tested from a virgin
+mirror. Verify rather than trust; it predates today's commits."**
+
+CONFIRMED in full, independently. 19 heads, complete history, virgin `clone --mirror` restores all
+19 at the listed SHAs, `fsck` clean, both recovery commits readable from the restored clone. The
+"predates today's commits" warning is correct and I quantified it: stale on **2** heads by 18:21,
+`add-ci-checks` and `r9-priorcode`, 2 commits each. Two additions the update did not carry: the
+bundle contains **no `main`**, so it is not a whole-project backup; and the check nobody runs is
+whether a branch is **absent from the bundle entirely**, which is what revision 2's 16-ref bundle
+was against a 19-branch set (9.1 step 4).
+
+**Also acted on: "the branch set is not a list, it is a rate, so specify how to RE-DERIVE the set
+at merge time rather than pinning it."** Section 9.1 is rewritten as a discovery procedure that
+takes no branch name from this document. The set moved twice while revision 3 was being written,
+so this is not a stylistic preference.
