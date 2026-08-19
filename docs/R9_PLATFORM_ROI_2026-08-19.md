@@ -1138,3 +1138,106 @@ a transient window that had not been labelled. Both are cheap, four floats and
 two integers, and `config` is queryable, so a threshold change becomes a visible
 diff across runs instead of an untracked edit, and any verdict count becomes
 re-derivable by filtering rather than by trusting a summary.
+
+---
+
+# PART 7. The smaller, correct question, and the landing risk re-measured
+
+## 34. The `sweep-v1` pair is a SPLIT, not a double creation
+
+The revised ask describes the two `can-it-ford-sweep-v1` repositories as "both
+with a README and no data" and suggests one is a creation step that ran twice.
+**Re-verified live, and it is the exact inverse.** The revised file listing has
+no row for the model repo at all:
+
+| repo | type | visibility | real files | README | data |
+|---|---|---|---|---|---|
+| `can-it-ford-sweep-v1` | dataset | public | 1 | **yes** (mine, this afternoon) | **no** |
+| `can-it-ford-sweep-v1` | **model** | public | **37** | **no**, `raw/main/README.md` is 404 | **yes**, manifest + 36 timeseries |
+
+So it is not one step run twice. **It is a split**: the data went to the *model*
+repo, which is the wrong type for a tabular sweep, and the *dataset* repo, which
+is the right type, is the bare one. A "ran twice" reading would predict two
+similar repos; the file lists refute that.
+
+The consequence is unchanged from Part 6 and still needs a decision: 36 runs of
+the deprecated box-proxy `track1_sweep_v1` lineage are publicly readable with
+**no README**, every row self-flagged `density_plausible=False`. The fix is a
+README, the data behind it is committed at `data/track1_sweep_v1/` on
+`origin/main`, and it is a public write so it is not mine to make.
+
+## 35. `can-it-ford-results`: my recommendation is REMOVE, and here is what would change it
+
+It is genuinely bare, 1 file, `.gitattributes` only, and **private**, so no
+exposure argument applies.
+
+**Recommend removing it**, for one reason that is not about storage: **the name
+is available and unlabelled.** An empty repository called `results` under this
+project's name is a magnet for a future session to push into, which creates a
+second public name for one thing. That is precisely the `sweep-v1` split above,
+and it cost an hour tonight to diagnose. The results that exist already have a
+home in `can-it-ford-speed-surface`.
+
+**What would change the answer:** if a result appears that is genuinely distinct
+from the speed surface *and* is re-derivable, it needs a repository, and a
+correctly-named new one is better than this generic one. Note that tonight's
+provenance audit found two headline results whose data lives only on Vista and
+in no repository; **those must not fill it**, because nothing goes up that
+cannot be re-derived.
+
+**Reversible alternative if deletion is unwanted:** leave it and add a one-line
+README claiming the name, the same move used on the `sweep-v1` dataset. That
+precedent does not transfer cleanly though: `sweep-v1` was public with 22
+downloads, which is why deletion was wrong there. This one is private with no
+consumers, so the argument for preserving the URL does not apply.
+
+**I have not deleted it.** A repository deletion is irreversible and is Josie's.
+
+## 36. The landing risk, re-measured: there is no longer a silent-revert path
+
+Register C-18(c) records that `r9-platform`'s `app.py` contains no `AR_R`, no
+`l1_verdict` and no `l0_depth_threshold`. **That is correct**, verified: zero
+occurrences in `hf_space/app.py`.
+
+**But it is incomplete at branch level, and the incompleteness inverts the risk.**
+The branch does carry all three, in `hf_space/arr_verdict.py` (`AR_R` at :38,
+`l0_depth_threshold` at :60, `l1_verdict` at :64), copied verbatim from
+`origin/main` rather than re-implemented, and `app.py:20` imports it and wires it
+at :292-298. That module was added by `bef6da0` after I overwrote the public
+Space and repaired it.
+
+Every landing resolution, measured rather than reasoned about:
+
+| resolution | outcome |
+|---|---|
+| take `r9-platform:hf_space/` **wholesale** | **fix PRESERVED**, `arr_verdict.py` carries it |
+| take `origin/main:hf_space/` wholesale | **fix PRESERVED**, inline in `app.py` |
+| take `r9-platform:app.py` **without** `arr_verdict.py` | **`ModuleNotFoundError` at import**, the Space fails to build |
+| `origin/main:app.py` + `r9-platform:arr_verdict.py` | fix preserved, harmless duplication |
+
+The third row is the one worth having measured: I ran it, with the module
+removed, and it raises `ModuleNotFoundError: No module named 'arr_verdict'` at
+**import time**. That is a build failure a person sees, **not a silent revert**.
+
+**So the hazard C-18(c) describes was real before `bef6da0` and is closed at
+branch level now.** The register entry is accurate about `app.py` and its risk
+framing describes the pre-repair state. Taking this branch's `hf_space/`
+wholesale is now the safe resolution rather than the dangerous one.
+
+**I am not resolving it.** It is d16-landing's merge and a human decision, and
+the point of writing it here is that whoever makes it should be choosing between
+four measured outcomes rather than one inferred one.
+
+## 37. On the correction itself
+
+Five relays tonight inferred a property from a field that does not measure it.
+Two were mine: `iso_vrel_criterion` reporting NOT COMPUTABLE from cell ids that
+never existed, and `read_surface` collapsing absent, empty and schema-mismatch
+into one silent `[]`. One was a `usedStorage` column read as content. One was a
+stale C-1 closure. One was my own `$?` read through a pipe.
+
+They share a shape worth naming once: **the field returned a real value, so
+nothing looked broken.** A missing value announces itself; a value that is
+merely about something else does not. The defence that worked every time was
+cheap and identical, and it is the only recommendation in this document that
+costs nothing: **ask what the field measures before asking what it says.**
