@@ -1175,3 +1175,73 @@ not as harmless.
 the driver mid-flight would have split the provenance of the runs being
 collected. The guard should re-check after the snap, or the snap should round
 up to a legal value instead of down.
+
+## T14. A FINER GRID CUTS THE FORCES BY 43 PERCENT AND CUTS S BY 43 PERCENT, AND THIS QUALIFIES THE HEADLINE
+
+The `|v_rel|` = 3.0 arc was re-run at g128, which is roughly eight times the
+cells of g64 and is what the idle 98 GB card was for. It does not confirm the
+g64 arc. It is written up exactly as it would have been had it confirmed it.
+
+| angle from broadside | g64 N | g128 N | change |
+|---|---|---|---|
+| -0.00 (all water) | 1882.3 | 1331.1 | -29.28 percent |
+| -11.25 | 3580.3 | 1820.7 | -49.15 |
+| -22.50 | 4219.5 | 2073.0 | -50.87 |
+| -33.75 | 3518.6 | 1675.8 | -52.37 |
+| -45.00 | 2170.2 | 1396.0 | -35.68 |
+| -56.25 | 4036.2 | 1602.9 | -60.29 |
+| -67.50 | 4262.0 | 1996.3 | -53.16 |
+| -78.75 | 3516.1 | 1975.2 | -43.82 |
+| -90.00 (all vehicle) | 923.7 | 1066.3 | **+15.43** |
+
+**Mean absolute level change 43.34 percent, worst 60.29 percent.** Note the sign
+flip at the pure-vehicle end: every mixed cell falls, the all-vehicle cell rises.
+
+Three consequences, in descending order of how much they hurt.
+
+1. **S falls from 1.0689 at g64 to 0.6065 at g128**, a 43 percent reduction in
+   the headline statistic itself.
+2. **The peak angle moves from -67.50 deg to -22.50 deg** under refinement alone,
+   at fixed speed. At g64 that same shift was reported in T2 as a consequence of
+   RAISING THE SPEED past 3.0 m/s. Refinement reproduces it without touching the
+   speed. **So T2's claim 3, that the worst-case split moves with speed, is
+   confounded with resolution and must not be stated as a physical result on
+   this evidence.** It is withdrawn to the status of an observation at g64.
+3. Rank inversions along the arc rise to **6 of 36 pairs (16.7 percent)**,
+   against 2.1 percent for the g64-to-g96 surface comparison. The ordering is
+   not as robust as the g96 comparison alone suggested.
+
+**WHAT SURVIVES, AND IT IS THE MAIN CLAIM.** S = 0.6065 at g128 is still a 61
+percent variation in load at a FIXED relative speed, against a fixed-seed
+repeatability floor of 0.076 percent at this magnitude (T11). That is a margin
+of about 800. **The existence and the scale of the split-dependence are robust
+to a doubling of resolution in every direction. Its precise value, and the
+location of its worst case, are not.** The paper-level claim, that v_car and
+v_water cannot be collapsed into one speed, stands. Any specific S value must
+carry its grid.
+
+**Ruled out as the explanation: simulated duration.** The three grids simulate
+14.545, 13.333 and 13.968 s in 400 frames, within 8 percent of each other, and
+all retain 150 frames. The g128 arc is not a shorter run.
+
+**Not ruled out, and the most likely candidate: stream development.** Mean
+`stream_established_frac` on this arc is +0.744 at g64, +0.787 at g96 and
+**+0.902** at g128. The same relationship holds cell-by-cell within every arc:
+the cells with the best-established stream carry the lowest load. A coarser grid
+represents the hull on fewer cells and obstructs the channel more, so the free
+stream is less developed and the measured reaction is larger. That is a
+hypothesis consistent with every number here and it has **not** been tested.
+
+**Convergence is NOT claimed and the ladder is not monotone-by-assumption.**
+CLAIMING a trend from two rungs would assume away this solver's documented
+behaviour: CLAUDE.md's August 4 audit item 5 records `final_disp_mag_m` moving
++87.8 percent from g48 to g64 and then -59.2 percent from g64 to g96 at fixed
+everything else. Syamlal, Celik and Benyahia 2017 is the citable reason a
+transient quantity need not converge under refinement at all. The middle rung
+was therefore run rather than interpolated.
+
+**The g128 arm is one seed.** Given T11, a single g128 draw at this speed is
+reproducible to roughly 0.08 percent, so the 43 percent effect is far outside
+run-to-run noise; but one draw cannot bound a distribution and none is claimed.
+Cost, for the record: 413,880 water particles, dx 0.073607 m, 91.3 s of wall
+clock per run against 5.99 s at g64.
