@@ -637,11 +637,16 @@ it converts a systematic error into a measured one.
 
 ## 9. What I could not verify, and what I am not claiming
 
-- **All five runs landed and section 7 is complete.** What remains untested is the bcfix
-  floor: every run here leaks, and I cannot test otherwise from this branch. I expect the
-  near-field offset to stay near zero there, because it is near zero at three points
-  spanning a 4x band change and a 1.5x resolution change, but **that is an expectation, not
-  a measurement**, and it is the one place a future run could still overturn this.
+- **The leaky-floor caveat is CLOSED, not carried.** Section 12 ran the bcfix engine, whose
+  floor loses 0.180 percent, and the near-field offset there is +0.65 mm. The expectation I
+  recorded here became a measurement rather than staying an expectation.
+- **What is still untested is the baseline leak's own cause.** Section 12.2 shows a 2.2
+  percent floor loss that neither the alignment nor the engine fix touches. I did not
+  diagnose it. The B-spline stencil truncation at the bottom particle layer is the obvious
+  candidate and `--ghost-layers` exists to test it, but I did not run that arm.
+- **Section 12.3's `n_grid` recommendation is arithmetic, not a measured result.** That an
+  exactly-aligned constrained plane is best is measured at g64; that it will hold at other
+  grids and at `lim = 2.2` is inference from one 2x2.
 - **Everything in section 7 is at the LEAKY floor**, because the staged code produces it.
   See the control note in section 7. Do not pool these numbers with bcfix-arm numbers.
 - **I predicted the wrong control reference and said so rather than quietly repointing it.**
@@ -830,3 +835,98 @@ a cell, and its `dp/dz` deficit should shrink with it.** If it does not, section
 result applies to their scene too and the mechanism is elsewhere. Either way it is one
 20-minute job, and their column is a cleaner probe of it than my sphere scene because it
 has no collider at all.
+
+---
+
+## 12. The 2x2 landed. Half my pre-registration failed, and that half is the finding
+
+Vista job **923195**, 3 arms, `RC = 0` on all, at `lim = 1.2` and g64 with `dx`, the SDF
+cache key and the scene file (`6ab8cec5`) held fixed. The fourth cell is my earlier
+`r9_g64_band1`. Engine {canonical `<`, bcfix `<=`} x floor {on a grid plane, shifted off it
+by half a cell through a subclass attribute}.
+
+| engine | floor | below floor | outside walls | surface drop | `fz` | ratio | near minus far |
+|---|---|---|---|---|---|---|---|
+| canonical `<` | ON-node | **4.904%** | 2.516% | 60.88 mm | 44.728 N | 1.522 | +0.98 mm |
+| bcfix `<=` | ON-node | **0.180%** | 2.816% | 36.23 mm | 60.476 N | 1.355 | +0.65 mm |
+| canonical `<` | OFF-node | **2.213%** | 2.552% | 50.51 mm | 51.741 N | 1.454 | +0.99 mm |
+| bcfix `<=` | OFF-node | **2.214%** | 2.552% | 50.51 mm | 51.741 N | 1.454 | +0.99 mm |
+
+### 12.1 The half that passed, and it is exact
+
+**At an off-node floor the engine fix does literally nothing.** 2.213 against 2.214 percent,
+`fz` 51.741 against 51.741 N, drop 50.51 against 50.51 mm, ratio 1.454 against 1.454. Off
+the grid plane `<` and `<=` are the same test and there is nothing to fix. That is the
+mechanism of the one-character change confirmed exactly, and it is why the fix bought 96.3
+percent of the leak at an on-node floor and 0.0 percent at an off-node one.
+
+**The negative control passed too.** Neither factor touches the wall planes, and the wall
+loss is 2.516 / 2.816 / 2.552 / 2.552 percent across all four arms, flat. A design where
+the wall column had moved with the floor treatment would have been measuring something
+else.
+
+### 12.2 The half that failed: alignment is NOT the whole leak
+
+**I pre-registered that the canonical off-node arm would leak like the fixed case, about
+0.2 percent. It leaks 2.213 percent, twelve times that.** The prediction is refuted and the
+correct statement is narrower than the one section 11.2 implied:
+
+**There are two floor-leak mechanisms, not one.** The exactly-aligned unconstrained plane is
+the larger at `lim = 1.2` and is what the one character fixes. Underneath it sits a
+**baseline leak of about 2.2 percent that neither the alignment nor the engine fix
+touches**, and which is the only mechanism present whenever the floor falls between grid
+planes. Section 11.2 was right about what the fix does and wrong to leave the impression
+that alignment was the whole story.
+
+**This resolves section 11.4's anomaly rather than leaving it open.** `d4_jobBbig_918251`
+runs off-node on the canonical engine and loses 3.796 percent, which looked inconsistent
+with an alignment-only account. It is not an anomaly: it is an off-node run showing the
+baseline leak, the same regime as this 2.213 percent. The remaining gap is its different
+scene sha and its different `lim`, and neither needs a new mechanism.
+
+### 12.3 A result neither branch predicted, and it points at the fix to make
+
+**Shifting the floor off the grid makes the FIXED engine WORSE: 0.180 to 2.214 percent.**
+The best of the four configurations is the one where a node lies exactly on the floor AND
+is constrained. An exactly-aligned, correctly-constrained plane suppresses the baseline
+leak as well as its own, presumably because the constrained node sits precisely where the
+B-spline stencil of the bottom particle layer is truncated.
+
+**Operationally that is worth more than the diagnosis.** It says do not chase the floor BC
+with a general fix first: **run at a grid where `FLOOR/dx` is an exact integer AND use the
+`<=` engine**, and the floor loss falls from 4.9 percent to 0.18 percent for one character
+and no cost. Job C's `n_grid 117, lim 2.2` satisfies neither condition: `FLOOR/dx = 3.9886`.
+**Choosing `n_grid` so that `0.075/(lim/n_grid)` is an integer is free**, and at `lim = 2.2`
+the nearest such grids are `n_grid = 88` (`dx = 0.025`, `FLOOR/dx = 3`) and `n_grid = 117.33`
+which is not an integer, so `88` or `176` are the candidates.
+
+### 12.4 The magnitude answer, now on three levels of leak instead of two
+
+Three arms give three floor-leak levels on one code path, and the criterion-3 ratio is
+linear in the leak to 11 percent of its own span:
+
+    ratio = 0.03474 * (percent below floor) + 1.35922
+
+| percent below floor | ratio | fit | residual |
+|---|---|---|---|
+| 4.904 | 1.5217 | 1.5296 | -0.0079 |
+| 2.213 | 1.4544 | 1.4361 | +0.0183 |
+| 0.180 | 1.3551 | 1.3655 | -0.0104 |
+
+**EXTRAPOLATED TO ZERO FLOOR LEAK THE RATIO IS 1.359, still +35.9 percent.** That is
+**1.44x the 25 percent FAIL band** and **3.9x the 9.22 percent instrument floor** of section
+5. Removing all of the floor leak removes 31.2 percent of the excess, which reproduces the
+two-point A/B's 31.9 percent from an independent third point.
+
+**So the answer to the question as asked is: consistent in sign, about one third in
+magnitude, and the FAIL survives the floor entirely.** A tank that lost no water through
+its floor at all would still fail criterion 3 by a factor of 1.4 on the band.
+
+### 12.5 E1 stays refuted, now at six arms including a non-leaking floor
+
+`near minus far` across every instrumented arm: **+0.98, +0.07, -1.14, +0.65, +0.99, +0.99
+mm**, against requirements of 26.02, 26.02, 17.34, 26.02, 26.02, 26.02 mm. **Section 9's
+one real limitation is closed**: the `bcfix` on-node arm has a floor that has essentially
+stopped leaking (0.180 percent) and its near-field offset is +0.65 mm, 2.5 percent of the
+requirement, verdict E3. The estimator hypothesis does not survive at any floor BC, any
+band, or any resolution tested.
