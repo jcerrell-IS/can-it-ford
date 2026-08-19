@@ -740,6 +740,9 @@ def main() -> int:
                     help="quantify the asymmetric rule: full record for a "
                          "verdict, demonstrated-stationary window for an "
                          "uncertainty claim, with the runs that move under each")
+    ap.add_argument("--keep-offschema", action="store_true",
+                    help="keep records lacking the 15-column FloodHistory "
+                         "velocity channels; reproduces the pre-B4 population")
     ap.add_argument("--selftest-asymmetry", action="store_true",
                     help="name the input that makes each --asymmetry check "
                          "FAIL; needs no run data")
@@ -753,8 +756,44 @@ def main() -> int:
     if args.asymmetry:
         return asymmetry(args.root)
 
+    keep_offschema = args.keep_offschema
+
     runs, dropped = find_runs(args.root, args.glob, args.scope,
                               args.keep_duplicates)
+
+    # POPULATION GATE, register row B4, added 2026-08-20.
+    #
+    # This audit characterises SETTLE BEHAVIOUR OF THE CANONICAL FULL-SCALE
+    # VEHICLE PIPELINE. Membership is decided by SCHEMA, which is checkable,
+    # rather than by directory name, which is not:  a genuine FloodHistory
+    # record carries the 15-column schema including the velocity channels
+    # `vx` and `vmag`. A record without them was produced by a different
+    # instrument and cannot be compared with the rest.
+    #
+    # WHY THIS IS NOT A CONVENIENCE FILTER. The one record it excludes,
+    # renders/mpm-engine-out/flood_vehicle, is 8-column
+    # (t,dx,dy,dz,dmag,yaw_deg,pitch_deg,roll_deg), has no velocity channel at
+    # all, and therefore cannot be evaluated on the surge channel the SLIDE
+    # gate actually reads. It ALSO set BOTH published extremes: discard 80 was
+    # the "max 80" and N_eff 2.9 was the "2.9" in "N_eff is 2.9 to 11.0". A
+    # record that cannot be evaluated on the deciding channel should not be
+    # setting the ends of a range quoted about that population.
+    #
+    # --keep-offschema restores the old behaviour so the published figures can
+    # still be reproduced exactly; it is a reproduction switch, not a default.
+    excluded: list[tuple[str, str]] = []
+    if not keep_offschema:
+        kept = []
+        for name, path in runs:
+            c = load_series(path)
+            miss = [k for k in ("vx", "vmag") if k not in c]
+            if miss:
+                excluded.append((name, f"off-schema, no {'/'.join(miss)} "
+                                       f"column ({len(c)} columns)"))
+            else:
+                kept.append((name, path))
+        runs = kept
+
     if not runs:
         print(f"no runs found under {args.root} (scope={args.scope}).")
         print("If you are in a git worktree, the run data is gitignored and "
@@ -767,6 +806,16 @@ def main() -> int:
     print(f"Settle audit against the driver's fixed "
           f"settle_frames={DRIVER_SETTLE_FRAMES} ({DRIVER_REF})")
     print(f"root: {args.root}   scope: {args.scope}")
+    if excluded:
+        print(f"POPULATION GATE (register B4): {len(excluded)} record(s) "
+              f"excluded as off-schema")
+        for nm, why in excluded:
+            print(f"    {nm}  [{why}]")
+        print("    Membership is by SCHEMA, not directory. Re-include with "
+              "--keep-offschema.")
+    elif keep_offschema:
+        print("POPULATION GATE DISABLED (--keep-offschema): off-schema records "
+              "retained,\n    reproducing the pre-B4 population.")
     print(f"distinct runs: {len(runs)}   byte-identical duplicates dropped: "
           f"{len(dropped)}")
     for name, keeper in dropped:

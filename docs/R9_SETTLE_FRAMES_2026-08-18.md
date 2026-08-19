@@ -179,6 +179,8 @@ licenses quoting `final_disp_mag_m` as converged.
 | 17 | The SLIDE verdict is unchanged at 400 frames, so the full-record rule is right for the right reason | section 20.6 |
 | 18 | The same config reports 0.657 m or 0.291 m of displacement depending only on when you stop | section 20.4 |
 | 19 | The canonical free-rigid path is NON-DETERMINISTIC: 7.8e-08 at frame 0 grows to 1.9e-02 by frame 26 | section 20.3 |
+| 20 | **Register B4: the population was 21, not 25. No conclusion moves**, and the median shift was duplicates, not the truck | section 21 |
+| 21 | **CLAUDE.md item 5's non-monotone displacement now has a MECHANISM**: the trajectory itself is non-monotonic | section 22 |
 
 ---
 
@@ -1528,4 +1530,127 @@ over-request that queued behind 139 jobs, because Slurm backfills short requests
 into gaps a long one cannot fit. 923186 asks 00:40:00 against a 26-minute
 estimate, sized from the measured 0.0387 s/frame rather than from a
 comfortable-looking round number.
+
+---
+
+## 21. REGISTER ROW B4: THE POPULATION WAS WRONG. NO CONCLUSION MOVES.
+
+The cross-session reader filed B4: the settle audit is reported as "25 of 25 runs"
+and is actually 22 distinct records, one of which is a model-scale truck rather
+than a full-scale vehicle. Both halves are correct. Re-derived here over the
+corrected population, and **the headline claims all survive unchanged**, which is
+worth stating as plainly as the defect.
+
+### 21.1 The exclusion criterion is SCHEMA, not scale
+
+`renders/mpm-engine-out/flood_vehicle` is excluded, but not primarily because it
+is model-scale. **Its `metrics.csv` carries 8 columns**, `t, dx, dy, dz, dmag,
+yaw_deg, pitch_deg, roll_deg`, **against the 15-column FloodHistory schema this
+audit is documented to read.** It has no `vx`, no `vmag`, no velocity channel at
+all, so it cannot be evaluated on the surge channel the SLIDE gate reads. That is
+checkable from the file; the model-scale claim comes from a session memory
+recording a 1.447 m, 28.7 kg bundled truck splat and I did **not** re-verify those
+dimensions here.
+
+Membership is now decided by schema in `settle_audit.py`, because a schema test is
+falsifiable and a directory-name test is not. `--keep-offschema` reproduces the old
+population exactly.
+
+### 21.2 All four populations, so no count is quoted without its scope
+
+| deduplicated | schema gate | n | discard min / median / max | `N_eff` | non-stationary | need > 8 |
+|---|---|---|---|---|---|---|
+| no | no | **25** | 29 / **48** / 80 | 2.87 to 11.00 | 12 of 25 | **25 of 25** |
+| no | yes | 24 | 29 / 48 / 80 | 2.87 to 11.00 | 11 of 24 | 24 of 24 |
+| yes | no | 22 | 29 / 62 / 80 | 2.87 to 11.00 | 12 of 22 | 22 of 22 |
+| yes | **yes** | **21** | 29 / **61** / 80 | 2.87 to 11.00 | 11 of 21 | **21 of 21** |
+
+**Row 1 is CLAUDE.md's published figure and it reproduces exactly**: 25 of 25,
+min 29, median 48, max 80, `N_eff` 2.9 to 11.0. The published numbers were right
+for the population they were computed on. **Row 4 is the corrected population: 21
+distinct, full-scale, on-schema records.**
+
+### 21.3 What moves, and what does not
+
+**Nothing that was concluded from it moves.**
+
+- **"Every record needs more than 8 frames discarded" survives at 100 percent**,
+  21 of 21. This is the claim the whole section rests on and it is untouched.
+- **The `N_eff` range is identical to two decimal places**, 2.87 to 11.00, in all
+  four populations.
+- **Min and max discard are identical**, 29 and 80, in all four.
+- Non-stationary goes 12 of 25 to 11 of 21, which is 48 percent to 52 percent.
+  Same conclusion, that roughly half the retained windows are still not
+  stationary.
+
+**One number moves: the median discard, 48 to 61.** And the cause is not the
+truck. It is **deduplication**: the median is 48 with duplicates and 61 or 62
+without, in both gated and ungated populations. The three byte-identical
+duplicates are low-discard `g64` records counted as independent, and they pulled
+the median down 13 frames. **The off-schema record changes the non-stationary
+count by one and nothing else at all.**
+
+I had expected the truck to be load-bearing, on the grounds that its displayed
+discard 80 and `N_eff` 2.9 looked like the published extremes. **Tested, and that
+was wrong.** Max discard 80 is a tie across eight records, seven of them
+full-scale, and the true minimum `N_eff` of 2.87 belongs to
+`yaris_L2_d0p30_v1p5`, not to the truck. The hypothesis was refuted by computing
+it rather than asserting it, which is the only reason it is not in this document
+as a finding.
+
+**New denominator, with its scope: 21 distinct on-schema records under
+`renders/`, byte-identical duplicates dropped, off-schema records excluded.** The
+wider corrected scope of section 8 is a different population again, 48 distinct
+across the whole repo, and must not be mixed with this one.
+
+### 21.4 A note on how the wrong count survived
+
+The published figure was not sloppy arithmetic. It was `--keep-duplicates` plus no
+schema gate, both defensible defaults at the time, and the number reproduces
+perfectly under them. What was missing was the scope travelling with the count,
+which is the same defect as the `n of 24` family in section 16 and the
+`DRIFT_THRESHOLD` totals in CLAUDE.md item 13. **Three instances now, in three
+different quantities, in one document.** The remedy is not more care at the call
+site; it is that a count and its population must be one object.
+
+---
+
+## 22. CLAUDE.md ITEM 5 NOW HAS A MECHANISM
+
+Recorded here explicitly and in the commit message, because item 5 has been
+carried as unexplained since August and it is now explained.
+
+**Item 5 records that `final_disp_mag_m` is non-monotone across the grid study:
+1100 kg moves +87.8 percent from g48 to g64 then -59.2 percent from g64 to g96;
+1609 kg moves +22.3 then -50.3.** It instructs readers to cite the binary verdict
+and never the displacement magnitude. That instruction is correct. Until now the
+reason was a statistical one, that an instantaneous value is not expected to
+converge under refinement, which is Syamlal, Celik and Benyahia 2017 and is
+already in CLAUDE.md.
+
+**The long record supplies the physical mechanism.** In `long_f400`, section 20.4,
+`dmag` **peaks at 0.667127 m at row 64 and ends at 0.290845 m, 43.6 percent of its
+own peak.** The vehicle moves downstream and then comes back: net displacement is
+**not monotonic in time**, so `final_disp_mag_m` is one sample of an oscillating
+trajectory taken at whatever time the record happens to stop.
+
+That is the mechanism. **The g48, g64 and g96 runs are not disagreeing about a
+converged displacement. They are sampling a non-monotonic trajectory at an
+arbitrary phase**, and the sign of the difference between any two of them is set
+by where in that oscillation frame 90 falls for each. A ±88 percent swing between
+grids needs no numerical explanation once the same configuration is known to swing
+by a factor of 2.3 within a single run at fixed grid.
+
+The three consequences worth carrying:
+
+1. **Item 5's instruction is strengthened, not weakened.** Cite the verdict. The
+   verdict is unchanged at 400 frames, section 20.6, while the displacement fell
+   to 43.6 percent of peak over the same frames.
+2. **The non-monotonicity is not evidence of a solver defect** and should stop
+   being cited as if it might be. It is the expected reading of a terminal-frame
+   sample of an oscillating quantity.
+3. **A grid-convergence claim is still possible, but not on this observable.**
+   It needs a time-averaged quantity over a demonstrated-stationary window with a
+   GCI, and section 20.5 establishes that the window exists for velocity and does
+   not exist for displacement at any length.
 
