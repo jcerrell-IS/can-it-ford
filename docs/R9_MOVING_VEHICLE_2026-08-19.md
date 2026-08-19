@@ -867,9 +867,17 @@ The same 20-cell matrix was run at g96 (M2, seed 0). Reproduced by
 
 | quantity | g64 to g96 |
 |---|---|
-| per-cell level change | mean +5.68 percent, min -19.54, max **+40.59** |
-| mean absolute change | **10.24 percent** |
+| per-cell level change | mean +5.71 percent, min -19.49, max **+40.63** |
+| mean absolute change | **10.21 percent** |
 | rank inversions | **4 of 190 pairs, 2.1 percent** |
+
+Both arms are seeded: g64 has five seeds and g96 has two, and the g96 noise
+floor is **0.00728** against g64's 0.00859, so the two surfaces are compared
+floor to floor rather than draw to draw. The comparison is also stable against
+its own ensemble: computed from g96 seed 0 alone it gave mean +5.68 percent,
+mean absolute 10.24 percent and the same 4 of 190 inversions, so adding the
+second seed moved the level figures by less than 0.04 points and moved the
+inversion count not at all.
 
 So the absolute force at a cell is resolution-sensitive at the ten percent level
 and up to forty percent in one cell, while the ORDERING of the surface is 97.9
@@ -885,9 +893,9 @@ under refinement at all.
 
 **This is NOT a GCI and must not be quoted as one.** `n_grid`, `dt` and
 `bc_per_frame` all move together between the two arms, so it bounds sensitivity
-to a bundle of changes rather than to resolution alone. M2's second seed had not
-finished when the node window closed, so g96 carries no distribution and nothing
-above is graded against a g96 noise floor.
+to a bundle of changes rather than to resolution alone. Two seeds is also a thin
+ensemble: it is enough to establish that a floor exists and roughly where it is,
+not enough to characterise a distribution.
 
 ## T6. Reproducibility record, which the literature does not supply
 
@@ -899,19 +907,19 @@ secondary-source claim about the literature and I have not read those papers.**
 
 | | g64 | g96 |
 |---|---|---|
-| water particles | 41,636 to 41,649 | 164,382 |
-| rigid particles | Yaris hull, SDF collider, `--sdf-res 32` | same |
+| water particles | 41,636 to 41,649 | 164,351 to 164,382 |
+| rigid body | Yaris hull as SDF collider, `--sdf-res 32` | same |
 | simulated time per run | 14.545 s | 13.333 s |
-| mean wall clock per run | 6.07 s | 29.50 s |
-| **wall per simulated second** | **0.417 s/s** | **2.213 s/s** |
-| runs measured | 156 | 20 |
+| mean wall clock per run | 5.99 s | 28.38 s |
+| **wall per simulated second** | **0.412 s/s** | **2.129 s/s** |
+| runs measured | 170 | 40 |
 
 GPU: **NVIDIA GH200 120GB**, driver 590.48.01, 97,871 MiB, TACC Vista, one card,
 partition `gh`. Engine: **warpmpm** (NOT Genesis) on warp 1.15.0.
 
 Two honest qualifications. The water particle count **varies with the seed**,
-41,636 to 41,649, which is the seed doing real work rather than reseeding a
-random number generator that nothing reads. And every timing above was measured
+by 13 particles at g64 and 31 at g96, which is the seed doing real work rather
+than reseeding a random number generator that nothing reads. And every timing above was measured
 with **up to four concurrent jobs sharing the one card**, so each is an upper
 bound on the cost of a single job, not a dedicated-card benchmark. The g64 and
 g96 rows also simulate slightly different durations because `bc_per_frame`
@@ -975,12 +983,13 @@ They are reported as what a search returned.
 
 Reported separately, because the node window closed on a running job.
 
-**Completed:** M1 (full matrix, g64, 5 seeds, 100 runs), M3 (five arcs, 9
-angles, 45 runs), M2 seed 0 (full matrix, g96, 20 runs).
+**Completed, all four arms:** M1 (full matrix, g64, 5 seeds, 100 runs), M2
+(full matrix, g96, 2 seeds, 40 runs), M3 (five arcs at 9 angles, 45 runs), M4b
+(still-water edge, 5 cells x 5 seeds, 25 runs). 210 new runs, 368 records in the
+committed TSV.
 
-**Did not complete:** M2 seed 1, so g96 has no ensemble and no noise floor. M4b
-was still running when the window closed; its completed cells are in the TSV and
-its `n` per cell is printed by the analysis rather than assumed.
+**Did not complete:** nothing that was launched and left running. The one arm
+that was killed, the first M4, was killed deliberately and is described below.
 
 **Discarded deliberately:** the first M4 attempt. It gave all five cells of a
 seed the same `--label`, and the driver names its record
