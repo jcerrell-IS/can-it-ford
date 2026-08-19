@@ -677,3 +677,338 @@ here and materially weakened my own argument, which is recorded in section 6(a) 
 dropped. Slot `d9-kramer` first reported the two-accessor defect and the 0.0277 per-mm
 sensitivity; the sensitivity is re-derived here from the 918043/918240 pair rather than
 transcribed, and agrees.
+
+---
+
+# ROUND 9 CONTINUATION, 2026-08-19, same slot, with a GPU node
+
+The first pass of this document was written with no node and no new runs. A node became
+available afterwards (Vista job 922255, partition `gh-dev`, node c642-091, shared with slot
+`d17-moving`). Everything below is new work. **Four of the six findings correct or qualify
+this document's own earlier claims**, which is the point of writing the section rather than
+quietly editing the tables above.
+
+**Correction to the dispatch's own srun form, verified live:** job 922255 is on partition
+**`gh-dev`**, not `gh`. The prescribed `srun -p gh ... --jobid=922255` names the wrong
+partition for this allocation. The form that works is
+
+```
+srun -p gh-dev -N 1 -n 1 -t 00:30:00 --overlap --jobid=922255 <command>
+```
+
+All five flags are still required; only the partition differs.
+
+## 14. Both accessors re-derived from raw geometry, and they are correct
+
+The instruction was to recompute rather than transcribe. Done, from the raw fields only:
+`fz_N`, `z_m`, `surface_z_measured_m` and `ref_radius_m`, rebuilding the spherical cap
+`V = pi*sub^2*(3R - sub)/3` and both denominators from `RHO_W_BENCHMARK = 998.2` and
+`G_ENGINE = 9.81`. The emitted ratio fields were **not** read. Script:
+`scratchpad/recompute.py`, stdlib plus numpy only.
+
+| run | max abs deviation, recomputed against stored |
+|---|---|
+| 918043 | `sub` 0, `cap` 0, `fb` 0, `ratio_meas` 0, `ratio_nom` 0 |
+| 918240 | `sub` 0, `cap` 1.7e-18 m3, `fb` 2.1e-14 N, `ratio_meas` 8.9e-16, `ratio_nom` 0 |
+| 918450 | `sub` 0, `cap` 0, `fb` 0, `ratio_meas` 0, `ratio_nom` 0 |
+
+Nominal denominator recomputed independently: **69.217987 N**, matching `analytic_buoyancy_N`
+in all three configs and the manifest's 69.2180 N.
+
+**So both accessors are implemented correctly and the emitted ratio fields are what they
+claim to be.** This closes the possibility that the disagreement was an arithmetic bug. It
+also confirms, from a second direction, the coordinator's point that `sphere_heave.py` has
+exactly one distinct content in this repo: **there is no code fork, there never was, and a
+future reader should not go looking for one.** One implementation, three disagreeing prose
+statements. The defect was always and only in the specification.
+
+## 15. My own "about 1 dx" figure was a linearisation and it is 34.4 percent too small
+
+Section 4 above reported "918240: 18.022 mm of surface offset, 0.9612 dx, accounts for the
+entire +50.056 percent", and the same figure propagated into the manifest's standing caveat
+and into `sphere_heave.py`'s `criterion3_spec` block as "about 1 dx at g64 spans the whole
+discrepancy". **That was the error divided by the local secant, which is a tangent-line
+estimate of a strongly convex function.** Replaced with an exact root-find: apply a uniform
+surface offset to every frame in the window, recompute the cap denominator, bisect to the
+target ratio. Script: `scratchpad/floor.py`.
+
+| run | graded ratio | offset to reach 1.00 | in dx | in particle layers `h` |
+|---|---|---|---|---|
+| 918043 | 1.6308 | 32.177 mm | 1.716 | 3.432 |
+| 918240 control | 1.5006 | 27.490 mm | 1.466 | 2.932 |
+| 918450 treatment | 1.3435 | 24.904 mm | 1.328 | 2.656 |
+| 918251 job C tank | 1.5060 | 33.424 mm | 1.778 | 3.555 |
+
+Direct check of the linearisation: at the 18.022 mm the old figure named, the window-mean
+ratio is **1.1342**, not 1.0000. The exact answer is 27.490 mm.
+
+**The correction cuts against the easy explanation, which is why it matters.** At "about
+1 dx" the surface-estimator escape hatch is cheap. At **1.33 to 1.78 dx, or 2.66 to 3.56
+particle layers**, it is a much larger claim, and nothing has shown the estimator is wrong by
+that much. The corrected figure strengthens the case that something real is being measured,
+and it strengthens the FAIL. All three copies of the old figure are fixed.
+
+## 16. RETRACTED AND REPLACED: criterion 3 does NOT sit at its own achievable floor
+
+**I wrote the wrong answer here first and am recording the retraction rather than editing it
+away, because the error is easy for the next person to repeat.**
+
+The question was whether criterion 3 has the property P-2 has, where a gate sits at its own
+achievable floor and therefore cannot distinguish a defect from the floor: P-2's
+zero-penetration floor is 7.9 to 10.0 percent against a 10 percent gate. **My first answer was
+"yes, and worse, the lever is 1.302x the whole band, so a PASS is not a physics result". That
+is FALSE.**
+
+**What was wrong.** I measured the instrument's resolution at the operating point these runs
+are at now (ratio about 1.5, draft 0.0997 m) and then applied that number to a hypothetical
+PASS. The sensitivity is state dependent:
+
+```
+d(ratio)/ds = -ratio * A_w / V_cap
+```
+
+**Both factors shrink toward a PASS at once.** Measured on 918240:
+
+| operating point | ratio | draft | `V_cap` | `A_w` | tangent |
+|---|---|---|---|---|---|
+| observed (FAIL) | 1.5006 | 0.099674 m | 3.6447e-03 m3 | 0.062729 m2 | **0.025827 /mm** |
+| a ratio-1.0 point | 1.0000 | 0.127164 m | 5.4669e-03 m3 | 0.069048 m2 | **0.012630 /mm** |
+
+`V_cap` grows 1.500x and the ratio factor falls to 1.0, so the tangent falls **2.045x**.
+
+**The corrected answer.** Half a particle layer of surface convention, `h/2` = 4.6875 mm at
+g64, is worth:
+
+| evaluated at | lever, ratio points | vs the 10.0 point PASS half-width |
+|---|---|---|
+| the observed FAIL points, four runs | **8.0 to 15.1** | comparable or larger |
+| a ratio-1.0 (PASS) point, four runs | **4.6 to 6.3** | about half the band |
+
+**So a PASS on criterion 3 would carry roughly half a band of surface-convention uncertainty.
+Real caveat, not disqualifying. The P-2 pathology does not apply and the criterion is
+two-sided.** The large lever at today's operating points is a symptom of how far these runs
+sit from equilibrium, shallow draft and high ratio, not a property of the criterion.
+
+**A second defect in the retracted version: the lever is direction dependent.** The response is
+convex, so up and down differ, and I had quoted the larger direction as a single number. At
+918240, `-h/2` gives **+13.020** points and `+h/2` gives **-11.338**. Across the four runs at
+their own operating points the down-lever is 9.0 to 15.1 and the up-lever 8.0 to 13.0. **Quote
+the range, and say which direction and which operating point.**
+
+**Also worth stating plainly, since I leaned on it:** the `h/2` offset was a **bias
+correction**, not a free choice of convention. Particle centres genuinely do sit `h/2` below
+the fill line of their layer, so `+h/2` is the correct estimator and 918043 was simply wrong.
+Using the size of that correction as a proxy for ongoing "convention ambiguity" is a
+**demonstration of the sensitivity, not evidence that the current estimator is uncertain by
+that much**. The honest reading is narrower than the one I first wrote: it shows what a
+half-layer error in the surface would cost, and there was such an error, and it has been
+fixed. It does not show that another one is present.
+
+**Unchanged by every part of this: the FAIL is robust.** Reaching the PASS boundary of 1.10
+needs 16.1 to 24.9 mm across the four graded runs, which is 1.72 to 2.66 particle layers, well
+beyond any half-layer argument in either direction.
+
+Three scales, for orientation: the Kramer benchmark's own experimental uncertainty about **0.3
+percent** *(relayed from the project's deep-search summary, NOT verified against the primary by
+this slot, treat as unverified)*, this band **10 percent**, the half-layer lever at a PASS point
+**4.6 to 6.3 percent**.
+
+**Band provenance, now stated in the manifest.** The 10 / 25 percent bands are a **project
+choice**, this project's own box-SDF agreement of 7.3 to 7.7 percent rounded outward. No
+external method's tolerance was imported to set them and none should be: benchmark cases
+transfer across methods, reported tolerances do not. The 7.3 to 7.7 percent prior is itself an
+internal self-consistency figure, so the band is anchored to a number of the same kind as the
+thing it grades.
+
+**Band provenance, now stated in the manifest.** The 10 / 25 percent bands are a **project
+choice**, this project's own box-SDF agreement of 7.3 to 7.7 percent rounded outward. No
+external method's tolerance was imported to set them and none should be: benchmark cases
+transfer across methods, reported tolerances do not. The 7.3 to 7.7 percent prior is itself an
+internal self-consistency figure, so the band is anchored to a number of the same kind as the
+thing it grades.
+
+## 17. Evidence-count correction: two independent runs, not three
+
+Section 4 above says the nominal accessor swings across all three bands "in all three
+pre-treatment runs. That is not a property of one run", listing 917909, 918043 and 918240.
+**For this accessor 918043 and 918240 are one measurement, not two.** The nominal denominator
+never touches the free surface, and the two runs differ only by the h/2 fix:
+
+| pair | max abs `fz_N` difference | relative |
+|---|---|---|
+| 918043 vs 918240 | 1.49e-03 N | **4.3e-06** |
+| 917909 vs 918043 | 1.82 N | **5.3e-03** |
+
+Their nominal window readings are identical to four decimals, -29.109 / -27.381 / -22.576 /
+-9.674 percent each. 917909 differs by three orders of magnitude more and is genuinely
+separate. **The conclusion survives unchanged**, because two independent runs still both swing
+across all three bands, but the enumeration was wrong and the same document identifies the
+918043/918240 pair as an instrument-calibration pair fifteen lines later. It was counting a
+controlled pair as independent replication in one sentence and as one instrument in the next.
+Corrected in the manifest too.
+
+## 18. The fix had never executed, because the machine that produces the data is on older code
+
+Verified by `md5sum`, not assumed:
+
+| copy | md5 | what it is |
+|---|---|---|
+| Vista `$WORK/d4_scene/sphere_heave.py` | `1c8994991e0029a89a047d9f3624ca78` | identical to commit `6ed163e`, the commit BEFORE the amendment |
+| this worktree at `06c7786` | `8b9538dae28be68a7705616de065697d` | the amendment |
+
+**The `criterion3_spec` block, whose entire purpose is to make the designation travel with the
+data, was not on the machine that produces the data.** Job C is staged to launch from
+`d4_scene`, so job C run today would have emitted output carrying no designation at all: the
+exact failure the block was written to prevent, reappearing one layer down, in the gap between
+the repository and the compute node.
+
+Resolved without overwriting anything shared: the current file was staged to a **new**
+directory `$WORK/d11_accessor/` (md5 verified `8b9538da...` after transfer) and run. The block
+emits correctly, confirmed by reading `config.criterion3_spec` back out of
+`repeat_seed0.json`. **This is the first time the amendment has ever executed.**
+
+`$WORK/d4_scene/sphere_heave.py` was deliberately **not** overwritten. Overwriting a shared
+staged file is a destructive action on a machine other sessions use, and it needs Josie's
+say-so, not mine. **Whoever launches job C must re-stage first, or job C inherits the old
+file.** That is a live pre-launch blocker, not a tidy-up.
+
+## 19. True repeats, which nobody had: the graded accessor is reproducible
+
+Every "repeat" quoted in this project so far has been the 918043/918240 pair, which differs by
+a code change. Two genuine repeats were run today on one code version.
+
+**Same seed (`seed 0`), against 918240, two days apart on a shared GPU:**
+
+| quantity | max abs difference |
+|---|---|
+| `fz_N` | 1.32e-03 N |
+| `surface_z_measured_m` | 3.99e-06 m |
+| `fz_over_analytic_measured` | 1.12e-04 |
+
+Window means of the graded ratio agree to **0.0006 ratio points** at all four windows
+(last 20, last 50, last 100, full). **Run-to-run nondeterminism is not a source of the
+discrepancy and can be set aside.** It also confirms retrospectively that the entire 13.019
+point move between 918043 and 918240 was the code fix, with nothing left over for noise.
+**Different seed (`seed 7` against `seed 0`), identical code, same node:** the graded ratio
+moves **+0.405 ratio points** at the primary window (1.500561 to 1.504609), and 0.076 to 0.457
+points across the four windows. `seed 7` grades **FAIL at all four windows** (+49.560 to
++50.461 percent), the same verdict, robust, stationary at 0.70 sigma. **N = 2 is
+reproducibility, not an error bar**, and is not quoted as one.
+
+**The complete sensitivity budget for the graded accessor at g64**, which is what the earlier
+sections were missing and what makes the caveat quantitative instead of rhetorical:
+
+| source | effect on the graded ratio |
+|---|---|
+| run-to-run, same seed | **0.0006 points** |
+| particle sampling seed | **0.405 points** |
+| surface convention, half a particle layer | **13.019 points** |
+| *PASS band half-width, for scale* | *10.000 points* |
+| the discrepancy actually observed | **34.4 to 63.1 points** |
+
+**The surface-convention term dominates everything except the discrepancy itself, and it alone
+exceeds the whole PASS band.** Numerics and sampling are three to four orders of magnitude
+below the effect being argued about, so neither can explain it. That is a negative result and
+it is worth as much as a positive one here: it removes two candidate explanations and leaves
+the estimator and the physics.
+
+## 20. THE VERDICT, stated plainly, on my criterion and my recomputation
+
+**Job B FAILS criterion 3. The FAIL is robust and I do not consider it close.**
+
+Criterion as I have landed it: **graded quantity** `fz_over_analytic_measured`; **primary
+window** the last 50 percent of frames; **bands** within 10 percent PASS, 10 to 25 REPORTABLE
+PARTIAL, beyond 25 FAIL, and those bands are a project choice, not a literature tolerance;
+**window-robustness gate** across last 20, last 50, last 100 frames and the full series;
+**stationarity gate at 3.0 sigma on the graded ratio**, not on `fz_N`.
+
+Every figure below is recomputed by me from the raw series, not transcribed:
+
+| run | what it is | primary window | all four windows | verdict |
+|---|---|---|---|---|
+| 918043 | pre h/2 fix | +63.076 % | +61.080 to +64.187 % | **FAIL** |
+| 918240 | control | +50.056 % | +49.177 to +50.286 % | **FAIL** |
+| 918450 | floor-BC treatment | +34.355 % | +34.355 to +36.401 % | **FAIL** |
+| 918251 | job C tank, pinned | +50.601 % | +47.166 to +54.615 % | **FAIL** |
+| `repeat_seed0` | true repeat, today | +50.056 % | +49.428 to +50.285 % | **FAIL** |
+| `repeat_seed7` | second seed, today | +50.461 % | +49.560 to +50.461 % | **FAIL** |
+
+**Six runs, four windows each, twenty-four gradings, every one a FAIL.** The best run in the
+set, the floor-BC treatment, sits at +34.4 percent against a 25 percent FAIL threshold, so it
+misses even the PARTIAL band by 9.4 points. Window choice cannot rescue it (spread 2.0
+points), seed cannot (0.4 points), numerics cannot (0.0006 points), and the surface-convention
+lever cannot (13.0 points, and 1.72 to 2.66 particle layers would be needed).
+
+**Does the respecification change the answer? No.** It changes what the answer rests on. Under
+the old unstated criterion, job B's verdict depended on which of two accessors a reader
+happened to follow and, on the nominal one, on an unstated window: the nominal reading swings
+FAIL / PARTIAL / PASS across the same 200 frames. Under the criterion as landed, the verdict
+is FAIL at every window on every run, and it is stated in the pre-registration rather than in
+a source comment.
+
+**What the FAIL does and does not license.** Section 16 originally claimed a PASS here would
+sit inside the instrument's own resolution, and **that claim is retracted**: measured at a
+ratio-1.0 operating point the half-layer surface lever is 4.6 to 6.3 ratio points against a
+10.0 point band, so a PASS would carry about half a band of convention uncertainty. **The
+criterion is two-sided and can clear the ladder as well as stop it**, with that caveat
+attached. What remains true is narrower: a PASS on criterion 3 alone is a hydrostatic
+self-consistency result, not a coupling validation, and the surface estimator is still blind
+within 2R of the axis. Validating it there is what would remove the caveat.
+
+## 21. What this means for job C, updated by evidence rather than prediction
+
+Section 9 above made a prediction about job C. Part of it can now be tested, because **the job
+C tank has already run**, in fixed mode, as job 918251 (`n_grid 117`, `lim 2.2`, `depth 0.5`,
+`dx` within 0.28 percent of job B's). Nobody had graded it. Graded now:
+
+- **The bigger tank does not fix the discrepancy.** +50.601 percent at the primary window,
+  against +50.056 percent in job B's tank. Essentially unchanged.
+- **It does drain less in absolute terms.** Mean surface drop 3.596 cm against 5.033 cm.
+- **The nominal companion is more misleading there, not less.** Its drift over the window is
+  **672.8 percent of the error it claims** (against 82.1 percent in job B's tank), and it is
+  **not window-robust**, reading PARTIAL at last-20 and PASS at the other three.
+
+So domain size is not the explanation, and grading job C's hydrostatics on the nominal
+accessor would produce a PASS built on a drift six times larger than the error claimed.
+**Section 9's remaining prediction is untested**: 918251 is pinned, and the claim that a free
+body follows the surface down still needs a `free = True` run.
+
+## 22. Downstream sites that hard-code a designation, for their owners
+
+Enumerated with file, line and quoted text, all **verified live at `claude/r7-collect` branch
+head today**, not copied forward. None is in this slot's write scope and none was edited.
+
+| file | line | exact text at head |
+|---|---|---|
+| `analysis/r7_jobb_bcfix_ab.py` | 23 | "THE ACCESSOR. `fz_over_analytic_measured`. The designation is a source comment reading" |
+| `analysis/r7_jobb_bcfix_ab.py` | 208 | `("fz_over_analytic_measured", "THE DESIGNATED ACCESSOR")` |
+| `analysis/r6_repeat_stats.py` | 241 | "`# the ladder", and sphere_heave.py:669-670 designates fz_over_analytic_measured as`" |
+| `analysis/r6_repeat_stats.py` | 252 | `("fz_over_analytic_measured", "MEASURED, the designated accessor")` |
+| `docs/R7_G192_AND_JOBB_BCFIX_2026-08-18.md` | 570 | "Graded on `fz_over_analytic_measured`, the accessor the source designates, against the manifest" |
+| `docs/HANDOFF_ROUND_7_2026-08-18.md` | 194 | "Job 918240, graded on `fz_over_analytic_measured`, the accessor `sphere_heave.py:669-670`" |
+
+**All six now name the right quantity**, because the manifest was amended to the measured
+accessor, so no verdict downstream changes. What they still get wrong is the **authority**:
+they cite a source comment, and two of them cite it by a line number.
+
+**The line numbers have now drifted three times in three days.** `:669-670` was correct before
+`6ed163e`, became `:804-807`, and after today's edits `:669-670` lands in the config dict and
+`:804-807` lands in a docstring about `occupied_volume_m3`. **Do not repoint them. Cite
+`docs/R5_PHYSICS_BATCH_MANIFEST.md` criterion 3 instead**, which is the authority, or read
+`config.criterion3_spec` out of the run's own JSON, which now travels with the data.
+
+## 23. What I still could not verify, added to section 11 rather than replacing it
+
+- **Whether the +34 percent residual is coupling error, estimator bias, or drainage.** Still
+  not separable, and section 16 now bounds how much of it the estimator could carry: to take
+  the whole thing it would have to be wrong by 2.66 to 3.56 particle layers.
+- **The Kramer 0.3 percent experimental uncertainty** is relayed from a deep-search summary and
+  was **not** checked against the primary paper by this slot. Marked unverified.
+- **The 2.28 percent per mm sensitivity** in `measure_surface`'s comment is unreconciled with
+  the measured 2.7775 and the spec block's 2.78. I flagged it in place rather than overwriting
+  it, because I could not reproduce 2.28 at any operating point I tried and do not know which
+  quantity it belongs to.
+- **Job C free-body behaviour.** Still a prediction. 918251 is pinned.
+- **Whether any downstream site has been acted on.** Still cannot edit them; now enumerated
+  for their owners in section 22.
+

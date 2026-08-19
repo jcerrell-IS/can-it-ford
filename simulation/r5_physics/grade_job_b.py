@@ -252,9 +252,27 @@ def grade(path: Path, drop_frac: float | None = None) -> dict:
                 "slope_n_sigma": r_st.get("slope_n_sigma"),
                 "mean_surface_drop_m": float(np.mean(
                     [r.get("surface_drop_m", float("nan")) for r in rows][start:])),
+                # CORRECTED 2026-08-19, slot d11-accessor, TWICE, and the second correction
+                # withdrew the first. (1) The "~1 dx" was a linearised estimate of a convex
+                # response and understated the offset by 34.4 percent; the exact root-find is
+                # 1.33 to 1.78 dx across the four runs graded to date. (2) I then asserted
+                # that half a particle layer of surface convention exceeds the PASS band, so
+                # a PASS could not be a physics result. THAT WAS WRONG. I had evaluated the
+                # lever where the runs sit now (ratio ~1.5, shallow draft) rather than where
+                # a PASS would sit. d(ratio)/ds = -ratio*A_w/V_cap falls 2.045x between the
+                # two, so the lever is 8.0 to 15.1 points at today's operating points but
+                # only 4.6 to 6.3 at a ratio-1.0 point, against a 10.0 point band. A PASS
+                # carries about half a band of convention uncertainty: a real caveat, not a
+                # disqualifying one. The FAIL is unaffected either way.
                 "caveat": ("denominator uses a free-surface estimate blind within 2R of the "
-                           "sphere axis; ~1 dx of surface offset at g64 spans the whole "
-                           "discrepancy. A PASS here is not a coupling validation."),
+                           "sphere axis; closing the discrepancy needs 1.33 to 1.78 dx of "
+                           "surface offset (exact, not linearised). Half a particle layer of "
+                           "surface convention is worth 8.0 to 15.1 ratio points at the "
+                           "operating points observed so far and 4.6 to 6.3 at a ratio-1.0 "
+                           "point, against a 10.0 point PASS band, so a PASS carries roughly "
+                           "half a band of convention uncertainty and is not by itself a "
+                           "coupling validation. A FAIL needs 1.72 to 2.66 particle layers to "
+                           "overturn and is robust to it."),
             }
 
     st = blocking.stationarity(steady, n_sigma=STATIONARITY_N_SIGMA)

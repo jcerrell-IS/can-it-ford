@@ -242,6 +242,30 @@ the committed test suite]**. Note this is **not** 69.3428 N: that was the supers
    PASS, 10 to 25% is a REPORTABLE PARTIAL, beyond 25% is a FAIL.** These bands are set now
    and will not be moved.
 
+   **PROVENANCE OF THE BAND, stated 2026-08-19 by slot `d11-accessor` because a criterion
+   that names a denominator and a window but not the origin of its threshold is still
+   incomplete.** The 10 / 25 percent bands are a **PROJECT CHOICE, not a literature
+   tolerance.** They are this project's own box-SDF buoyancy agreement of 7.3 to 7.7 percent,
+   rounded outward to a round number. **No published tolerance from any SPH, VOF, LBM or
+   other method was imported to set them, and none should be.** Benchmark cases and their
+   reference data transfer across methods; the tolerances one method reports for itself do
+   not, and are case-specific agreements rather than universal standards. If a future
+   revision wants a literature-anchored band it has to argue for one explicitly here, and
+   record whose tolerance it is and for which method.
+
+   Note also that the 7.3 to 7.7 percent prior is an **internal** agreement between this
+   project's SDF-collider path and a closed-form buoyancy, so it is a self-consistency figure
+   and not an external validation. The band is therefore anchored to a number of the same
+   kind as the thing it grades. That is defensible for a pilot gate and it is not a
+   validation, and the distinction must survive into any write-up.
+
+   **Three scales, in the order that matters:** the Kramer benchmark's own experimental
+   uncertainty is about **0.3 percent** *(relayed from the project's deep-search summary and
+   NOT verified against the Kramer paper by this slot; mark it unverified until someone reads
+   the primary)*; this band is **10 percent**; and the graded accessor's own surface-convention
+   lever is **13.0 percent** (see the standing caveat below). The band sits between the
+   benchmark's precision and the instrument's resolution, and nearer the wrong one.
+
    **AMENDED 2026-08-19 by slot `d11-accessor`. The bands are untouched; what changed is
    that the criterion now names WHICH quantity and OVER WHAT WINDOW.** As originally
    written this criterion said only "the steady vertical reaction against 69.2180 N", which
@@ -262,12 +286,42 @@ the committed test suite]**. Note this is **not** 69.3428 N: that was the supers
    - **Primary window:** the last 50% of frames. Fixed in advance rather than chosen from
      the data, the coarsest defensible transient exclusion, and already what
      `grade_job_b.py` applies as `DEFAULT_DROP_FRAC`.
-   - **Window-robustness gate.** The band must be identical at last-20, last-50, last-100
-     and full-series. If it is not, the run is **NOT GRADEABLE on window sensitivity** and
-     that is reported, never resolved by picking a window. Measured: the nominal ratio
-     swings FAIL / PARTIAL / PASS across those four windows on jobs 917909, 918043 and
-     918240, a 19.4-point spread, and job 918240's nominal reading crosses a band edge at
-     frame 163 of its own 200-frame run. The graded ratio spans 1.1 to 3.1 points.
+   - **Window-robustness gate.** The band must be identical at the **last 20 frames, the
+     last 50 frames, the last 100 frames, and the full series**. If it is not, the run is
+     **NOT GRADEABLE on window sensitivity** and that is reported, never resolved by picking
+     a window.
+
+     **The three sweep windows are ABSOLUTE FRAME COUNTS, not percentages, and that is a
+     deliberate choice with a consequence that must be reported with the gate.** Units added
+     2026-08-19 by slot `d11-accessor`: the primary window immediately above is a *fraction*
+     (`DEFAULT_DROP_FRAC = 0.5`) while these three are *counts*
+     (`grade_job_b.py:211-212`, `n_total - 20`, `n_total - 50`, `n_total - 100`), so
+     "last-50" means two different things one bullet apart and the manifest previously stated
+     the unit for neither. At the 200-frame run length used by every run graded so far, "last
+     100 frames" and "the last 50 percent" coincide, which is exactly why the ambiguity has
+     been invisible. **The gate therefore gets stricter as a run gets longer**, because a
+     fixed 20-frame tail is a smaller and noisier fraction of a longer series. Any run graded
+     at a length other than 200 frames must report its frame count alongside the gate result,
+     and a future decision to make these windows fractional is a change to this criterion and
+     must be recorded here rather than made in the grader.
+
+     Measured: the nominal ratio swings FAIL / PARTIAL / PASS across those four windows, a
+     19.4-point spread, and job 918240's nominal reading crosses a band edge at frame 163 of
+     its own 200-frame run. The graded ratio spans 1.1 to 3.1 points.
+
+     **Evidence count corrected 2026-08-19 by slot `d11-accessor`: that swing rests on TWO
+     independent runs, not the three this line previously listed.** It named 917909, 918043
+     and 918240. For *this* accessor 918043 and 918240 are one measurement, not two: the
+     nominal denominator does not use the free surface, the two runs differ only by commit
+     `7c9e0af`'s h/2 surface fix, and their `fz_N` series agree to `1.49e-03` N, a relative
+     `4.3e-06`. Their nominal window readings are identical to four decimals
+     (-29.109 / -27.381 / -22.576 / -9.674 percent each). 917909 is genuinely separate: it
+     differs from 918043 by `1.82` N, a relative `5.3e-03`, three orders of magnitude larger.
+     **The conclusion is unchanged and survives the correction**, because two independent runs
+     still both swing across all three bands; only the enumeration was wrong. This matters
+     because the same document identifies the 918043/918240 pair as an instrument-calibration
+     pair fifteen lines later, so it was counting a controlled pair as independent replication
+     in one sentence and as one instrument in the next.
    - **Stationarity gate, on the GRADED RATIO only, at 3.0 sigma.** Non-stationarity of the
      raw `fz_N` series is expected and is not disqualifying, per criterion 5 below. This
      distinction is what makes criteria 3 and 5 satisfiable at once: measured on jobs
@@ -279,10 +333,70 @@ the committed test suite]**. Note this is **not** 69.3428 N: that was the supers
      tank. Both quantities remain meaningful and neither is deleted.
    - **Standing caveat that travels with any PASS on this criterion.** The denominator
      depends on a free-surface estimate that excludes every particle within 2R of the
-     sphere axis, which is exactly where the pressure generating `fz` acts. Measured
-     sensitivity is 0.0278 ratio-points per mm of surface, so roughly 1 dx of surface offset
-     at g64 spans the entire discrepancy observed to date. **A PASS here is not a coupling
-     validation until that estimator is validated in the near field.**
+     sphere axis, which is exactly where the pressure generating `fz` acts. Local secant
+     sensitivity is 0.0278 ratio-points per mm of surface at g64, measured from the
+     918043/918240 h/2 pair. **A PASS here is not a coupling validation until that estimator
+     is validated in the near field.**
+
+     **CORRECTED 2026-08-19 by slot `d11-accessor`, and the correction cuts against the easy
+     explanation.** This bullet previously said "roughly 1 dx of surface offset at g64 spans
+     the entire discrepancy observed to date". That figure was the error divided by the
+     secant, a tangent-line estimate of a strongly convex response, and it **understates the
+     required offset by 34.4 percent**. Replaced by an exact root-find on the spherical-cap
+     denominator (uniform surface offset applied to every frame in the window, bisected to
+     the target ratio):
+
+     | run | graded ratio | offset to reach 1.00 | in dx | in particle layers `h` |
+     |---|---|---|---|---|
+     | 918043 | 1.6308 | 32.177 mm | 1.716 | 3.432 |
+     | 918240 control | 1.5006 | 27.490 mm | 1.466 | 2.932 |
+     | 918450 treatment | 1.3435 | 24.904 mm | 1.328 | 2.656 |
+     | 918251 job C tank | 1.5060 | 33.424 mm | 1.778 | 3.555 |
+
+     So the surface estimator would have to be wrong by **1.33 to 1.78 dx, or 2.66 to 3.56
+     particle layers**, to account for the discrepancy by itself. At "about 1 dx" that
+     explanation is cheap; at nearly three particle layers it is a much larger claim, and
+     nothing has yet shown the estimator is wrong by that much.
+
+   - **The surface-convention lever, and the answer to whether this criterion sits at its own
+     achievable floor.** Added 2026-08-19 by slot `d11-accessor`, in answer to the question
+     raised by P-2, whose zero-penetration floor is 7.9 to 10.0 percent against a 10 percent
+     gate. **The answer is no: criterion 3 does NOT have that pathology.** An earlier version
+     of this bullet claimed it did, and that claim is **RETRACTED**; the retraction and its
+     cause are recorded here rather than deleted, because the mistake is instructive.
+
+     The graded ratio depends on where the free surface is declared to be, and `d(ratio)/ds =
+     -ratio * A_w / V_cap`. **Both factors shrink toward a PASS**, so the lever is much larger
+     at the operating points these runs are at than at the operating point a PASS would be at.
+     Measured on 918240: tangent `0.025827` per mm at the observed point (ratio 1.5006, draft
+     0.099674 m) against `0.012630` per mm at a ratio-1.0 point (draft 0.127164 m), a
+     **2.045x fall**, because `V_cap` grows 1.500x while the ratio factor falls to 1.0.
+
+     Half a particle layer of surface convention, `h/2` = 4.6875 mm at g64, is therefore worth:
+
+     | evaluated at | lever, ratio points | against a 10.0 point PASS half-width |
+     |---|---|---|
+     | the observed FAIL points, four runs | **8.0 to 15.1** | comparable or larger |
+     | a ratio-1.0 (PASS) point, four runs | **4.6 to 6.3** | about half the band |
+
+     **So a PASS on criterion 3 would carry roughly half a band of surface-convention
+     uncertainty. That is a real caveat and it is not disqualifying**, and the large lever at
+     today's operating points is a symptom of how far these runs sit from equilibrium, shallow
+     draft and high ratio, rather than a property of the criterion. **The criterion is
+     two-sided.** It can stop the ladder and it can, with that caveat attached, clear it.
+
+     **What was wrong with the retracted version, since the error is easy to repeat:** it
+     evaluated the instrument's resolution at the operating point of a FAILING run and then
+     applied that number to a hypothetical PASS. A sensitivity that depends on the state must
+     be evaluated in the state the conclusion is about.
+
+     **The lever is also direction dependent**, because the response is convex: at 918240,
+     `-h/2` moves the ratio +13.020 points and `+h/2` moves it -11.338. Quote the range, never
+     a single number, and say which direction and which operating point it was measured at.
+
+     **Unchanged by all of this: the FAIL is robust.** Reaching the PASS boundary of 1.10 needs
+     16.1 to 24.9 mm across the four graded runs, which is 1.72 to 2.66 particle layers, well
+     beyond any half-layer convention argument.
    - **Note on stationarity of a ratio.** A stationary ratio built from two co-trending
      non-stationary series shows that numerator and denominator fall together, not that the
      measurement has settled; `surface_z_measured_m` is non-stationary at 16.9 to 20.0
