@@ -1010,9 +1010,36 @@ head today**, not copied forward. None is in this slot's write scope and none wa
 | `docs/R7_G192_AND_JOBB_BCFIX_2026-08-18.md` | 570 | "Graded on `fz_over_analytic_measured`, the accessor the source designates, against the manifest" |
 | `docs/HANDOFF_ROUND_7_2026-08-18.md` | 194 | "Job 918240, graded on `fz_over_analytic_measured`, the accessor `sphere_heave.py:669-670`" |
 
-**All six now name the right quantity**, because the manifest was amended to the measured
+**COUNT CORRECTED, and it was my own count that was wrong.** The table above lists six sites;
+a complete sweep of every `.py` and `.md` on the branch finds **13 assertion sites across 5
+files**. The six above are the load-bearing ones. The full list, with branch and blob verified
+by `git ls-tree` today:
+
+| file | branches | distinct blobs | assertion lines |
+|---|---|---|---|
+| `analysis/r7_jobb_bcfix_ab.py` | 1 (`r7-collect`) | 1, `a0cb1a57` | 23, 39, 44, 208 |
+| `analysis/r6_repeat_stats.py` | **7** | **1**, `e75e4893` | 241, 252 |
+| `docs/R7_G192_AND_JOBB_BCFIX_2026-08-18.md` | 1 | 1, `80612650` | 570, 640, 648, 661, 674, 821 |
+| `docs/FLAG_R5_D4_DISPATCH_MISROUTE_2026-08-18.md` | 1 | 1 | 69 |
+| `docs/HANDOFF_ROUND_7_2026-08-18.md` | **7** | **2**, `cfe670e3` and `e42e50aa` | 194 |
+
+**A second correction to this document.** It said earlier that the branch copies "are branch
+copies of the same content, not independent assertions". For `r6_repeat_stats.py` that is
+exactly right: seven branches, one blob. For `HANDOFF_ROUND_7_2026-08-18.md` it is **wrong**:
+there are **two** distinct blobs. They happen to be byte-identical on lines 194 and 219, the
+lines that carry the assertion, so the conclusion survives, but "the same content" was not
+checked and was not true.
+
+**All 13 now name the right quantity**, because the manifest was amended to the measured
 accessor, so no verdict downstream changes. What they still get wrong is the **authority**:
 they cite a source comment, and two of them cite it by a line number.
+
+**A tooling warning, because it produced a wrong answer inside this very enumeration.**
+`git rev-parse "$b:$f"` where the path begins `analysis/` is **eaten by zsh's `:a` modifier**
+and returns the branch name instead of a blob hash, which made a one-branch file appear to
+live on thirty. Quoting does not protect it. Use `git ls-tree <ref> -- <path>`. This is the
+recorded `zsh-eats-rev-colon-path` trap firing exactly as documented, on a path whose first
+letter is `a`.
 
 **The line numbers have now drifted three times in three days.** `:669-670` was correct before
 `6ed163e`, became `:804-807`, and after today's edits `:669-670` lands in the config dict and
