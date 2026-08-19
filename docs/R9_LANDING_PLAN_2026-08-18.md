@@ -1,8 +1,10 @@
-# R9 landing plan: getting fifteen local-only branches onto a remote, and making the CI run
+# R9 landing plan: getting nineteen local-only branches onto a remote, and making the CI run
 
 Slot `d16-landing`, branch `claude/r9-landing`, worktree `.claude/worktrees/r9-landing`.
-Written 2026-08-18 23:40 to 2026-08-19 00:05 BST (the session crossed midnight; the filename
-keeps the dispatch date).
+Written 2026-08-18 23:40 to 2026-08-19 00:20 BST, then revised 2026-08-19 17:12 BST after a
+seventeen-hour gap (the session crossed midnight and then resumed; the filename keeps the
+dispatch date). Section 1's two addenda record what moved in between, and the whole simulation
+was re-run at 17:12 rather than patched.
 
 **This is a plan for Josie to approve. Nothing in it has been executed against the repository.**
 No branch was merged, no ref was moved, nothing was pushed, nothing was deleted. Every merge
@@ -29,8 +31,10 @@ git -C /Users/josie/can-it-ford rev-list --left-right --count origin/main...clau
 
 Every prior statement of this relationship in the project, including the one the session-start
 banner prints, gives only the ahead half. The behind half is the one that matters for a landing,
-because **thirteen of the fifteen branches in this round are based on `claude/add-ci-checks`**, so
-thirteen branches are built on a base that is missing merged work.
+because **almost every branch in this round is based on `claude/add-ci-checks`**, so almost every
+branch is built on a base that is missing merged work. MEASURED at 17:12 on 2026-08-19 across all
+nineteen: every one reads `5` commits behind `origin/main` except `claude/r8-licence`, which reads
+`0` because it is the only branch that already contains `origin/main`.
 
 The 5 missing commits are merged pull requests, MEASURED with
 `git -C /Users/josie/can-it-ford log --oneline claude/add-ci-checks..origin/main`:
@@ -68,7 +72,7 @@ else.** MEASURED: that merge is CLEAN.
 
 ---
 
-## 1. Inventory: fifteen branches, not nine. Eighteen by the time I finished.
+## 1. Inventory: fifteen branches, not nine. Eighteen by the time I finished, nineteen a day later.
 
 The dispatch for this slot said nine. Nine is the R8 wave. Six R9 slots (`d11` to `d16`) were
 running while this document was being written, on six more unpushed branches, and one of them
@@ -89,6 +93,67 @@ committed mid-session (section 8). **The exposure is fifteen branches and it is 
 > eighteen branches: every one of them reads `5` on the left except `claude/r8-licence`, which
 > reads `0` because it is the only branch that already contains `origin/main`. Seventeen of
 > eighteen are behind by the same five merged PRs.
+
+> **SECOND ADDENDUM, 2026-08-19 17:12, seventeen hours after the first.** The session resumed
+> after a long gap (my prompt banner was reporting a stale 00:17, and the true clock was 17:12;
+> the times in the first addendum are correct, the gap after it was not visible to me until I
+> checked `date` against a file mtime). In those seventeen hours the set went from eighteen to
+> **NINETEEN** branches and **seven R9 branches committed real work**:
+>
+> | branch | was | now | own commits | files |
+> |---|---|---|---|---|
+> | `claude/r9-accessor` | `6ed163e` | `06c7786` | 73 | 31 |
+> | `claude/r9-corpus-bib` | `59c12b2` | `8bad9b4` | 2 | 4 |
+> | `claude/r9-kramer-extract` | `b6fe951` | `1f126dc` | 77 | 33 |
+> | `claude/r9-moving-vehicle` | `af62473` | `056ba10` | 2 | 3 |
+> | `claude/r9-priorcode` | (new) | `fdf934b` | 1 | 2 |
+> | `claude/r9-renders` | `af62473` | `256d013` | 1 | 2 |
+> | `claude/r9-settle` | `0726c18` | `0861b52` | 2 | 4 |
+>
+> **I re-ran the entire landing simulation against these current tips rather than patching the
+> old result, and the plan survives unchanged.** MEASURED: still exactly one conflicting file,
+> still `simulation/openchannel_bc.py`, still only on `r8-bc-merge` and `r8-persistence`, still
+> resolved by the same blob, still one `pre-commit` refusal at 13 files. **All seven newly
+> committed R9 branches merge CLEAN**, and `claude/r9-platform` is the only remaining no-op.
+> Final tree 1033 files, up from 1019, `canford-checks.yml` present. So the order in section 2 is
+> robust to a full day of additional work across seven branches, which is the useful thing to
+> know about it, and is a stronger claim than the original simulation could support.
+
+### 1.4 `docs/R9_DISCREPANCY_REGISTER_2026-08-19.md` is not a sixteenth merge, and its status changed twice while I checked it
+
+It was described to me as "a sixteenth thing to merge". MEASURED, it is not, and the reason is
+worth recording because it is the same moving-state problem in a third costume:
+
+- **00:14**: untracked. `git status` returned `?? docs/R9_DISCREPANCY_REGISTER_2026-08-19.md`,
+  and a scan of every local branch found it on **none** of them. At that moment it existed only
+  as a working-tree file in the **shared** main checkout: not committed, therefore in no bundle,
+  therefore protected by nothing at all. That is a worse status than the branches this plan
+  exists to protect, and it sat alongside 151 other untracked non-ignored files in that tree.
+- **00:26**: committed as `e0d2beb` on `claude/add-ci-checks`, together with
+  `scripts/r8/r8_launch.sh` and `scripts/r8/r8_plan.tsv`, 3 files, 133 insertions.
+
+Because it landed **on the integration branch itself**, it needs no merge of its own. It arrives
+with the target and is carried by phase 1. **The merge set is unchanged.**
+
+Two consequences that are not cosmetic:
+
+1. **`claude/add-ci-checks` moved from `af62473` to `e0d2beb`**, so every branch based on
+   `af62473` is now one commit behind it. MEASURED, this changes nothing in section 2: re-running
+   the merges against `e0d2beb` returns CONFLICT for `r8-bc-merge` and `r8-persistence` and CLEAN
+   for `r8-register` and `r8-tooling`, identical to the results against `af62473`.
+2. **d7-register's decisive precondition was re-checked against the new tip and still holds.**
+   MEASURED at 17:12 on 2026-08-19, against the moved tip `e0d2beb`: the register blob on
+   `claude/add-ci-checks` is still `124dd74`, so the
+   `r8-register` merge remains valid. `e0d2beb` touched three files and none of them is the
+   register. This is exactly the check section 9.2 says to run at the moment of merging rather
+   than trusting from a document, and running it caught nothing this time, which is the point:
+   it is cheap and it is the only thing standing between a moved tip and a silent re-derivation.
+
+**The general lesson for the landing: "uncommitted in the shared main checkout" is a real and
+common state here, and it is invisible to every branch-level protection in this plan.** A bundle
+captures commits. It does not capture 151 untracked files. Before the landing, decide which of
+those files are work and which are debris, because a `git clean` during conflict resolution
+would take all of them.
 
 MEASURED at 00:01:14 on 2026-08-19. Re-derive with the script in section 9.1; do not trust the
 tips below, they are a snapshot and at least one of them was already wrong within ten minutes.
@@ -198,12 +263,26 @@ MEASURED, the whole order below was simulated end to end. Script:
 | 4 | `claude/r8-persistence` | **CONFLICT**, 1 file | 13 | **`pre-commit` REFUSES** |
 | 5 | `claude/r8-kramer` | CLEAN | 31 | none fires |
 | 5 | `claude/r8-force` | CLEAN | 2 | none fires |
-| 5 | `claude/r9-accessor` | no-op, contained | - | - |
-| 5 | `claude/r9-kramer-extract` | no-op, contained | - | - |
-| 6 | four R9 doc branches | no-op today, see 1.2 | - | - |
+| 5 | `claude/r9-accessor` | CLEAN | 4 | none fires |
+| 5 | `claude/r9-kramer-extract` | CLEAN | 2 | none fires |
+| 6 | `claude/r9-landing` | CLEAN | 1 | none fires |
+| 6 | `claude/r9-corpus-bib` | CLEAN | 4 | none fires |
+| 6 | `claude/r9-renders` | CLEAN | 2 | none fires |
+| 6 | `claude/r9-settle` | CLEAN | 4 | none fires |
+| 6 | `claude/r9-moving-vehicle` | CLEAN | 3 | none fires |
+| 6 | `claude/r9-priorcode` | CLEAN | 2 | none fires |
+| 6 | `claude/r9-platform` | no-op, contained | - | - |
 
-Final simulated integration head: 1019 files, `canford-checks.yml` present, register blob
-`1c900e5` (the `r8-register` merged product, not `add-ci-checks`'s `124dd74`).
+This table is the **17:12 on 2026-08-19 re-run**, not the original 00:01 one. Phases 5 and 6
+changed: at 00:01 those seven R9 branches were no-ops sitting at their base, and they have since
+committed real work. Every one of them still merges CLEAN, so the order did not have to change,
+only the evidence for it got stronger. **Section 1.2's containment relations are the part that
+went stale fastest and must be re-derived**: `claude/r9-accessor` is no longer an ancestor of
+`claude/r8-force`, and `claude/r9-kramer-extract` is no longer identical to `claude/r8-kramer`.
+
+Final simulated integration head at the 17:12 re-run: **1033 files** (1019 at 00:01),
+`canford-checks.yml` present, `simulation/openchannel_bc.py` at the resolved blob `61afb193`,
+register blob `1c900e5` (the `r8-register` merged product, not `add-ci-checks`'s `124dd74`).
 
 ### 2.1 Why `r8-register` goes second, and this is the one place I disagree with its own document
 
@@ -299,6 +378,54 @@ argument; I used line containment and symbol counts, so this is a second origin 
 source cited twice.
 
 MEASURED: applying this resolution and continuing, the entire remaining order merges clean.
+
+### 3.1a The conflict is real. Content ancestry does not prevent it, and the two are independent
+
+`docs/R9_DISCREPANCY_REGISTER_2026-08-19.md` row **C1** states that the hashes show the short
+copy is "a strict ancestor state ... not a rival lineage", and concludes that the add/add
+conflict "is refuted" and that a resolution should not be planned for it.
+
+**The premise is correct and I agree with it. The conclusion about git is wrong, and keeping the
+resolution matters, because the conflict reproduces on demand.** These are two independent
+propositions and only the first is about content:
+
+1. **Is `9a94e247` a lineal ancestor state of the tip?** YES. C1 is right, d4-bcmerge is right,
+   and section 3.1 above reaches the same answer by a third method. I never claimed rival
+   lineages; section 3.1 says "linear in content, not rival implementations".
+2. **Does merging the branches produce an add/add conflict?** YES. MEASURED, live, re-run against
+   the current `claude/add-ci-checks` tip `e0d2beb` at 17:12 on 2026-08-19, `exit 1` for both
+   `claude/r8-bc-merge` and `claude/r8-persistence`.
+
+`add/add` is a statement about the **commit graph**, not about content. MEASURED, the mechanism
+in two commands:
+
+```
+git -C <repo> merge-base claude/add-ci-checks claude/r8-bc-merge     # -> 1a868f3
+git -C <repo> ls-tree 1a868f3 -- simulation/openchannel_bc.py        # -> 0 files, ABSENT
+```
+
+The path is absent from the merge base, so both sides **add** it, and git has **no base blob to
+three-way-merge against**. Lineal content ancestry is invisible to git unless it is recorded in
+the DAG, and here it is not: the two adds are `be1b138` and `049f7e1` on branches whose only
+common ancestor predates both.
+
+MEASURED, a minimal control that separates the two conditions (built in a scratch repo, both
+arms distinguished so the result cannot be vacuous):
+
+| both sides add the same path | blobs | merge-tree exit |
+|---|---|---|
+| identical content | `1275430f` = `1275430f` | **0, git resolves it cleanly** |
+| differing content | differ | **1, add/add conflict** |
+
+So add/add fires on exactly two conditions: the path is absent from the merge base, **and** the
+two blobs differ. Neither condition is "the two contents are unrelated". A file can be in perfect
+linear content ancestry and still conflict, which is precisely this case.
+
+**Practical consequence: keep the resolution.** Deleting it because the lineage is linear would
+send whoever executes the landing into a conflict they were told would not happen, on the one
+file in eighteen branches that conflicts. The resolution is also *easier* because C1 is right:
+since the contents are linear, "take `61afb193`" is provably lossless (section 3.1), which is
+exactly what you cannot say when two lineages genuinely diverge.
 
 ### 3.2 The resolution trips the `pre-commit` hook, the one place needing a deliberate override
 
@@ -632,15 +759,40 @@ done
 
 ### 9.2 Verification rules, which are the part most likely to be got wrong
 
-**A check that cannot tell "equal" from "could not evaluate" is worse than no check.** My first
-bundle comparison printed a clean `IN BUNDLE` for all ten heads. It was wrong: zsh does not
-word-split unquoted variables, both sides of every comparison evaluated to the empty string, and
-empty equalled empty. A silent false PASS. The coordinator hit the same shell property in the same
-ten minutes from the other direction, passing sixteen ref names to `git bundle create` as one
-argument, which was loud only because git happened to reject it. This project has now logged four
-instances of a comparison whose both arms failed being reported as agreement.
+**BINDING RULE FOR WHOEVER EXECUTES THIS LANDING: a check that cannot tell "equal" from "could
+not evaluate" is worse than no check, and must not be used to gate a merge.** This is not an
+anecdote. It was the dominant failure mode of the night, and it is a property of the shell rather
+than of anyone's care.
 
-Every comparison in a merge verification must therefore carry an explicit third outcome:
+Six instances in one session, five of them zsh's handling of unquoted or specially-named
+variables, and every one returned a confident answer:
+
+| # | what was run | what it returned | why it was wrong |
+|---|---|---|---|
+| 1 | `set -- $pair` in my bundle comparison | clean `IN BUNDLE` for all ten heads | zsh does not word-split; both sides were EMPTY, and empty equalled empty |
+| 2 | `git bundle create "$BUN" $REFS` | git rejected it | same property: sixteen ref names passed as ONE argument. Loud only by luck |
+| 3 | `while IFS= read -r h path` | every external command "not found" | zsh ties `path` to `$PATH`; builtins kept working, so it read as a tool problem |
+| 4 | `grep -rln ... --include=*.py` unquoted | **0 hits** | zsh tried to glob `--include=*.py`, the command failed, and a false zero is indistinguishable from a true zero |
+| 5 | `pgrep -f round5_autodispatch` | a match | it matched a Claude session whose prompt quoted the script name. Blocked a whole launch wave |
+| 6 | my add/add control, first attempt | `1` on **both** arms | the branch name did not exist under `git init -b base`. Caught only because uniform arms are suspicious |
+
+Instance 6 is mine and it happened **while writing section 3.1a**, which is the strongest argument
+for making this binding: I was actively hunting this failure mode, had already written it up once,
+and still produced it. What caught it was not care, it was that **agreement between arms that are
+supposed to differ is itself a signal**. The rebuilt harness printed
+`SEPARATED: identical=0 (clean), differing=1 (conflict)` instead of a bare comparison, so a broken
+run could not masquerade as a result.
+
+There is a second, subtler form worth naming because a merge verification is full of it: a
+**passing check on quantity A is not evidence about quantity B**. `d9-kramer` recorded this at
+23:06 after a self-test that correctly reproduced one constant was cited as confirming a claim
+that used a different one, and their note is exact, that a correct calculation attached to the
+wrong claim "does not merely fail to support it, it LAUNDERS it". Verifying that a branch merged
+cleanly is not evidence that it merged the tip you intended; that is what `HEAD^2` below is for.
+
+Every comparison in a merge verification must therefore carry an explicit third outcome, and any
+uniform result across arms that should differ must be treated as a harness fault until proven
+otherwise:
 
 ```bash
 if [ -z "$expected" ] || [ -z "$actual" ]; then
@@ -712,6 +864,22 @@ scratchpad: `verify_bundle.sh`, `simfinal.sh`.
   It says nothing about what is already public.
 - **Anything about the four R9 branches' content.** Three were still no-ops at 00:01 and one had
   one commit. Their merges are predicted from structure, not measured against real work.
+
+- **The 0.60 boundary operator, and which view I searched**, because
+  `docs/R9_DISCREPANCY_REGISTER_2026-08-19.md` row C2 asks for the scope to be stated. **Scope:
+  `/Users/josie/can-it-ford`, including `.claude/worktrees/`, excluding `.git/`.** In that view
+  MEASURED **58 copies of `make_phase_space.py`, 2 distinct contents, split 29/29**, and
+  `h < 0.60` returns **zero** files. The two variants are `h <= 0.60` and `haz > 0.60`, which are
+  the same boundary rule inverted, so C2's conclusion holds in my view too: **no operator fork
+  exists inside this repo**, and this search cannot see the pre-history-purge clones where
+  CLAUDE.md records `h < 0.60`, so it does not refute that claim.
+  **Two differences from C2 worth recording rather than smoothing over.** C2 reports **70 copies,
+  35/35**; I get 58, 29/29. Same ratio, same conclusion, different totals, so this is a scope
+  difference and not a disagreement about the answer, and per CLAUDE.md item 13's rule neither
+  number is usable without its scope. Mine sits 56 in `.claude/worktrees/`, 1 in
+  `designsafe-staging/scripts/`, 1 in `analysis/`. Separately, and this is why the row does not
+  affect the landing: MEASURED, **none of the nine R8 branches touches `make_phase_space.py`**,
+  so it is not in the merge set and cannot produce a conflict here.
 
 **Review status, stated rather than implied.** The `physics-skeptic` subagent was **not** run
 against this document, and no adversarial pass by another agent was performed. That is a
