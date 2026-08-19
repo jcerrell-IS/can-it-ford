@@ -393,7 +393,7 @@ class MovingVehicleChannelScene:
     def __init__(self, mesh, sdf, depth, v_car, v_water, n_grid,
                  ground_frame=False, device="auto", seed=0, bc_target_frac=0.5,
                  wrench_dt_mode="frame", inflow_cells=6.0, no_hull=False,
-                 hull_y=None, bc_per_frame_force=None):
+                 hull_y=None, bc_per_frame_force=None, lim_override=None):
         from warpmpm.core.solver import GridConfig, Solver
         from warpmpm.materials import newtonian
 
@@ -410,7 +410,20 @@ class MovingVehicleChannelScene:
         # ext[1] is the LONG axis AFTER load_vehicle(up='z') permutes. Taking the
         # PLY axes at face value gives 14.989 m instead of 9.4217 m, a 59 percent
         # error. sim_standing.py:82 makes the same indexed choice for the same reason.
-        lim = domain_limit(ext_long=ext[1], ext_short=ext[0], depth=depth)
+        # DOMAIN OVERRIDE, for the ground frame only in practice.
+        # The computed rule sizes the box to the HULL, which is correct for a
+        # rest-frame measurement where nothing translates. A ground-frame car has
+        # to drive somewhere: at the computed 9.4217 m the hull has 3.16 m of
+        # travel, which is 43 frames at 2.2 m/s, or 1.4 seconds. Overriding the
+        # limit is the only way to render a crossing, and it is recorded in
+        # lim_m like any other computed value so no reader can mistake an
+        # overridden domain for the rule's own answer.
+        # THE GRID IS FORCED CUBIC (GridConfig takes one scalar), so a longer
+        # road costs cubically and buys a tall empty box above the water. That
+        # is a real cost of this engine's API, not a modelling choice.
+        lim = (float(lim_override) if lim_override else
+               domain_limit(ext_long=ext[1], ext_short=ext[0], depth=depth))
+        self.lim_is_override = bool(lim_override)
         grid = GridConfig(n_grid=int(n_grid), grid_lim=lim)
         dx = grid.dx
         h = dx / 2.0
@@ -906,7 +919,8 @@ def run_cell(args, mesh, sdf, v_car, v_water, f_buoy, tag):
         n_grid=args.n_grid, ground_frame=args.ground_frame,
         device=args.device, seed=args.seed,
         wrench_dt_mode=args.wrench_dt_mode, no_hull=args.no_hull,
-        hull_y=args.hull_y, bc_per_frame_force=args.bc_per_frame)
+        hull_y=args.hull_y, bc_per_frame_force=args.bc_per_frame,
+        lim_override=getattr(args, "lim", None))
     if scene.ground_frame:
         need = v_car * (args.frames / FPS)
         if need > scene.travel_available:
@@ -918,6 +932,16 @@ def run_cell(args, mesh, sdf, v_car, v_water, f_buoy, tag):
     scene.start_motion()
 
     rows = []
+    # PER-FRAME FIELD DUMP, off unless asked for.
+    # The tidy record is one row per RUN and cannot be rendered; a video needs
+    # the water field and the hull pose at every frame. This is written as
+    # float32 because float64 doubles a file that is already hundreds of
+    # megabytes and no renderer resolves the difference. Positions are sliced to
+    # [:n_water] deliberately: the rigid particles are the hull and are better
+    # drawn from the mesh at the dumped pose than as a point cloud.
+    dump = bool(getattr(args, "dump_frames", False))
+    dstride = max(1, int(getattr(args, "dump_stride", 1) or 1))
+    d_xyz, d_pose, d_idx = [], [], []
     for i in range(args.frames):
         w = scene.step_frame()
         f = np.asarray(w["force"], dtype=float)
@@ -925,6 +949,32 @@ def run_cell(args, mesh, sdf, v_car, v_water, f_buoy, tag):
         rows.append({"frame": i + 1, "fx": float(f[0]), "fy": float(f[1]),
                      "fz": float(f[2]), "tx": float(t[0]), "ty": float(t[1]),
                      "tz": float(t[2])})
+        if dump and (i % dstride == 0):
+            d_xyz.append(scene.solver.x()[:scene.n_water].astype(np.float32))
+            d_pose.append(scene.collider_center().astype(np.float32)
+                          if scene.handle is not None
+                          else np.zeros(3, dtype=np.float32))
+            d_idx.append(i + 1)
+    if dump:
+        outdir = Path(args.out)
+        outdir.mkdir(parents=True, exist_ok=True)
+        dpath = outdir / ("FRAMES_%s_g%d.npz" % (args.label, args.n_grid))
+        np.savez_compressed(
+            dpath,
+            water_xyz=np.stack(d_xyz) if d_xyz else np.zeros((0, 0, 3), np.float32),
+            hull_center=np.stack(d_pose) if d_pose else np.zeros((0, 3), np.float32),
+            frame_index=np.asarray(d_idx, dtype=np.int32),
+            # everything a renderer needs to place the scene without re-deriving it
+            hull_extent_m=np.asarray(scene.ext, dtype=np.float32),
+            lim_m=np.float32(scene.lim), dx_m=np.float32(scene.dx),
+            depth_m=np.float32(scene.depth), floor_z_m=np.float32(scene.floor),
+            frame_dt_s=np.float32(scene.frame_dt_effective),
+            fps_nominal=np.int32(FPS),
+            v_car_ms=np.float32(v_car), v_water_ms=np.float32(v_water),
+            ground_frame=np.int32(1 if scene.ground_frame else 0))
+        print("DUMP %s  %d frames x %d water particles  %.1f MB"
+              % (dpath.name, len(d_xyz), scene.n_water,
+                 dpath.stat().st_size / 1e6), flush=True)
     u_mean, u_proj = scene.water_speed_stats()
     keep = rows[args.discard:]
     arr = np.array([[r["fx"], r["fy"], r["fz"]] for r in keep], dtype=float)
@@ -1014,6 +1064,17 @@ def main():
     ap.add_argument("--no-hull", action="store_true",
                     help="CONTROL: identical scene with the vehicle removed, to "
                          "separate a forcing defect from a blockage effect.")
+    ap.add_argument("--lim", type=float, default=None,
+                    help="override the computed domain limit, metres. The rule "
+                         "sizes the box to the hull, which leaves a ground-frame "
+                         "car only 3.16 m of travel at the default. Recorded in "
+                         "lim_m either way.")
+    ap.add_argument("--dump-frames", action="store_true",
+                    help="write FRAMES_<label>_g<n>.npz: water positions and hull "
+                         "pose every frame, for rendering. Off by default because "
+                         "it is hundreds of MB and no measurement needs it.")
+    ap.add_argument("--dump-stride", type=int, default=1,
+                    help="dump every Nth frame (default every frame)")
     ap.add_argument("--selftest", action="store_true")
     args = ap.parse_args()
 
@@ -1083,12 +1144,25 @@ def main():
                 print("CELL %s %s %r" % (tag, rec["status"], rec), flush=True)
                 continue
             fm = rec["force_mean_N"]
+            # C-16. THIS USED TO READ `rec["fz_settle_over_analytic"] or 0.0`,
+            # which printed "fz_settle/analytic 0.0000" when the value was None.
+            # A printed 0.0000 reads as a MEASURED zero vertical reaction, which
+            # is a physically meaningful and alarming statement, when the truth
+            # was that there is no value. Absence must not be rendered as a
+            # measurement. It is only a console line, never a verdict, but it is
+            # the manufacture-a-value shape, so it is fixed rather than excused.
+            # THE INPUT THAT MAKES THIS FAIL: an OK cell whose f_buoy_analytic_N
+            # is 0.0, which sets fz_settle_over_analytic to None at the record
+            # build above; the old line printed 0.0000 and the new one prints
+            # "n/a".
+            fza = rec.get("fz_settle_over_analytic")
             print("CELL %s  v_car %.3f v_water %.3f |v_rel| %.4f angle %.2f deg  "
-                  "F = (%.1f, %.1f, %.1f) N  |F_h| %.1f N  fz_settle/analytic %.4f  "
+                  "F = (%.1f, %.1f, %.1f) N  |F_h| %.1f N  fz_settle/analytic %s  "
                   "%.1f s"
                   % (tag, vc, vw, rec["v_rel_mag_ms"],
                      rec["v_rel_angle_deg_from_broadside"], fm[0], fm[1], fm[2],
-                     rec["force_horiz_mag_N"], rec["fz_settle_over_analytic"] or 0.0,
+                     rec["force_horiz_mag_N"],
+                     ("%.4f" % fza) if fza is not None else "n/a",
                      rec["wall_s"]), flush=True)
 
     summary = outdir / ("SUMMARY_%s_g%d.json" % (args.label, args.n_grid))

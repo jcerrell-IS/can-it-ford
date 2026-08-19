@@ -747,10 +747,17 @@ Twenty cells, five seeds. The full table is reproduced by
     python3 analysis/r9_speed_surface.py --from-tsv data/r9_speed_surface.tsv \
         --surface-arm M1 --arc-prefix M3m
 
-**The seed noise floor across the whole surface is S = 0.0086**, that is 0.86
-percent, where S is the pre-registered `(max - min) / mean`. The largest
+**The TOTAL REPEATABILITY FLOOR across the whole surface is S = 0.0086**, that
+is 0.86 percent, where S is the pre-registered `(max - min) / mean`. The largest
 within-cell standard deviation anywhere is 115 N on a cell whose mean is
 30,044 N.
+
+> **CORRECTED NAME, see T11.** This was written as "the seed noise floor" and
+> that name is wrong. It bundles the seed effect together with run-to-run
+> nondeterminism at fixed seed, which T11 measures at up to 0.59 percent in this
+> speed range. It is the CONSERVATIVE comparator and it is the right one to
+> grade against, so no number in this document changes; only the name does.
+> Anything reported as measuring "the seed" alone would be overstating it.
 
 This number is what makes everything below a measurement rather than scatter,
 and it could only be obtained by varying `--seed`. Repeats at a fixed seed give
@@ -789,7 +796,10 @@ Three separate statements, and they should not be merged:
    merely scale. A single worst-case split quoted from one magnitude would be
    wrong at another.
 
-Every S in that table exceeds the seed noise floor by between 88 and 149 times.
+Every S in that table exceeds the total repeatability floor by between 88 and
+149 times. Graded instead against T11's worst fixed-seed nondeterminism at the
+matching speed, the margin is a factor of about 130 at the very worst cell,
+which is the number to quote if a single figure is wanted.
 
 ## T3. A dip at exactly -45 deg survives the explanation that was supposed to kill it
 
@@ -1520,3 +1530,97 @@ on the `gh` production partition, verified before submission to checkpoint at
 invocation granularity and to put **five seeds on g128**, which was the only
 n=1 rung. It also runs ten further matrix seeds, a g160 arc, and the Silverado
 mesh-fidelity control.
+
+## T20. A moving car, as a renderable sequence, and why it is NOT a measurement
+
+Josie asked for a video of a moving car. d13-renders has a working Cycles scene
+but every frame so far is a stationary hull, which is not the research question.
+The data for motion has to come from here, because every arm above is a
+**rest-frame** run: the hull is fixed and the water carries the relative
+velocity. That is correct for a load measurement and it renders as a stationary
+car sitting in a current.
+
+**Ground frame is the right frame for a video and the wrong frame for a number.**
+`start_motion()` hands the hull its prescribed velocity and the collider
+translates, so the car actually drives. But the ground frame **failed this
+study's own C4 frame check at 34 percent**, with an undeveloped stream among its
+confounds. **No force from the render runs may be quoted as a measurement.** The
+load surface is built from the rest-frame arms and nothing here changes it.
+
+### Two driver additions, both additive and both default-off
+
+- **`--lim`**, a domain override. The computed rule sizes the box to the hull,
+  which is right when nothing translates. In the ground frame it leaves the hull
+  **3.16 m** of travel, which at 2.2 m/s is 43 frames, or 1.4 seconds. The
+  driver already refuses such a run with `REFUSED_TRAVEL` rather than silently
+  driving into a wall, so the limitation was known and guarded; it just could
+  not be lifted. `--lim 22.0` at `n_grid` 160 gives dx **0.1375 m**, which is
+  FINER than the g64 baseline's 0.1472, and **15.87 m** of travel.
+- **`--dump-frames`**, the per-frame field. The tidy record is one row per RUN
+  and cannot be rendered. This writes `FRAMES_<label>_g<n>.npz`: water positions
+  and hull centre every frame, in float32, plus the domain, dx, depth, floor,
+  frame dt and both speeds so a renderer can place the scene without
+  re-deriving any of it. Off by default because it is hundreds of megabytes and
+  no measurement needs it.
+
+### This also fixes d13-renders' structural artifact
+
+d13's renders show road patches floating on an infinite mirror because each
+vehicle's **simulation domain is smaller than the camera frame**. The render
+runs use a 22.0 m domain against the 9.42 m the rule produces, so the water
+extends well past any reasonable frame. The two jobs supply the motion and the
+larger domain together.
+
+### Submitted
+
+Job **922582**, `r9_render_motion`, 90 minutes on `gh`, two cells at depth
+0.30 m, `v_water` 1.0 m/s, seed 0, `n_grid` 160, `lim` 22.0:
+
+| cell | v_car | frames | video at 30 fps | travel needed |
+|---|---|---|---|---|
+| A | 2.2 m/s (5 mph, a realistic fording speed) | 150 | 5.0 s | 11.0 m |
+| B | 4.5 m/s (10 mph) | 100 | 3.3 s | 15.0 m |
+
+Both fit inside the 15.87 m available. **It runs a SEPARATE driver file**,
+`simulation/moving_vehicle_render.py` on the node, md5
+`d052005287ec9ae421d2a3f2fd6a33e2`, because batch 922514 was already running
+against `moving_vehicle_channel.py` at md5 `3ea7c487a25ec52a9279c53cd18747e6`
+and overwriting a driver mid-flight would split the provenance of the runs it is
+collecting. The batch copy was verified unchanged after the render copy landed.
+
+## T21. C-16 fixed: absence was being printed as a measured zero
+
+`moving_vehicle_channel.py` printed `rec["fz_settle_over_analytic"] or 0.0`, so
+a `None` on an OK cell rendered as `fz_settle/analytic 0.0000`. **A printed
+0.0000 there is not a missing value, it reads as a measured zero vertical
+reaction**, which would be a startling physical claim. It is a console line and
+never a verdict, and the `status != "OK"` branch already skipped, so the blast
+radius was small. It is fixed anyway because it is the manufacture-a-value shape
+that produced most of this round's instrument failures, and it was sitting in my
+own file while I was writing up two other instances of it.
+
+**The input that makes the old line fail:** an OK cell whose
+`f_buoy_analytic_N` is 0.0, which sets `fz_settle_over_analytic` to `None` where
+the record is built. The old line printed `0.0000`; the new one prints `n/a`.
+
+## T22. C-19: the corroboration of 4.7e-6 is narrower than it reads
+
+Slot d18-platform lists among its independent verifications that "the fixed-seed
+repeat spread reproduces d17's stated 4.7e-6 at 4.687e-6". **That verification
+is correct and it is not evidence for the general claim.** It reproduces the
+figure in the regime where the figure holds, the no-forcing control, which is
+exactly the regime T11 shows is unrepresentative. Neither session is wrong; the
+corroboration is narrower than its wording, and a reader would take it as
+confirming a general determinism claim that T11 refutes.
+
+**It also touches C-1 quantitatively, and the error bars there should widen.**
+d18 argued the settled-window inversion is not noise, using a per-cell seed
+spread of 0.066 to 0.338 percent. The nondeterminism measured in T11 is 0.0764
+percent at `|v_rel|` 3.0 and 0.3876 percent at 4.5, **comparable to or larger
+than the spread quoted**. The conclusion is untouched, because 2.262 against
+0.912 is not a fraction-of-a-percent effect, but the uncertainty attached to it
+was understated.
+
+**"Seed noise floor" is now "total repeatability floor" in this document and in
+`report_seeded_surface` itself**, not only in a commit message, because the name
+was doing the misleading and the name is what people copy.

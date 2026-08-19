@@ -307,8 +307,11 @@ def report_seeded_surface(rows, arm, label=""):
     print("    LARGEST within-cell spread across FORCED cells: %s" % fmt(noise, 5))
     print("    (a no-forcing cell is excluded from this: see the comment in")
     print("     report_seeded_surface, its relative spread divides by ~0)")
-    print("    This is the seed noise floor. Any claim about how the load varies")
-    print("    ACROSS cells has to clear it to be a measurement rather than scatter.")
+    print("    This is the TOTAL REPEATABILITY floor, NOT a seed floor: it bundles")
+    print("    the seed effect with run-to-run nondeterminism at FIXED seed, which")
+    print("    is up to 0.59 percent at 6 m/s. Calling it a seed floor would claim")
+    print("    a decomposition that has not been made. Any claim about how the load")
+    print("    varies ACROSS cells has to clear it to be a measurement, not scatter.")
     return cells, noise
 
 
