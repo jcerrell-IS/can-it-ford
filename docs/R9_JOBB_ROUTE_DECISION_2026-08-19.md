@@ -1305,3 +1305,90 @@ recommendation is not supported at 2.59 sigma with a factor-of-4.6 spread in mag
 and section 8's original position stands until a further grid point settles it. Vista job
 923291 (g192, `dx = 6.25 mm`) is that point, and its value should be read against **all six
 specifications**, not the one it was pre-registered against.
+
+---
+
+## 16. Amicarelli et al 2015 read in full: half the relayed claim holds, and it is the wrong half
+
+Relayed to me as "a FIXED BODY reading about 10 PERCENT ABOVE analytic stagnation pressure,
+with THE BOUNDARY TREATMENT NAMED AS THE CAUSE, and REFINEMENT SHOWN NOT TO FIX IT", and
+tagged by the sender as unverified. I read it.
+
+**[Ami15]** A. Amicarelli et al., *A Smoothed Particle Hydrodynamics model for 3D solid body
+transport in free surface flows*, Computers & Fluids 116, 205-228, 2015,
+doi:10.1016/J.COMPFLUID.2015.04.018.
+
+| relayed claim | verdict |
+|---|---|
+| a FIXED body | **holds** (fixed for this validation test) |
+| about 10 percent ABOVE analytic | **holds in magnitude, wrong quantity**: it is the peak PRESSURE COEFFICIENT, ~1.1 against an analytic 1.0, not a force |
+| stagnation pressure | **holds**, but see the regime problem below |
+| the BOUNDARY TREATMENT NAMED as the cause | **does NOT hold.** The attribution is implicit, by comparison: the paper reports its scheme is better than semi-analytic SA-SPH and worse than discrete-boundary DB-SPH. It never names the boundary treatment as the cause |
+| refinement shown NOT to fix it | **holds, weakly.** One halving step, "SPH-body-h/2", leaves the peak at ~1.1, read off Figure 3.1's right panel |
+
+### 16.1 The scope the relay dropped, and it is decisive
+
+**The method is purely SPH.** Section 2 solves Euler momentum, continuity and the
+Euler-Newton body equations in the SPH formalism throughout. The paper does use a
+background grid but states explicitly it is "coarse reference/background
+(non-computational)" and serves only to "efficiently compute all the geometrical
+parameters", that is neighbour searching. **There is no velocity projection onto grid
+nodes anywhere in it.**
+
+**Its boundary scheme is Adami, Hu and Adams 2012's generalized wall boundary condition**,
+dummy wall particles whose pressure is extrapolated from local fluid acceleration and
+gravity, adapted here for free slip. **This solver shares none of that.** Job B's force is a
+grid-node momentum difference `sum m*(v_free - v_new)/dt` over nodes gated at `sd <= band`
+(section 13.1). Dummy-particle pressure extrapolation and grid-node velocity projection are
+different mechanisms in different discretisations.
+
+**And the regime does not match at all.** Ami15's case is a 2D water jet perpendicularly
+IMPINGING a flat plate, a stagnation flow with a real free-stream velocity. **Job B is
+hydrostatic**: a sphere pinned in still water, `mach_peak = 0.0` in every run config.
+**There is no stagnation point in my scene and no stagnation pressure to over-predict.**
+The relayed phrase "analytic stagnation pressure" is the paper's quantity, and my scene does
+not have one.
+
+### 16.2 So: a phenomenological precedent, not a mechanism, and the write-up does not change
+
+**What Ami15 genuinely supplies**: a published, primary-source instance of a fixed body in a
+particle method reading a percent-level over-prediction near its boundary that **one
+refinement step does not clear**. That is worth having, and it is the first such precedent
+this project has found from a primary read rather than a search summary.
+
+**What it does not supply**: a mechanism for Job B. Different discretisation, different
+boundary scheme, different regime, different quantity, and a magnitude of 10 percent against
+my 20 to 46 percent, a factor of 2 to 5. **The write-up does not change from "unexplained"
+to "known failure mode of this class of boundary treatment", because it is not this class of
+boundary treatment.**
+
+The honest one-line use is: *particle-method boundary treatments are known to produce
+percent-level, refinement-resistant over-predictions on fixed bodies* [Ami15], as
+CONTEXT for job B's failure being a boundary-treatment defect rather than a bulk-scheme one.
+That is a supporting citation for a claim section 13 already establishes on its own evidence,
+not a diagnosis.
+
+### 16.3 The two companions, both still unread and both flagged
+
+- **Zhao 2019 on nodal density oscillation predicting "refinement makes it worse".** Section
+  15.2 measured the opposite: refinement makes it monotonically BETTER in all six
+  specifications tried. **So that mechanism is contradicted in sign by my data before I have
+  read it**, which is a reason to read it carefully rather than a reason to skip it: a
+  mechanism my data contradicts is more informative than one it merely permits.
+- **Got09b on free-surface misidentification producing spurious pressure up to 3x analytic
+  in a hydrostatic tank.** That is d11-accessor's column, not my sphere. But note their
+  1f98170 measured the ambient pressure field as CLEAN, g64 -0.6679 percent and g96 -0.7295
+  with blocked SEs of 3.3090 and 1.9954, both stationary and inside band. **A 3x spurious
+  pressure is not present in their column**, so if Got09b's mechanism were live in this
+  solver their measurement would have found it. **That is a candidate their data already
+  bounds out**, and it should be checked against their numbers before anyone spends a run on
+  it.
+
+### 16.4 The pattern across three relays tonight, since it is now three
+
+Wal07 claim (a) was not in the paper. Wal07's `O(h)` was a figure reading, not a stated
+result, and the paper's own analytic reference says `h^2`. Ami15's "boundary treatment named
+as the cause" is a comparison, not an attribution, and its scope is SPH, dummy particles and
+a stagnation jet. **In all three the direction survived and the specificity did not**, and in
+all three the failure was the same: a headline carried with its confidence and without its
+scope. The sender flagged this themselves before I checked, which is why the check was cheap.
