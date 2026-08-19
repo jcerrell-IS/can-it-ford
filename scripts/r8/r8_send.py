@@ -26,6 +26,7 @@ import argparse
 import hashlib
 import json
 import os
+import re
 import subprocess
 import sys
 import time
@@ -107,6 +108,17 @@ def main():
     if path != row["worktree"]:
         sys.exit(f"REFUSED: pane {name} is in '{path}' but slot {a.slot} owns "
                  f"'{row['worktree']}'. Fix the pane, do not send.")
+
+    # The pane must be running CLAUDE, not a bare shell. Measured 2026-08-19: nine
+    # sessions failed to start because their --session-id was already used, leaving
+    # a zsh prompt in each window. The sender's cwd check passed, so 4 KB of markdown
+    # was pasted into a SHELL and executed line by line ("zsh: command not found:
+    # --seed"). Prompt text contains backticks and redirects, so this is arbitrary
+    # code execution, not just noise. Checking the pane's foreground command closes it.
+    if not (("claude" in cmd) or cmd == "node" or re.match(r"^[0-9]+\.[0-9]+\.[0-9]+$", cmd)):
+        sys.exit(f"REFUSED: pane {name} is running '{cmd}', which is not a Claude "
+                 "session. Sending would paste the prompt into a shell and execute it. "
+                 "Relaunch the slot first.")
 
     # Idle check via the watcher's own view.
     if not a.force:
