@@ -52,7 +52,7 @@ def caption_composite(sc, im, a):
     W, H = im.size
     pad, lh = int(W * 0.016), int(W * 0.0142)
     vs = sc.get("vehicles", [])
-    bar = lh * (4 + len(vs)) + pad * 2
+    bar = lh * (5 + len(vs)) + pad * 2
     out = Image.new("RGB", (W, H + bar), (14, 15, 17))
     out.paste(im, (0, 0))
     d = ImageDraw.Draw(out)
@@ -74,16 +74,23 @@ def caption_composite(sc, im, a):
                   ph.get("dx", 0.0), "{:,}".format(v.get("hull_verts", 0))),
                font=fs, fill=(176, 180, 186))
     d.text((pad, H + pad + lh * (2 + len(vs))),
+           "MESH LIMIT, NOT A RENDER DEFECT: the Rogue and Silverado hulls are "
+           "Poisson reconstructions and are the best available; they deviate 2.8x "
+           "and 3.3x more than the Yaris from their own smoothed form, so they look "
+           "softer. Rendered with no water at all they are equally soft.",
+           font=fs, fill=(206, 186, 166))
+    d.text((pad, H + pad + lh * (3 + len(vs))),
            "ROAD: crowned section from simulation/road_geometry.road_profile, width "
            "%.1f m, carriageway %.1f m, cross slope %.3f. The runs used a FLAT floor, "
            "so the crown is PRESENTATIONAL; read no depth off it."
            % (sc.get("road_width_total", 0.0), sc.get("road_carriageway", 0.0),
               sc.get("road_cross_slope", 0.0)),
            font=fs, fill=(176, 180, 186))
-    d.text((pad, H + pad + lh * (3 + len(vs))),
+    d.text((pad, H + pad + lh * (4 + len(vs))),
            "ALSO PRESENTATIONAL: vehicle spacing, the flat water between and beyond "
            "the patches (%.4f m apart in height, three runs at three depths), and "
-           "all optics. No wheels, no suspension, no rolling degree of freedom."
+           "all optics, the buildings and the road's longitudinal grade. No wheels, "
+           "no suspension, no rolling degree of freedom."
            % sc.get("surround_spread_m", 0.0),
            font=fs, fill=(176, 180, 186))
     out.save(a.out)

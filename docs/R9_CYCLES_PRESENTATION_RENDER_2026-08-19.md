@@ -507,3 +507,52 @@ already moved 72 mm.
 **No adversarial review.** The physics-skeptic subagent is dead fleet-wide this round,
 so every number in this document is UNREVIEWED. Each is reproducible from the commands
 recorded here.
+
+## 15. The city, and a confound in the comparison frames
+
+### 15.1 Paint colour changes how much mesh defect a viewer sees
+
+Rendering the Rogue in dark blue made its surface noise far more obvious than the
+earlier pale salmon did: a dark glossy finish shows every dent, a pale one fills them
+in. That is not a rendering subtlety, it is a confound. **Vary the paint across a
+comparison set and a viewer will read a paint choice as a mesh-quality difference.**
+
+So the three per-class frames now hold paint FIXED and say so in the caption, while
+the street scene uses three different colours because it is a scene rather than a
+comparison. Whoever next builds a figure comparing vehicles should hold every
+appearance parameter fixed across the set for the same reason, not just paint.
+
+### 15.2 The city is procedural, and the facade took four attempts
+
+No urban HDRI exists on this machine and downloading one reopens a licence question,
+so the street is authored: massed boxes on the clear-sky HDRI already in `assets/`.
+The buildings carry nothing measurable.
+
+Three of the four facade attempts produced a literal checkerboard test pattern, and
+each failed differently:
+
+1. **Object-space texture coordinates.** Object coordinates run -0.5..0.5 over a cube
+   whatever its scale, so a fixed cell count put the same number of windows across a
+   7 m building and a 21 m one: window size grew with the building. **Any texture on
+   object coordinates after a non-uniform scale has this bug.**
+2. **World-space, but a second regular grid choosing which windows were lit.** A
+   regular mask over a regular grid reads as the coarser of the two, so the 6 m lit
+   grid was the pattern the eye actually saw.
+3. **Lit windows at all.** The world is a daytime clear sky; interior lighting is
+   wrong on the physics of the scene, and at this exposure a lit window competes with
+   the sun.
+4. **A Checker cannot be a window grid.** Checker alternates in every axis, so every
+   cell is either window or wall and there is no wall BETWEEN windows. A window grid
+   is two independent one-dimensional duty cycles, 62 percent glazed horizontally at
+   a 1.7 m pitch and 59 percent at a 3.4 m floor height, which is what finally worked.
+
+One further thing that had to change with the environment and would not have been
+guessed: a clear-sky HDRI with no ground carries much less total radiance than a
+treeline one, so swapping the file left the scene badly under-lit until the world
+strength was raised. `--hdri-strength` exists for that reason.
+
+### 15.3 What is still not fixed, deliberately
+
+The patch rectangles. `922582 r9_render_motion` and `922593 r9_crowned_road` are the
+fix, they are queued, and hand-tuning the surround further would be building
+scaffolding for a problem that is about to stop existing.

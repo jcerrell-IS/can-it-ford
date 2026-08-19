@@ -74,11 +74,20 @@ def parse():
                         "the simulated patch does not read as a floating slab. "
                         "PRESENTATIONAL: it carries no data, see mat_far_water().")
     p.add_argument("--far-reach", type=float, default=240.0)
+    p.add_argument("--city", type=int, default=0,
+                   help="number of massed buildings PER SIDE. PRESENTATIONAL.")
+    p.add_argument("--city-setback", type=float, default=13.0)
+    p.add_argument("--city-reach", type=float, default=95.0)
     p.add_argument("--cam-tgt-z", type=float, default=0.0,
                    help="metres above the road/floor the camera aims at (0 = 0.62)")
     p.add_argument("--far-inset", type=float, default=0.10,
                    help="metres the surround overlaps INTO the simulated patch, "
                         "to close the ragged-boundary slot. See main().")
+    p.add_argument("--hdri-strength", type=float, default=1.0,
+                   help="world background strength. A clear-sky HDRI with no ground "
+                        "carries much less total radiance than a treeline one, so "
+                        "swapping environments needs this re-set, not just the file "
+                        "changed.")
     p.add_argument("--hdri-rot", type=float, default=-38.0,
                    help="degrees, rotation of the environment about z")
     p.add_argument("--wet", type=float, default=0.55,
@@ -391,6 +400,117 @@ def far_water_multi(cx, cy, zlev, floor, rects, reach):
     return ob
 
 
+def mat_facade(seed):
+    """A daylight building facade: pale render wall with dark reflective glazing.
+
+    TWO EARLIER VERSIONS WERE BOTH A CHECKERBOARD TEST PATTERN, and both taught
+    something.
+
+    v1 mapped the windows in OBJECT space. Object coordinates run -0.5..0.5 over the
+    cube whatever its scale, so a fixed cell count put the same number of windows
+    across a 7 m building and a 21 m one: window size grew with the building. Any
+    texture on object coordinates after a non-uniform scale has this bug.
+
+    v2 fixed the size by driving the grid from world POSITION, and still looked like
+    a test pattern, because a second coarse grid picking which windows were lit was
+    itself regular and at 6 m it was the pattern the eye actually saw. A regular
+    mask over a regular grid reads as the coarser of the two.
+
+    v3 drops the lit windows entirely. The world here is a daytime clear sky, so
+    interior lighting is wrong on the physics of the scene as well as ugly: at this
+    exposure a lit window competes with the sun. Daylight glazing is simply DARK and
+    reflective against a paler wall, which needs no second grid and cannot produce a
+    checkerboard because the two materials are close in value.
+    """
+    m = bpy.data.materials.new("Facade%d" % seed)
+    nt, out = nodes(m)
+    b = principled(nt)
+    wall = 0.16 + 0.10 * ((seed * 37) % 5) / 4.0
+    b.inputs["Roughness"].default_value = 0.80
+
+    # A CHECKER CANNOT BE A WINDOW GRID, which is what the first three attempts
+    # missed. Checker alternates in every axis, so it is a chessboard: every cell is
+    # either window or wall and there is no wall BETWEEN windows. Real glazing is a
+    # grid of openings separated by spandrel, so the mask has to be built from two
+    # independent one-dimensional duty cycles, not from an alternation. Horizontal
+    # spacing is taken from y because these facades face across the road, which runs
+    # along y; the end walls get stripes instead and are barely in view.
+    geo = nt.nodes.new("ShaderNodeNewGeometry")
+    sep = nt.nodes.new("ShaderNodeSeparateXYZ")
+    nt.links.new(geo.outputs["Position"], sep.inputs["Vector"])
+
+    def mth(op, src=None, v1=None, v2=None, v3=None):
+        n = nt.nodes.new("ShaderNodeMath")
+        n.operation = op
+        if src is not None:
+            nt.links.new(src, n.inputs[0])
+        if v1 is not None:
+            n.inputs[0].default_value = v1
+        if v2 is not None:
+            n.inputs[1].default_value = v2
+        if v3 is not None:
+            n.inputs[2].default_value = v3
+        return n
+
+    wy = mth("WRAP", src=sep.outputs["Y"], v2=1.7, v3=0.0)
+    my = mth("LESS_THAN", src=wy.outputs[0], v2=1.05)      # 62 pct glazed
+    wz = mth("WRAP", src=sep.outputs["Z"], v2=3.4, v3=0.0)
+    mz = mth("LESS_THAN", src=wz.outputs[0], v2=2.0)       # 59 pct floor height
+    win = mth("MULTIPLY", src=my.outputs[0])
+    nt.links.new(mz.outputs[0], win.inputs[1])
+
+    col = nt.nodes.new("ShaderNodeMixRGB")
+    col.inputs["Color1"].default_value = (wall, wall * 0.97, wall * 0.93, 1.0)
+    col.inputs["Color2"].default_value = (0.030, 0.036, 0.046, 1.0)
+    nt.links.new(win.outputs[0], col.inputs["Fac"])
+    nt.links.new(col.outputs[0], b.inputs["Base Color"])
+
+    rgh = nt.nodes.new("ShaderNodeMix")
+    rgh.data_type = "FLOAT"
+    rgh.inputs[2].default_value = 0.82
+    rgh.inputs[3].default_value = 0.16
+    nt.links.new(win.outputs[0], rgh.inputs[0])
+    nt.links.new(rgh.outputs[0], b.inputs["Roughness"])
+    nt.links.new(b.outputs[0], out.inputs["Surface"])
+    return m
+
+
+def add_city(cx, cy, base_z, setback, count, reach):
+    """Massed roadside buildings, both sides, deterministic.
+
+    PRESENTATIONAL in full: nothing here is simulated, nothing may be measured off
+    it, and no building interacts with the water beyond standing in it. It exists
+    because the scene is a flooded ROAD and every frame so far has read as a lake in
+    a field, which is a statement about the setting the simulation never made either
+    way.
+
+    Deterministic from the index rather than random, so a re-render is the same city
+    and two frames of a sequence cannot disagree about where a building is.
+    """
+    made = 0
+    for side in (-1, 1):
+        for i in range(count):
+            k = i * 7919 + (0 if side < 0 else 104729)
+            t = (i + 0.5) / count
+            y = cy - reach + 2.0 * reach * t + ((k % 13) - 6) * 0.9
+            w = 7.0 + (k % 11) * 1.3
+            d = 8.0 + ((k // 3) % 9) * 1.6
+            hgt = 7.0 + ((k // 7) % 13) * 2.4
+            gap = setback + ((k // 5) % 7) * 1.1
+            x = cx + side * (gap + 0.5 * w)
+            bpy.ops.mesh.primitive_cube_add(size=1.0,
+                                            location=(x, y, base_z + 0.5 * hgt))
+            ob = bpy.context.object
+            ob.scale = (w, d, hgt)
+            ob.name = "Bldg_%d_%d" % (side, i)
+            ob.data.materials.append(mat_facade(k % 97))
+            made += 1
+    print("[cycles] city: %d massed buildings, setback %.1f m from the crown, over "
+          "%.0f m of road. PRESENTATIONAL, nothing measurable." %
+          (made, setback, 2 * reach))
+    return made
+
+
 def mat_ground(asphalt_dir, wet, water_z=None, markings=None):
     """Asphalt, ROUGH, and wet only where it is actually under water.
 
@@ -673,8 +793,9 @@ def main():
         wnt.links.new(tc.outputs["Generated"], mp.inputs["Vector"])
         wnt.links.new(mp.outputs[0], env.inputs["Vector"])
         wnt.links.new(env.outputs["Color"], bg.inputs["Color"])
-        bg.inputs["Strength"].default_value = 1.0
-        print("[cycles] world HDRI: %s" % Path(a.hdri).name)
+        bg.inputs["Strength"].default_value = a.hdri_strength
+        print("[cycles] world HDRI: %s at strength %.2f, rotated %.0f deg"
+              % (Path(a.hdri).name, a.hdri_strength, a.hdri_rot))
     else:
         bg.inputs["Color"].default_value = (0.28, 0.36, 0.48, 1.0)
         bg.inputs["Strength"].default_value = 1.6
@@ -723,6 +844,10 @@ def main():
     gw = sc.get("surround_z") or sc.get("still_water_z")
     ground.data.materials.append(
         mat_ground(a.asphalt_dir, a.wet, float(gw) if gw else None))
+
+    if a.city > 0:
+        add_city(cx, cy, float(sc.get("verge_z", floor)),
+                 a.city_setback, a.city, a.city_reach)
 
     # ---- vehicles and their water -----------------------------------------
     paint = tuple(float(x) for x in a.paint.split(","))
