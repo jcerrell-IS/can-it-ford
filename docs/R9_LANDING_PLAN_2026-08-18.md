@@ -2146,3 +2146,72 @@ merged work, and it leaves the remote untouched. **Section 9.4's step 8 stop sti
 5.5's precondition zero still stands: a merge to `main` plus a push writes to the public
 Hugging Face Space as a side effect through `sync-to-hub.yml`, with nobody typing an `hf`
 command.**
+
+
+---
+
+## 14. EXECUTION CARD. Read only this. Nothing above it is needed to run the first merge.
+
+**Revision 8, 2026-08-20 01:00 BST. Re-verified at tip `03d2bd6`, ahead 88, behind 5.
+NOT EXECUTED. Requires a go.**
+
+### THE FIRST MERGE
+
+```
+git -C /Users/josie/can-it-ford checkout claude/add-ci-checks
+git -C /Users/josie/can-it-ford merge origin/main
+```
+
+**One line each, as asked:**
+
+- **What it is:** `origin/main` merged INTO `claude/add-ci-checks`. This direction only. It moves no remote and cannot lose merged work.
+- **Why it is first:** it is the only step that closes the *behind* half, which has read **5 at every one of seven measurements** while ahead went 64 to 88.
+- **What it unblocks:** correctness of all five remaining conflicted merges, each of which is otherwise resolved against a base missing three CI workflow fixes and the public L1 physics fix.
+- **Risk:** none measured. **CLEAN at every tip this document has ever checked**, including `03d2bd6` at 00:58.
+- **Size:** 7 files, listed below. No hook fires; a clean merge never reaches `pre-commit`.
+- **Decisions required:** zero. No `--no-verify`, no resolution, no judgment call.
+- **Reversible:** yes, `git reset --hard ORIG_HEAD` before anything else touches the branch.
+- **What it does NOT do:** it does not push, does not touch `main`, does not write to any public surface.
+
+### THE 7 FILES IT BRINGS IN
+
+```
+.github/workflows/physics-consistency-review.yml    CI   (#14)
+.github/workflows/sync-to-hub.yml                   CI   (#10, #12)
+analysis/wandb_log_gated_runs.py                         (#11)
+hf_space/README.md                                  public Space  (#11)
+hf_space/app.py                                     public Space  (#11, the L1 joint-rule fix)
+vercel.json                                         public web    (#13)
+web/index.html                                      public web    (#13)
+```
+
+### VERIFY IT LANDED, three commands, before doing anything else
+
+```
+git -C /Users/josie/can-it-ford rev-parse HEAD^2          # must equal origin/main's live SHA
+git -C /Users/josie/can-it-ford rev-list --left-right --count origin/main...HEAD   # behind must be 0
+git -C /Users/josie/can-it-ford ls-tree HEAD -- hf_space/app.py                     # must exist
+```
+
+**Verify with `HEAD^2`, never with a line count.** Re-derive `origin/main` live with
+`git ls-remote origin refs/heads/main` at the moment of merging; do not use the SHA printed in
+this document.
+
+### STOP AFTER THIS
+
+The next merge is step 2, `r8-register`, and it CONFLICTS. Do not chain. Section 13 has the
+order; section 3 has each resolution.
+
+### ONE RESOLUTION SETTLED SINCE SECTION 13, so it does not have to be reasoned about again
+
+**Step 16, `analysis/classify_failure_modes.py`: take `r9-settle`'s `0861b52`, drop
+`add-ci-checks`'s `38cdbeb`. Nothing is lost.** The coordinator offered this and I confirmed it
+by measurement rather than accepting it. MEASURED: base 336 lines, `add-ci-checks` 344,
+`r9-settle` 358. Both sides independently fixed the same stale 9.80665 gravity comment, one day
+apart. `r9-settle`'s block is the superset in substance: it names `e495b56`, the regeneration of
+both artifacts, `core/solver.py:167-169`, AND the one surviving dead-code assignment at
+`analysis/viability_dashboard_scaffold.py:11`, which the other also names, **plus a caveat the
+other lacks**: that a file-level or occurrence-level grep returns a larger number which does not
+refute the one-assignment claim, so state the predicate. The only content unique to `38cdbeb` is
+the provenance note that register row B7 sat OPEN and UNOWNED while already fixed, which belongs
+on the board rather than in a docstring.
