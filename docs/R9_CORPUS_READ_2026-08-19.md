@@ -41,23 +41,52 @@ they predict OPPOSITE things:
 | channel | prediction under a PPC sweep at fixed grid |
 |---|---|
 | volumetric locking (Zha22d) | error RISES with PPC, and is insensitive or adverse to grid refinement |
-| velocity-projection bias (Wal07) | error FLAT in PPC, plateau set by h |
+| velocity-projection bias (Wal07) | error FLAT in PPC, plateau set by the grid |
 
-## 2. The velocity projection carries a constant bias for a FIXED body
+## 2. The velocity projection carries a GRID-SET plateau
 
 Wallstedt and Guilkey, "Improved Velocity Projection for the Material Point Method",
 CMES 19(3) 223-232, 2007.
 
-The mass-weighted projection is equivalent to trapezoidal integration and is exact only
-for linear fields under symmetric particle placement; off-centre particles destroy the
-cancellation. FOR A BODY HELD FIXED the particle distribution relative to the grid is
-static, so the projection error becomes a CONSTANT SYSTEMATIC BIAS rather than noise.
-For non-linear fields, increasing PPC does not remove it: the error reaches a plateau
-scaling roughly as O(h), while the linear-field part converges as PPC^-2 for bilinear
-and PPC^-3 for GIMP. Vshivkov's bound carries one PPC^-2 term and one h^2 term.
+**TWO CLAIMS IN THE FIRST VERSION OF THIS SECTION ARE WITHDRAWN, 2026-08-19, and the
+withdrawal is the coordinator's own.** d21-jobb read the paper directly rather than
+taking the relay and caught both, in commit d826c8a on claude/r9-jobb-route.
 
-Our force accessor is accumulated projection impulse divided by dt on a fixed body,
-which is exactly the configuration this applies to.
+WITHDRAWN (a): "FOR A BODY HELD FIXED the projection error becomes a CONSTANT SYSTEMATIC
+BIAS rather than noise" IS NOT IN THE PAPER. The paper says accuracy "is strongly
+dependent on particle density and location", and its section 2 carries the OPPOSITE
+emphasis, that as a simulation evolves "particles will generally move into a less
+favorable configuration". It would not have applied cleanly here in any case: the body is
+fixed but the WATER particles move. That sentence came from a PDF-reading subagent's own
+reasoning section, not from the paper's text, and was relayed onward as the paper's
+finding. It is the exact one-to-three-removes failure this document was written to expose.
+
+WITHDRAWN (b): the plateau's "O(h)" scaling is NOT a stated result. The plateau itself is
+real and quoted correctly. Its scaling was measured off Figure 10 by eye; the paper's own
+analytic reference is Vshivkov 1996, whose grid term is h^2. Say GRID-SET, never O(h).
+
+WHAT STANDS, and it is enough. The mass-weighted projection is equivalent to trapezoidal
+integration and is exact only for linear fields under symmetric particle placement;
+off-centre particles destroy the cancellation. For non-linear fields, increasing PPC does
+not remove the error: it reaches a PLATEAU set by the grid, while the linear-field part
+converges as PPC^-2 for bilinear and PPC^-3 for GIMP. Vshivkov's bound carries one PPC^-2
+term and one h^2 term.
+
+MEASURED AGAINST OUR OWN SOLVER, and this is the part that matters. d21 read the accessor
+from source: core/solver.py "force = sum m*(v_free - v_new) / dt", with m from
+state.grid_m and v_free from state.grid_v_out, so BOTH inputs are outputs of the
+mass-weighted P2G projection and the force is NOT a pressure integral over the wetted
+surface. Their job 923239 then swept PPC at fixed grid over 3.375, 8, 27 and 64 particles
+per cell, up to 4,784,798 particles, holding dx, dt, substeps, SDF, band and scene fixed:
+
+  PPC     3.375    8.000   27.000   64.000
+  k_fit   0.687    0.726    0.727    0.829
+
+Log-log slope in PPC over the 8-to-64 span is +0.0596. PPC^-2 would require -2 and predict
+a 98.4 percent fall. THE ERROR IS FLAT AND IF ANYTHING RISES, which is the pre-registered
+plateau signature. Honest scatter, in their words: k spans 13.5 percent about its mean
+across the three resolved arms, so the claim is flat to within its own scatter and
+certainly not converging, not "constant".
 
 ## 3. Quadrature error is NOT the explanation, and that is worth having
 
