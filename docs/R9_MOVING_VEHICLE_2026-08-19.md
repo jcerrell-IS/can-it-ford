@@ -1317,3 +1317,75 @@ They agree to **0.18 percent on S and 0.13 percent on load**. So the collapse
 from S ~1.07 at g64 to S ~0.61 at g128 is not a single-draw fluke, and neither
 is the 47 percent drop in load. The finest rung is still only two draws, and the
 queued batch job takes it to five.
+
+## T16. Which window the headline PAIR belongs to, answered, and the confound cleared first
+
+Raised by slot d18-platform, who measured that the headline pair inverts and
+correctly said it was not theirs to close. Answered here with the window named,
+as d15-settle's rule requires.
+
+### The confound first: `hull_y_m` empty in `c3full`
+
+`hull_y_m` is empty in exactly twelve arms and they are all from the FIRST
+session: `c0wrongdt`, `c1ctrl`, `c2arc`, `c3full`, `c3res`, `c4ground`,
+`c4rest` and `seed0` to `seed4`. **Every arm run since records it, and records
+the same value**, 4.710871156863869, across `M1`, `M2`, `M3`, `M4`, `M5`, `M6`,
+`M8`, `M9` and both BC controls. So the empty field is a RECORDING gap in the
+older runs, not a placement difference between them. It does mean hull placement
+in `c3full` cannot be verified from the record, only assumed, so `c3full` is not
+used below.
+
+### The measurement
+
+The pair is pure broadside (all water, the stationary-vehicle case) against the
+-22.5 deg split at the same `|v_rel|` = 3.0.
+
+| arm | frames / discard | retained | seeds | broadside N | split N | ratio |
+|---|---|---|---|---|---|---|
+| `seed*` | 60 / 20 | 40 | 5 | 4418.2 | 6144.7 | **1.391x** |
+| `L1s*` | 400 / 250 | 150 | 5 | 1864.4 | 3842.4 | 2.061x |
+| `U1s*` | 400 / 250 | 150 | 5 | 1864.2 | 3842.7 | 2.061x |
+| `M3` | 400 / 250 | 150 | 1 | 1882.3 | 4219.5 | 2.242x |
+| `M5m3.0s*` | 400 / 250 | 150 | 5 | 1876.1 | 4208.7 | **2.243x** |
+
+### The answer
+
+**The ratio belongs to the LATE window: frames 250 to 400 of 400, 150 frames
+retained, which is the developed-flow window.** Stated with that window it is
+**2.06x** at the `bc_per_frame` 2 setting the original figure came from, and
+**2.24x** at the applied-4 setting used by every arm run tonight.
+
+**I could not reproduce an inversion.** The broadside cell carries the lower
+load in every window I hold, 1.391x, 2.061x and 2.243x, all above 1. If
+d18-platform's inversion came from a different window, depth or pair, the
+specific window should be named and I will re-run against it rather than argue
+from mine.
+
+**What IS true, and it is why the pair should never be quoted bare.** The ratio
+moves from 1.391x to 2.243x, a 61 percent change, purely with the window, and
+the absolute forces move further: the broadside cell reads 4418.2 N over the
+early window against 1864.4 N over the late one, a factor of 2.4. The early
+window retains frames 20 to 60, which is transient; the late window retains 250
+to 400, which is developed. Both cells fall as the flow develops and the
+broadside cell falls further, which is what raises the ratio.
+
+**Restated rather than withdrawn: the pair is 2.24x over the developed-flow
+window, frames 250 to 400 of 400, at g64 with applied `bc_per_frame` 4, five
+seeds.** Any use of it must carry that window.
+
+**The general S result is NOT affected by any of this**, and this is the
+important part. S is computed within a single arm at a single window, so a
+window change rescales the cells it compares together. Measured, S at
+`|v_rel|` 3.0 is 1.0681 (g64, five seeds, sd 0.0026), 1.0076 (g96, four seeds),
+0.6065 and 0.6076 (g128, two seeds), and 1.0683 to 1.1872 across three BC rates
+at fixed grid. It is between 0.61 and 1.19 everywhere, against a fixed-seed
+repeatability floor of 0.076 percent. The claim that v_car and v_water cannot be
+collapsed into one speed does not rest on the pair.
+
+**On convergence, since the sequence above is not converging.** Grid refinement
+is not expected to converge a transient quantity (Syamlal, Celik and Benyahia
+2017, `10.1002/AIC.15868`), so the g96-to-g128 fall should not be read as a
+solver defect. A convergence claim would need a time-averaged observable over a
+demonstrated-stationary window with a GCI, and none of the windows above has
+been shown stationary. That is stated so a reader does not infer divergence is a
+bug, and it is not claimed either way here.
