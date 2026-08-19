@@ -1,6 +1,28 @@
 #!/usr/bin/env python3
 """Render the dumped moving-vehicle frames to PNGs, with an on-frame caption.
 
+ENCODING ON VISTA, READ THIS BEFORE REACHING FOR ffmpeg. Measured 2026-08-19:
+
+  /usr/bin/ffmpeg is PRESENT ON THE PATH AND DOES NOT RUN, on the login node and
+  on a gh compute node alike: "error while loading shared libraries:
+  libunwind.so.8". `which ffmpeg` therefore PASSES while every invocation fails,
+  which is presence mistaken for function.
+
+  The working binary is the one bundled with imageio_ffmpeg, a static build:
+  .venv/lib/python3.12/site-packages/imageio_ffmpeg/binaries/ffmpeg-linux-aarch64-v7.0.2
+
+  That build still fails with libx264 unless threading is forced off. It reports
+  "using cpu capabilities: ARMv8 NEON SVE SVE2" and then "Error while opening
+  encoder", writing a ZERO-BYTE mp4. Adding `-threads 1 -x264-params threads=1`
+  fixes it. Without it the encode produces a file, so a check that only tests for
+  the file existing would pass on an empty video.
+
+  Use the image2 glob reader, `-pattern_type glob`, not `-f concat`: the concat
+  demuxer expects timestamped streams and gives images invalid PTS. And do not
+  use `-start_number` with a numeric pattern, because image2 stops at the first
+  missing index and silently yields a SHORTER video that still looks continuous.
+
+
 WHY THE CAPTION IS ON THE FRAME AND NOT IN A README. A rendered fluid image is
 the most persuasive artefact this project produces and the least self-describing:
 nothing in a picture of water says which parts came out of the solver, which were

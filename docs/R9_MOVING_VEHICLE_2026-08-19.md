@@ -1852,3 +1852,44 @@ count is checkable after the fact.
 One frame renders in about 1.5 s measured on the node, so 250 frames across both
 cells is about 7 minutes. The encode job asks **25 minutes**, that plus a margin,
 rather than the hour a guess would have taken.
+
+### T26a. Encoding on Vista: three failures, and one of them writes a file
+
+The videos exist. Getting them out took three distinct failures worth recording,
+because the first two both LOOK like success.
+
+**1. `/usr/bin/ffmpeg` is on the PATH and does not run**, on the login node and
+on a `gh` compute node alike: `error while loading shared libraries:
+libunwind.so.8`. My tooling check was `which ffmpeg`, which passed. That is
+presence mistaken for function, and it is the same shape as the round's other
+instrument failures. The working binary is the static build bundled with
+`imageio_ffmpeg`.
+
+**2. My own script reported success it never had.** The sbatch ran
+`ffmpeg ... 2>&1 | tail -3` and then `echo "RC=$?"`, which captures the exit
+status of **`tail`**, not of ffmpeg. So the log printed `RC=0` and
+`ENCODE COMPLETE` while Slurm recorded the job **FAILED, ExitCode 2:0**, and no
+mp4 existed. A pipeline's `$?` is the last command's.
+
+**3. libx264 fails on this ARM build unless threading is forced off.** It reports
+`using cpu capabilities: ARMv8 NEON SVE SVE2`, then `Error while opening
+encoder`, and **writes a zero-byte mp4**. `-threads 1 -x264-params threads=1`
+fixes it. Note the failure mode: a check that tested only whether the output file
+existed would have passed on an empty video.
+
+Also: use the image2 **glob** reader, not `-f concat`, which expects timestamped
+streams and gives images invalid PTS; and never `-start_number` with a numeric
+pattern, which stops at the first missing index and silently yields a shorter
+video that still looks continuous.
+
+### The delivered files, counted twice on two machines
+
+| file | frames | duration | size |
+|---|---|---|---|
+| `can_it_ford_moving_2p2ms.mp4` | **150** | 5.000 s | 7.66 MB |
+| `can_it_ford_moving_4p5ms.mp4` | **100** | 3.333 s | 5.81 MB |
+
+Both 1280x960 at 30 fps. The PNG count and the encoder's own reported frame
+count were compared on the node (`match=YES` for both), and the frame counts were
+then re-derived on the Mac with a **different ffmpeg build** via
+`ffprobe -count_frames`. 150 requested, 150 dumped, 150 rendered, 150 encoded.
