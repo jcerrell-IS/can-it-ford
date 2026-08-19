@@ -1858,3 +1858,101 @@ Required because the answer differs by tree, as asked. **[read]**
   `claude/add-ci-checks`.
 - **Neither was measured on `origin/main`**, where `analysis/research_index.py` does
   not exist at all, so **none of this is reproducible from a fresh clone of main**.
+
+---
+
+# ADDENDUM 13: THE DECISION. CANONICAL BIB, AND WHAT MUST BE CITED.
+
+## 48. SELF-CORRECTION FIRST: I MEASURED AGAINST TWO FILES, NEITHER OF WHICH SHIPS
+
+Section 41 reported all fourteen prior-art works `\cite`d zero times, measured
+against `paper/conference_101719.tex` and `overleaf_sync/conference_101719.tex`.
+**Neither of those is the file the paper builds from**, so two of my claims were
+measured on the wrong artifact. Corrected live: **[read]**
+
+```
+overleaf/main tree:  conference_101719_1.tex        <- note the _1
+                     can_it_ford_references_IEEE.bib  (REPO ROOT, 15 entries)
+```
+
+| claim in section 41/43 | corrected |
+|---|---|
+| "all fourteen are `\cite`d zero times" | **13 of 14. `shah2018` IS cited in the shipped paper.** |
+| "one key points at two different papers" in a deliverable | **True, but NOT in the deliverable.** `alqadami2022` appears **0 times** on `overleaf/main`, in tex and bib alike. |
+
+**I over-stated the collision's severity and it was relayed onward at that
+severity, so I am correcting it plainly.** It is a real landmine, `paper/` and
+`overleaf_sync/` disagree and whoever merges them will silently pick one, but **it
+is a defect in staging files, not in the submitted paper.** Downgrade from
+"correctness defect in a deliverable" to "merge hazard in two staging copies".
+This is exactly the tree-provenance failure I wrote section 47 about and then
+committed anyway.
+
+## 49. THE CANONICAL BIBLIOGRAPHY IS `overleaf/main:can_it_ford_references_IEEE.bib`
+
+Measured across every ref I can reach: **[read]**
+
+| ref | path | entries |
+|---|---|---|
+| **`overleaf/main`** | **`can_it_ford_references_IEEE.bib`** (repo root) | **15** |
+| `origin/main` | `paper/...bib` | 21 |
+| `origin/main` | `overleaf_sync/...bib` | 21 |
+| `claude/r9-priorcode`, `add-ci-checks` | `paper/...bib` | **42** |
+| `claude/r9-priorcode`, `add-ci-checks` | `overleaf_sync/...bib` | 21 |
+
+**The decision, with the reasons, so it can be overturned on evidence rather than
+taste:**
+
+1. **`overleaf/main` is the only ref carrying the tex the paper builds from**,
+   `conference_101719_1.tex`. The two local `conference_101719.tex` files are not it.
+2. **Its bib is the only one consistent with the shipped document.** 15 entries, 14
+   distinct `\cite` keys in the tex, all 14 present in the bib, exactly one entry
+   never cited (`xiong2024`, which BibTeX therefore drops). Verified live tonight,
+   and it reproduces CLAUDE.md's independently recorded ladder exactly.
+3. **`paper/...bib` is not stable across refs**: 21 entries on `origin/main`, 42 on
+   two unmerged branches. A file that differs by 21 entries depending on checkout
+   cannot be canonical.
+
+**So: `paper/` and `overleaf_sync/` are STAGING. Neither is authoritative.** Changes
+must land in `overleaf/main:can_it_ford_references_IEEE.bib` to reach the paper.
+Note the standing constraint that `overleaf/main` shares no ancestor with `origin`,
+so `git push overleaf main` **overwrites rather than merges**, and a fresh Overleaf
+token is needed because the old one was taken off local disk but never revoked.
+
+## 50. WHAT THE SHIPPED PAPER ACTUALLY CITES FROM THE PRIOR ART: ONE WORK
+
+The 15 shipped keys are: `thorpe2026pvwm hsiao2025nerfmpm kerbl20233dgs
+xie2023physgaussian shand2011arr smithmodrafelder2019 shah2018 xia2014 azhar2023
+xiong2024 ccsa2016yaris heydinger1999sae nws_tadd genesis2024 fred2026`.
+
+**Exactly one of my fourteen prior-art works is in it: `shah2018`
+(`10.1051/matecconf/201820307003`), and it is cited.** The other **thirteen are
+absent from the shipped bibliography entirely**, so they cannot be cited without
+first being added.
+
+## 51. THE DECISION: SIX MUST BE ADDED AND CITED BEFORE SUBMISSION
+
+Ranked. Each is absent from the shipped bib, so each needs a bib entry **and** a
+`\cite`, not just a listing.
+
+| # | work | DOI | why it is non-negotiable |
+|---|---|---|---|
+| 1 | **Lyu 2024** | `10.1016/j.compfluid.2023.106144` | **Entirely particle-based 3D SPH vehicle wading. The closest published method to ours in existence, and absent from the corpus, both bibs and the whole repo.** No sentence calling a particle-based 3D vehicle-water simulation novel survives its existence. |
+| 2 | **He 2026** | `10.1115/1.4071177` | *Simulations **and Experimental Validation*** of vehicle-water interaction. The project's stated novelty is the validation step (L-7). **This is the single largest threat to the contribution and must be distinguished in the text, not merely cited.** |
+| 3 | **Wasfy 2015** | `10.1115/DETC2015-47142` | *Coupled Multibody Dynamics and SPH for Modeling Vehicle Water Fording.* Same problem, particle method, eleven years earlier. |
+| 4 | **Al-Qadami 2022** | `10.1111/jfr3.12828` | Numerical, **moving** vehicles: the regime the moving-vehicle work occupies. |
+| 5 | **Al-Qadami 2021** | `10.1007/s11069-021-04949-6` | **Full-scale experimental.** The external validation target this project does not have, and the natural anchor for L-1's stationary framing. |
+| 6 | **Zhao 2019** | `10.1016/j.compfluid.2018.10.007` | **Not fording prior art, but a live sourcing gap**: it is the source for the in/outflow BC the project implements, and it is absent from the shipped bib. Using a method and not citing it is a worse defect than omitting a competitor. |
+
+**Should add if space permits**, in this order: Khapane 2014, Varshney 2021 and Xin
+2020 as the industrial CFD-fording lineage; Shah 2020 (`10.1111/jfr3.12657`) **with
+its 1:10 scale stated wherever its drive force is quoted**; Pregnolato 2017;
+Azhar 2026 (`10.1111/jfr3.70181`), noting the shipped bib already has an `azhar2023`
+key whose identity I have **not** checked against this DOI and which should be
+checked before adding a second Azhar entry.
+
+**The honest summary for whoever writes the related-work paragraph.** The paper
+currently ships citing **one** work from the vehicle fording and wading literature.
+The literature contains **at least fourteen**. Adding the six above does not weaken
+the contribution; **failing to add them makes the novelty claim unsupportable**, and
+two of them (Lyu, He) constrain how that claim can be phrased at all.
