@@ -2002,3 +2002,147 @@ the `gh run list` summary, and the skill-version check added to the preflight at
 union merge for `SKILL.md` (section 3.4) is mine to land and the reader's finding that the skill
 exists in four states across live worktrees makes it more urgent, not less: **most sessions are
 loading a copy that still asserts a claim `CLAUDE.md` has withdrawn.**
+
+
+---
+
+## 13. THE SEQUENCE. What to merge, in what order, what each unblocks, and the one to do first
+
+**REVISION 7, 2026-08-20 00:55 BST. Nothing here has been executed.** Every row is
+`merge-tree` inside a throwaway hardlinked mirror. No ref moved, nothing was pushed.
+
+**The conflict set has grown from one file to six merges in thirty-one hours**, and two of the
+six appeared in the last six hours. The growth is not noise: it is what happens when nineteen
+branches keep committing against a base that also keeps committing. Re-derive before executing.
+
+### 13.1 The six merges that stop for a human, and what each one costs
+
+| step | branch | conflicts | mechanism | resolution | decision needed? |
+|---|---|---|---|---|---|
+| 2 | `r8-register` | `docs/CANONICAL_CORRECTIONS_REGISTER_2026-08-06.md` | content | **union**, directed | no |
+| 7 | `r8-bc-merge` | `simulation/openchannel_bc.py` | **add/add** | take `61afb193` whole (3.1) | no |
+| 8 | `r8-persistence` | same file, plus `.gitignore` | **add/add** + content | keep `61afb193`; union `.gitignore` then assert `check-ignore` (3.3) | no |
+| 14 | `r9-corpus-bib` | `.claude/skills/research-corpus/SKILL.md` | content | **directed union** (3.4a) | no |
+| 16 | `r9-settle` | `analysis/classify_failure_modes.py` | content | union, both are fixes | no |
+| 19 | `r9-platform` | `hf_space/README.md`, `hf_space/app.py` | content | take `r9-platform`'s `app.py` whole; hand-merge README | no |
+
+**Not one of the six needs a decision from Josie.** That is a change from revision 3, which said
+step 19 did. Section 3.5 and `d18`'s `e11db07` independently establish there is no silent-revert
+path, and I verified `e11db07`'s addition rather than accepting it: because live `app.py` carries
+`import arr_verdict as AV` at module level, **taking `app.py` without `arr_verdict.py` raises
+`ModuleNotFoundError` at build time.** Every wrong resolution of step 19 either preserves the L1
+fix or fails loudly. **A hazard whose failure modes are all loud is a merge, not a decision.**
+
+### 13.2 The two conflicts that are NEW since revision 5, and one of them is being made worse
+
+**Step 2, the register.** MEASURED: base `0efe4f3` 2186 lines, `add-ci-checks` **2232**,
+`r8-register` **3009**. `r8-register` carries `704b6b8` "Merge the register's two lineages by
+entry" plus `ce1cca8`; `add-ci-checks` carries `e81bc9c`, which added **35 lines, all 35 absent
+from `r8-register`**. Union required, neither is a superset.
+
+> **THIS CONFLICT IS WIDENING BY THE HOUR AND THE CAUSE IS FIXABLE TODAY. Register rows are being
+> written directly onto `claude/add-ci-checks` while `claude/r8-register` holds the 3009-line
+> reconciled version. Every such row makes phase 2 harder to land.** Section 2.1 argued
+> `r8-register` must go second to close a silent-corruption window; it was CLEAN then and it is
+> not now. **Write register rows to `claude/r8-register` until it lands, not to
+> `add-ci-checks`.** That is a one-line process change and it stops the bleeding immediately.
+
+**Step 16, `analysis/classify_failure_modes.py`.** `add-ci-checks`'s `38cdbeb` ("The skill-drift
+check compared length, which is the identity test this project's own skill forbids") against
+`r9-settle`'s `0861b52` ("A check that cannot fail is not a check: stationarity reported records
+it never ran"). **Two different repairs to the same file, both in the cannot-evaluate family.**
+Union; neither supersedes the other. Verify against the base, not either parent (3.0).
+
+### 13.3 What each merge unblocks
+
+Ordering is not preference. Four of the merges are prerequisites for something.
+
+- **Phase 1, `origin/main` into `add-ci-checks`, unblocks correctness of every later merge.** It
+  is the only step that closes the *behind* half. Without it every other merge lands on a base
+  missing three CI fixes and the public L1 fix, and any later `hf_space` or `.github` resolution
+  is being decided against a stale opponent.
+- **Step 2 unblocks the register as an authority.** Until it lands, `fork-register-reconcile`
+  merges CLEAN and silently reintroduces duplicate item numbering (2.1). The window is open now.
+- **Step 7 unblocks step 8.** Same path, same resolution; doing 8 first means resolving add/add
+  against the smaller blob.
+- **Step 14 unblocks every session's startup context.** See 13.4.
+- **Steps 16, 19 unblock nothing.** They are leaves. They can go last or be deferred without
+  cost, which is worth knowing when time runs out mid-landing.
+
+### 13.4 The propagation damage that is running right now
+
+MEASURED 2026-08-20 00:53 across the main checkout and all 35 worktrees, by line count of
+`.claude/skills/research-corpus/SKILL.md`:
+
+```
+23  ABSENT        9  152 lines        3  249 lines        1  648 lines
+```
+
+**Four states, and exactly ONE checkout holds the corrected file**: `r9-corpus-bib`, at 648
+lines. Twelve checkouts hold a stale copy and load it at startup. This corroborates `d20-reader`
+from a wider sweep (they measured four states across nine worktrees; I swept 36 and get the same
+four states with different counts, which is expected and is not a disagreement).
+
+`c621931` added a preflight warning so a session is *told* its copy is stale. **A warning is a
+mitigation, not a fix**, and per 12.2(c) coverage of a stale artifact is not the same as
+correcting it. Step 14 is the fix.
+
+### 13.5 The exposure is not closed, it is being re-opened at about 25 commits an hour
+
+The 00:14 bundle verifies: `/Users/josie/can-it-ford-bundles/2026-08-20/canitford-all-refs-0014.bundle`,
+512,913,328 bytes, "complete history", **203 heads**, and **no wave branch is missing from it**.
+That is a genuine improvement on every earlier bundle in this document.
+
+**And it was stale forty minutes later.** MEASURED at 00:54:
+
+```
+9 distinct branches (18 refs incl. worktree HEADs), 17 commits uncaptured
+add-ci-checks 5,  r9-jobb-route 3,  r9-priorcode 2,  r9-settle 2,  and 5 more at 1 each
+```
+
+So the honest statement is not "the exposure was 194 commits and is now closed". It is: **a
+bundle closes the exposure as of its timestamp, and this fleet re-opens it at roughly 25 commits
+per hour.** Bundling is a treadmill, not a fix. **The fix is a remote, and the remote is blocked
+on the rotation question in 5.1, which is Josie's and is still unanswered.**
+
+### 13.6 If only one merge could happen: PHASE 1, `origin/main` into `claude/add-ci-checks`
+
+**State the criterion first, because the answer changes with it.**
+
+- Optimising for **irreversible-loss risk**: no merge helps at all. Only a push does, and that is
+  gated on 5.1. Merge order is the wrong lever for that problem, and it would be dishonest to
+  present any merge as addressing it.
+- Optimising for **stopping active harm**: step 14, the skill (13.4). Twelve checkouts are
+  serving withdrawn claims to live sessions right now.
+- Optimising for **correctness of everything downstream**: phase 1.
+
+**I choose phase 1, on the third criterion, and the deciding argument is asymmetry of
+mitigation.**
+
+The skill damage is real and it is the strongest counter-argument, but **it has a cheap non-merge
+mitigation that already exists**: `c621931` warns at preflight, and any session can read
+`r9-corpus-bib`'s copy directly. The behind-half hazard has **no** mitigation short of the merge.
+You cannot warn your way out of a base that is missing three CI workflow fixes and a public
+physics fix; every downstream resolution is silently decided against the wrong opponent.
+
+Phase 1 is also the only candidate that is **free**:
+
+- **MEASURED CLEAN**, 7 files, at every tip this document has ever measured. It cannot fail.
+- **Zero decisions**, zero hook overrides, no `--no-verify`.
+- It closes the half of the divergence that is **stable and knowable**: 5 at all six measurements,
+  while the ahead half went 64 to 87 (rule B5).
+- It removes the single documented mechanism by which this repo has already lost work: a naive
+  fast-forward or wrong-direction merge on an ahead-and-behind branch, which cost 126 lines once.
+
+**If a second could happen, step 14.** If a third, step 2, and step 2 rises to first place the
+moment anyone writes another register row onto `add-ci-checks`, because that conflict is the only
+one in the set that is actively growing.
+
+### 13.7 What I am NOT recommending, stated so it cannot be read in
+
+I am not recommending that anything be pushed. I am not recommending that `add-ci-checks` go to
+`main`. Phase 1 is `origin/main` **into** the branch, which is the direction that cannot lose
+merged work, and it leaves the remote untouched. **Section 9.4's step 8 stop still stands, and
+5.5's precondition zero still stands: a merge to `main` plus a push writes to the public
+Hugging Face Space as a side effect through `sync-to-hub.yml`, with nobody typing an `hf`
+command.**
