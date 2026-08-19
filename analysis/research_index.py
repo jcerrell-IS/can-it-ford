@@ -133,6 +133,23 @@ def collapse(s: str) -> str:
     return re.sub(r"\s+", " ", s).strip()
 
 
+def norm_doi_field(s: str) -> str:
+    """Normalise a DOI given EITHER bare ('10.1115/1.4071177') or as a URL.
+
+    `norm_doi` below only reads doi.org URLs, because that is the form the
+    markdown reports carry. An API export carries the bare string, and feeding
+    it to `norm_doi` silently returns '' for every paper, which presents as
+    'every record is unjoinable' rather than as a parsing bug. Caught by
+    running the gate on a real 44-paper export, not by review.
+    """
+    s = (s or "").strip()
+    if not s:
+        return ""
+    if s.lower().startswith("10."):
+        return s.lower().rstrip(".,;")
+    return norm_doi(s)
+
+
 def norm_doi(link: str) -> str:
     if not link:
         return ""
@@ -739,6 +756,7 @@ def index_self_defects() -> list:
 # nothing: the builder has no way to see the workspace, so without this the gap
 # is invisible from inside the repo. Re-derive rather than trust:
 #     inspect_deep_searches(workspace_id=..., names=[], status_only=True)
+WORKSPACE_ID = "17299f2a-8dc8-438b-8c84-5abf19395e2c"
 WORKSPACE_SNAPSHOT_DATE = "2026-08-19"
 WORKSPACE_DEEP_SEARCHES = [
     # (name, created, relevant-paper count, ingested-as-slug or None)
@@ -1058,6 +1076,426 @@ def write_census_tsv(res: dict, path: str) -> None:
                                for c in TSV_COLUMNS) + "\n")
 
 
+# ---------------------------------------------------------------------------
+# DEEP-SEARCH SOURCE ADAPTER
+#
+# Why this exists. `REPORTS` above is a hardcoded list of eight local markdown
+# paths. The builder has no directory scan, no glob and no API call, so
+# `--build` cannot discover or reach a deep search that is not already in that
+# literal. Measured 2026-08-19: the workspace holds 20 completed searches and
+# the builder can see 8.
+#
+# The builder is pure standard library and runs outside any MCP session, so it
+# CANNOT call the Undermind API itself. That is the whole reason the fix is an
+# interchange file rather than a client: the fetch has to happen in a session
+# that has the connector, and the build has to happen in a script that does
+# not. This adapter is the file format between those two halves, plus the
+# gates that stop a bad export from silently entering the corpus.
+#
+# Every gate below exists because the corresponding failure was OBSERVED in the
+# live payload on 2026-08-19, not because it seemed prudent.
+# ---------------------------------------------------------------------------
+
+SEARCH_EXPORT_SCHEMA = "canford.deep_search/1"
+SEARCH_EXPORT_DIR = os.path.join(REPO, "data", "deep_searches")
+
+# A Semantic Scholar paper id as it appears in the `link` field: 40 hex chars.
+S2_RE = re.compile(r"semanticscholar\.org/paper/([0-9a-f]{40})")
+
+# The parse defect that produced settling-force#11/#29/#30: a `[link](url)`
+# regex met a report that escapes its brackets, and an ASCE DOI legitimately
+# contains parentheses, so the non-greedy match truncated and left raw markdown
+# in the title. Any export carrying this signature is rejected, not imported.
+MANGLED_TITLE_RE = re.compile(r"\\\[|\[link\]\(")
+
+
+def s2_of(rec: dict) -> str:
+    """Semantic Scholar id for a record, from an explicit field or from `link`.
+
+    The id is already present in the index for 57 of the 60 DOI-less records,
+    sitting in `link`, and nothing has ever joined on it. That is the same
+    shape as the finding this document opens with: the identifier existed and
+    the join used a different field.
+    """
+    s = (rec.get("s2") or "").strip().lower()
+    if re.fullmatch(r"[0-9a-f]{40}", s):
+        return s
+    m = S2_RE.search(rec.get("link") or "")
+    return m.group(1) if m else ""
+
+
+def join_key(rec: dict, slug: str = "", rank: int = 0) -> tuple[str, str]:
+    """(key, kind) under the precedence a merge should actually use.
+
+    DOI first because it is what the repo cites with. Semantic Scholar id
+    second because it is stable across rebuilds and re-rankings. The positional
+    `slug#rank` fallback is LAST and is flagged, because it is not an
+    identifier: re-running a search re-ranks it and every positional key moves.
+    60 of the current 332 records are keyed positionally.
+    """
+    doi = norm_doi_field(rec.get("doi") or "")
+    if doi:
+        return doi, "doi"
+    s2 = s2_of(rec)
+    if s2:
+        return f"s2:{s2}", "s2"
+    return f"{slug}#{rank}", "positional"
+
+
+def validate_search_export(obj: dict, path: str) -> tuple[list, list]:
+    """Gate an export before it can enter the corpus. Returns (errors, warns).
+
+    An error means do not import. A warning means import but record it. The
+    distinction matters: a partially-paged export is unusable, while an
+    upstream metadata smudge is real data that should not be thrown away.
+    """
+    err: list[str] = []
+    warn: list[str] = []
+
+    if obj.get("schema") != SEARCH_EXPORT_SCHEMA:
+        err.append(f"schema is {obj.get('schema')!r}, expected "
+                   f"{SEARCH_EXPORT_SCHEMA!r}")
+    for field in ("workspace_id", "search_path", "slug", "created",
+                  "exported", "n_relevant", "papers"):
+        if field not in obj:
+            err.append(f"missing required field `{field}`")
+    if err:
+        return err, warn
+
+    papers = obj["papers"]
+    slug = obj["slug"]
+
+    # G1. Pagination. inspect_deep_searches pages at 50 and reports the true
+    # total in its header. An export that stopped at one page looks complete
+    # and is not, which is the silent-truncation failure this project has
+    # already published and retracted once.
+    if len(papers) != obj["n_relevant"]:
+        err.append(f"n_relevant is {obj['n_relevant']} but the file carries "
+                   f"{len(papers)} papers: a paged export stopped early")
+
+    if slug in {s for s, _ in REPORTS}:
+        err.append(f"slug `{slug}` collides with a REPORTS slug")
+
+    seen: dict[str, int] = {}
+    for i, p in enumerate(papers, 1):
+        rank = p.get("rank", i)
+        key, kind = join_key(p, slug, rank)
+
+        # G2. Joinability. A record with neither a DOI nor an S2 id can never
+        # be marked cited however often the repo cites it, and would enter the
+        # corpus as a permanent orphan. That is exactly the state of
+        # settling-force#11, #29 and #30 today.
+        if kind == "positional":
+            err.append(f"paper {rank} ({p.get('title','')[:40]!r}) has neither "
+                       "a DOI nor a Semantic Scholar id, so it can never be "
+                       "joined; cited-status is gated on bool(doi) at :396")
+
+        # G3. The parse defect, refused rather than repeated.
+        t = p.get("title") or ""
+        if MANGLED_TITLE_RE.search(t) and "(" not in t[:5]:
+            err.append(f"paper {rank} title carries raw markdown: {t[:60]!r}")
+        if not t.strip():
+            err.append(f"paper {rank} has an empty title")
+
+        # G4. Authors that are really a truncated title. Observed live: the
+        # Undermind record for the 2012 Camry FE model truncates its title at
+        # "...for the 2012 Toyota" and puts "Camry Passenger Sedan" in the
+        # author field. Upstream data, not ours, so it warns and imports.
+        a = p.get("authors") or ""
+        if a and not re.search(r"[,.]| and ", a):
+            warn.append(f"paper {rank} authors {a!r} has no comma, initial or "
+                        "'and'; upstream may have spilled the title into it")
+
+        if key in seen:
+            warn.append(f"paper {rank} duplicates paper {seen[key]} on {key}")
+        else:
+            seen[key] = rank
+
+    if not obj.get("summary", "").strip():
+        warn.append("no `summary`: the search's synthesis is the part the "
+                    "paper index cannot hold, and it is why the vehicle-mesh "
+                    "question was re-derived by hand")
+    return err, warn
+
+
+def parse_search_export(path: str, allow_collision: bool = False) -> dict:
+    """Read one exported deep search into the same record shape as a report.
+
+    Deliberately mirrors `parse_report`'s output so the merge in `build()`
+    needs no special case: whatever ingests a markdown report can ingest one
+    of these.
+    """
+    with open(path, encoding="utf-8") as fh:
+        obj = json.load(fh)
+    err, warn = validate_search_export(obj, path)
+    if allow_collision:
+        # The reproduce-before-trust comparison deliberately re-exports a slug
+        # that IS already ingested. That collision is the point of the test,
+        # not a defect in the file.
+        err = [m for m in err if "collides with a REPORTS slug" not in m]
+    if err:
+        raise ValueError(f"{path}: " + "; ".join(err))
+    out: dict[str, dict] = {}
+    slug = obj["slug"]
+    for i, p in enumerate(obj["papers"], 1):
+        rank = p.get("rank", i)
+        key, kind = join_key(p, slug, rank)
+        text = f"{p.get('title','')} {p.get('abstract','')}"
+        out[key] = {
+            "title": p.get("title", ""),
+            "authors": p.get("authors", ""),
+            "journal": p.get("journal", ""),
+            "year": p.get("year", ""),
+            "doi": norm_doi_field(p.get("doi") or ""),
+            "link": p.get("link", ""),
+            "s2": s2_of(p),
+            "key_kind": kind,
+            "abstract": p.get("abstract", ""),
+            "has_abstract": bool((p.get("abstract") or "").strip()),
+            "cit_per_year": p.get("cit_per_year", ""),
+            "relevance": p.get("relevance", ""),
+            "reports": [slug],
+            "methods": tags_for(text),
+        }
+    return out
+
+
+def discover_search_exports(d: str) -> list[str]:
+    """Every export in the directory. A glob, which is the point.
+
+    The current builder cannot do this. Adding a search must not require
+    editing a Python literal, because a step that is only enforced by someone
+    remembering it is a step that stops happening.
+    """
+    if not os.path.isdir(d):
+        return []
+    return sorted(os.path.join(d, f) for f in os.listdir(d)
+                  if f.endswith(".json"))
+
+
+def report_source_audit(export_dir: str) -> int:
+    """What the builder can actually see, and what it is blind to.
+
+    Reports the blindness rather than a clean 8-of-8, which is what the
+    builder's own view would report today.
+    """
+    idx = load()
+    ingested = set(idx["source_reports"])
+    print("SOURCE AUDIT. What --build can reach, not what exists.\n")
+    print(f"  index built            {idx['built']}")
+    print(f"  workspace snapshot     {WORKSPACE_SNAPSHOT_DATE}  "
+          f"(HARDCODED below, see the warning at the end)")
+    print(f"  export dir             {export_dir}\n")
+
+    print("  RUNG 1, the eight hardcoded markdown reports:")
+    missing_files = 0
+    for slug, path in REPORTS:
+        ok = os.path.isfile(path)
+        missing_files += (not ok)
+        print(f"    {'OK     ' if ok else 'MISSING'}  {slug:20s} {path}")
+    print()
+
+    exports = discover_search_exports(export_dir)
+    print(f"  RUNG 2, exported deep searches discovered by glob: {len(exports)}")
+    if not exports:
+        print("    NONE. The directory does not exist or is empty, so this")
+        print("    adapter contributes nothing today. Stated explicitly")
+        print("    because a source audit that printed a clean 8-of-8 would be")
+        print("    the exact false all-clear this tool exists to prevent.")
+    for p in exports:
+        try:
+            obj = json.load(open(p, encoding="utf-8"))
+            e, w = validate_search_export(obj, p)
+            state = "REJECT" if e else ("WARN  " if w else "OK    ")
+            print(f"    {state}  {os.path.basename(p):40s} "
+                  f"{len(obj.get('papers', []))} papers")
+            for m in e[:3]:
+                print(f"            error: {m}")
+            for m in w[:2]:
+                print(f"            warn : {m}")
+        except Exception as exc:                       # noqa: BLE001
+            print(f"    REJECT  {os.path.basename(p):40s} unreadable: {exc}")
+    print()
+
+    have = [w for w in WORKSPACE_DEEP_SEARCHES if w[3]]
+    miss = [w for w in WORKSPACE_DEEP_SEARCHES if not w[3]]
+    print(f"  RUNG 3, workspace searches: {len(WORKSPACE_DEEP_SEARCHES)} known, "
+          f"{len(have)} ingested, {len(miss)} not")
+    for name, created, n, _ in miss:
+        when = "postdates the build" if created > idx["built"] else \
+               "PREDATES the build"
+        print(f"    invisible  {created}  {n:3d} papers  {when:19s}  {name[:52]}")
+    print()
+    print("  THE SNAPSHOT ABOVE IS ITSELF HARDCODED, and that is the same")
+    print("  defect one level up. It cannot notice search 21. Re-derive it in a")
+    print("  session that has the connector:")
+    print("    mcp__undermind__inspect_deep_searches(")
+    print(f"        workspace_id='{WORKSPACE_ID}', names=[])")
+    print("  and if the count differs from "
+          f"{len(WORKSPACE_DEEP_SEARCHES)}, this constant is stale, not the "
+          "workspace.")
+    return 0
+
+
+def report_identifier_audit() -> int:
+    """Which records CAN be joined, and by what.
+
+    Splits the flat "60 with no DOI" figure, which this tool's own bib-audit
+    header prints and which invites the wrong conclusion. 60 are unmatchable
+    BY THE DOI ROUTE. Only 3 are unidentifiable.
+    """
+    idx = load()
+    papers = idx["papers"]
+    doi_keyed, s2_only, orphan = [], [], []
+    for k, p in papers.items():
+        if (p.get("doi") or "").strip():
+            doi_keyed.append(k)
+        elif s2_of(p):
+            s2_only.append(k)
+        else:
+            orphan.append(k)
+    n = len(papers)
+    print("IDENTIFIER COVERAGE OF THE INDEX")
+    print(f"  scope   data/research_corpus_index.json built {idx['built']}, "
+          ".claude/worktrees/ excluded\n")
+    print(f"  {n:5d}  records")
+    print(f"  {len(doi_keyed):5d}  keyed by DOI")
+    print(f"  {len(s2_only):5d}  no DOI, but a Semantic Scholar id already "
+          "sitting in `link`")
+    print(f"  {len(orphan):5d}  neither, and therefore unidentifiable\n")
+    print("  THE MIDDLE ROW IS THE FINDING. The identifier exists and nothing")
+    print("  joins on it. cited_in_repo and cited_reader_facing are both gated")
+    print("  on bool(doi) at :396-397, so all "
+          f"{len(s2_only) + len(orphan)} of these are permanently uncited")
+    print("  whatever the repo does, and 'uncited' therefore means two")
+    print("  different things in the same column.\n")
+    if orphan:
+        print("  The unidentifiable records, all of them one parse defect:")
+        for k in orphan:
+            print(f"    {k:22s} {papers[k].get('title','')[:58]}")
+        print()
+    # Duplicates the DOI-keyed merge cannot see. A paper with no DOI gets a
+    # positional key, so the SAME paper appearing in three reports becomes
+    # three records. The S2 id is exactly the key that would have caught it.
+    groups: dict[str, list] = {}
+    for k, p in papers.items():
+        h = s2_of(p)
+        if h:
+            groups.setdefault(h, []).append(k)
+    dups = {h: ks for h, ks in groups.items() if len(ks) > 1}
+    if dups:
+        slots = sum(len(v) for v in dups.values())
+        same_title = sum(
+            1 for ks in dups.values()
+            if len({(papers[k].get("title") or "").strip().lower()
+                    for k in ks}) == 1)
+        print("  THE HEADLINE COUNT IS OVERSTATED, and this is how much.")
+        print(f"    {len(dups)} Semantic Scholar ids appear under "
+              f"{slots} different record keys.")
+        print(f"    All members share a byte-identical title in "
+              f"{same_title} of the {len(dups)} groups.")
+        print(f"    So {n} records represent {n - (slots - len(dups))} "
+              "distinct works, not "
+              f"{n}. The excess is {slots - len(dups)}.")
+        print("    Mechanism: no DOI, so the merge could not dedup them, and")
+        print("    the positional key made one paper look like several.")
+        for h, ks in sorted(dups.items(), key=lambda kv: -len(kv[1]))[:4]:
+            print(f"      {h[:12]}  {len(ks)}x  "
+                  f"{papers[ks[0]].get('title','')[:46]}")
+        print()
+
+    demo = [k for k in s2_only
+            if s2_of(papers[k]).startswith("61da26b6")]
+    if demo:
+        k = demo[0]
+        print("  WORKED EXAMPLE, and it is not a hypothetical one. CLAUDE.md")
+        print("  names four prior vehicle fording works the paper cites none")
+        print("  of, and identifies one of them ONLY by a Semantic Scholar")
+        print("  prefix, `61da26b6`. That paper is in this index:")
+        print(f"    record   {k}")
+        print(f"    title    {papers[k].get('title','')[:64]}")
+        print(f"    s2       {s2_of(papers[k])}")
+        print("  --doi cannot find it (it has none), --query cannot find it")
+        print("  (author-only match), and cited-status cannot mark it. Three")
+        print("  independent mechanisms each guarantee the index cannot tell")
+        print("  you it holds a paper the project is actively worried about.")
+    return 0
+
+
+def compare_export_to_index(path: str, slug: str) -> int:
+    """Reproduce-before-trust gate for the adapter.
+
+    An adapter fed by the API must first reproduce what the markdown route
+    already produced, on a search that went through the markdown route. Run
+    this against an ingested slug BEFORE trusting the adapter on the twelve
+    that were never ingested.
+    """
+    idx = load()
+    recs = parse_search_export(path, allow_collision=True)
+    have = {k: p for k, p in idx["papers"].items() if slug in p.get("reports", [])}
+    n_idx = idx.get("papers_per_report", {}).get(slug)
+    print(f"EXPORT vs INDEX for slug `{slug}`")
+    print(f"  export file      {path}")
+    print(f"  export records   {len(recs)}")
+    print(f"  index records    {len(have)}  "
+          f"(papers_per_report says {n_idx})")
+    ek = set(recs)
+    ik = set(have)
+    print(f"  in both          {len(ek & ik)}")
+    print(f"  export only      {len(ek - ik)}")
+    print(f"  index only       {len(ik - ek)}")
+    if ek == ik:
+        print("\n  IDENTICAL. The API route reproduces the markdown route on "
+              "this search.")
+        return 0
+
+    # A key mismatch is not necessarily a paper mismatch. The index keys a
+    # DOI-less paper positionally (`slug#rank`) and this adapter keys it
+    # `s2:<hash>`, so the SAME paper lands under two different keys. Pair the
+    # leftovers by title before concluding the sets differ, otherwise the
+    # comparison reports a difference that is purely a change of key scheme.
+    eo = {k: recs[k] for k in ek - ik}
+    io = {k: have[k] for k in ik - ek}
+    by_title = {}
+    for k, p in io.items():
+        by_title.setdefault(collapse(p.get("title", "")), []).append(k)
+    paired, unpaired = [], []
+    for k, p in eo.items():
+        t = collapse(p.get("title", ""))
+        if by_title.get(t):
+            paired.append((k, by_title[t].pop(0)))
+        else:
+            unpaired.append(k)
+    leftover_idx = [k for ks in by_title.values() for k in ks]
+
+    print(f"  same paper, different key   {len(paired)}")
+    print(f"  export only, unpaired       {len(unpaired)}")
+    print(f"  index only, unpaired        {len(leftover_idx)}")
+    for ke, ki in paired[:10]:
+        print(f"    {ki:24s} <- {ke[:46]:46s} {recs[ke]['title'][:34]}")
+    for k in unpaired[:6]:
+        print(f"    EXPORT ONLY  {k}  {recs[k]['title'][:46]}")
+    for k in leftover_idx[:6]:
+        print(f"    INDEX ONLY   {k}  {have[k].get('title','')[:46]}")
+
+    if not unpaired and not leftover_idx:
+        print("\n  SET-IDENTICAL, KEY SCHEME DIFFERS. Every leftover pairs "
+              "one-to-one by title.")
+        print(f"  {len(ek & ik)} matched on DOI and {len(paired)} are the "
+              "DOI-less records, which the index")
+        print("  keys positionally and this adapter keys by Semantic Scholar "
+              "id. The API route")
+        print("  reproduces the markdown route's paper set exactly; only the "
+              "key is different,")
+        print("  and the new key is the stable one. This is a PASS.")
+        return 0
+
+    print("\n  NOT IDENTICAL, and the leftovers do not pair by title. Do not "
+          "trust the adapter")
+    print("  on the twelve un-ingested searches until this is understood.")
+    return 1
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--build", action="store_true")
@@ -1088,10 +1526,56 @@ def main() -> int:
     ap.add_argument("--coverage", action="store_true",
                     help="what this index does and does not contain, as a "
                          "ladder of containers")
+    ap.add_argument("--source-audit", action="store_true",
+                    help="what --build can actually REACH, versus what the "
+                         "workspace holds. Reports the blindness rather than "
+                         "a clean eight-of-eight.")
+    ap.add_argument("--identifier-audit", action="store_true",
+                    help="which records can be joined and by what. Splits the "
+                         "flat 'no DOI' figure into no-DOI-but-identifiable "
+                         "and genuinely unidentifiable.")
+    ap.add_argument("--export-dir", default=SEARCH_EXPORT_DIR,
+                    help=f"directory of exported deep searches (default "
+                         f"{SEARCH_EXPORT_DIR})")
+    ap.add_argument("--ingest-check", metavar="PATH",
+                    help="validate one exported deep search against the "
+                         "adapter's gates without importing it")
+    ap.add_argument("--against-slug", metavar="SLUG",
+                    help="with --ingest-check, compare the export against the "
+                         "records the markdown route already produced for "
+                         "SLUG. The reproduce-before-trust gate.")
     a = ap.parse_args()
 
     if a.coverage:
         return report_coverage()
+
+    if a.source_audit:
+        return report_source_audit(a.export_dir)
+
+    if a.identifier_audit:
+        return report_identifier_audit()
+
+    if a.ingest_check:
+        if a.against_slug:
+            return compare_export_to_index(a.ingest_check, a.against_slug)
+        try:
+            obj = json.load(open(a.ingest_check, encoding="utf-8"))
+        except Exception as exc:                       # noqa: BLE001
+            print(f"unreadable: {exc}")
+            return 2
+        err, warn = validate_search_export(obj, a.ingest_check)
+        print(f"INGEST CHECK  {a.ingest_check}")
+        print(f"  schema   {obj.get('schema')}")
+        print(f"  slug     {obj.get('slug')}")
+        print(f"  papers   {len(obj.get('papers', []))} "
+              f"(n_relevant {obj.get('n_relevant')})")
+        for m in err:
+            print(f"  ERROR  {m}")
+        for m in warn:
+            print(f"  WARN   {m}")
+        print(f"\n  {'REJECTED' if err else 'ACCEPTED'}"
+              f"{' with warnings' if warn and not err else ''}")
+        return 1 if err else 0
 
     if a.bib_audit:
         res = audit_bibliography(a.bib_ref, a.tex_ref)

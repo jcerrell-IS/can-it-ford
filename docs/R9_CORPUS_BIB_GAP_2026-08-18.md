@@ -661,3 +661,342 @@ complement of *reach* and reported it as *cited*. **An integer that reproduces i
 not thereby a finding.** What made the difference here was carrying a
 `source_kind` column that nobody asked for, because it was the only column that
 could distinguish a category boundary from a defect.
+
+---
+
+# PART 2, 2026-08-19: WHAT IT WOULD TAKE FOR THE BUILDER TO SEE THE DEEP SEARCHES
+
+Part 1 established that `--build` cannot reach a deep search and never could.
+That is a diagnosis, not a fix, and a diagnosis nobody can act on is worth
+little. This part says what the fix is, proves the mechanism works before
+recommending it, and corrects three claims, one of them mine.
+
+Everything below was measured on 2026-08-19 against the live workspace
+`17299f2a-8dc8-438b-8c84-5abf19395e2c` and the committed index. Tags as before:
+READ, DERIVED, RECALLED.
+
+## 12. The one-line answer
+
+**A two-part adapter: a session-side exporter that has the connector, and a
+build-side reader that does not.** The builder is pure standard library and
+runs outside any MCP session, so it cannot call Undermind itself. That is not
+an incidental limitation to engineer around, it is the constraint that picks
+the design: the fetch has to happen where the connector lives, the build has to
+happen where it does not, and the only thing that can cross between them is a
+file.
+
+Implemented this unit, in `analysis/research_index.py`:
+
+```
+python3 analysis/research_index.py --source-audit
+python3 analysis/research_index.py --identifier-audit
+python3 analysis/research_index.py --ingest-check FILE.json
+python3 analysis/research_index.py --ingest-check FILE.json --against-slug SLUG
+```
+
+The exporter half is NOT implemented, and section 18 says why and what it costs.
+
+## 13. The control, run before the recommendation
+
+An adapter fed by the API must first reproduce what the markdown route already
+produced, on a search that went through the markdown route. Otherwise "ingest
+the other twelve" is a proposal to add 692 unverified records to the instrument
+every session is told to trust.
+
+DERIVED, three checks, increasing in strength:
+
+**Check 1, cardinality on all eight ingested searches.** The API's
+relevant-paper count against the index's `papers_per_report`:
+
+| slug | index | API |
+|---|---|---|
+| wall-penetration | 16 | 16 |
+| trustworthy-ai | 13 | 13 |
+| moving-rigid-body | 44 | 44 |
+| validated-coupling | 60 | 60 |
+| settling-force | 68 | 68 |
+| mpm-verification | 68 | 68 |
+| multi-resolution | 78 | 78 |
+| reliable-ai | 79 | 79 |
+
+Eight of eight, and they sum to **426**, which is exactly the raw-row count the
+markdown route produced before merging to 332. Equal counts are not equal sets,
+so this is necessary and not sufficient.
+
+**Check 2, membership at rank 1.** The top-ranked paper of each of the eight is
+present in the index by DOI. Eight of eight.
+
+**Check 3, a full export compared record by record.** All 44 papers of
+`Moving Rigid Body Free Surface Validation` were pulled from the API, written in
+the interchange format, and compared against the index's 44 records for that
+slug:
+
+```
+  in both          35
+  same paper, different key   9
+  export only, unpaired       0
+  index only, unpaired        0
+  SET-IDENTICAL, KEY SCHEME DIFFERS.
+```
+
+35 match on DOI. The other 9 are the DOI-less records, which the index keys
+positionally (`moving-rigid-body#15`) and the adapter keys by Semantic Scholar
+id (`s2:598636f5...`). They pair one-to-one by title with nothing left over on
+either side. **The API route reproduces the markdown route's paper set exactly.**
+
+That is the evidence for the recommendation. Without it, "use the API" would be
+a plausible claim rather than a tested one.
+
+### The control failed twice first, and both were my bugs
+
+Worth recording, because a gate that passes first time has usually not been
+exercised. `--ingest-check` rejected all 44 papers as unjoinable, then flagged a
+legitimate title as mangled.
+
+1. `norm_doi` only parses `doi.org/...` URLs, because that is the form the
+   markdown reports carry. An API export carries the bare string
+   `10.1115/1.4071177`, so every DOI normalised to empty and every record looked
+   identifier-less. The symptom presented as a finding about the data. Fixed by
+   `norm_doi_field`, which accepts either form.
+2. The mangled-title signature included `\)\s*$`, which flags any title legitimately
+   ending in a parenthesis, such as `... (CCP-WSI Blind Test Series 3)`.
+
+Both were found by running the gate on 44 real records. Neither would have been
+found by reading it.
+
+## 14. The interchange format
+
+One JSON file per search, in a tracked directory, discovered by glob.
+
+```json
+{
+  "schema": "canford.deep_search/1",
+  "workspace_id": "17299f2a-8dc8-438b-8c84-5abf19395e2c",
+  "search_path": "/Simulation Ready Vehicle Mesh Assets",
+  "slug": "vehicle-mesh",
+  "created": "2026-07-21",
+  "exported": "2026-08-19",
+  "exported_by": "slot d14-corpusbib, inspect_deep_searches + get_paper_info",
+  "n_relevant": 36,
+  "goal": "...the search's stated research goal...",
+  "summary": "...the search's synthesis prose...",
+  "papers": [
+    {"cite_key": "Mar13", "rank": 1, "relevance": 1.480,
+     "title": "...", "year": 2013, "authors": "...", "journal": "...",
+     "doi": "", "s2": "347f2ce0...", "link": "https://...",
+     "citations": 16, "cit_per_year": 1.2, "abstract": ""}
+  ]
+}
+```
+
+Two design points that are not cosmetic.
+
+**`goal` and `summary` are first-class, not decoration.** They are the part a
+paper index structurally cannot hold, and section 17 shows they are the part
+that actually answered the question this whole thread started from.
+
+**The join key has a precedence, and the positional fallback is an error rather
+than a default.** DOI first, because it is what the repo cites with. Semantic
+Scholar id second, because it is stable across rebuilds and re-rankings. A
+positional `slug#rank` key is refused, because it is not an identifier: re-run a
+search, it re-ranks, and every positional key silently moves to a different
+paper.
+
+## 15. The gates, each one from an observed failure
+
+`validate_search_export` refuses an import rather than degrading it. Every gate
+exists because the failure was seen in the live payload on 2026-08-19, not
+because it seemed prudent.
+
+| gate | refuses | observed |
+|---|---|---|
+| G1 | `n_relevant` disagreeing with `len(papers)` | `inspect_deep_searches` pages at 50 and reports the true total in its header, so a one-page export of a 105-paper search looks complete |
+| G2 | a paper with neither DOI nor S2 id | it would enter as a permanent orphan, which is the present state of `settling-force#11`, `#29`, `#30` |
+| G3 | raw markdown in a title | the exact signature of the parse defect in section 7 |
+| G4 | (warns) authors with no comma, initial or "and" | the Undermind record for the 2012 Camry model truncates its title at "...for the 2012 Toyota" and puts "Camry Passenger Sedan" in the author field |
+| G5 | a slug colliding with a `REPORTS` slug | silent double-ingestion |
+
+G4 warns rather than errors because it is upstream data, not ours, and throwing
+it away loses a real record.
+
+## 16. The identifier finding, which is section 2 again in a new place
+
+Part 1 opened with "the DOIs were in a field nobody joined on". Building the
+adapter surfaced the same shape a second time, and this one is larger.
+
+DERIVED, `--identifier-audit`, scope `data/research_corpus_index.json` as built
+2026-08-15, `.claude/worktrees/` excluded:
+
+```
+  332  records
+  272  keyed by DOI
+   57  no DOI, but a Semantic Scholar id ALREADY SITTING IN `link`
+    3  neither, and therefore unidentifiable
+```
+
+**Only 3 of 332 records are genuinely unidentifiable, and all 3 are the parse
+defect from section 7.** The other 57 carry a stable identifier that nothing
+joins on.
+
+**This corrects a line of my own.** The `--bib-audit` header prints "60 with no
+DOI and therefore unmatchable by the DOI route". That is true as written and
+invites a false conclusion, because a reader takes "no DOI" for
+"unidentifiable". Sixty are unmatchable *by the DOI route*. Three are
+unidentifiable. The header now says which.
+
+### It also means the headline count is overstated
+
+DERIVED: **11 Semantic Scholar ids appear under 24 different record keys**, and
+in all 11 groups the members carry a byte-identical title. So the index's 332
+records represent **319 distinct works**, an excess of 13.
+
+The mechanism is exactly the positional key. These papers have no DOI, the merge
+dedups on DOI, and the same paper appearing in three reports became three
+records. `Experimental testing of flood hazard curves for a partially submerged
+vehicle` is in there three times; so is `A method for automated regression test
+in scientific computing`.
+
+**So "332 distinct external papers", which `CLAUDE.md` states and every session
+reads at launch, is high by 13.** State it as 332 records / 319 distinct works,
+or re-derive with the S2 join. This does not move the 76, 43, 4 or 3 rungs,
+which are DOI-keyed and unaffected.
+
+### The worked example is not hypothetical
+
+`CLAUDE.md` names four prior vehicle fording works the paper cites none of, and
+identifies one of them only by a Semantic Scholar prefix, `61da26b6`. That paper
+is **in this index**, as `moving-rigid-body#39`, "Investigation of the Vehicle
+Mobility in Fording", Pazouki et al 2016.
+
+Three independent mechanisms each individually guarantee the index cannot tell
+you it holds it:
+
+- `--doi` cannot find it, because it has no DOI.
+- `--query "Pazouki"` cannot find it, because `--query` matches title and
+  abstract only, never authors.
+- cited-status cannot mark it, because it is gated on `bool(doi)` at `:396-397`.
+
+An absence found by a search that cannot match is not an absence. This is that
+sentence with a name attached.
+
+## 17. A paper-only adapter would NOT have prevented the loss
+
+This is the part that surprised me and it changes the recommendation's shape.
+
+The motivating incident is that a session re-derived the CCSA/NCAC vehicle-model
+answer by hand, at the cost of a full turn, when
+`Simulation Ready Vehicle Mesh Assets` had answered it on 21 July. The obvious
+inference is "ingest that search's 36 papers and the loss goes away". DERIVED,
+that inference is wrong.
+
+Of the 36 papers in that search, 22 carry a DOI and 14 do not. Of the 22,
+**6 are already in the index**: Smith 2019, Al-Qadami 2021, 2022 and 2023,
+Wasfy 2015, and Allen 2003. Those are every flood-vehicle and prior-art work in
+the set, and they arrived through other searches. So the papers that matter most
+were never missing.
+
+What was missing is in two places the paper layer does not reach:
+
+- **The synthesis.** "The NHTSA-grade assets are the 2010 Yaris, 2012 Camry and
+  2007 Silverado; the Rogue is not among them; no public PLY conversion of any
+  of them is verified to exist" is a conclusion drawn across the set. It lives
+  in the search's `summary`, and a paper index has nowhere to put it.
+- **The DOI-less grey literature.** The 14 without DOIs are the NCAC and MASH
+  validation reports themselves, which are the documents that answer the
+  question. Under the current schema they could only enter positionally, and
+  would be unjoinable and permanently uncited.
+
+**So the recommendation is not "ingest the papers". It is "ingest the search",
+with `goal` and `summary` as first-class fields and an identifier scheme that
+admits DOI-less reports.** A paper-only adapter would have imported 16 new
+crash-test and CFD-dataset records and still not answered the question.
+
+## 18. What it costs, and what is not done
+
+READ, from the tool schemas: `inspect_deep_searches` pages at 50 papers per
+call, `get_paper_info` accepts 50 cite keys per call and is the only route to a
+DOI (the search listing carries none).
+
+DERIVED, for the 12 invisible searches at their measured sizes (105, 92, 82, 81,
+56, 48, 47, 47, 43, 36, 32, 23):
+
+- about **18** `inspect_deep_searches` calls for the paper lists,
+- about **18** `get_paper_info` calls for DOIs and S2 ids,
+- **12** more for each search's goal and summary.
+
+Roughly **50 connector calls, one session, no GPU.** That is the whole cost of
+the exporter half.
+
+**NOT DONE, and it is a scope boundary rather than a judgement.** My declared
+write scope is four paths. Creating `data/deep_searches/` and the 12 export
+files is outside it, so this unit ships the reader, the gates and the control,
+and the directory does not exist. `--source-audit` therefore prints
+
+```
+  RUNG 2, exported deep searches discovered by glob: 0
+    NONE. The directory does not exist or is empty, so this
+    adapter contributes nothing today.
+```
+
+which is deliberate: a source audit that printed a clean eight-of-eight would be
+the exact false all-clear this tool exists to prevent. Whoever picks this up
+needs one decision (where the exports live) and one session.
+
+The demonstration export used for check 3 is real, built from the live API, and
+lives in this session's scratchpad rather than the repo for the same reason.
+
+## 19. The hardcoded snapshot is the same defect one level up
+
+`WORKSPACE_DEEP_SEARCHES` in `analysis/research_index.py` is a hardcoded list of
+20. It cannot notice search 21, which is precisely the criticism this document
+levels at `REPORTS`. Building a second fixed list to describe the first one's
+staleness would be absurd, so `--source-audit` ends by printing the exact call
+that re-derives it and the count to compare against. The constant is auditable
+rather than trusted. It is still a snapshot, and it should be replaced by the
+manifest once the export directory exists.
+
+## 20. Three corrections, one of them to a live file
+
+**(a) `Moving Rigid Body Free Surface Validation` is INGESTED, not invisible.**
+The coordinator's message of 2026-08-19 cited it as one of the twelve the
+builder cannot see, and named `[Kra21b]` as an instrument d11-accessor needs.
+READ, live: that search is `moving-rigid-body`, one of the eight in `REPORTS`,
+44 papers, and Kramer et al 2021 is in the index right now as
+`10.3390/en14020269`, `reports: ['moving-rigid-body']`, `cited_in_repo: True`.
+**d11-accessor can find it today** with
+`python3 analysis/research_index.py --doi 10.3390/en14020269`. The twelve
+invisible searches are listed in full by `--source-audit`; that one is not among
+them. `Simulation Ready Vehicle Mesh Assets` is, so the other half of the message
+holds.
+
+**(b) `faf53d1` misattributes the physics test.** It says `df52bee` added
+`tests/test_physics_gates.py`. READ, `git log --diff-filter=A -- tests/test_physics_gates.py`
+returns `50b70c0` ("Add the three physics gates: analytical, conservation,
+metamorphic"); `df52bee` changed it by +23/-7. This matters because `faf53d1` is
+on `claude/add-ci-checks`, which is the checked-out state of the main tree, so
+the skill every session loads at launch carries the wrong SHA.
+
+**(c) `faf53d1` carries the count I already refuted.** It states nineteen
+searches and "eight checked by name are all absent". Live: twenty, of which
+eight are ingested and twelve are not. The coordinator has accepted this; the
+file has not been updated, and it is the one every session reads.
+
+## 21. What I could not verify, and what I did not touch
+
+- **`shand2011arr` is still not resolved to present, and I nearly got this
+  wrong.** The census flagged it `UNCERTAIN_RELATED_WORK` with a same-author
+  same-year candidate at title score 0.27, and refused to force a verdict. The
+  adapter run surfaced that candidate as `moving-rigid-body#44`, Shand, Smith,
+  Cox and Blacka 2011, "Development of Appropriate Criteria for the Safety and
+  Stability of Persons and Vehicles in Floods". The bibliography cites the AR&R
+  Project 10 **literature review**. Reading both titles, these are two different
+  documents by the same team in the same year, so the entry stays absent and
+  **the "4 of 15" rung is unchanged**. This is a human read, not a measurement.
+- **Set equality was demonstrated on one search of the eight, not all eight.**
+  Checks 1 and 2 cover all eight at lower strength. A full export of the other
+  seven would close it.
+- **Nothing was rebuilt.** `--build` was not run,
+  `data/research_corpus_index.json` is untouched, and no other session's view of
+  the corpus changed. `data/r9_bib_corpus_census.tsv` regenerated
+  byte-identically, which is the reproducibility check on the Part 1 numbers.
+- Nothing in `paper/`, no `.bib`, no Overleaf write, no push.

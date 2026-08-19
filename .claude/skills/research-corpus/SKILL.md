@@ -1,15 +1,30 @@
 ---
 name: research-corpus
-description: Query the project's own 332-paper external research index before making any method claim, novelty claim, citation, or "nobody has done this" statement, and before proposing a numerical method or a validation target. Trigger on "has anyone done X", "is this novel", "what do we know about", "which paper says", "what should we cite", "how should we validate", "what method should I use", any DOI about to enter paper/ or docs/, any claim that a technique is untried, and before writing Methods or Limitations text. Also trigger before proposing a settle length, a convergence claim, or a verdict threshold.
+description: Query the project's own external research index (332 records, 319 distinct works) before making any method claim, novelty claim, citation, or "nobody has done this" statement, and before proposing a numerical method or a validation target. The index is blind to 12 of the project's 20 deep searches, so a zero from it is not an absence. Trigger on "has anyone done X", "is this novel", "what do we know about", "which paper says", "what should we cite", "how should we validate", "what method should I use", any DOI about to enter paper/ or docs/, any claim that a technique is untried, and before writing Methods or Limitations text. Also trigger before proposing a settle length, a convergence claim, or a verdict threshold.
 ---
 
 # The project's own research is indexed. Query it before asserting.
 
-This project holds **332 distinct external papers** across eight Undermind
-deep-research reports, 37 Claude artifacts, five Perplexity reports and two
-Elicit extracts. The failure mode this skill exists to stop is **asserting
-something the corpus already answers**, in either direction: claiming novelty
-that prior art contradicts, or proposing a method the reports already evaluated.
+> **An absence found by a search that cannot match is not an absence.**
+> Every false zero in this file is one instance of it: a query that never
+> searched authors, a membership test against the wrong container, a DOI join
+> against records that carry no DOI. Before you write "the corpus has nothing on
+> X", say which predicate you used and whether it COULD have returned a hit.
+> This applies to your own numbers, not only to numbers you are checking.
+
+This project's index holds **332 records** across eight Undermind deep-research
+reports, 37 Claude artifacts, five Perplexity reports and two Elicit extracts.
+The failure mode this skill exists to stop is **asserting something the corpus
+already answers**, in either direction: claiming novelty that prior art
+contradicts, or proposing a method the reports already evaluated.
+
+**332 RECORDS IS NOT 332 DISTINCT PAPERS.** Measured 2026-08-19 by
+`--identifier-audit`: 11 Semantic Scholar ids appear under 24 different record
+keys, with byte-identical titles in all 11 groups, so the index holds **319
+distinct works**. The duplicates are DOI-less papers that the merge could not
+dedup, keyed positionally as `slug#rank`, so the same paper appearing in three
+reports became three records. Say "332 records / 319 distinct works". The 76,
+43, 4 and 3 rungs below are DOI-keyed and unaffected.
 
 ## READ THIS FIRST: the index holds 8 of the project's 20 deep searches
 
@@ -36,7 +51,55 @@ Silverado or Rogue models exists. None of it is indexed, and `--query` returns
 by hand on 2026-08-19.
 
 **So before concluding the project has not researched something, check the
-workspace, not just this index.**
+workspace, not just this index.** Workspace id
+`17299f2a-8dc8-438b-8c84-5abf19395e2c`:
+
+```
+mcp__undermind__inspect_deep_searches(workspace_id=..., names=[])
+mcp__undermind__inspect_deep_searches(workspace_id=..., names=['/NAME'])
+mcp__undermind__get_paper_info(workspace_id=..., cite_keys=[...], show_doi=True)
+```
+
+`inspect_deep_searches` pages at 50 papers and its listing carries **no DOIs**;
+`get_paper_info` is the only route to one and batches 50 cite keys per call.
+
+**TWO SEARCHES ARE EASY TO MISFILE, so check `--source-audit` before saying a
+search is invisible.** `Moving Rigid Body Free Surface Validation` **is
+ingested** (slug `moving-rigid-body`, 44 papers), and its Kramer 2021 heave-decay
+benchmark is in the index right now as `10.3390/en14020269`, `cited_in_repo`
+true. It has been cited as an example of the invisible layer; it is not one.
+`Simulation Ready Vehicle Mesh Assets` **is** invisible, and it is the one that
+cost a session a full turn.
+
+### The vehicle mesh answer, so nobody re-derives it a fourth time
+
+From `Simulation Ready Vehicle Mesh Assets`, 21 July, 36 papers, un-ingested.
+The NHTSA-grade assets are the CCSA/NCAC reverse-engineered LS-DYNA vehicles:
+
+    2010 Toyota Yaris         passenger sedan     MASH 1100 kg vehicle
+    2012 Toyota Camry         MIDSIZE sedan       part-by-part teardown, mass and
+                                                  inertia checked against production
+    2007 Chevrolet Silverado  light pickup        MASH 2270 kg vehicle
+
+All three carry NHTSA NCAP full-scale validation; Yaris and Silverado include
+working suspension and steering. **The Nissan Rogue is NOT among them**; the
+documented midsize is the Camry. This repo's `MASS = {"rogue": 1571.3}` has no
+MASH anchor, while `silverado: 2270.0` and the Yaris 1100 kg ARE the MASH
+designations exactly.
+
+**HARD NEGATIVE from that search:** no citable, publicly redistributable OBJ /
+PLY / glTF / USD conversion of the Yaris, Silverado or Rogue models is verified
+to exist anywhere. This repo's `.ply` hulls are its own conversions and
+`vehicle_mesh_pipeline.py` (untracked, in `~/Downloads/vehicle_meshes/`) is the
+only provenance any hull has.
+
+**Ingesting that search's 36 papers would NOT have prevented the loss**, which
+is worth knowing before anyone proposes it as the fix. Measured 2026-08-19: 22
+of the 36 carry a DOI and **6 of those 22 are already in the index** (Smith
+2019, Al-Qadami 2021/2022/2023, Wasfy 2015, Allen 2003), which is every
+flood-vehicle work in the set. The answer above is not in any paper record: it
+is the search's **synthesis**, and the other 14 papers are DOI-less NCAC and
+MASH reports. A paper index has nowhere to put either.
 
 ## The ladder. Five numbers, five different predicates, never one number.
 
@@ -47,7 +110,7 @@ tracked tree only, **`.claude/worktrees/` excluded**, bibliography read at
 
 | n | predicate | how it is measured |
 |---|---|---|
-| **332** | papers in the corpus | distinct records in the index |
+| **332** | records in the corpus, **319 distinct works** | keys in the index; 11 papers are keyed twice or three times, see the note at the top |
 | **76** | DOI-shaped string **anywhere in the tracked tree** | `cited_in_repo` |
 | **43** | DOI-shaped string in a **reader-facing directory** | `cited_reader_facing`, meaning `paper/` `docs/` `deliverables/` `citations/` |
 | **4** | hold an entry in the **shipped bibliography** | census against the 15 entries on `overleaf/main` |
@@ -83,9 +146,11 @@ by construction. The denominator for any DOI-join statement is **272, not 332**.
 ## The tool
 
 `analysis/research_index.py`, pure standard library, reads the committed index at
-`data/research_corpus_index.json`. It never touches `~/Downloads`, which has
-returned EPERM in past sessions and made a recursive search silently report zero
-hits.
+`data/research_corpus_index.json`. **The QUERY commands never touch
+`~/Downloads`**, which has returned EPERM in past sessions and made a recursive
+search silently report zero hits. `--bib-audit` and `--source-audit` DO read the
+eight source reports, seven of which live there, and `--bib-audit` exits 2
+naming all eight rather than degrading if any is unreadable.
 
 ```bash
 python3 analysis/research_index.py --stats                    # method coverage
@@ -95,7 +160,32 @@ python3 analysis/research_index.py --doi 10.1002/nme.7217     # one paper
 python3 analysis/research_index.py --gaps --method validation-dataset
 python3 analysis/research_index.py --bib-audit                 # corpus vs the bib
 python3 analysis/research_index.py --coverage                  # what is NOT indexed
+python3 analysis/research_index.py --source-audit              # what --build can REACH
+python3 analysis/research_index.py --identifier-audit          # what can be JOINED
 ```
+
+`--source-audit` is the one to run before saying a search is or is not indexed.
+It reports three rungs (the eight hardcoded markdown paths and whether each is
+readable, exported searches found by glob, and the 20 workspace searches with
+the 12 invisible ones named), and it ends by printing the connector call that
+re-derives the workspace list, because its own snapshot is hardcoded and cannot
+notice a 21st search.
+
+`--identifier-audit` splits the flat "no DOI" figure into no-DOI-but-identifiable
+and genuinely unidentifiable, and reports the duplicate groups behind the
+332-versus-319 gap.
+
+**A deep-search adapter exists but has no data yet.** `--ingest-check FILE.json`
+validates one exported search against five gates, and
+`--ingest-check FILE.json --against-slug SLUG` is the reproduce-before-trust
+control: it compares an export against what the markdown route already produced.
+Run on a full 44-paper export of `moving-rigid-body` on 2026-08-19 it returned
+SET-IDENTICAL (35 matched on DOI, 9 DOI-less records paired one-to-one by title,
+0 unpaired either way), so the API route is a measured substitute for the
+markdown route rather than an assumed one. The export directory
+`data/deep_searches/` does not exist yet, so `--source-audit` correctly reports
+rung 2 as zero. See `docs/R9_CORPUS_BIB_GAP_2026-08-18.md` Part 2 for the schema
+and the roughly 50 connector calls it would take to fill it.
 
 `--bib-audit` censuses the shipped bibliography against the corpus AND against
 the eight source reports, and every row states the ROUTE it matched or failed to
@@ -118,7 +208,7 @@ added.
 
 25 method tags exist. Run `--stats` rather than guessing tag names.
 
-### Four traps that return a FALSE ZERO. A zero from any of them looks exactly like absence.
+### Five traps that return a FALSE ZERO. A zero from any of them looks exactly like absence.
 
 **1. `--query` searched only titles and abstracts until 2026-08-19, never authors.**
 So every author-name query returned zero regardless of the corpus contents.
@@ -153,9 +243,27 @@ checked eight deep-search names against `documents` on 2026-08-19, got nothing,
 and reported "eight of eight absent". Three of the eight were ingested. Use
 `--coverage`, which reads the right container.
 
+**5. Joining on `doi` when 60 of the 332 records carry none.** Measured
+2026-08-19 by `--identifier-audit`: 272 records are keyed by DOI, **57 have no
+DOI but do carry a stable Semantic Scholar id, already sitting in the `link`
+field**, and only **3** are genuinely unidentifiable (those 3 are one parse
+defect, below). "No DOI" is not "unidentifiable", and any check that joins on
+`doi` alone silently drops a sixth of the corpus.
+
+This is not theoretical and it hides exactly the papers the project worries
+about. `CLAUDE.md` names four prior vehicle fording works the paper cites none
+of, and identifies one of them only by the Semantic Scholar prefix `61da26b6`.
+**That paper is in this index**, as `moving-rigid-body#39`, Pazouki et al 2016,
+"Investigation of the Vehicle Mobility in Fording". Three separate mechanisms
+each guarantee the index cannot tell you so: `--doi` cannot match it (no DOI),
+`--query "Pazouki"` cannot match it (author-only), and `cited_in_repo` cannot
+mark it (gated on `bool(doi)` at `research_index.py:396-397`). So "uncited"
+means two different things in that column: not cited, and not checkable.
+
 **Before writing "the corpus has nothing on X", run at least two of: `--query`
-against the term, a direct DOI check, an author check, and `--coverage` to see
-whether the relevant deep search is even indexed. State which you ran.**
+against the term, a direct DOI check, an author check, `--identifier-audit` if
+the work may lack a DOI, and `--coverage` to see whether the relevant deep
+search is even indexed. State which you ran.**
 A single search that could not match the field you care about is not evidence of
 absence.
 
@@ -373,8 +481,13 @@ branch", never "no physics regression test".
 
 ## Known limits of the index itself
 
-- **60 of 332 papers carry no DOI** and cannot be diffed against the bibliography.
-  Absence from an uncited list is not proof of absence.
+- **60 of 332 records carry no DOI** and cannot be diffed against the
+  bibliography BY THE DOI ROUTE. Absence from an uncited list is not proof of
+  absence. Do not read this as 60 unidentifiable papers: **57 of the 60 carry a
+  Semantic Scholar id in the `link` field** and only 3 are unidentifiable (the
+  parse defect below). The identifier is present; nothing joins on it. That is
+  the same shape as the finding that DOIs were sitting in the `note` field of
+  the bibliography while the census joined on `doi`.
 - **222 of 332 have an abstract.** Each report details only its top 50, so 110
   papers are title-and-metadata only. Do not describe a metadata-only paper as
   read.
@@ -394,6 +507,17 @@ branch", never "no physics regression test".
   INDEX SELF-CHECK that detects this class. **The data has NOT been repaired**,
   because that needs a `--build` which would move the 332, the 60 and the 76/43
   rungs; whoever owns the index build owns the fix.
+- **11 papers are in the index more than once**, under 24 keys, with identical
+  titles. They are DOI-less, so the DOI-based merge could not see them and the
+  positional `slug#rank` key made one paper look like several. 332 records,
+  **319 distinct works**. `--identifier-audit` lists the groups.
+- **The builder cannot discover a source.** `REPORTS` is a hardcoded list of
+  eight local paths with no glob, scan or API call, so `--build` cannot reach a
+  deep search that is not already in that literal, and cannot reach the
+  workspace at all. It is pure standard library and runs outside any MCP
+  session, which is why the fix is an interchange file rather than a client.
+  `--source-audit` reports the blindness; `--ingest-check` validates an export;
+  the exporter half is unwritten and `data/deep_searches/` does not exist.
 - **The index cannot report its own coverage of the bibliography.** Use
-  `--bib-audit` for that, and see the two false-zero traps above before making
+  `--bib-audit` for that, and see the five false-zero traps above before making
   any absence claim.
