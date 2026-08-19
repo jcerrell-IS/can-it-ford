@@ -57,7 +57,8 @@
       "Read(reference_data/MPM_Flood-Vehicle_Reference_Data__Sedan__SUV__Pickup__NEON_TABLE_SUPERSEDED.md)",
       "Read(**/*_DEPRECATED*)",
       "Read(**/*_SUPERSEDED*)"
-    ]
+    ],
+    "defaultMode": "acceptEdits"
   },
   "hooks": {
     "Stop": [

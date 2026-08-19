@@ -116,6 +116,22 @@ if [ -f "$SK_MAIN" ]; then
   fi
 fi
 
+# 5c. THE ADVERSARIAL REVIEWER. Added 2026-08-19 from coordinator-audit finding A2.
+#     Measured over 18 transcripts: 20 Agent calls, ZERO successes, every one dying on a
+#     pinned model id, and an explicit model override does not reach it. Seven sessions
+#     each paid separately to discover that. The dispatch template tells every session to
+#     use physics-skeptic before finalising any percentage, force, verdict count or
+#     distance, so a silent failure costs turns AND leaves claims unreviewed while looking
+#     available. A control that fails closed would block; this one failed by being absent.
+say ""
+say "=== ADVERSARIAL REVIEW PATH ==="
+say "  STATUS AS OF 2026-08-19: the physics-skeptic subagent and the Agent tool generally"
+say "  were measured DEAD fleet-wide. 20 calls, 0 successes. An explicit model override"
+say "  does NOT reach it. The agent launches and then dies, so it reads as transient."
+say "  DO NOT retry it expecting a different result, and DO NOT fake the review."
+say "  Mark every percentage, force, verdict count and distance UNREVIEWED explicitly."
+say "  Re-test with one Agent call before assuming this is still true."
+
 # 6. Repo-wide concurrency. Who else is live right now.
 say ""
 say "=== OTHER LIVE SESSIONS (do not touch their branches or worktrees) ==="

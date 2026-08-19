@@ -105,7 +105,16 @@ while IFS=$'\t' read -r slot wave branch base tree needs_gpu writes; do
   # dialog appears and SWALLOWS the prompt argument. The session comes up idle at
   # ctx 0 percent with no turn. Deliver the prompt afterwards with r8_send.py
   # rather than trusting the argument, and check ctx before assuming it landed.
-  CMD="claude --model opus --effort max --permission-mode bypassPermissions"
+  # PER-SLOT PERMISSION MODE, from coordinator-audit finding A1. Measured across 18
+  # transcripts: 878 records carried bypassPermissions and ZERO carried plan, for the whole
+  # round, because this line hard-coded it. Deny and ask rules apply in every mode, so the
+  # 15 deny and 6 ask rules in .claude/settings.json were live throughout; what a global
+  # bypass actually cost was the 23 allow rules going inert and the confirmation step, and
+  # it overrode per-slot judgement with one global setting. The plan file now carries a
+  # permmode column; read and audit slots default to plan.
+  PM=$(awk -F'\t' -v s="$slot" '$1==s{print $NF}' "$PLAN")
+  case "$PM" in plan|acceptEdits|bypassPermissions) : ;; *) PM=acceptEdits ;; esac
+  CMD="claude --model opus --effort max --permission-mode $PM"
   CMD="$CMD --session-id $SID --add-dir $REPO"
   CMD="$CMD \"\$(cat '$PROMPT')\""
 
