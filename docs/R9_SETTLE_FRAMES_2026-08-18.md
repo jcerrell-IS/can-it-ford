@@ -182,6 +182,10 @@ licenses quoting `final_disp_mag_m` as converged.
 | 20 | **Register B4: the population was 21, not 25. No conclusion moves**, and the median shift was duplicates, not the truck | section 21 |
 | 21 | **CLAUDE.md item 5's non-monotone displacement now has a MECHANISM**: the trajectory itself is non-monotonic | section 22 |
 | 22 | **Q2's magnitude is WITHDRAWN under specification sensitivity**; direction survives 8 of 8, magnitude spans 18.4x | section 23 |
+| 23 | **Section 19's "nobody has run a longer one" is FALSE**: 35 comparable 250-frame records pre-existed on Vista | section 24.1 |
+| 24 | **The split REPLICATES on two pre-existing populations that are not mine**, 87 long records, 3 jobs, 0 exceptions | section 24.3 |
+| 25 | **A 91-frame displacement record passes stationarity 50 pct of the time; at 250 frames it never does.** The pass is a false pass | section 24.4 |
+| 26 | The comparable denominator is **163 of 369 on Vista**, with its selection rule stated | section 24.2 |
 
 ---
 
@@ -1749,4 +1753,132 @@ comparison was between two different conventions. Caught by noticing that spec A
 returned `vx` 136.96 where the document says 58.92. Rebuilt on one convention,
 with the document's convention listed separately as what it is, a ninth
 specification.
+
+---
+
+## 24. THE DENOMINATOR WAS A LOCAL SUBSET. 369 RECORDS EXIST ON VISTA.
+
+Every population I have corrected, 25, then 51/48, then B4's 21, came from what
+is on this Mac. Measured live on Vista: **369 `metrics.csv` and 339
+`rollout.npz`.** The coordinator was right that nobody had asked what the full
+population contains.
+
+### 24.1 THE CORRECTION THAT MATTERS MOST: SECTION 19 WAS WRONG
+
+Section 19 says, as the justification for submitting job 922622:
+
+> "The canonical runs are 91 rows. **Nobody has ever run a longer one.**"
+
+**That is false, and it was false when I wrote it.** Measured: **35 comparable
+records at 250 frames already existed on Vista**, in `d4_jobA` (20, in 10-repeat
+sets) and `r7_inflow_918506`'s `__closed` arms (15, in 5-repeat sets). Both
+predate tonight. They are Yaris, free, forced, closed-wall, canonical friction,
+and two of them sit at `g64 m1100 v1.5`, the exact configuration I ran at 400
+frames.
+
+The accurate statement is narrower and I should have written it: **the long
+records existed; nobody had analysed them for settling or stationarity.** What I
+asserted was an absence in the world from a search of one machine, which is
+precisely the failure this project's own rule names: a partial view cannot
+establish absence, and you must say which view you searched. I searched the Mac
+and wrote a claim about the project.
+
+Job 922622 was therefore not the only way to answer Q1 and Q2. It remains useful,
+because it is the only 400-frame arm and it carries a same-job 90-frame control,
+but the honest framing is that it **confirmed** something existing data could have
+shown.
+
+### 24.2 The 369, classified
+
+Membership decided by checkable criteria, every exclusion named:
+
+| n | class |
+|---|---|
+| **165** | **COMPARABLE to the canonical set** |
+| 50 | pinned body, different constraint |
+| 38 | non-Yaris hull (Rogue, Silverado) |
+| 30 | no-forcing control |
+| 26 | non-canonical boundary condition (recycle, recycnb, bare) |
+| 21 | clamp experiment |
+| 10 | different engine tree |
+| 9 | off-schema, no velocity channel |
+| 6 | image-particle experiment |
+| 6 | non-canonical floor friction |
+| 5 | enhanced-render variant |
+| 3 | brake/friction variant |
+
+**My first exclusion rule was too coarse and would have discarded the answer.** It
+excluded the whole `r7_inflow` tree as non-canonical BC. That tree MIXES boundary
+conditions: its `__closed` arms are the canonical closed-wall BC and only
+`recycle`, `recycnb` and `bare` change the scene. Excluding by tree rather than by
+arm would have thrown away 15 of the 35 pre-existing long records, which are the
+most valuable records in the inventory.
+
+**THE DENOMINATOR, WITH ITS SCOPE: 163 comparable records of 369 under
+`/work/11603/jcerrell0629` on Vista, selected by 15-column FloodHistory schema,
+free body, forced, Yaris hull, canonical closed-wall BC, floor friction 0.55, and
+at least 20 rows.** Of those, 76 are 91-frame, 35 are 250-frame and 52 are
+400-frame.
+
+### 24.3 THE SPLIT REPLICATES ON DATA THAT IS NOT MINE
+
+This is the result. Stationarity run across all 163. Median `N_eff` ratio against
+the 91-frame median, per channel, with the pre-registered bands:
+
+| population | records | `dx` | `dmag` | `vx` | `vmag` |
+|---|---|---|---|---|---|
+| `d4_jobA` 250, **pre-existing**, 10-rep | 20 | **SAT** 0.20 | **SAT** 0.20 | **SCAL** 1.13 | **SCAL** 3.27 |
+| `r7_inflow __closed` 250, **pre-existing**, 5-rep | 15 | **SAT** 0.20 | **SAT** 0.20 | **SCAL** 0.99 | **SCAL** 2.66 |
+| `r9_canonical_400`, mine tonight | 52 | **SAT** 0.14 | **SAT** 0.17 | **SCAL** 0.98 | **SCAL** 3.09 |
+
+**Displacement saturates in all three. Velocity scales in all three. Zero
+exceptions across 87 long records from three separate jobs run by different
+sessions for different purposes.** Section 23 established the direction survives
+eight window specifications on one run; this establishes it survives three
+independent populations. Those are different kinds of robustness and both were
+needed.
+
+Absolute medians make the point harder: `dx` `N_eff` is 5.12 at 91 frames and
+**2.89, 2.86 and 3.16** at 250, 250 and 400. It does not merely fail to grow, it
+**falls and then sits at about 3 regardless of record length.**
+
+### 24.4 A NEW RESULT: THE 91-FRAME RECORD IS TOO SHORT TO DETECT ITS OWN DRIFT
+
+Not something I set out to test, and it falls out of the same table.
+
+| population | `dx` records stationary at 5 percent |
+|---|---|
+| 91-frame comparable | **38 of 76**, 50 percent |
+| `d4_jobA` 250 | **0 of 20** |
+| `r7 __closed` 250 | **1 of 15** |
+| `r9_canonical_400` | 16 of 52, 31 percent |
+
+**At 91 frames a displacement record passes the stationarity test about half the
+time. At 250 frames it essentially never does.** The pass is an artifact of the
+record being too short to reveal the drift, not evidence of a settled value.
+
+That is a false-pass, and it is the exact shape of section 17: a test returning
+the pass value when it lacked the evidence to fail. Here the cause is not a coding
+defect, it is sample size, but the consequence for a reader is identical. **Any
+stationarity PASS on a 91-frame displacement record in this project should be
+treated as not-evaluated rather than as evidence of stationarity.**
+
+### 24.5 STEP 2 WAS OFFERED ON `gg` AND I DID NOT USE IT
+
+The coordinator offered 54 idle `gg` nodes, roughly 7,800 cores, and warned in the
+same message that filling idle nodes with work that does not need them wastes the
+allocation exactly as an idle idev session does. **Measured before deciding**, on
+the Vista login node: 0.046 s per 91-frame record and 1.85 s per 401-frame record,
+so the whole 163-record pass is about **2 minutes on one core.** It ran in the
+background on the login node in well under that.
+
+A batch submission would have spent more time in the queue than in the work.
+**`gg` was not needed and was not used.** Recording it because the negative is
+the useful part: the offer was generous and correct to make, and the right answer
+was still no.
+
+One correction to my own reasoning on the way: I first asserted this pass would
+take "seconds", the tool call timed out at 60 s, and only then did I measure. The
+estimate was wrong by an order of magnitude in the direction that would have made
+me confident. Measuring cost 2 commands.
 
