@@ -138,6 +138,53 @@ def build_column(n_grid, lim, depth, seed, device):
     return s, dx, h, surface_z, len(pts)
 
 
+def quiescence(s, n_particles, floor, depth):
+    """Well-balancedness diagnostics, added 2026-08-19 after Qui18b was surfaced.
+
+    Quinlan 2018, Computers & Fluids 177, 33-45, doi 10.1016/j.compfluid.2018.09.019
+    (title and journal verified against Crossref, verdict "matched", not taken on report)
+    validates a static tank by showing the total kinetic energy normalised by gravitational
+    potential energy decays to 1e-13 to 1e-18, which the paper calls machine zero, and that
+    with non-uniform particles the maximum velocity approaching equilibrium is of order
+    1e-4*sqrt(gH). A well-balanced scheme on a static column goes quiet. A scheme that does
+    not go quiet is not well balanced, and that is a structural property rather than a
+    tolerance.
+
+    THOSE NUMBERS ARE A REFERENCE POINT, NOT AN IMPORTED PASS BAND, and the distinction is
+    the manifest's own: benchmark cases transfer across methods, the tolerances one method
+    reports for itself do not. FVPM is not MPM. What transfers is the QUESTION (does the
+    residual motion decay, and to what floor) and not the number 1e-13.
+
+    TWO MEASURES, BECAUSE LEAKED PARTICLES WOULD OTHERWISE DOMINATE. Particles that have
+    passed the floor plane are in free fall and their kinetic energy grows without bound;
+    including them would report the leak as though it were residual noise in a static
+    column. So both are emitted: over all water, and over the particles still above the
+    floor. The second is the one that answers the well-balancedness question; the first is
+    the one that shows what the leak is doing.
+    """
+    x = s.x()[:n_particles]
+    v = s.v()[:n_particles]
+    vol = s.vol()[:n_particles]
+    m = RHO_W * vol
+    v2 = (v ** 2).sum(axis=1)
+    z_rel = np.maximum(x[:, 2] - floor, 0.0)
+    ke_all = float(0.5 * (m * v2).sum())
+    pe_all = float((m * G_ENGINE * z_rel).sum())
+    keep = x[:, 2] >= floor
+    ke_in = float(0.5 * (m[keep] * v2[keep]).sum()) if keep.any() else float("nan")
+    pe_in = float((m[keep] * G_ENGINE * z_rel[keep]).sum()) if keep.any() else float("nan")
+    v_ref = math.sqrt(G_ENGINE * depth)
+    vin = np.sqrt(v2[keep]) if keep.any() else np.array([float("nan")])
+    return {
+        "ke_over_pe_all": ke_all / pe_all if pe_all > 0 else float("nan"),
+        "ke_over_pe_above_floor": ke_in / pe_in if pe_in > 0 else float("nan"),
+        "vmax_over_sqrt_gH": float(vin.max()) / v_ref,
+        "vrms_over_sqrt_gH": float(np.sqrt((v2[keep]).mean())) / v_ref if keep.any() else float("nan"),
+        "sqrt_gH_m_s": v_ref,
+        "n_above_floor": int(keep.sum()),
+    }
+
+
 def pressure_profile(s, n_particles, dx, floor, surface_z, n_bins=20):
     """Bin particle pressure by height and fit dp/dz over the INTERIOR of the column.
 
@@ -211,6 +258,7 @@ def run(a):
     for f in range(a.frames):
         s.step(dt, substeps)
         prof = pressure_profile(s, n_p, dx, FLOOR, surface_z)
+        prof.update(quiescence(s, n_p, FLOOR, a.depth))
         prof["frame"] = f
         prof["t_s"] = (f + 1) * dt * substeps
         prof["dpdz_rel_error"] = prof["fit_dpdz_Pa_per_m"] / (-ref) - 1.0
@@ -218,7 +266,9 @@ def run(a):
         if a.verbose and f % 20 == 0:
             print(f"  frame {f:4d}  dp/dz {prof['fit_dpdz_Pa_per_m']:10.2f} Pa/m  "
                   f"rel {prof['dpdz_rel_error']*100:+7.3f}%  "
-                  f"below_floor {prof['n_below_floor']}", flush=True)
+                  f"below_floor {prof['n_below_floor']:6d}  "
+                  f"KE/PE(in) {prof['ke_over_pe_above_floor']:.3e}  "
+                  f"vmax/sqrt(gH) {prof['vmax_over_sqrt_gH']:.3e}", flush=True)
 
     tail = rows[len(rows) // 2:]
     rel = np.array([r["dpdz_rel_error"] for r in tail], float)
@@ -269,6 +319,18 @@ def run(a):
             "the band is not the same at mean-1SE and mean+1SE, so the verdict is not "
             "stable within one blocked standard error"),
         "curvature": curv,
+        "quiescence": {
+            "reference": "Qui18b Quinlan 2018 Comput Fluids 177:33-45 reports KE/PE decaying "
+                         "to 1e-13..1e-18 (machine zero) and vmax ~1e-4*sqrt(gH) on a static "
+                         "tank. REFERENCE POINT, NOT AN IMPORTED PASS BAND: FVPM is not MPM "
+                         "and tolerances do not transfer across methods. What transfers is "
+                         "the question, not the number.",
+            "ke_over_pe_above_floor_final": float(tail[-1].get("ke_over_pe_above_floor", float("nan"))),
+            "ke_over_pe_above_floor_min": float(min(r.get("ke_over_pe_above_floor", float("inf")) for r in tail)),
+            "ke_over_pe_all_final": float(tail[-1].get("ke_over_pe_all", float("nan"))),
+            "vmax_over_sqrt_gH_final": float(tail[-1].get("vmax_over_sqrt_gH", float("nan"))),
+            "vrms_over_sqrt_gH_final": float(tail[-1].get("vrms_over_sqrt_gH", float("nan"))),
+        },
         "window": "last 50 percent of frames",
         "n_frames_in_window": len(tail),
         "mean_dpdz_Pa_per_m": float(np.mean([r["fit_dpdz_Pa_per_m"] for r in tail])),
