@@ -256,6 +256,49 @@ This control is weak on its own, because frame 0 is after a step and mixes estim
 with real settling. Run 2 of job 922535 is the clean version: the sphere pinned 0.3 m clear
 of the water for 300 frames, where no body effect is available to explain anything.
 
+### 6.1 The instrument is validated against a planted answer, and that narrows E1 further
+
+`analysis/r9_jobb_estimator_test.py selftest` builds a synthetic particle cloud with a
+KNOWN free surface, flat everywhere except the annulus `R < r <= 2R`, where three extra
+layers are stacked on purpose. A smoke run proves the code does not crash; this proves the
+numbers mean something, which matters because this unit's whole conclusion rests on them.
+
+**IT ALREADY BIT, AND THE BUG WAS IN MY TEST.** The first version planted `FLOOR + DEPTH`
+as the far-field answer and reported a 3.26 mm instrument error. The lattice holds an
+integer number of layers of spacing `h`, and `0.5 / 0.009375 = 53.33`, so the real fill
+line is `FLOOR + 53h = 0.57187 m`, not 0.575. **The 3.26 mm was the test's own rounding,
+not the instrument's bias.** Recorded because a wrong instrument-error figure would have
+gone straight into the E1 assessment with the right sign to help it.
+
+With the geometry planted consistently:
+
+| quantity | planted | measured | error |
+|---|---|---|---|
+| far-field fill line, FLAT surface | 0.57187 m | 0.57174 m | **-0.14 mm** |
+| annulus fill line | 0.60000 m | 0.60172 m | +1.72 mm |
+| near minus far | 28.125 mm | 29.99 mm | **+1.87 mm, 6.7% high** |
+| column-max-median route, same flat surface | 0.57187 m | 0.57307 m | +1.20 mm |
+
+**Three things follow, and the second is the most useful.**
+
+1. The exclusion sweep behaves exactly as designed: 0.60159 / 0.60159 / 0.60160 / 0.60150
+   at exclusion 0 / 0.5R / 1R / 1.5R, then 0.57174 / 0.57171 / 0.57174 at 2R / 3R / 4R. A
+   30 mm step landing exactly on the 2R boundary. That is the signature the real run has to
+   show if E1 holds, and the radial profile resolves it into bins.
+2. **The two independent estimators differ by only 1.34 mm on a flat surface, which is
+   0.071 dx.** The percentile-plus-h/2 route reads 0.14 mm low, the column-max-median route
+   reads 1.20 mm high, and their bracket is 1.34 mm wide. At 1.46 percent of ratio per mm
+   that is **about 2 percentage points of ratio, not 40**. So **E1 cannot be an estimator
+   CONVENTION error.** Combined with section 6, where no 13-to-26 mm static offset is
+   present from the first frame, E1 survives only in one specific form: **the body
+   genuinely holds up about 26 mm of water in the annulus that the estimator discards.**
+   That is now the entire hypothesis, and it is exactly what run 1 measures.
+3. **The instrument is biased TOWARD E1** by 6.7 percent of whatever near-field rise it
+   measures, because a top-tail statistic on a partially filled top region reads high. An
+   E1 verdict has to clear that bias and must be reported with it attached. Against a
+   required 26 mm the bias is 1.9 mm, so it does not change the verdict at the
+   pre-registered thresholds, but it is stated rather than discovered later.
+
 ---
 
 ## 7. The pre-registered test: submitted, thresholds fixed before the run
@@ -387,9 +430,20 @@ integrates `az = fz/mass - g`; `measure_surface` feeds only the reported ratio c
         d4_ghost_918461 d4_combo_918526 d4_jobB_idev d4_jobB'
     scp vista:/tmp/jobb.tgz . && mkdir -p jobb && tar xzf jobb.tgz -C jobb
 
-    python3 analysis/r9_jobb_estimator_test.py offline jobb   # sections 3.1, 3.2
-    python3 analysis/r9_jobb_estimator_test.py floor   jobb   # section 5
+    python3 analysis/r9_jobb_estimator_test.py offline  jobb   # sections 3.1, 3.2
+    python3 analysis/r9_jobb_estimator_test.py floor    jobb   # section 5
+    python3 analysis/r9_jobb_estimator_test.py selftest        # section 6.1, needs numpy
     python3 analysis/r9_jobb_estimator_test.py verdict <instrumented payloads>   # section 7.1
 
-Everything in sections 3, 5 and 6 is stdlib-only and runs on the Mac in under a minute.
-Section 7 needs a GH200.
+Sections 3, 5 and 6 are stdlib-only and run on the Mac in under a minute. Section 6.1 needs
+numpy but no GPU and no warpmpm: `uv venv v && uv pip install --python v/bin/python numpy`
+provisions it in about fifteen seconds, which is the standing route on this Mac because no
+system interpreter here has numpy. Section 7 needs a GH200.
+
+A note on the four claims that carry a number and could be wrong cheaply, so they can be
+killed in one command each rather than surviving to the paper:
+
+  A_w/V_cap = 14.605 per metre         Wolfram Alpha, independently of the Python
+  K = rho*c^2 = 165,000 Pa             c read from the run config, not assumed
+  10 distinct simulations, not 18      the pairwise distance matrix is printed
+  instrument accurate to 0.14 mm flat  `selftest` exits non-zero if it is not

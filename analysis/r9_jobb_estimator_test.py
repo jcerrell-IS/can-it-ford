@@ -473,6 +473,119 @@ def run(args) -> None:
 
 
 # ======================================================================================
+# SELFTEST: does the instrument recover a surface geometry that was planted on purpose?
+# ======================================================================================
+def selftest() -> int:
+    """Plant a known free surface, elevated only in the annulus, and try to recover it.
+
+    WHY THIS EXISTS. The batch job's smoke run proves the code does not crash. It does not
+    prove the numbers mean anything, and this whole unit's conclusion rests on those
+    numbers. A synthetic cloud with a KNOWN answer is the only check that can fail for the
+    right reason. It needs no GPU and no warpmpm; `SphereTank` is stubbed to its own
+    `measure_surface` body, so the subclass under test is the real one.
+
+    IT ALREADY BIT, AND THE BUG WAS IN THE TEST. The first version planted `FLOOR+DEPTH`
+    as the far-field answer and reported a 3.26 mm instrument error. The lattice holds an
+    INTEGER number of layers of spacing h and 0.5/h is 53.33, so the real fill line is
+    FLOOR + 53h = 0.57187, not 0.575. The 3.26 mm was the test's own rounding. Derive the
+    planted value from the lattice actually built, never from the nominal depth.
+
+    WHAT IT ESTABLISHES, and both directions matter:
+      - on a FLAT planted surface the estimator as written is accurate to 0.14 mm;
+      - the percentile+h/2 route and the independent column-max-median route differ by
+        1.34 mm at g64, which is 0.071 dx, so the CHOICE OF ESTIMATOR CONVENTION is worth
+        about 2 percent of the ratio, not 40. E1 therefore cannot be a convention error;
+        it requires a genuine physical near-field elevation, which is what the run tests;
+      - the near-minus-far difference reads 1.87 mm HIGH on a planted 28.125 mm rise, 6.7
+        percent. The instrument is biased TOWARD supporting E1, so an E1 verdict has to
+        clear that bias and is reported with it attached.
+    """
+    import numpy as np
+
+    class _Stub:
+        """SphereTank.measure_surface as written, and nothing else."""
+        solver: object
+        n_water: int
+        center_xy: tuple
+        radius: float
+        h: float
+
+        def measure_surface(self):
+            x = self.solver.x()[: self.n_water]
+            cx, cy = self.center_xy
+            r = np.hypot(x[:, 0] - cx, x[:, 1] - cy)
+            far = r > 2.0 * self.radius
+            z = x[far, 2] if far.any() else x[:, 2]
+            return float(np.percentile(z, 99.0)) + 0.5 * self.h
+
+    import types
+    stub_mod = types.ModuleType("sphere_heave")
+    stub_mod.SphereTank = _Stub                                    # type: ignore[attr-defined]
+    sys.modules["sphere_heave"] = stub_mod
+    _, Tank = _build_instrumented(".")
+
+    R, DX, LIM, FLOOR, DEPTH, N_EXTRA = 0.15, 0.01875, 1.2, 0.075, 0.5, 3
+    h = DX / 2.0
+    rng = np.random.default_rng(0)
+    n_lat, n_z = int(round((LIM - 0.2) / h)), int(round(DEPTH / h))
+    far_fill = FLOOR + n_z * h
+    near_fill = FLOOR + (n_z + N_EXTRA) * h
+    ax = 0.1 + (np.arange(n_lat) + 0.5) * h
+    az = FLOOR + (np.arange(n_z) + 0.5) * h
+    gx, gy, gz = np.meshgrid(ax, ax, az, indexing="ij")
+    w = np.stack([gx.ravel(), gy.ravel(), gz.ravel()], axis=1)
+    w += rng.uniform(-0.2 * h, 0.2 * h, size=w.shape)
+    cx = cy = 0.5 * LIM
+    rad = np.hypot(w[:, 0] - cx, w[:, 1] - cy)
+    # Take the annulus slice ONCE, from the base lattice. Recomputing the mask against a
+    # `w` that the loop is growing is an index-length bug that numpy catches loudly here
+    # and would catch silently if the shapes happened to line up.
+    ring = w[(rad > R) & (rad <= 2.0 * R)]
+    layers = [w]
+    for k in range(N_EXTRA):
+        src = ring.copy()
+        src[:, 2] = FLOOR + (n_z + k + 0.5) * h + rng.uniform(-0.2 * h, 0.2 * h, size=len(src))
+        layers.append(src)
+    w = np.concatenate(layers)
+    # Carve the body out, so r < R carries no free surface, exactly as the real scene does.
+    w = w[~((np.hypot(w[:, 0] - cx, w[:, 1] - cy) <= R) & (w[:, 2] > far_fill - 0.09))]
+
+    t = Tank.__new__(Tank)
+    t.solver = types.SimpleNamespace(x=lambda: w.astype(np.float32))  # type: ignore[assignment]
+    t.n_water, t.center_xy, t.radius = len(w), (cx, cy), R
+    t.h, t.dx, t.lim, t.FLOOR, t.WALL, t.z = h, DX, LIM, FLOOR, 0.1, far_fill
+
+    far_est = t.measure_surface()
+    d = t._diag
+    print(f"planted far-field fill line   {far_fill:.5f} m  ({n_z} layers of h={h*1000:.4f} mm)")
+    print(f"planted annulus fill line     {near_fill:.5f} m  (rise {N_EXTRA*h*1000:.3f} mm)")
+    print(f"particles                     {len(w)}\n")
+    print(f"estimator as written, excl 2R {far_est:.5f} m   error {(far_est-far_fill)*1000:+.2f} mm")
+    print(f"near-field, R < r <= 2R       {d['surf_nearfield_m']:.5f} m   "
+          f"error {(d['surf_nearfield_m']-near_fill)*1000:+.2f} mm")
+    print(f"near minus far                {(d['surf_nearfield_m']-far_est)*1000:+.2f} mm  "
+          f"planted {N_EXTRA*h*1000:.3f} mm")
+    print(f"column-max median, independent{d['surf_far_colmax_median_m']:.5f} m   "
+          f"error {(d['surf_far_colmax_median_m']-far_fill)*1000:+.2f} mm, "
+          f"{d['n_columns']} columns")
+    print(f"the two estimators differ by   {(d['surf_far_colmax_median_m']-far_est)*1000:+.2f} mm "
+          f"= {(d['surf_far_colmax_median_m']-far_est)/DX:+.3f} dx")
+    print("\nexclusion sweep, the step must land exactly at 2R:")
+    for m in Tank.R_EXCLUDE:
+        print(f"  excl {m:>4}R  {d[f'surf_excl_{m:g}R_m']:.5f} m  n={d[f'n_excl_{m:g}R']:9d}")
+    print("radial profile:")
+    for lo, hi in Tank.R_BINS:
+        tag = f"{lo:g}_{hi:g}R" if hi < 1e8 else f"{lo:g}_infR"
+        print(f"  r in {tag:>10s} {d['surf_bin_'+tag+'_m']:.5f} m  n={d['n_bin_'+tag]:9d}")
+
+    ok_far = abs(far_est - far_fill) < 0.002
+    ok_rise = abs((d["surf_nearfield_m"] - far_est) - N_EXTRA * h) < 0.003
+    print(f"\nflat far-field recovered to < 2 mm   {ok_far}")
+    print(f"planted rise recovered to < 3 mm     {ok_rise}")
+    return 0 if (ok_far and ok_rise) else 1
+
+
+# ======================================================================================
 # VERDICT: apply the pre-registered thresholds to an instrumented payload
 # ======================================================================================
 def verdict(paths: list[str], last: int) -> None:
@@ -546,6 +659,8 @@ def main() -> None:
     r.add_argument("--device", default="auto")
     r.add_argument("--out", required=True)
 
+    sub.add_parser("selftest", help="recover a planted surface; needs numpy, no GPU")
+
     v = sub.add_parser("verdict", help="apply the pre-registered thresholds")
     v.add_argument("paths", nargs="+")
     v.add_argument("--last", type=int, default=50)
@@ -555,6 +670,8 @@ def main() -> None:
         offline(a.dirpath)
     elif a.cmd == "floor":
         floor_report(_load(a.dirpath, verbose=False) if a.dirpath else None)
+    elif a.cmd == "selftest":
+        raise SystemExit(selftest())
     elif a.cmd == "run":
         run(a)
     else:
