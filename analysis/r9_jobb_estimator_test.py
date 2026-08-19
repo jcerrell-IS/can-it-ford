@@ -478,6 +478,19 @@ def _build_instrumented(scene_dir: str):
 
 def run(args) -> None:
     _sh, Tank = _build_instrumented(args.scene_dir)
+    # THE FLOOR-ALIGNMENT ARM. `sphere_heave.py` is not edited; `FLOOR` is a CLASS
+    # attribute read through `self.FLOOR`, so a subclass override reaches every use of it.
+    #
+    # WHY THIS EXISTS. Job 918450's "bcfix" turned out to be a one-character fork of the
+    # ENGINE, `dotproduct < 0.0` -> `<= 0.0` at mpm_solver_warp.py:1955, which decides
+    # whether a grid node lying EXACTLY on a plane collider is constrained. At lim = 1.2
+    # the floor at 0.075 m sits exactly on a grid plane at every grid in the sweep
+    # (0.075/dx is 3, 4, 6, 8, 12 at g48/64/96/128/192, exact in both f64 and f32), so one
+    # whole plane of nodes went unconstrained. Shifting FLOOR by half a cell moves it off
+    # the grid with dx, the SDF cache key and everything else held fixed, which is the only
+    # way to separate the alignment from the engine change.
+    if args.floor_offset_cells:
+        Tank.FLOOR = 0.075 + args.floor_offset_cells * (args.lim / args.n_grid)
     tank = Tank(n_grid=args.n_grid, lim=args.lim, depth=args.depth,
                 h0_over_d=args.h0_over_d, seed=args.seed, device=args.device,
                 sdf_res=args.sdf_res, free=False,
@@ -488,6 +501,8 @@ def run(args) -> None:
     cfg["seed"] = args.seed
     cfg["instrumented_by"] = "analysis/r9_jobb_estimator_test.py"
     cfg["no_body_control"] = bool(args.h0_over_d >= 1.0)
+    cfg["floor_offset_cells"] = float(args.floor_offset_cells)
+    cfg["floor_m_effective"] = float(Tank.FLOOR)
     cfg["prereg_e1_ratio_below"] = PREDICT_E1_RATIO_BELOW
     cfg["prereg_e3_ratio_above"] = PREDICT_E3_RATIO_ABOVE
     print(json.dumps(cfg, indent=2, sort_keys=True), flush=True)
@@ -694,6 +709,9 @@ def main() -> None:
     r.add_argument("--ghost-layers", type=int, default=0)
     r.add_argument("--sdf-res", type=int, default=96)
     r.add_argument("--sdf-cache", default=None)
+    r.add_argument("--floor-offset-cells", type=float, default=0.0,
+                   help="shift FLOOR by this many dx. 0.5 moves the floor plane off the "
+                        "grid, isolating the exact-node collider bug from the engine fix")
     r.add_argument("--seed", type=int, default=0)
     r.add_argument("--device", default="auto")
     r.add_argument("--out", required=True)

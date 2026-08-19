@@ -702,3 +702,131 @@ killed in one command each rather than surviving to the paper:
   K = rho*c^2 = 165,000 Pa             c read from the run config, not assumed
   10 distinct simulations, not 18      the pairwise distance matrix is printed
   instrument accurate to 0.14 mm flat  `selftest` exits non-zero if it is not
+
+---
+
+## 11. What job 918450 actually set, and whether the leak explains criterion 3
+
+Asked by the coordinator, 2026-08-19 23:05. Neither d11-accessor nor I had read 918450.
+
+### 11.1 It is a ONE-CHARACTER FORK OF THE ENGINE, not a change to the scene
+
+`run_jobBbc.sh` on Vista points `PYTHONPATH` at `mpm-engine-bcfix-src`, not at the
+canonical `mpm-engine/src`. Its `sphere_heave.py` is sha256 `6ab8cec5...`, **byte-identical
+to the one I ran**. The entire difference is in the solver:
+
+    mpm_solver_warp.py:1955   -  if dotproduct < 0.0:
+                              +  if dotproduct <= 0.0:
+
+`diff -u` over the two trees gives **one hunk, one line**, and `diff -rq` finds no other
+differing source file. That is the whole of the "floor BC treatment".
+
+**This corrects my own section 7 note.** I wrote that the bcfix "is not in `d4_scene` and
+not on this branch", which is true but reads as a missing scene edit. It is not a scene
+edit at all. Neither branch nor scene file could ever have held it.
+
+### 11.2 Why one character mattered: the floor lands exactly on a grid plane
+
+The kernel computes `offset = float(grid_z)*model.dx - param.point[2]` and constrains the
+node only when the dot product with the plane normal is negative. A node lying **exactly**
+on the plane gives `0.0`, which `< 0.0` rejects, so it is left unconstrained.
+
+`FLOOR = 0.075` and `dx = lim/n_grid`, and at `lim = 1.2` that quotient is an exact
+integer at every grid this project has run:
+
+| grid | dx | FLOOR/dx | node on the floor plane? |
+|---|---|---|---|
+| g48 | 0.025000 | 3.000 | **yes**, exact in f64 and f32 |
+| g64 | 0.018750 | 4.000 | **yes** |
+| g96 | 0.012500 | 6.000 | **yes** |
+| g128 | 0.009375 | 8.000 | **yes** |
+| g192 | 0.006250 | 12.000 | **yes** |
+| **117 / lim 2.2 (job C's geometry)** | 0.018803 | 3.9886 | **no**, dot = 2.14e-4 |
+
+So a whole grid plane at the floor went unconstrained in **every** job B run, and the
+same test says **job C's own geometry would not have hit it**. The wall planes at
+`0.100` are exact only at g48, g96 and g192, and the measured wall loss follows that:
+my canonical g96 run loses **5.135 percent** of particles past the walls where g64 and
+g128 lose 2.5 to 2.6 percent, and the bcfix engine takes that g96 figure down to 2.730.
+
+### 11.3 SIGN and MAGNITUDE, from an A/B differing by exactly one character
+
+My `r9_g64_band1` (canonical `<`) against `d4_combo_918526/sphere_bcfix_ghost0` (bcfix
+`<=`). Same scene sha `6ab8cec5`, same flags, same 300 frames, one character apart:
+
+| | canonical `<` | bcfix `<=` | change |
+|---|---|---|---|
+| particles below the floor | 29350 (4.904%) | 1079 (0.180%) | **-96.3% of the leak** |
+| surface drop | 60.88 mm | 36.23 mm | -24.65 mm |
+| `fz` | 44.728 N | 60.476 N | +15.75 N |
+| **criterion-3 ratio** | **1.5217** | **1.3551** | **-0.1666** |
+| `fz` / 69.218 N (nominal) | 0.6462 | 0.8737 | +0.2275 |
+
+**SIGN: CONSISTENT.** Stopping the leak lowers the criterion-3 ratio. More water lost
+through the floor, larger criterion-3 excess, in the direction the question supposed.
+
+**MAGNITUDE: ABOUT ONE THIRD, AND THAT IS THE USEFUL HALF OF THE ANSWER.** Removing
+**96.3 percent** of the floor leak removed **31.9 percent** of the excess: 52.2 points
+down to 35.5. **Two thirds of the criterion-3 failure survives a floor that has
+essentially stopped leaking**, so the leak is a real contributor and cannot be the
+explanation. The FAIL is not rescued by fixing the floor: 35.5 points is still far
+outside the 25 percent FAIL band and still 3.9x the 9.22 percent instrument floor of
+section 5.
+
+**This reproduces a figure that section 9 recorded as unlocated.** The 2026-08-18 deep
+search's goal text asserts that eliminating the leak "removed only 30 percent of the force
+error". **The 30 percent reproduces from the payloads at 31.9.** The other figure in the
+same sentence still does not: it claims 49 particles, 0.008 percent, where the best run on
+Vista loses **1079 particles, 0.180 percent**, twenty-two times more.
+
+Volume budget at the last frame, per-particle volume `h^3 = 8.2397e-7 m3` over the 1.0 m2
+column, with the 7.42 mm one-time compression from `water_budget`'s own derivation:
+
+| | floor loss | wall loss | compression | total | observed drop |
+|---|---|---|---|---|---|
+| canonical `<` | 24.18 mm | 12.41 mm | 7.42 mm | 44.01 mm | 60.88 mm (72%) |
+| bcfix `<=` | 0.89 mm | 13.89 mm | 7.42 mm | 22.20 mm | 36.23 mm (61%) |
+
+**Fixing the floor does not fix the surface.** The bcfix run still drops 36 mm, of which
+the floor now contributes 0.89. The wall loss is untouched and is now the largest measured
+term. That is consistent with 11.2: at g64 the wall planes are NOT on grid nodes, so the
+one-character fix does nothing for them, and whatever moves water past the walls is a
+different mechanism.
+
+### 11.4 The alignment story does not survive its own test, so it is being tested
+
+`d4_jobBbig_918251` runs `n_grid 117, lim 2.2` on the **canonical** engine with the floor
+**off** the grid plane, and still loses **3.796 percent** through the floor, close to the
+4.5 to 4.9 percent of the aligned canonical runs rather than the 0.18 percent of the fixed
+one. **If exact-node alignment were the whole mechanism, that run should not leak.**
+
+It is confounded: its scene is sha `4b329d90`, not the `6ab8cec5` used by every run
+compared in 11.3, so it cannot decide the question. **Vista job 923195 completes the 2x2**,
+engine {canonical, bcfix} x floor {on-node, off-node by half a cell}, all at `lim = 1.2`
+with `dx`, the SDF cache key and the scene file held fixed. The off-node arms shift `FLOOR`
+by `0.5*dx` through a subclass attribute; `sphere_heave.py` is still not edited.
+
+**Pre-registered, written before the runs:** if exact-node alignment is the mechanism, the
+canonical off-node arm leaks like the fixed case, about 0.2 percent, because off the plane
+`<` and `<=` are the same test. **If it still leaks about 4.9 percent, the alignment story
+is refuted and the one-character fix works by some other route.**
+
+### 11.5 The dependence on d11-accessor's column, stated precisely
+
+d11-accessor's job 922619 is a no-body hydrostatic column whose `below_floor` climbs
+monotonically to 46,926 over 180 frames. It points the same way as my no-body control,
+where 97 percent of the surface fall happened with no body present.
+
+**It is not independent corroboration, and the shared parent is sharper than "copied
+defaults".** Their column runs `floor_m = 0.075`, `lim_m = 1.2`, `dx_m = 0.01875`, read
+live from their job log. That is **exactly** the geometry of 11.2: `0.075/0.01875 = 4.000`,
+a grid node sits precisely on their floor plane, and on the canonical engine it is
+unconstrained. **Their column and my control are two observations of one bug at one grid
+plane in one engine**, not two independent origins, and this project's rule says to say so.
+
+**What that buys them, which generic corroboration would not**: a falsifiable prediction.
+**Their column should stop leaking on `mpm-engine-bcfix-src`, or with `FLOOR` shifted half
+a cell, and its `dp/dz` deficit should shrink with it.** If it does not, section 11.4's
+result applies to their scene too and the mechanism is elsewhere. Either way it is one
+20-minute job, and their column is a cleaner probe of it than my sphere scene because it
+has no collider at all.
