@@ -1585,3 +1585,178 @@ is a question about those papers that I have not read and cannot settle from the
 code. **Nobody should expect a vehicle-in-water force number to fall out of this
 demo.** Run submitted as batch **923199** on 6 ranks to establish that the
 vehicle-scale pipeline executes end to end, which is worth knowing on its own.
+
+---
+
+# ADDENDUM 10: THE PINNED-OPERATING-POINT PRINCIPLE
+
+## 40. One rule, arrived at three times by three routes
+
+Three slots produced three non-convergence claims tonight and **all three were
+withdrawn or qualified by their own authors**, each for a different reason. That is
+not three incidents, it is one rule seen from three sides, so here it is as a rule.
+
+> **A convergence claim is empty until its operating point is pinned.**
+>
+> Asserting that a quantity converges, or fails to, is a claim about a limit under
+> refinement. It means nothing unless three things hold, and each of the three
+> failed once tonight:
+>
+> **(1) The observable must admit a limit at all.** If the quantity is an unbounded
+> functional of the state, no resolution and no record length can stabilise it and
+> the question is malformed rather than the solver defective.
+>
+> **(2) Everything else that moves the observable must be pinned AND reported,
+> including whatever moves as a side effect of refining.** Refinement is not a
+> clean single-variable change; it drags other parameters with it.
+>
+> **(3) The refinement range must be stated**, because a non-monotone ladder
+> returns opposite answers depending on where you sampled it.
+
+**The three failures, one per clause:**
+
+| clause | slot | what went wrong | failure signature |
+|---|---|---|---|
+| (1) observable admits no limit | d15-settle | `final_disp_mag_m` integrates a velocity with non-zero mean, so it drifts forever and ends at 43.6 percent of its own peak | **a statistic that gets WORSE on a longer record** (`dx` N_eff falls on a record 4.4x longer) |
+| (2) side-effect parameter unpinned | d21 | the ladder's operating point moved with resolution and was never matched | **the "held fixed" quantity is not the same at each rung** |
+| (3) range too narrow | **d19, me** | two rungs landed on the rising limb of a non-monotone curve; I published "does not converge" and four rungs refuted it | **a two-point ladder** |
+
+**Each signature is a cheap pre-registered check**, which is the point of writing it
+as a rule rather than three stories:
+
+- Before demanding convergence, ask **"is this observable bounded, and does a true
+  value exist independent of when I stopped looking?"** If no, change the
+  observable. A time-integral of a non-zero-mean quantity never qualifies.
+- Before comparing rungs, **measure the thing you believe is held fixed, at every
+  rung**, and report it beside the observable. Do not assume refinement held it.
+- Before concluding either way, **use at least four rungs over at least 3x in
+  spacing**, and report the range. For my own ladder, three rungs at 0.030, 0.020
+  and 0.015 would still have been ambiguous.
+
+**The asymmetry that makes this worth enforcing.** A *convergence* claim that is
+under-sampled usually looks noisy and invites more work. A *non-convergence* claim
+that is under-sampled looks like a finding, gets written up, and propagates, because
+"the solver does not converge" is more interesting than "it does". **All three
+withdrawals tonight were of non-convergence claims, and none of the three was
+caught by a reviewer.** Each was caught by its own author adding a data point. That
+is the cheapest possible check and it is not currently required anywhere.
+
+**Where each of the three results ended up after the rule was applied**, so nobody
+reads this as everything being wrong: d15's displacement result **strengthened**, from
+"non-convergent" to "cannot converge, here is the mechanism". Mine **reversed**, from
+"does not converge" to "converges non-monotonically, +48.04 to +15.72 over four
+rungs". d21's was **withdrawn**. The rule does not predict which way a claim moves;
+it predicts that an unpinned claim is not yet a result.
+
+---
+
+# ADDENDUM 11: THE DEFINITIVE PRIOR-ART TABLE, FROM PRIMARY RECORDS
+
+## 41. Fourteen works, every DOI resolved against Crossref by me tonight
+
+**[read]** Every row below was resolved by me against the Crossref primary record
+via Scholar Sidekick on 2026-08-20, not carried from any session's list and not
+from the corpus index. Titles are the resolved titles, years are Crossref
+`issued.year`. Citation status measured against the two tracked bibliographies and
+their `.tex` files.
+
+| # | first author, resolved title (abbrev) | DOI | **Crossref year** | method | in a repo `.bib` | **`\cite`d** |
+|---|---|---|---|---|---|---|
+| 1 | Al-Qadami, *Full-scale experimental investigations on the response of a flooded passenger vehicle* | `10.1007/s11069-021-04949-6` | **2021** | **experimental, full-scale** | no | no |
+| 2 | Al-Qadami, *A numerical approach to understand the responses of passenger vehicles moving through floodwaters* | `10.1111/jfr3.12828` | 2022 | **numerical, moving vehicles** | paper only | **no** |
+| 3 | Al-Qadami, *Understanding the Stability of Passenger Vehicles Exposed to Water Flows through 3D CFD Modelling* | `10.3390/su151713262` | 2023 | 3D CFD | overleaf only | **no** |
+| 4 | Shah, *Hydrodynamic effect on non-stationary vehicles at varying Froude numbers* | `10.1111/jfr3.12657` | **2020** | experimental, 1:10 scale | no | no |
+| 5 | Shah, *Instability Criteria for Vehicles in Motion Exposed to Flood Risks* | `10.1051/matecconf/201820307003` | 2018 | criteria | **both** | **no** |
+| 6 | Pregnolato, *The impact of flooding on road transport: A depth-disruption function* | `10.1016/j.trd.2017.06.020` | 2017 | empirical function | no | no |
+| 7 | He, *Predicting Vehicle-Water Interaction in Shallow Water: Simulations and Experimental Validation* | `10.1115/1.4071177` | 2026 | **simulation + experimental validation** | paper only | **no** |
+| 8 | Wasfy, *Coupled Multibody Dynamics and Smoothed Particle Hydrodynamics for Modeling Vehicle Water Fording* | `10.1115/DETC2015-47142` | 2015 | **SPH + multibody** | paper only | **no** |
+| 9 | Khapane, *Wading Simulation: Challenges and Solutions* | `10.4271/2014-01-0936` | 2014 | wading simulation | paper only | **no** |
+| 10 | Lyu, *Numerical investigation of vehicle wading based on an entirely particle-based three-dimensional SPH model* | `10.1016/j.compfluid.2023.106144` | **2024, NOT 2023** | **entirely particle-based 3D SPH** | no | no |
+| 11 | Xin & Donghai, *Analysis and research on vehicle wading performance* | `10.1177/0954407020942005` | **2020, NOT 2021** | wading performance | no | no |
+| 12 | Varshney, *CFD Method Development for Simulating Water Fording for a Passenger Car* | `10.4271/2021-01-0205` | 2021 | CFD fording | no | no |
+| 13 | Zhao, *Development of in/outflow boundary conditions for MPM simulation of uniform and non-uniform open channel flows* | `10.1016/j.compfluid.2018.10.007` | 2019 | **MPM BC** | paper only | **no** |
+| 14 | Azhar, *Assessment of Vehicle Stability Processes Under Unsteady Flow Conditions* | `10.1111/jfr3.70181` | 2026 | unsteady flow | no | no |
+
+**Not resolvable and therefore not in the table:** Pazouki (Semantic Scholar
+`61da26b6`, no DOI supplied) and `[Ols18b]` (no identifier supplied). **The set is
+at least 14 and I am not calling it complete**, because two known items have no
+resolvable identifier and my search was DOI-resolution, not a systematic sweep.
+
+## 42. THREE CORRECTIONS, TWO OF THEM TO NUMBERS I WAS HANDED TONIGHT
+
+**42a. `10.1016/j.compfluid.2023.106144` is Crossref year 2024, not 2023.** The DOI
+string contains `2023` because that is the journal's volume year, and the label
+`[Lyu23]` follows the string rather than the record. **A DOI containing a year is
+not a citation year**, and this is the same class of trap as the recorded Xia
+2013-versus-2014 case.
+
+**42b. `10.1177/0954407020942005` is Crossref year 2020, not 2021**, and the label
+`[Xin21b]` is wrong on the same basis: volume 235 issue 1 carries a 2021 print
+cover date while Crossref `issued` is 2020.
+
+**42c. CONFIRMED, and this one is a real trap that was flagged and is correct.**
+`10.1051/matecconf/201820307003` first author is **Syed Muzzamil Hussain Shah**, not
+Hamid. And `10.1111/jfr3.12657` is **2020**, so the two prior instructions to
+relabel it 2021 were both wrong. Crossref agrees with the correction, not with the
+instructions.
+
+## 43. THE LIVE DEFECT: ONE KEY, TWO DIFFERENT PAPERS
+
+**This is the finding that needs acting on and it is not a labelling nicety.**
+
+```
+paper/can_it_ford_references_IEEE.bib          alqadami2022 -> 10.1111/jfr3.12828   (2022, numerical)
+overleaf_sync/can_it_ford_references_IEEE.bib  alqadami2022 -> 10.3390/su151713262  (2023, 3D CFD)
+```
+
+**The same citation key resolves to two different works in two copies of the
+bibliography**, and the key asserts a year that is wrong for one of them. A
+`\cite{alqadami2022}` therefore means different things depending on which bib is
+compiled, and neither copy signals the conflict. This is the exact conflation the
+project has been warned about, now baked into the files rather than into prose.
+The two bibs also differ in size, 42 entries against 21, so they are not two copies
+of one list.
+
+**Also measured: every one of the fourteen is `\cite`d ZERO times** in both
+`paper/conference_101719.tex` and `overleaf_sync/conference_101719.tex`. Six sit in
+a bibliography and print nothing. **The standing claim that the paper cites none of
+the prior fording work is confirmed against primary records, and the count is at
+least 14, not four.**
+
+## 44. WHICH THE PAPER MUST CITE BEFORE SUBMISSION
+
+Ranked by how directly each threatens or positions the contribution.
+
+**Must cite, non-negotiable:**
+
+1. **Lyu 2024, `10.1016/j.compfluid.2023.106144`.** *Entirely particle-based
+   three-dimensional SPH model* for vehicle wading. **This is the closest published
+   method to ours in existence** and it is in no bibliography here. Any sentence
+   describing a particle-based 3D vehicle-wading simulation as novel is unsupportable
+   until this is cited and distinguished.
+2. **He 2026, `10.1115/1.4071177`.** *Simulations and Experimental Validation* of
+   vehicle-water interaction. **The project's stated novelty is the validation step**
+   (L-7), and this paper is simulation plus experimental validation of the same
+   interaction. It is in `paper/`'s bib and cited zero times. **It is the single
+   biggest threat to the novelty claim and must be addressed in the text, not just
+   listed.**
+3. **Wasfy 2015, `10.1115/DETC2015-47142`.** *Coupled Multibody Dynamics and SPH for
+   Modeling Vehicle Water Fording.* Particle method plus multibody, same problem,
+   eleven years earlier.
+4. **Al-Qadami 2022, `10.1111/jfr3.12828`.** Numerical, **moving** vehicles, which is
+   exactly the regime d17 is working in.
+5. **Al-Qadami 2021, `10.1007/s11069-021-04949-6`.** Full-scale **experimental**. This
+   is the natural external validation target the project lacks, and L-1's stationary
+   framing needs it.
+
+**Should cite:** Khapane 2014 (6), Varshney 2021 (12) and Xin 2020 (11) as the
+industrial CFD-fording lineage; Shah 2018 (5) and Shah 2020 (4) for the instability
+criteria, with (4)'s **1:10 scale** stated whenever its drive force is quoted;
+Pregnolato 2017 (6) for the depth-disruption framing; Azhar 2026 (14) for unsteady
+flow. **Zhao 2019 (13) is not prior art for fording but must be cited anyway**, since
+it is the source for the in/outflow BC and is currently in the bib uncited.
+
+**One thing this table does not settle.** Whether any of these releases a video or
+frame sequence, which was Q3 and is still unanswered. Nothing above was read beyond
+its Crossref record: **I resolved identity, not content.** No claim here about what
+any of these papers found, only about what they are and whether we cite them.
