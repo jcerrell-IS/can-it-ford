@@ -551,11 +551,31 @@ r8-register    + r8-naming      CLEAN
 r8-licence     + r8-tooling     CLEAN
 ```
 
-**Generalisable rule, and it is the reason to write this up rather than just fix it:** a
-pairwise conflict matrix over N sources is not a conflict analysis of a landing. A landing is
-N merges into a moving target, and the target is a source too. **Always include the integration
-branch as a row.** The same shape as *reach* versus *cited*, and *lineage* versus *merges
-cleanly* in 3.1a: two predicates that feel identical and are measured differently.
+### RULE L1: THE TARGET IS A SOURCE. A PAIRWISE MATRIX OVER N SOURCES IS NOT A CONFLICT ANALYSIS OF A LANDING.
+
+**A landing is N merges into a moving target, and the target is a source too. Always include the
+integration branch as a row.** State it as a rule rather than a corrected count, because the count
+was a symptom and the rule is what would have prevented it.
+
+The diagnostic property: **an instrument that cannot produce a given answer will never produce it,
+however many times you run it.** My matrix had no `add-ci-checks` row, so no number of re-runs
+across two revisions and four branch tips could have surfaced the `.gitignore` conflict. Re-running
+felt like verification and was not, because re-running only resamples what the instrument can see.
+
+**The check that catches this class, and it costs one question:** *what result is this method
+structurally incapable of returning?* Answer it before trusting a negative. Four instances tonight,
+same shape, four different instruments:
+
+| instrument | structurally could not return |
+|---|---|
+| my pairwise conflict matrix | any conflict involving the integration branch |
+| `canford-checks` job status | a failure in any `continue-on-error` step (6.1a) |
+| `count_claims` in a CI checkout | the 7 untracked declaration sites (6.3 item 1) |
+| `research_index --query` | any author, method tag or paraphrase |
+
+Same family as *reach* versus *cited*, and *lineage* versus *merges cleanly* in 3.1a: two
+predicates that feel identical and are measured differently. **The unifying error is not
+carelessness, it is trusting a negative from an instrument whose blind spot nobody stated.**
 
 ### 3.1 `simulation/openchannel_bc.py`, add/add, three lineages
 
@@ -767,12 +787,90 @@ a different file, on the same day.
 wrong too, for the same reason.** Whoever resolves this conflict should write 20 and give it a
 timestamp, because it will be 21 soon enough.
 
-Resolution, concretely: take `r9-corpus-bib`'s file as the base, graft `faf53d1`'s 75 added lines
-into it, and change `19`/`nineteen` to `20`/`twenty` in the grafted block. `r9-corpus-bib` is the
-base rather than the graft because its scope is this file and it is the larger, later-measured
-side.
+### 3.4a Executable specification for the `SKILL.md` union, and why it must be DIRECTED
+
+**REVISION 5. The union is not symmetric. On every point where the two sides state the same fact
+differently, `add-ci-checks` is the wrong one.** MEASURED by extracting the three conflict regions
+from the real step-14 conflicted tree and checking each disagreement against a primary source:
+
+| region | line | `add-ci-checks` says | `r9-corpus-bib` says | which is right |
+|---|---|---|---|---|
+| 1 | 8 | "332 **distinct external papers**" | "332 **records**" | **r9-corpus-bib.** `c621931` landed in `CLAUDE.md`: "Say 332 records / 319 works, never 332 distinct papers" |
+| 2 | 426 | "76 papers, 65 of them **uncited**" | "65 **carrying no DOI-shaped string in the tracked tree**, `.claude/worktrees/` excluded" | **r9-corpus-bib.** The first is the *reach* versus *cited* conflation this same file exists to stop, and the second states its scope |
+| 2 | 426 | `test_physics_gates.py` "**added by `df52bee`**" | "**added by `50b70c0`**, extended by `df52bee` (+30/-7)" | **r9-corpus-bib.** Verified: `git log --diff-filter=A -- tests/test_physics_gates.py` returns `50b70c0` (438 lines added); `df52bee` is +23/-7 |
+| 3 | 525 | "**19** completed deep searches", "The nineteen" | "8 of the project's **20**" | **r9-corpus-bib.** Workspace returns 20 completed (section 3.4) |
+
+**Three regions, four disagreements, `add-ci-checks` loses all four.** So a naive "ours" resolution,
+which is what a hurried `-X ours` or a habit of trusting the integration branch would give,
+reintroduces one phrasing `CLAUDE.md` has just forbidden, one predicate conflation, one false
+commit attribution and one stale count, **into the file every session loads at startup.**
+
+**The specification, executable as written:**
+
+```
+# 1. Take r9-corpus-bib's side for ALL THREE conflicted regions. It is right on every
+#    contested fact and its scope is this file.
+git checkout --theirs .claude/skills/research-corpus/SKILL.md     # theirs = r9-corpus-bib
+
+# 2. Region 3 is the ONE place with content only add-ci-checks has: the 87-line block
+#    "THE INDEX IS NOT THE WHOLE CORPUS. THE DEEP-SEARCH LAYER IS MISSING FROM IT."
+#    r9-corpus-bib's region-3 side is 25 lines about empty DOIs, a DIFFERENT subject.
+#    Graft the add-ci-checks block in, do not replace anything with it:
+git show claude/add-ci-checks:.claude/skills/research-corpus/SKILL.md > /tmp/aci_skill.md
+#    ... append the deep-search block, then:
+
+# 3. In the grafted block ONLY, change 19 -> 20 and "The nineteen" -> "The twenty",
+#    and stamp it, because it will be 21.
+
+# 4. Verify by containment in BOTH directions, not by eye:
+#    every line either side added must be present, except the four contested ones.
+```
+
+**Verification that decides whether the resolution is right**, and it is the same method section
+3.1 used, applied in both directions:
+
+```
+git show <merge-base> :.claude/skills/research-corpus/SKILL.md > /tmp/base.md
+/usr/bin/grep -Fxv -f /tmp/base.md <resolved> | wc -l          # everything the union added
+for side in claude/add-ci-checks claude/r9-corpus-bib; do
+  git show $side:.claude/skills/research-corpus/SKILL.md > /tmp/s.md
+  /usr/bin/grep -Fxv -f /tmp/base.md /tmp/s.md > /tmp/added.md
+  echo "$side added $(wc -l < /tmp/added.md), missing from resolution:"
+  /usr/bin/grep -Fxv -f <resolved> /tmp/added.md | wc -l       # expect 0, except the 4 contested lines
+done
+```
+
+Expect **0 missing from `r9-corpus-bib`** and **exactly the four contested lines missing from
+`add-ci-checks`**, which are the ones deliberately dropped. Any other number means the graft went
+wrong.
+
+**Why this matters more than the file:** the reader measured `SKILL.md` existing in **four states**
+across the live worktrees, with most sessions loading a copy that still asserts a claim `CLAUDE.md`
+has withdrawn. `c621931` adds a preflight warning so the next wave is told. **The warning is not
+the fix; this merge is.** Until it lands, the four contested claims above are what sessions read.
+
+Superseded revision-4 wording, retained: "take `r9-corpus-bib`'s file as the base, graft
+`faf53d1`'s 75 added lines into it, and change 19 to 20". That is right in outline and too vague to
+execute, and it does not say that the graft must be region 3 only.
 
 ### 3.5 `hf_space/`, step 19: the decision was taken by execution, and the outcome was the safe option
+
+> **STANDING CORRECTION, RE-VERIFIED 2026-08-19 19:23. This has now been restated to me twice in
+> the form "taking `r9-platform`'s `app.py` wholesale removes PR #11's L1 joint-rule fix from a
+> page that is already public." THE PREMISE IS TRUE AND THE CONCLUSION IS FALSE.**
+>
+> True: `r9-platform`'s `app.py` contains no `AR_R`, no `l1_verdict`, no `l0_depth_threshold`.
+> False: that taking it removes the fix. **The rule moved to `hf_space/arr_verdict.py` on the same
+> branch**, which is absent from the merge base on one side only and therefore merges CLEAN as a
+> plain add. Re-derived live at 19:23, unchanged since 17:46:50Z: Space sha `e7a9ca9b`,
+> `arr_verdict.py` 121 lines carrying `AR_R` and `l1_verdict`, `app.py` importing it once and
+> wiring `AV.evaluate` four times under `gr.Tab("AR&R verdict calculator")`.
+>
+> **So this is not a call for Josie about whether to keep a physics fix. It is already kept.**
+> What remains for step 19 is a `README.md` hand-merge, and that is a merge, not a decision. The
+> decision that was needed was about the *write*, it was taken by executing it, and section 5.5
+> is about that. Do not put "should we keep the L1 fix" in front of Josie: the answer is that
+> `d18-platform` already kept it, correctly, and the only thing left to check is the README.
 
 **REVISION 4, 2026-08-19 18:55. Revision 3 set out options A, B and C and marked C "do not choose
 without a deliberate decision". `d18-platform` then wrote to the public Space before reading that
@@ -1735,6 +1833,48 @@ mine names its pattern and its command, use mine or restate the other with its s
   own. It does carry `canford-checks.yml`, so it is inside the CI blast radius.
 - **`claude/r9-reader` had no commits of its own when first measured** and was contained in
   `add-ci-checks`; it has since gained work. Re-derive rather than reusing either state.
+
+### 12.2 Revision 5, 2026-08-19 19:30: three flags outside my write scope
+
+I write one file. These three need someone else's hands, and each is measured, not reported.
+
+**(a) `CLAUDE.md` item 13 still does not carry the third scope axis, and CI cannot pass until it
+does.** MEASURED 19:24: `/usr/bin/grep -n "tracked-only\|16/17\|third axis" CLAUDE.md` returns
+**nothing**. Item 13 names two binary choices giving four totals (22/23/24). Section 6.3 item 1
+establishes a third, tracked-only versus whole working tree, from 24 declaration sites of which
+**17 are tracked and 7 are not**, giving 16/17 in any CI checkout. Three axes, eight totals. Until
+item 13 carries 16/17 with its scope, `count_claims` is structurally incapable of passing in CI,
+which is why it is masked, which is why the workflow is green. **This is the root of the CI item,
+not a footnote to it.** `c621931` edited `CLAUDE.md` at 18:53 and did not add it.
+
+**(b) The banner is fixed; the DISPATCH TEMPLATES that generate session prompts are not.**
+MEASURED 19:25. `e81bc9c` correctly rewrote the printed string in `.claude/hooks/orient_live.sh`,
+and there is exactly one copy of that file (129 lines), so that fix is complete. But:
+
+```
+/usr/bin/grep -rn "RUNS NOWHERE\|LOCAL ONLY and none is pushed" scripts/r8/prompts/
+scripts/r8/prompts/d18-platform.md:201        CI EXISTS BUT RUNS NOWHERE
+scripts/r8/prompts/bodies/d18-platform.md:13  CI EXISTS BUT RUNS NOWHERE
+scripts/r8/prompts/d16-landing.md:195         Every one of them is LOCAL ONLY and none is pushed
+scripts/r8/prompts/bodies/d16-landing.md:7    Every one of them is LOCAL ONLY and none is pushed
+```
+
+**Four files, two claims, both refuted, and these are what get sent to the next wave verbatim.**
+Fixing the banner stops the false claim reaching a session's *context*; it does not stop it
+reaching a session's *instructions*, and instructions carry more weight. A future `d18-platform`
+will be told "CI EXISTS BUT RUNS NOWHERE" as a premise of its task.
+
+Also, minor and worth one line: `.claude/hooks/orient_live.sh:76` still carries the comment
+`# A workflow file that exists here but not on main runs NOWHERE.` directly above the corrected
+`echo`. Correct code, stale comment. Comments get copied.
+
+**(c) Priority inversion, confirmed and worth stating in the plan.** `d18-platform` measured
+eleven worktrees that never see the connector and CI warning at session start and treated it as
+the defect. Given that the warning was false, **those eleven were better off without it**, and the
+ordering is: fix the claim, then extend its reach. Extending the reach of a false warning is
+strictly worse than the warning being absent. That generalises past this instance: **coverage of
+an unverified check is negative value, and this is the second time tonight the same inversion
+appeared**, the first being `canford-checks` landing on `main` before it could fail.
 
 **(d) Accepted without reservation:** the coordinator's read that my CI log analysis supersedes
 the `gh run list` summary, and the skill-version check added to the preflight at `c621931`. The
