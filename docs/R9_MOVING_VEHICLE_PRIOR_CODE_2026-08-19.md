@@ -965,3 +965,121 @@ command, in the same document where I criticise exactly that habit. The general
 lesson is the one already in this project's rules: an inference from
 preconditions ("the module is on, the lib exists, MPI is present") is not a
 measurement of the outcome, and it took 40 seconds to find out.
+
+---
+
+# ADDENDUM 4: THE TAXONOMY, AND THE FLOOR TEST GENERALISED FOR d11-accessor
+
+## 23. THREE FAMILIES OF FLUID-TO-RIGID FORCE EXTRACTION
+
+Nobody in the 332-paper corpus lays this out, and it is more transferable than any
+single pairwise comparison. Every code below was read at a named revision; none of
+this is taken from a search summary. **[read]**
+
+| family | what is summed | over what | needs a `dt`? | zeroing discipline |
+|---|---|---|---|---|
+| **A. Nodal traction from particle stress** | `n . sigma . n` from the particle stress tensor, divided by nodal lumped mass | body-adjacent **nodes** | **No.** Stress is a state variable; it exists at an instant | n/a, nothing accumulates |
+| **B. Surface integral over markers** | pressure and viscous traction on boundary markers | body **surface** (BCE markers) | **No.** A surface integral of a state field | reset **adjacent to use**, zero-fill on the line before the kernel |
+| **C. Momentum difference over a timestep** | `alpha * (u_f - u_s) * V_cell`, times `rho_f`, divided by `dt` | body-**overlapping cells or particles** | **Yes, structurally.** The quantity is an impulse; only `dt` converts it to a force | sdfibm resets at the top of `interact()`, immediately before the consuming loop |
+
+Instances, with revisions:
+
+- **A**: Anura3D, `MPMDynContact.FOR:443-512`.
+- **B**: Chrono::FSI-SPH, upstream `1b90a9f`. `ChFsiInterface.cpp:94-96` returns a
+  stored `fsi_force` fed by a dedicated accumulator created in `AddFsiBody`. No
+  `dt` anywhere in the path, verified on two separate revisions.
+- **C**: `sdfibm` at `3627269`, `solidcloud.cpp:412-450`. **And ours**, the warpmpm
+  SDF collider.
+
+**The load-bearing consequence, and it is the opposite of what I first said.**
+Family C is not a defect and not an oddity. **It is a published formulation that a
+signed-distance immersed-boundary method arrives at independently**, because
+direct forcing computes the impulse needed to reconcile fluid and solid velocity,
+and an impulse only becomes a force when divided by the interval it acted over.
+Our SDF collider is in family C **because it is an SDF collider**, not because
+anyone was careless. Anyone auditing our accessor should be told this before they
+read the `dt` as a smell.
+
+**What remains a real difference, narrowed to one sentence.** Both other family-C
+and family-B implementations make the reset impossible to forget by placing it
+immediately before the use; ours exposes reset and `dt` at call sites that can be
+got wrong independently. That is an ergonomics gap, not a physics gap.
+
+**Candidate family D, NOT verified.** [Bha19] IBAMR is described as using "force
+constraints rather than surface-stress integration". If that means a Lagrange
+multiplier enforcing the rigidity constraint, it is a genuinely fourth mechanism.
+**I have not read IBAMR and am not claiming this.** It is the cheapest remaining
+addition to this table.
+
+## 24. THE FLOOR TEST, GENERALISED. FOR d11-accessor, ON JOB B CRITERION 3.
+
+d11-accessor reports Job B failing at all 24 gradings and asks whether a FAIL can
+be unfalsifiable. **My P-2 result is an instance of a general property, and the
+general form is what d11 needs.** Stating it as a procedure rather than a result:
+
+> **A pass/fail gate is only informative if the metric can actually reach the
+> passing region under the null condition the gate names.**
+
+P-2 is the worked example. The gate is "max water fraction inside the vehicle
+bounding box <= 10 percent". The null condition is *zero penetration*. I
+constructed frame 0 with **provably zero water in any hull voxel** and the metric
+reads **7.88 to 10.02 percent** across the 17 runs. The passing region is
+`[0, 10]`; the metric's floor at the null is `7.88` to `10.02`. **The floor
+overlaps and in one run exceeds the gate.** `sweepD_g64_d0p25` reads 10.02 percent
+at frame zero with zero penetration, and is recorded as *passing* at 9.682 only
+because water drains out later.
+
+**The three-step test d11 can run on criterion 3 tonight, without a GPU:**
+
+1. **Name the null.** What state is the criterion claiming to detect the absence
+   of? For P-2 it was penetration. For criterion 3 it is presumably a force-ratio
+   discrepancy.
+2. **Construct or identify a record that provably satisfies the null**, by
+   construction rather than by trusting a run to be clean. Mine was frame 0 with
+   the hull carve applied by the file's own code.
+3. **Evaluate the criterion's own expression on that record.** If the value lands
+   inside or above the failing region, **the criterion cannot distinguish a defect
+   from its own floor, and a FAIL is uninformative rather than evidence.**
+
+**Applied to what d11 already has.** Job B fails at all 24 gradings. If the
+measured accessor's band has a nonzero floor at the null, then "FAIL at every
+window" is exactly the signature of a floor, not of a robust defect: a real defect
+would be expected to vary with window, and a floor would not. **d11 already has
+the diagnostic evidence in hand** in the fact that the failure is window-invariant
+at 0.15 sigma. That is suspicious in the same way a uniform pass is suspicious,
+and this project already has the rule: a check must distinguish "equal" from
+"could not evaluate".
+
+**I am NOT claiming criterion 3 has a floor.** I have not read `sphere_heave.py`
+and it is not in my scope. I am claiming the test above is cheap, is the same test
+that produced the P-2 result, and that a window-invariant FAIL is the condition
+under which it is most worth running.
+
+## 25. WHY NOBODY CAN SEE ANY OF THIS, WHICH IS ITS OWN FINDING
+
+The P-2 write-up has now been requested four times while being complete since
+`a863ee7`. The cause is not the write-up. **[read]**
+
+```
+ls /Users/josie/can-it-ford/docs/R9_MOVING_VEHICLE_PRIOR_CODE_2026-08-19.md
+  -> No such file or directory
+git cat-file -e main:docs/R9_MOVING_VEHICLE_PRIOR_CODE_2026-08-19.md      -> ABSENT
+git cat-file -e origin/main:docs/R9_MOVING_VEHICLE_PRIOR_CODE_2026-08-19.md -> ABSENT
+git cat-file -e claude/r9-priorcode:docs/...                              -> PRESENT
+```
+
+The main checkout is on **`claude/add-ci-checks`**, not `main`, and this document
+exists on exactly one branch, unpushed. **Anyone reading `/Users/josie/can-it-ford/docs/`
+sees nothing, and correctly reports the work as missing.** This is not specific to
+me: every slot's deliverable is invisible to every other slot and to the
+coordinator unless the reader names the branch. Reach it with
+
+```
+git -C /Users/josie/can-it-ford show claude/r9-priorcode:docs/R9_MOVING_VEHICLE_PRIOR_CODE_2026-08-19.md
+```
+
+**The general lesson for the round:** "I cannot see your write-up" and "your
+write-up does not exist" are indistinguishable from a checkout on another branch,
+and the board rows carrying SHAs are the only thing that currently bridges the
+gap. A reader who checks a path instead of a SHA will keep concluding the work was
+never done.
