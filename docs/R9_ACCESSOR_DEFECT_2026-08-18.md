@@ -11,6 +11,29 @@ as theirs.
 
 ---
 
+## READ THIS FIRST: THERE IS NO CODE FORK, AND THERE NEVER WAS
+
+**One implementation, three disagreeing prose statements. The defect was only ever the
+specification.**
+
+`sphere_heave.py` has exactly **one distinct content** across all five copies in this
+repository, by `git hash-object`. Both accessors were verified correct by rebuilding them from
+raw geometry, independently of the emitted fields, and they reproduce to machine precision
+(section 14). **A reader who takes away "the code was wrong" will go looking for a fix that
+does not exist.** What disagreed was three pieces of English about the same working code:
+
+| where | what it said | which accessor |
+|---|---|---|
+| `docs/R5_PHYSICS_BATCH_MANIFEST.md` criterion 3, before amendment | "the steady vertical reaction against 69.2180 N" | **nominal** |
+| `sphere_heave.py` source comment, before amendment | "the number job B should actually be graded on" | **measured** |
+| `analysis/r7_jobb_bcfix_ab.py:208` on branch `r7-collect` | `"THE DESIGNATED ACCESSOR"` | **measured** |
+
+The fix was therefore never a code change. It was to make one document authoritative, name the
+denominator **and** the window in it, and make the designation travel with the data so it
+cannot drift away from it again.
+
+---
+
 ## 0. The finding, stated first
 
 **Criterion 3 of the batch manifest grades a quantity that the manifest and the source code
@@ -1012,3 +1035,109 @@ they cite a source comment, and two of them cite it by a line number.
 - **Whether any downstream site has been acted on.** Still cannot edit them; now enumerated
   for their owners in section 22.
 
+---
+
+## 24. THE FLOOR QUESTION IS STILL OPEN, and my retraction did NOT close it
+
+**Said plainly, because leaving this implied would be the same error twice.** Section 16
+retracted a claim about the *surface-convention lever*. That is a **sensitivity**, how much the
+answer moves when a convention changes. **It is not the floor.** The floor is a different
+quantity: the smallest `|ratio - 1|` this instrument could report **if the coupling were
+perfect**. My retraction did not measure it, and nothing in this document does.
+
+**So the question d19-priorcode raised about P-2 remains open for criterion 3, and here is
+exactly how open.**
+
+### What can be said
+
+**Nobody has measured the floor for this configuration.** It would take a case with known-zero
+coupling error in the Kramer sphere scene, and no such case has been run. The best available
+proxy is this project's own SDF-collider agreement, `err_steady_vs_analytic_pct` of
+**-7.6682** (`c1sdf_sdf_g64`) and **+7.2804** (`c1sdf_sdf_g96`) from job 894731, traced to
+`docs/CONTEXT_CENSUS_2026-08-07.md:1049-1050`. **That is a different scene**, so importing it
+here is an assumption, and it is labelled as one. It is also the same number the manifest
+already used to set the band, so the band and the floor estimate are not independent.
+
+### Against that proxy, criterion 3 does NOT have P-2's exact pathology
+
+| gate | floor estimate | headroom |
+|---|---|---|
+| P-2, 10.0 percent | 7.9 to 10.0 percent | **0.000 to 2.100 points, the floor reaches the gate** |
+| criterion 3, 10.0 percent | 7.28 to 7.67 percent | **2.332 to 2.720 points, the floor clears the gate** |
+
+P-2's floor touches its gate, so a P-2 FAIL can be produced by a perfect simulation.
+Criterion 3's floor clears its gate, but **by only 2.3 to 2.7 points out of 10**. That is thin,
+and it means any criterion 3 reading between about 7.3 and 10 percent could not distinguish
+good coupling from the floor. **The PASS band is mostly floor.**
+
+### But it does not touch this decision, and here is the falsifiable reason
+
+Job B's readings as a multiple of the proxy floor:
+
+| run | reading | multiple of floor |
+|---|---|---|
+| 918450, the best run in the set | 34.355 % | **4.48x to 4.72x** |
+| 918240 control | 50.056 % | 6.53x to 6.88x |
+| 918251 job C tank | 50.601 % | 6.60x to 6.95x |
+| 918043 worst | 63.076 % | 8.23x to 8.66x |
+
+**The FAIL survives unless the true floor is at least 4.48x the project's own estimate**, that
+is 34.4 percent rather than 7.3 to 7.7. Merely reaching the 25 percent FAIL threshold would
+take a floor **3.26x** the estimate. **That is the falsifiable form of the claim**: produce a
+zero-coupling-error case in this scene that reads above 25 percent and the FAIL becomes
+uninformative. Nothing observed so far is anywhere near that, and the box-collider path, which
+is the worst comparator on record, reads -37.91 and -21.28 percent in the same job 894731.
+
+### Status, in one line
+
+**OPEN in principle: the floor for this configuration has never been measured, and the PASS
+band is mostly floor. CLOSED for this decision: job B fails by 4.5x to 8.7x the best floor
+estimate available.** Measuring the floor properly is the work that would make a future PASS
+on criterion 3 mean something. It is not needed to act on this FAIL.
+
+---
+
+## 25. THE DECISION PAGE, for a reader who has not read anything above
+
+**What happened.** Job B is the Kramer floating-sphere pilot, the rung the ladder is currently
+on. It was graded against a criterion that named a target number but not which of two force
+measurements to apply it to, and not over what stretch of the run. Two measurements were live,
+they differ by roughly a factor of two once the tank drains, and they disagree about the sign
+of the error. Different tools followed different ones. **No code was wrong. The specification
+was incomplete.**
+
+**What has been fixed.** Criterion 3 now names the measurement (`fz_over_analytic_measured`),
+the window (the last 50 percent of frames), the robustness check (the verdict must be the same
+at last 20, last 50, last 100 frames and the full series), and where its pass/fail bands came
+from (a project choice, not a number borrowed from any published paper). The designation is now
+written into the run's own output file, so it travels with the data.
+
+**What the answer is.** **Job B fails.** Six runs, four windows each, twenty-four gradings, all
+of them a fail. The best run of the set is at +34.4 percent where the fail threshold is 25
+percent, so it misses even the middle band by 9.4 points. Changing the window does not rescue
+it, a different random seed does not, and numerical noise is thousands of times too small.
+
+**Why this needs a decision.** `docs/R5_PHYSICS_BATCH_MANIFEST.md:214` says **"Any FAIL stops
+the ladder."** Job C has not run and was scheduled to reuse this template.
+
+### The two honest options. This is Josie's call and this document does not make it.
+
+**Option A: accept the FAIL and stop the ladder.**
+The criterion is now fully specified, the FAIL is robust to every check applied to it, and it
+is 4.5x to 8.7x the project's own best estimate of the measurement floor. The likely cause is
+already diagnosed: the tank drains during the run (the free surface falls 2.9 to 6.1 cm) and
+the sphere is pinned, so it ends up proud of the waterline. Fixing the drainage is the work
+this points to. **Cost:** job C does not run until that is done.
+
+**Option B: amend the criterion in writing and proceed.**
+Legitimate if argued in the open. **But say out loud what it costs:** the manifest states of
+these bands that "These bands are set now and will not be moved." **Moving them means a band
+declared unmovable was moved after seeing the result it produced.** That is exactly the pattern
+this project has retracted findings over before. If this option is taken, the amendment must be
+recorded in the manifest with the date, the reason, and the fact that the result was already
+known, so a future reader can see it was not set in advance.
+
+**A third thing that is not an option, it is a prerequisite either way.** Vista's staged copy
+of the scene file is the version from **before** the amendment. Whoever launches job C must
+re-stage it first, or job C will run under the old, unfixed specification and emit no record of
+which measurement it was graded on.

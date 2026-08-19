@@ -397,6 +397,33 @@ the committed test suite]**. Note this is **not** 69.3428 N: that was the supers
      **Unchanged by all of this: the FAIL is robust.** Reaching the PASS boundary of 1.10 needs
      16.1 to 24.9 mm across the four graded runs, which is 1.72 to 2.66 particle layers, well
      beyond any half-layer convention argument.
+
+   - **THE MEASUREMENT FLOOR FOR THIS CRITERION HAS NEVER BEEN MEASURED, and the PASS band is
+     mostly floor.** Added 2026-08-19 by slot `d11-accessor`. The retraction above concerns a
+     *sensitivity*, not a floor, and does not close this question. The floor is the smallest
+     `|ratio - 1|` this criterion could report **if the coupling were perfect**, and
+     establishing it needs a known-zero-error case in this scene, which has not been run.
+
+     Best available proxy, and it is from a **different scene** so importing it is an
+     assumption: `err_steady_vs_analytic_pct` of **-7.6682** (`c1sdf_sdf_g64`) and **+7.2804**
+     (`c1sdf_sdf_g96`), job 894731, at `docs/CONTEXT_CENSUS_2026-08-07.md:1049-1050`. It is
+     also the same figure used to set these bands, so band and floor are **not independent**.
+
+     | gate | floor estimate | headroom |
+     |---|---|---|
+     | P-2 | 10.0 % | 7.9 to 10.0 % | 0.00 to 2.10 points, floor **reaches** the gate |
+     | criterion 3 | 10.0 % | 7.28 to 7.67 % | **2.33 to 2.72 points**, floor clears the gate |
+
+     So criterion 3 does **not** have P-2's exact pathology, but it clears its gate by only 2.3
+     to 2.7 points out of 10. **Any reading between about 7.3 and 10 percent cannot distinguish
+     good coupling from the floor**, so a marginal PASS on this criterion means very little.
+
+     **This does not affect the current FAIL**, which sits at **4.48x to 8.66x** the proxy
+     floor. The falsifiable form: **produce a zero-coupling-error case in this scene that reads
+     above 25 percent and the FAIL becomes uninformative.** That needs a floor 3.26x the
+     estimate to reach the FAIL threshold at all, and 4.48x to reach the best run's reading.
+     **Measuring the floor properly is what a future PASS on this criterion would require; it
+     is not needed to act on a FAIL of this size.**
    - **Note on stationarity of a ratio.** A stationary ratio built from two co-trending
      non-stationary series shows that numerator and denominator fall together, not that the
      measurement has settled; `surface_z_measured_m` is non-stationary at 16.9 to 20.0
