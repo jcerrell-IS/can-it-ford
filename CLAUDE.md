@@ -744,7 +744,7 @@ something needs a citation, QUERY THE INDEX.** Load the `research-corpus` skill
     python3 analysis/research_index.py --method added-mass -v
     python3 analysis/research_index.py --gaps --method validation-dataset
 
-`data/research_corpus_index.json` holds **332 distinct external papers** merged
+`data/research_corpus_index.json` holds **332 RECORDS, which are 319 DISTINCT WORKS**, merged
 from eight Undermind reports, tagged across 25 method axes, each marked for
 whether it reaches a reader-facing document. Built 2026-08-15 by
 `analysis/research_index.py`. It reads only the committed index, never
@@ -793,6 +793,17 @@ in item 13. `.claude/worktrees/` MUST be excluded. A first version of the index
 included it and reported 269 of 332 as cited, because another session's
 `r5-research/data/r5_citation_xref.tsv` carries 489 DOIs. State the scope with
 any figure.
+
+CORRECTED 2026-08-19 by the cross-session readout, measured live, do not restate the
+old forms:
+
+- **332 records are 319 DISTINCT WORKS.** Eleven Semantic Scholar ids appear under
+  twenty-four record keys with byte-identical titles. Say "332 records / 319 works", never
+  "332 distinct papers".
+- **"60 carry no DOI and are undiffable" is WITHDRAWN in that form.** 57 of them carry a
+  Semantic Scholar id already sitting in the `link` field; only **3** are unidentifiable.
+- **"Four prior vehicle fording or wading simulations exist" UNDERSTATES it.** The
+  deep-search layer puts it at eight or nine. Do not cite four.
 
 THREE PRIOR-ART FACTS THAT CONSTRAIN THE PAPER. Four prior vehicle fording or
 wading simulations exist and `paper/` cites NONE of them: He et al 2026
@@ -904,3 +915,25 @@ Nothing was deleted, moved or renamed anywhere in this pass.
    layer at its root was already fully indexed by the 2026-08-14 Round 3
    provenance audit, 37 union artifact ids, zero unique to that location.
    It is now indexed at repository level, 16 rows for 1,541 files.
+
+
+## THE ADVERSARIAL REVIEW PATH IS DEAD FLEET-WIDE, 2026-08-19
+
+Recorded here because it existed in five sessions' transcripts and **zero committed files**,
+and a transcript is not a deliverable. Nine independent origins confirm it.
+
+The `physics-skeptic` subagent, and any Agent call, dies with:
+
+    deepseek-ai/DeepSeek-V4-Flash:deepinfra
+
+**An explicit `model` override does NOT reach it.** Measured twice at 18:37 and 18:38: the
+`physics-skeptic` agent at default and a `general-purpose` agent with an explicit `opus`
+override produced the IDENTICAL error. The agent *launches* and then dies, which is why it
+reads as a transient failure and gets retried instead of recorded.
+
+**Consequence for every claim made on 2026-08-18 and 2026-08-19:** the operating protocol
+asks for the physics-skeptic before finalising any percentage, force, verdict count or
+distance. It was unavailable. Sessions d11, d12, d14, d15, d18 and d19 all correctly marked
+their claims UNREVIEWED rather than faking the review. **Those claims remain unreviewed.**
+Do not treat any of them as adversarially checked, and do not re-attempt the subagent
+expecting a different result until the model id is fixed.

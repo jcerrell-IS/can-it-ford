@@ -95,6 +95,27 @@ if [ -f "$MINE_MD" ] && [ -f "$MAIN_MD" ]; then
   fi
 fi
 
+# 5b. SKILL VERSION MISMATCH. Added 2026-08-19 after the cross-session readout found
+#     the research-corpus skill in four different states across the live worktrees:
+#     absent in two, an old copy in six, the coordinator's in the main checkout, and
+#     the corrected one in a single worktree. Most sessions could not see a night of
+#     corrections, and the old copy still asserted something CLAUDE.md had withdrawn.
+#     The CLAUDE.md comparison below already existed and did not catch it, because a
+#     skill lives in a different file.
+SK_MAIN="$REPO/.claude/skills/research-corpus/SKILL.md"
+SK_MINE="$HERE/.claude/skills/research-corpus/SKILL.md"
+say ""
+if [ -f "$SK_MAIN" ]; then
+  A_SK=0; [ -f "$SK_MINE" ] && A_SK=$(wc -l < "$SK_MINE" | tr -d ' ')
+  B_SK=$(wc -l < "$SK_MAIN" | tr -d ' ')
+  say "research-corpus skill   mine $A_SK lines, main checkout $B_SK lines"
+  if [ "$A_SK" != "$B_SK" ]; then
+    say "SKILL VERSION MISMATCH. Your copy is not the corrected one."
+    say "    READ $SK_MAIN BY THAT ABSOLUTE PATH before citing the corpus."
+    say "    An old copy has asserted a withdrawn claim before."
+  fi
+fi
+
 # 6. Repo-wide concurrency. Who else is live right now.
 say ""
 say "=== OTHER LIVE SESSIONS (do not touch their branches or worktrees) ==="
