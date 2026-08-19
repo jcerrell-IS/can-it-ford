@@ -13,32 +13,38 @@ The question this document answers is a different one: **WHERE the FAIL lives.**
 
 ## 1. The answer, before the working
 
-**Four findings, three of which are settled and one of which is pending a run.**
+**THE FAIL IS A SOLVER-SIDE DEFECT, NOT AN INSTRUMENT ARTIFACT. The estimator hypothesis is
+refuted by direct measurement, and it is refuted by four independent lines in one run.**
 
-1. **The 2R exclusion is a DELIBERATE, DOCUMENTED TRADE, not an oversight.** The docstring
-   states its reason. Whether the trade is correct for this denominator is a separate
-   question and is the one still open.
+1. **The near-field surface the estimator discards sits 0.98 mm above the far field. The
+   hypothesis needed 26.02 mm.** That is 3.8 percent of the requirement, and 2.8 percent
+   once the no-body control is subtracted. The ratio against the near-field surface is
+   **1.493**, against a pre-registered E1 threshold of 1.10 and an E3 threshold of 1.25.
+   **Including every particle the estimator throws away moves the ratio the WRONG WAY,
+   1.522 to 1.528.** Vista job 922584, 2 min 58 s, `RC = 0` on all three runs.
 
-2. **No existing run can separate the estimator from the contact band, and I measured the
-   degeneracy rather than assuming it.** Over the 8 distinct `band_mult = 1.0` fixed-sphere
-   simulations, "the collider is inflated by `k*dx`" and "the surface is under-read by
-   `k*dx`" fit the measured force EQUALLY WELL with one global parameter each: RMS relative
-   force error **3.36 percent** and **2.76 percent** against a no-correction RMS of 27.75
-   percent. The estimator model fits marginally BETTER. **The hypothesis this unit was sent
-   to test is not merely alive; on all existing evidence it is the slightly better fit.**
+2. **The `2R` exclusion is not merely a defensible trade, it is the correct call, and that
+   is now measured rather than argued.** The docstring says the annulus carries "the
+   meniscus and any splash off the collider". `water_z_max` is indeed 30.13 mm above the
+   far-field surface, so those particles exist, but the annulus 99th percentile is only
+   0.98 mm up. **A few ejected particles, not an elevated shelf.** Nobody had checked.
 
-3. **THE PRE-REGISTERED TEST IS SUBMITTED AND ITS THRESHOLDS ARE FIXED.** Vista batch job
-   **922584** and **922585**, five runs including a smoke test and a no-body control. The
-   result is recorded in section 7 whichever way it falls.
+3. **The no-body control removes the last escape route.** With the sphere pinned clear of
+   the water and `max |fz| = 0.000e+00 N` over 300 frames, **the free surface still falls
+   59.75 mm**, against 61.84 mm with the body. **97 percent of the surface fall happens
+   with no body present.** It is the floor and wall leak, not the sphere.
 
-4. **Criterion 3 has the P-2 pathology on the PASS side and NOT on the FAIL side, and this
-   is now quantified.** At the state job B actually occupies at g64, a one-particle-layer
-   ambiguity in the free-surface location is **13.7 percent of the ratio**, which exceeds
-   the entire 10 percent PASS band; a half-layer ambiguity is 6.85 percent, 68 percent of
-   it. **A PASS at g64 could not have been informative.** But the observed excess is 5.0x
-   to 9.4x the half-layer floor, so **the FAIL is outside the floor by a wide margin and
-   remains informative.** That asymmetry is the practically important result and it does
-   not depend on which explanation wins.
+4. **Criterion 3 has the P-2 pathology on the PASS side and NOT on the FAIL side, and the
+   analytic prediction was confirmed by measurement.** Section 5 derived a half-layer floor
+   of **9.22 percent** at this state from `A_w/V_cap` alone. The measured spread between
+   two independent estimators is **9.8 ratio-points**. Separate derivations, agreeing to 6
+   percent. **A PASS at g64 could not have been informative** because the band equals the
+   instrument's resolution. But the excess is 5.0x to 9.4x that floor, so **d11-accessor's
+   FAIL clears its own floor by a factor of several and stands.**
+
+**The estimator is not worth nothing, and section 7.2 says what it is worth**: the whole
+family of defensible estimator choices spans 10.4 ratio-points against a 52.2-point excess,
+at most 20 percent, and none of it in the direction the hypothesis needed.
 
 **Two things the coordinator's framing gets wrong, both checkable in one command each**,
 and both are stated here because acting on them would have wasted the run:
@@ -114,6 +120,13 @@ evidence base is materially smaller than the file count suggests. This is consis
 and extends, sections 10.1 and 13.3 of the job B result, which caught two of these pairs.
 
 ### 3.2 The two live models are near-degenerate, and the estimator fits slightly better
+
+**This section is preserved as it stood BEFORE the run, because it is why the run was worth
+buying.** Section 7 refuted the estimator model by direct measurement. That does not make
+this analysis wrong; it makes it the correct reading of the evidence that existed, and the
+gap between "fits marginally better on 8 points" and "refuted at 3.8 percent of its
+requirement" is the whole argument for spending three minutes of a GH200 rather than
+reasoning further from force fits.
 
 One global parameter each, fitted to the measured `fz` of every distinct run, last-50-frame
 window. `V_cap` is the same closed form `sphere_heave.buoyancy_at` uses, clamp included.
@@ -348,10 +361,29 @@ from g48 to g64 so it shares the MAIN run's cached SDF: at g48 the SDF is not in
 override computes the diagnostics and then returns `super().measure_surface()` verbatim, so
 every column the published grader reads is bit-identical. In `--fixed` mode the surface
 never feeds the dynamics (`self.free` is False), so the physics risk is zero by
-construction. **The control on my own tool is run 1**: its configuration is identical to
-`d4_ngrid_918722/sphere_bcfix_n64` and `d4_combo_918526/sphere_bcfix_ghost0`, which agree
-with each other to 2.25e-3 N and give `fz = 60.476 N`. **If run 1 does not reproduce that,
-the instrumentation changed the physics and nothing below is usable.**
+construction. **The control on my own tool is run 1**: it must reproduce an existing run to
+within this scene's run-to-run reproducibility, or the instrumentation changed the physics
+and nothing below is usable.
+
+**THE CONTROL PASSED AND MY PREDICTION OF WHICH RUN IT WOULD MATCH WAS WRONG.** I predicted
+`d4_ngrid_918722/sphere_bcfix_n64` at `fz = 60.476 N`. Run 1 gives `fz = 44.7281 N` and
+reproduces `d4_band/sphere_g64_band1.0` instead, to a per-frame `max |dFz|` of **2.375e-3 N
+= 3.43e-5 of the 69.218 N target**, which is the reproducibility floor of this scene. So
+the instrumentation is validated, against a different reference than I named.
+
+**The reason matters and is a provenance finding for whoever owns the floor BC.** Run 1
+used `d4_scene/sphere_heave.py` (sha256 `6ab8cec5...`, byte-identical to my branch head)
+with `--ghost-layers 0`, and ended with **`n_below_floor = 29350`**, the leaky-floor
+behaviour. The "bcfix" runs 918450, 918526 and 918722 also carry `n_ghost_layers = 0` and
+end with **1079**. Same file and same flags cannot give both. **Therefore the bcfix code
+state is NOT in `d4_scene/sphere_heave.py` and NOT on this branch.** It exists somewhere
+else, plausibly the branch carrying `r7_jobb_bcfix_ab.py`, which is out of my scope. Anyone
+citing a "bcfix" number should say which file produced it, because the copy staged on Vista
+for jobs B and C does not.
+
+Consequence for this section: **every run below is at the LEAKY floor configuration.** That
+is stated in the result rather than discovered later, and section 7.1 says what it does and
+does not compromise.
 
 The five runs:
 
@@ -373,68 +405,207 @@ E1's quantitative requirement at g64 is a near-field surface **26.0 mm** above t
 field. E3 requires only the inflated body's displacement rise, which section 13.5 already
 measured at 0.79 to 1.02 of its own prediction and is a few mm.
 
-### 7.1 RESULT
+### 7.1 RESULT: E1 IS REFUTED. The FAIL is a solver-side defect, not an instrument artifact
 
-**PENDING at the time of writing. 922584 and 922585 were queued, not yet running.** This section is
-to be completed from `r9_jobb_estimator_test.py verdict`, which applies the thresholds
-above mechanically, and the outcome is to be written up the same way whichever it is. **If
-the near-field surface turns out to sit ~26 mm high and the ratio collapses to ~1, then the
-FAIL is an instrument artifact, two sessions have committed a verdict whose MEANING is
-wrong, and this document says so.**
+Job 922584 ran on `c608-091` and finished in **2 minutes 58 seconds**, all three runs
+`RC = 0`, `ALLDONE`. Applied mechanically by `r9_jobb_estimator_test.py verdict`, last 50
+frames:
+
+    ratio against the far-field surface  (as published)   1.522
+    ratio against the near-field surface (the test)       1.493
+    E1 required near-field rise at this dx: 26.02 mm; measured +0.98 mm
+    VERDICT E3: the estimator does NOT explain the FAIL (ratio > 1.25)
+
+**The near-field surface sits 0.98 mm above the far field. E1 needed 26.02 mm. That is 3.8
+percent of the requirement**, and the resulting ratio, 1.493, is not close to the 1.10
+threshold; it is above the 1.25 threshold that supports the opposite conclusion.
+
+**Four independent lines in the same run all say so, and each is a different measurement.**
+
+**(a) The exclusion radius barely moves the surface, and removing the exclusion makes the
+ratio WORSE.** Same statistic, same `+h/2`, only the population changes:
+
+| exclusion | surface | vs far-field | ratio | n |
+|---|---|---|---|---|
+| 0 (keep everything) | 0.51390 m | -0.22 mm | **1.528** | 598505 |
+| 0.5R | 0.51399 | -0.14 | 1.526 | 590419 |
+| 1R | 0.51428 | +0.16 | 1.517 | 562983 |
+| 1.5R | 0.51414 | +0.02 | 1.521 | 511065 |
+| **2R, as written** | **0.51412** | **0.00** | **1.522** | 438606 |
+| 3R | 0.51459 | +0.47 | 1.508 | 231196 |
+| 4R | 0.51534 | +1.21 | 1.486 | 34566 |
+
+The whole sweep spans **1.43 mm** of surface and 4.2 points of ratio. **Including every
+particle the estimator throws away moves the ratio from 1.522 to 1.528, in the wrong
+direction.** The dispatch's hypothesis predicted a collapse toward 1.0.
+
+**(b) The radial profile is flat. There is no shelf.** Deviation from the far-field
+estimate, 99th percentile plus `h/2` in each annulus: `1-1.5R +2.28 mm`, `1.5-2R +0.19`,
+`2-2.5R -0.47`, `2.5-3R -0.56`, `3-4R +0.34`, `4R+ +1.21`. **A 2.84 mm span across the
+entire tank.** The `0-1R` bin reads -32.67 mm, which is the body's own carved footprint and
+is not a free surface, exactly as section 2 said it would not be.
+
+**(c) The ceiling from section 3.2a is reconciled, and the docstring is vindicated.**
+`water_z_max - far` is **+30.13 mm**, so the single highest particle really is 30 mm up.
+But the annulus 99th percentile is only **+0.98 mm** up. **The annulus holds a few ejected
+particles, not an elevated shelf.** That is precisely what `measure_surface`'s docstring
+claims is in there, and it had never been checked. **The 2R exclusion is not just a
+defensible trade; it is the correct call, and it is now measured rather than argued.**
+
+**(d) The no-body control removes the last escape route.** With the sphere pinned 0.3 m
+clear of the water, `n_carved = 0` and `max |fz| = 0.000e+00 N` over all 300 frames, so the
+collider provably never touches fluid:
+
+| | far-field vs design | near minus far |
+|---|---|---|
+| frame 0 | -8.78 mm | +0.05 mm |
+| first 50 | -22.93 mm | -5.44 mm |
+| last 50 | **-59.75 mm** | **+0.26 mm** |
+
+**The free surface falls 59.75 mm with no body present at all**, against 61.84 mm in the
+main run. **97 percent of the surface fall is reproduced with the body removed**, and
+`n_below_floor` is 29122 without the body against 29350 with it. The fall is the floor and
+wall leak, full stop; the sphere contributes essentially nothing to it. And subtracting the
+control, **the body's true near-field elevation is +0.98 - 0.26 = +0.72 mm**, which is
+**2.8 percent** of what E1 requires.
+
+### 7.2 What the estimator IS worth, because it is not zero and section 5 predicted it
+
+The honest counterpart. Two defensible estimators on the same cloud disagree by more than
+the synthetic flat-surface test suggested, because the real surface is wavy:
+
+| estimator | surface | ratio |
+|---|---|---|
+| percentile 99 plus `h/2`, as written | 0.51412 m | 1.522 |
+| column-max median, independent route | 0.51755 m | 1.424 |
+| domain-clean (drop leaked particles) | 0.51458 m | 1.508 |
+
+The two independent routes differ by **3.43 mm = 0.183 dx**, worth **9.8 ratio-points**.
+Across every variant measured, the whole estimator family spans **1.424 to 1.528, 10.4
+points, against an excess of 52.2 points**: at most **20 percent** of the discrepancy, and
+none of it in the direction E1 needed.
+
+**Section 5's floor calculation is independently corroborated by this.** It predicted an
+`h/2` floor of **9.22 percent** at this exact state from `A_w/V_cap` alone, with no run
+involved. The measured spread between two defensible estimators is **9.8 points**. Those
+are separate derivations, one analytic and one measured, and they agree to within 6
+percent. **Criterion 3's 10 percent PASS band really is the same size as the instrument's
+own resolution at g64**, and that now rests on a measurement, not only on arithmetic.
+
+The percentile choice is a much bigger lever than the exclusion radius: p95 gives 2.395,
+p99 gives 1.522, p99.9 gives 1.194 and the raw maximum gives 0.871. **This is not a free
+parameter to tune.** p99.9 and max let a handful of ejected particles define the surface,
+which is the failure the docstring rejects by name, and (c) above shows those particles
+exist and sit 30 mm up. The defensible band is p99 to the column-max median: 1.424 to 1.522.
+
+### 7.3 What this result does NOT establish
+
+- **It is measured at the LEAKY floor**, because that is what the staged code produces (see
+  the control note above). The surface has fallen 61.8 mm and `sub` is 89.1 mm rather than
+  113.8 mm. **This does not weaken the refutation**: the quantity refuted is a near-field
+  RISE, and the radial profile is flat to 2.84 mm regardless of where the mean level sits.
+  It does mean the numbers here should not be pooled with bcfix-arm numbers.
+- **It is one resolution.** Job 922585 carries g96 and band 2.0 and had not run.
+- **Refuting E1 does not by itself prove E3.** E3's positive evidence is separate and
+  pre-existing: the force moves 34.6 to 69.1 N across the band sweep at fixed dx, and the
+  inflated-collider geometric model fits every distinct run with one constant `k = 0.84`
+  to `0.86` at 3.4 percent RMS. E2 is bounded out arithmetically in section 4. So E3 is
+  reached by elimination PLUS positive evidence, which is stronger than elimination alone
+  and weaker than a direct measurement of the contact impulse. **That direct measurement,
+  decomposing the wrench into pressure and contact parts, is the next test and this unit
+  did not do it.**
 
 ---
 
-## 8. The recommendation for job C, and why it depends on section 7
+## 8. The recommendation for job C. Section 7 resolved the branch, and it moved
 
-**This is Josie's decision to take or leave. What follows is the case, with the branch
-point made explicit, because the two live explanations imply OPPOSITE recommendations.**
+**This is Josie's decision to take or leave.** Section 7 refuted E1, so the branch that
+said "the instrument is broken, the solver is fine, run job C" is closed. What follows is
+the case on the surviving branch, **plus a blocker the no-body control turned up that is
+worse than the one this unit was sent to look for.**
 
-Job C is the free heave decay, three drop heights, `--n-grid 117 --lim 2.2`, 4.5 h
-requested. It is graded against Kramer's published displacement time series, whose stated
-experimental uncertainty is about 0.3 percent of drop height.
+### 8.1 THE LEAK IS THE HARDER BLOCKER, AND IT IS MEASURED WITH A NO-FORCING CONTROL
 
-**The branch point is this: job C's dynamics never use the measured surface.** `advance()`
-integrates `az = fz/mass - g`; `measure_surface` feeds only the reported ratio columns. So:
+The no-body run is the cleanest thing in this document: no body, `max |fz| = 0.000e+00 N`
+over 300 frames, nothing to argue about. In it, **the tank loses 29122 of 606797 particles
+through the floor, 4.80 percent, and the free surface falls 59.75 mm in 10 seconds.**
 
-- **If E1 (estimator) holds**, the FORCE is right, the MOTION is right, and only the
-  diagnostic column is wrong. Job C is graded on motion, not on the buoyancy ratio.
-  **Recommendation: run job C. The instrument is broken, not the solver, and job C does not
-  read that instrument.** Fix the denominator column separately and re-grade job B on it.
-- **If E3 (contact band) holds**, the fluid sees a sphere inflated by `k*dx`, and job C
-  measures exactly the quantity that inflation corrupts. At `n_grid 117`, `lim 2.2`,
-  `dx = 18.803 mm` and `b = 0.8605*dx = 16.18 mm`, so `(R+b)/R = 1.108`. The heave
-  stiffness `rho*g*A_w` scales as `(R+b)^2/R^2 = 1.227`, **+22.7 percent**. The predicted
-  natural-period bias is:
+Job C is a free heave decay. Its predicted natural period is **0.777 s**. Over the 200
+frames the staged script requests, that is 6.7 s, roughly **9 periods**, during which the
+waterline in this configuration falls by about **40 mm, which is 27 percent of the sphere
+radius**. The sphere would be settling relative to a draining waterline for the entire
+decay. **A decay measured against a moving waterline cannot be compared to an experiment
+with a fixed one**, and Kramer's stated experimental uncertainty is 0.3 percent of drop
+height, so there is no tolerance to absorb it.
 
-  | added-mass assumption | period bias |
-  |---|---|
-  | `a33` NOT inflated (`a33/m = 0.5` held at the config's assumed value) | **-9.7%** |
-  | `a33` inflated as `(R+b)^3` | **-4.5%** |
+**The fix exists and is not in the staged file.** The bcfix arms end with `n_below_floor =
+1079` against 29350 here, a **27-fold** reduction, and their surface falls 36.2 mm rather
+than 61.8 mm. But section 7's control note shows that code state is **not** in
+`d4_scene/sphere_heave.py` and not on this branch. **The highest-value action before job C
+is to locate and stage the bcfix, not to run anything.** It costs no GPU time to find.
 
-  Both bracket a bias 15x to 32x Kramer's experimental uncertainty. **Recommendation: do
-  NOT run job C at `n_grid 117`. It would spend 4.5 hours measuring the contact band.**
-  The band is `band_mult * dx` and `band_mult` is a run-time flag, so the cheap fix exists:
-  either refine until `b` is small against `R`, or run job C at two band values and
-  extrapolate to `band -> 0`, which is a defensible correction and costs one extra arm.
+### 8.2 THE BAND, WHICH IS THE ORIGINAL BLOCKER AND IS STILL THERE
 
-**What is common to both branches, and is the recommendation I would make regardless:**
+At `n_grid 117`, `lim 2.2`, `dx = 18.803 mm`, and the inflated-collider fit `k = 0.8605`
+gives `b = 16.18 mm`, so `(R+b)/R = 1.108`. Heave stiffness `rho*g*A_w` scales as
+`(R+b)^2/R^2 = 1.227`, **+22.7 percent**. The predicted natural-period bias is:
 
-1. **Do not re-use criterion 3's 10 percent band at g64 or coarser for anything.** Section
-   5 shows it is 1.5 to 2.1 times the instrument's own resolution there. This is
-   independent of which explanation wins.
-2. **Whatever job C runs at, report the near-field surface column.** It costs one extra
-   array operation per frame and it is the column whose absence made this whole question
-   unanswerable for four audit rounds.
-3. **The ladder-stopping decision stands either way.** Under E3 it stands because the
-   solver's coupling is biased. Under E1 it stands because the project's only external
-   validation instrument was measuring itself, which is a worse problem, not a lesser one.
+| added-mass assumption | period bias |
+|---|---|
+| `a33` NOT inflated (`a33/m = 0.5`, the config's own assumed value) | **-9.7%** |
+| `a33` inflated as `(R+b)^3` | **-4.5%** |
+
+Both bracket a bias **15x to 32x** Kramer's experimental uncertainty. Labelled assumption:
+`a33/m = 0.5` is an estimate carried in the run config, not a measurement, and the two rows
+above are the honest bracket rather than a single number.
+
+**`band_mult` is a run-time flag**, so the cheap route exists: run job C at two band values
+and extrapolate to `band -> 0`. That is one extra arm, it is a defensible correction, and
+it converts a systematic error into a measured one.
+
+### 8.3 THE RECOMMENDATION
+
+1. **Do not run job C at `n_grid 117` on the staged code.** It would spend 4.5 hours
+   measuring a 4.8 percent floor leak and a 22.7 percent stiffness inflation, both of which
+   are already characterised and neither of which job C is designed to measure.
+2. **Locate and stage the bcfix first.** Zero GPU cost, 27-fold leak reduction, and it is
+   the difference between a draining tank and a tank.
+3. **Then run job C with a band arm**, two `band_mult` values, and extrapolate to zero. The
+   period is the graded quantity and the band biases it in a computable direction.
+4. **Report the near-field surface column in whatever runs next.** It costs one extra array
+   operation per frame. Its absence is why this question stayed open through four audit
+   rounds, and its presence closed it in a 3-minute job.
+
+### 8.4 WHAT STANDS REGARDLESS OF ALL OF THE ABOVE
+
+- **The ladder-stopping decision stands, and it is now better founded than when it was
+  taken.** The FAIL is a real solver-side defect, it clears the instrument's own floor by a
+  factor of 5 to 9, and the leading mechanism is named.
+- **Criterion 3's 10 percent PASS band is unusable at g64 or coarser.** Predicted at 9.22
+  percent analytically, measured at 9.8 points between two defensible estimators. If a
+  future job is graded on this criterion, either the grid gets finer or the band gets
+  widened to something the instrument can resolve, and widening a pre-registered band is a
+  criterion change that must be pre-registered as one.
 
 ---
 
 ## 9. What I could not verify, and what I am not claiming
 
-- **Section 7.1 is empty.** No run of mine had landed. Every claim above rests on payloads
-  other sessions produced plus arithmetic I did on them.
+- **Section 7.1 is filled and 922585 is not.** The g96 and band-2.0 arms had not run, so
+  the refutation rests on ONE resolution. The g96 arm would show whether the near-field
+  offset scales with dx; at g64 it is 0.98 mm against a required 26.02, so it would have to
+  behave very strangely at g96 to change anything, but that is an expectation, not a
+  measurement.
+- **Everything in section 7 is at the LEAKY floor**, because the staged code produces it.
+  See the control note in section 7. Do not pool these numbers with bcfix-arm numbers.
+- **I predicted the wrong control reference and said so rather than quietly repointing it.**
+  I wrote that run 1 would reproduce `fz = 60.476 N`. It reproduced 44.728 N. The
+  instrumentation control passed on its own terms, to 3.43e-5 of target, but my statement of
+  which run it would match was wrong, and the reason turned out to be a provenance fact
+  worth more than the prediction was.
+- **The adversarial reviewer is dead and this was measured by d20-reader**, 20 Agent calls
+  across 18 transcripts with zero successes. I did not attempt one and did not fake one.
+  **Every percentage, force, verdict count and distance in this document is UNREVIEWED.**
 - **The "49 particles out of 598505" leak figure is unlocated.** It appears in the goal text
   of the 2026-08-18 deep search
   (`MPM SPH buoyancy force overestimation and hydrostatic validation benchmarks`), which is
