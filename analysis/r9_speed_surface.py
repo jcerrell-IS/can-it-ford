@@ -358,6 +358,47 @@ def report_split_vs_noise(cells, noise):
     return worst
 
 
+def report_bc_guard_control(rows, suspect="M1", control="M7"):
+    """Did the silently-violated bc guard change the answer?
+
+    THE DEFECT. MovingVehicleChannelScene refuses a bc_per_frame coarser than
+    its CFL-style auto rule, then AFTERWARDS snaps the value so it divides the
+    substeps. The check happens before the snap, so the snap can push the
+    applied value back under the rule with no error. Measured on the committed
+    records at g64, substeps 11:
+
+        pass 4  ->  4 < auto 5  ->  ValueError, the run aborts
+        pass 5  ->  5 >= auto 5 ->  snap to 4  ->  APPLIED 4 < auto 5, silent
+
+    The exact condition that aborts one run is reached quietly by another, and
+    it caught the four v_car = 8.9 m/s cells of the main surface.
+
+    THE CONTROL holds the physics fixed and moves only the suspect quantity.
+    Passing 6 gives sub_per_tick 2 and applied bc 6, which satisfies the rule,
+    while substeps_effective stays 12 exactly as in the suspect runs. So dt and
+    the frame duration are IDENTICAL and only the BC application count differs.
+    A difference here is the defect; no difference bounds it as harmless at
+    these settings, which is a weaker and more honest claim than "it is fine".
+    """
+    a, b = _cells_mean(rows, suspect), _cells_mean(rows, control)
+    common = sorted(set(a) & set(b))
+    if not common:
+        print("    no shared cells between %s and %s yet" % (suspect, control))
+        return None
+    print("    v_car v_water   suspect N (bc 4)   control N (bc 6)   rel diff")
+    print("    " + "-" * 66)
+    ds = []
+    for k in common:
+        d = (b[k] - a[k]) / a[k]
+        ds.append(abs(d))
+        print("    %5.1f %6.1f   %15.1f   %16.1f   %+7.3f%%"
+              % (k[0], k[1], a[k], b[k], 100 * d))
+    worst = max(ds)
+    print("    " + "-" * 66)
+    print("    worst absolute difference: %.3f%% over %d cells" % (100 * worst, len(common)))
+    return worst
+
+
 def report_grid_compare(rows, arm_lo, arm_hi):
     """Compare the SAME surface at two resolutions, on shape as well as level.
 
@@ -656,6 +697,12 @@ def main():
     if hi:
         print()
         report_grid_compare(rows, args.surface_arm, "M2")
+
+    # ------------------------------------------------------------ S6 guard
+    print()
+    print("=" * 74)
+    print("S6  THE bc GUARD WAS SILENTLY VIOLATED: DID IT MATTER?")
+    report_bc_guard_control(rows)
 
     # ------------------------------------------------------------ S5 edge
     print()

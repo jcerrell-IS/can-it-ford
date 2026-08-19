@@ -972,12 +972,24 @@ They are reported as what a search returned.
 - **The -45 degree dip is unexplained**, see T3.
 - **`wrench_dt_mode=frame` is a design decision, not a detail.** The accumulator
   is divided by the caller-supplied dt, so handing it the substep inflates every
-  force by exactly the substep count, plausibly and silently. d19-priorcode
-  established this session that this caller-supplied dt is peculiar to this
-  engine's accessor: Anura3D takes nodal traction from particle stress and
-  Chrono zero-fills its accumulator next to the kernel launch, so neither
-  exposes the trap. The mode is written into every row of the TSV so no reader
-  has to trust it was set correctly.
+  force by exactly the substep count, plausibly and silently. The mode is
+  written into every row of the TSV so no reader has to trust it was set
+  correctly.
+
+  **CORRECTED, and the correction reverses the framing.** An earlier version of
+  this bullet said, on slot d19-priorcode's authority, that a caller-supplied dt
+  is peculiar to this engine's accessor, because Anura3D takes nodal traction
+  from particle stress and Chrono zero-fills its accumulator next to the kernel
+  launch. **d19 has since refuted its own claim.** `sdfibm`, read locally at
+  commit `3627269`, computes `F = rho_f * SUM_cells[alpha * (u_f - u_s) *
+  V_cell] / dt` with `dtINV = 1.0/dt` and `dt` supplied through
+  `SolidCloud::interact(time, dt)`. That is a momentum difference over a
+  timestep, which is this pattern exactly. So a published signed-distance
+  immersed-boundary code arrives independently at the same force-extraction
+  design, and the requirement is **not** an idiosyncrasy of this engine. It
+  remains a trap worth guarding, because the failure is silent, but it is a
+  shared design rather than a local defect. This is a secondary-source claim: I
+  have not read sdfibm.
 
 ## T9. What completed and what did not
 
@@ -1026,3 +1038,140 @@ is not. The pre-existing `seed0` to `seed4` labels do **not** match that pattern
 rather than half-counted. Writing the seed into the record is the right fix and
 was not done tonight, because changing the driver mid-flight would have split
 the provenance of the very runs being collected.
+
+---
+
+# RESULTS, FOURTH BLOCK (same node 922255, after the first two commits)
+
+Three further arms were run once the card was measured to be idle at 9 to 17
+percent. Each answers a question raised by the results above rather than opening
+a new one.
+
+## T11. THE FIXED-SEED DETERMINISM CLAIM IS TRUE ONLY IN THE NEAR-STATIC LIMIT
+
+This document, the previous session, and the dispatch that commissioned this
+work all state the same thing: the SDF path is effectively deterministic at a
+fixed seed, relative spread 4.7e-6, so repeats at fixed configuration carry no
+information and an ensemble must come from `--seed`. **That is refuted in the
+regime this study is about, and it was refuted by accident.**
+
+M5 re-ran the five arcs at seed 0 under a new label, intended only as a
+bookkeeping duplicate of M3. Every recorded field is identical between them:
+same grid, same seed, same `bc_per_frame` 4 as applied, same
+`substeps_effective` 12, same frames and discard. They should have agreed to the
+last few digits. Measured, nine cells per magnitude:
+
+| `\|v_rel\|` m/s | max abs. relative difference | mean |
+|---|---|---|
+| 1.0 | 0.0037 percent | 0.0015 |
+| 2.0 | 0.0182 percent | 0.0077 |
+| 3.0 | 0.0764 percent | 0.0301 |
+| 4.5 | 0.3876 percent | 0.1919 |
+| 6.0 | **0.5881 percent** | 0.2376 |
+
+Two identical invocations agree to 3.7e-5 at 1.0 m/s and to only 5.9e-3 at
+6.0 m/s. The disagreement grows **monotonically and by a factor of 160** across
+the range, which is why it is reported as a finding rather than as scatter: pure
+scheduling jitter would not order itself by velocity.
+
+**Why the original number was not wrong, only narrow.** The 4.7e-6 was measured
+on the C1 no-forcing control, where the water is still and the vehicle is
+stationary. Almost nothing is being accumulated, so almost nothing can be
+accumulated in a different order. The claim was then carried to a moving,
+forced scene where it does not hold.
+
+**Mechanism, offered as a hypothesis and NOT established here.** Faster flow
+means more particles crossing more cells per step, so more atomic collisions in
+the particle-to-grid scatter, and floating point addition is not associative
+under reordering. That predicts exactly the observed monotone growth with
+speed. It has not been tested and no attempt was made to test it.
+
+**Three consequences, and the first two matter more than the third.**
+
+1. **The "seed noise floor" in T1 is not a seed floor.** It is a total
+   repeatability floor that bundles seed effect together with run-to-run
+   nondeterminism at fixed seed. That is the conservative comparator and it is
+   the right one to grade against, so no number above changes. But it must not
+   be described as measuring the seed.
+2. **Fixed-config repeats DO carry information at speed**, and roughly as much
+   variance as changing the seed does. The instruction to spend runs only on
+   seeds is correct at low speed and wasteful of a control at high speed.
+3. **The headline is untouched.** S runs from 0.76 to 1.29 against a
+   repeatability floor of at most 0.59 percent, so the margin is a factor of
+   130 at the very worst cell rather than the 149 quoted from the seed floor.
+
+## T12. Error bars on S, the headline statistic
+
+S is a ratio of extremes across cells, and the uncertainty of an extremal
+statistic does not follow from the uncertainty of its members, so S needed its
+own ensemble. **Five seeds per magnitude, nine angles each, 225 runs.**
+
+| `\|v_rel\|` m/s | S per seed | mean S | sd |
+|---|---|---|---|
+| 1.0 | 0.7590, 0.7578, 0.7621, 0.7564, 0.7574 | **0.7585** | 0.0022 |
+| 2.0 | 0.9733, 0.9701, 0.9727, 0.9702, 0.9708 | **0.9714** | 0.0015 |
+| 3.0 | 1.0683, 1.0697, 1.0712, 1.0666, 1.0647 | **1.0681** | 0.0026 |
+| 4.5 | 1.1150, 1.1140, 1.1148, 1.1173, 1.1171 | **1.1156** | 0.0015 |
+| 6.0 | 1.2864, 1.2847, 1.2847, 1.2868, 1.2848 | **1.2855** | 0.0010 |
+
+**The monotone rise is not seed scatter, and the margin is not marginal.** Each
+step between consecutive magnitudes, expressed in units of the larger of the two
+standard deviations:
+
+| step | gap in S | in sd |
+|---|---|---|
+| 1.0 to 2.0 | 0.2129 | **97 sd** |
+| 2.0 to 3.0 | 0.0967 | **38 sd** |
+| 3.0 to 4.5 | 0.0475 | **19 sd** |
+| 4.5 to 6.0 | 0.1698 | **114 sd** |
+
+The tightest step in the whole sweep is 19 standard deviations. There is no
+reading of this data in which the trend is noise.
+
+Note that the mean S at 4.5 is 1.1156 here against the 1.1202 reported in T2
+from a single arc, and that T2's value sits OUTSIDE the five-seed range
+[1.1140, 1.1173]. That is T11 in action: T2's column came from one invocation
+each, and a single invocation is not reproducible to better than half a percent
+at these speeds. **T2's S column should be read as the single draws they are;
+this table supersedes it.** The qualitative content of T2 is unaffected, since
+the peak-angle shift and the monotone rise both survive at 19 sd or better.
+
+## T13. The bc guard was silently violated, and it cost at most 1.5 percent
+
+**The defect.** The scene refuses a `bc_per_frame` coarser than its CFL-style
+auto rule, because a particle could overshoot a recycle plane. It checks BEFORE
+it snaps the value to divide the substeps evenly, and the snap can push the
+applied value back under the rule with no error at all. At g64 with 11 substeps:
+
+```
+pass 4  ->  4 < auto 5   ->  ValueError, run aborts     (this is what killed uni.log)
+pass 5  ->  5 >= auto 5  ->  snap to 4  ->  APPLIED 4 < auto 5, silently
+```
+
+The identical condition that aborts one run is reached quietly by another. It
+caught the four `v_car` = 8.9 m/s cells of the main g64 surface, twenty runs
+across five seeds. The g96 arm is unaffected: it applied 8 against an auto of 7.
+
+**The control.** With 11 substeps, passing 6 gives `sub_per_tick` 2 and an
+applied `bc_per_frame` of 6, which satisfies the rule, while
+`substeps_effective` stays 12 exactly as in the suspect runs. dt and the frame
+duration are therefore identical and the ONLY thing that changes is how often
+the boundary condition is applied. Five seeds per cell:
+
+| v_car | v_water | suspect (applied 4) | control (applied 6) | difference |
+|---|---|---|---|---|
+| 8.9 | 0.5 | 13737.9 N | 13535.8 N | -1.471 percent |
+| 8.9 | 1.0 | 20097.0 N | 19873.5 N | -1.112 percent |
+| 8.9 | 2.0 | 25622.6 N | 25666.7 N | +0.172 percent |
+| 8.9 | 3.0 | 30035.4 N | 30299.6 N | +0.880 percent |
+
+**Worst case 1.471 percent, and the signs are mixed.** So the violation is a
+real systematic, not nothing: it is about twice the repeatability floor at these
+speeds. It is also two orders of magnitude below the S values it could have
+threatened, so no conclusion in this document turns on it. Reported as bounded,
+not as harmless.
+
+**The fix belongs in the driver and was NOT applied tonight**, because changing
+the driver mid-flight would have split the provenance of the runs being
+collected. The guard should re-check after the snap, or the snap should round
+up to a legal value instead of down.
