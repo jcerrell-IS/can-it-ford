@@ -112,9 +112,26 @@ while IFS=$'\t' read -r slot wave branch base tree needs_gpu writes; do
   # bypass actually cost was the 23 allow rules going inert and the confirmation step, and
   # it overrode per-slot judgement with one global setting. The plan file now carries a
   # permmode column; read and audit slots default to plan.
-  PM=$(awk -F'\t' -v s="$slot" '$1==s{print $NF}' "$PLAN")
+  # READ BY COLUMN NAME, NEVER BY $NF. This used to be `print $NF`, which meant the
+  # LAST column, and it silently became wrong the moment an `effort` column was appended
+  # on 2026-08-20: permmode would have read "high", failed the case below, and fallen back
+  # to acceptEdits, quietly cancelling the plan-mode setting on the read-only slots. A
+  # positional read of a named column is a latent bug that fires on the next schema change.
+  col() {
+    awk -F'\t' -v s="$slot" -v want="$1" '
+      NR==1 { for (i=1; i<=NF; i++) if ($i==want) c=i; next }
+      $1==s && c { print $c }' "$PLAN"
+  }
+  PM=$(col permmode)
   case "$PM" in plan|acceptEdits|bypassPermissions) : ;; *) PM=acceptEdits ;; esac
-  CMD="claude --model opus --effort max --permission-mode $PM"
+
+  # PER-SLOT EFFORT. Was a hardcoded `--effort max` on every session. The documented
+  # default is `high`, and `max` is documented as prone to overthinking with diminishing
+  # returns, to be tested before adopting broadly. A fleet where a file-inventory slot and
+  # a physics estimator both run max is spending the same reasoning budget on both.
+  EF=$(col effort)
+  case "$EF" in low|medium|high|xhigh|max) : ;; *) EF=high ;; esac
+  CMD="claude --model opus --effort $EF --permission-mode $PM"
   CMD="$CMD --session-id $SID --add-dir $REPO"
   CMD="$CMD \"\$(cat '$PROMPT')\""
 
