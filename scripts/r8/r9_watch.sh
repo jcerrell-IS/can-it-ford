@@ -39,9 +39,13 @@ while true; do
       echo "$m" > "$f"
     fi
   done
+  # The login banner can prepend lines like `/work is mounted not "FULL"...` to
+  # stdout. Those are not jobs; keep only rows whose first field is a job id, or
+  # the watcher reports a filesystem notice as a running allocation.
   Q=$(ssh -o BatchMode=yes -o ConnectTimeout=10 vista \
         "squeue -u jcerrell0629 -h -o '%i|%j|%T|%L'" 2>/dev/null)
   RC=$?
+  Q=$(echo "$Q" | awk -F'|' '$1 ~ /^[0-9]+(_[0-9]+)?$/')
   if [ $RC -ne 0 ]; then
     # COULD NOT MEASURE. Say so; do not reinterpret it as zero jobs, and leave
     # PREVJOBS alone so the real state is still there when the link returns.
