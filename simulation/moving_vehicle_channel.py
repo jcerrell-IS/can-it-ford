@@ -392,7 +392,8 @@ class MovingVehicleChannelScene:
 
     def __init__(self, mesh, sdf, depth, v_car, v_water, n_grid,
                  ground_frame=False, device="auto", seed=0, bc_target_frac=0.5,
-                 wrench_dt_mode="frame", inflow_cells=6.0, no_hull=False):
+                 wrench_dt_mode="frame", inflow_cells=6.0, no_hull=False,
+                 hull_y=None, bc_per_frame_force=None):
         from warpmpm.core.solver import GridConfig, Solver
         from warpmpm.materials import newtonian
 
@@ -466,8 +467,19 @@ class MovingVehicleChannelScene:
             self.center0 = np.array([0.5 * lim, self.y_start, floor])
             self.travel_available = (lim - pad - 2.0 * dx) - (self.y_start + half_len)
         else:
-            self.center0 = np.array([0.5 * lim, 0.5 * lim, floor])
+            # hull_y ISOLATES THE PLACEMENT CONFOUND IN THE FRAME COMPARISON.
+            # The rest frame naturally puts the hull at the domain centre and the
+            # ground frame must start it at one end, so the two arms of C4 did not
+            # share a hull position and their at-rest vertical reactions already
+            # differed (2.0474 against 1.6751) before either hull moved. Setting
+            # hull_y lets the rest frame be run at the ground frame's own
+            # positions, which turns one of C4's three confounds into a measured
+            # quantity instead of a caveat.
+            self.center0 = np.array([0.5 * lim,
+                                     0.5 * lim if hull_y is None else float(hull_y),
+                                     floor])
             self.travel_available = float("inf")
+        self.hull_y = float(self.center0[1])
 
         # water block
         rng = np.random.default_rng(seed)
@@ -534,7 +546,30 @@ class MovingVehicleChannelScene:
         # not travel more than bc_target_frac*dx past a recycle plane before the
         # recycler sees it, or it reaches the engine's own domain wall first.
         travel_per_frame = u_max * self.frame_dt
-        self.bc_per_frame = max(1, int(math.ceil(travel_per_frame / (bc_target_frac * dx))))
+        # bc_per_frame_force MAKES THE INTEGRATION UNIFORM ACROSS A MATRIX.
+        #
+        # The auto rule below sets bc_per_frame from u_max, so cells with
+        # different speeds get different numbers of host-BC applications AND
+        # different substeps_effective, hence a different physical duration per
+        # frame. Measured on the |v_rel| = 3.0 arc: the 45 degree cell (u_max
+        # 2.121) fell on bc_per_frame 1 while all four others (u_max 2.772 to
+        # 3.000) got 2, so it received half the BC applications and simulated
+        # 13.333 s against 14.545 s over the same 400 frames. That cell was
+        # exactly the anomalous dip in the arc, so the arc's SHAPE was partly an
+        # artifact of this threshold, not physics. Any matrix meant to be
+        # compared cell-to-cell must pass this explicitly.
+        if bc_per_frame_force is not None:
+            self.bc_per_frame = max(1, int(bc_per_frame_force))
+        else:
+            self.bc_per_frame = max(1, int(math.ceil(travel_per_frame / (bc_target_frac * dx))))
+        self.bc_auto = int(math.ceil(travel_per_frame / (bc_target_frac * dx)))
+        # never coarser than the auto rule: that would let a particle overshoot
+        # a recycle plane by more than the safe fraction of a cell
+        if self.bc_per_frame < self.bc_auto:
+            raise ValueError(
+                "bc_per_frame %d is coarser than the %d the CFL-style rule needs at "
+                "u_max %.3f m/s; a particle would overshoot the recycle plane"
+                % (self.bc_per_frame, self.bc_auto, u_max))
         # substeps must divide into the sub-ticks; round up so the frame is whole
         self.sub_per_tick = max(1, int(math.ceil(self.substeps / self.bc_per_frame)))
         self.bc_per_frame = int(math.ceil(self.substeps / self.sub_per_tick))
@@ -870,7 +905,8 @@ def run_cell(args, mesh, sdf, v_car, v_water, f_buoy, tag):
         mesh, sdf, depth=args.depth, v_car=v_car, v_water=v_water,
         n_grid=args.n_grid, ground_frame=args.ground_frame,
         device=args.device, seed=args.seed,
-        wrench_dt_mode=args.wrench_dt_mode, no_hull=args.no_hull)
+        wrench_dt_mode=args.wrench_dt_mode, no_hull=args.no_hull,
+        hull_y=args.hull_y, bc_per_frame_force=args.bc_per_frame)
     if scene.ground_frame:
         need = v_car * (args.frames / FPS)
         if need > scene.travel_available:
@@ -904,9 +940,13 @@ def run_cell(args, mesh, sdf, v_car, v_water, f_buoy, tag):
         "depth_m": scene.depth, "depth_cells": scene.depth_cells,
         "band_over_depth": scene.band_over_depth,
         "no_hull": scene.no_hull,
+        "hull_y_m": scene.hull_y,
+        "ground_y_start_m": (scene.y_start if scene.ground_frame else None),
+        "travel_available_m": (scene.travel_available if scene.ground_frame else None),
         "n_water": scene.n_water, "water_layers": scene.water_layers,
         "substeps": scene.substeps, "substeps_effective": scene.substeps_effective,
-        "bc_per_frame": scene.bc_per_frame, "dt_s": scene.dt,
+        "bc_per_frame": scene.bc_per_frame,
+        "bc_per_frame_auto": scene.bc_auto, "dt_s": scene.dt,
         "wrench_dt_mode": scene.wrench_dt_mode,
         "wrench_dt_s": (scene.dt if scene.wrench_dt_mode == "substep"
                         else scene.frame_dt_effective),
@@ -964,6 +1004,13 @@ def main():
     ap.add_argument("--wrench-dt-mode", default="frame", choices=["frame", "substep"],
                     help="substep DELIBERATELY commits trap 1, so the detector can "
                          "be shown to fire. Never use it for a reported result.")
+    ap.add_argument("--bc-per-frame", type=int, default=None,
+                    help="force a uniform host-BC count per frame across a matrix; "
+                         "the auto rule varies it with speed and that changes the "
+                         "physical duration of a frame between cells.")
+    ap.add_argument("--hull-y", type=float, default=None,
+                    help="rest frame only: place the hull at this y instead of the "
+                         "domain centre, to match a ground-frame position.")
     ap.add_argument("--no-hull", action="store_true",
                     help="CONTROL: identical scene with the vehicle removed, to "
                          "separate a forcing defect from a blockage effect.")

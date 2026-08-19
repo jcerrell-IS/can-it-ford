@@ -61,7 +61,25 @@ def by_label(rows, prefix):
 
 
 def spread(vals):
-    """(max - min) / mean. The pre-registered statistic S."""
+    """(max - min) / mean. The pre-registered statistic S.
+
+    THE TYPE CHECK BELOW IS NOT DEFENSIVE PADDING, IT IS A MEASURED BUG.
+    Passing a dict here reduces over its KEYS, silently and without error. That
+    happened on 2026-08-19 in an ad-hoc analysis of this very arc: a per-seed
+    spread was reported as 1.6591 for all five seeds, sd exactly 0.0000, and
+    1.6591 is (3.0 - 0.0) / mean(0, 1.148, 2.121, 2.772, 3.0), the spread of the
+    SWEEP AXIS itself. It was computed without touching a single force, and it
+    was reported next to a correct aggregate of 1.1776 without the contradiction
+    being noticed at first. The sd of exactly zero is what gave it away.
+
+    A statistic that cannot tell the measurement from the axis it was swept over
+    is the same class of defect as a test that passes on its own source text.
+    """
+    if isinstance(vals, dict):
+        raise TypeError(
+            "spread() got a dict; it would reduce over KEYS and return a number "
+            "derived from the sweep axis rather than from any measurement. "
+            "Pass list(d.values()).")
     if not vals:
         return None
     m = sum(vals) / len(vals)
@@ -94,10 +112,52 @@ def report_stream_health(rows):
     return bad
 
 
+TIDY_COLS = [
+    "tag", "status", "frame", "no_hull", "hull_y_m",
+    "v_car_ms", "v_water_ms", "v_rel_mag_ms", "v_rel_angle_deg_from_broadside",
+    "n_grid", "dx_m", "lim_m", "depth_m", "depth_cells", "band_over_depth",
+    "n_water", "water_layers", "substeps", "substeps_effective",
+    "bc_per_frame", "bc_per_frame_auto", "wrench_dt_s", "wrench_dt_mode",
+    "frames", "discard", "settle_frames", "stream_established_frac",
+    "fz_settle_N", "f_buoy_analytic_N", "fz_settle_over_analytic",
+    "force_horiz_mag_N", "recycled_x", "recycled_y", "floor_clamps", "wall_s",
+]
+
+
+def export_tidy(rows, out_path):
+    """One row per run, no per-frame series.
+
+    `out/` is gitignored, so these records exist only on an idev node unless they
+    are promoted, and an idev node is not storage. This writes the TIDY record
+    and the derived quantities only: the per-frame series is ~400 rows per run,
+    it is a working artifact rather than a result, and it stays on the node.
+
+    `label` is derived from the tag prefix rather than stored, so the arm a run
+    belongs to (control, arc, matrix, frame test, fidelity) is recoverable
+    without consulting the script that generated it.
+    """
+    import csv
+    with open(out_path, "w", newline="") as fh:
+        w = csv.writer(fh, delimiter="\t")
+        w.writerow(["label"] + TIDY_COLS
+                   + ["force_mean_x_N", "force_mean_y_N", "force_mean_z_N",
+                      "u_mean_x_ms", "u_mean_y_ms", "u_mean_z_ms"])
+        for r in sorted(rows, key=lambda r: (r.get("tag") or "")):
+            tag = r.get("tag") or ""
+            line = [tag.split("_")[0]] + [r.get(c) for c in TIDY_COLS]
+            fm = r.get("force_mean_N") or [None] * 3
+            um = r.get("u_mean_water_ms") or [None] * 3
+            w.writerow(line + list(fm) + list(um))
+    return out_path
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--dir", default=os.path.join(REPO, "out", "r9_moving"))
     ap.add_argument("--selftest", action="store_true")
+    ap.add_argument("--export", default=None,
+                    help="write the tidy one-row-per-run table to this TSV path. "
+                         "out/ is gitignored, so this is how records leave the node.")
     args = ap.parse_args()
     if args.selftest:
         return selftest()
@@ -107,6 +167,10 @@ def main():
         print("no SUMMARY_*.json under %s" % args.dir)
         return 1
     print("loaded %d run records from %s\n" % (len(rows), args.dir))
+    if args.export:
+        export_tidy(rows, args.export)
+        print("wrote tidy table (%d rows, no per-frame series) -> %s\n"
+              % (len(rows), args.export))
 
     # ---------------------------------------------------------------- C1
     print("=" * 74)
@@ -272,6 +336,15 @@ def selftest():
     assert spread([2.0, 2.0, 2.0]) == 0.0
     assert spread([]) is None
     assert spread([0.0, 0.0]) is None
+    # a dict must RAISE, not silently reduce over keys. See spread()'s docstring:
+    # this exact mistake produced a plausible 1.6591 that was the spread of the
+    # sweep axis, not of any force.
+    try:
+        spread({0.0: 10.0, 3.0: 20.0})
+    except TypeError:
+        pass
+    else:
+        raise AssertionError("spread() must refuse a dict")
     ok += 1
 
     # the stall filter must reject a dead stream and keep a live one, and must

@@ -63,9 +63,29 @@ verified against the paper texts and are marked unverified wherever used.**
 Verifying a title against a resolved DOI is not the same as verifying that the
 paper says what someone said it says.
 
-`analysis/research_index.py --query "Al-Qadami"` returns **zero** matches, so
-none of these is in the 332-paper corpus index. The index cannot report on this
-topic's closest prior art and its silence is not evidence of absence.
+~~`analysis/research_index.py --query "Al-Qadami"` returns **zero** matches, so
+none of these is in the 332-paper corpus index.~~
+
+> **RETRACTED 2026-08-19, and this was my error, not the tool's.** The query does
+> return zero. **The inference from it was invalid.** `research_index.py:518-521`
+> matches the query substring against `title` and `abstract` ONLY; it never reads
+> the authors field. An author query is therefore structurally incapable of
+> matching, and zero was guaranteed before any paper was consulted.
+>
+> Re-checked by DOI, which is the field the index actually joins on. **Four of
+> the five papers above ARE in the corpus:** `10.1007/s11069-021-04949-6`,
+> `10.1111/jfr3.12828`, `10.3390/su151713262` and `10.1111/jfr3.12657` each
+> return 1 match. Only `10.1051/matecconf/201820307003` is absent (as is
+> Pregnolato et al `10.1016/j.trd.2017.06.020`).
+>
+> So the corpus is **not** silent on this topic, the prior art was available, and
+> nothing here may claim otherwise. The novelty statement stands only on the
+> SURFACE, which is what the measurements below support.
+>
+> This is the same failure mode as the two defects in R0 and the analysis bug in
+> R9c: **a check that could not have returned any other answer.** I ran the query,
+> got zero, and reported it as evidence. The correct move was to ask what the
+> query searches before believing what it returned.
 
 **The contribution claimed here is the SURFACE**: `v_car` crossed with `v_water`
 as separate variables producing a graded load, where the field publishes
@@ -469,3 +489,184 @@ comparison is the contribution stated as a number.
 - `analysis/research_index.py --query "Al-Qadami"` returns zero and
   `--method moving-vehicle` returns no match, so the corpus is silent on this
   topic. No novelty claim here rests on that silence.
+
+---
+
+# RESULTS, SECOND SESSION (node 922255, c642-091, 2026-08-19)
+
+The first session's results above are unchanged. This session tested the
+headline against three things that could have destroyed it, and it survived all
+three. It also found one more defect in my own analysis.
+
+**Reused-code provenance, now pinned properly.** The exploratory driver was read
+from the `orphan-rescue-token-rotate-d72f90` worktree, which **no longer exists**
+as of this session. That is why a worktree path is a bad citation. The content is
+durable in history and is cited by blob:
+
+| file | blob | at commit |
+|---|---|---|
+| `simulation/moving_vehicle_sdf_exploratory.py` | `86ef1905...` (29,788 B) | `187d868` |
+| `docs/MOVING_VEHICLE_SDF_EXPLORATORY_2026-08-11.md` | `bb9c7c58...` | `187d868` |
+
+**The `srun` form that works on Vista**, for any slot that needs it. All five are
+required and the wrapper reveals the missing ones one at a time:
+
+```
+srun -p gh-dev -N 1 -n 1 -t 00:20:00 --overlap --jobid=<id> <cmd>
+```
+
+## R7. The frame problem, measured
+
+**R7a. How far the ground frame would need to travel.** A 300-frame rest-frame
+run at `|v_rel| = 2.2 m/s` reaches within 10 percent of its own final-40-frame
+mean at frame 190, which is 6.333 s, i.e. **13.933 m of equivalent travel**.
+
+The ground frame has **3.078 m**. It is short by a factor of **4.5**.
+
+That is the negative with a number: the ground frame cannot develop in this
+domain, and the cubic grid means lengthening the travel axis costs `n_grid^3`
+while wrecking the depth resolution. This is a property of the scene, not a
+scheduling problem.
+
+**R7b. The frame gap across three speeds**, at each of which the ground frame is
+at least nominally feasible:
+
+| v_car | frames available | ground `\|F_h\|` | rest `\|F_h\|` | gap |
+|---|---|---|---|---|
+| 0.5 | 180 | 225.8 N | 581.1 N | 88.1 % |
+| 1.0 | 90 | 745.7 N | 986.7 N | 27.8 % |
+| 2.2 | 41 | 1911.5 N | 2678.3 N | 33.4 % |
+
+**R7c. AND HERE IS WHY I WILL NOT CALL ANY OF THAT A FRAME DISCREPANCY.** I ran
+the placement control: the rest frame, hull moved along y across the span the
+ground-frame hull traverses, everything else identical.
+
+| hull y (m) | 3.1718 | 3.9414 | 4.7109 | 5.4804 | 6.2499 |
+|---|---|---|---|---|---|
+| `\|F_h\|` (N) | 2190.6 | 2493.0 | 2678.2 | 3525.9 | 6611.9 |
+
+**Spread 126.3 percent from placement alone**, which is four times the 33 percent
+"frame gap" at the same speed. Restricted to the three positions clear of the
+upstream inflow slab the spread is still ~20 percent; the blow-up at y = 6.2499
+is the hull's leading end reaching into the Dirichlet slab, which is a second,
+separate scene constraint worth recording: **the hull must be kept clear of the
+inflow slab, and the auto-placement does not enforce it.**
+
+So the honest statement is: **at this resolution the frame change cannot be
+separated from hull placement, because placement alone moves the answer further
+than the frame does.** 34 percent is an upper bound containing the placement
+term, not a measurement of a frame effect, and I am not going to present it as
+the first number on the moving-reference-frame problem. It is not clean enough to
+be that. What IS defensible is R7a: the travel distance needed, against the
+travel distance available, both measured.
+
+## R8. The headline survives three attacks
+
+**R8a. It is not a transient artifact.** The surface was measured over frames
+20-60; the 300-frame run shows the load still falling there (the 41-frame rest
+arm read 2678 N where the settled value is 673 N, a factor of 4). So I re-ran the
+arc at 400 frames, 5 seeds, and computed S over five windows:
+
+| window | f20-60 | f60-150 | f150-250 | f250-325 | f325-400 |
+|---|---|---|---|---|---|
+| S | 0.8886 | 1.0233 | 1.2053 | 1.1633 | 1.1879 |
+
+**S exceeds the pre-registered 0.10 by more than an order of magnitude in every
+window**, including the settled one, where residual drift per cell between the
+last two windows is 0.4 to 3.8 percent. Per-seed at f250-400: S = 1.1776,
+sd 0.0016 over 5 seeds.
+
+**8b. It is not an artifact of non-uniform integration.** I found that
+`bc_per_frame` was set per-cell from `u_max`, so the 45 deg cell got 1 host-BC
+application per frame where the other four got 2, and simulated 13.333 s against
+14.545 s. I predicted that was causing the arc's jagged shape. **I was wrong.**
+Forcing `bc_per_frame = 2` uniformly moved that cell by 1.07 percent and every
+other cell by under 0.01 percent, and S went 1.1755 to 1.1776. The
+non-uniformity was real and is now fixed (`--bc-per-frame`), but it was not the
+cause. The jagged shape is reproducible, seed-independent, and **unexplained**.
+
+**8c. It survives a 23x change in mesh fidelity.** See R9 below.
+
+**What does NOT survive: the shape of the arc.** In the transient window the peak
+is at 22.5 deg; in the settled window it is at 67.5 deg. My first-session note
+that "the 22.5 deg peak reproduces across both grids and all five seeds" was true
+**within the transient window only** and is withdrawn as a general statement.
+Report the spread; do not interpret the ordering.
+
+## R9. Mesh fidelity, same vehicle, two meshes
+
+Silverado hulls from `~/Downloads/vehicle_meshes/` (untracked, not previously on
+Vista), same vehicle, 23x apart in vertex count:
+
+| | coarse | fine |
+|---|---|---|
+| vertices / faces | 2,108 / 4,380 | 48,706 / 97,596 |
+| `lim` (m) | 12.792386 | 13.095687 |
+| `dx` (m) | 0.199881 | 0.204620 |
+| depth cells | 1.501 | 1.466 |
+| analytic buoyancy | 2529.5 N | 2476.0 N |
+
+**R9a. The control is itself caught by the resolution trap.** `lim` derives from
+the loaded hull's extent, and decimation shrinks the extent, so the same vehicle
+at two fidelities gets a domain differing by **2.37 percent** and therefore a
+different `dx`, a different realized depth in cells, and a different displaced
+volume. A mesh-fidelity comparison at fixed `n_grid` is not at fixed resolution.
+This is the documented cross-vehicle trap appearing **within a single vehicle
+class**, which is sharper than the form it is usually stated in.
+
+**R9b. The conclusion is fidelity-robust; individual cells are not.**
+
+| v_car | coarse | fine | diff |
+|---|---|---|---|
+| 0.000 | 2527.0 N | 2575.1 N | +1.9 % |
+| 1.148 | 4789.4 N | 4773.7 N | -0.3 % |
+| 2.121 | 3304.1 N | 3183.2 N | -3.7 % |
+| 2.772 | 4489.7 N | 6085.6 N | **+35.5 %** |
+| 3.000 | 1492.4 N | 1587.2 N | +6.4 % |
+
+**S(coarse) = 0.9929, S(fine) = 1.2355**, both an order of magnitude above the
+threshold. Four of five cells agree within 6.4 percent; one moves 35.5 percent,
+and it is the 67.5 deg cell, the same one that is the maximum in the settled
+Yaris arc. So the spread survives fidelity and the shape does not, which is the
+same split as R8.
+
+**R9c. A THIRD DEFECT, THIS ONE IN MY OWN ANALYSIS, AND IT IS THE MOST INSTRUCTIVE
+OF THE THREE.** While computing the per-seed distribution I called a spread
+helper with a **dict** where it expected a sequence. Python reduced over the
+KEYS. It returned 1.6591 for all five seeds with a standard deviation of exactly
+0.0000, and 1.6591 is `(3.0 - 0.0) / mean(0, 1.148, 2.121, 2.772, 3.0)`: **the
+spread of the sweep axis itself, computed without reading a single force.** It
+sat next to a correct aggregate of 1.1776 and looked like a plausible result.
+
+The sd of exactly zero is what exposed it. `spread()` now raises on a dict and
+the self-test asserts that it does. Corrected per-seed values: 1.1766, 1.1762,
+1.1782, 1.1771, 1.1801.
+
+This is the third time in this slot that a check returned a number it could not
+have derived from the data it claimed to measure: the self-test that passed on
+its own source text, the corpus query that could not search authors, and now a
+statistic that reduced over its own sweep axis. All three looked like results.
+
+## R10. Vehicle class provenance, recorded and NOT acted on
+
+Reported to me this session, from an Undermind deep search of 21 July:
+the CCSA/NCAC LS-DYNA set with teardown provenance and NHTSA NCAP validation is
+**Yaris, Camry, Silverado**, and there is **no Nissan Rogue** in it. The code's
+`MASS` entries for Yaris (1100) and Silverado (2270) match the MASH designations;
+`rogue` at 1571.3 has no such anchor. The same search reports as a negative that
+no publicly redistributable OBJ/PLY/glTF/USD conversion of these models is
+verified to exist, which makes this project's own `vehicle_mesh_pipeline.py` the
+sole provenance for every `.ply` hull, and it is untracked.
+
+**This is a SECONDARY-SOURCE claim and I have not verified any of it against a
+primary record.** It is recorded because it bears on a class comparison, not
+because it is established. I have **not** swapped any hull: the 89 percent result
+is measured on the Yaris hull named in section 0, and changing geometry would
+invalidate comparison with it. Whether to move to Yaris/Camry/Silverado is
+Josie's call.
+
+## R11. Records promoted out of `out/`
+
+`analysis/r9_speed_surface.py --export` writes `data/r9_speed_surface.tsv`, one
+tidy row per run, **162 runs**, no per-frame series. The series stay on the node:
+they are ~400 rows per run and are a working artifact, not a result.
