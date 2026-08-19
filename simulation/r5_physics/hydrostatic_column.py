@@ -108,12 +108,25 @@ def substeps_and_dt(dx, c=None):
     return n, tick / n
 
 
-def build_column(n_grid, lim, depth, seed, device):
+def build_column(n_grid, lim, depth, seed, device, ppc=2):
+    """ppc is particles per cell PER AXIS, so ppc**3 per cell. Default 2 gives 8, which is
+    what every run before 2026-08-19 used and what sphere_heave.py uses (h = dx/2).
+
+    PARAMETERISED 2026-08-19 TO TEST THE VOLUMETRIC-LOCKING HYPOTHESIS WITHOUT TOUCHING THE
+    ENGINE. Zhao, Jiang and Choo (Zha22d, CMAME 2023, arXiv 2209.02466) call explicit MPM
+    inherently vulnerable to volumetric locking because it "carries many material points per
+    element, each imposing an incompressibility constraint", with symptoms of overly stiff
+    response and severe non-physical pressure oscillation that spatial refinement does not
+    remedy. That mechanism is explicitly PER-PARTICLE-PER-ELEMENT, so it predicts severity
+    rising with ppc AT FIXED dx. Sweeping ppc holds the grid, the timestep, the sound speed
+    and the CFL substep count all fixed, and changes only the number of volumetric
+    constraints per cell. No engine change, no new parameter in the solver.
+    """
     from warpmpm.core.solver import GridConfig, Solver
     from warpmpm.materials import newtonian
 
     dx = lim / n_grid
-    h = dx / 2.0
+    h = dx / float(ppc)
     surface_z = FLOOR + depth
 
     rng = np.random.default_rng(seed)
@@ -226,13 +239,15 @@ def band_of(rel):
 
 
 def run(a):
-    s, dx, h, surface_z, n_p = build_column(a.n_grid, a.lim, a.depth, a.seed, a.device)
+    s, dx, h, surface_z, n_p = build_column(a.n_grid, a.lim, a.depth, a.seed, a.device,
+                                            ppc=a.ppc)
     substeps, dt = substeps_and_dt(dx)
     ref = RHO_W * G_ENGINE
     cfg = {
         "n_grid": a.n_grid, "lim_m": a.lim, "dx_m": dx, "h_m": h, "depth_m": a.depth,
         "floor_m": FLOOR, "wall_m": WALL, "surface_z_seeded_m": surface_z,
         "n_water": n_p, "substeps": substeps, "dt_substep_s": dt, "seed": a.seed,
+        "ppc_per_axis": a.ppc, "ppc_per_cell": a.ppc ** 3,
         "bulk_Pa": BULK, "eta_Pa_s": ETA, "rho_w_kg_m3": RHO_W, "g_m_s2": G_ENGINE,
         "reference_dpdz_Pa_per_m": -ref,
         "base_hydrostatic_Pa": ref * a.depth,
@@ -356,6 +371,10 @@ def main():
     p.add_argument("--depth", type=float, default=0.5)
     p.add_argument("--frames", type=int, default=200)
     p.add_argument("--seed", type=int, default=0)
+    p.add_argument("--ppc", type=int, default=2,
+                   help="particles per cell PER AXIS (ppc**3 per cell). 2 reproduces every "
+                        "run before 2026-08-19. Sweeping this at fixed --n-grid is the "
+                        "locking discriminator; see build_column.")
     p.add_argument("--device", default="auto")
     p.add_argument("--verbose", action="store_true")
     p.add_argument("--out", default="hydrostatic_column.json")

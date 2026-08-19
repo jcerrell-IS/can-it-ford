@@ -1716,17 +1716,23 @@ of the residual motion are the same quantity seen twice.
 The residual motion carries dynamic pressure. Evaluated at 918240's own geometry
 (waterplane 0.062729 m2, analytic denominator 35.7139 N):
 
-| scale | velocity | dynamic pressure | force over the waterplane |
-|---|---|---|---|
-| control vrms | 0.2202 m/s | 24.20 Pa | 1.52 N |
-| control vmax | 0.6352 m/s | 201.37 Pa | 12.63 N |
-| **job B's actual excess** | | **285.00 Pa** | **17.88 N** |
+| scale | velocity | dynamic pressure | force over the waterplane | share of the excess |
+|---|---|---|---|---|
+| control vrms | 0.2202 m/s | 24.20 Pa | 1.52 N | 8.5 % |
+| control vmax | 0.6352 m/s | 201.37 Pa | 12.63 N | **70.7 %** |
+| **job B's actual excess** | | **285.00 Pa** | **17.88 N** | 100 % |
 
-**Job B's excess sits between the rms and max dynamic pressure of the residual motion this
-column carries, and closer to the max.** That is an order-of-magnitude coincidence, and it
-is a **hypothesis, not a result**: persistent non-quiescence could be contributing to the
-measured reaction, and it is neither the coupling nor the surface estimator, so it is not on
-anyone's current candidate list.
+**CORRECTED 2026-08-19, caught by the coordinator, and the correction matters.** I first
+wrote that job B's excess "sits between the rms and max dynamic pressure, and closer to the
+max". **That is false. 285.00 Pa EXCEEDS BOTH**, including the max of 201.37 Pa, by 41.5
+percent. **The residual motion at this column's amplitude accounts for at most 70.66 percent
+of the excess, leaving 83.63 Pa unexplained**, and that is before the sign question is
+raised at all.
+
+**So the honest form is: the right ORDER, NOT a sufficient magnitude.** Persistent
+non-quiescence could be *contributing* to the measured reaction, and it is neither the
+coupling nor the surface estimator, so it is not on anyone's current candidate list. It
+cannot be the whole story even at its most generous reading.
 
 **FALSIFIER, and it is `d21-jobb-route`'s to run since they are already instrumenting the
 near field:** measure the residual velocity field in the sphere scene. **If its dynamic
@@ -1777,3 +1783,51 @@ error at length and **does not find a one-signed bias**, characterising the erro
 kicks and noise. **Quadrature is therefore not a candidate for a systematic offset** and I
 have stopped carrying it as one. Noted that the workspace record for `Ste00` lists no year
 and no DOI; the 2008 date is from this project's own CLAUDE.md L-5, not from the index.
+
+---
+
+# 34. Is the non-quiescence volumetric locking? Pre-registered, and the two hypotheses disagree in SIGN
+
+`Zha22d` (Zhao, Jiang and Choo, CMAME 2023, arXiv 2209.02466) calls explicit MPM
+**inherently vulnerable** to volumetric locking because it "carries many material points per
+element, each imposing an incompressibility constraint", with symptoms of overly stiff
+response and **severe non-physical stress and pressure oscillation** that **spatial
+refinement does not remedy**. *(Relayed from a full-text read I did not perform; the paper is
+in the workspace index and this slot has not read it. Treat the quoted characterisation as
+secondary.)*
+
+**Why it fits what I measured.** A persistent, non-decaying agitation in a nearly
+incompressible material, whose KE/PE **grows** rather than decays, sits 11 orders above the
+well-balanced reference, and is **untouched by a boundary fix that repaired 96.4 percent of
+the mass loss**, is the signature that description implies. It would also re-read my three
+"decoupled" properties as one cause plus two others rather than three unrelated facts.
+
+## 34.1 The discriminator needs no engine change, and I have run it
+
+The proposed remedy is F-bar, and implementing it means editing the G2P stress update inside
+a Warp kernel in `mpm_solver_warp.py`. **That is an engine modification, far outside this
+slot's scope, and a real piece of work with its own validation burden.** Before spending
+that, the hypothesis can be tested for free.
+
+**Zha22d's mechanism is per-particle-per-element.** So it predicts severity rising with
+**particles per cell at fixed `dx`**. Sweeping ppc holds the grid, the timestep, the sound
+speed and the CFL substep count all fixed, and changes **only** the number of volumetric
+constraints per cell. Job **923270**, three arms at g64, ppc 1, 2 and 3, so 1, 8 and 27
+particles per cell, everything else identical including the seed.
+
+**PRE-REGISTERED, and the two candidate explanations predict OPPOSITE SIGNS, which is what
+makes this a discriminator rather than a measurement:**
+
+| hypothesis | prediction for KE/PE as ppc rises |
+|---|---|
+| **volumetric locking** | **RISES** (1 to 8 to 27 constraints per cell) |
+| acoustic ringing / sampling noise | **FLAT or FALLS** (more particles, better sampling) |
+
+**FALSIFIER: if KE/PE does not rise with ppc, locking is not the source of the
+non-quiescence and the hypothesis dies on these three arms.** If it does rise, F-bar becomes
+worth the engineering and there is a measured reason to ask for it rather than a literature
+analogy.
+
+**Note the standing caveat that applies to my own sweep:** ppc = 2 is what every run before
+today used, including `sphere_heave.py`. So arm 2 must reproduce the control arm of job
+923190, and if it does not, the sweep is measuring something other than what it claims.
