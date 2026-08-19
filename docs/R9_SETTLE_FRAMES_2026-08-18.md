@@ -8,25 +8,39 @@ are in section 11.
 
 ---
 
-## 1. The rule, which is the point of this document
+## 1. The rule, its price, and why the price is asymmetric
 
 **Use the FULL RECORD for a verdict. Use a demonstrated-stationary window for any
 convergence or uncertainty claim.**
 
-The rule is asymmetric because the two questions are different. Incipient motion
-is an EVENT: trimming the startup transient before a SLIDE test deletes exactly
-the frames the test exists to find. A time-averaged force or a grid-convergence
-claim is the opposite: a mean taken over a non-stationary window is not a settled
-value no matter how many frames went into it.
-
-**Both halves are now measured on the same 24 runs, so the cost of picking one
-rule for both cases is a number rather than an argument.** Reproduce with
-`analysis/settle_audit.py --asymmetry`:
+**The price, measured on the same 24 runs** (`analysis/settle_audit.py
+--asymmetry`):
 
 | you get this wrong | runs that move | direction |
 |---|---|---|
 | stationary window used for a VERDICT | **16 of 24** on the magnitude channel, **14 of 24** on the surge channel | all 30 moves DELETE a SLIDE, 0 create one |
 | full record used for an UNCERTAINTY | **24 of 24** error bars too small, median **4.32x**, worst **5.64x** | always overstates precision |
+
+**Why the price is asymmetric, in one line: the error arrives looking like a
+cleaner analysis.**
+
+That is the whole reason nobody catches it. Applying the stationary-window rule to
+a verdict does not produce an obviously wrong answer, it produces a tidier one.
+All 30 moves DELETE a SLIDE and none creates one, so the mistake is directional
+and it runs toward the quieter result every time.
+
+**And the direction matters for this project's headline specifically.** The
+canonical outcome is 16 SLIDE / 1 STUCK. The wrong rule deletes slides, so
+misapplying it would have moved the published count toward STUCK: toward "the
+vehicle mostly stayed put", which reads as the more conservative and therefore the
+more defensible finding. A reviewer would have had no reason to push back on it.
+The error would have been adopted, not caught.
+
+The rule is asymmetric because the two questions are different. Incipient motion
+is an EVENT: trimming the startup transient before a SLIDE test deletes exactly
+the frames the test exists to find. A time-averaged force or a grid-convergence
+claim is the opposite: a mean over a non-stationary window is not a settled value
+no matter how many frames went into it.
 
 The uncertainty row's factor is `sqrt(N / N_eff)` with `N` the full 91-frame
 record and `N_eff` measured on the retained window, and **that pairing mixes two
@@ -38,12 +52,6 @@ and the conclusion is insensitive to the choice, but the pairing has to be state
 a bare "4.32x" is a factor without its predicate, which is the failure section 16
 is about. Worst case moves the other way, 5.63x/5.64x on the retained window
 against 5.55x/5.54x on the full record.
-
-The verdict row is the dangerous one, and the reason is in its direction column.
-The wrong rule never manufactures a verdict on this data, it only erases them, so
-the mistake arrives looking like a cleaner and more conservative analysis. Applied
-to the canonical set it would silently contradict the published 16 SLIDE / 1
-STUCK, having removed the surge in which the sliding physically happens.
 
 The uncertainty row is unfixable by any settle length and is the subject of
 section 7: 91 frames carry a median `N_eff` of about 5, so `sqrt(N / N_eff)` is
@@ -58,6 +66,47 @@ rather than noise decaying toward the answer.
 `use_stationary_window=False` for this reason, and this measurement reproduces its
 docstring exactly as a held-fixed control before recomputing anything: 21 of 24
 SLIDE on the full record, 5 of 24 with the transient removed.
+
+---
+
+### 1.1 WHICH PUBLISHED NUMBER WAS COMPUTED UNDER WHICH RULE
+
+The first question a reader has is whether **16 SLIDE / 1 STUCK** is affected.
+**It is not, and not by luck: it was computed under the correct rule from the
+start.** Every row below was traced to the code that produces it, live, this
+session. Read directly, not recalled.
+
+| published number | computed on | is that the right rule? |
+|---|---|---|
+| **16 SLIDE / 1 STUCK**, the canonical verdict | **FULL RECORD**, surge channel, `>=`. `failure_modes.py:168-182` builds `surge_drift` from the whole array and `_first_sustained_index` scans from index 0. There is no truncation, no window, no discard anywhere in that file | **YES.** Correct rule, correct channel. Unaffected |
+| 21 of 24 full-record SLIDE | FULL RECORD, magnitude channel. `probabilistic_verdict.py:107` defaults `use_stationary_window=False` | YES |
+| 19 of 24, the same on the surge channel | FULL RECORD, surge channel | YES |
+| 5 of 24 transient-removed | STATIONARY WINDOW, deliberately | YES **as a robustness diagnostic**, which is the only thing it is ever allowed to be. Reporting it as the verdict is the error this document prices |
+| 17 of 24 threshold flip | FULL RECORD | YES |
+| `N_eff` 2.84 to 90, the settle audit, section 7 | STATIONARY WINDOW | YES |
+| **`final_disp_mag_m` grid convergence**, CLAUDE.md item 5, the +87.8 percent and -59.2 percent across g48/g64/g96 | **NEITHER.** `sim_standing.py:501` is `d = scene.history.displacement[-1]`, a SINGLE TERMINAL FRAME. Not a verdict and not a mean over any window | **NO, and no settle length or window choice fixes it.** See below |
+
+**The last row is the one that matters, because the rule as stated is binary and
+that number is in neither class.** A single terminal-frame value has no window to
+choose. It cannot be made to converge by discarding more leading frames, because
+the quantity is not an average of anything: it is one sample of a still-evolving
+transient. This is not a new complaint, it is the same conclusion CLAUDE.md
+already records under "GRID REFINEMENT DOES NOT CONVERGE A TRANSIENT QUANTITY",
+and it is why item 5 instructs readers to cite the verdict and never the
+displacement magnitude.
+
+So the honest statement of scope is three-way, not two-way:
+
+1. **Verdicts** take the full record. Published and correct.
+2. **Convergence and uncertainty claims** take a demonstrated-stationary window.
+   Published and correct where they exist.
+3. **Instantaneous and extremal quantities** obey neither rule and are not
+   rescued by either. A grid-convergence claim built on one needs replacing with
+   a time-averaged observable over a demonstrated-stationary window plus a GCI,
+   which is work this document does not do and does not claim to have done.
+
+Nothing in this document proposes changing a published verdict, and nothing in it
+licenses quoting `final_disp_mag_m` as converged.
 
 ---
 
@@ -76,6 +125,8 @@ SLIDE on the full record, 5 of 24 with the transient removed.
 | 9 | A count without its PREDICATE fails exactly as a count without its channel does, now four instances | section 14 |
 | 10 | `classify_failure_modes.py` carried six defective citations, not the one assigned | section 15 |
 | 11 | **The asymmetric rule costs 16 of 24 verdicts one way and 24 of 24 error bars the other**, measured on the same runs | section 1, `--asymmetry` |
+| 11a | **16 SLIDE / 1 STUCK was computed under the correct rule and is unaffected**, traced to `failure_modes.py:168-182` | section 1.1 |
+| 11b | A THIRD class exists that neither rule covers: single-frame terminal values such as `final_disp_mag_m` | section 1.1 |
 | 12 | The "15 of 24" collision is resolved and the error was mine: it is a threshold-flip count, not a SLIDE count | section 16 |
 | 13 | The rule has a physical mechanism, verified to primary source: added mass is not one coefficient during acceleration | section 18 |
 | 14 | Three sessions independently built instruments that could not fail, in one round | section 17 |
