@@ -1466,3 +1466,100 @@ in `8f978c1`.** The exact root-find is 24.904 to 33.424 mm, which is 1.33 to 1.7
 "about one". The search was therefore commissioned on a premise 34 percent too small. It does not
 invalidate the literature it returned, since the papers were selected on the mechanism rather
 than the magnitude, but **anyone reading that goal text should not take the number from it.**
+
+---
+
+# 31. The hydrostatic column ran, and MY OWN pre-registered criterion has the same hole
+
+Job **922619** on `gh`, submitted after the pre-registration in `da438d7`, two runs at g64
+and g96, 200 frames each, no body in the domain. **It completed with RC 0 and it printed
+`"band": "PASS"`. That PASS should not be believed and I am not reporting it as a result.**
+
+**PARTIAL REPORT.** The Vista `ControlMaster` socket expired between the job finishing and my
+reading it, so the only data in hand is what the completion poll captured: the g96 verdict
+block and ten printed frames. **The per-bin profiles and the whole g64 run have not been read
+yet.** Everything below is from the captured output; nothing is inferred about g64.
+
+## 31.1 The PASS is an artifact of cancellation, and the defect is mine
+
+```
+"band": "PASS",  "mean_rel_error_pct": -0.7295,  "std_rel_error_pct": 12.519
+```
+
+The mean sits 0.73 percent from the reference, inside a 5 percent band. **The frame-to-frame
+scatter is 12.519 percent.** Printed frames *inside the graded window*:
+
+| frame | relative error |
+|---|---|
+| 100 | **-25.473 %** |
+| 120 | -17.672 % |
+| 140 | +8.454 % |
+| 160 | +9.055 % |
+| 180 | -3.651 % |
+
+**The graded window spans 34.528 points against a 5 point band, which is 6.91x the entire
+band.** The mean passes only because large negative and positive excursions cancel. Even the
+naive standard error of the mean, treating 100 autocorrelated frames as independent, is 1.252
+points, a quarter of the band before any blocking inflation.
+
+**This is the same class of defect I was sent here to fix, committed by me, eleven commits
+later.** Criterion 3 named a denominator and no window. **My criterion named a graded quantity,
+a denominator, a window and a band, and no dispersion or stationarity gate.** I wrote in
+`da438d7` that the gradient formulation meant this check "cannot inherit the defect it was
+written to investigate". It did not inherit that one. It invented the adjacent one.
+
+Criterion 3 as amended carries a stationarity gate on the graded ratio at 3.0 sigma, precisely
+because a drifting series cannot be summarised by a mean. **I did not carry that gate across to
+my own check.** The correct verdict on this run is **NOT GRADEABLE on dispersion**, by exactly
+the reasoning the manifest already contains.
+
+## 31.2 Why it is not stationary: the column drains, with no body in it
+
+`n_below_floor`, particles that have passed the floor plane, with **no sphere in the domain at
+all**:
+
+| frame | 0 | 20 | 40 | 60 | 80 | 100 | 120 | 140 | 160 | 180 |
+|---|---|---|---|---|---|---|---|---|---|---|
+| below floor | 0 | 16816 | 30090 | 37763 | 39633 | 39814 | 40370 | 41563 | 44141 | 46926 |
+
+**Monotone throughout, and still rising at the last frame.** The column never reaches
+hydrostatic equilibrium, which is why `dp/dz` swings instead of settling. **A measurement of
+static pressure error requires a static column, and this one is not static.**
+
+**What this does and does not establish.** It establishes that the floor leak **reproduces with
+no body present**, so the leak is not caused by the sphere, its SDF collider, or the contact
+band. That localises it to the floor plane boundary condition. It does **not** establish the
+solver's static pressure error, which is the number the run was commissioned to produce, and
+which remains **unmeasured**.
+
+**A caveat I can state and have not yet verified.** My column copied `sphere_heave.py`'s
+defaults, and commit `6ed163e` added a sacrificial sub-floor fluid layer as a floor-leak remedy
+**defaulted OFF** (`n_ghost_layers = 0`). So this column ran with the remedy off, as the
+baseline does. **I have not checked what job 918450, the floor-BC treatment, did differently**,
+and I will not claim the leak is unfixed until I have.
+
+## 31.3 What the run is worth, stated plainly
+
+**It did not answer the coordinator's question.** The question was what this solver's static
+pressure error actually is, and the intended discriminator was: if the column is sound, job B's
++34 to +64 percent belongs to the sphere; if the column is tens of percent wrong, the FAIL was
+never about the sphere. **Neither branch is reachable from a column that is still draining.**
+
+**It did return a real finding**, which is that the drainage is a property of the tank and its
+floor, not of the body, and that finding cost one queued batch job.
+
+**What it needs to become the reference it was meant to be**, in order:
+
+1. **Stop the drainage first.** Either enable the sacrificial sub-floor layer, or close the
+   domain, or use a rigid lid, so the column can actually reach equilibrium. Until then no
+   static quantity can be measured in this scene at all.
+2. **Add the missing gate to my own criterion** before re-running: a stationarity gate on
+   `dp/dz` and a dispersion gate, matching what criterion 3 already requires of the graded
+   ratio. A criterion that names a quantity, a window and a band but no gate on drift is
+   incomplete, and this run is the demonstration.
+3. Only then read the gradient and compare it to `rho0*g`, expecting +1.6 percent.
+
+**The pre-registration itself was still worth doing.** Because the band and the falsifier were
+fixed in `da438d7` before the job existed, the PASS could be rejected on the evidence rather
+than argued about afterwards. **A pre-registration that catches its own author is doing its
+job.**
