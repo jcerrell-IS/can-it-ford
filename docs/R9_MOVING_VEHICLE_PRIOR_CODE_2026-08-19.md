@@ -367,3 +367,195 @@ rather than dropped.
 4. Run the 2c control once. It is two runs, one parameter apart, and it either
    retires the one-sidedness question or turns it into the main finding.
 5. Do not plan on validating the in/outflow BC against Anura3D. It is not there.
+
+---
+
+# ADDENDUM, 2026-08-19 evening: wall treatment, and two corrections
+
+Commissioned as "Schulz and Sutmann 2019, image-particle boundaries", on the
+premise that grid-momentum-zeroing walls smear stress into the object and that
+this is the candidate mechanism behind the seven P-2 gate failures. Both halves
+of that premise turned out to need correcting before the question could be
+answered. Same tagging as above: **[read]**, **[recv]**, **[inf]**.
+
+## 8. Correction 1: the method is already implemented, run, and refuted
+
+`simulation/image_particles.py` is **tracked**, 237 lines, committed `8bab808`
+(2026-08-18 04:08), wired into `sim_channel.py` and `sim_overfall.py`. It cites
+Schulz and Sutmann 2019 and carries the exact "distorts the stress multiple grid
+lengths into the object" quote. Results are on disk at
+`data/openchannel_2026-08-18/image_particles_scan.json`. **[read]**
+
+Its own verdict field: **"REFUTED. Floor penetration worsens monotonically with
+image count."** Floor clamps go 664372 (0 images), 650615 (500), 713498 (2000),
+877972 (6000); `images_12000` crashed on a grid-edge guard three times. Its stated
+mechanism is that images cannot carry their source's `J` because `F` has no
+setter, so they act as a spurious pressure source, **and that was predicted in the
+module docstring before the runs were made.** Its scope line is already correct
+and should be preserved: it refutes *that host-side mirror implementation*, not
+Schulz and Sutmann, whose method assumes the image carries the source stress state.
+
+**Why the audit missed it, and why the audit was not wrong.** `8bab808` predates
+the eight branches audited, so restricting the search to files each branch
+*changed* correctly excludes it. The measurement was sound. The conclusion drawn
+from it, "the ranked list is entirely untouched and you would be first", does not
+follow, because "not touched last night" was reported as "untouched". That is the
+same shape as citing a total without its scope.
+
+## 9. Correction 2: P-2 is an axis-aligned bounding-box test, and its zero-penetration floor is 7.88 to 10.02 percent against a 10 percent gate
+
+`renders/yaris_render_s1/sim_standing.py:463-465`: **[read]**
+
+```python
+lo_v, hi_v = veh.min(0), veh.max(0)
+inbox = ((w >= lo_v) & (w <= hi_v)).all(axis=1)
+frac_max = max(frac_max, float(inbox.mean()))
+```
+
+That is the vehicle's **axis-aligned bounding box**, not the hull. The same file
+uses a proper **voxel-occupancy** test at `:186-196` to carve water out of the
+hull at load time, so the water P-2 counts is water the initialiser deliberately
+leaves in the empty parts of the box: under the floorpan, around the wheels,
+beside the roofline taper.
+
+**Measured, all 17 canonical runs.** I reconstructed frame 0 from each run's
+recorded `lim`, `h`, `dx`, `floor`, `depth` plus `veh_particles_scene0`, applied
+the file's own carve, then applied the file's own P-2 expression. At frame 0, with
+**exactly zero water in hull voxels by construction**:
+
+| quantity | value |
+|---|---|
+| P-2 at frame 0, across all 17 runs | **7.88 to 10.02 percent** |
+| water in hull voxels at frame 0 | **0** |
+| hull volume / AABB volume | 32.7 to 37.0 percent |
+| gate limit | 10 percent |
+
+For the seven failures, frame 0 already accounts for **55.1 to 89.2 percent** of
+each run's own recorded maximum. `g48_m1100` fails at 10.053 percent with 8.971
+present at frame 0, so its entire failure is 1.08 points of dynamics.
+`sweepD_g64_d0p25` reads **10.02 percent at frame zero, above the gate**, and is
+recorded as passing at 9.682 only because water drains as the run proceeds.
+Several passing runs have a frame-0 value *above* their own recorded max, so the
+metric is not monotone in penetration at all.
+
+**Two independent corroborations that the reconstruction is faithful**, neither of
+which was an input to it: hull/AABB comes out 32.7 to 37.0 percent against
+CLAUDE.md item 4(b)'s 33.2 percent, and the seven runs my table marks FAIL are
+exactly the seven CLAUDE.md item 7 names. **[read]**
+
+This also explains the image-particle scan: `passthrough_max_frac` is
+**bit-identical at 0.0833005975148345** for 0, 500 and 2000 images, because the
+metric is dominated by a structural term no wall treatment can move. **[inf]**
+
+**Caveats, stated rather than buried.** The reconstruction omits the seeded
+jitter, so particle counts are off 0.3 percent at g64 and 2.6 percent at g48.
+Frame 0 uses the `scene0` pose while the recorded max is over 90 frames of a
+moving vehicle, so "frame-0 share of max" is a decomposition indicator, not an
+exact partition. The per-frame water field is **not** in `rollout.npz` for these
+runs, so I could not recompute the metric frame by frame; that also contradicts a
+note in my own memory, which is wrong and should be corrected.
+
+Reproduce with (no GPU, needs only numpy):
+
+```python
+import numpy as np, json
+R='renders/yaris_render_s1/g64_m1100/'
+d=np.load(R+'rollout.npz'); s=json.load(open(R+'summary.json'))
+lim,h,dx=float(d['lim']),float(d['h']),float(d['dx'])
+floor,depth=float(d['floor']),float(d['depth'])
+truck=np.asarray(d['veh_particles_scene0'],dtype=np.float64)
+wall=4.0*dx
+xs=np.arange(wall+0.5*h,lim-wall-0.5*h,h); ys=xs
+zs=np.arange(floor+0.5*h,floor+depth,h)
+water=np.stack(np.meshgrid(xs,ys,zs,indexing='ij'),-1).reshape(-1,3)
+vk=np.floor(truck/h).astype(np.int64); wk=np.floor(water/h).astype(np.int64)
+base=vk.min(0); span=(vk.max(0)-base+1)
+vlin=np.ravel_multi_index((vk-base).T,span)
+ins=np.all((wk>=base)&(wk<=vk.max(0)),axis=1)
+wl=np.full(len(water),-1,dtype=np.int64)
+wl[ins]=np.ravel_multi_index((wk[ins]-base).T,span)
+w=water[~(np.isin(wl,np.unique(vlin))&ins)]          # the file's own carve
+lo,hi=truck.min(0),truck.max(0)
+print(((w>=lo)&(w<=hi)).all(axis=1).mean(), s['passthrough_max_frac'])
+```
+
+**What this does NOT say.** It does not say there is no passthrough. It says P-2
+cannot measure it, because its zero-penetration floor sits at the gate. The
+residual dynamic term for `g64_m1100` is about 1.9 points. A hull-occupancy
+metric already exists in the same file and would answer the question directly.
+Recommending it, not applying it: `sim_standing.py` is outside my write scope and
+changing a published gate's definition is a decision, not a fix.
+
+## 10. So how DO the three codes treat a wall
+
+The original question, now answerable. **[read]**
+
+| | wall mechanism | pressure support at the wall? | region affected |
+|---|---|---|---|
+| **ours** (warpmpm) | grid-velocity projection. `add_plane` (`mpm_solver_warp.py:1950-1990`) removes the normal component and applies friction on nodes behind the plane; `add_bounding_box` (`:2287`) is a literal `Dirichlet_collider` zeroing outward normal velocity in a hard-coded `padding = 3` cell band | **no** | half-space behind the plane; 3-cell band at each domain face |
+| **Anura3D** | zero prescribed displacement on nodal DOFs, `MeshInfo.FOR:415-559`, with separate `NodalPrescibedDisp`, `...Water`, `...Gas` arrays per phase | **no** | conforming mesh boundary nodes |
+| **Chrono::FSI** | BCE boundary markers whose velocity **and pressure** are modified per **Adami**, `SphBceManager.cu:61`; exposed as `enum class BoundaryMethod { ADAMI, HOLMES }` with **ADAMI the default** (`ChFsiDefinitionsSPH.h:65`, `ChFsiFluidSystemSPH.cpp:103`) | **yes** | boundary marker layers |
+
+**Of the three, only Chrono has pressure support at the wall.** Ours and Anura3D
+both impose kinematic constraints with no pressure support, which is exactly the
+class Schulz and Sutmann criticise. Chrono treats boundary method as a first-class
+switchable option with two literature-named choices; our `surface` parameter
+offers `sticky`, `slip` and `separable`, all three of which are kinematic.
+
+**How far the wall actually reaches into our water, computed rather than
+asserted.** The transfer is a quadratic B-spline, 3x3x3 stencil, support radius
+1.5 dx (`mpm_utils.py:1383-1398`, base node `floor(x/dx - 0.5)`). For `g64_m1100`
+the floor sits at `3.00 dx` and water occupies four layers at 3.25, 3.75, 4.25 and
+4.75 dx: **[read + computed]**
+
+| layer | z (dx) | stencil nodes | touches a floor-modified node (index < 3)? |
+|---|---|---|---|
+| 0 | 3.250 | 2, 3, 4 | **yes, node 2** |
+| 1 | 3.750 | 3, 4, 5 | no |
+| 2 | 4.250 | 3, 4, 5 | no |
+| 3 | 4.750 | 4, 5, 6 | no |
+
+So **one of four water layers, 25 percent of the column, has stencil support on a
+boundary-modified node.** The side walls are clear: water is inset `4 dx`, its
+first stencil is nodes 3,4,5, and the Dirichlet band is nodes 0,1,2, so there is
+no overlap. The `4 dx` inset and the `floor = 3 dx` placement both look chosen to
+clear the 3-cell band, and the floor placement puts the plane exactly at the top
+of it.
+
+## 11. Why the image-particle attempt was doomed in this engine, mechanism-level
+
+This is the part worth keeping, and it is stronger than the scan's own conclusion.
+
+The scan says images act as a spurious pressure source because they cannot carry
+their source's `J`. True. But the production remedy in Chrono **does not mirror
+particles at all**: Adami's method keeps boundary markers fixed and **extrapolates
+pressure onto them** from the adjacent fluid. It needs a writable pressure field
+on the boundary particles.
+
+In this warpmpm build, a fluid particle's pressure is a function of `J` alone
+(`kirchoff_stress_newtonian`, `mpm_utils.py:28`, exponent 1.1), `J` comes from `F`,
+and **`F` has no setter**: `Solver` exposes `F()` at `:543` and `F_torch()` at
+`:625` and nothing that writes it. **[read]** So the one thing Adami's method
+requires is the one thing this engine does not expose.
+
+That reframes the remedy. It is **not** "write a better mirror". A better mirror
+still cannot set the image's pressure. It is "expose a way to set particle
+pressure state", which is an engine change, not a host-side one. Anyone tempted to
+retry image particles in this build should read that as the blocking constraint
+and cost the engine change first. **[inf, from three [read] facts]**
+
+## 12. What I did not do
+
+- I did **not** modify `sim_standing.py`, `gates.py`, `image_particles.py` or any
+  data file, and did not rerun any simulation. Section 9 is measurement of
+  existing artifacts only.
+- The physics-skeptic subagent failed with a model-access API error earlier in
+  this session and I did not retry it here, so **nothing in this addendum had
+  independent adversarial review**. The claim most worth attacking is section 9's
+  reconstruction, and the cheapest attack is to add the seeded jitter and confirm
+  the frame-0 fraction does not move materially. Two things already argue it will
+  not: the reconstruction independently reproduces CLAUDE.md item 4(b)'s hull/AABB
+  ratio to within 0.1 points, and it independently reproduces item 7's exact list
+  of seven failing runs. Neither was an input.
+- Anura3D's absorbing boundary (`MPMDynViscousBoundary.FOR`) is not characterised
+  here; I established only that its ordinary walls are prescribed-displacement.
