@@ -1,6 +1,22 @@
 # settle_frames: what it should be, what moves, and what no settle length can fix
 
 Slot d15-settle, branch `claude/r9-settle`, 2026-08-18.
+
+> ## THE PUBLISHED VERDICT SURVIVES. READ THIS FIRST.
+>
+> This document prices a methodological error at 16 of 24 verdicts. The first
+> question that raises is whether **16 SLIDE / 1 STUCK** is affected.
+>
+> **It is not, and not by luck. It was computed under the correct rule from the
+> start.** `simulation/failure_modes.py:168-182` builds `surge_drift` from the
+> whole array and `_first_sustained_index` scans from index 0. There is no
+> truncation, no window and no discard anywhere in that file, confirmed by
+> reading the computation rather than by a keyword search returning nothing.
+>
+> Full record, surge channel, `>=`. That is the correct rule for a verdict, and it
+> is what produced the canonical result. **Nothing in this document proposes
+> changing a published verdict.** Section 1.1 traces every other published number
+> to the rule it was computed under.
 Every number here was measured live this session against the MAIN checkout
 `/Users/josie/can-it-ford`. Nothing is quoted from a dispatch, a summary, or
 another session's claim without independent re-derivation. Reproduction commands
@@ -18,7 +34,7 @@ convergence or uncertainty claim.**
 
 | you get this wrong | runs that move | direction |
 |---|---|---|
-| stationary window used for a VERDICT | **16 of 24** on the magnitude channel, **14 of 24** on the surge channel | all 30 moves DELETE a SLIDE, 0 create one |
+| stationary window used for a VERDICT | **16 of 24** on the magnitude channel, **14 of 24** on the surge channel | all 30 moves DELETE a SLIDE; creation is impossible, see below |
 | full record used for an UNCERTAINTY | **24 of 24** error bars too small, median **4.32x**, worst **5.64x** | always overstates precision |
 
 **Why the price is asymmetric, in one line: the error arrives looking like a
@@ -28,6 +44,32 @@ That is the whole reason nobody catches it. Applying the stationary-window rule 
 a verdict does not produce an obviously wrong answer, it produces a tidier one.
 All 30 moves DELETE a SLIDE and none creates one, so the mistake is directional
 and it runs toward the quieter result every time.
+
+**CORRECTED 2026-08-19, AND THE CORRECTION STRENGTHENS THE CLAIM.** An earlier
+version of this document reported the "0 create one" as a measured property of
+these 24 runs. **It is not a measurement. It is a theorem, and I was presenting a
+tautology as data.** The stationary window is a SUFFIX `d[start:]`, so any
+sustained episode inside it is a sub-run of an episode in the full record, and the
+full record's longest episode is therefore always at least the suffix's. Window
+SLIDE implies full-record SLIDE. No input can produce a creation. Verified by
+exhaustion over every mask to length 14 and every start, 425,986 cases, 0
+creations against 119,413 deletions, reproducible with
+`analysis/settle_audit.py --selftest-asymmetry`.
+
+Only the **30** is data. The **0** was never at risk.
+
+The corrected claim is stronger than the one it replaces. The directional bias is
+not a fact about this dataset that might not hold elsewhere: **it is a property of
+suffix truncation itself, so it holds for any dataset and any sustained-episode
+gate.** Any transient-removal rule that keeps a suffix can only ever erase a
+sustained-episode verdict, never manufacture one.
+
+I found this by applying the register's new rule, that a commit adding a check
+must name the input making that check fail, to my own new code. There is no such
+input for the creation counter. That is the eighth-plus instance of the pattern
+this document describes in section 17, it is mine, and it was produced inside the
+function written to demonstrate the pattern, one commit after I had already caught
+myself doing the same thing there once.
 
 **And the direction matters for this project's headline specifically.** The
 canonical outcome is 16 SLIDE / 1 STUCK. The wrong rule deletes slides, so

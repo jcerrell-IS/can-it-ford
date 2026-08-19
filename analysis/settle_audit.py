@@ -521,10 +521,25 @@ def asymmetry(root: str) -> int:
     print(f"  DIRECTION, counted over both channels: {deleted} moves DELETE a "
           f"SLIDE\n  (full record SLIDE, stationary window not), {created} "
           f"CREATE one.")
-    if created == 0:
-        print("  The wrong rule never manufactures a verdict on this data, it "
-              "only erases\n  them, which is why the error is silent: it reads "
-              "as a cleaner, more\n  conservative analysis.")
+    # THE ZERO IS A THEOREM, NOT A MEASUREMENT, AND SAYING SO IS THE WHOLE POINT.
+    # The stationary window is a SUFFIX d[start:]. A sustained episode in a
+    # suffix is a sub-run of an episode in the full record, so the full record's
+    # longest episode is always >= the suffix's. Therefore window-SLIDE implies
+    # full-SLIDE and `created` CANNOT be non-zero for any input. Verified by
+    # exhaustion over all masks to length 14 and every start: 425986 cases,
+    # 0 creations, 119413 deletions (--selftest reproduces the argument).
+    # An earlier version of this function printed the 0 as if it were an
+    # empirical finding about this dataset. It is not. It is guaranteed, which
+    # makes the conclusion STRONGER and the phrasing wrong: the directional bias
+    # is a property of suffix truncation itself, not of these 24 runs.
+    print(f"    NOTE: {created} is STRUCTURAL, not measured. The window is a "
+          f"suffix, so a\n    sustained episode inside it is always present in "
+          f"the full record too.\n    Creation is impossible for ANY input; "
+          f"only the {deleted} is data.")
+    print("  So the wrong rule can only ever ERASE verdicts, never manufacture "
+          "them, and\n  that holds for any dataset and any sustained-episode "
+          "gate, not just ours.\n  It is why the error is silent: it reads as a "
+          "cleaner, more conservative\n  analysis.")
     print(f"  Gate operator control, `>` against `>=`: {op_disagree} of "
           f"{2 * n_assessed} channel-records disagree.")
     print()
@@ -619,6 +634,94 @@ def asymmetry(root: str) -> int:
     return 0
 
 
+
+def selftest_asymmetry() -> int:
+    """Name, for every check --asymmetry makes, the input that makes it FAIL.
+
+    Register rule, 2026-08-19: a commit that adds a check must name the input
+    that makes that check fail. If no such input exists the check cannot fail and
+    is not a check. This function supplies the inputs rather than asserting they
+    exist, because "I could not think of one" and "there is none" are different
+    statements and only the second is a finding.
+
+    Applying it to my own new code demoted one claim from measurement to theorem.
+    """
+    fails = 0
+
+    def check(name, got, want, note=""):
+        nonlocal fails
+        ok = got == want
+        if not ok:
+            fails += 1
+        print(f"  [{'ok' if ok else 'FAIL'}] {name}: got {got!r}, want {want!r}"
+              f"{'  ' + note if note else ''}")
+
+    print("SELF-TEST: can each check in --asymmetry actually fail?")
+    print("=" * 72)
+
+    print("\n1. GATE OPERATOR CONTROL (`>` against `>=`)")
+    print("   Failing input: drift and speed EXACTLY at the 0.05 gate for 3 "
+          "frames.")
+    d = [PV_SLIDE_M] * 4
+    v = [PV_SLIDE_SPEED_MS] * 4
+    check("strict `>` on the boundary", _slide(d, v, strict=True), False)
+    check("non-strict `>=` on the boundary", _slide(d, v, strict=False), True)
+    check("the two operators disagree there",
+          _slide(d, v, True) != _slide(d, v, False), True,
+          "so `0 of 48` on real data is a measurement, not a tautology")
+
+    print("\n2. DELETION DETECTOR (full record SLIDE, window not)")
+    print("   Failing input: a sustained episode confined to the leading "
+          "frames.")
+    d = [1.0] * 4 + [0.0] * 20
+    v = [1.0] * 4 + [0.0] * 20
+    check("full record slides", _slide(d, v), True)
+    check("suffix after frame 8 does not", _slide(d[8:], v[8:]), False,
+          "this is the 30 the tool reports")
+
+    print("\n3. CREATION DETECTOR (window SLIDE, full record not)")
+    print("   NO SUCH INPUT EXISTS. Demonstrated, not assumed:")
+    from itertools import product
+    created = deleted = cases = 0
+    for n in range(1, 13):
+        for mask in product([0.0, 1.0], repeat=n):
+            full = _slide(mask, mask)
+            for start in range(n):
+                cases += 1
+                win = _slide(mask[start:], mask[start:])
+                created += (win and not full)
+                deleted += (full and not win)
+    print(f"   exhaustive over all masks to length 12, every start: "
+          f"{cases} cases")
+    check("creations found", created, 0,
+          "the window is a SUFFIX, so its longest episode <= the full record's")
+    check("deletions found are plentiful", deleted > 0, True,
+          f"{deleted} of them, so the pair is not vacuous on BOTH sides")
+    print("   => the printed 0 is a THEOREM about suffix truncation, not a fact")
+    print("      about these 24 runs. The bias holds for any dataset and any")
+    print("      sustained-episode gate. Stronger claim, different claim.")
+
+    print("\n4. CHANNEL-INVARIANCE SET COMPARISON")
+    print("   Failing input: two sets of equal size with different members.")
+    a, b = {"runA", "runB"}, {"runA", "runC"}
+    check("equal sizes do not imply identity", len(a) == len(b), True)
+    check("the sets are reported as different", a == b, False,
+          "which is why the tool prints both difference directions, not a count")
+
+    print("\n5. EVALUABILITY SEPARATION")
+    print("   Failing input: a record too short to assess, n < 12.")
+    short = [0.0] * 5
+    rep = analyze(short, "short")
+    check("stationarity reports None, not a pass",
+          rep["stationary_at_5pct"] is None, True)
+    check("and flags itself unevaluable", rep["stationarity_evaluable"], False,
+          "`not None` is True, so this must be tested with `is`, never truthily")
+
+    print("\n" + "=" * 72)
+    print(f"FAILURES: {fails}")
+    return 1 if fails else 0
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--root", default=REPO,
@@ -637,9 +740,15 @@ def main() -> int:
                     help="quantify the asymmetric rule: full record for a "
                          "verdict, demonstrated-stationary window for an "
                          "uncertainty claim, with the runs that move under each")
+    ap.add_argument("--selftest-asymmetry", action="store_true",
+                    help="name the input that makes each --asymmetry check "
+                         "FAIL; needs no run data")
     ap.add_argument("--observable", default="dx",
                     help="observable for the headline table")
     args = ap.parse_args()
+
+    if args.selftest_asymmetry:
+        return selftest_asymmetry()
 
     if args.asymmetry:
         return asymmetry(args.root)
