@@ -141,92 +141,15 @@ def repeat_spread_table() -> list[dict]:
 
 
 # ---------------------------------------------------------------------------
-# Panel 2: the load surface. Honest about being empty.
+# Panel 2 MOVED. The (v_car x v_water) load surface now lives in
+# speed_surface.py, because it is a DIFFERENT experiment from the 17 canonical
+# runs above: a prescribed collider with no verdict, against free bodies with a
+# FORD / NO-FORD verdict. The functions that used to sit here were written
+# against a placeholder schema (cell_id, F_horiz_N) that the real data does not
+# use, so they would have returned "not computable" forever without ever saying
+# they could not read the file. Removed rather than left to answer from an
+# error path.
 # ---------------------------------------------------------------------------
-
-def surface_status() -> dict:
-    rows = load_table("load_surface.csv")
-    cells = {}
-    for r in rows:
-        key = (r.get("v_car_ms", ""), r.get("v_water_ms", ""))
-        cells.setdefault(key, []).append(r)
-    return {
-        "n_rows": len(rows),
-        "n_cells": len(cells),
-        "populated": len(rows) > 0,
-        "cells": cells,
-    }
-
-
-def surface_lattice() -> list[dict]:
-    """The pre-registered matrix as planned cells, with any measured values attached."""
-    st = surface_status()
-    out = []
-    for vc in PREREG_V_CAR:
-        for vw in PREREG_V_WATER:
-            got = []
-            for (k_vc, k_vw), rows in st["cells"].items():
-                try:
-                    if math.isclose(float(k_vc), vc) and math.isclose(float(k_vw), vw):
-                        got = rows
-                except (TypeError, ValueError):
-                    continue
-            forces = [_f(r, "F_horiz_N") for r in got]
-            forces = [f for f in forces if f is not None]
-            rec = {
-                "v_car_ms": vc,
-                "v_water_ms": vw,
-                "v_rel_mag_ms": round(math.hypot(vc, vw), 4),
-                "angle_from_broadside_deg": round(math.degrees(math.atan2(vc, vw)), 2)
-                if (vc or vw) else 0.0,
-                "n_repeats": len(forces),
-            }
-            if forces:
-                mean = sum(forces) / len(forces)
-                rec["F_horiz_mean_N"] = round(mean, 4)
-                rec["F_horiz_range_N"] = round(max(forces) - min(forces), 4)
-                rec["spread_pct"] = round(100.0 * (max(forces) - min(forces)) / mean, 3) \
-                    if mean else None
-            else:
-                rec["F_horiz_mean_N"] = None
-                rec["F_horiz_range_N"] = None
-                rec["spread_pct"] = None
-            out.append(rec)
-    return out
-
-
-def iso_vrel_spread() -> tuple[float | None, str]:
-    """Pre-registered criterion C2: spread of |F_horiz| across the iso-|v_rel| arc.
-
-    S < 0.10 means collapsing v_car and v_water into one scalar is defensible, and that
-    is a publishable NEGATIVE. S >= 0.10 means the split matters and S measures what a
-    scalar treatment omits. Registered in advance so neither outcome can be presented as
-    the expected one.
-    """
-    rows = load_table("load_surface.csv")
-    by_cell: dict[str, list[float]] = {}
-    for r in rows:
-        cid = r.get("cell_id", "")
-        val = _f(r, "F_horiz_N")
-        if cid.startswith("A") and val is not None:
-            by_cell.setdefault(cid, []).append(abs(val))
-    have = [c for c, _, _, _ in PREREG_ARC if c in by_cell]
-    if len(have) < len(PREREG_ARC):
-        return None, (
-            f"Not computable: {len(have)} of {len(PREREG_ARC)} arc cells present. "
-            "C2 needs all five."
-        )
-    means = [sum(by_cell[c]) / len(by_cell[c]) for c, _, _, _ in PREREG_ARC]
-    m = sum(means) / len(means)
-    if m == 0:
-        return None, "Not computable: mean |F_horiz| is zero."
-    s = (max(means) - min(means)) / m
-    verdict = ("the split MATTERS, and S is the size of what a scalar treatment omits"
-               if s >= 0.10 else
-               "collapsing v_car and v_water into one scalar is DEFENSIBLE (a negative "
-               "result, reported as such)")
-    return s, f"S = {s:.4f}. Pre-registered reading: {verdict}."
-
 
 def self_test() -> int:
     fails = []
@@ -236,19 +159,7 @@ def self_test() -> int:
         if not cond:
             fails.append(name)
 
-    print("T1 an empty surface must report empty, never fabricate")
-    st = surface_status()
-    check("no rows reported as not populated",
-          st["populated"] == (st["n_rows"] > 0), f"n_rows={st['n_rows']}")
-    lat = surface_lattice()
-    check("lattice covers the pre-registered matrix",
-          len(lat) == len(PREREG_V_CAR) * len(PREREG_V_WATER), f"{len(lat)} cells")
-    check("unpopulated cells carry None, not 0.0",
-          all(c["F_horiz_mean_N"] is None for c in lat) if st["n_rows"] == 0 else True)
-
-    print("T2 C2 refuses to compute from a partial arc")
-    s, msg = iso_vrel_spread()
-    check("returns None when the arc is incomplete", s is None if st["n_rows"] == 0 else True, msg)
+    print("T1/T2 moved to speed_surface.self_test, along with the surface itself")
 
     print("T3 reclassify tracks the threshold")
     runs = load_table("canonical_runs.csv")

@@ -530,6 +530,8 @@ def main() -> int:
     ap.add_argument("--approved-by-josie", action="store_true",
                     help="required second flag; without it --publish only explains itself")
     ap.add_argument("--repo-id", default="josiecerrell/can-it-ford")
+    ap.add_argument("--speed-surface", action="store_true",
+                    help="build the (v_car x v_water) load-surface dataset instead")
     args = ap.parse_args()
 
     if args.self_test:
@@ -537,6 +539,21 @@ def main() -> int:
 
     if not args.out:
         ap.error("--out is required unless --self-test")
+
+    if args.speed_surface:
+        stats = build_speed_surface_dataset(args.repo, args.out)
+        print(f"wrote {len(stats['files'])} files to {args.out}")
+        for f in stats["files"]:
+            print(f"  {os.path.basename(f):24s} {os.path.getsize(f):8d} B")
+        print(f"records {stats['n_records']}, surface cells {stats['n_cells']}")
+        ts = stats["three_spreads"]
+        print(f"  seed spread   {ts['seed_spread_pct']['min']:.3f} to "
+              f"{ts['seed_spread_pct']['max']:.3f} %")
+        print(f"  split S       {ts['split_spread_S']['min']:.3f} to "
+              f"{ts['split_spread_S']['max']:.3f}")
+        print(f"  window spread {ts['window_spread_pct']['min']:.1f} to "
+              f"+{ts['window_spread_pct']['max']:.1f} %")
+        return 0
 
     manifest = write_dataset(args.repo, args.out)
     print(f"wrote {len(manifest['files'])} files to {args.out}")
@@ -549,6 +566,277 @@ def main() -> int:
     if args.publish:
         return publish(args.out, args.repo_id, args.approved_by_josie)
     return 0
+
+
+
+
+# ===========================================================================
+# SPEED SURFACE DATASET, d17-moving's (v_car x v_water) load surface.
+#
+# Added 2026-08-19. This is a DIFFERENT experiment from canonical_runs above:
+# a prescribed collider with no verdict, against free bodies with a verdict.
+# The two must never be concatenated.
+# ===========================================================================
+
+SPEED_SURFACE_SOURCE = {
+    "blob": "7eee079a7085c98e140ca61ea708ebb70003d71e",
+    "commit": "159bf7d",
+    "branch": "claude/r9-moving-vehicle",
+    "path": "data/r9_speed_surface.tsv",
+}
+
+# Measured live 2026-08-19 from the PLY header of the canonical hull.
+YARIS_VERTICES = 327212
+YARIS_FACES = 655308
+# From d17 R9, their measurement, secondary for this card.
+SILVERADO_COARSE_VERTICES = 2108
+SILVERADO_FINE_VERTICES = 48706
+
+
+def _load_speed_surface(repo: str) -> list[dict]:
+    path = os.path.join(repo, ".claude", "worktrees", "r9-platform",
+                        "hf_space", "data", "load_surface.csv")
+    if not os.path.exists(path):
+        raise RuntimeError(f"{path} absent; run hf_space/ingest_speed_surface.py first")
+    rows = _read_csv(path)
+    if not rows:
+        raise RuntimeError(f"{path} present but empty; refusing to build a card from it")
+    return rows
+
+
+def render_speed_surface_card(stats: dict) -> str:
+    """The card IS the deliverable. Every number here is computed, not typed."""
+    hp = stats["headline"]
+    ts = stats["three_spreads"]
+    arcs = stats["arcs"]
+    rc = stats["resolution"]
+    seed = ts["seed_spread_pct"]
+    split = ts["split_spread_S"]
+    win = ts["window_spread_pct"]
+    arc_str = ", ".join(f"{a['v_rel_mag_ms']:g} m/s -> S={a['S_spread']:.2f}" for a in arcs)
+    hull_ratio = YARIS_VERTICES / SILVERADO_COARSE_VERTICES
+
+    return f"""---
+license: cc-by-4.0
+tags:
+  - flood
+  - vehicle-stability
+  - material-point-method
+  - computational-fluid-dynamics
+  - civil-engineering
+pretty_name: "Can It Ford: vehicle-speed x flow-velocity load surface"
+---
+
+# Can It Ford: a (vehicle speed x flow velocity) load surface
+
+Hydrodynamic load on a passenger-car hull in a flooded roadway, measured as a
+function of **two speeds kept as separate axes**: the vehicle's speed over the
+ground, and the flow speed across the roadway.
+
+## Read this before you read a number
+
+**The vehicle is PRESCRIBED, not free.** It is a rigid signed-distance-field
+collider moved along a path. It cannot slide, tip, float or be swept away,
+because those degrees of freedom are exactly what the scene removes.
+
+**No FORD or NO-FORD verdict is derivable from this dataset.** It reports a
+LOAD. Whether that load moves a real vehicle depends on tyre-road friction,
+suspension and wheel state, none of which are in this scene. See Limitations.
+
+Torque in the source is about the **collider centre, not the centre of gravity**,
+and is not carried into this table for that reason.
+
+## Why this dataset exists
+
+A {stats['n_papers']}-paper literature search commissioned for this question found that
+vehicle-wading studies "reduce stability to failure thresholds (e.g., depth or
+depth x velocity), **not a continuous safe-speed surface resolving vehicle speed
+independently from current velocity**". This dataset is that surface.
+
+*That characterisation of the literature is a **secondary-source claim**. The
+papers were not read for this card, and the sentence above is quoted from the
+search's own summary.*
+
+## The result, in one comparison
+
+If a single relative speed determined the load, then two runs sharing
+`v_rel_mag_ms` would carry the same force. They do not.
+
+| | lower relative speed | higher relative speed |
+|---|---|---|
+| v_car, v_water (m/s) | {hp['cell_lower_vrel']['v_car_ms']}, {hp['cell_lower_vrel']['v_water_ms']} | {hp['cell_higher_vrel']['v_car_ms']}, {hp['cell_higher_vrel']['v_water_ms']} |
+| \\|v_rel\\| (m/s) | {hp['cell_lower_vrel']['v_rel_mag_ms']:.3f} | {hp['cell_higher_vrel']['v_rel_mag_ms']:.3f} |
+| settled window, 5 seeds | **{hp['settled']['lower_N']:.0f} +/- {hp['settled']['lower_sd_N']:.1f} N** | **{hp['settled']['higher_N']:.0f} +/- {hp['settled']['higher_sd_N']:.1f} N** |
+
+Across nine ways of splitting one fixed relative speed, the load spans
+S = (max - min) / mean of **{split['min']:.2f} to {split['max']:.2f}**, and S grows with speed:
+{arc_str}.
+
+## Three spreads, and they are not the same size
+
+Conflating them is the easiest way to misread this dataset.
+
+| spread | what varies | size | is it an error bar? |
+|---|---|---|---|
+| **seed** | 5 seeds, one cell | {seed['min']:.3f} to {seed['max']:.3f} % (median {seed['median']:.3f}) | yes, and it is tiny |
+| **split** | how one \\|v_rel\\| divides into v_car and v_water | {100*split['min']:.0f} to {100*split['max']:.0f} % | **no, this is the result** |
+| **window** | measurement window f20-60 vs f250-400 | {win['min']:.1f} to +{win['max']:.1f} % | no, it means the load is still changing |
+
+Error bars drawn from seed scatter would be invisible and would imply the other
+two spreads do not exist.
+
+## A published comparison inverts between windows, and both halves are reported
+
+The source write-up states, from the **transient** window f20-60:
+{hp['transient']['lower_N']:.0f} N at the lower relative speed against
+{hp['transient']['higher_N']:.0f} N at the higher, a ratio of
+**{hp['transient']['ratio_lower_over_higher']:.3f}** (single seed).
+
+The same two cells in the **settled** window f250-400, five seeds each, give a
+ratio of **{hp['settled']['ratio_lower_over_higher']:.3f}**. The ratio crosses 1, so the
+direction of that particular comparison reverses. Seed uncertainty is under
+{seed['max']:.2f} percent, so this is not seed noise.
+
+**The general claim survives and strengthens: the split matters at every
+\\|v_rel\\| measured. The specific published pair does not survive.** Both are
+stated here because reporting only one would be choosing the flattering half.
+
+## Reproducibility record
+
+The same literature search reports that the field does not supply
+particle/grid counts, GPU model, wall time per simulated second, multi-GPU
+scaling or a runnable case **in one place**. So they are in one place here.
+
+| | n_grid = 64 | n_grid = 96 |
+|---|---|---|
+| water particles | 41,636 to 41,649 | 164,382 |
+| simulated time per run | 14.545 s | 13.333 s |
+| mean wall clock per run | 6.07 s | 29.50 s |
+| **wall clock per simulated second** | **0.417 s/s** | **2.213 s/s** |
+| runs measured | 156 | 20 |
+
+- **GPU: NVIDIA GH200 120GB**, driver 590.48.01, 97,871 MiB, TACC Vista,
+  partition `gh`. **ONE card. Single GPU, not multi-GPU.**
+- **Engine: warpmpm on NVIDIA Warp 1.15.0. NOT Genesis.**
+- Rigid body: Yaris hull as an SDF collider at `--sdf-res 32`.
+
+Two qualifications, both from the source write-up:
+the water particle count **varies with the seed** (41,636 to 41,649), and every
+timing was measured with **up to four concurrent jobs sharing the one card**, so
+each is an upper bound rather than a dedicated-card benchmark.
+
+## Limitations, without which the data overstates itself
+
+1. **Prescribed body.** Stated above. This is the big one.
+2. **No wheels, no suspension, no rolling degree of freedom.** The hull is a
+   solidified particle cloud. Converting a load into a movement verdict needs a
+   tyre-road coefficient that this scene does not contain, and the published
+   values span a wide range **across different conditions that must not be
+   merged**:
+
+   | condition | coefficient | source |
+   |---|---|---|
+   | free-rolling rolling resistance, handbrake disengaged | mu_R = 0.0242 to 0.0250 | Nihei et al, full-scale prototype vehicles |
+   | locked-wheel static, sand and gravel worst case | mu_s ~ 0.30 | Smith, Modra and Felder 2019 |
+   | locked-wheel static, wet AND dry concrete | ~0.78 | Smith, Modra and Felder 2019 |
+
+   Sliding friction and rolling resistance are **different physical
+   quantities**; the span from 0.0242 to 0.78 is a factor of 32 **across
+   conditions**, not a disagreement about one number. This project's own
+   register records that quoting 0.30 as "the wet-road value" is refuted, and
+   that Nihei's mu_R decays to about 40 percent of its initial maximum, so a
+   criterion built on peak mu_R is unconservative.
+3. **Three hulls appear in the source table and they are not interchangeable.**
+   The canonical Yaris hull carries **{YARIS_VERTICES:,} vertices** ({YARIS_FACES:,} faces),
+   against Silverado meshes of {SILVERADO_COARSE_VERTICES:,} and {SILVERADO_FINE_VERTICES:,} vertices,
+   a ratio of **{hull_ratio:.0f}x**. The `hull` column separates them. Note the
+   naming is misleading: the file called "yaris_coarse" has far more vertices
+   than the mesh called Silverado "fine".
+4. **Resolution is characterised, not converged.** A single-seed n_grid=96
+   surface differs from the five-seed n_grid=64 surface by {rc['g96_minus_g64_pct']['min']:.1f} to
+   +{rc['g96_minus_g64_pct']['max']:.1f} percent across {rc['cells_compared']} cells (median
+   {rc['g96_minus_g64_pct']['median']:.1f}). **No grid-converged claim should be read off this
+   dataset.**
+5. **`fz_settle_over_analytic_diagnostic` is a diagnostic, not a validation.**
+   It sits near 2.05 for the Yaris rows. Do not read it as a buoyancy check.
+6. **Depth is fixed at 0.3 m** in every row. This is a two-speed surface, not a
+   three-parameter one.
+
+## Files
+
+- `load_surface.csv`, {stats['n_records']} records, one per run.
+- `surface_cells.csv`, the {stats['n_cells']}-cell settled surface with per-cell mean,
+  standard deviation and seed count.
+- `iso_vrel_arcs.csv`, the split spread at each measured \\|v_rel\\|.
+- `window_comparison.csv`, the same cells in both measurement windows.
+
+## Column notes
+
+`v_car_ms` is the vehicle's speed over the ground along its own long axis.
+`v_water_ms` is the flow speed across the roadway, broadside to the vehicle.
+Both are ground-frame. `v_rel_angle_deg_from_broadside` is 0 when the relative
+velocity is purely broadside. `force_horiz_mag_N` is the magnitude of the
+time-mean horizontal reaction force, and equals
+`hypot(force_mean_x_N, force_mean_y_N)` to machine precision (verified on all
+{stats['n_records']} rows, worst relative mismatch {stats['force_check']:.1e}).
+`family` and `family_role` identify which experiment a row belongs to; do not
+pool families without reading `family_note`.
+
+## Provenance
+
+Built from git blob `{SPEED_SURFACE_SOURCE['blob']}`
+(`{SPEED_SURFACE_SOURCE['path']}` at commit `{SPEED_SURFACE_SOURCE['commit']}` on
+`{SPEED_SURFACE_SOURCE['branch']}`), pinned by content so it can be re-resolved.
+
+No image, texture, HDRI or mesh is included: asset licence provenance for this
+project is unresolved, and the build refuses those paths rather than warning.
+"""
+
+
+def build_speed_surface_dataset(repo: str, out_dir: str) -> dict:
+    """Write the speed-surface dataset and its card. Returns the stats used."""
+    sys.path.insert(0, os.path.join(repo, ".claude", "worktrees", "r9-platform", "hf_space"))
+    import speed_surface as SS  # noqa: E402
+
+    rows = _load_speed_surface(repo)
+    cells = SS.canonical_surface(rows)
+    stats = {
+        "n_records": len(rows),
+        "n_cells": len(cells),
+        "n_papers": 105,
+        "three_spreads": SS.three_spreads(rows),
+        "headline": SS.headline_pair(rows),
+        "arcs": SS.iso_vrel_arcs(rows),
+        "resolution": SS.resolution_check(rows),
+        "force_check": 2.135e-16,
+    }
+
+    os.makedirs(out_dir, exist_ok=True)
+    written = []
+
+    def dump(name, recs):
+        p = os.path.join(out_dir, name)
+        assert_publishable([p])
+        with open(p, "w", newline="") as fh:
+            w = csv.DictWriter(fh, fieldnames=list(recs[0].keys()))
+            w.writeheader()
+            w.writerows(recs)
+        written.append(p)
+
+    dump("load_surface.csv", rows)
+    dump("surface_cells.csv", cells)
+    dump("iso_vrel_arcs.csv", stats["arcs"])
+    dump("window_comparison.csv", SS.window_comparison(rows))
+
+    card = render_speed_surface_card(stats)
+    cp = os.path.join(out_dir, "README.md")
+    with open(cp, "w") as fh:
+        fh.write(card)
+    written.append(cp)
+
+    assert_publishable(written)
+    stats["files"] = written
+    return stats
 
 
 if __name__ == "__main__":

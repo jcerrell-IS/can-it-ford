@@ -16,6 +16,7 @@ import gradio as gr
 import plotly.graph_objects as go
 
 import surface as S
+import speed_surface as SS
 
 RUNS = S.load_table("canonical_runs.csv")
 
@@ -57,68 +58,138 @@ def on_threshold(slide_m):
 # ---------------------------------------------------------------------------
 
 def _surface_figure():
-    lat = S.surface_lattice()
-    st = S.surface_status()
-    xs = S.PREREG_V_WATER
-    ys = S.PREREG_V_CAR
+    """The settled five-seed surface. Cell labels carry n and the seed sd."""
+    surf = SS.canonical_surface()
+    xs = sorted({c["v_water_ms"] for c in surf})
+    ys = sorted({c["v_car_ms"] for c in surf})
+    idx = {(c["v_car_ms"], c["v_water_ms"]): c for c in surf}
     z, text = [], []
     for vc in ys:
         zrow, trow = [], []
         for vw in xs:
-            cell = next(c for c in lat
-                        if c["v_car_ms"] == vc and c["v_water_ms"] == vw)
-            zrow.append(cell["F_horiz_mean_N"])
-            if cell["n_repeats"]:
-                trow.append(f"{cell['F_horiz_mean_N']:.1f} N<br>"
-                            f"spread {cell['spread_pct']:.1f}%<br>"
-                            f"n={cell['n_repeats']}")
-            else:
-                trow.append("planned,<br>no data")
+            c = idx.get((vc, vw))
+            if c is None:
+                zrow.append(None)
+                trow.append("no data")
+                continue
+            zrow.append(c["F_horiz_mean_N"])
+            trow.append(f"{c['F_horiz_mean_N']:.0f} N<br>"
+                        f"&plusmn;{c['F_horiz_sd_N']:.1f} ({c['seed_rel_sd_pct']:.2f}%)<br>"
+                        f"n={c['n_seeds']} seeds")
         z.append(zrow)
         text.append(trow)
-
     fig = go.Figure(go.Heatmap(
         z=z, x=[str(v) for v in xs], y=[str(v) for v in ys],
         text=text, texttemplate="%{text}", colorscale="Viridis",
         hoverongaps=False, colorbar=dict(title="|F_horiz| (N)"),
     ))
-    title = ("Load surface: PRE-REGISTERED MATRIX, NO DATA YET"
-             if not st["populated"] else
-             f"Load surface, {st['n_rows']} records across {st['n_cells']} cells")
     fig.update_layout(
-        title=title,
-        xaxis_title="v_water (m/s), broadside flow",
+        title="Settled load surface, five seeds per cell (window f250-400)",
+        xaxis_title="v_water (m/s), broadside flow across the roadway",
         yaxis_title="v_car (m/s), vehicle speed along its own axis",
         height=520, margin=dict(l=10, r=10, t=60, b=40), template="plotly_white",
     )
     return fig
 
 
-def surface_notes():
-    st = S.surface_status()
-    _, msg = S.iso_vrel_spread()
-    if not st["populated"]:
-        return (
-            "### No load-surface data yet\n\n"
-            "The grid above is the **pre-registered matrix**, committed before the first "
-            "GPU run so the result cannot be graded against a target chosen after seeing "
-            "it. Every cell reads *planned, no data*.\n\n"
-            "**Nothing is drawn from zero data on purpose.** A smooth interpolated "
-            "surface over an empty table would look exactly like a result, and that is "
-            "the most damaging thing this page could show.\n\n"
-            f"**Pre-registered criterion C2.** {msg}\n\n"
-            "**When it is populated, note what it is not.** The vehicle in those runs is "
-            "*prescribed*, held on a path, not free. It cannot be swept away, because "
-            "being swept away is the degree of freedom that scene removes. **No FORD or "
-            "NO-FORD verdict is derivable from the load surface.** Torque is reported "
-            "about the collider centre, not the centre of gravity."
-        )
-    return (
-        f"### Load surface, {st['n_rows']} records\n\n"
-        f"**Pre-registered criterion C2.** {msg}\n\n"
-        "The vehicle is *prescribed*, not free, so no FORD verdict follows from this "
-        "panel. Torque is about the collider centre, not the centre of gravity."
+def _split_figure():
+    """SPREAD 2, the result. At FIXED |v_rel| the load still varies by ~100 percent."""
+    arcs = SS.iso_vrel_arcs()
+    fig = go.Figure()
+    for a in arcs:
+        fig.add_trace(go.Bar(
+            x=[f"|v_rel| = {a['v_rel_mag_ms']:g} m/s"],
+            y=[a["F_max_N"] - a["F_min_N"]],
+            base=[a["F_min_N"]],
+            name=f"S = {a['S_spread']:.2f}",
+            text=[f"min {a['F_min_N']:.0f} N<br>max {a['F_max_N']:.0f} N<br>"
+                  f"S = {a['S_spread']:.2f}"],
+            textposition="outside",
+        ))
+    fig.update_layout(
+        title=("At a FIXED relative speed the load is not fixed. "
+               "Each bar spans min to max over nine ways of splitting the same |v_rel|."),
+        yaxis_title="|F_horiz| (N), min to max across the arc",
+        height=520, margin=dict(l=10, r=10, t=80, b=40), template="plotly_white",
+        showlegend=True,
     )
+    return fig
+
+
+def _window_figure():
+    """SPREAD 3, and the reason a window has to be stated with every number."""
+    wc = SS.window_comparison()
+    labels = [f"({w['v_car_ms']:g}, {w['v_water_ms']:g})" for w in wc]
+    fig = go.Figure()
+    fig.add_trace(go.Bar(x=labels, y=[w["transient_f20_60_N"] for w in wc],
+                         name="transient f20-60 (published)"))
+    fig.add_trace(go.Bar(x=labels, y=[w["settled_f250_400_N"] for w in wc],
+                         name="settled f250-400 (five seeds)"))
+    fig.update_layout(
+        title="Same twenty cells, two measurement windows",
+        xaxis_title="(v_car, v_water) m/s",
+        yaxis_title="|F_horiz| (N)",
+        barmode="group", height=520,
+        margin=dict(l=10, r=10, t=60, b=90), template="plotly_white",
+    )
+    return fig
+
+
+def surface_notes():
+    ts = SS.three_spreads()
+    hp = SS.headline_pair()
+    rc = SS.resolution_check()
+    seed = ts["seed_spread_pct"]
+    split = ts["split_spread_S"]
+    win = ts["window_spread_pct"]
+    return f"""
+### Three spreads live in this data, and they are not the same size
+
+| spread | what varies | size | is it an error bar? |
+|---|---|---|---|
+| **seed** | five seeds, one cell | {seed['min']:.3f} to {seed['max']:.3f} % (median {seed['median']:.3f}) | yes, and it is tiny |
+| **split** | how one \\|v_rel\\| divides into v_car and v_water | S = {split['min']:.2f} to {split['max']:.2f}, i.e. {100*split['min']:.0f} to {100*split['max']:.0f} % | **no, this is the result** |
+| **window** | f20-60 against f250-400 | {win['min']:.1f} to +{win['max']:.1f} % | no, it means the load is still changing |
+
+The split and window spreads exceed the seed spread by **two to three orders of
+magnitude**. A plot with error bars drawn from seed scatter would show almost
+nothing and would imply the other two do not exist.
+
+### What a scalar relative speed leaves out
+
+At \\|v_rel\\| = 6.0 m/s the load ranges from
+{[a for a in SS.iso_vrel_arcs() if a['v_rel_mag_ms']==6.0][0]['F_min_N']:.0f} N to
+{[a for a in SS.iso_vrel_arcs() if a['v_rel_mag_ms']==6.0][0]['F_max_N']:.0f} N
+depending only on how that speed is split between the vehicle and the water.
+S grows with speed: {', '.join(f"{a['v_rel_mag_ms']:g} m/s -> {a['S_spread']:.2f}" for a in SS.iso_vrel_arcs())}.
+
+### The window matters enough to invert a published comparison
+
+The pair reported in the source write-up, at the **transient** window:
+(v_car {hp['cell_lower_vrel']['v_car_ms']}, v_water {hp['cell_lower_vrel']['v_water_ms']})
+carries {hp['transient']['lower_N']:.0f} N at \\|v_rel\\| {hp['cell_lower_vrel']['v_rel_mag_ms']:.3f} m/s,
+against {hp['transient']['higher_N']:.0f} N at the higher \\|v_rel\\| {hp['cell_higher_vrel']['v_rel_mag_ms']:.3f} m/s,
+a ratio of **{hp['transient']['ratio_lower_over_higher']:.3f}**.
+
+The same two cells in the **settled** window, five seeds each:
+{hp['settled']['lower_N']:.0f} &plusmn; {hp['settled']['lower_sd_N']:.1f} N against
+{hp['settled']['higher_N']:.0f} &plusmn; {hp['settled']['higher_sd_N']:.1f} N,
+a ratio of **{hp['settled']['ratio_lower_over_higher']:.3f}**.
+
+The ratio crosses 1, so the direction of that particular comparison reverses.
+The seed uncertainty is under 0.35 percent, so the reversal is not seed noise.
+**The general claim, that the split matters, survives in both windows and is
+strengthened; the specific pair does not.** Both statements are on this page
+because reporting only one of them would be choosing the flattering half.
+
+### Resolution
+
+A single-seed n_grid=96 surface differs from this five-seed n_grid=64 surface by
+{rc['g96_minus_g64_pct']['min']:.1f} to +{rc['g96_minus_g64_pct']['max']:.1f} percent across
+{rc['cells_compared']} cells, median {rc['g96_minus_g64_pct']['median']:.1f}. That is the size of
+the resolution effect. It is **not** a convergence claim, and no grid-converged
+statement should be read off this page.
+"""
 
 
 # ---------------------------------------------------------------------------
@@ -224,9 +295,21 @@ def build() -> gr.Blocks:
         with gr.Tab("Load surface (v_car x v_water)"):
             gr.Markdown(
                 "Most published work collapses vehicle speed and flow speed into a "
-                "single relative speed. This matrix keeps them as separate axes."
+                "single relative speed. This matrix keeps them as separate axes, and "
+                "every cell is a mean over five seeds rather than a single point."
             )
             gr.Plot(_surface_figure)
+            gr.Markdown(
+                "### The spread at fixed relative speed\n"
+                "If a scalar relative speed determined the load, every bar below would "
+                "have zero height."
+            )
+            gr.Plot(_split_figure)
+            gr.Markdown(
+                "### The same cells, two measurement windows\n"
+                "The left bar of each pair is the window the source write-up published."
+            )
+            gr.Plot(_window_figure)
             gr.Markdown(surface_notes)
 
         with gr.Tab("Repeat spread"):
