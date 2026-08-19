@@ -1,0 +1,1 @@
+cell_id,v_car_ms,v_water_ms,v_rel_mag_ms,angle_from_broadside_deg,repeat_index,n_grid,depth_m,frame_window,F_horiz_N,F_x_N,F_y_N,F_z_N,torque_about_collider_centre_Nm,fz_settle_over_analytic_diagnostic,frame,engine,run_id
