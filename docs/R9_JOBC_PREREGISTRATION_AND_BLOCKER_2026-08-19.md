@@ -359,6 +359,154 @@ rather than after seeing one.** That is the whole point of the instrument.
 
 ---
 
+---
+
+## 6. Do the criteria survive the shared-numerator finding?
+
+Added 2026-08-20 after `ea1d385`. **Criterion 3 does not survive and needs rewriting before
+anything is graded against it. Criteria 1, 2 and 5 survive. Criterion 4 survives but must
+stop being cited as reassurance. The ladder-stop is NOT reopened, and Job C's value goes UP.**
+
+### 6.1 The claim, verified rather than relayed
+
+Read directly, not taken from the relay:
+
+- `sphere_heave.py:782` computes `w = self.solver.sdf_wrench(self.collider, self.tick)` and
+  `fz = w["force"][2]`. **One reading.**
+- `:818` returns `fz / fb_meas`; `:819` returns `fz / (RHO_W_BENCHMARK * G_ENGINE *
+  2/3 pi R^3)`. **Same `fz`. The two accessors differ only in the divisor.**
+- Solver side, vendored copy: the gate is `if sd <= param.band`, and the accumulation is
+  `impulse = m * (v_free - v_new)` followed by `wp.atomic_add(param.force, 0, impulse)`.
+
+**One citation correction:** that impulse is at `kernels/mpm_solver_warp.py:2733`, not
+:2732. Line 2732 is `m = state.grid_m[gx, gy, gz]`, the mass fetch. This project has closed
+an identical off-by-one before (the rigid-mass citation `:851-853` corrected to `:856`), so
+it is worth getting right rather than passing on.
+
+**The claim is confirmed. The two accessors are one measurement under two normalisations.**
+
+### 6.2 Why criterion 3 does not survive
+
+**Criterion 3 has never graded a force. It grades a normalisation choice applied to a single
+force reading.** That is now provable from source rather than arguable.
+
+`d11-accessor`'s amendment was necessary and correct: two quantities were live under one
+criterion and a source comment, not the manifest, was deciding which. But **naming one of
+two denominators over a shared numerator resolves an ambiguity without adding any
+information about the force.** The amended criterion is well defined and still cannot do the
+job it was written for.
+
+Concretely, a FAIL at +46.17 percent is consistent with all three of:
+
+1. the coupling force really is 46 percent high;
+2. the denominator is wrong (the analytic buoyancy at the measured surface is not the right
+   comparison for what `sdf_wrench` accumulates);
+3. `sdf_wrench` itself is biased, so neither ratio means what it appears to.
+
+**With one numerator, no window and no choice of denominator separates these three.** Job B
+ran 24 gradings and 184 transient-exclusion windows and could not, because every one of them
+divided the same number.
+
+**This is the same defect shape this slot documented for the 0.3 percent figure** in section
+12 of `R9_KRAMER_FULL_EXTRACT_2026-08-18.md`: one measured quantity expressed under two
+normalisations that differ by a large factor, where the number is meaningless unless the
+normalisation is named, and a band derived under one cannot grade a value computed under the
+other. Three instances now, in three different criteria, found by three slots in two days.
+
+**The rewrite is specifiable, which it was not before `ea1d385`.** Criterion 3 should grade
+**agreement between two independent routes**, not one route against a closed form. d21's
+`control_volume_force()` reads only fluid state, `cauchy()` and `vol()`, and never touches
+the body, the SDF or the band. Its own framing is the right criterion: if it returns
+`rho*g*V_cap` while `sdf_wrench` returns 1.35x, the defect is in the accessor; if it returns
+1.35x too, the fluid really is pushing that hard. **Job 923343 was RUNNING at 00:57 on
+2026-08-20, 5:08 elapsed, so that number does not exist yet.**
+
+### 6.3 The other criteria
+
+| criterion | survives? | why |
+|---|---|---|
+| 1, collider accepted | **yes** | structural, on `add_sdf_collider`; does not read `fz` |
+| 2, SDF matches closed form | **yes** | grades the builder via `sdf_radius_rms_err_m`; does not read `fz` |
+| 3, steady vertical reaction | **NO** | section 6.2 |
+| 4, lateral force vanishes | **yes, but** | see below |
+| 5, stationarity | **yes** | a statement about the series, and already "expected, not disqualifying" |
+
+**Criterion 4 needs a warning label.** It grades `|F_lateral| / |Fz|`, and **both components
+come from the same wrench vector**. A uniform multiplicative bias on the accessor cancels
+exactly in that ratio. So criterion 4 is **structurally incapable of detecting the error
+criterion 3 is disputing**, and a PASS on 4 is not evidence that the force readout is sound.
+It tests isotropy, which is worth testing, and nothing more. Do not cite it as reassurance.
+
+### 6.4 The ladder-stop is NOT reopened
+
+Three reasons, and none of them is procedural conservatism:
+
+1. **The discrepancy is real as a discrepancy.** Something disagrees with the closed form by
+   +46 percent at g64. Whether the fault is the accessor or the physics, it is unexplained,
+   and running the harder path on top of an unexplained 46 percent is exactly what the gate
+   exists to prevent.
+2. **This finding makes it LESS understood, not more.** Two readings that had been treated as
+   two views of the force turn out to be one. Evidence that seemed to bracket the problem
+   does not. That argues for holding.
+3. **It does not touch the two independent prerequisites** in section 1: Vista's stale
+   driver, and the `lim` contradiction between the command block and the cost line.
+
+**Additional and new: Job C must not be GRADED until 923343 reports**, separately from the
+gate. Job C's criteria are written against accessors that may be about to be shown biased.
+Grading a decay run against `sdf_wrench` and then learning the accessor carries a
+multiplicative bias would mean regrading everything.
+
+### 6.5 BUT JOB C'S VALUE GOES UP, and this is the actionable part
+
+The shared numerator propagates into the free-decay trajectory, because the 1-DOF
+integration is `az = fz/mass - G` with the same `fz`. **That makes the period an independent
+probe of the same numerator, and it separates two hypotheses that no static measurement can.**
+
+In the small-amplitude limit `T = 2*pi*sqrt(m/k)`:
+
+- a **multiplicative** bias `k` on the coupling force scales the restoring stiffness, so
+  `T -> T/sqrt(k)`;
+- an **additive** offset shifts the equilibrium submergence and leaves `T` unchanged.
+
+**So the free-decay period discriminates a multiplicative accessor bias from an additive
+one, and the equilibrium submergence of section 5.5 catches the additive case.** Together
+they cover both.
+
+Quantified against my own 01D band `[0.760850, 0.791480]` s, using d21's matched-submergence
+excesses:
+
+| arm | static excess | predicted 01D period | inside my band? |
+|---|---|---|---|
+| g64 (Job B's own arm) | +46.17 pct | **0.650865 s** | **NO** |
+| g96 | +28.11 pct | 0.695230 s | **NO** |
+| g128 | +21.50 pct | 0.713891 s | **NO** |
+
+**The 01D band tolerates only `+6.965` percent multiplicative force bias before leaving it**
+(`k = (0.786901/0.760850)^2`), against a static disagreement of +46.17 percent.
+
+**PRE-REGISTERED PREDICTION, before any Job C run exists:**
+
+- **If the static excess is a multiplicative force error that acts on the dynamics, Job C at
+  01D FAILS at every resolution measured, landing near 0.651 to 0.714 s against a floor of
+  0.760850 s.**
+- **If Job C at 01D lands inside the band, the static excess CANNOT be a multiplicative
+  force error acting on the dynamics**, which localises the defect to the accessor's static
+  path or to the held configuration, and does so without any new machinery.
+
+**Both outcomes are informative, and that was not true of Job C before `ea1d385`.** It is
+the strongest argument yet for eventually running it, and it is not an argument for running
+it now.
+
+**Assumptions, stated because the mapping is where this could be wrong.** `T = 2*pi*sqrt(m/k)`
+is the small-amplitude linear limit. 01D is the drop the paper itself calls "a small drop
+height, which can be considered a linear case", which is a second reason 01D was the right
+primary choice; the mapping should NOT be applied at 05D, where the waterplane area varies
+materially over the cycle. The excesses are d21's matched-submergence estimates and the dx
+prong is **1.86 sigma, below this project's 3 sigma bar**, so the three predicted periods are
+provisional in magnitude although not in sign.
+
+---
+
 ## 4. Review status
 
 **UNREVIEWED by a second party.** The `physics-skeptic` subagent is dead fleet-wide,
