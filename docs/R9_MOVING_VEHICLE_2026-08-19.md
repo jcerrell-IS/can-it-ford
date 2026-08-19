@@ -1379,8 +1379,13 @@ session: `c0wrongdt`, `c1ctrl`, `c2arc`, `c3full`, `c3res`, `c4ground`,
 the same value**, 4.710871156863869, across `M1`, `M2`, `M3`, `M4`, `M5`, `M6`,
 `M8`, `M9` and both BC controls. So the empty field is a RECORDING gap in the
 older runs, not a placement difference between them. It does mean hull placement
-in `c3full` cannot be verified from the record, only assumed, so `c3full` is not
-used below.
+in `c3full` cannot be verified from the record, only assumed.
+
+> **CORRECTED, this sentence used to end "so `c3full` is not used below" and that
+> is inconsistent with T17, which does use it.** T17 uses `c3full` deliberately,
+> because it is the arm that produced the published 2.262x and a number cannot be
+> withdrawn without showing where it came from. The confound that sentence was
+> worried about is now CLOSED by measurement rather than by avoidance: see T33.
 
 ### The measurement
 
@@ -2171,3 +2176,109 @@ something else, so it is not claimed and was not attempted.
 - The residual is **not monotone in camber** and is confounded with the extra
   water the depth-matched design introduces.
 - All of it carries the grid caveat of T28 and none of it is a verdict.
+
+## T33. C-1 finished: the placement confound is CLOSED, and the pair still inverts
+
+d18-platform named one confound it could not close, and it was the right one to
+name: the settled side of the C-1 comparison records `hull_y_m`, and the
+transient side is `c3full`, whose `hull_y_m` is empty because it predates the
+field. **If `c3full` had placed the hull differently, the inversion would be
+placement and not window**, and every conclusion drawn from it would be wrong.
+Noting that is not closing it. So it was measured.
+
+Job **923314** re-ran the TRANSIENT window on an arm that records its placement,
+at the same grid, seeds and `bc_per_frame` as the settled arm, so the two differ
+in the window **and nothing else**:
+
+| window | arm | `hull_y_m` | applied bc | seeds | (2.20, 3.00) | (4.50, 0.50) | ratio |
+|---|---|---|---|---|---|---|---|
+| transient | `c3full` | **EMPTY** | 2 | 1 | 8621.4 N | 3811.1 N | 2.262 |
+| transient | **`WTrans`** | **4.710871156863869** | 4 | 3 | 9253.3 N | 3848.8 N | **2.404** |
+| settled | `L2full` | 4.710871156863869 | 2 | 1 | 5028.4 N | 5534.7 N | 0.909 |
+| settled | `M1` | 4.710871156863869 | 4 | 5 | 5176.5 N | 5675.3 N | **0.912** |
+
+**The confound is closed and the conclusion is unchanged.** With placement
+recorded and IDENTICAL on both sides and the same applied bc, the transient
+window gives 2.404 and the settled gives 0.912. **The ratio still crosses one.**
+`WTrans` also reproduces `c3full` to within 6 percent, and the two differ in bc
+(4 against 2), so `c3full` was not anomalous, merely under-recorded.
+
+Note in passing that the settled side is insensitive to bc, 0.909 against 0.912,
+while the transient side is not, 2.262 against 2.404. A transient window is more
+sensitive to a numerical parameter as well as to its own length, which is a
+further reason not to publish from one.
+
+The prediction was written into the job script before it ran: "I expect a ratio
+above 1, near c3full's 2.262". It came out at 2.404.
+
+## T34. The classification question: a load ratio is d15's THIRD class, and here is the rule
+
+The question put to me was which of d15-settle's two classes a load ratio is:
+**full record for a verdict, demonstrated-stationary window for a convergence or
+uncertainty claim.** It is neither, and forcing it into either would be wrong.
+
+- It is **not a verdict**. Nothing moves or fails to move; the body is prescribed.
+- It is **not an uncertainty or convergence claim**. It is not an error bar and
+  not a refinement statement.
+
+It is a **COMPARISON**: an ordering between two conditions, of the form "A carries
+more load than B". That is a third class and d15's rule does not cover it.
+
+### The rule I propose for the third class
+
+> **A comparison must be reported over a window in which the ORDERING is stable,
+> and the stability must be shown at more than one window, not assumed. If the
+> ordering flips between windows, the comparison is not a result: report it as
+> window-dependent with both values named, and do not resolve it to one.**
+
+The load ratio fails that test, so under this rule it does not get restated as a
+single number at all. **The correct handling of the C-1 pair is therefore neither
+"2.3x" nor "0.912x" but "2.404 transient, 0.912 settled, and the ordering is not
+a property of the scene".** That is what T17 withdrew it to and this is the rule
+that justifies the withdrawal rather than just performing it.
+
+### Why the general result is in a different position, tested rather than asserted
+
+The obvious worry is that if the pair fails a window change, the headline should
+too. It was tested on the same scene at the same two windows:
+
+| window | frames kept | S at `\|v_rel\|` 3.0 | seeds |
+|---|---|---|---|
+| transient, 60/20 | 40 | **0.8886 +- 0.0033** | 5 |
+| settled, 400/250, bc 2 | 150 | **1.1776 +- 0.0016** | 5 |
+| settled, 400/250, bc 4 | 150 | **1.0681 +- 0.0026** | 5 |
+
+**S moves with the window, by 20 to 32 percent, and its conclusion does not.**
+In every window the load varies by 89 to 118 percent at a fixed relative speed,
+against a repeatability floor of about 0.08 percent. The claim "the split
+matters" is true in both windows; the claim "this cell carries more than that
+one" is true in one and false in the other.
+
+**That asymmetry is the whole reason S is the result and the pair never should
+have been.** S is a spread over a whole arc at exactly fixed relative speed, so a
+window change rescales every cell it compares together. The pair is two cells
+that differ in BOTH speeds and in `|v_rel|`, compared across a product grid,
+which is the fragile construction. The magnitude of S still carries its window
+and its grid, exactly as T28 requires.
+
+## T35. The R5 surface table is the TRANSIENT surface, and its settled twin exists
+
+Broader than the pair, and worth stating separately because a reader looking at
+R5 sees a 20-cell surface with no window warning on the cells themselves.
+
+**The R5 table is `c3full`: 60 frames with 20 discarded.** Its settled-window
+twin is the `L2full` arm at 400/250, which is in the shipped TSV and was not
+tabulated anywhere. Four cells, to show the size of it:
+
+| cell | R5 as published (transient) | `L2full` (settled) |
+|---|---|---|
+| (2.20, 3.00) | 8621.4 N | **5028.4 N** |
+| (4.50, 0.50) | 3811.1 N | **5534.7 N** |
+| (6.70, 0.50) | not comparable, see below | 9577.9 N |
+| (8.90, 3.00) | 42221.0 N | **30211.8 N** |
+
+**The settled surface with five seeds is already published in this document, in
+T1**, and T1 supersedes R5's table for every purpose. R5 is retained as the
+record of what was originally claimed, with its withdrawal note, and should not
+be read as a current result. Anyone quoting a force from R5 is quoting a
+transient-window number from a single seed.
