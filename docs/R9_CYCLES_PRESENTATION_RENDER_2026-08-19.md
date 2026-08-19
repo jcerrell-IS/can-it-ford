@@ -351,3 +351,136 @@ MAY NOT: any depth read off the crowned road away from the crown; anything at al
 the flat water beyond the patches; any inference that the three vehicles experienced one
 flood; any drivetrain, wheel-rotation or suspension behaviour, none of which the
 simulation has; and any optical quantity, since warpmpm computes no optics.
+
+## 11. The scene pass: what Josie's verdict changed
+
+Her verdict was that the renderer is right and the SCENE is wrong. That was correct,
+and it reframed everything below as geometry and material rather than lighting.
+
+### 11.1 The road and the flood were one mirror, and the material fix alone did nothing
+
+Asphalt and water are physically nothing alike: dry asphalt is rough, 0.6 to 0.8, and
+scatters; open water is near-specular, 0.01 to 0.05, at IOR 1.333. The renderer had
+them both at intermediate roughness, so they read as one continuous grey mirror and
+the eye could not find the waterline. The road material now drives roughness AND
+colour from height against the waterline through a 0.06 m band, so submerged road is
+dark and glossy and road above the water is pale and rough.
+
+**That change on its own was invisible, and the reason is the useful part.** With a
+level road the flood covers every square metre of tarmac in frame, so nothing is ever
+dry and a wet/dry material split has nowhere to appear. The road therefore has a
+longitudinal GRADE and climbs out of the water. That grade is the ONLY road geometry
+in these frames that is not `simulation/road_geometry`'s own, it is presentational,
+and it is what gives the flood an edge.
+
+### 11.2 Lane markings make the camber legible
+
+The crown and cross slope have been real imported geometry since `c0fa82b` and were
+invisible in every frame, because a uniform grey surface gives the eye nothing to read
+curvature against. Procedural markings, no asset: a dashed centre line and two edge
+lines, draped over the crowned surface. They are the cheapest possible curvature gauge
+and they are also what says "carriageway" rather than "lake".
+
+### 11.3 Paint: metallic and roughness have to move together
+
+Two earlier values were wrong for the same reason. Metallic 0.72 at roughness 0.22
+turned the flanks to chrome at grazing incidence; dropping to 0.28 fixed the chrome
+and lost the flake depth that makes paint read as paint. Now 0.80 at roughness 0.38
+under a clearcoat, and `--paints` gives each class its own colour, because three
+identical bodies in one frame is a debug look.
+
+### 11.4 The Chrono cross-check, half adopted
+
+d19-priorcode established Chrono::FSI's units convention and its shipped values. Two
+things came out of comparing them against this pipeline.
+
+**Adopted: the finer marching-cubes grid.** In spacing units this pipeline was 2 to 3
+times coarser than Chrono ships. Refining it is a convergence result, not only a
+cosmetic one:
+
+| cube size | triangles | bodies | enclosed / particle-carried |
+| --- | ---: | ---: | ---: |
+| 0.465 spacings | 214k | 42 | 0.915 |
+| 0.248 spacings (Chrono's default) | 756k | 52 | **0.936** |
+| 0.186 spacings | 1.35M | 58 | 0.940 |
+
+**Rejected on measurement: Chrono's shorter smoothing length.** At 0.99 spacings this
+field breaks into 321 connected bodies and loses 7 percent of its enclosed volume. The
+cause is a genuine difference between the two particle fields, not an error in either
+code: Chrono's are SPH particles that stay near-uniformly spaced, while these are MPM
+particles that have clustered by frame 60, median nearest-neighbour 0.0404 m against a
+seeding spacing of 0.0736 m, so a smoothing length tuned for uniform spacing leaves
+the sparse regions unsupported. **Do not copy an SPH code's smoothing length onto an
+MPM field without re-measuring it.**
+
+Also confirmed from Chrono and worth recording: it does not use a screen-space method
+either. It writes particles to JSON, calls splashsurf, and emits a Wavefront obj. So
+reconstruct-then-path-trace is what a published FSI code ships, and this pipeline is
+not improvising.
+
+### 11.5 The hull melting is a mesh-source defect, measured
+
+The Rogue and Silverado look soft where the Yaris holds its edges. Two things were
+ruled out before concluding anything.
+
+- **Not water bleeding onto the hull.** Rendering the hull with NO WATER IN THE SCENE
+  AT ALL leaves it just as lumpy.
+- **Not the wrong file.** The higher-vertex `*_poisson_raw.ply` variants are not
+  watertight, fail the hull-placement enclosure assert, and are the less-processed
+  source of the same noise rather than a cleaner version.
+
+Measured, as deviation of each hull from its own Taubin-smoothed form at 60 iterations:
+
+| hull | vertices | mean deviation | p99 | volume change |
+| --- | ---: | ---: | ---: | ---: |
+| Yaris | 327,212 | 4.66 mm | 9.96 mm | 0.004 pct |
+| Rogue | 66,987 | **13.04 mm** | 27.14 mm | 0.081 pct |
+| Silverado | 48,706 | **15.37 mm** | 33.02 mm | 0.135 pct |
+
+So the Rogue and Silverado carry 2.8x and 3.3x the Yaris's surface deviation. Taubin
+smoothing is applied to the RENDER hull and helps, but does not remove it: the lumps
+are large-scale, not high-frequency, and smoothing hard enough to flatten them would
+be reshaping the vehicle, which the volume and displacement guards refuse. **The fix
+is to regenerate those hulls from their point clouds with better reconstruction
+parameters**, which is mesh work this slot is barred from doing and which belongs to
+whoever owns `vehicle_mesh_pipeline.py`.
+
+Taubin rather than Laplacian is deliberate: plain Laplacian shrinks a closed surface
+monotonically and would move the waterline, which is the one thing in these frames
+that carries physics.
+
+## 12. The larger-domain run: exactly what it needs, and why this slot cannot submit it
+
+The floating patches are the last structural defect, and the fix is a run whose domain
+exceeds the camera frame, not a renderer change. Measured, so it can be costed:
+
+- The domain is set at `renders/yaris_render_s1/sim_standing.py:160`,
+  `lim = float(max(2.2 * ext[1], 3.5 * ext[0], 6.0 * depth))`. It is a hardcoded
+  expression with **no CLI override**; every other knob in that driver has one.
+- The g64 Yaris run has `grid_lim` 9.4217 m at `dx` 0.14721 m.
+- **Doubling the domain at fixed n_grid halves the resolution**: `dx` becomes 0.29443 m,
+  exactly 2.00x coarser, which also changes the realised water depth. That is not the
+  same physics and must not be presented as the same run at a wider view.
+- **Doubling the domain at fixed dx needs n_grid 128**, precisely. That is not
+  speculative: g128 runs already exist locally under `data/g128_2026-08-18/` and
+  `data/g128_canonical_2026-08-13/`, so the resolution is established rather than new.
+
+So the change is small and the resolution is already exercised: add a `--domain-mult`
+argument to that driver, default 1.0 so every existing run reproduces bit-for-bit, and
+submit at `--grid 128 --domain-mult 2.0`. **This slot cannot make that edit**: its
+standing boundary bars any change to a file under `renders/*/sim_*.py`, and that is
+the file. It belongs to whoever owns the solver driver.
+
+## 13. The city setting is blocked on an asset, and I did not go and get one
+
+Josie wants a street, not a lake in a field. Only two HDRIs exist on this machine, both
+rural: `assets/DaySkyHDRI002A_1K_HDR.exr`, which is trees and grass, and
+`assets/hdri/kloofendal_43d_clear_puresky_2k.hdr`, which is a clear sky with no ground.
+No urban environment is present anywhere under `~/`.
+
+Downloading one would introduce a fresh asset with a fresh licence question, of exactly
+the kind this project has just spent a round resolving, so it is not something to do
+unasked. What CAN be done without any asset is procedural: roadside buildings as simple
+massed geometry, kerb and drain detail, and the clear-sky HDRI instead of the treeline
+so the environment stops saying "lake". That is authored work, not a download, and it
+is the next thing after the moving sequence.
