@@ -42,6 +42,28 @@ def font(sz):
     return ImageFont.load_default()
 
 
+def wrap(d, text, font, maxw):
+    """Greedy word wrap to a pixel width.
+
+    Added after a caption overflowed the frame and CLIPPED the very figure it had
+    just been asked to carry: the 47.6 percent volume loss ran off the right edge.
+    A caption that silently truncates is worse than a shorter one, because the
+    reader cannot tell that anything is missing. Every block is now measured and
+    wrapped rather than trusted to fit.
+    """
+    words, lines, cur = text.split(), [], ""
+    for w in words:
+        t = (cur + " " + w).strip()
+        if d.textlength(t, font=font) <= maxw or not cur:
+            cur = t
+        else:
+            lines.append(cur)
+            cur = w
+    if cur:
+        lines.append(cur)
+    return lines
+
+
 def caption_composite(sc, im, a):
     """Caption for a multi-vehicle road scene.
 
@@ -50,58 +72,66 @@ def caption_composite(sc, im, a):
     read as one event unless it says otherwise, and it was not one event.
     """
     W, H = im.size
-    pad, lh = int(W * 0.016), int(W * 0.0142)
+    pad, lh = int(W * 0.016), int(W * 0.0132)
     vs = sc.get("vehicles", [])
-    bar = lh * (6 + len(vs)) + pad * 2
+    scratch = ImageDraw.Draw(Image.new("RGB", (8, 8)))
+    fb, fs = font(int(lh * 0.74)), font(int(lh * 0.62))
+    maxw = W - 2 * pad
+
+    blocks = [(a.title or "Flooded roadway, three vehicle classes", fb, (238, 238, 240)),
+              ("THESE THREE VEHICLES WERE NEVER IN ONE SIMULATION. Three independent "
+               "warpmpm runs, each rigidly TRANSLATED onto one road: hull and its own "
+               "water move together, so every waterline is that run's, unaltered.",
+               fs, (206, 176, 176))]
+    for v in vs:
+        ph = v.get("physics", {})
+        blocks.append((
+            "   %s  %s   mass %s kg   depth %.3f m at the crown   n_grid %s   "
+            "dx %.5f m   render hull %s vertices"
+            % (v.get("name", "?"), ph.get("label", ""), ph.get("mass_kg"),
+               v.get("still_water_depth_m", 0.0), ph.get("n_grid"),
+               ph.get("dx", 0.0), "{:,}".format(v.get("hull_verts", 0))),
+            fs, (176, 180, 186)))
+    blocks += [
+        ("PROVENANCE IS NOT EQUAL ACROSS THESE THREE. Yaris and Silverado derive from "
+         "the CCSA/NCAC documented set: teardown or scanning, measured or calibrated "
+         "mass and inertia, full-scale NHTSA NCAP validation. The ROGUE IS NOT IN THAT "
+         "SET; the documented midsize is a 2012 Camry.", fs, (214, 176, 150)),
+        ("MESH LIMIT, AND IT WAS LOOKED AT: the Rogue and Silverado hulls are Poisson "
+         "reconstructions and ARE the best of the 19 watertight candidates on this "
+         "machine, at 16.6 and 13.5 deg mean dihedral against the Yaris's 7.6. THE "
+         "SMOOTHEST ROGUE ON DISK IS MISSING 47.6 PERCENT OF THE CAR: smoothness and "
+         "completeness trade off across the reconstruction sweep, so this hull is the "
+         "compromise, not an oversight.", fs, (206, 186, 166)),
+        ("NO REDISTRIBUTABLE CONVERSION OF ANY OF THESE MODELS HAS BEEN VERIFIED, in "
+         "the result set of the one deep search that looked. That is a bounded negative "
+         "from a named search, not proof none exists. These hulls are this project's "
+         "own conversions and their licence question is OPEN.", fs, (206, 186, 166)),
+        ("ROAD: crowned section from simulation/road_geometry.road_profile, width "
+         "%.1f m, carriageway %.1f m, cross slope %.3f. The runs used a FLAT floor, so "
+         "the crown is PRESENTATIONAL; read no depth off it."
+         % (sc.get("road_width_total", 0.0), sc.get("road_carriageway", 0.0),
+            sc.get("road_cross_slope", 0.0)), fs, (176, 180, 186)),
+        ("ALSO PRESENTATIONAL: vehicle spacing, the flat water between and beyond the "
+         "patches (%.4f m apart in height, three runs at three depths), all optics, the "
+         "buildings and the road's longitudinal grade. No wheels, no suspension, no "
+         "rolling degree of freedom." % sc.get("surround_spread_m", 0.0),
+         fs, (176, 180, 186)),
+    ]
+
+    laid = []
+    for text, f, col in blocks:
+        for ln in wrap(scratch, text, f, maxw):
+            laid.append((ln, f, col))
+    bar = lh * len(laid) + pad * 2
     out = Image.new("RGB", (W, H + bar), (14, 15, 17))
     out.paste(im, (0, 0))
     d = ImageDraw.Draw(out)
-    fb, fs = font(int(lh * 0.72)), font(int(lh * 0.60))
-    d.text((pad, H + pad), a.title or "Flooded roadway, three vehicle classes",
-           font=fb, fill=(238, 238, 240))
-    d.text((pad, H + pad + lh),
-           "THESE THREE VEHICLES WERE NEVER IN ONE SIMULATION. Three independent "
-           "warpmpm runs, each rigidly TRANSLATED onto one road: hull and its own "
-           "water move together, so every waterline is that run's, unaltered.",
-           font=fs, fill=(206, 176, 176))
-    for i, v in enumerate(vs):
-        ph = v.get("physics", {})
-        d.text((pad, H + pad + lh * (2 + i)),
-               "  %-24s %s   mass %s kg   depth %.3f m at the crown   n_grid %s   "
-               "dx %.5f m   render hull %s vertices"
-               % (v.get("name", "?"), ph.get("label", ""), ph.get("mass_kg"),
-                  v.get("still_water_depth_m", 0.0), ph.get("n_grid"),
-                  ph.get("dx", 0.0), "{:,}".format(v.get("hull_verts", 0))),
-               font=fs, fill=(176, 180, 186))
-    d.text((pad, H + pad + lh * (2 + len(vs))),
-           "PROVENANCE IS NOT EQUAL ACROSS THESE THREE. Yaris and Silverado derive "
-           "from the CCSA/NCAC documented set: teardown or scanning, measured or "
-           "calibrated mass and inertia, full-scale NHTSA NCAP validation. The ROGUE "
-           "IS NOT IN THAT SET; the documented midsize is a 2012 Camry.",
-           font=fs, fill=(214, 176, 150))
-    d.text((pad, H + pad + lh * (3 + len(vs))),
-           "MESH LIMIT, NOT A RENDER DEFECT: the Rogue and Silverado hulls are "
-           "Poisson reconstructions and ARE the best of the 19 watertight candidates "
-           "on this machine. Mean dihedral angle 16.6 and 13.5 deg against the "
-           "Yaris's 7.6, so 2.2x and 1.8x rougher. Every smoother reconstruction "
-           "loses 18 to 54 percent of the vehicle's volume.",
-           font=fs, fill=(206, 186, 166))
-    d.text((pad, H + pad + lh * (4 + len(vs))),
-           "ROAD: crowned section from simulation/road_geometry.road_profile, width "
-           "%.1f m, carriageway %.1f m, cross slope %.3f. The runs used a FLAT floor, "
-           "so the crown is PRESENTATIONAL; read no depth off it."
-           % (sc.get("road_width_total", 0.0), sc.get("road_carriageway", 0.0),
-              sc.get("road_cross_slope", 0.0)),
-           font=fs, fill=(176, 180, 186))
-    d.text((pad, H + pad + lh * (5 + len(vs))),
-           "ALSO PRESENTATIONAL: vehicle spacing, the flat water between and beyond "
-           "the patches (%.4f m apart in height, three runs at three depths), and "
-           "all optics, the buildings and the road's longitudinal grade. No wheels, "
-           "no suspension, no rolling degree of freedom."
-           % sc.get("surround_spread_m", 0.0),
-           font=fs, fill=(176, 180, 186))
+    for k, (ln, f, col) in enumerate(laid):
+        d.text((pad, H + pad + lh * k), ln, font=f, fill=col)
     out.save(a.out)
-    print("[caption] wrote %s (%dx%d)" % (a.out, out.size[0], out.size[1]))
+    print("[caption] wrote %s (%dx%d), %d wrapped lines, nothing clipped"
+          % (a.out, out.size[0], out.size[1], len(laid)))
 
 
 def main():
