@@ -1245,3 +1245,61 @@ reproducible to roughly 0.08 percent, so the 43 percent effect is far outside
 run-to-run noise; but one draw cannot bound a distribution and none is claimed.
 Cost, for the record: 413,880 water particles, dx 0.073607 m, 91.3 s of wall
 clock per run against 5.99 s at g64.
+
+## T15. The resolution ladder with an ensemble, and a confound I proposed and then refuted
+
+The `|v_rel|` = 3.0 arc now exists at three grids. g64 and g96 carry ensembles;
+g128 is one draw.
+
+| grid | arcs | mean S | sd S | mean `\|F_h\|` | peak angle | mean stream |
+|---|---|---|---|---|---|---|
+| g64 | 5 | 1.0681 | 0.0026 | 3118.5 N | -67.5 deg | +0.744 |
+| g96 | 4 | 1.0076 | 0.0032 | 3109.9 N | -56.2 deg | +0.739 |
+| g128 | 1 | 0.6065 | n/a | 1659.7 N | -22.5 deg | +0.902 |
+
+**g64 and g96 agree closely and g128 does not.** From g64 to g96 the mean load
+moves by 0.3 percent and S by 5.7 percent. From g96 to g128 the load falls 47
+percent and S falls 40 percent. That is not the shape of a converging sequence,
+and it should not be reported as one. It is consistent with this solver's
+documented non-monotonicity under refinement.
+
+### The confound I proposed
+
+The three rungs did not apply the boundary condition equally often relative to
+what the CFL-style rule required: applied 4 against auto 2 at g64, 8 at g96, and
+**11 against auto 3** at g128. The inflow slab is a per-tick Dirichlet clamp, so
+applying it more often forces the stream harder. g128 had both the
+best-established stream (+0.902) and the lowest load, which is exactly what
+over-forcing would produce. The hypothesis was that the g128 result was a
+BC-rate artifact rather than a resolution effect.
+
+### The control, and it refutes the hypothesis
+
+The grid was held at g64 and only the application rate moved, to g128's value.
+`substeps_effective` stays at 11 or 12 throughout, so frame duration is
+effectively unchanged:
+
+| run | applied / auto | mean `\|F_h\|` | S | mean stream |
+|---|---|---|---|---|
+| g64, bc applied 4 | 4 / 2 | 3123.1 N | 1.0683 | +0.744 |
+| g64, bc applied 6 | 6 / 2 | 3161.4 N | 1.1156 | +0.729 |
+| g64, bc applied 11 | 11 / 2 | 3213.0 N | 1.1872 | +0.710 |
+| **g128, bc applied 11** | 11 / 3 | **1659.7 N** | **0.6065** | **+0.902** |
+
+**Over-applying the BC moves both quantities the WRONG WAY.** At fixed grid it
+raises the mean load by 2.9 percent and *lowers* stream establishment from
++0.744 to +0.710. g128 at the same applied rate has a 47 percent *lower* load
+and a *higher* stream. A BC-rate explanation predicts the opposite sign on both,
+so it is refuted.
+
+**Conclusion: the g128 result is a genuine resolution effect.** It is still one
+draw, and the batch job queued tonight runs g96, g128 and g160 arcs at five
+seeds to bound it properly.
+
+**A further reason not to trust the peak angle.** It reads -67.50, -22.50 and
+-67.50 at bc 4, 6 and 11 on the SAME grid. It is not even monotone in a
+numerical parameter that changes the load by under 3 percent. Combined with T14,
+the location of the worst-case split is not a reportable quantity at any
+resolution reached here. The EXISTENCE and SCALE of the split-dependence, which
+is the actual claim, are unaffected: S is between 0.61 and 1.19 across every
+grid and every BC rate tried, against a repeatability floor of 0.076 percent.
