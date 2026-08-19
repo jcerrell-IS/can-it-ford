@@ -117,9 +117,9 @@ absence.
 
 ## Facts already established. Do not re-derive, do not contradict without evidence.
 
-**Four prior vehicle fording or wading simulations exist and `paper/` cites none
-of them.** Any novelty claim about simulating a vehicle in floodwater has to be
-positioned against these first:
+**Four prior vehicle fording or wading simulations exist and none of them prints
+in the reference list.** Any novelty claim about simulating a vehicle in
+floodwater has to be positioned against these first:
 
 | Work | Identifier |
 |---|---|
@@ -127,6 +127,16 @@ positioned against these first:
 | Wasfy, Wasfy & Peters 2015, multibody dynamics plus SPH, Humvee-type | `10.1115/DETC2015-47142` |
 | Pazouki, Jayakumar & Negrut, fluid-MBS, point-cloud solid discretisation | Semantic Scholar `61da26b6` |
 | Khapane & Ganeshwade 2014, "Wading Simulation, Challenges and Solutions" | `10.4271/2014-01-0936` |
+
+**"Cites none of them" was sharpened 2026-08-19, and A BIB ENTRY IS NOT A
+CITATION.** On `claude/add-ci-checks` all four now HAVE entries in
+`paper/can_it_ford_references_IEEE.bib` (keys `he2026vehiclewater`,
+`wasfy2015fording`, `pazouki2016fording`, `khapane2014wading`, added by slot
+`d5-priorart`), so a DOI search over `paper/` now returns hits and a naive
+re-check would call this claim stale. It is not: **zero of the four appear in any
+`\cite` command in `paper/conference_101719.tex`**, so BibTeX drops all four and
+none reaches the reader. Same reach-versus-cited distinction as the ladder at the
+top of this file. On `origin/main` they have no entries either.
 
 Al-Qadami et al 2022 (`10.1111/jfr3.12828`) additionally claim "for the very
 first time" a full-scale passenger vehicle **moving** perpendicular to
@@ -153,6 +163,21 @@ of 91, and N_eff is only 2.9 to 11.0, so any uncertainty computed from N=91 is
 overstated roughly three to five times. Use `analysis/stationarity.py` to state a
 settle length, never a constant.
 
+**THE "25 RUNS" DENOMINATOR NEEDS ITS SCOPE.** Added 2026-08-19 from slot
+`d15-settle`'s committed `docs/R9_SETTLE_FRAMES_2026-08-18.md`, not re-derived
+here. That 25 is records under `renders/` **with duplicates kept**; 3 of them are
+byte-identical duplicates of their `_incoming/` originals (md5-confirmed), so
+**the audited population was 22 distinct records presented as 25**. It also
+includes `renders/mpm-engine-out/flood_vehicle`, which is the bundled model-scale
+truck, not the Yaris and not full scale. The true population is **51 on disk, 48
+distinct**, and on that corrected scope, on the `dx` channel the SLIDE gate
+actually reads, the finding gets STRONGER: **48 of 48 need more than 8 frames
+discarded**, min 29, median 54, max 80.
+
+Also do not put the `settle_frames=8` citation and the discard statistic in
+adjacent sentences without saying they are DIFFERENT QUANTITIES. They are, and
+the adjacency invites the invalid inference "so `settle_frames` should be 48".
+
 **Grid refinement is not expected to converge a transient quantity.** Syamlal,
 Celik & Benyahia 2017 (`10.1002/AIC.15868`). The non-monotone `final_disp_mag_m`
 across g48/g64/g96 is documented expected behaviour for an instantaneous value.
@@ -165,6 +190,28 @@ probabilistic and record-length dependent (Dancey et al 2002). Measured with
 p >= 0.01 to 0.50**, and `g96_m2337` has a one-frame margin. Report a probability
 and the cut, not a bare label.
 
+**NEVER QUOTE THAT 17 AS A BARE INTEGER: IT CARRIES A CHANNEL.** Added 2026-08-19.
+`analysis/probabilistic_verdict.py` gates `p_move` on the MAGNITUDE channel
+(`dmag`, `vmag`) while `simulation/failure_modes.py` gates SLIDE on the SURGE
+axis (`SURGE_AXIS = 0`, so `|dx|` and `|vx|`). Since `dmag >= |dx|` and
+`vmag >= |vx|` elementwise, **every published `p_move` is an UPPER BOUND** on the
+classifier's own gate. On the corrected surge channel slot `d2-persist` measured
+**15 of 24** flipping, and full-record SLIDE going from **21 of 24 to 19 of 24**,
+each reproduced exactly on the committed channel first as a held-fixed control.
+
+**17 and 21 remain the correct figures for the code as committed**, because
+d2-persist's diff is DELIBERATELY UNAPPLIED pending a human decision. Both sets
+are right and answer different questions. Quote the channel with the number, every
+time.
+
+Unresolved as of 2026-08-19, flagged rather than silently picked: `d2-persist`
+records the mapping as "17 of 24 flip -> 15 of 24", while `d15-settle`'s committed
+`docs/R9_SETTLE_FRAMES_2026-08-18.md` records "the 21 of 24 and 5 of 24 figures
+are on the COMMITTED magnitude channel; on the corrected surge channel
+d2-persist measured 19 of 24 and 15 of 24". Those disagree about WHICH figure
+becomes 15. Neither has been re-derived here. Do not repeat either mapping as
+settled until the two slots reconcile it.
+
 **Removing the startup transient is wrong for a SLIDE verdict.** Incipient motion
 is an event, not a steady state; the settling report says impact and water-entry
 loading have no steady force and want peak or event statistics. Transient removal
@@ -173,8 +220,15 @@ condition after it, which is a robustness diagnostic and not the verdict.
 
 ## Method families the corpus evaluated and this repo has never tried
 
-Verified zero occurrences in `analysis/` and `simulation/`: **CPDI**, **GIMP**,
-**moving-reference-frame MPM**. The multi-resolution report found no MPM study
+**No implementation** in `analysis/` or `simulation/`: **CPDI**, **GIMP**,
+**moving-reference-frame MPM**. Re-measured 2026-08-19 and the wording is now
+narrower than "verified zero occurrences", which had become literally false: a
+case-insensitive search returns 2 hits for CPDI and 1 for GIMP, and **all three
+are inside `analysis/research_index.py` itself**, in this index's own method-tag
+regex table and a usage example. The tool that measures the absence is what
+falsifies the string form of the claim. `moving.reference.frame` is still a true
+zero. The substantive claim stands: no CPDI, GIMP or moving-reference-frame
+scheme is implemented here. The multi-resolution report found no MPM study
 anywhere that follows a rigid vehicle with a refinement window through a large
 flood domain, and no moving-reference-frame MPM result at all, so this is both an
 opening and untried.
@@ -203,9 +257,48 @@ quadrature. Standard MPM, GIMP, CPDI and B-spline MPM are not interchangeable.
 
 `--method validation-dataset` returns 76 papers, 65 of them carrying no DOI-shaped
 string anywhere in the tracked tree, `.claude/worktrees/` excluded (22 of the 76
-have no DOI at all, so they cannot match by construction). The repo has
-**no physics regression test**; `tests/` holds only `test_count_claims_check.py`
-and `test_csv_schema.py`.
+have no DOI at all, so they cannot match by construction).
+
+**THE "NO PHYSICS REGRESSION TEST" CLAIM IS STALE AND IS WITHDRAWN.** Corrected
+2026-08-19. This paragraph read "The repo has **no physics regression test**;
+`tests/` holds only `test_count_claims_check.py` and `test_csv_schema.py`." That
+was true when written and stopped being true on 2026-08-18, so the file was
+simultaneously recommending Poiseuille and Couette as "the natural content for a
+locked CI regression test" and asserting no such test existed. **A session
+reading it today could build a second one.**
+
+Live, and the answer is REF-DEPENDENT, so name the ref:
+
+| ref | `tests/` contents |
+|---|---|
+| `origin/main` | `test_count_claims_check.py`, `test_csv_schema.py`. The old claim is still TRUE here. |
+| `claude/add-ci-checks` and every r8/r9 branch | the above **plus `tests/test_physics_gates.py`** |
+
+`tests/test_physics_gates.py` was **added by `50b70c0`** ("Add the three physics
+gates: analytical, conservation, metamorphic") and extended by `df52bee` (+30/-7,
+which also added `scripts/run_analytic_benchmarks_vista.sh`). It carries **12 test
+functions** covering exactly the recommendation two paragraphs above: Poiseuille
+against its governing equation, no-slip and peak, mean-is-two-thirds-of-peak,
+Couette linearity and superposition with Poiseuille, plus conservation
+(particle-count, finite-and-bounded metrics, unit anchors) and metamorphic gates
+(verdict invariance under grid refinement, heavier-vehicle ordering).
+
+It RUNS, pure standard library, no pytest needed: `python3 tests/test_physics_gates.py`.
+Measured 2026-08-19: **0 failures**, and the skip count depends on where you run it.
+
+- **Main checkout: 1 skip.** Only the solver-vs-analytical comparison, which waits
+  on solver output at `tests/data/poiseuille_profile.csv`. That is the genuine
+  outstanding item and it needs a Vista run.
+- **A worktree: 5 skips.** The extra four are `renders/` data being physically
+  absent from a worktree, not a gap in the suite. **Do not read a worktree skip
+  count as an open gap**, which is the same worktree-absence trap that has
+  produced false counts in this repo before.
+
+`.github/workflows/canford-checks.yml:31` runs it as `python3 tests/test_physics_gates.py`.
+**But that workflow is NOT on `origin/main` either**, so as of 2026-08-19 the gate
+exists, passes, and executes nowhere automatically until that branch lands. The
+honest statement is "built and green, not yet running in CI on the default
+branch", never "no physics regression test".
 
 - **Analytical, no download needed:** Poiseuille and Couette flow are the standard
   MPM fluid verification cases with exact closed-form solutions
