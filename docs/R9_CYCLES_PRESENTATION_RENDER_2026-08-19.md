@@ -484,3 +484,26 @@ unasked. What CAN be done without any asset is procedural: roadside buildings as
 massed geometry, kerb and drain detail, and the clear-sky HDRI instead of the treeline
 so the environment stops saying "lake". That is authored work, not a download, and it
 is the next thing after the moving sequence.
+
+## 14. Every guard in this pipeline, with the input that makes it fail
+
+Added because the register rule landed this round: a check whose failing input cannot
+be named is not a check. All four were RUN against that input, not reasoned about.
+
+| guard | where | input that makes it fail | observed |
+| --- | --- | --- | --- |
+| water enclosed volume outside [0.5, 1.6] | `prep_cycles_scene.water_surface` | a smoothing length below about one particle spacing, which is what passing it in absolute metres to a library wanting radius multiples produces | ratio 0.00001 at 8 mm smoothing against 40 mm spacing |
+| water body count above 2 pct of particles | same | the same input | 41,788 bodies for 41,812 particles |
+| hull smoothing max vertex movement > 0.05 m | `prep_cycles_scene.smooth_render_hull` | Taubin at 400 iterations on the Rogue hull | 0.0725 m, REJECTED |
+| hull smoothing volume change > 1.5 pct | same | Taubin at 1500 iterations on the Rogue hull | 2.888 pct, REJECTED |
+| surround shell non-manifold | `cycles_render.far_water_multi` | raising hole walls as single quads instead of splitting them on the global grid | 84 non-manifold edges, and it printed the warning |
+
+The displacement bound catches before the volume bound, which is the ordering you want:
+Taubin is volume-preserving to first order, so a run that has started to reshape the
+body is visible in vertex movement long before it shows up in enclosed volume. A guard
+on volume alone would have passed 400 iterations at 0.744 percent while a vertex had
+already moved 72 mm.
+
+**No adversarial review.** The physics-skeptic subagent is dead fleet-wide this round,
+so every number in this document is UNREVIEWED. Each is reproducible from the commands
+recorded here.
