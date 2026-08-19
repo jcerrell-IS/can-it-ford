@@ -437,7 +437,13 @@ Measured, as deviation of each hull from its own Taubin-smoothed form at 60 iter
 | Rogue | 66,987 | **13.04 mm** | 27.14 mm | 0.081 pct |
 | Silverado | 48,706 | **15.37 mm** | 33.02 mm | 0.135 pct |
 
-So the Rogue and Silverado carry 2.8x and 3.3x the Yaris's surface deviation. Taubin
+So the Rogue and Silverado carry 2.8x and 3.3x the Yaris's surface deviation.
+**PARTLY WITHDRAWN 2026-08-20, see section 17: that ratio is mostly a RESOLUTION
+artifact.** Taubin displacement scales with edge length, and these meshes differ
+in edge length by 3x. Normalised, the resolution-independent figure is 2.2x and
+1.8x by mean dihedral angle. The conclusion that these are the best available
+hulls survives and is now measured across all 19 candidates rather than assumed.
+Taubin
 smoothing is applied to the RENDER hull and helps, but does not remove it: the lumps
 are large-scale, not high-frequency, and smoothing hard enough to flatten them would
 be reshaping the vehicle, which the volume and displacement guards refuse. **The fix
@@ -624,3 +630,79 @@ left one flat plane. Added: window recess by bump from the same mask, a parapet 
 of the wall so the top edge casts a line, a set-back ground floor, and tower setbacks
 on a third of the blocks so the roofline steps against the sky. It is massing, not
 architecture, and at 20 to 60 m from camera that is the right level of investment.
+
+## 17. Every watertight hull on this machine, measured
+
+Asked which of the reconstruction sweep to render, and whether a better Rogue already
+exists at a different Poisson depth. Measured all 19 `*coarse_watertight.ply` in
+`~/Downloads/vehicle_meshes/` plus the canonical Yaris. The directory holds 41 `.ply`
+files, all byte-distinct.
+
+**The answer is no, and the reason is the interesting part.**
+
+| hull | verts | edge mm | Taubin mm | Taubin/edge | dihedral deg | volume err |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| yaris_coarse_v1l | 327,212 | 17.4 | 4.66 | 0.268 | **7.61** | -0.24 pct |
+| rogue_coarse | 66,987 | 41.7 | 13.04 | 0.313 | **16.64** | -0.68 pct |
+| rogue_g96_pd8 | 36,074 | 55.5 | 17.65 | 0.318 | 18.58 | -0.20 pct |
+| rogue_g96_pd7 | 39,119 | 55.4 | 16.97 | 0.307 | 16.26 | **-17.67 pct** |
+| rogue_g96_pd6 | 31,357 | 54.9 | 15.48 | 0.282 | **9.75** | **-47.64 pct** |
+| rogue_g64_pd6 | 13,685 | 82.3 | 23.44 | 0.285 | 18.20 | **-53.63 pct** |
+| silverado_coarse | 48,706 | 52.4 | 15.37 | 0.294 | **13.45** | -0.69 pct |
+| silverado_g96_pd8 | 26,072 | 69.7 | 21.16 | 0.304 | 15.54 | +0.23 pct |
+
+### 17.1 A correction to my own metric
+
+Taubin displacement is **not resolution-independent**. It scales with edge length,
+because smoothing moves a vertex toward its neighbours and coarse meshes have distant
+neighbours. Across all 20 meshes `Taubin/edge` sits in a narrow band, **0.268 to 0.351**,
+while the raw figure spans 4.66 to 76.70 mm. So the raw ratio is close to a measure of
+triangle size.
+
+The earlier 2.8x and 3.3x therefore overstate the surface-quality gap. On mean dihedral
+angle, which is dimensionless and resolution-independent, the gap is **2.19x for the
+Rogue and 1.77x for the Silverado**. The direction is unchanged, the magnitude is not,
+and the corrected figure is now what the caption prints.
+
+### 17.2 Why the choice is not obvious: the smoothest mesh is the worst one
+
+**Minimising roughness selects a blob.** The smoothest Rogue on disk is
+`rogue_g96_pd6` at 9.75 deg, close to the Yaris's 7.61. It is also missing **47.6
+percent of the vehicle's volume**. Poisson depth is the control:
+
+- **depth 6** loses 48 to 54 percent of the volume,
+- **depth 7** loses 18 to 28 percent,
+- **depth 8** lands within 0.2 to 5 percent.
+
+A low-depth Poisson reconstruction is smooth precisely because it has stopped following
+the surface. Any single-metric selection on smoothness picks it, and the render would
+show a car that had lost half its displaced volume, which is the quantity the entire
+buoyancy argument rests on.
+
+So the selection needs two criteria and they oppose each other: **volume error inside a
+few percent as a hard gate, then minimum dihedral among the survivors.**
+
+### 17.3 What I would render, and it is what is already loaded
+
+- **Rogue: `rogue_coarse_watertight.ply`**, 66,987 verts, dihedral 16.64 deg, volume
+  -0.68 percent. Lowest dihedral of any Rogue that passes the volume gate, and the
+  finest available.
+- **Silverado: `silverado_coarse_watertight.ply`**, 48,706 verts, dihedral 13.45 deg,
+  volume -0.69 percent. `silverado_g96_pd8` has marginally better volume at +0.23
+  percent but is rougher, 15.54 deg, and coarser.
+- **Yaris: `yaris_coarse_v1l_watertight.ply`**, unchanged.
+
+**The hypothesis that a better Rogue is already on disk is refuted by measurement.** No
+Poisson depth in the sweep gives both lower dihedral and acceptable volume. The lumpy
+Rogue is not a selection mistake; it is the ceiling of what this reconstruction pipeline
+produced, and improving it means re-running the reconstruction, not choosing differently.
+
+### 17.4 Two inventory notes
+
+`rogue_g48_pd8` and `rogue_g48_pd8_dq0.02` are byte-distinct yet identical in vertex
+count, face count, volume, area, edge length and dihedral. The same holds for the g64
+and g96 pd8 pairs. The `dq` variants are not a meaningful axis of this sweep on any
+measure taken here.
+
+And `truck_trimmed.ply` was not measured. It is the warped `fit_to_bbox` mesh and is
+excluded by standing rule, not by anything found here.

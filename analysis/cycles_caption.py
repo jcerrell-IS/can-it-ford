@@ -81,9 +81,10 @@ def caption_composite(sc, im, a):
            font=fs, fill=(214, 176, 150))
     d.text((pad, H + pad + lh * (3 + len(vs))),
            "MESH LIMIT, NOT A RENDER DEFECT: the Rogue and Silverado hulls are "
-           "Poisson reconstructions and are the best available; they deviate 2.8x "
-           "and 3.3x more than the Yaris from their own smoothed form, so they look "
-           "softer. Rendered with no water at all they are equally soft.",
+           "Poisson reconstructions and ARE the best of the 19 watertight candidates "
+           "on this machine. Mean dihedral angle 16.6 and 13.5 deg against the "
+           "Yaris's 7.6, so 2.2x and 1.8x rougher. Every smoother reconstruction "
+           "loses 18 to 54 percent of the vehicle's volume.",
            font=fs, fill=(206, 186, 166))
     d.text((pad, H + pad + lh * (4 + len(vs))),
            "ROAD: crowned section from simulation/road_geometry.road_profile, width "
