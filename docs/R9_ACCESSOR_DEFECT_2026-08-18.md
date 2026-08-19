@@ -1168,3 +1168,171 @@ known, so a future reader can see it was not set in advance.
 of the scene file is the version from **before** the amendment. Whoever launches job C must
 re-stage it first, or job C will run under the old, unfixed specification and emit no record of
 which measurement it was graded on.
+
+---
+
+# 26. THE DECISION: THE LADDER STOPS
+
+**Taken by the coordinator on 2026-08-19, recorded here so it is actionable and attributable.
+Not taken by this slot.**
+
+**Job B's FAIL is accepted. The ladder stops. Job C does not proceed on an assumption that
+job B passed.** Reasoning, in the coordinator's order of weight:
+
+1. **The magnitude is not marginal.** 24 of 24 gradings fail at +34.4 to +64.2 percent, which
+   is 3.4x to 6.4x the 10 percent PASS band and 1.4x to 2.6x the 25 percent FAIL threshold.
+   Contrast P-2, whose zero-penetration floor of 7.9 to 10.0 percent sits **at** its 10 percent
+   gate, making a P-2 failure uninformative. Criterion 3's floor estimate clears its gate
+   (section 24), and job B is 4.5x to 8.7x that floor.
+2. **The implementation is verified sound** (section 14). Both accessors rebuilt from raw
+   geometry reproduce the emitted fields to machine precision, and the nominal denominator
+   recomputes to 69.217987 N against the manifest's 69.2180 N. The code was never the question.
+3. **The instrument is precise.** The Kramer benchmark is reported at about 0.3 percent
+   experimental uncertainty *(relayed from the project's deep-search summary and still NOT
+   verified against the primary by this slot)*. The reference is not the weak link.
+
+### One correction to the reasoning as handed to me, because it is a figure I already retracted
+
+The decision text repeats that "an 18.1 mm surface offset, about 0.97 dx at g64, accounts for
+the whole +50 percent". **That is the linearised figure, retracted in `8f978c1`.** It divides
+the error by the local secant, and the response is convex. The exact root-find gives **27.490
+mm, 1.466 dx, 2.932 particle layers** for 918240; at 18.022 mm the ratio is still **1.1342**,
+not 1.0. Full table in section 15.
+
+**This matters for the recommended test rather than for the decision.** At 0.97 dx the
+estimator hypothesis is a sub-cell quibble. At **2.93 particle layers** it is a substantial
+claim about the flow field, and the test below is correspondingly more informative if it comes
+back negative. The local sensitivity of **0.0277 ratio-points per mm** is confirmed and is the
+right number to quote; what must not be done is extrapolate it linearly across 27 mm.
+
+## 27. RECOMMENDED NEXT ACTION: measure the near-field surface
+
+**This is the single highest-value action remaining, it should happen before job C is graded on
+this template, and it has never been run.** If the estimator explains the discrepancy then
+criterion 3 is measuring the instrument rather than the solver.
+
+**What to do.** `measure_surface` currently excludes every particle within `2R` of the sphere
+axis and returns `percentile(z_far, 99) + h/2`. Add a **diagnostic-only** second estimate over
+the particles it currently discards, the annulus `r <= 2R`, and emit both. No solver change, no
+change to the graded quantity, one extra column, and the existing runs can be reproduced
+exactly because the seed and config are fixed. A 200-frame g64 job B is about 6 to 7 minutes on
+a GH200, measured: my two repeats today ran in that window.
+
+**What it decides, with the numbers attached:**
+
+| run | near-field elevation required to explain the whole discrepancy |
+|---|---|
+| 918450 treatment | **24.904 mm** (1.328 dx, 2.656 particle layers) |
+| 918240 control | **27.490 mm** (1.466 dx, 2.932 layers) |
+| 918251 job C tank | **33.424 mm** (1.778 dx, 3.555 layers) |
+
+Local sensitivity **0.0277 ratio-points per mm**, so a near-field surface even 10 mm above the
+far-field estimate would account for roughly 28 points of the 50.
+
+**The sign matters and cuts both ways.** The hypothesis needs the near-field surface to sit
+**above** the far-field one. If instead the near field is **depressed**, which is what a pinned
+obstacle in draining water could equally produce, then the true submerged volume is smaller,
+the true denominator is smaller, and **the discrepancy gets worse, not better**. The test can
+therefore make the problem larger. That is a reason to run it, not a reason to avoid it.
+
+### I tried to settle it from data already on disk and could not, which is itself worth recording
+
+`water_z_max_m` is the maximum `z` over **all** water particles including the excluded annulus,
+so it is a hard ceiling on how high any near-field surface could possibly be. If the required
+elevation exceeded it, the hypothesis would be dead without a new run.
+
+| run | required | mean headroom `water_z_max - surface` | max headroom | verdict |
+|---|---|---|---|---|
+| 918240 | 27.490 mm | 39.717 mm | 45.928 mm | **not refuted** |
+| 918450 | 24.904 mm | 34.000 mm | 42.293 mm | **not refuted** |
+| 918251 | 33.424 mm | 40.077 mm | 46.987 mm | **not refuted** |
+
+The required elevation is about **69 percent of the way** from the far-field surface to the
+single highest particle in the tank. So the hypothesis is not arithmetically impossible, and a
+cheap attempt to kill it failed. **That strengthens the case for running the real test.** Note
+this is a weak ceiling: `water_z_max` may be one ejected particle anywhere in the domain, so
+failing to refute is not evidence in favour.
+
+## 28. THE THREE OPEN ITEMS, stated as open
+
+**1. Whether criterion 3's band has the P-2 floor property. UNRESOLVED.** Section 16 retracted
+my answer, and section 24 sets out why the retraction did not close the question: I had
+measured a *sensitivity*, and the floor is a *different quantity* that nobody has measured for
+this scene. Against a proxy floor from a different scene the gate clears by only 2.3 to 2.7
+points out of 10, so **the PASS band is mostly floor**. It does not affect this FAIL, which is
+4.5x to 8.7x that proxy. **Open.**
+
+**2. What the correct value actually is. UNRESOLVED, and nobody has attempted it.** Everything
+established so far shows the measured reaction and the analytic buoyancy disagree. **No work in
+this project establishes which of them is right.** The measured reaction is 53.5915 N where
+Archimedes at the measured surface gives 35.7139 N, an excess of **17.8776 N, or 25.8 percent
+of the sphere's own weight** (7.056 kg, 69.2194 N). That excess has no attributed mechanism.
+Until it has one, "the solver over-predicts" and "the denominator is wrong" are both unproven.
+**Open, and it is the scientifically substantive one.**
+
+**3. Whether the near-field exclusion is a defect or a deliberate trade. ANSWERED: a deliberate
+trade, and the real problem is a scope mismatch.** Read live at `sphere_heave.py:760-763`:
+
+> "Particles within 2R of the sphere axis are excluded: that annulus carries the meniscus and
+> any splash off the collider, which is a local deformation and not the tank's free surface.
+> The 99th percentile rather than the max, because a single ejected particle should not define
+> a surface."
+
+That is an explicit, correct rationale **for the quantity it was built to measure**: the tank's
+far-field free surface. **The mismatch is in what criterion 3 then does with it.** Buoyancy on
+the sphere is set by the water column *at the sphere*, which is exactly the annulus the
+estimator discards by design. So this is **not a bug and not an oversight**: it is a
+well-reasoned estimator answering a different question from the one the criterion asks of it.
+**That is the same class of defect as the one this whole document is about**, a quantity used
+for a purpose its definition does not support, which is why it deserves the same treatment:
+name what it measures, and do not silently reuse it for something else.
+
+## 29. Adversarial checks, run by me because the subagent was unavailable
+
+**The `physics-skeptic` subagent failed three times this session** with the same model
+configuration error, including on two explicit model overrides. **No independent adversarial
+pass was run and every number in this document should be treated as unreviewed by a second
+party.** I ran the checks I would have asked it for, which is not a substitute.
+
+**Independent algebra check, Wolfram Alpha**, on the two quantities everything else rests on:
+
+| quantity | mine | Wolfram | agreement |
+|---|---|---|---|
+| cap volume at `sub` = 0.099674, `R` = 0.15 | 3.644714e-03 m3 | 0.00364472 m3 | 6 significant figures |
+| tangent `ratio*A_w/V_cap` at 918240 | 0.025827 /mm | 0.0258267 /mm | 6 significant figures |
+
+**Test 1, the nested-window objection.** The manifest's gate uses last-20, last-50, last-100
+and full series, which are **nested**: last-20 is inside last-50 is inside last-100 is inside
+full. **Agreement among them is therefore not four independent tests, and "robust at all four
+windows" overstates the evidence.** That criticism of the gate is valid and is recorded against
+it. Re-run on three **disjoint** thirds of the graded window:
+
+| run | third 1 | third 2 | third 3 |
+|---|---|---|---|
+| 918240 | +50.540 % FAIL | +50.030 % FAIL | +49.612 % FAIL |
+| 918450 | +33.065 % FAIL | +34.926 % FAIL | +35.053 % FAIL |
+| 918251 | +50.113 % FAIL | +50.722 % FAIL | +50.959 % FAIL |
+| repeat seed 7 | +50.777 % FAIL | +50.783 % FAIL | +49.842 % FAIL |
+
+**The conclusion survives a genuinely independent version of the test**, even though the gate
+as written is weaker evidence than it appears.
+
+**Test 2, is there any window at all that avoids a FAIL?** Exhaustive scan of every possible
+transient-exclusion start frame leaving at least 16 frames, 184 choices per run:
+
+| run | best achievable over all 184 starts | verdict |
+|---|---|---|
+| 918240 | start 4, +48.583 % | FAIL |
+| 918450 | start 97, **+34.117 %** | FAIL |
+| 918251 | start 183, +45.848 % | FAIL |
+
+**There is no window choice anywhere in the data, defensible or not, that avoids a FAIL.** The
+single most favourable reading obtainable from any run by any truncation is +34.117 percent,
+against a FAIL threshold of 25.
+
+**A note on `DeepWiki`, which I did not use and should say why.** It was suggested for "how the
+surface estimator is meant to behave". `measure_surface` is **this project's own code in
+`sphere_heave.py`**, not solver code, so no repository wiki can be authoritative about its
+intended behaviour. The docstring quoted in item 3 above is the primary source and I read it
+live. Asking a wiki instead would have produced a plausible answer about somebody else's
+estimator.

@@ -228,6 +228,33 @@ the committed test suite]**. Note this is **not** 69.3428 N: that was the supers
    with every run and is still required; it is no longer what the band is computed from.
    See `docs/R9_ACCESSOR_DEFECT_2026-08-18.md` for why.
 
+> ## LADDER STATUS: STOPPED, 2026-08-19
+>
+> **Job B FAILED criterion 3 and the FAIL was accepted. The ladder is stopped under the rule
+> stated immediately below. Job C must NOT proceed on an assumption that job B passed.**
+> Decision taken by the round-9 coordinator, recorded by slot `d11-accessor`.
+>
+> **The evidence:** 24 of 24 gradings fail at +34.4 to +64.2 percent, which is 3.4x to 6.4x
+> the 10 percent PASS band and 4.5x to 8.7x the best available floor estimate. An exhaustive
+> scan of all 184 possible transient-exclusion start frames finds **no window, defensible or
+> otherwise, that avoids a FAIL**; the most favourable reading obtainable from any run by any
+> truncation is +34.117 percent. Three **disjoint** thirds of the graded window fail
+> independently in every run. Both accessors were rebuilt from raw geometry and reproduce to
+> machine precision, so the implementation was never in question.
+>
+> **Before job C runs, two things must happen.** (1) The near-field surface test in
+> `docs/R9_ACCESSOR_DEFECT_2026-08-18.md` section 27, which is cheap, has never been run, and
+> decides whether criterion 3 is measuring the solver or its own instrument. (2) Vista's
+> `$WORK/d4_scene/sphere_heave.py` must be re-staged: it is the version from **before** this
+> criterion was amended, so job C launched from it would run under the old specification and
+> emit no record of which quantity it was graded on.
+>
+> **Three questions remain open and are NOT settled by this FAIL**, listed in section 28 of
+> that document: whether this band has the P-2 floor property, which of the measured reaction
+> and the analytic buoyancy is actually correct (nobody has established this, and the 17.8776 N
+> excess has no attributed mechanism), and how much of the discrepancy the near-field exclusion
+> can carry.
+
 **Pass criteria, fixed in advance and graded in this order.** Any FAIL stops the ladder:
 
 1. **The collider is accepted.** `add_sdf_collider` refuses a collider whose stored SDF does
