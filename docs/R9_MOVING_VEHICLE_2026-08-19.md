@@ -2111,3 +2111,63 @@ does not converge and every absolute force here carries its grid.
 AT THE VEHICLE matches the flat arm. If those reproduce the flat arm's 3119.7 N,
 the effect is entirely depth-at-vehicle; whatever they differ by is the bed
 geometry. The prediction was written into the job script before it ran.
+
+## T32. The crown decomposition, and it flips sign
+
+Job **923302** COMPLETED, 00:06:28, ExitCode 0:0, 54 cells. 1,191 records.
+
+T27 said most of the crown's benefit was probably "the vehicle stands in less
+water", and offered the depth-matched comparison as the way to find out. It has
+now run, and **the answer is more interesting than the prediction.**
+
+Depth is measured from the floor, that is at the road edges, and the crown
+removes `crown_height` from it at the centreline. Setting depth to
+`0.30 + crown_height` therefore puts **exactly 0.30 m over the crown**, matching
+the flat arm at the vehicle.
+
+| arm | depth (edges) | crown | depth AT VEHICLE | n_water | mean `\|F_h\|` | vs flat |
+|---|---|---|---|---|---|---|
+| flat | 0.3000 | 0.0000 | **0.300** | 41,648 | 3119.7 N | reference |
+| 2 pct, level fixed | 0.3000 | 0.0942 | 0.206 | 34,946 | 1979.8 N | **-36.5 pct** |
+| 4 pct, level fixed | 0.3000 | 0.1884 | 0.112 | 28,340 | 1563.6 N | **-49.9 pct** |
+| 2 pct, vehicle depth fixed | 0.3942 | 0.0942 | **0.300** | 45,129 | 2539.6 N | **-18.6 pct** |
+| 4 pct, vehicle depth fixed | 0.4884 | 0.1884 | **0.300** | 58,733 | 3307.4 N | **+6.0 pct** |
+
+### Three things, and the second one is the result
+
+1. **The crown is not only depth.** At 2 percent, with the vehicle standing in
+   exactly the same 0.30 m of water as on the flat road, the load is still
+   **18.6 percent lower**. Roughly half of the level-fixed 36.5 percent survives
+   the depth being matched.
+2. **The depth-matched difference REVERSES SIGN between 2 and 4 percent**, from
+   -18.6 to **+6.0 percent**. A single monotone mechanism cannot produce that.
+   Whatever the crown does, it is not one effect scaling with camber.
+3. **The level-fixed benefit is real and large at both cambers**, -36.5 and
+   -49.9 percent, and that is the operational question: a flood has a level, and
+   the road either has a camber or does not.
+
+### The honest name for the second column, which is NOT "the geometry term"
+
+I set this up calling the depth-matched difference the geometry term. **That name
+is wrong and I am not keeping it.** Holding the depth at the vehicle fixed
+necessarily makes the flood DEEPER AT THE EDGES: 0.3942 m and 0.4884 m against
+0.30 m, and `n_water` rises to 45,129 and 58,733 against 41,648. So the
+depth-matched arm changes the bed shape **and** puts more water in the domain,
+and the 4 percent case has 41 percent more water than the flat reference. That
+extra water at the sides is the obvious candidate for the sign flip.
+
+**Neither framing isolates bed geometry alone.** They bracket it. A clean
+geometry term would need a third design that holds both the vehicle depth and
+the total water fixed, which is not possible on a fixed domain without changing
+something else, so it is not claimed and was not attempted.
+
+### What is safe to say
+
+- At a fixed flood level, a standard 2 percent camber reduces the horizontal load
+  by **36.5 percent**, and 4 percent by **49.9 percent**. Paired, three seeds,
+  only the cross slope varying.
+- **Most but not all of that is the shallower water at the vehicle.** At 2
+  percent, 18.6 of the 36.5 points survive matching the vehicle depth.
+- The residual is **not monotone in camber** and is confounded with the extra
+  water the depth-matched design introduces.
+- All of it carries the grid caveat of T28 and none of it is a verdict.
