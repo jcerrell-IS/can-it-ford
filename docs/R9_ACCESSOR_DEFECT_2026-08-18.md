@@ -1563,3 +1563,93 @@ floor, not of the body, and that finding cost one queued batch job.
 fixed in `da438d7` before the job existed, the PASS could be rejected on the evidence rather
 than argued about afterwards. **A pre-registration that catches its own author is doing its
 job.**
+
+---
+
+# 32. The floor leak is a floor-plane defect, and the one-line fix works without a body
+
+Job **923190**, `gh`, requested 00:20:00 and ran **00:01:40**. Two arms at g64, 200 frames,
+identical script, grid, seed and tank. **The only difference is the engine**, one line, read
+back at runtime rather than assumed:
+
+```
+control  $WORK/mpm-engine/src         mpm_solver_warp.py:1955   if dotproduct <  0.0:
+bcfix    $WORK/mpm-engine-bcfix-src   mpm_solver_warp.py:1955   if dotproduct <= 0.0:
+```
+
+**Finding the right axis took a correction of its own.** Section 31 said my column ran with
+`6ed163e`'s sacrificial sub-floor remedy off and that I had not checked what job 918450 did
+differently. **918450 also ran `n_ghost_layers = 0`.** The sub-floor layer was never the
+treatment. 918450's fix was **engine-side**, which is why the two runs' config blocks look
+identical apart from six new reporting fields.
+
+## 32.1 The prediction was pre-registered in `1f98170` and it is CONFIRMED
+
+| arm | `n_below_floor` final | of 606797 | first frame with any loss |
+|---|---|---|---|
+| control | **24510** | 4.0392 % | frame **2** |
+| bcfix | **883** | 0.1455 % | frame **126** |
+
+**Reduction 96.40 percent in a column with no body in it**, against **96.28 percent** in the
+sphere scene (26964 to 1002 of 598505, measured by me from 918240/918450 rather than taken on
+report). **The two agree to 0.11 percentage points.**
+
+**So the floor leak is a floor-plane boundary-condition defect, entirely body-independent, and
+so is its remedy.** No sphere, no SDF collider, no contact band, and both the defect and the
+one-line fix behave the same as they do with a body present. The fix also changes the onset
+qualitatively, not just the magnitude: first loss moves from frame 2 to frame 126.
+
+## 32.2 The fix removes 96 percent of the leak and does NOT move the pressure gradient
+
+| arm | mean `dp/dz` error | blocked SE | verdict |
+|---|---|---|---|
+| control | -0.6677 % | 3.3090 % | PASS, gradeable |
+| bcfix | +1.0569 % | 4.2705 % | **NOT GRADEABLE on precision** |
+
+Difference between arms: **+1.72 +/- 5.40 percent, which is 0.32 sigma.** **The leak and the
+hydrostatic gradient are decoupled**: removing 96.4 percent of the lost mass does not
+detectably change the pressure gradient. That is worth stating because the natural assumption
+runs the other way.
+
+## 32.3 The new gate fired on its first real use, on my own run
+
+The bcfix arm reads **PASS at mean minus one blocked SE and REPORTABLE PARTIAL at mean plus
+one**, so the verdict is not stable within its own error bar and the gate added in `1f98170`
+refuses to grade it. **That gate was added specifically because the previous version of this
+criterion reported a mean without an error bar, and the first thing it did was catch a run of
+mine.** The control arm passes the same gate cleanly.
+
+## 32.4 A free repeatability check, and it is clean
+
+The control arm is the same configuration and seed as job 922619's g64, run in a different job
+on a different node:
+
+| quantity | 922619 g64 | 923190 control | agreement |
+|---|---|---|---|
+| `n_below_floor` final | 24508 | 24510 | 2 particles of 606797 |
+| mean `dp/dz` error | -0.6679 % | -0.6677 % | 4 decimal places |
+| blocked SE | 3.3090 % | 3.3090 % | exact |
+
+## 32.5 What this settles for job B, and what it does not
+
+**Job B's discrepancy is 7.8 to 19.6 blocked standard errors away from this column's reading**,
+on either arm:
+
+| arm | vs 918450, the best job B run (+34.355 %) | vs 918043, the worst (+64.187 %) |
+|---|---|---|
+| control | 10.58 sigma | 19.60 sigma |
+| bcfix | 7.80 sigma | 14.78 sigma |
+
+**The pre-registered falsifier fires. This solver carries no static pressure bias remotely
+large enough to explain job B**, and it holds whether or not the floor fix is applied. **The
+discrepancy belongs to the sphere: the coupling, the contact treatment, or the free-surface
+estimator.** That is d21-jobb-route's question, and this run removes one candidate from it
+rather than answering it.
+
+**What it does NOT settle, stated because the numbers invite over-reading.** The bcfix arm's
++1.0569 percent sits 0.13 sigma from the +1.632 percent compressible excess I predicted in
+`da438d7`, and it is tempting to call that a confirmation. **It is not.** The control arm's
+-0.6677 is also consistent with the same prediction at 0.69 sigma, the two arms differ by only
+0.32 sigma, and **the blocked SE is 2.0 to 2.6 times the effect being predicted.** The column
+as run cannot resolve its own compressibility correction. Confirming that needs either a longer
+window or damping of the acoustic ringing that sets `tau_int`, and neither was done here.
