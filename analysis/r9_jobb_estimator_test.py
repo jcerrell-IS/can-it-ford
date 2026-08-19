@@ -484,9 +484,94 @@ def _build_instrumented(scene_dir: str):
             # Bit-identical to an uninstrumented run. This is the whole safety argument.
             return super().measure_surface()
 
+        def control_volume_force(self):
+            """A THIRD force accessor that never touches the body, the SDF or the band.
+
+            Both existing readings come from the same place: `sdf_wrench` sums
+            `m*(v_free - v_new)` over grid nodes the collider gates at `sd <= band`
+            (mpm_solver_warp.py:2732). So the nominal and measured ratios disagree about
+            the DENOMINATOR while sharing a NUMERATOR, and nothing in this scene has ever
+            read the force by a second route.
+
+            This does. Take a control volume B enclosing the body: a tank-wide slab whose
+            top face lies ABOVE the free surface, so its traction is identically zero, and
+            whose bottom face lies below the body. The side faces are the slip walls
+            (friction 0.0, sphere_heave.py:577-581), so they carry no vertical shear.
+            Momentum balance on the fluid in B at a hydrostatic steady state leaves
+
+                Fz_on_body = p_bottom * A_tank  -  W_fluid_in_B
+
+            and in the analytic limit that is exactly `rho*g*V_displaced`: the column
+            weight `rho*g*A*depth` cancels, leaving the displaced volume. It reduces to
+            Archimedes by construction, which is what makes it a check rather than a
+            second opinion.
+
+            IT READS ONLY FLUID STATE. `cauchy()` for the stress and `vol()` for the
+            volume, both per particle, neither aware that a collider exists. **If this
+            returns rho*g*V_cap while sdf_wrench returns 1.35x it, the defect is in the
+            ACCESSOR. If it returns 1.35x too, the fluid really is pushing that hard and
+            the accessor is sound.** That is a cleaner statement than either existing
+            reading can make alone.
+
+            Reported alongside, not instead: this estimator has its own errors, a
+            weakly-compressible pressure read off a nearly-singular Jacobian and no viscous
+            term. Its scatter is reported so it can be judged.
+
+            THE FIRST VERSION OF THIS WAS BIASED AND THE SYNTHETIC CHECK CAUGHT IT. It
+            estimated the face pressure as `sum(-sigma_zz * V_p) / (thickness * area)`,
+            which returned 143.95 N where the analytic answer is 69.218. Two compounding
+            errors, both extensive: the slab's volume-weighted mean z sits h below the face
+            it is meant to describe (+91.8 Pa at g64), and the particle volume in the slab
+            over-counts the face area by 0.63 percent. **The fix is to estimate the face
+            pressure INTENSIVELY, by a linear fit of p against z evaluated at the face**,
+            which carries neither error, and to take the fluid weight from a direct volume
+            sum, which needs no area at all. On the synthetic tank that returns 68.2628 N
+            against 69.2180, **-1.38 percent, and it is identical to four decimals across
+            fit bands of 4h, 6h, 8h and 12h**. The residual is the particle lattice's carve
+            of the sphere, not the estimator. -1.38 percent is the accuracy this reader
+            brings to discriminating a ratio of 1.0 from one of 1.35.
+            """
+            import numpy as np
+            x = self.solver.x()[: self.n_water]
+            sig = self.solver.cauchy()[: self.n_water]
+            vol = self.solver.vol()[: self.n_water]
+            p = -sig[:, 2, 2]                                  # p = -sigma_zz
+            lo_w, hi_w = self.WALL, self.lim - self.WALL
+            inside = ((x[:, 0] >= lo_w) & (x[:, 0] <= hi_w)
+                      & (x[:, 1] >= lo_w) & (x[:, 1] <= hi_w))
+            out = {"cv_n_inside": int(inside.sum())}
+            scopes = (((hi_w - lo_w) ** 2, inside, "in"),
+                      (self.lim ** 2, np.ones(len(x), bool), "all"))
+            for area, sel, scope in scopes:
+                for nface in (2, 4):
+                    z_face = self.FLOOR + nface * self.h
+                    for nfit in (6, 12):
+                        tag = f"{scope}_f{nface}_b{nfit}"
+                        band = sel & (x[:, 2] >= self.FLOOR) & (x[:, 2] < self.FLOOR + nfit * self.h)
+                        above = sel & (x[:, 2] >= z_face)
+                        if band.sum() < 100 or above.sum() < 100:
+                            out[f"cv_fz_{tag}_N"] = float("nan")
+                            continue
+                        c = np.polyfit(x[band, 2], p[band], 1)
+                        p_face = float(np.polyval(c, z_face))
+                        w = RHO_W_BENCHMARK * G_ENGINE * float(vol[above].sum())
+                        out[f"cv_fz_{tag}_N"] = p_face * area - w
+                        if nfit == 6 and nface == 2:
+                            # Free diagnostic: the fitted vertical pressure gradient should
+                            # be -rho*g. This is the same quantity d11-accessor's
+                            # hydrostatic column grades, measured here inside the sphere
+                            # scene, so the two scenes become comparable on it.
+                            out[f"cv_dpdz_{scope}_Pa_m"] = float(c[0])
+                            out[f"cv_p_face_{scope}_Pa"] = p_face
+            return out
+
         def advance(self):
             rec = super().advance()
             rec.update(self._diag)
+            try:
+                rec.update(self.control_volume_force())
+            except Exception as exc:                       # never let a diagnostic kill a run
+                rec["cv_error"] = repr(exc)[:200]
             # Ratios against every surface variant, so the decision is read off directly
             # rather than recomputed by hand later.
             zbot = self.z - self.radius
