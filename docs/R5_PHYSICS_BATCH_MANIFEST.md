@@ -286,12 +286,20 @@ the committed test suite]**. Note this is **not** 69.3428 N: that was the supers
    kind as the thing it grades. That is defensible for a pilot gate and it is not a
    validation, and the distinction must survive into any write-up.
 
-   **Three scales, in the order that matters:** the Kramer benchmark's own experimental
-   uncertainty is about **0.3 percent** *(relayed from the project's deep-search summary and
-   NOT verified against the Kramer paper by this slot; mark it unverified until someone reads
-   the primary)*; this band is **10 percent**; and the graded accessor's own surface-convention
-   lever is **13.0 percent** (see the standing caveat below). The band sits between the
-   benchmark's precision and the instrument's resolution, and nearer the wrong one.
+   **DO NOT ANCHOR THIS BAND TO KRAMER'S 0.3 PERCENT.** Corrected 2026-08-19 by slot
+   `d11-accessor`. An earlier version of this note put the Kramer benchmark's "0.3 percent
+   experimental uncertainty" alongside this band as though the two measured comparable things.
+   **They do not.** The project's own 18 August deep search
+   (`/MPM SPH buoyancy force overestimation and hydrostatic validation benchmarks`) records that
+   the 0.3 percent is **of drop height** and that Kramer is **"a motion benchmark, not a stated
+   static-force tolerance"**. Criterion 3 grades a **static** force, so Kramer supplies no
+   reference tolerance for it at all.
+
+   **A larger gap follows from that, and it is not this slot's to close:** the same search finds
+   that static verification is more directly done with MPM hydrostatic columns or SPH still-water
+   pressure and fixed-cylinder tests. **Criterion 3 grades a static force against a motion
+   benchmark.** That is the same class of defect this criterion was just amended to fix, one
+   level up, and it should be recorded as open rather than resolved here.
 
    **AMENDED 2026-08-19 by slot `d11-accessor`. The bands are untouched; what changed is
    that the criterion now names WHICH quantity and OVER WHAT WINDOW.** As originally

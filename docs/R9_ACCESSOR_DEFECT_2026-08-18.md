@@ -1052,8 +1052,10 @@ letter is `a`.
 - **Whether the +34 percent residual is coupling error, estimator bias, or drainage.** Still
   not separable, and section 16 now bounds how much of it the estimator could carry: to take
   the whole thing it would have to be wrong by 2.66 to 3.56 particle layers.
-- **The Kramer 0.3 percent experimental uncertainty** is relayed from a deep-search summary and
-  was **not** checked against the primary paper by this slot. Marked unverified.
+- **The Kramer 0.3 percent experimental uncertainty.** Still not checked against the primary
+  paper. **Now further qualified in section 30.1:** the project's own deep search says it is
+  0.3 percent *of drop height* and that Kramer is a *motion* benchmark carrying no stated
+  static-force tolerance, so it never applied to criterion 3 in the first place.
 - **The 2.28 percent per mm sensitivity** in `measure_surface`'s comment is unreconciled with
   the measured 2.7775 and the spec block's 2.78. I flagged it in place rather than overwriting
   it, because I could not reproduce 2.28 at any operating point I tried and do not know which
@@ -1187,9 +1189,13 @@ job B passed.** Reasoning, in the coordinator's order of weight:
 2. **The implementation is verified sound** (section 14). Both accessors rebuilt from raw
    geometry reproduce the emitted fields to machine precision, and the nominal denominator
    recomputes to 69.217987 N against the manifest's 69.2180 N. The code was never the question.
-3. **The instrument is precise.** The Kramer benchmark is reported at about 0.3 percent
-   experimental uncertainty *(relayed from the project's deep-search summary and still NOT
-   verified against the primary by this slot)*. The reference is not the weak link.
+3. **The instrument is precise.** ~~The Kramer benchmark is reported at about 0.3 percent
+   experimental uncertainty, so the reference is not the weak link.~~ **THIS REASON IS
+   WITHDRAWN, see section 30.1.** The project's own 18 August deep search states that the 0.3
+   percent is "of drop height" and that Kramer is "a motion benchmark, **not a stated
+   static-force tolerance**". Job B is a static-force test, so that figure does not bound its
+   reference uncertainty. **Reasons 1 and 2 carry the decision on their own**; this one should
+   not be quoted in support of it.
 
 ### One correction to the reasoning as handed to me, because it is a figure I already retracted
 
@@ -1336,3 +1342,127 @@ surface estimator is meant to behave". `measure_surface` is **this project's own
 intended behaviour. The docstring quoted in item 3 above is the primary source and I read it
 live. Asking a wiki instead would have produced a plausible answer about somebody else's
 estimator.
+
+---
+
+# 30. What the project's own deep searches say, and one correction to the decision's reasoning
+
+Two completed deep searches bear directly on this thread. **Neither is reachable through
+`analysis/research_index.py`**, which ingests 8 of the workspace's 21 searches, so a miss there
+is not evidence of absence. Read via `inspect_deep_searches` in workspace
+`17299f2a-8dc8-438b-8c84-5abf19395e2c`:
+
+- `/MPM SPH buoyancy force overestimation and hydrostatic validation benchmarks` (18 Aug, 32 papers)
+- `/free surface elevation estimator error in particle method buoyancy validation` (19 Aug, 88 papers)
+
+These are **secondary** sources: an AI search summarising papers. Nothing below has been checked
+against a primary record by this slot, and it is all labelled accordingly.
+
+## 30.1 CORRECTION: the 0.3 percent is a MOTION tolerance and does not apply to job B
+
+Reason 3 of the ladder decision was "the instrument is precise: the Kramer benchmark is
+approximately 0.3 percent experimental uncertainty, so the reference is not the weak link". I
+had already flagged that figure as relayed and unverified. **The project's own 18 August search
+states what it actually is, and it is not what it was being used for:**
+
+> "experimental uncertainty is about 0.3% **of drop height**, but this is a **motion benchmark,
+> not a stated static-force tolerance** [Kra21b, Sci19]"
+
+**Job B is a static-force test.** Kramer's benchmark supplies **no stated static-force
+tolerance** at all, so 0.3 percent cannot bound the uncertainty on the quantity criterion 3
+grades. The conclusion that the reference is not the weak link may still be right, but **this
+figure does not establish it**, and it should stop being quoted in support of it.
+
+**The same search names what the right comparison would be:** "For static verification, MPM
+hydrostatic columns/problems and SPH still-water pressure or fixed/floating-cylinder tests are
+more direct [Yan17, Gar19, Omi17, Qui18b]." **Job B grades a static force against a motion
+benchmark.** That is a real specification gap, of exactly the same kind as the one this
+document is about, and it is larger than the one I was sent to fix.
+
+## 30.2 The near-field exclusion: the literature does NOT treat it as benign
+
+Section 28 item 3 concluded from the docstring that the 2R exclusion is a deliberate trade with
+a scope mismatch. The 19 August search reaches the same place from the outside:
+
+> "Near-body exclusion is **not established as a benign operation**: particle methods identify
+> free surfaces through density/neighbor criteria, geometric scans, or reconstructed
+> signed-distance/level-set fields [Mar10b, Liu22f, Sun19g, Zha17c], and the literature
+> emphasizes **false surface classification and truncated support** as pressure-error sources
+> [Got09b, Che18c]."
+
+So the estimator hypothesis is not a stretch invented to excuse a bad result. It is the failure
+mode the field already flags.
+
+## 30.3 A better test than the one I proposed in section 27
+
+The search proposes a discriminator that is cheaper and cleaner than my near-field-annulus
+diagnostic, and I had not thought of it:
+
+> "A cheap discriminator is to recompute elevation with **nested exclusion radii (including
+> zero)**, local vertical columns, and a geometric/level-set reconstruction; compare the
+> resulting analytic buoyancy directly with the same raw force. **A body-off hydrostatic run
+> provides the estimator bias independently of body loading.**"
+
+**The body-off run is the decisive one.** With no sphere in the tank the true free surface is
+known without any body-induced deformation, so the estimator's bias is measured directly and
+the 2R exclusion becomes a no-op by construction. **It separates estimator bias from body
+loading completely**, which my proposed test does not: mine measures the near-field surface but
+still cannot say whether the near-field deformation is physical or an artifact.
+
+**Recommended sequence, superseding section 27's single test:**
+
+1. **Body-off hydrostatic run.** Same tank, same resolution, no sphere. Measures pure estimator
+   bias against a known flat surface. Cheapest and most decisive.
+2. **Nested exclusion radii including zero**, on the existing runs, emitted as extra columns.
+   Turns the 2R choice from a fixed assumption into a swept parameter.
+3. Only then the near-field annulus estimate from section 27.
+
+Steps 1 and 2 are diagnostic-only, need no solver change, and step 2 can reuse the fixed seed
+and config so the existing runs reproduce exactly.
+
+## 30.4 Two negatives worth as much as the positives
+
+**Nobody has published a failure of this size traced to a single cause.** From the 19 August
+search: "The retrieved studies mostly report improved validation, **not a documented 35-64%
+buoyancy failure traced uniquely to one cause**; controlled ablations are therefore essential."
+Across 88 papers. So the question of which explanation is right is genuinely open in the field,
+not just here, and **the project will not find the answer by reading; it has to run the
+ablations.**
+
+**The impulse-exchange double-counting hypothesis is NOT supported.** From the 18 August
+search: the studies "do not establish a universal 50% bias or show that **velocity-projection
+impulse exchange intrinsically double-counts gravity** [Yan17, Yan18, Ste00, Bau23]." That was a
+live candidate; it has no literature support and should not be asserted without a direct test.
+
+## 30.5 A third mechanism I had not been weighing, with a repo-side hook
+
+> "Traditional MPM **wall momentum zeroing can distort stress several grid lengths into an
+> object**; image-particle boundaries reduce this artifact [Sch19e]."
+
+This project's solver does exactly that: slot `d19-priorcode` recorded on the board that
+`add_plane` projects grid velocity rather than supporting pressure at a wall. **The sphere spans
+about 16 grid cells**, so a distortion of "several grid lengths" is a substantial fraction of
+the body. That makes the third explanation, boundary and coupling treatment, quantitatively
+plausible rather than a formality, and [Sch19e] names a specific remedy.
+
+## 30.6 Prior work this reproduces rather than discovers
+
+The 18 August search's own goal text records that, as of that date, two explanations had already
+been ruled out by this project: a leakage fix took particle leak from 4.5 percent to 0.008
+percent while the force error fell only from about 50 to about 36 percent, and **quadrupling the
+tank plan area changed the ratio by only 1 percent**.
+
+**My section 21 result is the second of those, re-measured.** 918251 is the quadrupled-area case
+and reads +50.601 percent against 918240's +50.056, a change of 0.545 points, about 1 percent
+relative. **That reproduces a finding already made rather than discovering a new one**, and it
+should be reported that way. It does independently corroborate it from the graded accessor,
+which the earlier statement did not use.
+
+## 30.7 One caveat on the 19 August search itself
+
+Its goal text states "A surface-elevation offset of **under two centimetres, which is about one
+grid cell**, would account for the entire discrepancy." **That is the linearised figure retracted
+in `8f978c1`.** The exact root-find is 24.904 to 33.424 mm, which is 1.33 to 1.78 grid cells, not
+"about one". The search was therefore commissioned on a premise 34 percent too small. It does not
+invalidate the literature it returned, since the papers were selected on the mechanism rather
+than the magnitude, but **anyone reading that goal text should not take the number from it.**
