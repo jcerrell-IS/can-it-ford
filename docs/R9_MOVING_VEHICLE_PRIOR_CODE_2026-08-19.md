@@ -1143,3 +1143,98 @@ timestep.** Set beside our own SDF-collider buoyancy validation of 7.3 to 7.7
 percent, our number looks good, and CLAUDE.md L-3's instruction to state
 resolution as a limitation rather than a converged result now has support from
 outside our own code.
+
+---
+
+# ADDENDUM 6: THE TAXONOMY, SETTLED. IBAMR PROVES IT INSIDE ONE CODEBASE.
+
+## 27. The final table, and the single best piece of evidence in it
+
+My section 23 table was assembled across four codebases, which always leaves the
+objection that the difference tracks the project, the language or the solver
+family rather than the formulation. **IBAMR removes that objection by implementing
+both behaviours itself.**
+
+| family | force is obtained by | needs `dt`? | instances |
+|---|---|---|---|
+| **A** | nodal traction from particle stress, over nodal lumped mass | **no** | Anura3D `MPMDynContact.FOR:443-512` |
+| **B** | surface integral over markers / immersed boundary | **no** | Chrono::FSI-SPH BCE (`ChFsiInterface.cpp:94-96`, rev `1b90a9f`); **IBAMR FD/BP** |
+| **C** | momentum difference over a timestep | **yes, structurally** | **ours** (warpmpm SDF collider); sdfibm `3627269` (`solidcloud.cpp:412-450`); **IBAMR FD/IB** |
+
+**IBAMR spans B and C in one codebase**: its FD/BP force is a surface integral with
+`dt` **absent**, and its FD/IB force is a momentum difference that **divides by
+`dt`**. Same authors, same library, same language, same solver: the only thing that
+changes is the formulation, and the `dt` appears exactly when the formulation makes
+the quantity an impulse. **[recv]**
+
+**That is the whole argument, and it is now demonstrated rather than inferred:**
+
+> The `dt` is not a property of a project, a language or a solver family. It is a
+> property of the formulation. A surface integral of a state field needs no `dt`.
+> A momentum difference accumulated over a step needs one, because an impulse only
+> becomes a force when divided by the interval it acted over.
+
+**Consequence for our accessor, stated so an auditor cannot misread it.** Our SDF
+collider is in family C **because it is an SDF collider**. The `dt` in
+`sdf_wrench` is required by the method, not evidence of a defect, and the same
+line appears in two independent published implementations. My original framing,
+carried on the board and to d17 twice, said ours was the only one of three needing
+a caller `dt`; that was wrong and this table replaces it.
+
+**What remains a genuine gap, and it is ergonomics not physics.** Chrono zero-fills
+on the line before the kernel launch; sdfibm resets at the top of `interact()`
+immediately before the consuming loop. Both make the reset impossible to forget by
+placing it adjacent to the use. Ours exposes reset and `dt` at call sites that can
+be got wrong independently. **The fix is unchanged and now rests on three
+implementations: wrap reset, step and read in one helper that owns the `dt`.**
+
+**PROVENANCE, STATED PLAINLY.** Families A, B (Chrono) and C (sdfibm, ours) I read
+myself at named revisions. **The IBAMR row I did NOT read.** It is
+`[recv]` from a sibling session's read of the primary paper, cited to Eq. 30
+(s4.2.3) and Eq. 40 (s4.2.4). It is the strongest single entry in the table and it
+is the one entry I cannot vouch for at first hand. IBAMR is open source, so
+confirming it against `github.com/IBAMR/IBAMR` is cheap and is the first thing to
+do before this table goes in a paper.
+
+## 28. Three corrections carried in from other sessions
+
+**28a. `[Roe23]` FloatStepper has NO heave-decay case.** It is an added-mass
+implementation reference only. **Do not cite it as a validation target for the
+sphere-heave work.** **[recv]** This matters because the sphere-heave grading
+(d11-accessor's Job B) is exactly the kind of work that would reach for a
+published heave-decay comparison, and there is not one in that paper.
+
+**28b. "Four prior vehicle fording or wading simulations exist" is an UNDERCOUNT.**
+CLAUDE.md's figure of four (He 2026, Wasfy 2015, Pazouki, Khapane and Ganeshwade
+2014) is superseded. At least four more: `[Lyu23]` `10.1016/j.compfluid.2023.106144`
+(particle-based 3D SPH vehicle wading, and therefore the closest published method
+to ours that I now know of), `[Ols18b]`, `[Xin21b]` `10.1177/0954407020942005`, and
+`[Var21]` `10.4271/2021-01-0205`. Corrected in CLAUDE.md at `c621931`. **[recv]**
+**The separate claim is unaffected**: none of them prints in the paper's reference
+list. Note the direction of the error, because it matters for how the paper frames
+itself: the prior art is **denser** than we thought, so any novelty claim is
+weaker, not stronger. `[Lyu23]` in particular should be read before anyone
+describes a particle-based vehicle-wading simulation as unprecedented.
+
+**28c. The `physics-skeptic` subagent is dead fleet-wide and an explicit `model`
+override does NOT reach it.** Nine origins confirm it; recorded in CLAUDE.md at
+`c621931`, verified live by me at `:925`. I hit this three times tonight, including
+once through a `general-purpose` agent with an explicit `opus` override, which is
+the exact combination CLAUDE.md now records as failing. **Everything in this
+document from addendum 2 onward is therefore UNREVIEWED, and I will stop retrying
+rather than burn attempts expecting a different result.**
+
+## 29. Status of the refinement ladder, and a note on who is blocked
+
+Batch job **922515** is still `PENDING (Priority)` behind d17's `922514`
+(`r9_speed_surface`, now `RUNNING` on c634-111). It will settle whether the
+buoyancy error diverges monotonically or is non-monotone like our own g48/g64/g96
+ladder. **Until it lands, the two-point result stands as "does not converge", not
+as "diverges monotonically".**
+
+**d11-accessor is NOT blocked on me.** The full P-2 numbers, including the
+per-run decomposition and the `sweepD_g64_d0p25` case that reads 10.02 percent at
+zero penetration, have been inline on the shared board since 18:35, and the board
+lives in the main checkout where every session can read it without checking out my
+branch. The general three-step floor test is in section 24 and was also posted in
+full to the board. The write-up has existed since `a863ee7`.
