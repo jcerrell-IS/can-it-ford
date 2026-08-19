@@ -181,6 +181,7 @@ licenses quoting `final_disp_mag_m` as converged.
 | 19 | The canonical free-rigid path is NON-DETERMINISTIC: 7.8e-08 at frame 0 grows to 1.9e-02 by frame 26 | section 20.3 |
 | 20 | **Register B4: the population was 21, not 25. No conclusion moves**, and the median shift was duplicates, not the truck | section 21 |
 | 21 | **CLAUDE.md item 5's non-monotone displacement now has a MECHANISM**: the trajectory itself is non-monotonic | section 22 |
+| 22 | **Q2's magnitude is WITHDRAWN under specification sensitivity**; direction survives 8 of 8, magnitude spans 18.4x | section 23 |
 
 ---
 
@@ -1430,6 +1431,14 @@ for, and the extra structure is what makes it worth having.
 and `vx`.** Run-to-run variation cannot plausibly produce that, and it is a
 within-run measurement in any case.
 
+> **MAGNITUDE WITHDRAWN 2026-08-20, see section 23.** The ratios in this table
+> are ONE window specification's answer. Across eight defensible window rules the
+> velocity ratio spans 1.71 to 31.60, a factor of 18.4. **The direction survives
+> all eight and the qualitative verdicts never overlap between the families, but
+> the size of the gain is not established.** Do not quote "3.06" or "a 4.4x
+> record buys 3x the samples". Found by applying slot d21-jobb's
+> specification-sensitivity test, which is theirs, not mine.
+
 **VELOCITY EQUILIBRATES. DISPLACEMENT DOES NOT, AND CANNOT.** That is not a
 solver defect, it is arithmetic: displacement is the time integral of velocity, so
 if velocity settles to any non-zero mean, displacement drifts forever and no window
@@ -1653,4 +1662,91 @@ The three consequences worth carrying:
    It needs a time-averaged quantity over a demonstrated-stationary window with a
    GCI, and section 20.5 establishes that the window exists for velocity and does
    not exist for displacement at any length.
+
+---
+
+## 23. d21's TEST APPLIED TO MY OWN Q2. DIRECTION SURVIVES, MAGNITUDE DOES NOT.
+
+Slot d21-jobb replied to my frames-to-3-sigma advice with a correction that
+applies to me, not just to them. Their grid-prong estimate moved with the
+**matching band** by more than the effect they were measuring: across three bands
+the end-to-end effect went -24.68 at 1.86 sigma, -7.63 at 0.94 sigma, and -14.71
+at 2.41 sigma, with monotonicity breaking in the middle band. They ran six
+specifications, found all six negative and five of six monotone, and **withdrew
+the magnitude while keeping the direction.**
+
+Their instruction back to me was exact: *"if a specification sensitivity is what
+is limiting you, extra frames buy nothing at all. Before spending frames, check
+whether your estimate is stable across two or three defensible windows."* My
+section 20.5 headline rests on **one** window rule. So I ran it.
+
+### 23.1 Q2 under eight window specifications
+
+`N_eff(400) / N_eff(90)`, one convention throughout, suffix window `xs[discard:]`.
+Linear scaling would give `401/91 = 4.41`.
+
+| specification | `dx` ratio | `vx` ratio | velocity gains more? |
+|---|---|---|---|
+| max of the three (document default) | 1.13 | 31.60 | yes |
+| MSER only | 1.13 | 13.24 | yes |
+| Chodera only | 1.32 | 19.23 | yes |
+| transient scan only | 1.13 | 13.24 | yes |
+| no discard, whole record | 1.30 | 2.93 | yes |
+| fixed 10 percent | 1.05 | 2.50 | yes |
+| fixed 25 percent | **1.74** | **1.71** | **no** |
+| fixed 50 percent | 0.47 | 19.93 | yes |
+
+Graded against the **pre-registered** Q2 bands from section 19, ratio to the
+linear prediction, `>= 0.7` SCALING and `<= 0.3` SATURATION:
+
+| family | SCALING | ambiguous | SATURATION |
+|---|---|---|---|
+| displacement `dx` | 0 | 1 | **7** |
+| velocity `vx` | **5** | 3 | 0 |
+
+### 23.2 What survives and what I am withdrawing
+
+**SURVIVES, and it is the load-bearing claim.** Displacement never reaches linear
+scaling under **any** of the eight specifications: its ratio spans 0.47 to 1.74
+against a linear 4.41. Velocity never lands in SATURATION under any of them.
+**The two families never share a verdict except "ambiguous", so the qualitative
+separation is established by consistency across specifications rather than by one
+lucky window.** "Velocity equilibrates, displacement cannot" stands, and so does
+the practical consequence: longer records buy nothing for a displacement
+statistic.
+
+**WITHDRAWN: the magnitude.** Section 20.5 reports `vx` `N_eff` going 4.33 to
+58.92, a ratio of 3.06 against the linear prediction. That is **one
+specification's answer**. Across eight defensible window rules the velocity ratio
+spans **1.71 to 31.60, a factor of 18.4**, and the document's own headline used a
+NINTH convention, `analyze()`'s `xs[start:end]` two-sided trim, which is not the
+suffix convention used in the table above. **The direction is established; the
+size of the gain is not.** Any statement of the form "a 4.4x longer record buys
+you 3x the independent samples" is withdrawn and should not be quoted.
+
+The single non-conforming row, fixed 25 percent at 1.74 against 1.71, is a tie
+rather than a reversal, and I am recording it as a tie rather than rounding it
+away.
+
+### 23.3 The methodological point, which is d21's and not mine
+
+This is the same shape as their finding and I reached it only because they sent
+it. **An estimate that moves with the analysis window by more than the effect
+being measured cannot be rescued by more data.** I had spent the previous unit
+establishing that frames are nearly free, which is true and useful, and then
+recommended spending them. For a specification-limited estimate that advice buys
+nothing.
+
+The correct order is theirs: **check stability across two or three defensible
+windows FIRST, because that costs one loop, and only then decide whether more
+frames would help.** It would have caught both of their errors and it caught the
+magnitude claim in mine. More frames would have caught none of the three.
+
+One process note, since it nearly bit: my first sensitivity harness was not
+internally consistent. Its "default" row used a suffix window while `analyze()`
+trims both ends, so that row did not reproduce the document's own number and the
+comparison was between two different conventions. Caught by noticing that spec A
+returned `vx` 136.96 where the document says 58.92. Rebuilt on one convention,
+with the document's convention listed separately as what it is, a ninth
+specification.
 
