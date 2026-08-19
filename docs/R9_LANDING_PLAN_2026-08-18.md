@@ -56,9 +56,49 @@ and got a different answer, the difference is stated as a difference, not silent
 
 ## 0. The thing to fix first, because every other number in this plan sits on top of it
 
-**`claude/add-ci-checks` is 67 commits ahead of `origin/main` AND 5 commits BEHIND it.**
+**`claude/add-ci-checks` is 82 commits ahead of `origin/main` AND 5 commits BEHIND it.**
 
-MEASURED 2026-08-19 18:15:
+### RULE B5: NEVER STATE THE AHEAD COUNT WITHOUT THE BEHIND COUNT. THEY ARE DIFFERENT OBJECTS.
+
+**A branch that is ahead-and-behind is not a branch that is ahead.** The first can silently drop
+merged work on a naive fast-forward or a wrong-direction merge; the second cannot. This project
+has already lost work to exactly that shape, when a named SHA was merged instead of a re-derived
+tip and 126 lines disappeared.
+
+**The half everyone quotes is the volatile one. The half everyone omits is the stable one.**
+MEASURED across this document's own five revisions:
+
+| when | behind | ahead |
+|---|---|---|
+| 2026-08-18 22:49 | **5** | 64 |
+| 2026-08-19 00:19 | **5** | 65 |
+| 2026-08-19 17:46 | **5** | 66 |
+| 2026-08-19 18:15 | **5** | 67 |
+| 2026-08-20 00:06 | **5** | **82** |
+
+The ahead count moved 64 to 82 in twenty-six hours and is stale within minutes of being written.
+The behind count has been **5** at every single measurement. So the number that gets quoted is the
+one that cannot be relied on, and the number that gets dropped is the one that can. Quote the pair,
+always, as `behind/ahead`, and say what the behind half contains.
+
+**What the five behind actually are, and this is why the omission matters.** MEASURED with
+`git show --stat` on each:
+
+| SHA | PR | changes | class |
+|---|---|---|---|
+| `647aaa0` | #10 | `.github/workflows/sync-to-hub.yml` +48/-9 | **CI** |
+| `f6348c7` | #11 | `hf_space/app.py` +118, `hf_space/README.md` +37, `analysis/wandb_log_gated_runs.py` +177 | **public Space, the L1 joint-rule fix** |
+| `aee70ab` | #12 | `.github/workflows/sync-to-hub.yml` +2/-1 | **CI** |
+| `1c71a5a` | #13 | `vercel.json`, `web/index.html` +132 | **public web deploy** |
+| `c7f0a16` | #14 | `.github/workflows/physics-consistency-review.yml` +29/-1 | **CI** |
+
+**Three of the five touch `.github/workflows/`, across two different workflow files, and all five
+touch either CI or a public surface. Not one of them is ordinary source.** So the branch that
+carries the new CI is missing three CI fixes, and the branch that everyone is about to land is
+missing the fix to the very public page section 3.5 is about. That is the whole argument for
+phase 1, and it is invisible to anyone who reads only "82 ahead".
+
+MEASURED 2026-08-20 00:06 (previous revision read 67 ahead at 18:15; the behind half is unchanged):
 
 ```
 git -C /Users/josie/can-it-ford rev-list --left-right --count origin/main...claude/add-ci-checks
@@ -1312,9 +1352,14 @@ caveats above.
 **The round's framing of this item was "the CI is not on main, so make it run". That framing is
 retired.** It runs. It has run seven times. The correct framing, and it inverts the priority:
 
-> **`canford-checks` is an instrument that reports success without being able to fail.** One of
-> its six checks exits 1 on every run and is masked; two more carry `continue-on-error` and could
-> fail the same way tomorrow without anyone noticing. Half the workflow cannot return a negative.
+> **`canford-checks` reports success while a check inside it exits 1.** MEASURED from the live
+> workflow: **two of six steps carry `continue-on-error: true`** (`register_integrity` at line 22,
+> `count_claims` at line 25) and **four cannot fail silently** (`params_check`, `stationarity`,
+> `research_index --stats`, `test_physics_gates`).
+
+**CORRECTION to revision 4, which said "half the workflow cannot return a negative".** It is
+**two of six, a third, not a half.** The four unmasked steps are real gates and one of them is
+demonstrated below to work. Overstating the rot makes the true finding easier to dismiss.
 
 **That is worse than never having run**, and the reason is specific rather than rhetorical: a
 workflow that has never run supplies no assurance and everyone knows it. This one has supplied
@@ -1334,6 +1379,82 @@ degradation is invisible to every consumer except someone reading the raw log.
 **Priority consequence for whoever owns CI:** landing `canford-checks.yml` on `main` without
 section 6.3 item 1 does not turn CI on, it extends a broken instrument's reach from six branches
 to the trunk and to every pull request. **Item 1 should land with it or before it, not after.**
+
+### 6.2b What makes the job green, and the exact input that makes it RED
+
+**A check with no demonstrated failing input is decoration.** So here is the mechanism, and then
+a failing input, run rather than named.
+
+**Why green.** `continue-on-error: true` tells Actions to record the step's failure and keep
+going, and to leave the JOB conclusion unaffected. `count_claims` exits 1 on every run; the log
+carries `##[error]Process completed with exit code 1`; the job is `success`. Worse, and this is
+the part that defeats an audit: **`gh run view --json jobs` reports that step's `conclusion` as
+`success` too** (6.1a). The failure exists only in the raw log. Every summary view above the log
+agrees the run passed.
+
+**Which steps can turn it red: four of six.** `params_check`, `stationarity`, `research_index
+--stats`, `test_physics_gates`. A defect visible ONLY to `register_integrity` or `count_claims`
+cannot turn it red, by construction, no matter how severe.
+
+**A failing input, demonstrated. Three arms, so it is not vacuous.** Run against a
+`git archive` export of `claude/add-ci-checks` (951 tracked files, which is what
+`actions/checkout` gives CI). **Every arm ran in the scratchpad export; the repository was never
+touched, confirmed with `git status --porcelain` afterwards.**
+
+The guard is `params_check.check_inertia_wired()`, which exists because `CLAUDE.md` item 4 says
+the inertia tensor must NOT be wired into the solver: the tabulated `inertia_kg_m2` reproduces
+exactly from `box_inertia(1100, 4.30, 1.70, 1.47)`, the solver already derives a better tensor
+from the hull cloud, and the axes are transposed against the scene, so a naive wire gives
+**Ixx -69.2 percent and Iyy +379.2 percent**. It fires when a file (a) reads as a sim driver,
+matching `import warpmpm|from warpmpm|finalize_rigid_bodies|set_material_range`, (b) contains
+`rigid_inv_inertia_body =`, `set_rigid_body_inertia`, or an `inertia_kg_m2[...]` subscript, and
+(c) does **not** carry the string `AXIS-CHECKED`.
+
+| arm | input | `params_check` | job |
+|---|---|---|---|
+| baseline | pristine export | rc **0** | green |
+| **1** | append to `renders/yaris_render_s1/sim_standing.py`: `vehicle.rigid_inv_inertia_body = 1.0 / np.array(P["inertia_kg_m2"])` | rc **1** | **RED** |
+| **2** | the same line, plus a comment containing `AXIS-CHECKED` | rc **0** | green |
+| 3 | restored to pristine | rc **0** | green |
+
+Arm 1's message, verbatim from the run:
+
+```
+FAIL: renders/yaris_render_s1/sim_standing.py appears to wire an inertia tensor into the solver
+without an 'AXIS-CHECKED' acknowledgement. ... a naive wire gives Ixx -69.2% and Iyy +379.2%.
+1 blocking issue(s) found
+```
+
+**Arm 2 is what makes this evidence rather than an anecdote.** Without it, arm 1 shows only that
+the check dislikes being edited. With it, the check is shown to discriminate on the *specific*
+condition it claims to police, and to pass the same physical change once it is acknowledged.
+
+**So the answer to "is this check decoration" differs by step, and both answers matter:**
+
+- **`params_check` is a real gate.** It has a realistic failing input, that input is exactly the
+  well-intentioned "realism upgrade" a contributor would write, and it is unmasked, so it turns
+  the job red. This is the workflow's best component and it should be said plainly.
+- **`count_claims` is currently decoration**, not because it lacks a failing input but because it
+  has no *passing* one: section 6.3 item 1 shows it is structurally incapable of passing in a
+  tracked-only checkout. A check that always fails and is always ignored carries exactly as much
+  information as no check.
+
+**The full baseline, reproduced against the CI-equivalent export** and matching real run
+`32278287331` step for step:
+
+```
+params_check            rc=0     register_integrity   rc=0   (masked)
+stationarity            rc=0     count_claims         rc=1   (masked, and the reason the job lies)
+research_index --stats  rc=0
+test_physics_gates      rc=0
+```
+
+**A caveat on my own harness, because it nearly produced a false finding.** My first pass ran the
+four unmasked checks in a shell loop and reported `research_index --stats` as `rc=2`, which would
+have been a fabricated CI failure. Re-run directly it is `rc=0`; the 2 was an artefact of the
+loop, not of the script. **A harness that cannot distinguish "the check failed" from "my wrapper
+failed" is the same defect as the one this section is about**, and I hit it while writing the
+section about it. One command per step, no loop.
 
 ### 6.3 Three changes worth making before it lands, none of them blocking
 
