@@ -642,8 +642,15 @@ it converts a systematic error into a measured one.
   recorded here became a measurement rather than staying an expectation.
 - **What is still untested is the baseline leak's own cause.** Section 12.2 shows a 2.2
   percent floor loss that neither the alignment nor the engine fix touches. I did not
-  diagnose it. The B-spline stencil truncation at the bottom particle layer is the obvious
-  candidate and `--ghost-layers` exists to test it, but I did not run that arm.
+  diagnose it. Section 13.3 shows the SURFACE DROP converges in PPC (82 to 24.6 mm), so
+  particle resolution is part of it, but I did not run the `--ghost-layers` arm that would
+  test B-spline stencil truncation directly.
+- **The PPC sweep is at ONE grid.** Wal07's plateau is defined as grid-set, so the
+  complementary test is a `dx` sweep at FIXED PPC, which I did not run. The g64/g96 arms in
+  section 7.2a differ in leak as well as `dx`, so they do not serve. **Flatness in PPC is
+  measured; that the plateau MOVES with `dx` is not, and the paper's own analytic reference
+  (Vshivkov) says `h^2` where the relayed claim said `O(h)`.**
+- **Wal07 claim (a) is withdrawn, not adopted.** Section 13.2. Nothing here rests on it.
 - **Section 12.3's `n_grid` recommendation is arithmetic, not a measured result.** That an
   exactly-aligned constrained plane is best is measured at g64; that it will hold at other
   grids and at `lim = 2.2` is inference from one 2x2.
@@ -930,3 +937,133 @@ one real limitation is closed**: the `bcfix` on-node arm has a floor that has es
 stopped leaking (0.180 percent) and its near-field offset is +0.65 mm, 2.5 percent of the
 requirement, verdict E3. The estimator hypothesis does not survive at any floor BC, any
 band, or any resolution tested.
+
+---
+
+## 13. Is the accessor the velocity-projection route? Yes, and its plateau signature holds
+
+### 13.1 What the accessor computes, read from source rather than inferred
+
+`core/solver.py:354-360`:
+
+> "Reaction wrench the material exerts on an SDF collider, from the grid impulse
+> accumulated since the last reset: **force = sum m\*(v_free - v_new) / dt**"
+
+and the kernel that accumulates it, `mpm_solver_warp.py:2732-2734`:
+
+    v_free  = state.grid_v_out[gx, gy, gz]
+    m       = state.grid_m[gx, gy, gz]
+    impulse = m * (v_free - v_new)
+    wp.atomic_add(param.force, 0, impulse)
+
+**So the answer is yes, with a precision worth keeping.** The accessor is not itself a
+velocity projection; it is a grid-level momentum difference over the nodes the collider
+touches. But **both of its inputs are outputs of the mass-weighted P2G projection**:
+`state.grid_m` is `sum_p w_ip m_p`, and `state.grid_v_out` descends from
+`sum_p w_ip m_p v_p / sum_p w_ip m_p` plus the stress and gravity update. **It is not a
+pressure integral over the wetted surface**, which is the alternative the 2026-08-18 deep
+search's goal text contrasted it with. Any systematic error in the projection propagates
+into `m` and `v_free` and therefore into the reported force.
+
+### 13.2 Wal07 read directly, and two of the relayed claims do not survive
+
+The citation record resolves: **Wallstedt and Guilkey 2007, "Improved Velocity Projection
+for the Material Point Method", CMES 19, 223-232, doi:10.3970/CMES.2007.019.223**, matching
+the relayed description including the page range. The PDF is retrievable, so I read it
+rather than relying on the relay, and the project's rule that "report X says paper Y
+reports N" is not "paper Y reports N" earned its keep twice:
+
+**(a) "For a body held fixed the projection error is a CONSTANT SYSTEMATIC BIAS, not
+noise" is NOT IN THE PAPER.** What the paper says is that accuracy "is strongly dependent
+on particle density and location" (abstract), and section 2 adds the opposite emphasis:
+"even if the initial particle distribution is ideal, as simulations evolve, the particles
+will generally move into a less favorable configuration." The paper never characterises the
+error as constant, and it never treats a fixed body. **The claim should be withdrawn**, and
+nothing below leans on it. It also would not have applied cleanly here: the body is fixed
+but the water particles move, so the particle-grid registration in this scene is not static.
+
+**(b) The plateau IS in the paper and is quoted correctly, but its O(h) scaling is NOT a
+stated result.** Section 3, page 226, on a prescribed quadratic velocity field: the error
+descends "to a plateau ... further increase in PPC produces no decrease in error ... The
+right term, and the associated plateau, could be reduced independently by fixing PPC and
+reducing grid cell size." The `PPC^-2` (bilinear) and `PPC^-3` (GIMP) scalings are also the
+paper's own words, for the LINEAR field. **But the paper's analytic reference for the
+plateau is Vshivkov's 1996 bound, whose grid term is `h^2`, not `h`.** The `O(h)` reading
+comes from measuring Figure 10 off the page. So the direction is the paper's; the exponent
+is not, and it should be quoted as "grid-set" rather than as `O(h)`.
+
+**Ste08 checks out as the negative result, and adds something nobody asked for.** Steffen
+et al. 2008, doi:10.3970/CMES.2008.031.107, calls quadrature errors **"force kicks"** that
+constrain the time step, not a one-signed bias, so quadrature is not the explanation here.
+The unasked-for part is directly on point: **"The geometric errors are exacerbated when
+smoother, and necessarily wider, basis functions are used, such as uGIMP, or B-splines."**
+This engine uses quadratic B-splines. That is a second, literature-backed mechanism for a
+boundary-region force error, and it points at the same place as the contact band.
+
+### 13.3 THE TEST: particles per cell at fixed grid
+
+Vista job **923239**, 30 minutes requested, all arms `RC = 0`. `sphere_heave` hardcodes
+`self.h = self.dx/2`, pinning PPC at 8, so this needed a property override on `h` in my
+subclass; `h` is assigned exactly once at `sphere_heave.py:491` and read in nine places, so
+the interception is complete and consistent. `PPC_DIVISOR = 2` reproduces the unmodified
+path bit-for-bit. Every arm is the bcfix engine at the on-node floor, the lowest-leak
+configuration measured, with `dx`, `dt`, substeps, the SDF, the band and the scene held
+fixed. **Only the particle spacing moves.**
+
+| PPC | particles | h | below floor | surface drop | sub | `fz` | excess | fitted k | near minus far |
+|---|---|---|---|---|---|---|---|---|---|
+| 3.375 | 252,379 | 12.50 mm | 0.330% | 82.08 mm | 67.92 mm | 27.298 N | +51.03% | 0.687 | +1.36 mm |
+| **8.000** | 598,505 | 9.375 | 0.180% | 36.23 | 113.77 | 60.476 | **+35.51%** | **0.726** | +0.65 |
+| 27.000 | 2,019,044 | 6.250 | 0.245% | 26.49 | 123.51 | 68.220 | +33.58% | 0.727 | -0.55 |
+| 64.000 | 4,784,798 | 4.688 | 0.218% | 24.62 | 125.38 | 72.432 | **+38.41%** | **0.829** | -0.47 |
+
+**Compare on `k`, not on the raw excess.** The arms sit at different submergences because a
+coarser particle lattice drains and compacts more, so `sub` runs 67.9 to 125.4 mm. `k` is
+the collider inflation in units of `dx` that reproduces the measured force AT THAT
+submergence, so it removes the operating-point difference; the raw excess does not.
+
+**RESULT, against the pre-registration.** Over the resolved subset, PPC 8 to 64, an **8.0x
+span** with particle count from 0.6 to 4.8 million:
+
+    k_fit  0.7259 -> 0.8287           measured log-log slope in PPC:  +0.0596
+    PPC^-2 predicts a 98.4 percent fall.  PPC^-3 predicts 99.8 percent.
+
+**The error is FLAT in PPC. The measured slope is +0.06 where the convergent hypotheses
+require -2 or -3, and the sign is if anything the wrong way.** Eight times the particles,
+4.8 million of them, does not reduce the error at all. **That is the pre-registered
+signature of a grid-set plateau, and Wal07's mechanism survives its own test.**
+
+Honest scatter: `k` over the three resolved arms is 0.726, 0.727, 0.829, a 13.5 percent
+spread about the mean, and the PPC 64 point is the highest. So the correct statement is
+**flat to within its own scatter and certainly not converging**, not "constant". A 13.5
+percent spread is one seventh of the smallest fall either convergent hypothesis predicts.
+
+### 13.4 What the sweep separates, which is more than it was asked to
+
+**The surface drop converges in PPC and the force error does not.** Drop falls 82.08 to
+36.23 to 26.49 to 24.62 mm, flattening toward roughly 24 mm, while `k` stays flat. Those
+are two different failures with two different remedies, and before this sweep they were
+entangled in every run in this document. **Adding particles fixes the water column. It does
+not touch the force.**
+
+**E1 is refuted at four more arms**, `near minus far` = +1.36, +0.65, -0.55, -0.47 mm
+against a requirement of 26.02 mm, across a 19x PPC span. That is nine instrumented arms
+now, spanning two grids, three bands, two engines, two floor alignments and four particle
+densities, and the estimator hypothesis has not come within 5 percent of its requirement in
+any of them.
+
+### 13.5 A correction to my own section 11, prompted by d11-accessor's 1f98170
+
+Their hydrostatic column, re-graded with the blocked standard error criterion 3 already
+mandates, gives g64 -0.6679 percent with blocked SE 3.3090 and g96 -0.7295 with 1.9954,
+both stationary and inside the band. Their NOT GRADEABLE is withdrawn and **the ambient
+pressure field is exonerated**, at 10 to 17 blocked SE from job B's excess.
+
+**That does not retract section 11 or 12, and the distinction is worth stating because it
+is easy to blur.** My leak analysis never claimed the leak corrupts the ambient pressure
+field. It claimed the leak lowers the WATER LEVEL, which changes the submerged cap volume
+in criterion 3's denominator, which is a geometric effect on the analytic term and not a
+pressure effect on the measured one. Section 12.4 measured that directly: three leak levels,
+`ratio = 0.03474*(percent below floor) + 1.35922`, extrapolating to **+35.9 percent at zero
+leak**. Their result and mine agree: **the leak is not the explanation**, they by showing
+the pressure field is clean and I by showing the excess survives the leak's removal.

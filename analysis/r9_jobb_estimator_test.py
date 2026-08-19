@@ -373,6 +373,31 @@ def _build_instrumented(scene_dir: str):
         added here is written to NEW keys.
         """
 
+        # PARTICLES PER CELL, at FIXED GRID. `sphere_heave` hardcodes `self.h = self.dx/2`,
+        # so PPC is pinned at 8 and cannot be swept from the command line. It is assigned
+        # exactly ONCE (sphere_heave.py:491) and read in nine places, so intercepting the
+        # assignment with a property reaches all of them consistently: the lattice spacing
+        # (:528, :555-557), the seed jitter (:560), the per-particle volume h**3 (:570),
+        # the reported h_m (:654) and the +h/2 surface offset (:715).
+        #
+        # WHY THIS IS THE CONTROL THAT MATTERS. Wallstedt and Guilkey 2007 give the
+        # mass-weighted velocity projection a falsifiable signature: for a NON-LINEAR
+        # velocity field the projection error does NOT vanish as PPC rises, it plateaus at
+        # a level set by the GRID, while the linear-field part converges as PPC^-2 for
+        # bilinear and PPC^-3 for GIMP. So sweeping PPC at FIXED dx separates a
+        # grid-set plateau from a particle-count-convergent error, and nothing else in
+        # this scene does. The divisor is applied as a RATIO to the incoming value so that
+        # PPC_DIVISOR = 2.0 reproduces the unmodified path bit-for-bit.
+        PPC_DIVISOR = 2.0
+
+        @property
+        def h(self):
+            return self._h
+
+        @h.setter
+        def h(self, value):
+            self._h = value * (2.0 / self.PPC_DIVISOR)
+
         # Exclusion radii to sweep, as multiples of the sphere radius. 2.0 is the value
         # `SphereTank.measure_surface` actually uses; 0.0 keeps everything.
         R_EXCLUDE = (0.0, 0.5, 1.0, 1.5, 2.0, 3.0, 4.0)
@@ -491,6 +516,7 @@ def run(args) -> None:
     # way to separate the alignment from the engine change.
     if args.floor_offset_cells:
         Tank.FLOOR = 0.075 + args.floor_offset_cells * (args.lim / args.n_grid)
+    Tank.PPC_DIVISOR = float(args.ppc_divisor)
     tank = Tank(n_grid=args.n_grid, lim=args.lim, depth=args.depth,
                 h0_over_d=args.h0_over_d, seed=args.seed, device=args.device,
                 sdf_res=args.sdf_res, free=False,
@@ -502,6 +528,8 @@ def run(args) -> None:
     cfg["instrumented_by"] = "analysis/r9_jobb_estimator_test.py"
     cfg["no_body_control"] = bool(args.h0_over_d >= 1.0)
     cfg["floor_offset_cells"] = float(args.floor_offset_cells)
+    cfg["ppc_divisor"] = float(args.ppc_divisor)
+    cfg["particles_per_cell"] = float(args.ppc_divisor) ** 3
     cfg["floor_m_effective"] = float(Tank.FLOOR)
     cfg["prereg_e1_ratio_below"] = PREDICT_E1_RATIO_BELOW
     cfg["prereg_e3_ratio_above"] = PREDICT_E3_RATIO_ABOVE
@@ -709,6 +737,9 @@ def main() -> None:
     r.add_argument("--ghost-layers", type=int, default=0)
     r.add_argument("--sdf-res", type=int, default=96)
     r.add_argument("--sdf-cache", default=None)
+    r.add_argument("--ppc-divisor", type=float, default=2.0,
+                   help="h = dx / this, so particles per cell = this**3. 2.0 is the "
+                        "hardcoded default and reproduces it bit-for-bit; 3.0 gives PPC 27")
     r.add_argument("--floor-offset-cells", type=float, default=0.0,
                    help="shift FLOOR by this many dx. 0.5 moves the floor plane off the "
                         "grid, isolating the exact-node collider bug from the engine fix")
