@@ -18,6 +18,8 @@ $V $X --order                # section 5, RANS4 and RANS5
 $V $X --sphere               # section 6, the workbook nobody opened
 $V $X --descriptions         # section 7
 $V $X --all --json           # everything, machine readable
+$V $X --uncertainty          # section 12, the 0.3 pct figure and its statistic
+$V $X --thresholds           # section 12.4, sweep the only threshold in the module
 $V $X --self-test            # section 11, proves every fail-loud guard fires
 ```
 
@@ -73,6 +75,15 @@ go in this repo, **no Kramer series file does**.
    Section 6. Two of the three checks I first built on it are **downgraded** there: the
    Archimedes agreement is circular, and the added-mass cross-check is the same source read
    twice, not a second source.
+7. **The benchmark's own precision claim reproduces, and the experiment is not the limiting
+   factor.** The abstract's "about 0.3% of the respective drop heights" comes back as
+   **0.2915 percent** from the shipped CI95 series. Two things follow that are not in the
+   abstract: the figure is **normalisation dependent**, 5x to 50x larger against the local
+   signal than against the drop height, so it must never be imported as an acceptance
+   tolerance; and the inter-code envelope is **29x, 67x and 74x** the experiment's own
+   repeatability on the same statistic, rising with drop height. Section 12. The one
+   threshold in this module is swept there too and is **not load bearing**, invariant
+   across a 14.9x window.
 
 ---
 
@@ -728,5 +739,172 @@ transcribed, and the audit in section 2 is what makes it checkable.
   by import, deliberately, to avoid forking the statistic. If that reduction is wrong, my
   section 3 tables inherit the error. What I re-derived independently is the grouping, the
   radial order, the sheet metadata and the sphere physics.
-- **The 0.3 percent uncertainty qualifier** is inherited from `PROVENANCE.txt` and was not
-  re-checked here.
+- **The 0.3 percent uncertainty qualifier: CLOSED 2026-08-19, see section 12.** This bullet
+  used to read "inherited from `PROVENANCE.txt` and was not re-checked here". It has now
+  been checked against the article abstract by `pdftotext` and reproduced from the shipped
+  CI95 series at 0.2915 percent of H0. **It is also not external corroboration**: the figure
+  originates in the paper's own abstract, so a survey quoting it is the same source cited
+  twice. What section 12 adds that is genuinely new is the normalisation dependence and the
+  inter-code-to-experiment ratio.
+
+---
+
+## 12. The 0.3 percent figure, and the only threshold in this module
+
+Added after the coordinator relayed an external survey of moving-body free-surface
+validation targets, which singles this benchmark out at **"approximately 0.3 percent
+experimental uncertainty"**, and asked whether any conclusion here imports a *tolerance*
+rather than a *datum*. Both halves are answered by measurement below. Regenerate with
+`--uncertainty` and `--thresholds`.
+
+### 12.1 The 0.3 percent is not external corroboration, it is the paper's own abstract
+
+**Checked before using it.** The figure does not originate with the survey. It is in
+Kramer et al. 2021's abstract, verified by `pdftotext` against the article PDF on disk:
+
+> "The precision of the heave decay time series was calculated from random and systematic
+> standard uncertainties. At a 95% confidence level, uncertainties were found to be very
+> low, on average only about 0.3% of the respective drop heights."
+
+So a survey reporting "approximately 0.3 percent" for this dataset is **restating the
+abstract, not independently assessing it**. Treating it as external corroboration would be
+one source cited twice, which is the failure this project's claim discipline exists to
+stop. The prior slot had already spotted this: `kramer_benchmark.ci95_halfwidth:472`
+carries the abstract's sentence in its own docstring as the thing it is testing.
+
+**What is genuinely worth doing is checking the paper's claim against the data the paper
+shipped**, which nothing had done. Route A, the three `*_CI95_Normalized.txt` series:
+
+| drop | mean half-width, pct of H0 | max, pct of H0 | n samples |
+|---|---|---|---|
+| 01D | 0.3187 | 0.8000 | 3214 |
+| 03D | 0.2656 | 0.5370 | 3214 |
+| 05D | 0.2901 | 0.9684 | 3214 |
+| **pooled** | **0.2915** | | |
+
+**The abstract reproduces from its own supplementary data, to the digit it states.** That
+is a confirmation and it is reported with the same weight as a refutation would be.
+
+### 12.2 The number is normalisation dependent, by a factor of 5 to 50
+
+This is the part that matters for anyone reusing it. The abstract says **"of the respective
+drop heights"**, and that phrase is load bearing. Divide the *same* measured band by the
+*local* signal instead of by H0:
+
+| drop | vs H0, median | vs local signal, median | factor | worst local | n samples |
+|---|---|---|---|---|---|
+| 01D | 0.3082 pct | **1.567 pct** | **5.1x** | **14.134 pct** | 1662 |
+| 03D | 0.2602 pct | **1.335 pct** | **5.1x** | 9.918 pct | 1742 |
+| 05D | 0.2857 pct | **1.473 pct** | **5.2x** | **15.107 pct** | 1825 |
+
+Both columns are **medians over the same samples**, restricted to `|x3/H0| > 0.05` because
+a ratio against a signal passing through zero is not a meaningful percentage. That
+commensurability had to be built rather than assumed: the first draft of this table put a
+mean in one column and a median in the other, and the factor between them would have meant
+nothing. The guard is now in the function's own docstring.
+
+**Same measurement, 5.1x to 5.2x larger at the median, and the authors' own uncertainty
+reaches 53x the drop-height figure at its worst point.**
+
+**AND THE 5.1x IS ITSELF THRESHOLD DEPENDENT, WHICH I FOUND BY APPLYING SECTION 12.4's TEST
+TO MY OWN NEW CODE.** The `|x3/H0| > 0.05` cutoff is a number I chose. Swept:
+
+| cutoff | factor |
+|---|---|
+| 0.02 | 7.68x to 8.31x |
+| **0.05** | **5.08x to 5.16x** |
+| 0.1 | 3.40x to 3.63x |
+| 0.2 | 2.23x to 2.35x |
+
+So unlike the `1.0` in section 12.4, **this threshold is load bearing for the exact figure**
+and "5.1x" must never be quoted without its cutoff. What survives every cutoff tested is the
+direction and the order of magnitude: the factor **stays above 2x throughout**, range 2.23x
+to 8.31x. The qualitative claim, that the drop-height normalisation understates the
+pointwise uncertainty by a large factor, holds regardless; the specific number does not.
+
+This is the honest outcome of turning my own criticism on myself, and it is the second time
+in this document that has changed a result rather than confirmed one. The
+reason is mechanical: the band is roughly constant in absolute terms while the oscillation
+decays, so as a fraction of the local signal it grows through the record.
+
+**Consequence, and it is exactly the survey's own methodological rule.** 0.3 percent is a
+*datum about the experiment*, expressed as a fraction of the initial drop height. It is not
+a pointwise relative uncertainty and it is **not an acceptance tolerance**. Importing it as
+one, "our code should match to 0.3 percent", applies an initial-amplitude band to a decayed
+signal, in a region where the authors' own stated uncertainty is five to fifty times wider.
+That would make a method look far worse late in the record than the experiment can actually
+resolve.
+
+### 12.3 The experiment is not the limiting factor, and the margin grows with nonlinearity
+
+Route C is a **separate origin**: 12 `*_Raw` files rather than 3 CI95 files, and a different
+physical quantity, the first damped period. It is also the *only* commensurable one, because
+`intercode()` grades every code on `first_damped_period_s` against the experimental mean of
+that same quantity. A five-cycle average would have flattered the experiment; cycle 1 is the
+like-for-like figure.
+
+| drop | codes | inter-code envelope, pct | width, points | experiment (max-min)/mean | ratio |
+|---|---|---|---|---|---|
+| 01D | 10 | -3.31 to +0.58 | 3.89 | 0.1331 pct | **29.2x** |
+| 03D | 10 | -5.98 to +3.62 | 9.60 | 0.1430 pct | **67.1x** |
+| 05D | 11 | -12.26 to +12.83 | 25.08 | 0.3384 pct | **74.1x** |
+
+**The entire inter-code envelope is code disagreement, not measurement noise.** At the
+nonlinear drop the codes spread 74 times wider than the four physical repetitions do on the
+same statistic.
+
+**And the ratio rises monotonically with drop height, 29.2x to 67.1x to 74.1x.** Both
+growth factors are printed by the script rather than taken off the table by eye: the
+**inter-code envelope width grows 6.44x** from 01D to 05D while the experiment's own
+repeatability grows only **2.54x** over the same range. So the divergence is a modelling
+problem that worsens with
+nonlinearity, not a measurement problem that worsens with amplitude. This is the strongest
+available statement that the instrument is not the weak link, and unlike the 0.3 percent
+figure it is derived here rather than restated.
+
+**One number that is easy to quote wrongly.** Two different statistics in this section both
+round to "about 0.3 percent": the CI half-width pooled over drops (0.2915 pct of H0) and the
+05D first-period repeatability range (0.3384 pct of the mean period). They are different
+physical quantities measured from different files. This is the same scope-sensitivity trap
+CLAUDE.md item 13 records for `DRIFT_THRESHOLD`: **never quote 0.3 percent for this dataset
+without naming the statistic.**
+
+### 12.4 The tolerance audit: this document has exactly one threshold, and it is inert
+
+The coordinator's test was "if any conclusion imports a tolerance rather than a datum, that
+is the line to fix". Swept, rather than defended.
+
+`/usr/bin/grep` for `toleran|acceptance|within [0-9]|threshold` across both my files finds
+**two** numeric thresholds in the code, and they behave oppositely, which is the useful part.
+The first is `envelope_by_grouping():440`, counting groups with `worst_abs_pct < 1.0`, swept
+below and **inert**. The second is the `local_cutoff` in `uncertainty_scope()`, added by this
+same unit and **not inert**, swept in section 12.2. Everything else is a measured value. In particular the "0.82 percent"
+in the prior slot's headline is the **measured worst deviation of the tight groups**, not a
+limit anyone set.
+
+A verdict computed against a bare literal nobody swept is the shape of defect this project
+has already been bitten by, `sustain_frames = 3` flipping five verdicts at 4. So:
+
+| key | count at 1.0 pct | invariant for ANY threshold in | width |
+|---|---|---|---|
+| author | 5 of 6 | 0.8215 to 12.8268 pct | **15.6x** |
+| institution | 4 of 6 | 0.8215 to 12.2570 pct | **14.9x** |
+| `CODE_META.group` | 5 of 6 | 0.8215 to 12.8268 pct | **15.6x** |
+
+**`THRESHOLD IS LOAD BEARING: False`** for this one. The per-group worst deviations are
+`[0.191, 0.302, 0.541, 0.656, 0.821, 12.827]`: an order-of-magnitude gap with nothing in it.
+Any threshold anywhere in a 15x-wide window gives the same answer, so the 1.0 is a
+presentational bin in an empty region and **no conclusion in this document rests on it.**
+
+Note what this does *not* rescue. The grouping-key finding of section 3 stands unchanged:
+the count is robust to the threshold and still moves from 5 of 6 to 4 of 6 when the *key*
+changes. Threshold-insensitivity and key-sensitivity are independent properties, and only
+the second one is a defect.
+
+### 12.5 What is still unverified here
+
+The three routes above are separate origins in the sense that matters (different files,
+different quantities), but **all three come from one archive and one research group**. None
+of this is an independent replication of the Kramer experiment, and nothing in this document
+should be read as one. **These claims remain UNREVIEWED by a second party**, per section 10.
+

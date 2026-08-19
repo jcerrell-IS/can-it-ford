@@ -1172,6 +1172,372 @@ def _p_cost(c):
         print(f"    {e['model_type']:<52} {e['cost']:<14} {e['cells']}")
 
 
+# --------------------------------------------------------------------------------------
+# 8. THE 0.3 PERCENT UNCERTAINTY, AND WHICH STATISTIC IT IS
+# --------------------------------------------------------------------------------------
+def _sweep_local_cutoff(root: Path, cuts=(0.02, 0.05, 0.10, 0.20)) -> dict:
+    """Is the route-B factor an artifact of where the near-zero cutoff was put?
+
+    Same discipline this module applies to the 1.0 in `envelope_by_grouping`: a number
+    chosen by the author, that a reported factor is computed against, gets swept and the
+    range reported. Recursion is avoided by calling the reduction directly rather than
+    re-entering `uncertainty_scope`.
+    """
+    out = {}
+    for c in cuts:
+        facs = []
+        for drop in DROPS:
+            d = np.loadtxt(root / f"{drop}_CI95_Normalized.txt", skiprows=1)
+            mean, half = d[:, 1], (d[:, 3] - d[:, 2]) / 2.0
+            big = np.abs(mean) > c
+            if not big.any():
+                continue
+            facs.append(float(np.median(half[big] / np.abs(mean[big]))
+                              / np.median(half[big])))
+        _require_nonempty(facs, f"drops with samples above cutoff {c}", str(root))
+        out[str(c)] = {"min": float(min(facs)), "max": float(max(facs))}
+    _require_nonempty(out, "cutoffs swept", str(root))
+    lo = min(v["min"] for v in out.values())
+    hi = max(v["max"] for v in out.values())
+    return {"by_cutoff": out, "factor_min_over_all_cutoffs": lo,
+            "factor_max_over_all_cutoffs": hi,
+            "factor_stays_above_2x": bool(lo > 2.0)}
+
+
+def uncertainty_scope(exp_root: Path | None = None,
+                      local_cutoff: float = 0.05) -> dict:
+    """Reproduce the abstract's "about 0.3% of the respective drop heights", then show
+    what that number is NOT.
+
+    WHY THIS FUNCTION EXISTS. The figure arrived here a second time, via a survey of
+    validation targets, phrased as "approximately 0.3 percent experimental uncertainty"
+    with no statistic named. It is not an independent assessment: it is the Kramer 2021
+    abstract restated, so treating it as external corroboration would be one source cited
+    twice. What IS worth doing is checking the paper's own claim against the data the
+    paper shipped, and pinning down the normalisation, because the same measured band is
+    0.29 percent or 15 percent depending only on what you divide it by.
+
+    THREE ROUTES, and they are separate origins, which is the point:
+      A  the authors' 95 percent CI series (3 files nothing else in this repo reduces)
+      B  the same band divided by the LOCAL signal instead of the drop height
+      C  repeatability of the first damped period across the 4 repetitions, which reads
+         12 different files (the Raw series) and a different physical quantity
+    Route A is the abstract's own statistic. Route C is the one commensurable with the
+    inter-code envelope, because `intercode()` grades every code on the FIRST damped
+    period against the experimental mean of that same quantity.
+    """
+    root = exp_root or EXP_ROOT
+    per_drop, half_pct, local = {}, [], {}
+    for drop in DROPS:
+        p = root / f"{drop}_CI95_Normalized.txt"
+        _require(p.exists(), f"CI95 series missing for {drop}", f"looked for {p}")
+        d = np.loadtxt(p, skiprows=1)
+        _require(d.ndim == 2 and d.shape[1] == 4,
+                 f"{drop} CI95 file must have 4 columns "
+                 f"(t/Te0, mean, lower, upper), found shape {d.shape}",
+                 f"reading {p}")
+        _require_nonempty(d, f"{drop} CI95 rows", str(p))
+        t, mean, lo, hi = d[:, 0], d[:, 1], d[:, 2], d[:, 3]
+        _require(bool((hi >= lo).all()),
+                 f"{drop} CI95 upper bound is below the lower bound somewhere",
+                 "the columns may be swapped in the file as shipped")
+        half = (hi - lo) / 2.0                    # in units of H0, the file is normalised
+        # Route B: the SAME band against the local signal. Restricted to where the signal
+        # is not near a zero crossing, because a ratio to ~0 is not a meaningful percent.
+        # NAMED, not bare. This section criticises a hard-coded 1.0 elsewhere in
+        # the module, so its own cutoff is a parameter and is swept below.
+        big = np.abs(mean) > local_cutoff
+        _require_nonempty(mean[big],
+                          f"{drop} samples with |x3/H0| > {local_cutoff}", str(p))
+        rel = half[big] / np.abs(mean[big])
+        # BOTH normalisations are reduced with the SAME statistic over the SAME samples.
+        # An earlier draft compared a mean against a median and a factor computed from
+        # that would have been meaningless; the two columns must be commensurable or the
+        # ratio between them says nothing.
+        per_drop[drop] = {
+            "n_samples": int(d.shape[0]),
+            "mean_halfwidth_pct_of_H0": float(half.mean() * 100.0),
+            "max_halfwidth_pct_of_H0": float(half.max() * 100.0),
+            "median_halfwidth_pct_of_H0_same_samples":
+                float(np.median(half[big]) * 100.0),
+            "median_rel_to_local_signal_pct": float(np.median(rel) * 100.0),
+            "max_rel_to_local_signal_pct": float(rel.max() * 100.0),
+            "n_samples_used_for_local": int(big.sum()),
+            "normalisation_factor_median_over_median": float(
+                np.median(rel) / np.median(half[big])),
+        }
+        half_pct.append(per_drop[drop]["mean_halfwidth_pct_of_H0"])
+        local[drop] = per_drop[drop]["median_rel_to_local_signal_pct"]
+
+    _require_count(len(half_pct), len(DROPS),
+                   "drop heights with a CI95 series", str(root))
+    pooled = float(np.mean(half_pct))
+
+    # Route C: first-damped-period repeatability, the quantity intercode() actually grades.
+    kb = _import_benchmark()
+    reps = {}
+    if kb is not None:
+        ex = kb.experiment(root)
+        for drop in DROPS:
+            e = ex[drop]["first_damped_period_s"]
+            _require(e["n"] == len(REPS),
+                     f"{drop} first damped period built from {e['n']} repetitions, "
+                     f"expected {len(REPS)}",
+                     "a repeatability figure from fewer reps is not the same statistic")
+            reps[drop] = {
+                "mean_s": float(e["mean"]),
+                "min_s": float(e["min"]),
+                "max_s": float(e["max"]),
+                "n": int(e["n"]),
+                "range_pct_of_mean": float(100.0 * (e["max"] - e["min"]) / e["mean"]),
+            }
+        _require_count(len(reps), len(DROPS),
+                       "drop heights with a period-repeatability figure", str(root))
+
+    return {
+        "abstract_claim": ("At a 95% confidence level, uncertainties were found to be very "
+                           "low, on average only about 0.3% of the respective drop heights"),
+        "abstract_source": "Kramer et al. 2021, Energies 14(2):269, abstract",
+        "per_drop": per_drop,
+        "pooled_mean_halfwidth_pct_of_H0": pooled,
+        "reproduces_abstract_to_1dp": bool(round(pooled, 1) == 0.3),
+        "route_b_median_rel_to_local_signal_pct": local,
+        "route_c_first_period_repeatability": reps,
+        "normalisation_factor_per_drop": {
+            d: per_drop[d]["normalisation_factor_median_over_median"] for d in per_drop},
+        "local_cutoff": float(local_cutoff),
+        "local_cutoff_sweep": _sweep_local_cutoff(root) if local_cutoff == 0.05 else None,
+        "normalisation_factor_min": float(min(
+            per_drop[d]["normalisation_factor_median_over_median"] for d in per_drop)),
+        "normalisation_factor_max": float(max(
+            per_drop[d]["normalisation_factor_median_over_median"] for d in per_drop)),
+    }
+
+
+def _import_benchmark():
+    """Import the sibling benchmark module, or return None. NEVER silently substitute."""
+    import importlib.util
+    p = (Path(__file__).resolve().parents[1] / "simulation" / "r5_physics"
+         / "kramer_benchmark.py")
+    if not p.exists():
+        return None
+    spec = importlib.util.spec_from_file_location("kramer_benchmark", p)
+    m = importlib.util.module_from_spec(spec)
+    sys.modules["kramer_benchmark"] = m
+    spec.loader.exec_module(m)
+    return m
+
+
+def envelope_against_experiment() -> dict:
+    """Put the inter-code envelope and the experiment's own repeatability on ONE scale.
+
+    THE COMPARISON IS LIKE FOR LIKE BY CONSTRUCTION, and that had to be checked rather
+    than assumed: `intercode()` computes `dev_period_pct` from `first_damped_period_s`
+    against the experimental MEAN of the same quantity, so the commensurable experimental
+    figure is the spread of the FIRST period across the 4 repetitions, not a mean over
+    five cycles. Using a 5-cycle average here would have flattered the experiment.
+    """
+    kb = _import_benchmark()
+    _require(kb is not None, "kramer_benchmark.py not found",
+             "this comparison needs the module that computes the published envelope; "
+             "it is NOT recomputed here, to avoid the second-definition fork "
+             "CLAUDE.md item 16 records for gates.py")
+    s = kb.intercode()
+    ex = kb.experiment()
+    rows = {}
+    for drop in DROPS:
+        d = s["drops"][drop]
+        devs = [d["codes"][c]["dev_period_pct"] for c in d["codes"]]
+        _require_nonempty(devs, f"{drop} per-code period deviations", "intercode()")
+        e = ex[drop]["first_damped_period_s"]
+        _require(e["mean"] != 0.0, f"{drop} experimental mean period is zero",
+                 "cannot form a percentage against it")
+        exp_range = 100.0 * (e["max"] - e["min"]) / e["mean"]
+        _require(exp_range > 0.0,
+                 f"{drop} experimental period range is {exp_range}, not positive",
+                 "four repetitions that agree to the bit would mean the reps are the "
+                 "same file, not that the experiment is perfect")
+        width = max(devs) - min(devs)
+        rows[drop] = {
+            "n_codes": int(d["n_codes"]),
+            "envelope_min_pct": float(min(devs)),
+            "envelope_max_pct": float(max(devs)),
+            "envelope_width_points": float(width),
+            "exp_first_period_mean_s": float(e["mean"]),
+            "exp_range_pct_of_mean": float(exp_range),
+            "intercode_over_experiment": float(width / exp_range),
+        }
+    _require_count(len(rows), len(DROPS), "drops compared", "intercode() vs experiment()")
+    ratios = [rows[d]["intercode_over_experiment"] for d in DROPS]
+    widths = [rows[d]["envelope_width_points"] for d in DROPS]
+    _require(widths[0] > 0.0, "01D envelope width is not positive",
+             "cannot form a growth factor against it")
+    return {
+        "rows": rows,
+        "ratio_min": float(min(ratios)),
+        "ratio_max": float(max(ratios)),
+        "ratio_rises_with_drop_height": bool(ratios == sorted(ratios)),
+        "envelope_width_rises_with_drop_height": bool(widths == sorted(widths)),
+        "experiment_is_not_the_limiting_factor": bool(min(ratios) > 1.0),
+        "envelope_width_growth_01D_to_05D": float(widths[-1] / widths[0]),
+        "exp_repeatability_growth_01D_to_05D": float(
+            rows[DROPS[-1]]["exp_range_pct_of_mean"]
+            / rows[DROPS[0]]["exp_range_pct_of_mean"]),
+    }
+
+
+def threshold_sensitivity(env: dict | None = None) -> dict:
+    """Sweep the one bare threshold in this module and report the interval it is safe in.
+
+    `envelope_by_grouping()` counts "groups within 1 percent" against a hard-coded 1.0.
+    A verdict computed against a bare literal nobody swept is the exact shape of defect
+    this project has already been bitten by (`sustain_frames = 3` flipping five verdicts
+    at 4). So rather than defend the 1.0, measure the interval over which the count does
+    not move. If that interval is wide, the number is a presentational bin sitting in an
+    empty region of the data and no conclusion rests on it. If it is narrow, the headline
+    is threshold-dependent and must say so.
+    """
+    e = env or envelope_by_grouping()
+    out = {}
+    for key, tab in e["tables"].items():
+        w = sorted(r["worst_abs_pct"] for r in tab["rows"])
+        _require_nonempty(w, f"per-group worst deviations under key {key!r}",
+                          "envelope_by_grouping()")
+        below = [x for x in w if x < 1.0]
+        above = [x for x in w if x >= 1.0]
+        _require_nonempty(below, f"groups under 1 pct with key {key!r}",
+                          "a count of zero tight groups is a result this sweep cannot "
+                          "interpret, not a pass")
+        _require_nonempty(above, f"groups at or above 1 pct with key {key!r}",
+                          "if every group is tight there is no envelope to explain and "
+                          "the headline this sweep exists to test is vacuous")
+        lo, hi = max(below), min(above)
+        out[key] = {
+            "count_at_1pct": len(below),
+            "n_groups": len(w),
+            "invariant_from_pct": float(lo),
+            "invariant_to_pct": float(hi),
+            "invariance_factor": float(hi / lo) if lo else float("inf"),
+            "worst_abs_pct_sorted": [float(x) for x in w],
+        }
+    factors = [v["invariance_factor"] for v in out.values()]
+    _require_nonempty(factors, "grouping keys swept", "envelope_by_grouping()['tables']")
+    return {
+        "keys": out,
+        "min_invariance_factor": float(min(factors)),
+        "threshold_is_load_bearing": bool(min(factors) < 2.0),
+    }
+
+
+def _p_uncertainty(u, c):
+    print()
+    print("=" * 86)
+    print("THE 0.3 PERCENT FIGURE: reproduced, and then shown to be normalisation "
+          "dependent")
+    print("=" * 86)
+    print(f"  abstract: \"{u['abstract_claim']}\"")
+    print(f"  source  : {u['abstract_source']}")
+    print()
+    print("  ROUTE A, the authors' own CI95 series, half-width in units of the drop "
+          "height:")
+    for drop, v in u["per_drop"].items():
+        print(f"    {drop}   mean {v['mean_halfwidth_pct_of_H0']:.4f} pct of H0"
+              f"   max {v['max_halfwidth_pct_of_H0']:.4f} pct"
+              f"   n {v['n_samples']}")
+    print(f"    pooled over the three drops: "
+          f"{u['pooled_mean_halfwidth_pct_of_H0']:.4f} pct of H0")
+    print(f"    reproduces the abstract to 1 dp: {u['reproduces_abstract_to_1dp']}")
+    print()
+    print("  ROUTE B, THE SAME BAND against the local signal instead of the drop height.")
+    print("  Both columns are MEDIANS over the SAME samples, so the factor is meaningful:")
+    print(f"    {'drop':<7}{'vs H0':>12}{'vs local':>12}{'factor':>10}"
+          f"{'worst local':>14}{'n':>8}")
+    for drop, v in u["per_drop"].items():
+        print(f"    {drop:<7}{v['median_halfwidth_pct_of_H0_same_samples']:>11.4f}%"
+              f"{v['median_rel_to_local_signal_pct']:>11.3f}%"
+              f"{v['normalisation_factor_median_over_median']:>9.1f}x"
+              f"{v['max_rel_to_local_signal_pct']:>13.3f}%"
+              f"{v['n_samples_used_for_local']:>8}")
+    print(f"    SAME MEASUREMENT, {u['normalisation_factor_min']:.1f}x to "
+          f"{u['normalisation_factor_max']:.1f}x LARGER at the median and up to "
+          f"{max(v['max_rel_to_local_signal_pct'] for v in u['per_drop'].values()):.1f} "
+          f"percent at worst.")
+    sw = u.get("local_cutoff_sweep")
+    if sw:
+        print(f"    CUTOFF SWEEP, because this section criticises a bare threshold and "
+              f"must not carry one.")
+        print(f"    The near-zero cutoff is {u['local_cutoff']}, and the factor DOES "
+              f"depend on it:")
+        for cut, cv in sw["by_cutoff"].items():
+            print(f"      |x3/H0| > {cut:<5}  factor {cv['min']:.2f}x "
+                  f"to {cv['max']:.2f}x")
+        print(f"    So {u['normalisation_factor_min']:.1f}x is NOT cutoff independent, "
+              f"unlike the 1.0 swept by --thresholds.")
+        print(f"    What survives every cutoff is the DIRECTION and the order of "
+              f"magnitude: the factor")
+        print(f"    stays above 2x throughout ({sw['factor_min_over_all_cutoffs']:.2f}x "
+              f"to {sw['factor_max_over_all_cutoffs']:.2f}x): "
+              f"{sw['factor_stays_above_2x']}")
+    print("    0.3 percent is a fraction of the DROP HEIGHT, not a pointwise")
+    print("    relative uncertainty. Importing it as an acceptance tolerance for a "
+          "decayed signal")
+    worst = max(v["max_rel_to_local_signal_pct"]
+                / v["median_halfwidth_pct_of_H0_same_samples"]
+                for v in u["per_drop"].values())
+    print(f"    applies an initial-amplitude band where the authors' own uncertainty "
+          f"reaches {worst:.0f}x it.")
+    print()
+    if u["route_c_first_period_repeatability"]:
+        print("  ROUTE C, separate origin (12 Raw files, different quantity): "
+              "first damped period")
+        for drop, v in u["route_c_first_period_repeatability"].items():
+            print(f"    {drop}   mean {v['mean_s']:.6f} s   "
+                  f"(max-min)/mean {v['range_pct_of_mean']:.4f} pct   n {v['n']}")
+    print()
+    print("=" * 86)
+    print("IS THE EXPERIMENT THE LIMITING FACTOR? Inter-code envelope on the SAME "
+          "statistic")
+    print("=" * 86)
+    print(f"  {'drop':<6}{'codes':>6}{'envelope pct':>22}{'width':>9}"
+          f"{'exp (max-min)/mean':>21}{'ratio':>9}")
+    for drop, r in c["rows"].items():
+        env = f"{r['envelope_min_pct']:+.2f} to {r['envelope_max_pct']:+.2f}"
+        print(f"  {drop:<6}{r['n_codes']:>6}{env:>22}"
+              f"{r['envelope_width_points']:>9.2f}"
+              f"{r['exp_range_pct_of_mean']:>20.4f}%"
+              f"{r['intercode_over_experiment']:>8.1f}x")
+    print(f"  ratio rises with drop height: {c['ratio_rises_with_drop_height']}")
+    print(f"  envelope width grows {c['envelope_width_growth_01D_to_05D']:.2f}x from 01D "
+          f"to 05D, while the experiment's own")
+    print(f"  repeatability grows only "
+          f"{c['exp_repeatability_growth_01D_to_05D']:.2f}x over the same range.")
+    print(f"  experiment is NOT the limiting factor: "
+          f"{c['experiment_is_not_the_limiting_factor']}")
+
+
+def _p_thresholds(t):
+    print()
+    print("=" * 86)
+    print("THRESHOLD SWEEP: is the 'groups within 1 percent' headline tolerance "
+          "dependent?")
+    print("=" * 86)
+    for key, v in t["keys"].items():
+        print(f"  {key:<18} count at 1.0 pct = {v['count_at_1pct']} of {v['n_groups']}"
+              f"   invariant for ANY threshold in "
+              f"({v['invariant_from_pct']:.4f}, {v['invariant_to_pct']:.4f}) pct"
+              f"   = {v['invariance_factor']:.1f}x wide")
+        print(f"    {'':16} per-group worst abs pct: "
+              f"{[round(x, 3) for x in v['worst_abs_pct_sorted']]}")
+    print(f"  narrowest invariance factor across keys: "
+          f"{t['min_invariance_factor']:.1f}x")
+    print(f"  THRESHOLD IS LOAD BEARING: {t['threshold_is_load_bearing']}")
+    if not t["threshold_is_load_bearing"]:
+        print("    So the 1.0 is a presentational bin in an empty region of the data, "
+              "not an")
+        print("    imported acceptance tolerance. No conclusion in this document rests "
+              "on it.")
+
+
 def self_test() -> dict:
     """Prove every guard FIRES. An assertion nobody has seen fail is not a check.
 
@@ -1277,6 +1643,24 @@ def self_test() -> dict:
             kb.CODE_META.update(saved)
     case("audit_code_meta with CODE_META empty", c6, "ZERO fields")
 
+    # 7. uncertainty_scope pointed at a tree with no CI95 series. Route A silently
+    #    returning a pooled mean of nothing would report "reproduces the abstract" from
+    #    zero files, which is the same false-pass shape as cases 1 and 6.
+    def c7():
+        uncertainty_scope(empty)
+    case("uncertainty_scope with no CI95 series", c7, "CI95 series missing")
+
+    # 8. threshold_sensitivity when every group is tight. The sweep's whole purpose is
+    #    to locate the gap between the tight groups and the outlier; with no outlier
+    #    there is no gap, and an "invariant everywhere" verdict would be vacuous rather
+    #    than reassuring.
+    def c8():
+        fake = {"tables": {"author": {"rows": [{"worst_abs_pct": 0.1},
+                                               {"worst_abs_pct": 0.2}]}}}
+        threshold_sensitivity(fake)
+    case("threshold_sensitivity with no group above the threshold", c8,
+         "at or above 1 pct")
+
     n_fired = sum(1 for r in results if r["fired"])
     n_matched = sum(1 for r in results if r["matched"])
     return {"n_cases": len(results), "n_fired": n_fired, "n_matched": n_matched,
@@ -1315,6 +1699,10 @@ def main():
     ap.add_argument("--sphere", action="store_true")
     ap.add_argument("--descriptions", action="store_true")
     ap.add_argument("--cost", action="store_true")
+    ap.add_argument("--uncertainty", action="store_true",
+                    help="the 0.3 pct figure, its statistic, and the envelope on one scale")
+    ap.add_argument("--thresholds", action="store_true",
+                    help="sweep the one bare threshold in this module")
     ap.add_argument("--self-test", action="store_true",
                     help="prove every fail-loud guard actually fires")
     ap.add_argument("--all", action="store_true")
@@ -1325,7 +1713,8 @@ def main():
         _p_selftest(t)
         raise SystemExit(0 if t["all_fired"] else 1)
     if not any((a.model_table, a.audit, a.groups, a.manifest, a.order,
-                a.sphere, a.descriptions, a.cost, a.envelope)):
+                a.sphere, a.descriptions, a.cost, a.envelope,
+                a.uncertainty, a.thresholds)):
         a.all = True
 
     blob = {}
@@ -1356,6 +1745,18 @@ def main():
         blob["envelope_by_grouping"] = e
         if not a.json:
             _p_envelope(e)
+    if a.all or a.thresholds:
+        th = threshold_sensitivity(blob.get("envelope_by_grouping"))
+        blob["threshold_sensitivity"] = th
+        if not a.json:
+            _p_thresholds(th)
+    if a.all or a.uncertainty:
+        un = uncertainty_scope()
+        cm = envelope_against_experiment()
+        blob["uncertainty_scope"] = un
+        blob["envelope_against_experiment"] = cm
+        if not a.json:
+            _p_uncertainty(un, cm)
     if a.all or a.manifest:
         m = series_manifest()
         blob["manifest"] = m
