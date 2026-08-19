@@ -1715,3 +1715,58 @@ is what will be reported.
 node. The guarded import means a crowned run would have **raised** rather than
 silently running on a flat floor, which is what the guard is for; the module was
 shipped read-only and its own selftest passes there, 8 checks.
+
+## T24. Review status of every number in this document: UNREVIEWED
+
+**No adversarial subagent reviewed any claim here, and none could have.** The
+fleet audit measured 20 `Agent` calls across 18 transcripts with **zero**
+successes: every attempt hit the same pinned model id, and the three transcripts
+showing no errors are exactly the three that never attempted one. This project
+BUILT the control the corpus recommends, `.claude/agents/physics-skeptic.md`,
+and ran a whole round with it silently dead.
+
+So, stated plainly rather than left to inference: **every percentage, force,
+verdict count, distance and ratio in this document is UNREVIEWED by an
+independent checker.** What they do have instead, and it is not nothing:
+
+- every headline number is regenerated from the committed TSV by
+  `analysis/r9_speed_surface.py --from-tsv`, on stdlib alone, with no GPU;
+- the two claims that could be attacked cheapest were attacked deliberately and
+  one of them died: I proposed a BC-rate confound for the g128 collapse and a
+  held-fixed control refuted it (T15), and the 2.3x pair was withdrawn (T17);
+- three separate results were withdrawn or narrowed by my own controls rather
+  than by a reviewer.
+
+That is self-checking, and self-checking is weaker than review. It should not be
+described as review.
+
+## T25. The bc guard is STILL UNFIXED, and here is the spec for fixing it
+
+To be unambiguous, because a readout has already described it as fixed: **I did
+not fix the bc guard.** T13 reports it and says explicitly that the fix belongs
+in the driver and was deliberately not applied, because batch 922514 was
+mid-flight against that file and changing a driver under a running job splits
+the provenance of the runs it is collecting. It is still self-bypassing today.
+
+The register's new rule is that any commit adding a check must name the input
+that makes the check FAIL. Applied to the guard as it should be rebuilt:
+
+**The fix.** Re-check the constraint AFTER the snap that divides the substeps,
+or make the snap round UP to a legal value instead of down.
+
+**The input that makes the FIXED guard fail, i.e. the case it must reject and
+the current one accepts:** g64 with `substeps` 11, `bc_per_frame_auto` 5, and a
+caller passing `--bc-per-frame 5`. Today: the pre-snap check sees 5 >= 5 and
+passes, then `sub_per_tick = ceil(11/5) = 3` and `bc_per_frame = ceil(11/3) = 4`,
+so the run proceeds at applied 4 against an auto of 5, silently. A correct guard
+must reject that, or lift it to 6, which is the next value giving
+`sub_per_tick = 2` and applied 6.
+
+**The regression that proves the fix is not vacuous:** the same call must still
+be ACCEPTED at `bc_per_frame_auto` 4 or lower, where applied 4 is legal. A guard
+that rejects both is not stricter, it is broken, and it would have refused the
+whole `v_car` 6.7 m/s row, which ran legally at applied 4 against auto 4.
+
+**Blast radius, measured not assumed:** exactly the four `v_car` = 8.9 m/s cells
+of the g64 matrix, 20 runs across five seeds. The g96 arm is unaffected, applied
+8 against auto 7. The measured cost is bounded at 1.471 percent (T13).
