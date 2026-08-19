@@ -1877,3 +1877,70 @@ zero from the whole tree.
 **Note the standing caveat that applies to my own sweep:** ppc = 2 is what every run before
 today used, including `sphere_heave.py`. So arm 2 must reproduce the control arm of job
 923190, and if it does not, the sweep is measuring something other than what it claims.
+
+## 34.2 RESULT: KE/PE RISES with particles per cell. Quadrature and sampling are both excluded.
+
+Job **923270**, `COMPLETED 00:04:16`, three arms at g64, everything held but `ppc`.
+
+| ppc | per cell | n_water | KE/PE (blocked mean) | blocked SE | vmax/sqrt(gH) | vrms/sqrt(gH) | leak % |
+|---|---|---|---|---|---|---|---|
+| 1 | 1 | 75,843 | 1.1171e-02 | 1.47e-03 | 0.2146 | 0.0715 | 11.919 |
+| **2** | **8** | **606,797** | **1.0913e-02** | 2.38e-04 | 0.2868 | 0.0994 | 4.039 |
+| **3** | **27** | **2,048,000** | **1.3735e-02** | 1.58e-04 | 0.3044 | 0.1124 | 3.434 |
+
+**THE GRADED LEG, 8 to 27, exactly as pre-registered in `9d82ed2` before any output was
+opened:**
+
+> **KE/PE rises 1.0913e-02 to 1.3735e-02, +25.86 percent, a difference of
+> 2.8220e-03 +/- 2.8529e-04 blocked, which is 9.89 sigma.**
+
+**Direction: RISES.** Against the three pre-registered predictions:
+
+| hypothesis | predicted | observed | verdict |
+|---|---|---|---|
+| pressure oscillation / locking channel | RISES | **rises, 9.89 sigma** | **survives** |
+| acoustic ringing or sampling | flat or falls | rises | **excluded** |
+| quadrature error (`Ste08`) | falls | rises | **excluded** |
+
+**Quadrature is now excluded twice over, on independent grounds:** `Ste08` reports no
+one-signed bias (section 33.5), and it predicts the opposite sign on this leg. That is worth
+stating because quadrature is the candidate a reader raises first.
+
+### The self-check passed, which is the reason to believe the rest
+
+`ppc = 2` is what every prior run used, so it had to reproduce job 923190's control arm or
+the sweep would be measuring something other than what it claims. Final frame, independent
+job, independent node:
+
+| quantity | 923190 control | 923270 ppc=2 | relative difference |
+|---|---|---|---|
+| KE/PE above floor | 9.252206e-03 | 9.252180e-03 | 2.9e-06 |
+| vmax/sqrt(gH) | 2.581555e-01 | 2.581675e-01 | 4.6e-05 |
+| `n_below_floor` | 24511 | 24508 | 1.2e-04 |
+
+### The leak runs the OTHER way, which strengthens the result rather than confounding it
+
+The three arms do not have identical leak fractions, so they are not identical states, and
+that is worth checking rather than waving through. **The leak FALLS with ppc, 11.919 to
+4.039 to 3.434 percent, while KE/PE RISES.** Opposite directions, so mass loss cannot be
+driving the agitation. Had they moved together, this result would be uninterpretable.
+
+### What it does and does not license
+
+**Licensed:** the non-quiescence gets **worse** with more integration points per cell at
+fixed grid, which is the pressure-oscillation signature and the opposite of what both rival
+candidates predict. And `ppc = 1` sits **off** the trend at 1.1171e-02, slightly *above*
+ppc = 2, so the coordinator's warning was correct on the data: a monotone reading across
+1, 8, 27 would have been wrong, and grading the 8-to-27 leg was the right restriction.
+
+**Not licensed.** Two points give a **direction, not a scaling law**, and I am not fitting
+one: 3.375x more particles per cell produces a 1.259x rise, which is strongly sublinear, and
+two arms cannot distinguish that from any other sublinear form. **Nor does this show F-bar
+would fix it.** It shows the mechanism responds to the variable F-bar targets, which is what
+makes the engine change worth costing, not a substitute for making it.
+
+**One test I cannot run from what I have.** `ppc = 3` at g64 and the earlier g96 run both
+carry h = 0.00625 m and 2,048,000 particles at different `dx`, which would directly test
+`Zha22d`'s claim that refinement does not remedy the oscillation. **The g96 run predates the
+velocity instrumentation, so it has no KE/PE and the comparison cannot be made from disk.**
+It needs one more arm.
