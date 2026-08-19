@@ -1101,6 +1101,11 @@ SEARCH_EXPORT_DIR = os.path.join(REPO, "data", "deep_searches")
 
 # A Semantic Scholar paper id as it appears in the `link` field: 40 hex chars.
 S2_RE = re.compile(r"semanticscholar\.org/paper/([0-9a-f]{40})")
+# Not every DOI-less record links to Semantic Scholar. Found by running the
+# exporter on a real 32-paper search: one record (Miyawaki et al 2023) carries
+# an arXiv link instead, and an S2-only scheme rejects it as unjoinable when it
+# is perfectly identifiable. A third key type, not a special case.
+ARXIV_RE = re.compile(r"arxiv\.org/(?:abs|pdf)/(\d{4}\.\d{4,5})")
 
 # The parse defect that produced settling-force#11/#29/#30: a `[link](url)`
 # regex met a report that escapes its brackets, and an ASCE DOI legitimately
@@ -1139,6 +1144,9 @@ def join_key(rec: dict, slug: str = "", rank: int = 0) -> tuple[str, str]:
     s2 = s2_of(rec)
     if s2:
         return f"s2:{s2}", "s2"
+    m = ARXIV_RE.search(rec.get("link") or "")
+    if m:
+        return f"arxiv:{m.group(1)}", "arxiv"
     return f"{slug}#{rank}", "positional"
 
 
@@ -1317,15 +1325,37 @@ def report_source_audit(export_dir: str) -> int:
             print(f"    REJECT  {os.path.basename(p):40s} unreadable: {exc}")
     print()
 
+    # An export covers a search when its search_path names it. Cross-referenced
+    # rather than tracked separately, so rung 3 cannot go on calling a search
+    # invisible after rung 2 has one sitting on disk.
+    exported_names = set()
+    for p in exports:
+        try:
+            o = json.load(open(p, encoding="utf-8"))
+            exported_names.add((o.get("search_path") or "").lstrip("/").strip())
+        except Exception:                                  # noqa: BLE001
+            pass
+
     have = [w for w in WORKSPACE_DEEP_SEARCHES if w[3]]
     miss = [w for w in WORKSPACE_DEEP_SEARCHES if not w[3]]
+    covered = [w for w in miss if w[0].strip() in exported_names]
+    blind = [w for w in miss if w[0].strip() not in exported_names]
     print(f"  RUNG 3, workspace searches: {len(WORKSPACE_DEEP_SEARCHES)} known, "
-          f"{len(have)} ingested, {len(miss)} not")
-    for name, created, n, _ in miss:
+          f"{len(have)} ingested as markdown, {len(covered)} exported, "
+          f"{len(blind)} still invisible")
+    for name, created, n, _ in covered:
+        print(f"    exported   {created}  {n:3d} papers  "
+              f"{'awaiting a --build':19s}  {name[:52]}")
+    for name, created, n, _ in blind:
         when = "postdates the build" if created > idx["built"] else \
                "PREDATES the build"
         print(f"    invisible  {created}  {n:3d} papers  {when:19s}  {name[:52]}")
     print()
+    if covered:
+        print("  AN EXPORT IS NOT AN INGESTION. The files above are on disk and")
+        print("  pass the gates, but --build has NOT consumed them, so the")
+        print("  corpus is unchanged and a query still cannot reach them.")
+        print()
     print("  THE SNAPSHOT ABOVE IS ITSELF HARDCODED, and that is the same")
     print("  defect one level up. It cannot notice search 21. Re-derive it in a")
     print("  session that has the connector:")

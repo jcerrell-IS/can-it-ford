@@ -63,6 +63,40 @@ mcp__undermind__get_paper_info(workspace_id=..., cite_keys=[...], show_doi=True)
 `inspect_deep_searches` pages at 50 papers and its listing carries **no DOIs**;
 `get_paper_info` is the only route to one and batches 50 cite keys per call.
 
+### The twenty, and what each one settles
+
+Ingested as markdown (8), exported and awaiting a `--build` (2), still invisible
+(10). Run `--source-audit` for the live split; this table is what each is FOR.
+
+| deep search | settles | state |
+|---|---|---|
+| Moving Rigid Body Free Surface Validation | validation cases for a moving body, incl. the Kramer sphere | ingested |
+| Settling and Force Reporting in Free Surface Flow | settle length and force statistics | ingested |
+| Quantitative MPM Wall Penetration | the mechanism behind the seven P-2 failures | ingested |
+| Multi-resolution MPM for Large-domain Flooding | refinement windows, and the moving-frame gap | ingested |
+| Validated MPM Vehicle Water Coupling | coupling validation | ingested |
+| MPM Simulation Verification Provenance | verification practice and provenance | ingested |
+| Reliable AI Scientific Software | AI-written scientific code | ingested |
+| Trustworthy AI Assisted Scientific Simulation | AI-assisted simulation credibility | ingested |
+| MPM SPH buoyancy force overestimation and hydrostatic validation benchmarks | **the buoyancy error and how buoyancy is actually validated** | exported |
+| Simulation Ready Vehicle Mesh Assets | **the CCSA/NCAC vehicle models, above** | exported |
+| moving vehicle floodwater simulation open source implementations | moving-body open-source couplings, 105 papers | invisible |
+| how computational researchers audit and defend simulation credibility | verification practice | invisible |
+| GPU particle solver portability scaling and surrogate fidelity | engine and GH200 portability | invisible |
+| which realism effects change a flood vehicle stability verdict | which realism upgrades move a verdict | invisible |
+| moving vehicle floodwater GPU particle simulation | the moving-vehicle prior art | invisible |
+| Dynamic Vehicle Traction in Floodwater | traction under partial flotation; **holds `shah2018`** | invisible |
+| Small Data Physics Surrogates at 36 Conditions | surrogates at this project's design size | invisible |
+| Physics Simulation Validation Protocol | validation protocol, 81 papers | invisible |
+| Quantitative Flood Traversability Connections | threshold provenance, 82 papers | invisible |
+| Optical Vehicle Collision Geometry | photogrammetric vehicle geometry | invisible |
+
+**Exporting one takes three calls and is documented in
+`docs/R9_CORPUS_BIB_GAP_2026-08-18.md` section 23.** Write the result to
+`data/deep_searches/<slug>.json` and validate with `--ingest-check`. **An export
+is not an ingestion**: `build()` does not read that directory yet, so an
+exported search is on disk and still unreachable by `--query`.
+
 **TWO SEARCHES ARE EASY TO MISFILE, so check `--source-audit` before saying a
 search is invisible.** `Moving Rigid Body Free Surface Validation` **is
 ingested** (slug `moving-rigid-body`, 44 papers), and its Kramer 2021 heave-decay
@@ -232,7 +266,19 @@ feasibility" returns 0 and that is nearly meaningless.
 surname, not an identity, and a miss on one work by an author whose other work is
 present is the interesting case rather than a null result. The corpus holds six
 papers from the Shah/Mustaffa flood-vehicle group and **not** `shah2018`
-(`10.1051/matecconf/201820307003`), which the paper cites. Beware short surnames
+(`10.1051/matecconf/201820307003`), which the paper cites.
+
+**`shah2018` IS NOT A SOURCING GAP, and an earlier version of this project's
+write-up said it was.** Measured 2026-08-19: it is `[Sha18c]` in the workspace
+and appears in **three** deep searches, the oldest dated **2026-07-21, which is
+25 days BEFORE the index was built**. It is absent from the corpus only because
+the builder cannot reach that search. Nobody needs to go and find this paper.
+**Name variant on the same record:** the workspace gives first author "Syed
+**Hamid** Hussain Shah"; Crossref gives "Syed **Muzzamil** Hussain Shah" and is
+authoritative (verified live, verdict `matched`, zero field mismatches). An
+author-route search keyed on the workspace spelling misses it.
+
+Beware short surnames
 in the other direction too: a substring search for "Xia" returns **23** records,
 nearly all of them hits inside given names such as "Lingxiao" and "Xiao-Guang".
 

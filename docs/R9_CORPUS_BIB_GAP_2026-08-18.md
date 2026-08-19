@@ -1,5 +1,15 @@
-# The corpus is not a superset of the bibliography: it is a sourcing gap, not a
-# dropped merge, and the gap is one paper wide rather than eleven
+# The corpus is not a superset of the bibliography: the builder cannot reach the
+# layer that holds the missing works, and the gap is one paper wide rather than
+# eleven
+
+> **THIS TITLE WAS CORRECTED 2026-08-19 AND THE ORIGINAL IS RETRACTED.** It read
+> "it is a **sourcing gap**, not a dropped merge". It is an **ingestion** gap:
+> `shah2018` is in three deep searches, one of them 25 days OLDER than the index
+> build, and it is absent from the corpus only because the builder cannot see
+> that search. The "not a dropped merge" half stands (`DROPPED_IN_MERGE` is 0)
+> and the "one paper wide" half stands. **Section 22 has the full retraction,
+> including how the wrong inference was made and why it matters.** Read it
+> before quoting section 1.
 
 Slot `d14-corpusbib`, branch `claude/r9-corpus-bib`, worktree
 `.claude/worktrees/r9-corpus-bib`. Written 2026-08-18, 23:39 to 00:0x BST.
@@ -20,10 +30,15 @@ resolves it.
 
 ## 1. The answer, in four lines
 
-**It is a sourcing gap, not a dropped merge.** DERIVED: the DOIs and titles of
-the 11 absent works appear nowhere in the **raw text** of any of the eight source
-reports. The raw text is upstream of the index, so this is not an artefact of how
-the index was built. They were never returned by any search.
+**It is not a dropped merge.** DERIVED: `DROPPED_IN_MERGE` is 0, and the DOIs and
+titles of the 11 absent works appear nowhere in the **raw text** of any of the
+eight source reports. That measurement stands.
+
+~~They were never returned by any search.~~ **WITHDRAWN 2026-08-19, see section
+22.** Eight reports cannot testify about twenty searches. `shah2018` was returned
+by a search dated 2026-07-21, twenty-five days before the index was built, and by
+two more since. The gap is an **ingestion** gap: the builder cannot reach the
+layer holding the work. Nobody needs to go and find this paper.
 
 **The gap is far narrower than eleven.** DERIVED: of the 11 cited works absent
 from the corpus, exactly **one** is peer-reviewed flood-vehicle literature inside
@@ -148,7 +163,12 @@ three preprints include two of the group's own arXiv postings.
 
 ---
 
-## 5. `shah2018` is a real sourcing gap, and it is not a random miss
+## 5. `shah2018` is the one in-scope absence, and it is not a random miss
+
+> **HEADING CORRECTED 2026-08-19.** This read "is a real **sourcing** gap".
+> It is an **ingestion** gap: section 22. Everything else in this section,
+> including the citation-neighbourhood evidence below, stands and in fact
+> reads better under the corrected framing.
 
 READ, verified this session against the resolved Crossref record via
 `scholar-sidekick verifyCitation`, verdict `matched`, confidence `high`:
@@ -192,8 +212,12 @@ P10/S2/020. ISBN:978-0-85825-948-5", which is the `shand2011arr` entry of this
 bibliography with a matching report number and ISBN. It also cites at R18 Bonham
 and Hattersley (1967) "Low level causeways", which **is** in the corpus as
 `moving-rigid-body#15`. So `shah2018` sits directly in this corpus's citation
-neighbourhood, which strengthens rather than weakens the claim that missing it is
-a genuine sourcing gap.
+neighbourhood, which strengthens rather than weakens the claim that missing it
+matters. CORRECTED 2026-08-19: this sentence ended "a genuine sourcing gap" and
+that is withdrawn per section 22. Note how much better the evidence fits the
+corrected reading: a paper whose own reference list overlaps this corpus is
+exactly what you expect the project's searches to have RETURNED, and they did,
+on 2026-07-21.
 
 ---
 
@@ -1000,3 +1024,195 @@ file has not been updated, and it is the one every session reads.
   the corpus changed. `data/r9_bib_corpus_census.tsv` regenerated
   byte-identically, which is the reproducibility check on the Part 1 numbers.
 - Nothing in `paper/`, no `.bib`, no Overleaf write, no push.
+
+---
+
+# PART 3, 2026-08-19: THE EXPORTER, AND THE RETRACTION OF THIS DOCUMENT'S HEADLINE
+
+## 22. RETRACTED: "it is a sourcing gap, not a dropped merge"
+
+Part 1's title says the corpus/bibliography gap is **a sourcing gap**, and
+section 1 says of the 11 absent works "**They were never returned by any
+search.**"
+
+**That sentence is WITHDRAWN.** It is false, and it is false by the exact
+mechanism this document is named after.
+
+READ, live 2026-08-19 from the workspace: `shah2018`
+(`10.1051/matecconf/201820307003`) is `[Sha18c]` and it appears in **three**
+completed deep searches:
+
+| deep search | created | relative to the 2026-08-15 index build |
+|---|---|---|
+| `Dynamic Vehicle Traction in Floodwater` | 2026-07-21 | **PREDATES it by 25 days** |
+| `moving vehicle floodwater GPU particle simulation` | 2026-08-18 | postdates |
+| `moving vehicle floodwater simulation open source implementations` | 2026-08-19 | postdates |
+
+The first one settles it. The project had sourced this paper **25 days before
+the index was built**, and it is absent from the corpus only because
+`Dynamic Vehicle Traction in Floodwater` is not in the hardcoded `REPORTS` list.
+
+**So it is an INGESTION gap, not a sourcing gap.** Nobody needs to go and find
+this paper. It has been found, twice more since, and the reader has now read its
+full text.
+
+### How I got it wrong, which is the point
+
+The evidence I offered was: the DOI and title appear nowhere in the raw text of
+any of the **eight source reports**. That measurement is correct and I would
+make it again. The inference from it was not.
+
+**Eight reports cannot testify about twenty searches.** I searched the container
+that the builder can see, found nothing, and reported it as absence from the
+project's research. That is an absence found by a search that could not have
+matched, committed by me, in the document that names the rule, one commit after
+I wrote the rule into the skill every session loads.
+
+It is also the same argument I made correctly elsewhere. Commit `6ecf4e5`
+reasons that `ccsa2016yaris` is invisible because the builder cannot reach the
+layer holding it. I applied that to the vehicle-mesh case and not to
+`shah2018`, in the same document, on the same day.
+
+The two framings have very different consequences, which is why this matters
+rather than being a wording quibble:
+
+- *sourcing gap* means someone must commission a search and go find the paper.
+- *ingestion gap* means the paper is already in the workspace and the builder
+  cannot see it, so the fix is the adapter in Part 2 and nothing else.
+
+**The corrected headline: the corpus is not a superset of the bibliography
+because the builder cannot reach the layer that holds the missing works.**
+The "one paper wide, not eleven" finding in section 4 SURVIVES unchanged: ten of
+the eleven are absent for reasons of category, and `shah2018` is the one
+in-scope work. What changes is why it is absent.
+
+### A metadata trap on the same record
+
+The workspace gives the first author as **Syed Hamid Hussain Shah**. Crossref,
+resolved live via `verifyCitation`, gives **Syed Muzzamil Hussain Shah**, with
+Mustaffa, Kim and Yusof, "Instability Criteria for Vehicles in Motion Exposed to
+Flood Risks", MATEC Web of Conferences 203, 07003, 2018. Verdict `matched`,
+confidence high, zero field mismatches.
+
+So the authoritative given name is **Muzzamil** and the WORKSPACE record carries
+the variant. This project has recorded the Muzzamil/Hamid variant before. State
+the direction when you use it: an author-route census keyed on the workspace
+spelling will silently miss this work.
+
+## 23. The exporter exists, and two searches are through it
+
+Part 2 shipped the reader and said the exporter was the missing half. It is
+written now, in the only place it can be: a session that holds the connector.
+
+**The procedure, which is the deliverable, not the two files:**
+
+1. `inspect_deep_searches(workspace_id, names=['/NAME'])` gives the search's
+   `goal`, its results `summary`, and the ranked paper list. Page at 50.
+2. `get_paper_info(workspace_id, cite_keys=[...50 max...], show_doi=True)` is the
+   **only** route to a DOI. The search listing carries none.
+3. Write the `canford.deep_search/1` object from section 14 to
+   `data/deep_searches/<slug>.json`.
+4. `--ingest-check` it. Do not hand-fix a rejection; fix the export.
+
+Two searches are exported and both pass the gates:
+
+```
+  RUNG 2, exported deep searches discovered by glob: 2
+    OK      buoyancy-overestimation.json             32 papers
+    OK      vehicle-mesh-assets.json                 36 papers
+  RUNG 3: 20 known, 8 ingested as markdown, 2 exported, 10 still invisible
+```
+
+**AN EXPORT IS NOT AN INGESTION**, and `--source-audit` now says so in those
+words. The files are on disk and pass the gates; `--build` has not consumed
+them, so the corpus is unchanged and a `--query` still cannot reach them.
+Wiring `parse_search_export` into `build()` moves the 332, the 60 and the 76/43
+rungs, and whoever owns the index build should do that deliberately rather than
+as a side effect of this unit.
+
+### A third identifier type, found by running it
+
+`[Miy23]` carries an **arXiv** link rather than a Semantic Scholar one, and the
+S2-only key scheme rejected it as unjoinable when it is perfectly identifiable.
+`join_key` now has three types in precedence order: `doi`, `s2:<40 hex>`,
+`arxiv:<id>`, positional last and refused. Found by exporting 32 real records,
+not by review. That is the second time this unit that running the gate on real
+data found a gap in the gate.
+
+## 24. FOR d11-accessor AND d21-jobb-route, what the buoyancy search actually says
+
+`data/deep_searches/buoyancy-overestimation.json` carries the full goal and
+summary. Four findings bear directly on how Job B is graded. These are the
+search's conclusions, RECALLED from its summary and NOT independently verified
+against the 32 primary sources.
+
+1. **The literature does NOT establish that impulse-exchange force extraction
+   intrinsically double-counts gravity**, and does not establish a universal
+   50 percent bias. So a large positive buoyancy bias cannot be attributed to
+   the accessor on the literature's authority; it has to be shown.
+2. **A positive bias is more plausibly a discrete hydrostatic and
+   interface-coupling error than a tank-size effect.** That is consistent with
+   the pinned-span control this project already ran, which found the tank effect
+   small.
+3. **Kramer's 0.3 percent is a MOTION benchmark, not a static-force tolerance.**
+   The search states this explicitly. Grading a static force against a number
+   quoted from a heave-decay experiment is a category error, and this is the
+   instrument d11-accessor is grading Job B against.
+4. **The literature rarely reports force-extraction windows, pressure-surface
+   versus impulse-exchange cross-checks, or systematic particles-per-cell
+   convergence.** This project has TWO force accessors that disagree by roughly
+   a factor of two and even on sign. That disagreement is not an anomaly to be
+   embarrassed by; it is the diagnostic the field under-reports, and reporting
+   both is publishable rather than disqualifying.
+
+Also in that search and already in the corpus: Steffen's quadrature-error work,
+Bauer 2023 on spatial integration errors (`10.1002/nme.7217`), Zhang 2017 on
+incompressible MPM for free surfaces (`10.1016/j.jcp.2016.10.064`), and Hu 2018
+CPIC (`10.1145/3197517.3201293`), which `CLAUDE.md` A-1 already names as the
+literature-backed alternative coupling architecture.
+
+## 25. Still open after this unit
+
+- **10 of 20 searches remain unexported**, including the 105-paper
+  `moving vehicle floodwater simulation open source implementations` and the
+  43-paper `Dynamic Vehicle Traction in Floodwater` that holds `shah2018`.
+  Roughly 40 connector calls at the rates in section 18.
+- **`build()` does not read the export directory.** The reader, the gates and
+  the discovery glob exist and are exercised; the wiring into `build()` is one
+  function call and a rebuild, and it moves published counts.
+- **The two exports carry no abstracts.** `detail_level='full'` returns them at
+  a smaller page size; without them, `tags_for` under-tags every record, exactly
+  the metadata-only limitation the skill already warns about.
+- **The section 24 findings are the search's own conclusions**, one remove from
+  the 32 papers. An AI research report saying a paper says X is not that paper
+  saying X.
+
+## 26. THE EXPORT DIRECTORY IS GITIGNORED, AND THAT NEARLY ATE THE WHOLE FIX
+
+Found at commit time, not design time. `data/*` in `.gitignore` matches
+`data/deep_searches/`, so both export files were **invisible to `git status`**.
+Re-derive the rule rather than trusting a line number, which this project's
+standing rules require for `.gitignore` specifically:
+
+```
+git check-ignore -v data/deep_searches/buoyancy-overestimation.json
+```
+
+Had I committed without checking, the outcome would have been the exact failure
+this unit exists to fix: an adapter that works on my disk, a `--source-audit`
+that reports two exports on my machine and zero everywhere else, and a sibling
+session told the buoyancy search was available when its checkout has no such
+file. A local-only artifact reported as a shared one.
+
+**What I did:** `git add -f` on the two files, so they are tracked and reachable
+by d11-accessor and d21-jobb-route now.
+
+**What I did NOT do, and it needs doing.** `git add -f` tracks *these two* files
+and leaves the DIRECTORY ignored, so the eleventh export anyone writes will be
+silently dropped again. The durable fix is an un-ignore pair for
+`data/deep_searches/` in `.gitignore`. **`.gitignore` is outside this slot's
+declared write scope and it is a file this project has already recorded three
+stale line-number citations against in one day, so I have not edited it.**
+Whoever owns it should add the pair and verify with `git check-ignore -v`.
+Until then, every export needs `-f` and nothing warns you.
+
