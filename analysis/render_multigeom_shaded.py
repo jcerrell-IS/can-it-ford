@@ -78,8 +78,35 @@ from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import render_multigeom_rollout as RMR          # proven transform + surface code
 
-BANNER = ("NON-CANONICAL COMPANION EXPERIMENT   not part of the 17-run gated "
-          "inventory   (class_specific and hullsweep batches kept distinct)")
+BANNER_NONCANON = ("NON-CANONICAL COMPANION EXPERIMENT   not part of the 17-run "
+                   "gated inventory   (class_specific and hullsweep batches kept "
+                   "distinct)")
+BANNER_CANON = ("CANONICAL 17-RUN INVENTORY   run '%s' is row %d of "
+                "data/all_runs_inventory.csv   DISPLAY RENDER, not a measurement")
+INVENTORY_CSV = Path(__file__).resolve().parents[1] / "data" / "all_runs_inventory.csv"
+
+
+def banner_for(run: Path) -> str:
+    """The banner is DERIVED from the canonical inventory, never hardcoded.
+
+    This module was written for the multigeom companion runs and carried a
+    hardcoded "NON-CANONICAL ... not part of the 17-run gated inventory" string.
+    Pointed at any of the 17 gated runs, that string is a FALSE PROVENANCE CLAIM
+    printed onto the image itself. The 17-run store is data/all_runs_inventory.csv
+    (CLAUDE.md August 4 audit item 8), so the run name is looked up there and the
+    banner follows the answer. If the inventory cannot be read, the banner says so
+    rather than asserting either way.
+    """
+    try:
+        rows = INVENTORY_CSV.read_text().splitlines()
+    except OSError as exc:
+        return ("PROVENANCE UNVERIFIED   could not read %s (%s)   "
+                "do not cite this frame's inventory status"
+                % (INVENTORY_CSV.name, type(exc).__name__))
+    names = [r.split(",", 1)[0].strip() for r in rows[1:] if r.strip()]
+    if run.name in names:
+        return BANNER_CANON % (run.name, names.index(run.name) + 1)
+    return BANNER_NONCANON
 
 # Water optical constants.
 F0_WATER = 0.0204          # Schlick F0 for air->water, ((1.333-1)/(1.333+1))**2
@@ -103,16 +130,143 @@ WE_LO, WE_HI = 8.0, 60.0  # onset and saturation. The classic critical Weber for
                           # printed and written to the manifest so it is auditable.
 
 
+ASSETS = Path(__file__).resolve().parents[1] / "assets"
+HDRI_EXR = ASSETS / "DaySkyHDRI002A_1K_HDR.exr"
+
+
+def build_hdri_cache(cache_dir: Path):
+    """Decode assets/DaySkyHDRI002A_1K_HDR.exr to the .npy pair load_hdri reads.
+
+    WHY THIS EXISTS. `--hdri-cache` was a required argument and NOTHING IN THE
+    REPOSITORY PRODUCED THE CACHE: a live check on 2026-08-19 found this module is
+    the only file in the tracked tree that names hdri_sky.npy, and it only reads
+    it. So the renderer could not be run from a clean checkout, and the four
+    committed manifests under renders/multigeom_2026-08-08_render/ were produced
+    from a cache built by something no longer in the tree. This closes that hole.
+
+    The EXR is READ and decoded to .npy. The asset is never written.
+
+    SUN DIRECTION is derived, not typed: the luminance-weighted, solid-angle
+    weighted centroid of the brightest 0.01 percent of texels. Measured on the
+    shipped file this gives elevation 64.4 deg. Taking the bare argmax instead
+    lands on one texel of a 53-texel sun disc and is noisier.
+    """
+    try:
+        import OpenEXR
+    except ImportError:
+        raise SystemExit(
+            "Cannot decode %s: the OpenEXR module is not installed and no cache "
+            "exists at %s. Install it (uv pip install OpenEXR) or point "
+            "--hdri-cache at a directory holding hdri_sky.npy and hdri_sun.npy."
+            % (HDRI_EXR.name, cache_dir))
+    if not HDRI_EXR.exists():
+        raise SystemExit("HDRI asset missing: %s" % HDRI_EXR)
+    f = OpenEXR.File(str(HDRI_EXR))
+    sky = np.asarray(f.parts[0].channels["RGBA"].pixels)[:, :, :3].astype(np.float32)
+    sky = np.clip(sky, 0.0, None)          # the shipped file carries a small
+    H, W, _ = sky.shape                    # negative epsilon, -0.0054
+    lum = sky @ np.array([0.2126, 0.7152, 0.0722], dtype=np.float32)
+    m = lum >= np.percentile(lum, 99.99)
+    jj, ii = np.nonzero(m)
+    pol = (jj + 0.5) / H * np.pi
+    az = ((ii + 0.5) / W - 0.5) * 2.0 * np.pi
+    w = lum[m] * np.sin(pol)               # solid-angle weight
+    d = np.stack([np.sin(pol) * np.cos(az), np.sin(pol) * np.sin(az),
+                  np.cos(pol)], axis=1)
+    sun = (d * w[:, None]).sum(0)
+    sun /= np.linalg.norm(sun) + 1e-12
+    cache_dir.mkdir(parents=True, exist_ok=True)
+    np.save(cache_dir / "hdri_sky.npy", sky)
+    np.save(cache_dir / "hdri_sun.npy", sun.astype(np.float32))
+    print("[shade] hdri cache      : built from %s, %dx%d, sun elev %.1f deg"
+          % (HDRI_EXR.name, W, H, np.degrees(np.arcsin(sun[2]))))
+    return sky, sun.astype(np.float32)
+
+
 def load_hdri(cache_dir: Path):
-    """Load the cached equirect HDRI and its sun direction.
+    """Load the cached equirect HDRI and its sun direction, building it if absent.
 
     assets/DaySkyHDRI002A_1K_HDR.exr is READ, never regenerated. It is decoded
     once to .npy because no EXR backend is installed in the render venv; the
     decode step is a read of the asset, not a rewrite of it.
     """
-    sky = np.load(cache_dir / "hdri_sky.npy").astype(np.float32)
-    sun = np.load(cache_dir / "hdri_sun.npy").astype(np.float32)
+    sky_p, sun_p = cache_dir / "hdri_sky.npy", cache_dir / "hdri_sun.npy"
+    if not (sky_p.exists() and sun_p.exists()):
+        sky, sun = build_hdri_cache(cache_dir)
+    else:
+        sky = np.load(sky_p).astype(np.float32)
+        sun = np.load(sun_p).astype(np.float32)
     return sky, sun / (np.linalg.norm(sun) + 1e-12)
+
+
+def prefilter_env(sky, levels=(0.0, 6.0, 28.0)):
+    """Roughness pyramid of the equirect environment: sharp, glossy, diffuse.
+
+    This is the split-sum approximation's prefiltered-environment half (Karis
+    2013): a rough surface reflects an average over a lobe, so instead of one
+    mirror sample it takes one sample from a pre-blurred copy. The blur is done
+    in the equirect domain with WRAP in azimuth and REFLECT in polar, which is
+    approximate near the poles and exact enough at the horizon, where every
+    reflection in this scene lands.
+
+    NOT NEW INGREDIENTS. The water already samples this same environment along
+    its mirror direction (sample_env at the reflection step). All this adds is
+    the ability to sample it at a roughness, which is what lets a car body and
+    an asphalt road use the same environment as the water instead of a constant.
+    """
+    from scipy.ndimage import gaussian_filter
+    out = []
+    for s in levels:
+        if s <= 0.0:
+            out.append(sky)
+            continue
+        # wrap azimuth so the seam at +/-pi does not darken
+        pad = int(np.ceil(3.0 * s))
+        pad = min(pad, sky.shape[1] // 2 - 1)
+        w = np.concatenate([sky[:, -pad:], sky, sky[:, :pad]], axis=1)
+        b = np.stack([gaussian_filter(w[:, :, c], sigma=s, mode="nearest")
+                      for c in range(3)], axis=-1)
+        out.append(b[:, pad:pad + sky.shape[1]])
+    return out
+
+
+def env_at_roughness(sky_p, d, rough):
+    """Sample the prefiltered pyramid, blending between levels by roughness."""
+    lo = sample_env(sky_p[0], d)
+    mid = sample_env(sky_p[1], d)
+    hi = sample_env(sky_p[2], d)
+    r = np.clip(np.asarray(rough, dtype=np.float32), 0.0, 1.0)[..., None]
+    a = np.clip(r / 0.35, 0.0, 1.0)          # sharp -> glossy over 0.00-0.35
+    b = np.clip((r - 0.35) / 0.65, 0.0, 1.0)  # glossy -> diffuse over 0.35-1.0
+    return lo * (1.0 - a) + mid * a * (1.0 - b) + hi * b
+
+
+def ggx_spec(n, l, v, rough, F):
+    """GGX/Trowbridge-Reitz D term against a single direction, Smith-free.
+
+    IDENTICAL FORM to the water's specular lobe (shade_water, GGX step): same D,
+    same half-vector, same Fresnel weighting. Only the roughness differs. Kept as
+    a shared function so the two surfaces cannot drift apart.
+    """
+    h = l + v
+    h = h / (np.linalg.norm(h, axis=-1, keepdims=True) + 1e-12)
+    ndoth = np.clip(np.einsum("...i,...i->...", n, h), 0.0, 1.0)
+    a2 = np.clip(rough * rough, 1e-5, 1.0) ** 2
+    D = a2 / (np.pi * ((ndoth * ndoth) * (a2 - 1.0) + 1.0) ** 2)
+    return (F * D)[..., None] * np.array([1.0, 0.98, 0.94], dtype=np.float32)
+
+
+def tonemap(rgb, exposure):
+    """Reinhard + gamma 2.2. The SAME output transform the water already used.
+
+    This is the fix for a real defect, not a flourish: shade_water returned
+    tone-mapped, gamma-encoded values while RMR.shade returned raw clamped
+    linear ones, and both were pushed into the SAME Poly3DCollection. Water and
+    vehicle were being composited in two different colour spaces in one image.
+    """
+    rgb = np.asarray(rgb, dtype=np.float32) * exposure
+    rgb = rgb / (1.0 + rgb)
+    return np.clip(rgb, 0.0, 1.0) ** (1.0 / 2.2)
 
 
 def sample_env(sky, d):
@@ -124,6 +278,197 @@ def sample_env(sky, d):
     i = np.clip(((az / (2 * np.pi) + 0.5) * W).astype(np.int32), 0, W - 1)
     j = np.clip(((pol / np.pi) * H).astype(np.int32), 0, H - 1)
     return sky[j, i]
+
+
+# ---------------------------------------------------------------------------
+# Vehicle material. Same ingredients as the water: Schlick Fresnel, a GGX lobe
+# against the HDRI sun, and the HDRI itself for both reflection and irradiance.
+# ---------------------------------------------------------------------------
+# Dielectric F0. Car clearcoat and rubber are both dielectrics; 0.04 is the
+# standard n=1.5 value, ((1.5-1)/(1.5+1))**2 = 0.04. Not a tuned number.
+F0_DIELECTRIC = 0.04
+ROUGH_BODY = 0.22          # clearcoat over paint: glossy, not a mirror
+ROUGH_TIRE = 0.80          # rubber: nearly diffuse
+SPEC_GAIN = 0.030          # same lobe gain the water uses, kept equal on purpose
+
+
+def smooth_face_normals(V, F, flat):
+    """Area-weighted vertex normals, averaged back onto faces.
+
+    WHY THIS IS NEEDED AND WHY IT IS NOT CHEATING. The vehicle is a marching-cubes
+    isosurface of a particle lattice, so its facets are an artifact of the
+    RECONSTRUCTION, not of the hull. With flat facet normals the Schlick term
+    swings the full 0.04-to-1.0 range between neighbouring faces, and since F=1
+    means "pure environment reflection", the car came out patched with sky-grey
+    like crumpled foil. The old single-Lambert model hid this because a clamped
+    dot product has no grazing-angle response at all.
+
+    Smoothing the NORMAL is the correct fix rather than damping the Fresnel: the
+    true hull is smooth, so the smooth normal is the better estimate of it. The
+    GEOMETRY is untouched, so every silhouette, the floor contact and the bbox
+    enclosure check all still see the exact reconstructed surface.
+    """
+    tri = V[F]
+    area = 0.5 * np.linalg.norm(
+        np.cross(tri[:, 1] - tri[:, 0], tri[:, 2] - tri[:, 0]), axis=1)
+    vn = np.zeros_like(V, dtype=np.float64)
+    for k in range(3):
+        np.add.at(vn, F[:, k], flat * area[:, None])
+    vn /= np.linalg.norm(vn, axis=1, keepdims=True) + 1e-12
+    sm = vn[F].mean(axis=1)
+    sm /= np.linalg.norm(sm, axis=1, keepdims=True) + 1e-12
+    # Keep the smoothed normal on the same side as the flat one.
+    sm[np.einsum("ij,ij->i", sm, flat) < 0.0] *= -1.0
+    return sm
+
+
+def shade_vehicle(nrm, base, tire, view, sky_p, sun, exposure):
+    """Fresnel + GGX + HDRI vehicle material, replacing a single Lambert term.
+
+    WHAT THIS REPLACES. render_multigeom_rollout.shade() was, in full:
+        sh = clip(n . LIGHT, 0, 1) * 0.6 + 0.4
+        return clip(sh[:, None] * base, 0, 1)
+    One clamped dot product against a hardcoded direction, no environment, no
+    Fresnel, no specular, no tone map, in a figure whose water had all four.
+
+    WHAT THIS IS NOT. It is not a new shading model and it is not a measurement.
+    Every term here already existed in this file and was being applied to the
+    water only. warpmpm computes no optics for either surface (register B7).
+
+    Diffuse irradiance is approximated by one sample of the heavily blurred
+    environment along the normal. That is the standard cheap irradiance estimate,
+    and it is why the underside of the hull goes dark and the roof picks up sky:
+    the old model lit both identically from a fixed vector.
+    """
+    n = nrm
+    v = view / (np.linalg.norm(view) + 1e-12)
+    # FACING RATIO, absolute. A back-facing normal must not be clamped toward
+    # zero: Schlick sends F -> 1 there, i.e. "pure mirror", so every back face
+    # would render as sky-grey. Measured on this hull at the default camera,
+    # np.clip(n@v, 1e-4, 1) put 54.9 percent of the 9000 faces at F > 0.9 and
+    # 77.4 percent of those were back faces. Back faces are culled by the caller,
+    # and taking |n.v| keeps any that survive shading as a two-sided surface.
+    ndotv = np.clip(np.abs(n @ v), 1e-4, 1.0)
+
+    rough = np.where(tire, ROUGH_TIRE, ROUGH_BODY).astype(np.float32)
+
+    # Fresnel (Schlick), identical form to the water's
+    F = F0_DIELECTRIC + (1.0 - F0_DIELECTRIC) * (1.0 - ndotv) ** 5
+
+    # diffuse: irradiance from the environment along the normal
+    irr = env_at_roughness(sky_p, n, np.ones_like(rough))
+    diff = base * irr
+
+    # reflection: environment along the mirror direction, blurred by roughness
+    r = 2.0 * ndotv[:, None] * n - v[None, :]
+    r /= np.linalg.norm(r, axis=-1, keepdims=True) + 1e-12
+    refl = env_at_roughness(sky_p, r, rough)
+
+    # specular: GGX against the HDRI sun
+    spec = ggx_spec(n, sun[None, :], v[None, :], rough, F) * SPEC_GAIN
+
+    rgb = diff * (1.0 - F[:, None]) + refl * F[:, None] + spec
+    return tonemap(rgb, exposure)
+
+
+# ---------------------------------------------------------------------------
+# Ground. THERE WAS NO GROUND. Dry columns are dropped entirely (the D2 fix), so
+# outside the wet footprint the 3D view showed empty white paper.
+# ---------------------------------------------------------------------------
+GROUND_FALLBACK_ALBEDO = np.array([0.085, 0.085, 0.090], dtype=np.float32)
+GROUND_FALLBACK_ROUGH = 0.70
+ASPHALT = {
+    "color": ASSETS / "Asphalt015_1K-JPG_Color.jpg",
+    "rough": ASSETS / "Asphalt015_1K-JPG_Roughness.jpg",
+    "normal": ASSETS / "Asphalt015_1K-JPG_NormalGL.jpg",
+}
+ASPHALT_LICENCE = (
+    "assets/Asphalt015*: LICENCE NOT ESTABLISHED. No licence file ships in "
+    "assets/, and none of the four files carries a copyright, licence or source "
+    "string in its header (checked 2026-08-19). The naming scheme matches "
+    "ambientCG, whose library is CC0, but provenance by naming convention is "
+    "INFERENCE, not proof that these bytes came from there. Gated off by default "
+    "for that reason.")
+
+
+def load_ground_maps(kind: str, tile_m: float, cells: int):
+    """Return (albedo_fn, rough_fn, normal_fn) sampling the ground maps in metres.
+
+    kind='none' returns the untextured fallback and READS NOTHING from assets/,
+    which is the default. kind='asphalt' reads the three Asphalt015 maps. See
+    ASPHALT_LICENCE: their licence could not be established from the files, so
+    the texture is opt-in and the caption says so on any frame that uses it.
+
+    TILE SCALE IS A DISPLAY CHOICE, NOT A MEASUREMENT. The files carry no
+    physical scale, so tile_m is stated in the caption rather than implied.
+    """
+    if kind == "none":
+        return None
+    import matplotlib.image as mpimg
+    miss = [str(p) for p in ASPHALT.values() if not p.exists()]
+    if miss:
+        raise SystemExit("--ground-texture asphalt: missing %s" % ", ".join(miss))
+
+    def rd(p, srgb):
+        a = mpimg.imread(str(p)).astype(np.float32)
+        if a.max() > 1.5:
+            a /= 255.0
+        if a.ndim == 2:
+            a = a[:, :, None].repeat(3, axis=2)
+        a = a[:, :, :3]
+        return a ** 2.2 if srgb else a      # colour is sRGB-encoded; data maps
+
+    return {                                # are linear and must NOT be degamma'd
+        "color": rd(ASPHALT["color"], True),
+        "rough": rd(ASPHALT["rough"], False),
+        "normal": rd(ASPHALT["normal"], False),
+        "tile_m": float(tile_m),
+    }
+
+
+def sample_tex(tex, X, Y, tile_m):
+    """Nearest-neighbour tiled lookup, X/Y in metres."""
+    h, w = tex.shape[:2]
+    u = np.mod(X / tile_m, 1.0)
+    v = np.mod(Y / tile_m, 1.0)
+    i = np.clip((u * w).astype(np.int32), 0, w - 1)
+    j = np.clip((v * h).astype(np.int32), 0, h - 1)
+    return tex[j, i]
+
+
+def ground_maps_at(gm, X, Y):
+    """(albedo, roughness, normal) on the X/Y grid, in world units."""
+    if gm is None:
+        alb = np.broadcast_to(GROUND_FALLBACK_ALBEDO, X.shape + (3,)).copy()
+        rgh = np.full(X.shape, GROUND_FALLBACK_ROUGH, dtype=np.float32)
+        nrm = np.zeros(X.shape + (3,), dtype=np.float32)
+        nrm[..., 2] = 1.0
+        return alb, rgh, nrm
+    t = gm["tile_m"]
+    alb = sample_tex(gm["color"], X, Y, t)
+    rgh = sample_tex(gm["rough"], X, Y, t)[..., 0]
+    # NormalGL: tangent-space, +Y up (OpenGL convention, as the filename says).
+    # Encoded 0..1 -> -1..1. z is the surface normal here because the ground is
+    # flat and axis-aligned, so tangent space IS world space up to a swap.
+    nt = sample_tex(gm["normal"], X, Y, t) * 2.0 - 1.0
+    nrm = np.stack([nt[..., 0], nt[..., 1], np.abs(nt[..., 2])], axis=-1)
+    nrm /= np.linalg.norm(nrm, axis=-1, keepdims=True) + 1e-12
+    return alb, rgh, nrm
+
+
+def shade_ground(alb, rgh, nrm, view, sky_p, sun, exposure, wet_tint=None):
+    """Ground material, same ingredients again: Fresnel + GGX + HDRI."""
+    v = view / (np.linalg.norm(view) + 1e-12)
+    ndotv = np.clip(np.einsum("ijk,k->ij", nrm, v), 1e-4, 1.0)
+    F = F0_DIELECTRIC + (1.0 - F0_DIELECTRIC) * (1.0 - ndotv) ** 5
+    irr = env_at_roughness(sky_p, nrm, np.ones_like(rgh))
+    diff = alb * irr
+    r = 2.0 * ndotv[..., None] * nrm - v[None, None, :]
+    r /= np.linalg.norm(r, axis=-1, keepdims=True) + 1e-12
+    refl = env_at_roughness(sky_p, r, rgh)
+    spec = ggx_spec(nrm, sun[None, None, :], v[None, None, :], rgh, F) * SPEC_GAIN
+    rgb = diff * (1.0 - F[..., None]) + refl * F[..., None] + spec
+    return tonemap(rgb, exposure)
 
 
 def surface_quads(X, Y, Hh, rgb, drop):
@@ -230,7 +575,8 @@ def free_surface(w, sp, cx, cy, half, floor, cell, smooth_len_m):
     return X, Y, Hh, S, wet
 
 
-def shade_water(X, Y, Hh, S, floor, view, sky, sun, h_particle, exposure):
+def shade_water(X, Y, Hh, S, floor, view, sky, sun, h_particle, exposure,
+                bottom_rgb=None):
     """Analytic water shading. DISPLAY ONLY, see the module docstring.
 
     Returns (rgb, foam, We) with rgb already tone-mapped and gamma-encoded.
@@ -263,7 +609,12 @@ def shade_water(X, Y, Hh, S, floor, view, sky, sun, h_particle, exposure):
     depth = np.clip(Hh - floor, 0.0, None)
     path = depth / np.clip(cos_t, 0.2, 1.0)
     trans = np.exp(-(SIGMA_RGB * VIS_GAIN)[None, None, :] * path[..., None])
-    refr = BOTTOM_RGB[None, None, :] * trans + SCATTER_RGB[None, None, :] * (1.0 - trans)
+    # The riverbed seen THROUGH the water. BOTTOM_RGB was a flat 0.05 grey whose
+    # own comment read "wet asphalt"; when the ground is textured, the actual
+    # ground albedo is used here, so the road reads continuously from dry, through
+    # the shallow margin, into the deep water where Beer-Lambert absorbs it away.
+    bot = BOTTOM_RGB[None, None, :] if bottom_rgb is None else bottom_rgb
+    refr = bot * trans + SCATTER_RGB[None, None, :] * (1.0 - trans)
 
     # ---- foam: WEBER-NUMBER criterion, Ihmsen et al. 2012 (D3 fix) ---------
     # We = rho |v_rel|^2 L / sigma. Inertia over surface tension: above a critical
@@ -305,21 +656,25 @@ def shade_water(X, Y, Hh, S, floor, view, sky, sun, h_particle, exposure):
     return rgb, foam, We
 
 
-def caption_lines(z, zmin, floor, extra: str) -> list[str]:
+def caption_lines(z, zmin, floor, extra: str, banner: str) -> list[str]:
     """Numbers from this run's OWN summary.json / rollout.npz. Nothing retyped."""
     s = z["summary"]
     rise = s["C2_veh_zmin_rise"]
     nf = len(zmin)
     p2, p3 = s["passthrough_max_frac"], abs(rise) <= 0.01
+    # The 17 gated runs carry no 'vehicle_key': that field is a multigeom addition.
+    # Fall back to 'label', then to the run directory name, rather than crashing or
+    # inventing a hull name.
+    vkey = s.get("vehicle_key") or s.get("label") or z.get("run_name", "unknown")
     l2 = ("%s hull, %.1f kg, n_grid %d, dx %.5f m, %d water layers, depth %.2f m, "
           "surge %.1f m/s, %d frames at %d fps"
-          % (s["vehicle_key"], s["mass_kg"], s["n_grid"], s["dx"], s["water_layers"],
+          % (vkey, s["mass_kg"], s["n_grid"], s["dx"], s["water_layers"],
              s["depth_m"], s["velocity_ms"], nf, z["fps"]))
     l3 = ("final |disp| %.5f m   P-2 passthrough %.4f (%s, limit <0.10)   "
           "P-3 z-min rise %+.5f m (%s, limit |rise|<=0.01)   verdict NO-FORD"
           % (s["final_disp_mag_m"], p2, "PASS" if p2 < 0.10 else "FAIL",
              rise, "PASS" if p3 else "FAIL"))
-    lines = [BANNER, l2, l3]
+    lines = [banner, l2, l3]
     if not p3:
         lines.append(
             "P-3 FAIL RECURS. Measured from the verified transform: hull z-min "
@@ -350,7 +705,11 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--run", required=True)
     ap.add_argument("--outdir", required=True)
-    ap.add_argument("--hdri-cache", required=True)
+    ap.add_argument("--hdri-cache", default=None,
+                    help="directory holding hdri_sky.npy / hdri_sun.npy. Built "
+                         "from assets/DaySkyHDRI002A_1K_HDR.exr if absent. "
+                         "Defaults to <outdir>/_hdri_cache. NO LONGER REQUIRED: "
+                         "it used to be, and nothing in the repo produced it.")
     ap.add_argument("--frames", default="all")
     ap.add_argument("--stride", type=int, default=1)
     ap.add_argument("--width", type=int, default=1800)
@@ -366,6 +725,22 @@ def main():
                          "particles and the sheet comes out speckled rather than "
                          "smooth. Rogue h = 0.0816 m, Silverado h = 0.1021 m.")
     ap.add_argument("--exposure", type=float, default=1.45)
+    ap.add_argument("--ground-texture", choices=("none", "asphalt"), default="none",
+                    help="'asphalt' reads assets/Asphalt015_1K-JPG_*. DEFAULT OFF: "
+                         "those files carry no licence record, see ASPHALT_LICENCE.")
+    ap.add_argument("--ground-tile-m", type=float, default=2.0,
+                    help="physical size of one texture tile, m. A DISPLAY CHOICE: "
+                         "the files carry no scale, so it is captioned not implied.")
+    ap.add_argument("--cull-backfaces", action="store_true",
+                    help="drop faces pointing away from the camera. Formally "
+                         "correct for a closed body, but the hull has genus ~100 "
+                         "so its tunnels become see-through. Off by default.")
+    ap.add_argument("--hero", action="store_true",
+                    help="3D view only, full canvas, caption kept. The diagnostic "
+                         "panels are dropped; the provenance banner is not.")
+    ap.add_argument("--legacy-vehicle-shading", action="store_true",
+                    help="restore the single-Lambert vehicle and draw no ground, "
+                         "i.e. the pre-2026-08-19 appearance, for A/B comparison.")
     ap.add_argument("--upsample", type=int, default=3)
     ap.add_argument("--sigma", type=float, default=1.0)
     ap.add_argument("--max-faces", type=int, default=9000)
@@ -373,9 +748,18 @@ def main():
 
     run, out = Path(a.run), Path(a.outdir)
     out.mkdir(parents=True, exist_ok=True)
-    sky, sun = load_hdri(Path(a.hdri_cache))
+    sky, sun = load_hdri(Path(a.hdri_cache) if a.hdri_cache
+                         else out / "_hdri_cache")
+    sky_p = prefilter_env(sky)
+    gmaps = None if a.legacy_vehicle_shading else load_ground_maps(
+        a.ground_texture, a.ground_tile_m, 0)
+    if a.ground_texture == "asphalt" and not a.legacy_vehicle_shading:
+        print("[shade] ground texture  : assets/Asphalt015_1K-JPG_* at %.2f m/tile"
+              % a.ground_tile_m)
+        print("[shade] LICENCE         : %s" % ASPHALT_LICENCE)
 
     z = RMR.load_run(run)
+    z["run_name"] = run.name
     pv, world, worst, errs = RMR.rigid_transform(z)
     print("[shade] run             : %s" % run)
     print("[shade] transform check : max|err| %.3e m  (gates.py:136/:157 reused)" % worst)
@@ -384,6 +768,19 @@ def main():
     Vb, Fb, n_raw = RMR.build_surface(pv, hpart, upsample=a.upsample,
                                       sigma=a.sigma, max_faces=a.max_faces)
     base, n_tire = RMR.base_colours(Vb, Fb)
+    # Which faces base_colours painted as tire, recovered from the colour it
+    # assigned rather than by re-deriving the geometric test, so the two can
+    # never disagree about which face is rubber and which is paint.
+    tire_face = np.all(np.isclose(base, RMR.TIRE[None, :]), axis=1)
+    # Base colours are authored as sRGB-ish display values; the new material
+    # pipeline works in linear light and gamma-encodes at the end, so decode
+    # them once here. Without this the car comes out washed out. Kept SEPARATE
+    # from `base` so --legacy-vehicle-shading reproduces the old frame exactly.
+    base_lin = base.astype(np.float32) ** 2.2
+    # The body is RIGID, so smoothed normals are computed ONCE in the body frame
+    # and rotated per frame. Exact, and it keeps the per-frame cost unchanged.
+    nrm_body_flat, _ = RMR.face_normals_outward(Vb, Fb)
+    nrm_body = smooth_face_normals(Vb, Fb, nrm_body_flat)
     outside = int(((pv < Vb.min(0) - 1e-9) | (pv > Vb.max(0) + 1e-9)).any(1).sum())
     print("[shade] surface         : %d faces, encloses %d/%d particles"
           % (len(Fb), len(pv) - outside, len(pv)))
@@ -416,7 +813,8 @@ def main():
                         "vehicle surface = marching-cubes isosurface of the %d "
                         "SIMULATED rigid particles (h = dx/2 = %.5f m, %d faces); "
                         "no .ply is read, so register E8 is not engaged."
-                        % (len(pv), hpart, len(Fb)))
+                        % (len(pv), hpart, len(Fb)),
+                        banner_for(run))
     idx = list(range(0, nf, a.stride)) if a.frames == "all" else [int(a.frames)]
     slab = a.slab_cells * dx
     foam_stats, we_stats = [], []
@@ -429,14 +827,50 @@ def main():
 
         Vw = Vb @ z["R"][f].T + z["t"][f]
         nrm, tri = RMR.face_normals_outward(Vw, Fb)
-        fcol = RMR.shade(base, nrm)
+        if a.legacy_vehicle_shading:
+            fcol = RMR.shade(base, nrm)
+        else:
+            fcol = shade_vehicle(nrm_body @ z["R"][f].T, base_lin, tire_face,
+                                 view, sky_p, sun, a.exposure)
+        # BACK-FACE CULLING. The hull is a closed opaque body, so a face pointing
+        # away from the camera is never visible and drawing it can only leak
+        # through gaps in matplotlib's painter's sort. It is also half the mesh:
+        # 4584 of 9000 faces at the default camera. The old flat-Lambert model
+        # made the leak hard to see because its darkest possible value was still
+        # 0.4*base, a dark red; an environment-lit model paints the same leaked
+        # faces sky-grey. Culling fixes the cause, not the symptom.
+        # Culled in the 3D panel only. The profile panel is an ORTHOGRAPHIC view
+        # along +x drawn in ascending-x order, so the painter's order there is
+        # already exact and back faces are overpainted by near ones; culling on a
+        # staircase surface would instead punch holes wherever a near face has
+        # n_x == 0 exactly, which on a marching-cubes lattice is most of them.
+        # OFF BY DEFAULT, and the reason is a measured property of the hull, not
+        # a preference. The reconstructed isosurface is CLOSED (0 boundary edges
+        # at every decimation level tested) but has GENUS ~100: about a hundred
+        # tunnels pass through it, gaps the particle lattice never closed. Culling
+        # is formally correct for a closed body and it makes those tunnels
+        # see-through, which at hero framing reads as a broken car. Drawing the
+        # back faces fills them with the far interior surface. The silhouette,
+        # the floor contact and the particle-enclosure check are identical either
+        # way; only the tunnel interiors differ.
+        keep3 = ((nrm @ view) > 0.0 if (a.cull_backfaces
+                                        and not a.legacy_vehicle_shading)
+                 else np.ones(len(tri), dtype=bool))
+        tri3, fcol3 = tri[keep3], fcol[keep3]
         order = np.argsort(tri.mean(1)[:, 0])
         tri_yz, fcol_yz = tri[:, :, 1:3][order], fcol[order]
 
         X, Y, Hh, S, wet = free_surface(w, sp, cx, cy, a.half, floor,
                                         a.surf_cell, hpart)
+        # Ground first: its albedo is what the water refracts against, so the
+        # riverbed under the flood is the same surface as the dry road beside it.
+        if a.legacy_vehicle_shading:
+            g_bottom = None
+        else:
+            g_alb, g_rgh, g_nrm = ground_maps_at(gmaps, X, Y)
+            g_bottom = g_alb
         wrgb, foam, We = shade_water(X, Y, Hh, S, floor, view, sky, sun,
-                                     hpart, a.exposure)
+                                     hpart, a.exposure, bottom_rgb=g_bottom)
         # foam and We reported over WET cells only; averaging over dry ground
         # would silently dilute both and make the diagnostic unreadable.
         foam_stats.append(float(foam[wet].mean()) if wet.any() else 0.0)
@@ -447,18 +881,37 @@ def main():
         drop = occ | ~wet
         wq, wc = surface_quads(X, Y, np.where(wet, Hh, np.nan), wrgb, drop)
 
+        # Ground quads at the floor plane, drawn only where the water is NOT, so
+        # the two never z-fight. Under the hull footprint the ground IS drawn:
+        # the car sits on the road, and leaving a hole there was what made the
+        # old frame read as a hull floating over blank paper.
+        gq, gc = [], np.zeros((0, 3), dtype=np.float32)
+        if not a.legacy_vehicle_shading:
+            grgb = shade_ground(g_alb, g_rgh, g_nrm, view, sky_p, sun, a.exposure)
+            Zg = np.full(X.shape, floor, dtype=np.float32)
+            gq, gc = surface_quads(X, Y, Zg, grgb, wet & ~occ)
+
         fig = plt.figure(figsize=(a.width / a.dpi, a.height / a.dpi), dpi=a.dpi)
-        gs = GridSpec(3, 2, figure=fig, width_ratios=[1.12, 1.0],
-                      height_ratios=[1.0, 0.55, 0.62],
-                      left=0.02, right=0.975, top=0.945, bottom=0.235,
-                      wspace=0.13, hspace=0.55)
+        if a.hero:
+            # HERO: the 3D view only, at full canvas. Same scene, same camera,
+            # same caption block. The diagnostic panels are dropped, NOT the
+            # caption: a render that loses its provenance line is exactly the
+            # artifact this project has already been burned by.
+            gs = GridSpec(1, 1, figure=fig, left=0.03, right=0.97,
+                          top=0.955, bottom=0.20)
+        else:
+            gs = GridSpec(3, 2, figure=fig, width_ratios=[1.12, 1.0],
+                          height_ratios=[1.0, 0.55, 0.62],
+                          left=0.02, right=0.975, top=0.945, bottom=0.235,
+                          wspace=0.13, hspace=0.55)
 
         # ---- oblique 3D: shaded water sheet + solid hull ---------------------
-        ax = fig.add_subplot(gs[:, 0], projection="3d")
+        ax = (fig.add_subplot(gs[0, 0], projection="3d") if a.hero
+              else fig.add_subplot(gs[:, 0], projection="3d"))
         # D1: ONE collection carrying water quads AND hull faces, so the painter's
         # sort is over all faces together instead of between two artists.
-        polys = wq + list(tri)
-        pcol = np.vstack([wc, fcol]) if len(wq) else fcol
+        polys = gq + wq + list(tri3)
+        pcol = np.vstack([c for c in (gc, wc, fcol3) if len(c)])
         pc = Poly3DCollection(polys, facecolors=pcol, edgecolors="none",
                               linewidths=0, shade=False, zsort="average")
         ax.add_collection3d(pc)
@@ -473,51 +926,59 @@ def main():
         ax.tick_params(labelsize=7)
         ax.set_title("frame %03d / %d    t = %.3f s    shaded free surface "
                      "(display model)" % (f, nf - 1, f / z["fps"]), fontsize=10)
+        if a.hero:
+            # A 3D axes reserves ~20 percent margin around its box, and this
+            # scene's box is a flat slab (7.8 x 7.8 x ~1.5 m), so the default
+            # leaves most of a hero canvas empty. Overscan the axes rectangle.
+            ax.set_position([-0.06, 0.13, 1.12, 0.90])
 
-        # ---- car profile, (y, z), equal aspect, PARTICLES not the sheet ------
-        ax2 = fig.add_subplot(gs[0, 1])
-        m = np.abs(w[:, 0] - vx) < slab
-        ax2.scatter(w[m, 1], w[m, 2], c=sp[m], cmap="viridis", vmin=vlo, vmax=vhi,
-                    s=3.2, alpha=0.5, linewidths=0, rasterized=True)
-        ax2.add_collection(PolyCollection(tri_yz, facecolors=fcol_yz,
-                                          edgecolors="none", zorder=4, rasterized=True))
-        ax2.axhline(floor, color="#222222", lw=1.5, zorder=5)
-        ax2.set_xlim(ylo_p, yhi_p)
-        ax2.set_ylim(zlo, zhi)
-        ax2.set_aspect("equal")
-        ax2.set_xlabel("y, vehicle long axis (m)", fontsize=8)
-        ax2.set_ylabel("z (m)", fontsize=8)
-        ax2.tick_params(labelsize=7)
-        ax2.set_title("car profile, raw particles, slab |x - x_veh| < %.2f m "
-                      "(unshaded: this is the data)" % slab, fontsize=9)
+        # HERO drops the three diagnostic panels. The caption block below
+        # is NOT dropped: provenance travels with the image.
+        if not a.hero:
+            # ---- car profile, (y, z), equal aspect, PARTICLES not the sheet ------
+            ax2 = fig.add_subplot(gs[0, 1])
+            m = np.abs(w[:, 0] - vx) < slab
+            ax2.scatter(w[m, 1], w[m, 2], c=sp[m], cmap="viridis", vmin=vlo, vmax=vhi,
+                        s=3.2, alpha=0.5, linewidths=0, rasterized=True)
+            ax2.add_collection(PolyCollection(tri_yz, facecolors=fcol_yz,
+                                              edgecolors="none", zorder=4, rasterized=True))
+            ax2.axhline(floor, color="#222222", lw=1.5, zorder=5)
+            ax2.set_xlim(ylo_p, yhi_p)
+            ax2.set_ylim(zlo, zhi)
+            ax2.set_aspect("equal")
+            ax2.set_xlabel("y, vehicle long axis (m)", fontsize=8)
+            ax2.set_ylabel("z (m)", fontsize=8)
+            ax2.tick_params(labelsize=7)
+            ax2.set_title("car profile, raw particles, slab |x - x_veh| < %.2f m "
+                          "(unshaded: this is the data)" % slab, fontsize=9)
 
-        # ---- foam field, plan view -------------------------------------------
-        ax4 = fig.add_subplot(gs[1, 1])
-        ax4.pcolormesh(X, Y, np.where(wet, foam, np.nan), cmap="bone",
-                       vmin=0.0, vmax=1.0, rasterized=True)
-        ax4.plot([hull_xy[0], hull_xy[1], hull_xy[1], hull_xy[0], hull_xy[0]],
-                 [hull_xy[2], hull_xy[2], hull_xy[3], hull_xy[3], hull_xy[2]],
-                 color="#b3282d", lw=1.2)
-        ax4.set_aspect("equal")
-        ax4.set_xlabel("x (m)", fontsize=8)
-        ax4.set_ylabel("y (m)", fontsize=8)
-        ax4.tick_params(labelsize=7)
-        ax4.set_title("foam from Weber number (Ihmsen 2012), We_99 = %.0f; "
-                      "red = hull footprint" % we_stats[-1], fontsize=9)
+            # ---- foam field, plan view -------------------------------------------
+            ax4 = fig.add_subplot(gs[1, 1])
+            ax4.pcolormesh(X, Y, np.where(wet, foam, np.nan), cmap="bone",
+                           vmin=0.0, vmax=1.0, rasterized=True)
+            ax4.plot([hull_xy[0], hull_xy[1], hull_xy[1], hull_xy[0], hull_xy[0]],
+                     [hull_xy[2], hull_xy[2], hull_xy[3], hull_xy[3], hull_xy[2]],
+                     color="#b3282d", lw=1.2)
+            ax4.set_aspect("equal")
+            ax4.set_xlabel("x (m)", fontsize=8)
+            ax4.set_ylabel("y (m)", fontsize=8)
+            ax4.tick_params(labelsize=7)
+            ax4.set_title("foam from Weber number (Ihmsen 2012), We_99 = %.0f; "
+                          "red = hull footprint" % we_stats[-1], fontsize=9)
 
-        # ---- z-min against the floor plane -----------------------------------
-        ax3 = fig.add_subplot(gs[2, 1])
-        ax3.plot(np.arange(nf), (zmin - floor) * 1e3, color="#b3282d", lw=1.5)
-        ax3.axhline(0.0, color="#222222", lw=1.2)
-        ax3.plot([f], [(zmin[f] - floor) * 1e3], "o", color="black", ms=5)
-        ax3.set_xlim(0, nf - 1)
-        ax3.set_xlabel("frame", fontsize=8)
-        ax3.set_ylabel("z-min above floor (mm)", fontsize=8)
-        ax3.tick_params(labelsize=7)
-        ax3.grid(alpha=0.25, lw=0.5)
-        ax3.set_title("z-min above floor: f0 %+.1f mm -> f%d %+.1f mm"
-                      % ((zmin[0] - floor) * 1e3, nf - 1, (zmin[-1] - floor) * 1e3),
-                      fontsize=9)
+            # ---- z-min against the floor plane -----------------------------------
+            ax3 = fig.add_subplot(gs[2, 1])
+            ax3.plot(np.arange(nf), (zmin - floor) * 1e3, color="#b3282d", lw=1.5)
+            ax3.axhline(0.0, color="#222222", lw=1.2)
+            ax3.plot([f], [(zmin[f] - floor) * 1e3], "o", color="black", ms=5)
+            ax3.set_xlim(0, nf - 1)
+            ax3.set_xlabel("frame", fontsize=8)
+            ax3.set_ylabel("z-min above floor (mm)", fontsize=8)
+            ax3.tick_params(labelsize=7)
+            ax3.grid(alpha=0.25, lw=0.5)
+            ax3.set_title("z-min above floor: f0 %+.1f mm -> f%d %+.1f mm"
+                          % ((zmin[0] - floor) * 1e3, nf - 1, (zmin[-1] - floor) * 1e3),
+                          fontsize=9)
 
         for i, line in enumerate(cap):
             fig.text(0.02, 0.198 - i * 0.0272, line,
