@@ -114,7 +114,12 @@ def report_stream_health(rows):
 
 
 TIDY_COLS = [
+    # road_cross_slope and road_crown_height_m were in the RECORD and missing
+    # from here, so every crowned run exported as though it were flat and the
+    # only surviving evidence of the road was the label and a smaller n_water.
+    # A column added to the record does not reach the TSV until it is added here.
     "tag", "status", "frame", "no_hull", "hull_y_m",
+    "road_cross_slope", "road_crown_height_m",
     "v_car_ms", "v_water_ms", "v_rel_mag_ms", "v_rel_angle_deg_from_broadside",
     "n_grid", "dx_m", "lim_m", "depth_m", "depth_cells", "band_over_depth",
     "n_water", "water_layers", "substeps", "substeps_effective",

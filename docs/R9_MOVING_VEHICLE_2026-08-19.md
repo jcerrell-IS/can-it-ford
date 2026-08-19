@@ -1884,12 +1884,158 @@ video that still looks continuous.
 
 ### The delivered files, counted twice on two machines
 
-| file | frames | duration | size |
-|---|---|---|---|
-| `can_it_ford_moving_2p2ms.mp4` | **150** | 5.000 s | 7.66 MB |
-| `can_it_ford_moving_4p5ms.mp4` | **100** | 3.333 s | 5.81 MB |
+**CORRECTED: this table named two filenames that exist nowhere on the node.**
+The names below are the artifacts as WRITTEN by the job; the third column is the
+name each was given when delivered to Josie, which is where the earlier, wrong
+names came from. Same bytes, two names, and a reader following the old table
+found nothing.
+
+| on Vista, `out/` | frames | duration | size (bytes) | delivered as |
+|---|---|---|---|---|
+| `r9_RENDvc2p2.mp4` | **150** | 5.000 s | 7,664,603 | `can_it_ford_moving_2p2ms.mp4` |
+| `r9_RENDvc4p5.mp4` | **100** | 3.333 s | 5,810,911 | `can_it_ford_moving_4p5ms.mp4` |
 
 Both 1280x960 at 30 fps. The PNG count and the encoder's own reported frame
 count were compared on the node (`match=YES` for both), and the frame counts were
 then re-derived on the Mac with a **different ffmpeg build** via
 `ffprobe -count_frames`. 150 requested, 150 dumped, 150 rendered, 150 encoded.
+
+---
+
+# RESULTS, FIFTH BLOCK: the batch and the crowned road
+
+Three jobs completed: **922514** `r9_speed_surface` (02:59:11), **922582**
+`r9_render_motion` (00:36:43) and **922593** `r9_crowned_road` (00:07:31), all
+ExitCode 0:0. The committed TSV now holds **1,137 records**.
+
+## T27. YES, the crowned road IS the paired comparison the literature is missing
+
+A deep search of 18 August states plainly that **no retrieved study quantifies a
+crowned or cambered road against a flat plane**. The question asked of me was
+whether job 922593 actually answers that, because an unpaired run would not.
+
+**It is paired, and the flat side is measured, not assumed.** Every arm is the
+same `|v_rel|` = 3.0 arc, 9 angles, 3 seeds, g64, 400 frames with 250 discarded,
+`bc_per_frame` 5, depth 0.30 m, same hull, same domain, same seeds. **The only
+thing that differs is the cross slope.**
+
+| arm | cross slope | crown height | n_water | mean `\|F_h\|` | S | peak angle |
+|---|---|---|---|---|---|---|
+| `RDgate0` | **0.00, flat** | 0.0000 m | 41,648 | **3119.7 N** | 1.0703 | -67.5 deg |
+| `RDs2p0` | 0.02 | 0.0942 m | 34,946 | **1979.8 N** | 1.1196 | |
+| `RDs4p0` | 0.04 | 0.1884 m | 28,340 | **1563.6 N** | 1.5347 | |
+
+**A 2 percent crown, which is the standard road camber, cuts the horizontal load
+by 36.5 percent. A 4 percent crown cuts it by 49.9 percent.**
+
+### The gate passed, and it did NOT pass exactly
+
+`--road-cross-slope 0.0` runs the array clamp over a flat profile and must
+reproduce the scalar-clamp flat arm `M5m3.0s*`. Measured, three seeds:
+
+| seed | max abs. relative difference | mean |
+|---|---|---|
+| 0 | 0.159 percent | 0.045 |
+| 1 | **0.254 percent** | 0.060 |
+| 2 | 0.219 percent | 0.045 |
+
+**I claimed this would be byte-identical and it is not.** Every recorded field
+is identical between the two arms, `n_water` 41,648 on both, same dx, lim,
+substeps, `substeps_effective`, applied `bc_per_frame`, `wrench_dt_s`, hull
+placement and analytic buoyancy. So it is the same scene. But the worst
+disagreement, 0.254 percent, is about **three times** the fixed-seed
+nondeterminism floor of 0.0764 percent that T11 measured at this speed. The
+extra array operations plausibly perturb accumulation order, **and I have not
+isolated it, so it is reported as an unexplained residual rather than explained
+away.** It is 140 times smaller than the crown effect it gates, so the arm
+stands; a gate that had to resolve a 0.25 percent effect would not.
+
+### The mechanism is mostly the obvious one, and saying so is the honest move
+
+A crown makes the centreline shallower at a level flood surface, which is the
+whole point of a crown. The water it displaces is measured, not inferred:
+`n_water` falls **16.1 percent** at 2 percent slope and **32.0 percent** at 4
+percent. So this is not a subtle hydrodynamic result, it is mostly "the vehicle
+is standing in less water", and it should be reported that way rather than
+dressed up. What makes it worth publishing is that **nobody has put a number on
+it**, and the number is large.
+
+**Two framings exist and this is one of them.** Holding the flood LEVEL fixed
+and crowning the road, which is what a real road does, is the operational
+question. Holding the depth AT THE VEHICLE fixed and crowning the road would
+isolate the geometry from the depth. **This arm answers the first.** The second
+is a different experiment and is not claimed here.
+
+### A trap this created, flagged before anyone reads past it
+
+`f_buoy_analytic_N` is **4468.62 N in all three arms**, because it is computed
+from the nominal 0.30 m depth and the hull geometry, not from the water actually
+present. On a crowned road the vehicle sits in 0.206 m (2 percent) or 0.112 m
+(4 percent). **So `fz_settle_over_analytic` is not a valid buoyancy ratio for
+the crowned arms** and must not be read as one. The flat arm is unaffected.
+
+### What this is NOT
+
+**No verdict, on either side.** The body is prescribed and cannot be swept away,
+so the comparison is a paired LOAD comparison, not a paired verdict comparison.
+Filling the literature's gap completely would need a free body, which
+`RigidBody6DOF` refuses at a non-zero COM offset. A 36.5 percent load reduction
+is large enough to matter to any threshold, but converting it into a FORD or
+NO-FORD claim is exactly the step this document has refused throughout.
+
+## T28. The resolution ladder does not converge, and now there are four rungs
+
+The batch put five seeds on g96 and g128 and added g160.
+
+| grid | seeds | S | mean `\|F_h\|` | peak angle | mean stream |
+|---|---|---|---|---|---|
+| g64 | 5 | 1.0681 +- 0.0026 | 3118.5 N | -67.5 deg | +0.744 |
+| g96 | 5 | 1.0067 +- 0.0029 | 3109.1 N | -56.25 deg | +0.739 |
+| g128 | 5 | 0.6075 +- 0.0010 | 1659.0 N | -22.5 deg | +0.902 |
+| g160 | 2 | **0.4964 +- 0.0008** | **1127.8 N** | -22.5 deg | +0.930 |
+
+**The load keeps falling and shows no sign of settling**: 3118, 3109, 1659,
+1128. g64 to g96 moves it 0.3 percent, then g96 to g128 drops 47 percent and
+g128 to g160 a further 32 percent. **This is not a converging sequence and no
+convergence is claimed from it.** `stream_established_frac` rises monotonically
+across the same ladder, 0.744, 0.739, 0.902, 0.930, which is the pattern T15's
+control is consistent with and which the BC-rate explanation was refuted for.
+
+**S falls with it**, 1.068, 1.007, 0.608, 0.496, so the SIZE of the
+split-dependence is strongly resolution dependent. **Its existence is not**: even
+at g160 the load varies by 50 percent at a fixed relative speed, against a
+per-arm sd of 0.0008 and a fixed-seed repeatability floor of 0.0764 percent.
+That separation is why the qualitative claim survives while every absolute
+number in this document carries its grid.
+
+## T29. Mesh density moves the answer too, by 5 percent on load and 21 percent on S
+
+Same vehicle, same everything, two mesh densities, three seeds each:
+
+| Silverado mesh | vertices | mean `\|F_h\|` | S | peak angle |
+|---|---|---|---|---|
+| coarse | 2,108 | 4273.1 N | 0.9274 +- 0.0006 | -56.25 deg |
+| fine | 48,706 | 4490.8 N | 1.1248 +- 0.0026 | -67.5 deg |
+
+A 23-fold increase in vertex count moves the load **5.1 percent** and S **21.3
+percent**, and moves the peak angle. So the hull's mesh resolution is a third
+axis of sensitivity alongside grid and BC rate, and the peak angle is unstable
+under all three, which is the last nail in T14's withdrawal of it.
+
+## T30. Where the remaining allocation should NOT go
+
+The same search ranks realism effects by whether any retrieved study shows them
+flipping a vehicle motion verdict. **No retrieved study shows air entrainment,
+spray, surface tension, turbulence closure, reduced sound speed, or outlet
+boundary choice flipping one.** The ten-times-flow-speed sound-speed rule **has
+no primary derivation** in that literature; it is convention. What does have
+threshold evidence is bed condition and friction, road slope and flow
+orientation, and watertightness.
+
+**This bears directly on where this project has been spending.** Considerable
+effort has gone into the in/outflow boundary condition and the recirculating
+outlet. That work is not wasted, and this document depends on the forcing being
+sound, but the literature does not support treating outlet formulation as
+verdict-critical, and it should stop being prioritised as though it were.
+
+**All of T30 is secondary source. I have read none of those papers.**
