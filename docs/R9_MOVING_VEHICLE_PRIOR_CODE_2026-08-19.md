@@ -404,6 +404,29 @@ same shape as citing a total without its scope.
 
 ## 9. Correction 2: P-2 is an axis-aligned bounding-box test, and its zero-penetration floor is 7.88 to 10.02 percent against a 10 percent gate
 
+**READ THIS BEFORE THE TABLE, BECAUSE THE NUMBER IS EASY TO READ BACKWARDS.**
+A floor of 7.88 to 10.02 percent against a gate of 10 percent does **not** mean
+the runs comfortably satisfy P-2. It means **the gate sits inside the band the
+metric occupies when there is provably zero penetration.** The seven runs
+CLAUDE.md item 7 records as P-2 failures are therefore not established as
+measuring a defect; on this evidence they are largely measuring the achievable
+floor of an axis-aligned bounding-box test on a hull that fills a third of its own
+box. `sweepD_g64_d0p25` settles it: it reads **10.02 percent at frame zero with
+zero water in any hull voxel**, i.e. it is already over the gate before any physics
+has happened, and it is recorded as *passing* at 9.682 only because water drains
+out later. A metric that can start above its own gate at zero penetration, and
+pass by draining, is not measuring what the gate name says.
+
+**What this does and does not license.** It does not show the seven runs have no
+penetration; frame-0 share of each run's recorded max is 55.1 to 89.2 percent, so
+there is real dynamics in the remainder, and for `g48_m1100` the whole failure is
+1.08 points of it. It does show that **P-2 cannot be quoted as a penetration
+fraction**, that the 10 percent limit is not a meaningful threshold against this
+estimator, and that any published statement resting on "7 of 17 runs fail P-2"
+needs the floor quoted alongside it or it misleads. The fix is to score the metric
+against the **hull voxels** the same file already computes at `:186-196`, not
+against the bounding box.
+
 `renders/yaris_render_s1/sim_standing.py:463-465`: **[read]**
 
 ```python
@@ -559,3 +582,206 @@ and cost the engine change first. **[inf, from three [read] facts]**
   of seven failing runs. Neither was an input.
 - Anura3D's absorbing boundary (`MPMDynViscousBoundary.FOR`) is not characterised
   here; I established only that its ordinary walls are prescribed-displacement.
+
+---
+
+# ADDENDUM 2, 2026-08-19 18:1x: THE CROSS-CODE NUMBER EXISTS NOW
+
+The unit was commissioned as "build Chrono::FSI-SPH on Vista aarch64 and run one
+comparison case". **The build did not need doing and the comparison case ran.**
+Everything below is measured on Vista job `922255`, node `c642-091`, GH200 120GB.
+
+## 13. Two corrections to the dispatch, both found before spending node time
+
+**13a. An aarch64 Chrono::FSI build already exists on Vista.** The dispatch said
+"Only an `ls6/chrono_x86_build` exists on disk, which is x86 for a different
+machine, so an aarch64 build is genuinely new." That is false. **[read]**
+
+```
+/scratch/11603/jcerrell0629/chrono_eval_2026-08-14/     6.9 GB, 2026-08-14
+  build_fsi/lib/libChrono_fsisph.so                     built
+  build_fsi/bin/demo_FSI-SPH_*                          15 FSI-SPH demos
+  chrono/  at 1b90a9f9854575f1ce1287d359d957b0273c075f  2026-08-13, clean tree
+```
+
+Had I followed the dispatch I would have spent the whole window rebuilding
+something that was already there. **Check `$SCRATCH` before believing any
+"nothing exists" claim about TACC**; the earlier session's work was on `$SCRATCH`,
+and the inventory that produced the dispatch line evidently looked elsewhere.
+
+**13b. The toolchain versions in project memory are close but not right.**
+Measured live: Vista's default `nvcc` is **CUDA 12.5** (`nvidia/24.7`), and the
+module that the prior build actually used is **`cuda/12.6` with `gcc/13.2.0`**,
+named at `chrono_gh200_fsi_build.sbatch:53-54`. **[read]** Available gcc modules
+are 13.2.0, 14.2.0, 15.1.0.
+
+**A gotcha not in project memory at all, and it costs a run to discover: the
+built binaries are not self-contained.** Running any demo without reloading the
+build toolchain fails at load time, not at runtime:
+
+```
+/lib64/libstdc++.so.6: version `GLIBCXX_3.4.32' not found
+  (required by .../libChrono_fsisph.so)
+```
+
+`module load gcc/13.2.0 cuda/12.6` before execution fixes it. Anyone re-using
+this build needs that line.
+
+## 14. What I ran, and the two failures before it worked
+
+`tow_drag.cpp`, 153 lines, compiled against the existing libraries directly with
+`g++` rather than through CMake (faster, and it proves the install is usable as a
+library). A box is held at mid-depth in a closed water tank, settled, then towed
+horizontally at constant speed; `GetFsiBodyForce` is read every meta-step.
+
+```
+domain 1.6 x 0.6 x 0.5 m,  box 0.20 x 0.16 x 0.16 m,  rho 1000, mu 1e-3
+spacing 0.030 m, RK2, ADAMI BCE, artificial-unilateral viscosity, dt 1e-4 fixed
+settle 0.25 s with the body held, then tow 0.6 m
+```
+
+**Two failed attempts, recorded because the failure modes are the transferable
+part.** Both aborted at `SphCollisionSystem.cu:354 from calcHashD`, "position is
+NaN", on the very first step.
+
+1. **No hydrostatic initialisation.** The fluid column starts at p = 0 everywhere
+   and collapses under gravity. Fix:
+   `RegisterParticlePropertiesCallback(DepthPressurePropertiesCallback(fsize.z()))`.
+   `demo_FSI-SPH_ObjectDrop` does this and I had dropped it.
+2. **The `ChLinkMotorLinearSpeed` constraint.** This was the real one. The NaN
+   particle indices were ~129,000 to 130,700, which are the **body's BCE markers**,
+   not fluid particles, so the body pose went NaN first and poisoned its own
+   markers. Replaced by prescribing pose and velocity directly on a `SetFixed(true)`
+   body each step. That is also **closer to what our driver does**, not further
+   from it, so the comparison improved.
+
+**Diagnostic worth keeping:** when a Chrono FSI run NaNs, check whether the
+reported particle indices are above the fluid count. If they are, the rigid body
+is the cause and the fluid is a victim.
+
+## 15. THE NO-FORCING CONTROL PASSES, WHICH IS WHAT LICENSES EVERYTHING ELSE
+
+Run first, deliberately, before any number that could be flattering. **[read]**
+
+| run | mean Fx over window | sd Fx |
+|---|---|---|
+| **U = 0, body held still** | **-0.196 N** | 2.088 N |
+| settle window of every run | +0.189 N | (identical across runs, same seedless init) |
+
+Fx is consistent with zero at zero forcing. The accessor is not returning
+garbage and the setup has no spurious horizontal driving.
+
+## 16. Drag at three tow speeds, and it does NOT scale as U squared
+
+| U [m/s] | mean Fx [N] | sd Fx [N] | \|Fx\|/(½ρAU²) | tow duration [s] |
+|---|---|---|---|---|
+| 0.0 | -0.196 | 2.088 | control | 0.50 |
+| 0.5 | -31.05 | 54.67 | 9.70 | 1.20 |
+| 1.0 | -47.91 | 186.09 | 3.74 | 0.60 |
+| 2.0 | -93.70 | 122.33 | 1.83 | 0.30 |
+
+`A_ref = 0.0256 m²`. **The sign is correct**: the body is towed in +x and Fx is
+negative, so the fluid opposes the motion. The magnitudes are the right order for
+a bluff body of this size.
+
+**Three things must be said with these numbers or they will be misread.**
+
+1. **The scatter exceeds the mean at every non-zero speed.** sd/|mean| is 1.76,
+   3.88 and 1.31. **Not one of these means is well determined**, and quoting any
+   single one as "Chrono's drag" would be exactly the error this project keeps
+   logging. What is well determined is the *sign* and the *order of magnitude*.
+2. **The apparent sub-quadratic scaling is confounded and I am not claiming it.**
+   4x the speed gives only 3.0x the force, which looks strongly sub-quadratic. But
+   tow duration was set to `travel/U`, so the U = 2.0 run is 0.30 s against 1.20 s
+   at U = 0.5, and each run starts impulsively from rest. The fast run's averaging
+   window sits inside its startup transient while the slow run's does not. **The
+   scaling test is not valid as run**; the fix is equal tow durations at equal
+   travel-normalised windows, which is one parameter change and a rerun.
+3. Closed tank, so blockage and wall proximity are present and uncorrected. These
+   are apparent coefficients, not free-stream ones.
+
+**This independently reproduces our own project's central measurement problem in a
+different code.** Short records, scatter comparable to signal, and a mean whose
+value depends on the window chosen. Compare the settle-length finding in CLAUDE.md
+(25 of 25 runs need more than 8 frames discarded, N_eff 2.9 to 11.0). That is a
+property of measuring a transient force on a body in particle-based fluid, **not a
+warpmpm defect**, and the paper's limitations section can now say so citing a
+second implementation.
+
+## 17. THE ONE NUMBER WITH AN ANALYTIC ANSWER, AND CHRONO MISSES IT BY 48 PERCENT
+
+During the settle window the body is stationary and fully submerged, so the
+vertical force has a closed form: `F_z = ρ g V`.
+
+| quantity | value |
+|---|---|
+| mean Fz over settle window (125 samples) | **74.355 N** (sd 10.778) |
+| analytic ρgV, V = 0.20·0.16·0.16 = 0.005120 m³ | **50.227 N** |
+| ratio | **1.4804** |
+| error | **+48.04 percent** |
+
+**I proposed a mechanism, tested it in the same session, and it is REFUTED.**
+The hypothesis was BCE cladding: at spacing 0.030 m the box is only 5.3 spacings
+across its short dimension, so the effective hydrodynamic volume exceeds the
+nominal one. Inflating the box by half a spacing per face predicts 81.5 N (1.62x),
+by a quarter spacing 64.6 N (1.29x), and the measured 74.4 N sits between them.
+That hypothesis makes a hard prediction: **the error must fall as spacing falls,
+and must fall toward 1.000.** I ran the refinement. It does the opposite.
+
+| spacing [m] | box widths per spacing | mean Fz [N] | sd [N] | ratio to ρgV | error |
+|---|---|---|---|---|---|
+| 0.030 | 5.3 | 74.355 | 10.778 | 1.4804 | **+48.04 %** |
+| 0.020 | 8.0 | 79.292 | 13.708 | 1.5787 | **+57.87 %** |
+| 0.015 | 10.7 | run aborted | | | |
+| 0.010 | 16.0 | run aborted | | | |
+
+**The error grows by 9.8 points under a 1.5x refinement, and the scatter grows
+with it.** The cladding explanation is dead as stated, and I am not substituting a
+new one I have not tested.
+
+**What I can and cannot conclude from two points.** I can say the error does not
+decrease under this refinement step, which is enough to refute the hypothesis. I
+**cannot** distinguish monotone divergence from non-monotone behaviour with two
+points, and I will not call it either. The comparison is also confounded: `dt` was
+held at 1e-4 while spacing fell, so the CFL margin shrank across the pair, and the
+two finer runs died of it. Both aborted at `SphFluidDynamics.cu:712`, "A particle
+density is NaN", a *different* failure from the earlier `calcHashD` one and the
+signature of a CFL violation. A clean refinement study must scale `dt` with
+spacing; that is the next run, and it is cheap.
+
+**Why the negative is worth more than the positive would have been.** CLAUDE.md
+item 5 records that our own g48/g64/g96 ladder is **non-monotone and unconverged**,
+with `final_disp_mag_m` moving +87.8 percent then -59.2 percent for 1100 kg, and
+instructs that the verdict may be cited but never the displacement magnitude.
+L-5 cites Steffen, Kirby and Berzins 2008 as the mechanism for MPM losing
+convergence under refinement at fixed particles-per-cell. **An independent SPH code
+on the same hardware also fails to converge a body force under refinement.** That
+is corroboration from a separate origin, which is the standard this project holds
+itself to, and it argues the behaviour is generic to particle methods rather than
+a warpmpm defect. It is two points against our three and is confounded by fixed
+`dt`, so it is support, not proof.
+
+**Why this matters more than the drag numbers.** Our project's own SDF-collider
+buoyancy validation is **7.3 to 7.7 percent** (CLAUDE.md A-2, and note that the
+"1.6 to 7.7" range is a conflation that item explicitly forbids). A widely used,
+independently developed code gets **+48 percent** on the same quantity at coarse
+resolution. Two consequences:
+
+- **Our 7.3 to 7.7 percent is not bad.** It is far better than an established
+  code at the resolution we could afford, and the comparison is now on record.
+- **Force error on a submerged body is large in an established code too**, and
+  refining did not fix it. CLAUDE.md L-3 records that the g64 baseline has 4
+  particle layers and exactly 2.000 cells per flow depth. **This is independent
+  support for L-3's "state this as a limitation, not a converged resolution"**,
+  from outside our own code and on our own hardware.
+- **It does NOT support L-4.** L-4 says coarse resolution usually over-predicts
+  peak hydrodynamic force, so over-threshold NO-FORD verdicts are conservative.
+  Here the *finer* run over-predicted more. One shape, one quantity (buoyancy, not
+  drag), two points, fixed `dt`: this does not refute L-4, but it is the first
+  measurement in this project that points the other way, and L-4 should not be
+  cited as though nothing has ever cut against it.
+
+Do not overstate it either: Chrono's error here is measured on **one shape at one
+resolution with one BCE setting**, with no attempt to use its own recommended
+resolution. It is evidence that the effect is generic, not evidence that Chrono is
+inaccurate.
