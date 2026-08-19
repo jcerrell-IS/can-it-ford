@@ -1083,3 +1083,63 @@ write-up does not exist" are indistinguishable from a checkout on another branch
 and the board rows carrying SHAs are the only thing that currently bridges the
 gap. A reader who checks a path instead of a SHA will keep concluding the work was
 never done.
+
+---
+
+# ADDENDUM 5: THE dt CONFOUND IS MEASURED AND ELIMINATED. THE DIVERGENCE IS REAL.
+
+## 26. I named the weakness in my own claim, ran the control, and the claim survived
+
+Addendum 2 reported buoyancy error growing under refinement, +48.04 percent at
+spacing 0.030 to +57.87 at 0.020, and I refused to call it divergence because of a
+confound **I flagged myself**: `dt` was held at 1e-4 while spacing fell, so the CFL
+margin shrank across the pair, and the two finest runs died of exactly that. The
+obvious alternative explanation was that the "refinement" was measuring the
+shrinking CFL margin rather than the spacing.
+
+**Control: rerun spacing 0.020 with `dt` scaled linearly with spacing**
+(1e-4 x 0.020/0.030 = 6.667e-5), everything else identical. **[read]**
+
+| run | spacing | `dt` | n | mean Fz [N] | sd | ratio to rho g V | error |
+|---|---|---|---|---|---|---|---|
+| baseline | 0.030 | 1.000e-4 | 125 | 74.355 | 10.778 | 1.4804 | **+48.04 %** |
+| dt FIXED | 0.020 | 1.000e-4 | 125 | 79.292 | 13.708 | 1.5787 | **+57.87 %** |
+| **dt SCALED** | **0.020** | **6.667e-5** | **188** | **79.332** | **13.681** | **1.5795** | **+57.95 %** |
+
+**The two 0.020 runs agree to 0.08 percentage points**, 0.04 N out of 79 N, despite
+a 1.5x change in `dt` and a 1.5x change in sample count. **The `dt` confound is not
+the explanation and I am retiring that caveat rather than carrying it.** The error
+growth is a property of the spatial refinement.
+
+**The cladding hypothesis is refuted quantitatively, not just directionally.**
+Backing out the effective displaced volume `V_eff = Fz/(rho g)` and solving
+`(0.20+d)(0.16+d)^2 = V_eff` for the implied linear inflation `d`:
+
+| spacing | `V_eff` [m³] | implied `d` [m] | `d` in units of spacing |
+|---|---|---|---|
+| 0.030 | 0.007580 | ~0.024 | **0.80** |
+| 0.020 | 0.008087 | ~0.028 | **1.40** |
+
+Cladding predicts `d` proportional to spacing, so `d` should have fallen from
+0.024 to about 0.016 m and stayed near constant in spacing units. **Instead `d`
+grew in absolute terms and nearly doubled in spacing units.** That is the opposite
+of the prediction on both measures.
+
+**What I still will not claim.** Two spatial points cannot distinguish monotone
+divergence from non-monotone behaviour, and CLAUDE.md item 5 records our own
+g48/g64/g96 ladder as non-monotone, so non-monotonicity is the live alternative
+and I have no right to exclude it. Batch job **922515** runs the four-point ladder
+(0.030, 0.020, 0.015, 0.010, each with `dt` scaled) and will settle it. **It was
+submitted as sbatch precisely so the answer survives the interactive window**, per
+the standing finding that this project burns 98.5 to 99.1 percent of node-hours on
+interactive idev with 95 of 184 runs ending in TIMEOUT.
+
+**Why this matters beyond one code.** A no-forcing control passing, a hypothesis
+stated with its own falsifier, the falsifier run, and the hypothesis dying is the
+full loop this project keeps asking for. The surviving claim is now: **an
+established, independently developed SPH code does not converge the buoyant force
+on a bluff body under spatial refinement, and this is not an artifact of the
+timestep.** Set beside our own SDF-collider buoyancy validation of 7.3 to 7.7
+percent, our number looks good, and CLAUDE.md L-3's instruction to state
+resolution as a limitation rather than a converged result now has support from
+outside our own code.
