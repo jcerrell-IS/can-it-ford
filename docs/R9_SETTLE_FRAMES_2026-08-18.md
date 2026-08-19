@@ -1196,3 +1196,104 @@ document measured independently, and both stated as bounds rather than as suppor
   an outlet condition. Recorded so that a future session does not add a dependency
   on them believing they were settled here.
 
+---
+
+## 19. PRE-REGISTRATION: THE LONG-RECORD TEST
+
+**Written and committed BEFORE the job was submitted.** This section exists
+because I have argued all round that a threshold chosen after seeing the data is
+not a threshold, and this is the first time that rule binds on me.
+
+### 19.1 Why this run has to exist
+
+Every claim in this document about record length is an inference from records that
+do not exist. The canonical runs are 91 rows. **Nobody has ever run a longer one.**
+Section 7 says the record is too short; register D9 reaches a 250-frame conclusion
+by a different route; both are inferences from the same absent evidence. Two
+inferences agreeing is not a measurement, and I have spent this whole document
+saying so about other people's numbers.
+
+### 19.2 Design
+
+Three arms, one variable. Only `--frames` changes. Canonical Yaris g64, mass
+1100 kg, depth 0.30 m, velocity 1.5 m/s, eta 1.0e-3, floor friction 0.55.
+`scripts/r9_settle_longrecord.sbatch`.
+
+| arm | frames | purpose |
+|---|---|---|
+| `probe_f10` | 10 | measure per-frame cost instead of guessing it |
+| `control_f90` | 90 | the canonical length, held fixed |
+| `long_f400` | 400 | past D9's 250, so saturation is visible if it exists |
+
+**The control arm is not a formality and it is the reason the job has three arms
+rather than one.** Its only job is to distinguish "the environment still
+reproduces the canonical result" from "could not evaluate". This round has logged
+eight instrument failures where exactly that distinction was collapsed, one of
+them mine, so a long run without a same-job control would be a ninth.
+
+Driver is Vista `$WORK/render_s2/sim_standing.py`, sha256 `5215c38b`, **the driver
+that produced the 17 gated runs**, chosen over the Mac canonical `4696c3b2` and
+the Aug 8 staged `7236e474` because the control arm's entire value is
+comparability with those records. Stated as a decision with a cost: this does not
+test the current repo driver.
+
+### 19.3 WHAT WOULD CHANGE MY RECOMMENDATION, fixed in advance
+
+**Gate 0, the control. If `control_f90` does not reproduce, I report that and
+nothing else.** Reproduction means the SLIDE verdict matches canonical
+`g64_m1100`, which is SLIDE, and `final_disp_mag_m` lands within 20 percent of
+0.658537 m. The 20 percent is deliberately loose and is not a precision claim: it
+is sized to catch gross environment drift only, because item 5 already records a
+3.4 percent disagreement between two measures of this very quantity on this very
+run, and this configuration's true run-to-run spread is unknown to me. **If the
+control fails I will not report the 400-frame numbers as a result**, because a
+difference would then be unattributable between length and environment.
+
+**Q1. Does the retained window become stationary at an affordable length?**
+Currently 12 of 25 retained windows are non-stationary at 5 percent, and a short
+record cannot be told from a genuinely non-stationary one.
+- Prediction: at 400 frames the majority of channels become stationary.
+- **If >= 75 percent of channels are stationary at 400**: length was the binding
+  constraint, D9 is supported, and I recommend 250 to 400 frames for any
+  convergence claim.
+- **If the record is still non-stationary at 400**: the non-stationarity is not a
+  short-record artifact. My recommendation changes materially, from "run longer"
+  to **"displacement is not a stationary observable at any affordable length, and
+  convergence claims must move to a different observable entirely."** That is a
+  stronger and more negative result than D9's and it would need saying plainly.
+
+**Q2. Does `N_eff` scale with frame count, or saturate?** This is the sharpest of
+the three because the two outcomes are quantitatively separated in advance. The
+independent-sample argument predicts `N_eff` proportional to `N`, so 400 frames
+should give roughly `5 x (400 / 91) = 22.0`.
+- **Ratio to prediction >= 0.7, i.e. `N_eff` >= 15.4**: scaling holds, length is
+  the binding constraint, D9 stands, section 7's "the record is too short" is
+  correct as written and running longer buys real independent samples.
+- **Ratio <= 0.3, i.e. `N_eff` <= 6.6**: saturation. The correlation time is
+  growing with the record, which means drift rather than mere correlation.
+  **Running longer would NOT buy independent samples**, D9's 250-frame conclusion
+  needs revisiting, and section 7 must be restated from "too short" to "does not
+  equilibrate".
+- **Between 0.3 and 0.7**: ambiguous. I will report it as ambiguous and will not
+  force a verdict out of it.
+
+**Q3. Does the SLIDE verdict survive a 4.4x longer record?**
+- Prediction: **yes, SLIDE, with onset at the same frame as the control.** Section
+  6.2 measured that 43 of 47 runs reach half their peak surge speed by frame 1, so
+  onset is an early-record event and should be untouched by what happens after
+  frame 90.
+- **If onset is unchanged**: the full-record rule is right for the right reason,
+  not right by luck, and the asymmetric-rule pricing in section 1 stands.
+- **If the verdict flips at 400 frames**: a 91-frame record was truncating the
+  physics, and the published verdicts would rest on an arbitrary record length.
+  That is the outcome that would most damage this document, and it is why the
+  prediction is written down before the run rather than after.
+
+### 19.4 What this run cannot answer
+
+It is ONE configuration and one seed. It cannot establish a run-to-run
+distribution, it cannot separate grid effects from length effects, and a single
+non-stationary result at 400 frames would not prove non-stationarity at 2000. It
+also does not change `settle_frames`, which runs before recording starts and is
+not what this measures, per section 4.
+
