@@ -528,6 +528,28 @@ def asymmetry(root: str) -> int:
     print(f"  Gate operator control, `>` against `>=`: {op_disagree} of "
           f"{2 * n_assessed} channel-records disagree.")
     print()
+    # CHANNEL-INVARIANCE OF THE TRANSIENT-REMOVED SET, TESTED MEMBER-FOR-MEMBER.
+    # Equal COUNTS from different members would be a coincidence presented as a
+    # property, so the sets are compared directly and both differences printed.
+    # This is the only entry in the "n of 24" family that needs no channel
+    # qualifier, and that is worth being able to re-derive rather than trust.
+    keep = {}
+    for dk, _vk, _lab in chans:
+        keep[dk] = {r["run"] for r in rows
+                    if (c := r["chan"].get(dk)) and c.get("evaluable")
+                    and c["window"]}
+    ks = list(keep)
+    if len(ks) == 2:
+        a, b = keep[ks[0]], keep[ks[1]]
+        print(f"  TRANSIENT-REMOVED SET, {ks[0]} against {ks[1]}: "
+              f"{len(a)} and {len(b)} runs, identical set? {a == b}")
+        print(f"    in both {len(a & b)}   only {ks[0]}: "
+              f"{sorted(x.split('/')[-1] for x in a - b) or 'none'}   "
+              f"only {ks[1]}: "
+              f"{sorted(x.split('/')[-1] for x in b - a) or 'none'}")
+        for r in sorted(x.split('/')[-1] for x in a & b):
+            print(f"      {r}")
+    print()
 
     # ---- UNCERTAINTY SIDE -------------------------------------------------
     print("-" * 72)

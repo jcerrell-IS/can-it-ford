@@ -128,6 +128,8 @@ licenses quoting `final_disp_mag_m` as converged.
 | 11a | **16 SLIDE / 1 STUCK was computed under the correct rule and is unaffected**, traced to `failure_modes.py:168-182` | section 1.1 |
 | 11b | A THIRD class exists that neither rule covers: single-frame terminal values such as `final_disp_mag_m` | section 1.1 |
 | 12 | The "15 of 24" collision is resolved and the error was mine: it is a threshold-flip count, not a SLIDE count | section 16 |
+| 12a | The whole `n of 24` family in one table: one denominator, seven numerators, all correct, all different | section 16.1 |
+| 12b | **`5 of 24` is channel-invariant member-for-member**, the only entry in the family safe to quote without a channel | section 16.1 |
 | 13 | The rule has a physical mechanism, verified to primary source: added mass is not one coefficient during acceleration | section 18 |
 | 14 | Three sessions independently built instruments that could not fail, in one round | section 17 |
 
@@ -831,6 +833,68 @@ enough to swap unnoticed:**
 | full-record SLIDE | does the run slide at all | 21 of 24 | **19 of 24** |
 | transient-removed SLIDE | does sliding PERSIST past startup | 5 of 24 | **5 of 24** |
 | threshold flip | does the verdict change anywhere in `p >= 0.01` to `0.50` | 17 of 24 | **15 of 24** |
+
+### 16.1 THE WHOLE "n of 24" FAMILY, IN ONE PLACE
+
+One denominator, seven numerators, every one of them correct, every one of them
+measuring something different. This is the table to reach for when two figures
+appear to contradict each other:
+
+| n of 24 | quantity | channel | rule | origin |
+|---|---|---|---|---|
+| **21** | SLIDE | magnitude | full record | this document, reproduces `probabilistic_verdict.py` |
+| **19** | SLIDE | surge | full record | d2-persist, re-derived here |
+| **5** | SLIDE, transient removed | **either** | stationary window | this document, both channels |
+| **17** | threshold flip | magnitude | full record | CLAUDE.md, **not re-derived by me** |
+| **15** | threshold flip | surge | full record | d2-persist, **not re-derived by me** |
+| **16** | verdicts moved by the wrong rule | magnitude | both, compared | this document, `e50191b` |
+| **14** | verdicts moved by the wrong rule | surge | both, compared | this document, `e50191b` |
+
+Two of those seven I have **not** recomputed: the 17 and the 15. I established
+which quantity they measure and who owns them, which is what the collision needed,
+but the values remain CLAUDE.md's and d2-persist's respectively and are marked as
+theirs. The other five were measured here.
+
+**ONE ENTRY IS SAFE TO QUOTE BARE, AND ONLY ONE.** The transient-removed count is
+**5 on both channels**: it is channel-invariant. Every other row in that table
+changes value when the channel changes, so every other row needs its channel
+stated or it is not a fact.
+
+**And it is invariant member-for-member, not merely in total**, which is the
+stronger result and was tested rather than assumed. Two sets of five with
+different members summing to the same count would be a coincidence dressed up as a
+property, so the sets were compared directly:
+
+```
+dmag : sweepD_g64_d0p35  sweepD_g64_d0p45  sweepV_g64_v2p0  sweepV_g64_v2p5  sweepV_g64_v3p0
+dx   : sweepD_g64_d0p35  sweepD_g64_d0p45  sweepV_g64_v2p0  sweepV_g64_v2p5  sweepV_g64_v3p0
+identical set? True    in both: 5    dmag only: []    dx only: []
+```
+
+The mechanism is visible in section 6.3: the transient is exactly where the two
+channels disagree, because `vmag[0]` exceeds the speed gate in 18 of 47 runs while
+`|vx[0]|` does so in 0 of 47. The magnitude channel is contaminated at frame 0 by
+the settle residual and the surge channel is not. Remove those frames and what
+remains is essentially all surge, so the two channels stop being different
+questions. **The number that survives channel choice is the one computed after the
+contaminating frames are gone**, which is why this is the only bare-quotable entry
+in the family.
+
+The five are the deepest and fastest cells in the sweep, `d0p35`, `d0p45`, `v2p0`,
+`v2p5` and `v3p0`, which is the physically expected membership: sliding persists
+past startup where the forcing is largest.
+
+OBSERVED AND EXPLICITLY NOT CLAIMED AS CAUSAL: those five are exactly CLAUDE.md
+item 7's seven P-2 failures minus the two `m1100` runs, a clean subset. Both sets
+plausibly just track forcing severity, and d19-priorcode measured that P-2 is
+dominated by a structural frame-0 bounding-box term rather than by dynamics, so
+the correspondence is recorded as an observation for whoever owns the gates and
+not as a mechanism.
+
+That is a useful thing to know and it is also a trap, because 5 of 24 is the one
+number in the family that reads as quotable and is the one that must never be
+quoted as the verdict. Safe to quote bare, safe to quote without a channel, and
+still only ever a robustness diagnostic.
 
 d2-persist's 15 is the **threshold-flip** count, descending from CLAUDE.md's
 "17 of 24 runs flip verdict somewhere in p >= 0.01 to 0.50". My limitations
