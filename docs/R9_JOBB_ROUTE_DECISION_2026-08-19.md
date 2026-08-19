@@ -1197,3 +1197,111 @@ convergence and restores a non-zero asymptote.**
   time, which was three minutes; it was that we could not know the design was already
   vetted, and a design nobody has vetted gets pre-registered thresholds and a self-test,
   which is what those three minutes actually bought.
+
+---
+
+## 15. Specification robustness, and my second correction to the same claim
+
+d15-settle (`claude/r9-settle`) warned that the g128 point rested on 35 frames and that an
+`N_eff` computed from a window that barely exists is unreliable rather than merely small,
+and said to check that first because it is upstream of everything. **Checking it found a
+larger problem than the one flagged, and it is systematic rather than statistical.**
+
+### 15.1 The blocking is fine. The BAND is not
+
+`blocking.blocked_se` reports `converged = True` and `se_is_lower_bound = False` at every
+grid point, including g128, with `tau_int` at 1.00 to 1.36 after `sub` is regressed out.
+So the residuals are near-uncorrelated and the standard errors are honest **as standard
+errors**. d15-settle's specific worry does not bite here, and their arithmetic about `N_eff`
+does not apply: this is an instantaneous force, the velocity-like family, and the blocking
+ladder converged.
+
+**But the ESTIMATE moves with the matching band by more than the effect being measured.**
+Excess at 130 mm submergence, linear in `sub`:
+
+| band | dx 18.75 | dx 12.50 | dx 9.375 | end-to-end | monotone? |
+|---|---|---|---|---|---|
+| [126, 140] mm | 46.17 | 28.11 | 21.50 | -24.68, 1.86 sigma | yes |
+| [115, 150] mm | 31.55 | 16.80 | 23.91 | -7.63, 0.94 sigma | **no** |
+| [105, 155] mm | 31.45 | 24.40 | 16.74 | -14.71, 2.41 sigma | yes |
+
+**The g96 point moves 28.11 to 16.80 to 24.40 across bands, and in the middle band the
+monotonicity breaks.** A linear model for `fz(sub)` is evidently not adequate over the
+wider windows, so the intercept at the reference submergence shifts with the window. That
+is a specification sensitivity, not noise, and no amount of extra frames fixes it.
+
+### 15.2 Six specifications, and what survives all of them
+
+Three bands times two models, linear and quadratic in `sub`:
+
+**PPC PRONG, excess at 130 mm across PPC 8 / 27 / 64:**
+
+| specification | 8 | 27 | 64 | change |
+|---|---|---|---|---|
+| linear [126,140] | 46.17 | 40.49 | 41.69 | -4.5 |
+| linear [115,150] | 31.55 | 37.21 | 40.16 | +8.6 |
+| linear [105,155] | 31.45 | 34.16 | 39.38 | +7.9 |
+| quadratic [126,140] | 49.15 | 53.67 | 51.74 | +2.6 |
+| quadratic [115,150] | 44.42 | 38.94 | 40.08 | -4.3 |
+| **quadratic [105,155]** | **42.28** | **43.26** | **42.52** | **+0.2** |
+
+**The change straddles zero in sign and never exceeds the standard errors of 3.3 to 9.3
+points. In the best-conditioned specification, the widest band with the more flexible
+model, it is +0.2 points over an 8x PPC span.** The PPC prong is robust: **flat under
+every specification tried, and flattest where the estimator is best conditioned. Locking's
+first prong stays refuted.**
+
+**GRID PRONG, end-to-end dx 18.75 to 9.375:**
+
+| specification | change | sigma | monotone? |
+|---|---|---|---|
+| linear [126,140] | -24.68 | 1.86 | yes |
+| linear [115,150] | -7.63 | 0.94 | no |
+| linear [105,155] | -14.71 | 2.41 | yes |
+| quadratic [126,140] | -35.29 | 1.91 | yes |
+| quadratic [115,150] | -23.80 | 2.29 | yes |
+| quadratic [105,155] | -19.99 | 2.59 | yes |
+
+**Every one of the six is NEGATIVE and five of six are monotone. None reaches 3 sigma.**
+
+### 15.3 THE CORRECTION, and it is my second on this same claim tonight
+
+Section 14.3 withdrew my earlier "not converging, asymptote about +24 percent" and replaced
+it with "linear in `dx`, extrapolating to -4.2 percent at `dx -> 0`". **That replacement was
+also over-stated and is now itself corrected.** The defensible position is between the two:
+
+- **DIRECTION: established, and by consistency rather than by significance.** Refinement
+  improves the excess in **all six** specifications. A sign that survives three bands and
+  two functional forms is not a band artifact. **This contradicts locking's second prong in
+  every specification tried**, which strengthens section 14.2's refutation rather than
+  weakening it.
+- **MAGNITUDE: NOT established.** The end-to-end change spans -7.6 to -35.3 points
+  depending on band and model, a factor of 4.6, and the largest significance reached is
+  2.59 sigma against this project's 3 sigma bar.
+- **THE EXTRAPOLATION IS WITHDRAWN.** `excess = 2.669*dx_mm - 4.217` and its "-4.2 percent
+  at `dx -> 0`" were one specification's answer quoted as if specification-independent. **No
+  asymptote is determined by this data, neither zero nor +24 percent.** The honest statement
+  is that the excess falls with refinement by an amount this data cannot pin down.
+
+**Twice in one night I converted a real signal into a number the data did not support, and
+both times the mechanism was the same**: I picked one analysis window, got a clean-looking
+fit, and reported the fit rather than the fit's sensitivity to the choice. The first time
+the window was "last 50 frames at whatever submergence the run happened to reach"; the
+second time it was "sub in [126,140] mm, linear". **The cheap defence is not a better window,
+it is to report the spread across several defensible windows before quoting any coefficient
+from one of them**, which costs one loop and would have caught both.
+
+### 15.4 What this does and does not change
+
+**Unchanged**: E1 refuted (sections 7, 12.5, 13.3), the leak accounting for about a third
+(11.3, 12.4), criterion 3's PASS band being the size of the instrument's own resolution at
+g64 (5, 7.2), the accessor being the projection route (13.1), locking refuted on its PPC
+signature (14.2, 15.2), and the two Wal07 claims that did not survive reading the paper
+(13.2). None of those rests on the grid-prong magnitude.
+
+**Changed**: any statement about where the excess converges to. Section 14.3 said job C's
+recommendation "moves again" to "run it finer" if the error is convergent. **That
+recommendation is not supported at 2.59 sigma with a factor-of-4.6 spread in magnitude**,
+and section 8's original position stands until a further grid point settles it. Vista job
+923291 (g192, `dx = 6.25 mm`) is that point, and its value should be read against **all six
+specifications**, not the one it was pre-registered against.
