@@ -351,10 +351,13 @@ rather than dropped.
 - The `a·dt²` teleport estimate was the other open item and I closed it myself:
   re-evaluated at the settings the coupled runs actually use
   (`substeps_per_pose=1`, `dt=3.03e-3`), it is 0.36 mm, recorded in section 3.
-- **The corpus is silent on this whole topic** and that silence is not evidence:
-  `research_index.py --query "Al-Qadami"` returns zero and both
-  `--method moving-vehicle` and `--method rigid-coupling` return no match **[recv]**.
-  No novelty claim in this document rests on a corpus miss.
+- ~~**The corpus is silent on this whole topic**~~ **WITHDRAWN 2026-08-20, see
+  section 45.** This was `[recv]` and it is FALSE: **10 of the 14 prior-art works
+  are in the 332-paper corpus**, measured by me. The zero it rested on was a
+  correct measurement of a **broken predicate**: `--query` matches title and
+  abstract only, never authors. The one thing that saved this bullet was the last
+  sentence, which was and remains true: **no novelty claim in this document rests
+  on a corpus miss.**
 
 ## 7. Recommended order of work for d17
 
@@ -1760,3 +1763,98 @@ it is the source for the in/outflow BC and is currently in the bib uncited.
 frame sequence, which was Q3 and is still unanswered. Nothing above was read beyond
 its Crossref record: **I resolved identity, not content.** No claim here about what
 any of these papers found, only about what they are and whether we cite them.
+
+---
+
+# ADDENDUM 12: THE CORPUS DOES HOLD MOST OF THE PRIOR ART, AND ONE WORK IS TRULY ABSENT
+
+## 45. Measured by me, on a named tree, with the container stated
+
+The claim I was given, that none of the six resolved DOIs is in the corpus, is
+false, and my own section 6 bullet repeating a related `[recv]` zero is withdrawn
+above. **Measured live 2026-08-20** on
+`claude/r9-priorcode:data/research_corpus_index.json`. **[read]**
+
+**The index blob is byte-identical across `claude/r9-priorcode`,
+`claude/r9-corpus-bib` and `claude/add-ci-checks` (`d132b45f`), and is ABSENT from
+`origin/main`.** So every session that has the tool is reading the same data, and a
+session working from a fresh clone of main has no corpus tool at all.
+
+| work | in `papers[]` (the 332) | in `documents[]` |
+|---|---|---|
+| Al-Qadami 2021 experimental | **yes** | 1 |
+| Al-Qadami 2022 numerical | **yes** | 4 |
+| Al-Qadami 2023 3D CFD | **yes** | 4 |
+| Shah 2020 | **yes** | 2 |
+| **Shah 2018** | **no** | 2 |
+| **Pregnolato 2017** | **no** | 2 |
+| He 2026 | **yes** | 1 |
+| Wasfy 2015 | **yes** | 2 |
+| Khapane 2014 | **yes** | 0 |
+| **Lyu 2024** | **no** | **0** |
+| Xin 2020 | **yes** | 0 |
+| **Varshney 2021** | **no** | 2 |
+| Zhao 2019 | **yes** | 1 |
+| Azhar 2026 | **yes** | 4 |
+
+**10 of 14 are in the 332-paper corpus.**
+
+**THE SCOPE QUESTION, AND IT DISSOLVES THE DISAGREEMENT RATHER THAN SETTLING IT
+AGAINST ANYONE.** Of the six DOIs I was handed, **4 of 6 are in `papers[]`** and the
+other two, Shah 2018 and Pregnolato 2017, appear **only in `documents[]`**. So "all
+six are present" is right if `documents[]` counts and wrong if it does not, on the
+identical index blob. **This is exactly the container distinction d14 themselves
+drew earlier for deep searches**, applied now to papers, and it is the same
+scope-sensitivity as the DRIFT_THRESHOLD total: **state the container or the number
+means nothing.**
+
+**THE ONE THAT IS TRULY ABSENT, AND IT IS THE WORST ONE TO BE MISSING.**
+**`10.1016/j.compfluid.2023.106144`, Lyu 2024, is in NEITHER container: 0 in
+`papers[]`, 0 in `documents[]`.** It appears nowhere in the corpus, nowhere in
+either bibliography, and nowhere in the repo. **It is the entirely particle-based
+three-dimensional SPH vehicle-wading paper, which is the closest published method
+to ours in existence.** Every other item in this table is at least known to the
+project somewhere. This one is not, and it is the one that most directly constrains
+a novelty claim. **That is the single most actionable line in this document.**
+
+## 46. THREE PREDICATES DISAGREED ON THE SAME FILE AND I NEARLY PUBLISHED TWICE
+
+Recorded because the near-misses are the transferable part and the pattern is now
+the dominant failure mode of the round.
+
+1. **`--query "Al-Qadami"` returns zero.** Correct measurement, **broken
+   predicate**: it matches title and abstract only, never authors. A zero from
+   `--query` is not evidence of absence.
+2. **A raw `grep -c` on the index file returns 2 for Shah 2018**, which looks like
+   `--doi` giving a false negative. **I nearly wrote that `--doi` is broken.** It is
+   not: the grep was hitting `documents[]`, while `--doi` correctly searches
+   `papers[]`. **Two predicates, two containers, both right.**
+3. **My own membership test returned zero for all fourteen.** `papers` is a **dict
+   keyed by DOI**, not a list of records, so `for x in papers` iterates
+   *keys*, and `.get("doi")` on a string raises. An earlier version of that loop
+   silently produced all-zeros, which would have published "the corpus contains
+   none of the prior art", the exact inverse of the truth.
+
+**Only one of those three was a real defect, and it was the first.** The other two
+were mine, and both would have produced a confident wrong answer in the same
+direction: **absence**. That is the asymmetry worth naming, and it is the same one
+as in section 40: **a predicate that under-reports produces findings, and findings
+propagate.** The check that caught all three was cheap and obvious in hindsight,
+**make the predicate return a known-present hit before trusting a zero**, and it is
+the same positive-control discipline that caught the zsh word-splitting false zero
+in section 44.
+
+## 47. Which tree each citation-status claim in this document was measured on
+
+Required because the answer differs by tree, as asked. **[read]**
+
+- **Prior-art table citation columns (section 41)**: measured on
+  `/Users/josie/can-it-ford` working tree, currently on branch
+  **`claude/add-ci-checks`**, against the two tracked bibliographies
+  `paper/can_it_ford_references_IEEE.bib` and
+  `overleaf_sync/can_it_ford_references_IEEE.bib` and their `.tex` siblings.
+- **Corpus membership (section 45)**: measured on **`claude/r9-priorcode`**, index
+  blob `d132b45f`, verified identical on `claude/r9-corpus-bib` and
+  `claude/add-ci-checks`.
+- **Neither was measured on `origin/main`**, where `analysis/research_index.py` does
+  not exist at all, so **none of this is reproducible from a fresh clone of main**.
