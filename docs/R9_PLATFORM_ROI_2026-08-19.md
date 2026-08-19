@@ -52,6 +52,14 @@ health check that asserts `wandb == OK` from an HTTP status is measuring nothing
 the same failure class the discrepancy register's Class D records: a check that cannot
 distinguish "working" from "could not evaluate".
 
+**The existing session-start check was then tested against that finding, and it passes**
+[read]. `.claude/hooks/orient_live.sh:99` does **not** read a status code: it greps the
+response body for `"runCount"`. Running its exact query unauthenticated returns
+`{"data":{"project":null}}`, which contains no `runCount`, so it correctly reports
+NOT REACHABLE without a credential. **The hook is sound and needs no fix.** I had
+initially recorded a doubt about it without testing; testing it took one command, and the
+doubt was wrong. The general warning above stands for anything written in future.
+
 Other live reads:
 
 - Repo `jcerrell-IS/can-it-ford` is **PUBLIC** [read].
