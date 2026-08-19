@@ -112,6 +112,29 @@ def water_surface(w, h, window, cube_mult, iso, smooth_mult, smooth_iters, floor
        neighbour and the fluid never becomes a fluid. The docstring is a secondary
        source and it is wrong; the sweep above is the primary one.
 
+    CROSS-CHECKED AGAINST CHRONO, 2026-08-19, and only half of it was adopted.
+    Chrono::FSI documents the same relative convention at ChFsiFluidSystemSPH.h:136-140
+    and sets its radius to spacing/2 at ChFsiProblemSPH.cpp:287, giving shipped values
+    of roughly 0.75 to 1.0 spacings of smoothing and 0.15 to 0.25 spacings of cube.
+    Measured here on one frame, changing one at a time:
+
+      cube  0.465 spacings -> 214k tris, 42 bodies, volume ratio 0.915
+      cube  0.248 spacings -> 756k tris, 52 bodies, volume ratio 0.936   <- adopted
+      cube  0.186 spacings -> 1.35M tris, 58 bodies, volume ratio 0.940
+      smoothing 1.24 -> 0.99 spacings, at cube 0.248:
+                        919k tris, 321 BODIES, volume ratio 0.863        <- rejected
+
+    So the finer GRID was adopted, and it is a convergence result as well as a
+    cosmetic one: enclosed volume rises toward the particle-carried volume as the
+    marching-cubes grid refines. Chrono's shorter SMOOTHING LENGTH was rejected,
+    measured rather than assumed: it fragments this field into 321 pieces and loses
+    7 percent of the volume. The reason is a real difference in the particle fields,
+    not a mistake in either code. Chrono's are SPH particles that stay near-uniformly
+    spaced; these are MPM particles that have clustered by frame 60, median
+    nearest-neighbour 0.0404 m against a seeding spacing h of 0.0736 m, so a
+    smoothing length tuned for uniform spacing leaves the sparse regions unsupported.
+    Do not copy an SPH code's smoothing length onto an MPM field without re-measuring.
+
     2. THE PARTICLE RADIUS MUST CARRY THE PARTICLE'S VOLUME, not half the grid
        spacing. warpmpm seeds one particle per h^3 of water (measured: 48367
        particles * h^3 = 19.29 m3 against a slab of 8.30 x 8.31 x 0.294 m), so the
@@ -182,9 +205,14 @@ def water_surface(w, h, window, cube_mult, iso, smooth_mult, smooth_iters, floor
         raise SystemExit(
             "WATER SURFACE REJECTED: enclosed volume %.4f m3 is %.3f of the "
             "%.4f m3 the particles carry. Outside [0.5, 1.6] the surface is not a "
-            "reconstruction of this fluid and must not be rendered. A ratio near "
-            "zero with a body count near the particle count is the units bug "
-            "documented at the top of this function." % (vol, ratio, expect))
+            "reconstruction of this fluid and must not be rendered.\n"
+            "THE INPUT THAT MAKES THIS CHECK FAIL: a smoothing length below about "
+            "one particle spacing. Passing smoothing_length in absolute metres "
+            "when the library wants multiples of the particle radius shrinks it by "
+            "the radius factor, to roughly 8 mm against a 40 mm spacing, and the "
+            "surface then closes around each particle separately. The signature is "
+            "this ratio near zero WITH a body count near the particle count."
+            % (vol, ratio, expect))
     if bodies > 0.02 * n_kept:
         raise SystemExit(
             "WATER SURFACE REJECTED: %d connected bodies for %d particles. The "
@@ -340,6 +368,54 @@ def still_water_level(w, cx, cy, h, r_excl=3.2):
     return float(np.median(tops)), len(tops)
 
 
+def smooth_render_hull(V, F, iters):
+    """Taubin-smooth the RENDER hull, and measure what that did.
+
+    WHY THIS IS NEEDED AND WHAT IT IS NOT. The Rogue and Silverado hulls are
+    Poisson reconstructions and carry surface noise at roughly the centimetre
+    scale; the Yaris hull does not, because it comes from a different pipeline.
+    Path-traced at photoreal quality that noise reads as the bodywork melting.
+    Established as a mesh property rather than a render artefact by rendering the
+    hull with NO WATER IN THE SCENE AT ALL: it is still lumpy, so nothing is
+    bleeding onto it. It is also not a matter of picking the wrong file: the
+    higher-vertex `*_poisson_raw.ply` variants are NOT watertight and are the
+    less-processed source of the same noise, not a cleaner version.
+
+    TAUBIN, not Laplacian. Plain Laplacian smoothing shrinks a closed surface
+    monotonically, which would move the waterline on the vehicle, and the waterline
+    is the one thing in these frames that carries physics. Taubin alternates a
+    positive and a negative pass so the volume is preserved to first order. The
+    actual volume change and the largest vertex movement are MEASURED here and
+    printed, and the export is refused if either exceeds a small bound, so this can
+    never quietly become a reshaping of the vehicle.
+
+    This is an APPEARANCE operation on the RENDER hull only. It does not touch the
+    simulation, which never loaded this mesh: the solver has the solidified particle
+    cloud and nothing else.
+    """
+    import trimesh
+    if iters <= 0:
+        return V, F, 0.0, 0.0
+    m0 = trimesh.Trimesh(vertices=V.copy(), faces=F.copy(), process=False)
+    v0 = float(m0.volume)
+    m = trimesh.Trimesh(vertices=V.copy(), faces=F.copy(), process=False)
+    trimesh.smoothing.filter_taubin(m, lamb=0.5, nu=0.53, iterations=int(iters))
+    V2 = np.asarray(m.vertices, dtype=np.float64)
+    dv = float(np.abs(np.asarray(m.volume) - v0) / max(abs(v0), 1e-12))
+    dmax = float(np.linalg.norm(V2 - V, axis=1).max())
+    print("[prep] hull smoothing: Taubin %d iters, volume change %.3f percent, "
+          "largest vertex movement %.4f m" % (iters, 100.0 * dv, dmax))
+    if dv > 0.015:
+        raise SystemExit("HULL SMOOTHING REJECTED: volume moved %.3f percent, above "
+                         "the 1.5 percent bound. That is a reshaping of the vehicle, "
+                         "not a denoise, and it would move the waterline." % (100 * dv))
+    if dmax > 0.05:
+        raise SystemExit("HULL SMOOTHING REJECTED: a vertex moved %.4f m, above the "
+                         "0.05 m bound. Real bodywork features are being removed."
+                         % dmax)
+    return V2, np.asarray(m.faces, dtype=np.int64), dv, dmax
+
+
 def place_hull(hull_ply: Path, pv, h):
     """Map the hull PLY into scene body-frame coordinates, and CHECK the result.
 
@@ -379,13 +455,18 @@ def main():
     ap.add_argument("--hull", required=True, help="hull .ply, READ not copied")
     ap.add_argument("--outdir", required=True)
     ap.add_argument("--half", type=float, default=3.4)
-    ap.add_argument("--cube-mult", type=float, default=0.75,
+    ap.add_argument("--cube-mult", type=float, default=0.40,
                     help="marching-cubes voxel, in MULTIPLES OF THE PARTICLE "
-                         "RADIUS. Passed straight through; see water_surface().")
+                         "RADIUS. Default 0.40 radii = 0.248 particle spacings, "
+                         "which is Chrono's shipped default; see water_surface().")
     ap.add_argument("--smooth-mult", type=float, default=2.0,
                     help="SPH smoothing length, in MULTIPLES OF THE PARTICLE "
                          "RADIUS, despite what the library docstring claims.")
     ap.add_argument("--iso", type=float, default=0.6)
+    ap.add_argument("--hull-smooth", type=int, default=0,
+                    help="Taubin smoothing iterations on the RENDER hull. Use for "
+                         "the Poisson-reconstructed Rogue and Silverado hulls; the "
+                         "Yaris hull does not need it. APPEARANCE ONLY.")
     ap.add_argument("--smooth-iters", type=int, default=25,
                     help="weighted-Laplacian smoothing iterations on the water "
                          "surface (Loschner et al 2023). 0 disables.")
@@ -435,6 +516,7 @@ def main():
               % (Path(a.hull).name, len(Q), rot, score, score / h,
                  [v for k, v in scores.items() if k != rot][0]))
         Qw = Q @ z["R"][f].T + z["t"][f]
+    Qw, HF, hull_dvol, hull_dmax = smooth_render_hull(Qw, HF, a.hull_smooth)
     write_ply(out / "hull.ply", Qw, HF)
 
     window = (cx - a.half, cx + a.half, cy - a.half, cy + a.half)
@@ -463,6 +545,9 @@ def main():
         "run": run.name, "frame": f, "fps": int(z["fps"]),
         "floor_z": float(floor), "dx": float(z["dx"]), "h": float(h),
         "hull_ply_source": str(a.hull), "hull_rotation": rot,
+        "hull_smooth_iters": int(a.hull_smooth),
+        "hull_smooth_dvol_frac": float(hull_dvol),
+        "hull_smooth_max_move_m": float(hull_dmax),
         "hull_fit_nn_m": score, "hull_faces": int(len(HF)),
         "water_faces": nwater, "no_water": bool(a.no_water),
         "car_center": [cx, cy], "half": a.half,

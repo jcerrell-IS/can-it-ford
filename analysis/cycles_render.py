@@ -65,6 +65,10 @@ def parse():
     p.add_argument("--lens", type=float, default=58.0)
     p.add_argument("--paint", default="0.42,0.05,0.06",
                    help="linear RGB base colour of the car paint")
+    p.add_argument("--paints", default="",
+                   help="composite only: one 'r,g,b' per vehicle, ';'-separated. "
+                        "Three identical vehicles in one frame is a debug look; "
+                        "different classes should not share one body colour.")
     p.add_argument("--far-water", action="store_true",
                    help="draw a flat water surround beyond the solver domain so "
                         "the simulated patch does not read as a floating slab. "
@@ -118,14 +122,17 @@ def mat_paint(rgb):
     nt, out = nodes(m)
     b = principled(nt)
     b.inputs["Base Color"].default_value = (*rgb, 1.0)
-    # Metallic 0.72 was too high and read as chrome, not paint: at the grazing
-    # angles this camera uses, a near-metal Principled surface mirrors the sky and
-    # the flank of the vehicle turns into a mirror. Automotive basecoat is a
-    # dielectric binder carrying metal flake, so the flake fraction belongs low
-    # with the clearcoat above supplying the sharp highlight.
-    b.inputs["Metallic"].default_value = 0.28
-    b.inputs["Roughness"].default_value = 0.30
-    for n, v in (("Coat Weight", 1.0), ("Coat Roughness", 0.035),
+    # METALLIC HIGH, ROUGHNESS HIGH ENOUGH TO STOP IT BEING CHROME. Two earlier
+    # values were both wrong for the same reason, that metallic and roughness have
+    # to move together: 0.72 with roughness 0.22 turned the flanks into mirrors at
+    # grazing incidence, and dropping to 0.28 fixed the chrome but lost the flake
+    # depth that makes paint read as paint. Automotive basecoat is metal flake in a
+    # binder under a clearcoat, so the flake fraction is genuinely high; what keeps
+    # it from mirroring is the basecoat's roughness, with the coat above supplying
+    # the one sharp highlight.
+    b.inputs["Metallic"].default_value = 0.80
+    b.inputs["Roughness"].default_value = 0.38
+    for n, v in (("Coat Weight", 1.0), ("Coat Roughness", 0.06),
                  ("Coat IOR", 1.5)):
         if n in b.inputs:
             b.inputs[n].default_value = v
@@ -384,71 +391,190 @@ def far_water_multi(cx, cy, zlev, floor, rects, reach):
     return ob
 
 
-def mat_ground(asphalt_dir, wet):
-    """Asphalt. Textured if the maps are supplied, procedural otherwise.
+def mat_ground(asphalt_dir, wet, water_z=None, markings=None):
+    """Asphalt, ROUGH, and wet only where it is actually under water.
+
+    THE SINGLE BIGGEST TELL IN THE EARLIER FRAMES was that the road and the flood
+    rendered as the same flat grey mirror, so the eye could not find the waterline.
+    That was a material error, not a lighting one. The two surfaces are physically
+    nothing alike:
+
+      dry asphalt   roughness 0.6 to 0.8. It SCATTERS. It must not mirror a treeline.
+      open water    roughness 0.01 to 0.05, IOR 1.333, with transmission.
+      wet asphalt   the interesting middle: a film drops roughness toward 0.1 to 0.2
+                    and raises reflectivity, but it is still not open water.
+
+    So roughness and colour are now driven by HEIGHT against the waterline rather
+    than by one global `wet` number: submerged road is dark and glossy, road above
+    the water is pale and rough, and the transition is a band a few centimetres
+    wide. That band is the visible waterline on the road, which is the cue that was
+    missing. `wet` now sets only how wet the SUBMERGED surface is.
 
     LICENCE, UPDATED 2026-08-19. These maps were opt-in and defaulted OFF while
     their licence was unestablished: no licence file ships in assets/ and no
-    copyright or source string appears in any of the four headers, so the position
-    was that the caller had to assert the right to use them. Josie confirmed by
-    email on 2026-08-19 that licence permission is granted, so they are now used by
-    default. The flag is KEPT so a caller can still render without them, and the
-    provenance gap in the files themselves is unchanged: that was a permission
-    question, and it was answered by the owner, not by the files.
+    copyright or source string appears in any of the four headers. Josie confirmed
+    by email on 2026-08-19 that licence permission is granted, so they are used by
+    default now. The provenance gap in the files is unchanged; the permission rests
+    on the owner's word, not on anything recoverable from the assets.
     """
     m = bpy.data.materials.new("Asphalt")
     nt, out = nodes(m)
     b = principled(nt)
-    # A water film drops roughness and raises reflectivity. That is the whole of
-    # "wet road" as a material, and Cycles expresses it directly.
-    dry_rough, wet_rough = 0.86, 0.13
-    rough = dry_rough + (wet_rough - dry_rough) * wet
-    b.inputs["Roughness"].default_value = rough
-    b.inputs["Base Color"].default_value = (0.021, 0.021, 0.023, 1.0)
-    if "Specular IOR Level" in b.inputs:
-        b.inputs["Specular IOR Level"].default_value = 0.5 + 0.5 * wet
+    dry_rough = 0.78
+    wet_rough = 0.78 + (0.14 - 0.78) * float(wet)
+    dry_rgb = (0.055, 0.055, 0.058)
+    wet_rgb = tuple(c * 0.42 for c in dry_rgb)     # a film darkens asphalt hard
+    b.inputs["Roughness"].default_value = dry_rough
+    b.inputs["Base Color"].default_value = (*dry_rgb, 1.0)
 
+    tc = nt.nodes.new("ShaderNodeTexCoord")
+    mp = nt.nodes.new("ShaderNodeMapping")
+    mp.inputs["Scale"].default_value = (0.5, 0.5, 0.5)      # 2 m per tile
+    nt.links.new(tc.outputs["Object"], mp.inputs["Vector"])
+
+    col_out = None
+    rgh_out = None
     if asphalt_dir:
         d = Path(asphalt_dir)
         col = d / "Asphalt015_1K-JPG_Color.jpg"
         rgh = d / "Asphalt015_1K-JPG_Roughness.jpg"
         nrm = d / "Asphalt015_1K-JPG_NormalGL.jpg"
-        tc = nt.nodes.new("ShaderNodeTexCoord")
-        mp = nt.nodes.new("ShaderNodeMapping")
-        mp.inputs["Scale"].default_value = (0.5, 0.5, 0.5)   # 2 m per tile
-        nt.links.new(tc.outputs["Object"], mp.inputs["Vector"])
         if col.exists():
             t = nt.nodes.new("ShaderNodeTexImage")
             t.image = bpy.data.images.load(str(col))
             nt.links.new(mp.outputs[0], t.inputs["Vector"])
-            # darken toward wet: a water film makes asphalt read much darker
-            mix = nt.nodes.new("ShaderNodeMixRGB")
-            mix.blend_type = "MULTIPLY"
-            mix.inputs["Fac"].default_value = 1.0
-            k = 1.0 - 0.72 * wet
-            mix.inputs["Color2"].default_value = (k, k, k, 1.0)
-            nt.links.new(t.outputs["Color"], mix.inputs["Color1"])
-            nt.links.new(mix.outputs[0], b.inputs["Base Color"])
+            # The Asphalt015 albedo is a pale grey. Real bituminous road surface is
+            # far darker; left as shipped it reads as concrete and washes out.
+            dk = nt.nodes.new("ShaderNodeMixRGB")
+            dk.blend_type = "MULTIPLY"
+            dk.inputs["Fac"].default_value = 1.0
+            dk.inputs["Color2"].default_value = (0.30, 0.30, 0.32, 1.0)
+            nt.links.new(t.outputs["Color"], dk.inputs["Color1"])
+            col_out = dk.outputs[0]
         if rgh.exists():
             t = nt.nodes.new("ShaderNodeTexImage")
             t.image = bpy.data.images.load(str(rgh))
             t.image.colorspace_settings.name = "Non-Color"
             nt.links.new(mp.outputs[0], t.inputs["Vector"])
             mr = nt.nodes.new("ShaderNodeMapRange")
-            mr.inputs["To Min"].default_value = max(0.02, rough - 0.10)
-            mr.inputs["To Max"].default_value = min(1.0, rough + 0.10)
+            mr.inputs["To Min"].default_value = 0.62
+            mr.inputs["To Max"].default_value = 0.92
             nt.links.new(t.outputs["Color"], mr.inputs["Value"])
-            nt.links.new(mr.outputs[0], b.inputs["Roughness"])
+            rgh_out = mr.outputs[0]
         if nrm.exists():
             t = nt.nodes.new("ShaderNodeTexImage")
             t.image = bpy.data.images.load(str(nrm))
             t.image.colorspace_settings.name = "Non-Color"
             nt.links.new(mp.outputs[0], t.inputs["Vector"])
             nm = nt.nodes.new("ShaderNodeNormalMap")
-            nm.inputs["Strength"].default_value = 0.85 * (1.0 - 0.5 * wet)
+            nm.inputs["Strength"].default_value = 0.9
             nt.links.new(t.outputs["Color"], nm.inputs["Color"])
             nt.links.new(nm.outputs[0], b.inputs["Normal"])
+
+    if water_z is None:
+        if col_out:
+            nt.links.new(col_out, b.inputs["Base Color"])
+        if rgh_out:
+            nt.links.new(rgh_out, b.inputs["Roughness"])
+        nt.links.new(b.outputs[0], out.inputs["Surface"])
+        return m
+
+    # submergence factor: 1 under the waterline, 0 above it, over a 6 cm band
+    geo = nt.nodes.new("ShaderNodeNewGeometry")
+    sep = nt.nodes.new("ShaderNodeSeparateXYZ")
+    nt.links.new(geo.outputs["Position"], sep.inputs["Vector"])
+    sub = nt.nodes.new("ShaderNodeMapRange")
+    sub.inputs["From Min"].default_value = water_z + 0.03
+    sub.inputs["From Max"].default_value = water_z - 0.03
+    sub.inputs["To Min"].default_value = 0.0
+    sub.inputs["To Max"].default_value = 1.0
+    sub.clamp = True
+    nt.links.new(sep.outputs["Z"], sub.inputs["Value"])
+
+    mixc = nt.nodes.new("ShaderNodeMixRGB")
+    mixc.inputs["Color1"].default_value = (*dry_rgb, 1.0)
+    mixc.inputs["Color2"].default_value = (*wet_rgb, 1.0)
+    if col_out:
+        tint = nt.nodes.new("ShaderNodeMixRGB")
+        tint.blend_type = "MULTIPLY"
+        tint.inputs["Fac"].default_value = 1.0
+        tint.inputs["Color2"].default_value = (0.42, 0.42, 0.44, 1.0)
+        nt.links.new(col_out, tint.inputs["Color1"])
+        nt.links.new(col_out, mixc.inputs["Color1"])
+        nt.links.new(tint.outputs[0], mixc.inputs["Color2"])
+    nt.links.new(sub.outputs["Result"], mixc.inputs["Fac"])
+    nt.links.new(mixc.outputs[0], b.inputs["Base Color"])
+
+    mixr = nt.nodes.new("ShaderNodeMapRange")
+    mixr.inputs["To Min"].default_value = dry_rough
+    mixr.inputs["To Max"].default_value = wet_rough
+    nt.links.new(sub.outputs["Result"], mixr.inputs["Value"])
+    if markings:
+        # LANE MARKINGS, procedural, no asset. Two jobs beyond decoration. They tell
+        # the viewer this grey ribbon is a carriageway rather than a lake, which no
+        # amount of asphalt texture does on its own. And they make the CAMBER
+        # visible: the crown and cross slope are real geometry imported from
+        # simulation/road_geometry.road_profile, but a uniform grey surface gives
+        # the eye nothing to read curvature against, so the geometry that is the
+        # unevaluated part of this configuration was invisible in every frame so
+        # far. A straight painted line draped over a crowned surface is the
+        # cheapest possible curvature gauge.
+        cx_road, half_c = markings
+        geo2 = nt.nodes.new("ShaderNodeNewGeometry")
+        sp2 = nt.nodes.new("ShaderNodeSeparateXYZ")
+        nt.links.new(geo2.outputs["Position"], sp2.inputs["Vector"])
+
+        def mnode(op, v1=None, v2=None, inp=None):
+            n = nt.nodes.new("ShaderNodeMath")
+            n.operation = op
+            if v1 is not None:
+                n.inputs[0].default_value = v1
+            if v2 is not None:
+                n.inputs[1].default_value = v2
+            if inp is not None:
+                nt.links.new(inp, n.inputs[0])
+            return n
+
+        sub_x = mnode("SUBTRACT", v2=cx_road, inp=sp2.outputs["X"])
+        dx = mnode("ABSOLUTE", inp=sub_x.outputs[0])
+        centre = mnode("LESS_THAN", v2=0.075, inp=dx.outputs[0])
+        off = mnode("SUBTRACT", v2=half_c - 0.35, inp=dx.outputs[0])
+        offa = mnode("ABSOLUTE", inp=off.outputs[0])
+        edge = mnode("LESS_THAN", v2=0.075, inp=offa.outputs[0])
+        yw = mnode("WRAP", inp=sp2.outputs["Y"])
+        yw.inputs[1].default_value = 9.0
+        yw.inputs[2].default_value = 0.0
+        dash = mnode("LESS_THAN", v2=6.0, inp=yw.outputs[0])
+        cdash = mnode("MULTIPLY", inp=centre.outputs[0])
+        nt.links.new(dash.outputs[0], cdash.inputs[1])
+        both = mnode("MAXIMUM", inp=cdash.outputs[0])
+        nt.links.new(edge.outputs[0], both.inputs[1])
+        onroad = mnode("LESS_THAN", v2=half_c + 0.05, inp=dx.outputs[0])
+        mask = mnode("MULTIPLY", inp=both.outputs[0])
+        nt.links.new(onroad.outputs[0], mask.inputs[1])
+
+        paintmix = nt.nodes.new("ShaderNodeMixRGB")
+        paintmix.inputs["Color2"].default_value = (0.52, 0.52, 0.50, 1.0)
+        nt.links.new(mask.outputs[0], paintmix.inputs["Fac"])
+        nt.links.new(mixc.outputs[0], paintmix.inputs["Color1"])
+        nt.links.new(paintmix.outputs[0], b.inputs["Base Color"])
+
+        rmix = nt.nodes.new("ShaderNodeMix")
+        rmix.data_type = "FLOAT"
+        nt.links.new(mask.outputs[0], rmix.inputs[0])
+        nt.links.new(mixr.outputs[0], rmix.inputs[2])
+        rmix.inputs[3].default_value = 0.42
+        nt.links.new(rmix.outputs[0], b.inputs["Roughness"])
+        print("[cycles] lane markings: dashed centre line at x=%.2f, edge lines at "
+              "+/-%.2f m, 6 m mark and 3 m gap. Procedural, no asset. They are the "
+              "only cue that makes the imported crown and camber legible."
+              % (cx_road, half_c - 0.35))
+    else:
+        nt.links.new(mixr.outputs[0], b.inputs["Roughness"])
     nt.links.new(b.outputs[0], out.inputs["Surface"])
+    print("[cycles] road: dry roughness %.2f above z=%.3f m, wet roughness %.2f "
+          "below it, transition band 0.06 m. Water is roughness 0.02, so the two "
+          "surfaces are no longer the same mirror." % (dry_rough, water_z, wet_rough))
     return m
 
 
@@ -574,7 +700,9 @@ def main():
         # laid far below as a ground fill so the horizon is not empty, but it is
         # 1.2 m down and never visible next to the road.
         road = imp_ply(Path(a.scene) / sc["road"], "Road")
-        road.data.materials.append(mat_ground(a.asphalt_dir, a.wet))
+        road.data.materials.append(mat_ground(
+            a.asphalt_dir, a.wet, float(sc["surround_z"]),
+            markings=(float(sc["crown_x"]), 0.5 * float(sc["road_carriageway"]))))
         print("[cycles] road: %d polys, %s, width %.1f m, carriageway %.1f m, "
               "cross slope %.3f" % (len(road.data.polygons),
                                     sc.get("road_profile_source", "?"),
@@ -592,7 +720,9 @@ def main():
     bpy.ops.mesh.primitive_plane_add(size=520.0, location=(cx, cy, fill_z - 0.003))
     ground = bpy.context.object
     ground.name = "Ground"
-    ground.data.materials.append(mat_ground(a.asphalt_dir, a.wet))
+    gw = sc.get("surround_z") or sc.get("still_water_z")
+    ground.data.materials.append(
+        mat_ground(a.asphalt_dir, a.wet, float(gw) if gw else None))
 
     # ---- vehicles and their water -----------------------------------------
     paint = tuple(float(x) for x in a.paint.split(","))
@@ -603,9 +733,11 @@ def main():
         # hulls of different sizes into one mesh would compute that partition in a
         # box spanning all three and paint the wrong faces on every one of them.
         allw = []
+        plist = [tuple(float(x) for x in c.split(","))
+                 for c in a.paints.split(";") if c.strip()] or [paint]
         for k, v in enumerate(sc["vehicles"]):
             h = imp_ply(Path(a.scene) / v["hull"], "Hull%d" % k)
-            assign_hull_materials(h, paint)
+            assign_hull_materials(h, plist[k % len(plist)])
             h.data.polygons.foreach_set("use_smooth", [True] * len(h.data.polygons))
             h.data.update()
             w = imp_ply(Path(a.scene) / v["water"], "Water%d" % k)
