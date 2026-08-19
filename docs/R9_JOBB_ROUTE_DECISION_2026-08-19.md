@@ -22,6 +22,10 @@ refuted by direct measurement, and it is refuted by four independent lines in on
    **1.493**, against a pre-registered E1 threshold of 1.10 and an E3 threshold of 1.25.
    **Including every particle the estimator throws away moves the ratio the WRONG WAY,
    1.522 to 1.528.** Vista job 922584, 2 min 58 s, `RC = 0` on all three runs.
+   **It holds at three arms and at g96 the sign reverses**: the offset is +0.98, +0.07 and
+   **-1.14 mm** at g64/band1, g64/band2 and g96/band1, against requirements of 26.02, 26.02
+   and 17.34 mm. E1's specific prediction was that the offset scales as `1.3875*dx`; it
+   does not scale with dx at all, because it is noise about zero (section 7.2a).
 
 2. **The `2R` exclusion is not merely a defensible trade, it is the correct call, and that
    is now measured rather than argued.** The docstring says the annulus carries "the
@@ -498,6 +502,45 @@ parameter to tune.** p99.9 and max let a handful of ejected particles define the
 which is the failure the docstring rejects by name, and (c) above shows those particles
 exist and sit 30 mm up. The defensible band is p99 to the column-max median: 1.424 to 1.522.
 
+### 7.2a The two supporting arms landed, and one refutes E1 with the sign reversed
+
+Job **922600**, 7 minutes, `RC = 0` on both. (922585 asked 75 minutes and never scheduled;
+after job A finished in 2 min 58 s that request was obviously the wrong shape, so it was
+cancelled and resubmitted at 15 minutes, which started almost at once.) Same code state,
+same floor BC, so these three are a self-consistent set:
+
+| run | dx | band/dx | fz | sub | ratio | near minus far | E1 needs | fitted k |
+|---|---|---|---|---|---|---|---|---|
+| g64 band 1.0 | 18.75 mm | 1.0 | 44.728 N | 89.12 mm | 1.522 | **+0.98 mm** | 26.02 mm | 0.864 |
+| g64 band 2.0 | 18.75 | 2.0 | 69.107 | 91.25 | 2.256 | **+0.07 mm** | 26.02 mm | 0.915 |
+| g96 band 1.0 | 12.50 | 1.0 | 34.511 | 83.90 | 1.306 | **-1.14 mm** | 17.34 mm | 0.765 |
+
+**Three things, and the second is what the g96 arm was bought for.**
+
+1. **At g96 the near-field surface is BELOW the far field.** E1 needed +17.34 mm and got
+   -1.14 mm. The sign is against the hypothesis, and using the near-field surface makes the
+   ratio WORSE, 1.310 to 1.342. Across the three arms the offset is +0.98, +0.07, -1.14 mm:
+   **a 2.1 mm span straddling zero**, against requirements of 26.02, 26.02 and 17.34 mm.
+2. **The near-field offset does not scale with dx.** That was E1's specific, falsifiable
+   prediction: it required `1.3875 * dx`, so 26.0 mm at g64 falling to 17.3 mm at g96. The
+   measured offset does not fall with dx because it is not a function of dx; it is noise
+   about zero. **This is the arm that could have rescued E1 and it did the opposite.**
+3. **The near-field surface is passive to the band, and the FAR field is not.** Quadrupling
+   the band from 0.5 to 2.0 dx nearly doubles the force, and the near-field offset moves
+   only +0.98 to +0.07 mm. But the **far-field surface rises +2.12 mm** over the same
+   change. That is job B result section 13.5's displacement-rise mechanism, reached from a
+   completely independent direction: the inflated body displaces more water and lifts the
+   whole tank slightly, while doing nothing special to the annulus.
+
+**A SECOND INSTRUMENTATION CONTROL, AND THIS ONE I PREDICTED CORRECTLY.** The g96 arm
+reproduces the existing `d4_jobB_idev/sphere_fixed_g96_300` at `fz = 34.5107` against
+`34.5115 N`, a per-frame `max |dFz|` of **5.014e-3 N = 7.24e-5 of target**. Two independent
+reproductions of two different pre-existing runs, at two resolutions, both inside this
+scene's reproducibility floor. The instrumentation does not touch the physics.
+
+Fitted inflation `k = 0.864 / 0.915 / 0.765` across the three arms, consistent with the
+global `k = 0.84` to `0.86` of section 3.2 fitted to a different and larger set.
+
 ### 7.3 What this result does NOT establish
 
 - **It is measured at the LEAKY floor**, because that is what the staged code produces (see
@@ -505,7 +548,10 @@ exist and sit 30 mm up. The defensible band is p99 to the column-max median: 1.4
   113.8 mm. **This does not weaken the refutation**: the quantity refuted is a near-field
   RISE, and the radial profile is flat to 2.84 mm regardless of where the mean level sits.
   It does mean the numbers here should not be pooled with bcfix-arm numbers.
-- **It is one resolution.** Job 922585 carries g96 and band 2.0 and had not run.
+- **It is two resolutions and two bands, not one, but all at the same floor BC.** Section
+  7.2a adds g96 and band 2.0. What is still untested is whether the near-field offset
+  behaves the same way once the floor stops leaking, and that cannot be tested from this
+  branch because the bcfix is not on it.
 - **Refuting E1 does not by itself prove E3.** E3's positive evidence is separate and
   pre-existing: the force moves 34.6 to 69.1 N across the band sweep at fixed dx, and the
   inflated-collider geometric model fits every distinct run with one constant `k = 0.84`
@@ -591,11 +637,11 @@ it converts a systematic error into a measured one.
 
 ## 9. What I could not verify, and what I am not claiming
 
-- **Section 7.1 is filled and 922585 is not.** The g96 and band-2.0 arms had not run, so
-  the refutation rests on ONE resolution. The g96 arm would show whether the near-field
-  offset scales with dx; at g64 it is 0.98 mm against a required 26.02, so it would have to
-  behave very strangely at g96 to change anything, but that is an expectation, not a
-  measurement.
+- **All five runs landed and section 7 is complete.** What remains untested is the bcfix
+  floor: every run here leaks, and I cannot test otherwise from this branch. I expect the
+  near-field offset to stay near zero there, because it is near zero at three points
+  spanning a 4x band change and a 1.5x resolution change, but **that is an expectation, not
+  a measurement**, and it is the one place a future run could still overturn this.
 - **Everything in section 7 is at the LEAKY floor**, because the staged code produces it.
   See the control note in section 7. Do not pool these numbers with bcfix-arm numbers.
 - **I predicted the wrong control reference and said so rather than quietly repointing it.**
