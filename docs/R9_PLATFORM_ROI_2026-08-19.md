@@ -1014,3 +1014,127 @@ So the eleven worktrees were **better off** without that line, and my finding
 was correct about the mechanism (a tracked hook is frozen at a branch point) and
 wrong about the direction of the harm. The measurement stands; the framing does
 not, and it is corrected here rather than quietly dropped.
+
+---
+
+# PART 6. The Hub audit, re-measured. "Six public empty shells" is refuted.
+
+## 29. `usedStorage` is LFS-only accounting, not repository content
+
+The audit I was handed reported ten repositories with eight at **0 B**, and
+concluded that six public empty shells carry this project's name. **The size
+field it used counts LFS-backed storage only.** Files stored in git, which is
+every small text and CSV file, report zero while being fully present.
+
+Proved by download, not by argument:
+
+```
+GET .../datasets/josiecerrell/can-it-ford-speed-surface/resolve/main/load_surface.csv
+  http=200   208,366 bytes   368 data rows
+```
+
+That is the repository the audit called empty, and the file it called 0 B is
+203 KB of the surface this project believes is the field's open gap.
+
+## 30. Every repository, re-measured by counting files that are not `.gitattributes`
+
+`.gitattributes` is created automatically by the Hub, so a repo holding only
+that file is the real definition of empty. Measured live, private ones with
+authentication:
+
+| repo | type | vis | real files | actually empty? |
+|---|---|---|---|---|
+| `hicss-splat-bucket` | bucket | public | 588 MB | no |
+| `can-it-ford-page` | space | **private** | **275** | no, a full project page, 50 MB LFS |
+| `can-it-ford-sweep-v1` | **model** | public | **37** | **no, and this is the finding** |
+| `can-it-ford-sweep-v1` | dataset | public | 1 | no, my placeholder README |
+| `can-it-ford` | space | public | 10 | no, the live Space |
+| `can-it-ford-speed-surface` | dataset | public | 5 | no, the live dataset |
+| `can-it-ford-demo` | space | public | 2 | no, README + `phase_space_results.csv` |
+| `can-it-ford-lab` | space | **private** | 7 | no, a Dockerfile app with a login page |
+| `can-it-ford-results` | dataset | **private** | **0** | **YES** |
+| `can-it-ford-scratch` | bucket | public | **0** | **YES** |
+
+**Two of ten are empty, not eight. One of those two is public, not six.**
+
+## 31. The real finding is the opposite of the one reported
+
+The audit reasoned that the same name existing as both a dataset and a model,
+both empty, suggested a creation step that ran twice and a population step that
+never ran. **It is the other way round.** The *model* repo is the populated one,
+and it is populated with something that needs a decision:
+
+`josiecerrell/can-it-ford-sweep-v1`, **model type, PUBLIC**, 36 runs plus a
+manifest:
+
+- 3 vehicle classes: sedan 4.6 m / 1240 kg, suv 4.8 m / 2020 kg, pickup 5.5 m / 1930 kg
+- 4 depths x 3 velocities x 3 classes = 36 runs, all `n_grid` 64
+- **`density_plausible` is `False` on all 36 rows**, by the pipeline's own check
+- densities 336.61, 482.61, 306.51 kg/m^3, none of them the canonical Yaris 310.494
+- **no README at all** (`raw/main/README.md` returns 404)
+- typed as a **model**, which is the wrong type for a tabular sweep
+
+**Provenance established, and it IS reproducible.** The published `manifest.csv`
+is byte-identical to `data/track1_sweep_v1/manifest.csv` after newline
+normalisation (published is CRLF, committed is LF, exactly 37 bytes across 37
+lines, the same trap as the speed-surface source this morning), and
+`data/track1_sweep_v1/` **is tracked on `origin/main`**. So this is committed,
+re-derivable data, not an orphan.
+
+**But `track1_sweep_v1` is the box-proxy lineage**, the one CLAUDE.md marks
+deprecated and instructs not to cite for a density or a paper figure. So a public
+repository under this project's name serves the superseded lineage, with every
+row self-flagged implausible, and no README to say any of that.
+
+That is strictly worse than an empty repository, and it is the exact hazard I
+wrote the `sweep-v1` dataset README about this afternoon, **while the actual
+data was sitting one repo-type away and I did not look.** My placeholder README
+says "this repository holds no data", which is true of the *dataset* repo and
+misleading now that I know a same-named *model* repo serves 36 runs.
+
+## 32. Recommendation for each, and I have acted on NONE of them
+
+Deleting a public repository and emptying one are different irreversible acts,
+and neither is mine. **No repository was created, deleted, emptied or modified in
+this part.**
+
+| repo | recommendation | why |
+|---|---|---|
+| `can-it-ford-sweep-v1` **(model)** | **FILL, highest priority: add a README.** Do not delete | 36 real runs, publicly readable, zero scope attached. The README must say: box-proxy `track1_sweep_v1` lineage, superseded, `density_plausible=False` on every row, not the canonical Yaris, and where the current data is. Artifact exists and is committed: `data/track1_sweep_v1/`, tracked on `origin/main`. Retyping it as a dataset would change its URL and is a second decision |
+| `can-it-ford-sweep-v1` (dataset) | **AMEND my README** | it says "holds no data" without mentioning that a same-named model repo does. That is now the misleading half |
+| `can-it-ford-results` (dataset, private) | **DELETE, or fill** | genuinely empty, private, so it costs nothing and misleads nobody. Deleting is tidy; leaving it is harmless. **Do not fill it** until there is an artifact: tonight's provenance audit found two headline results whose data lives only on Vista |
+| `can-it-ford-scratch` (bucket, public) | **DELETE or make private** | genuinely empty and public. The only true "public empty shell" of the ten |
+| `can-it-ford-speed-surface` | **keep, already filled** | 5 files, 368 records, provisional card |
+| `can-it-ford` (space) | **keep, already filled** | 10 files, running, two applications |
+| `can-it-ford-demo` (space) | **inspect before deciding** | 2 real files; `phase_space_results.csv` may be the superseded bare-hazard rule. Not mine |
+| `can-it-ford-page` (private) | **keep private** | 275 files, a real project page. Not mine |
+| `can-it-ford-lab` (private) | **keep private** | 7 files, a Dockerfile app with a login page. Not mine |
+| `hicss-splat-bucket` | **out of scope** | not can-it-ford named, 588 MB |
+
+**Nothing above should be filled with a number that cannot be re-derived.** The
+only fill I recommend is a README, which is prose about data that is already
+committed.
+
+## 33. Weights and Biases: what it logs, and the one thing to add
+
+**What it logs now.** `wandb` appears in ten tracked Python files, and across
+them there are six `wandb.init`, six `wandb.log` and two `wandb.summary` calls.
+The metric keys actually written are seven scalars: `depth_m`, `velocity_ms`,
+`dv_product`, `l1_haz_score`, `l1_verdict`, `l2_verdict`, `verdict`. So the 105
+runs are a **verdict ledger**: two inputs, one hazard product, three verdict
+labels, one row per run. There are no forces, no time series, no retained
+window, no seed, no grid, and no thresholds. My run `3w9sk50e` added the first
+distribution tables (20 cells x 5 seeds = 100 draws), and it is the only run
+carrying an ensemble.
+
+**The single highest-leverage addition: log the deciding thresholds, and the
+retained window, as `config` on every run.** A verdict is already logged; the
+four literals that decide it (`slide_m`, `slide_speed_ms`, `float_m`,
+`sustain_frames`) are not, and neither is the frame window a load was averaged
+over. Those are precisely the two "number without its scope" failures this
+project keeps paying for: 16 SLIDE / 1 STUCK is threshold-dependent and must
+never be quoted bare, and tonight a published 2.3x was withdrawn because it was
+a transient window that had not been labelled. Both are cheap, four floats and
+two integers, and `config` is queryable, so a threshold change becomes a visible
+diff across runs instead of an untracked edit, and any verdict count becomes
+re-derivable by filtering rather than by trusting a summary.
