@@ -33,9 +33,8 @@ took the complement of *reach* and reported it as *cited*, which is a different
 predicate measured a different way. The arithmetic is **332 - 76 = 256**, so the
 number is the complement of the **76** rung, DOI-string-appears-anywhere, and it
 was published under the word "cited", which is the **3** rung. Two rungs apart.
-`CLAUDE.md`
-withdrew the identical clause on 2026-08-18; this file was not updated with it
-and kept asserting the retracted number for a day.
+`CLAUDE.md` withdrew the identical clause on 2026-08-18; this file was not
+updated with it and kept asserting the retracted number for a day.
 
 Why the two cannot be collapsed: **reach** asks whether a DOI string appears in a
 directory. **Cited** asks whether a bibliography entry exists and a `\cite`
@@ -91,7 +90,7 @@ added.
 
 25 method tags exist. Run `--stats` rather than guessing tag names.
 
-### Two traps that return a FALSE ZERO. A zero from either looks exactly like absence.
+### Three traps that return a FALSE ZERO. A zero from any of them looks exactly like absence.
 
 **1. `--query` searched only titles and abstracts until 2026-08-19, never authors.**
 So every author-name query returned zero regardless of the corpus contents.
@@ -104,11 +103,20 @@ check were present. **Fixed**, `--query` now searches authors too. If you are
 reading an older checkout, search the authors field directly before concluding
 absence.
 
-**2. An author's name is not their work.** Even with the fix, a surname hit is a
+**2. `--query` is a LITERAL SUBSTRING match, and for a third of the corpus it is
+title-only.** It does not stem and does not survive a paraphrase. **110 of the
+332 records have no abstract**, so for those a topic query can only match words
+appearing in the title. `--query` now prints that ratio to stderr on every run,
+so a zero arrives with its own caveat attached. A search for "vehicle fording
+feasibility" returns 0 and that is nearly meaningless.
+
+**3. An author's name is not their work.** Even with the fix, a surname hit is a
 surname, not an identity, and a miss on one work by an author whose other work is
 present is the interesting case rather than a null result. The corpus holds six
 papers from the Shah/Mustaffa flood-vehicle group and **not** `shah2018`
-(`10.1051/matecconf/201820307003`), which the paper cites.
+(`10.1051/matecconf/201820307003`), which the paper cites. Beware short surnames
+in the other direction too: a substring search for "Xia" returns **23** records,
+nearly all of them hits inside given names such as "Lingxiao" and "Xiao-Guang".
 
 **Before writing "the corpus has nothing on X", run at least two of: `--query`
 against the term, a direct DOI check, and an author check. State which you ran.**

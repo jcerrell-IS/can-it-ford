@@ -199,6 +199,24 @@ a genuine sourcing gap.
 
 ## 5a. An offered corroboration that is REFUTED, and the false zero behind it
 
+**RETRACTED AT SOURCE, 2026-08-19.** The coordinating session that offered the
+claim below has since withdrawn it independently, before reading this section,
+and its retraction reproduces this refutation from separate evidence: it read the
+`doi` and `authors` fields of the index directly rather than running the query
+tool, and got the same 4-of-6 present and the same 5 Al-Qadami records. So the
+claim is retracted by both its author and its auditor, by two different methods.
+It is kept here in full rather than deleted, because the *reason* it was wrong is
+the reusable part and a deleted error teaches nobody.
+
+Two corrections to that retraction, both minor and both verified live here. It
+cites the defect at `analysis/research_index.py:518-521`; on this branch that
+code was already fixed in commit `8bad9b4` and the clause now sits near `:1067`,
+so the line reference points at an unfixed ref (`origin/main` or similar), not at
+this branch. And it adds a fact I had not established, which is a real widening
+of the defect and is carried into section 5b: **110 of the 332 records have no
+abstract at all**, so for a third of the corpus `--query` was title-only
+substring matching even for topic queries, not just author queries.
+
 Added 2026-08-19. A coordinating session offered this as corroboration: six
 flood-vehicle DOIs were resolved against Crossref, `research_index.py --query
 "Al-Qadami"` returned zero matches, and therefore "not one of them is in the 332",
@@ -251,6 +269,71 @@ searches did not miss this neighbourhood. They worked it repeatedly and returned
 eleven of its papers. That makes a single in-scope absence a sharper finding than
 a claim of blanket silence would have been, because blanket silence would have
 been explained by scope and this cannot be.
+
+---
+
+## 5b. Turning the same test on my own census, which is where it bit
+
+The retraction came with an instruction worth more than the retraction: *before
+any absence number goes in the census, establish whether it was measured with a
+predicate that could have returned a hit, and apply that to your own numbers as
+much as to the ones you are auditing.* Applied here, it found a hole in my own
+tool within one command.
+
+**My author route silently skipped two entries.** The route guards with
+`len(surname) > 3`. DERIVED: that excluded `xie2023physgaussian` (surname "Xie")
+and `xia2014` (surname "Xia"). `xia2014` is harmless, it matched by DOI. But
+`xie2023physgaussian` was published in section 4 as `NEVER_INGESTED` **while one
+of its three index routes had never run**, and the census cell said "0 matches"
+rather than "did not run". That is the same shape as the `--query` defect: a
+predicate that cannot fire, reported as a measurement.
+
+**The guard itself is correct and I kept it.** DERIVED: searching "Xia" as a
+substring of the authors field returns **23** records, and nearly all are hits
+inside *given* names, "Lingxiao", "Xiao-Guang", "Xiaomin", "Xiaoguang". A
+three-character surname substring is overwhelmingly false-positive. The bug was
+never the guard. The bug was that the skip was **silent**.
+
+**Did it change the answer? No, and I checked rather than assumed.** DERIVED:
+the corpus contains **0** records with "Xie" in the authors field, so the route
+would have returned nothing had it run. `xie2023physgaussian` stays
+`NEVER_INGESTED`. The verdict survives, but it survived by luck until this check,
+and that distinction is the whole point.
+
+**The fix, and it is the one this project keeps re-learning.** Evaluability is now
+recorded separately from result. A route that cannot run reports
+`NOT-EVALUABLE(reason)`, never `0`. Two new census columns, `routes_evaluable`
+and `n_routes_evaluable`, say which of the five routes *could* have fired for
+each work, and `--bib-audit` prints the breakdown for every absence.
+
+| absent work | routes that could fire |
+|---|---|
+| `thorpe2026pvwm`, `hsiao2025nerfmpm`, `nws_tadd`, `genesis2024`, `fred2026` | 3 of 5 (no DOI in the bib, so both DOI routes are lost) |
+| `xie2023physgaussian` | 4 of 5 (author route not evaluable, short surname) |
+| `kerbl20233dgs`, **`shah2018`**, `ccsa2016yaris`, `heydinger1999sae` | **5 of 5** |
+
+**No absence in this census rests on fewer than three independent routes, and
+`shah2018`, the one load-bearing absence, rests on all five.** That is now a
+printed property of the tool rather than a claim in prose.
+
+Note what the 3-of-5 rows are: every one of them is a preprint, a web page or a
+software repository, that is, exactly the category-boundary group from section 4
+whose absence is already explained without needing a search at all. The works
+where the absence claim has to carry weight are the ones where it is strongest.
+
+### The general rule this project keeps paying for
+
+Three independent instances tonight, in three different tools:
+
+1. `--query` matched `title` and `abstract` only, so an author query returned a
+   structurally guaranteed zero.
+2. My author route skipped short surnames and reported the skip as zero.
+3. A `grep` of mine failed on an unquoted zsh glob mid-session; the shell errored
+   and the pipeline would have read as zero had I not seen the error text.
+
+All three are the same failure: **a cell that cannot distinguish "no" from "could
+not ask".** The remedy is not more care, it is a schema in which the two cannot
+share a value, which is what `routes_evaluable` and `NOT-EVALUABLE(reason)` are.
 
 ---
 

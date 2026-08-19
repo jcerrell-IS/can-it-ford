@@ -732,6 +732,22 @@ def index_self_defects() -> list:
     return out
 
 
+def _evaluable_summary(doi: str, author_evaluable: bool) -> str:
+    """Which of the five routes COULD have returned a hit for this work.
+
+    An absence measured by a predicate that cannot fire is not a measurement.
+    This column exists so that a NEVER_INGESTED verdict can be weighed by how
+    many independent routes actually ran, rather than trusted because the word
+    looks definite.
+    """
+    out = ["title-index", "title-reports"]          # always evaluable
+    if doi:
+        out += ["doi-index", "doi-reports"]
+    if author_evaluable:
+        out.append("author-index")
+    return "+".join(out)
+
+
 def audit_bibliography(bib_spec: str, tex_spec: str) -> dict:
     """Census every shipped bib entry against the corpus AND its source reports.
 
@@ -782,14 +798,28 @@ def audit_bibliography(bib_spec: str, tex_spec: str) -> dict:
         # thing in this census: it proves the literature search REACHED this
         # author and did not return this work, which separates a real sourcing
         # gap from a topic the corpus was never pointed at.
-        same_auth = [r for r in papers.values()
-                     if surname and len(surname) > 3
-                     and surname.lower() in r.get("authors", "").lower()]
-        ay_same_year = [r for r in same_auth if year and r.get("year") == year]
-        ay_other = sorted({r.get("year", "") for r in same_auth
-                           if r.get("year") != year} - {""})
-        routes.append(f"author-index:same-year={len(ay_same_year)},"
-                      f"other-years={len(same_auth) - len(ay_same_year)}")
+        # EVALUABILITY IS RECORDED SEPARATELY FROM THE RESULT.
+        # A surname of 3 characters or fewer is not searched, because substring
+        # matching on a short name is overwhelmingly false-positive: "Xia"
+        # returns 23 records, nearly all of them hits inside GIVEN names
+        # ("Lingxiao", "Xiao-Guang", "Xiaomin"). The guard is right. What was
+        # WRONG until 2026-08-19 is that the skip was silent, so the route
+        # reported "0 matches" when it had not run. Zero-because-not-run and
+        # zero-because-absent are different facts and must never share a cell.
+        author_evaluable = bool(surname) and len(surname) > 3 and bool(year)
+        if author_evaluable:
+            same_auth = [r for r in papers.values()
+                         if surname.lower() in r.get("authors", "").lower()]
+            ay_same_year = [r for r in same_auth if r.get("year") == year]
+            ay_other = sorted({r.get("year", "") for r in same_auth
+                               if r.get("year") != year} - {""})
+            routes.append(f"author-index:same-year={len(ay_same_year)},"
+                          f"other-years={len(same_auth) - len(ay_same_year)}")
+        else:
+            same_auth, ay_same_year, ay_other = [], [], []
+            why = ("surname too short to search" if surname and len(surname) <= 3
+                   else "no surname" if not surname else "no year in bib entry")
+            routes.append(f"author-index:NOT-EVALUABLE({why})")
 
         # ---- route 4, DOI as a raw string in each of the eight reports ----
         doi_reports = [rp["slug"] for rp in reports
@@ -860,6 +890,9 @@ def audit_bibliography(bib_spec: str, tex_spec: str) -> dict:
             "best_report_candidate": rt_title[:110],
             "best_report_slug": rt_slug or "-",
             "same_author_other_years": ",".join(ay_other) or "-",
+            "routes_evaluable": _evaluable_summary(doi, author_evaluable),
+            "n_routes_evaluable": str(2 + int(bool(doi)) * 2
+                                      + int(author_evaluable)),
             "routes": " | ".join(routes),
             "notes": " ".join(notes) or "-",
             "title": title,
@@ -885,7 +918,8 @@ TSV_COLUMNS = ["bib_key", "source_kind", "cited_in_tex", "year", "first_author",
                "doi", "doi_field_used", "verdict", "matched_how",
                "best_index_score", "best_index_candidate", "reports_with_doi",
                "best_report_score", "best_report_candidate",
-               "best_report_slug", "same_author_other_years", "routes",
+               "best_report_slug", "same_author_other_years",
+               "routes_evaluable", "n_routes_evaluable", "routes",
                "notes", "title"]
 
 
@@ -986,6 +1020,21 @@ def main() -> int:
                 if r["notes"] != "-":
                     print(f"      NOTE {r['notes']}")
             print()
+        print("--- WAS EACH ABSENCE MEASURED BY A PREDICATE THAT COULD FIRE? ---")
+        print("  An absence found by a search that cannot match is not a")
+        print("  measurement. Five routes exist; not all are evaluable for every")
+        print("  work. A DOI-less bib entry loses both DOI routes; a surname of")
+        print("  3 characters or fewer is not searched because substring")
+        print("  matching on a short name is overwhelmingly false-positive.")
+        absent = [r for r in rows if r["verdict"] == "NEVER_INGESTED"]
+        for r in sorted(absent, key=lambda r: int(r["n_routes_evaluable"])):
+            flag = "  <-- WEAK" if int(r["n_routes_evaluable"]) <= 2 else ""
+            print(f"    {r['bib_key']:22} {r['n_routes_evaluable']} of 5   "
+                  f"{r['routes_evaluable']}{flag}")
+        weak = [r for r in absent if int(r["n_routes_evaluable"]) <= 2]
+        print(f"  absences resting on 2 routes or fewer: "
+              f"{len(weak)}{' (' + ', '.join(r['bib_key'] for r in weak) + ')' if weak else ''}")
+        print()
         defects = index_self_defects()
         print("--- INDEX SELF-CHECK ---")
         if not defects:
@@ -1076,9 +1125,23 @@ def main() -> int:
         # This is the tool whose whole purpose is to stop absence claims, so a
         # false zero here is worse than no tool.
         q = a.query.lower()
+        pool = list(sel)
         sel = [r for r in sel
                if q in r["title"].lower() or q in r["abstract"].lower()
                or q in r.get("authors", "").lower()]
+        # STATE THE SEARCH DEPTH WITH THE RESULT.
+        # This is a LITERAL SUBSTRING match. It does not stem, does not handle a
+        # paraphrase, and for any record without an abstract it is title-only.
+        # 110 of the 332 have no abstract, so for a third of the corpus a topic
+        # query can only match words that appear in the title. A zero here is
+        # weak evidence of absence and the tool should say so rather than let
+        # the reader infer certainty from an empty list.
+        _no_abs = sum(1 for r in pool if not r.get("abstract"))
+        sys.stderr.write(
+            f"[--query is a literal substring match over title+abstract+authors. "
+            f"{_no_abs} of {len(pool)} searched records have NO abstract and were "
+            f"matched on title and authors only. A paraphrase will miss. Do not "
+            f"read 0 matches as absence without a second route.]\n")
     if a.doi:
         d = a.doi.lower().strip()
         sel = [r for r in sel if r["doi"] == d or d in r["doi"]]
