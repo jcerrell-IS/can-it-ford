@@ -186,6 +186,9 @@ licenses quoting `final_disp_mag_m` as converged.
 | 24 | **The split REPLICATES on two pre-existing populations that are not mine**, 87 long records, 3 jobs, 0 exceptions | section 24.3 |
 | 25 | **A 91-frame displacement record passes stationarity 50 pct of the time; at 250 frames it never does.** The pass is a false pass | section 24.4 |
 | 26 | The comparable denominator is **163 of 369 on Vista**, with its selection rule stated | section 24.2 |
+| 27 | **THE THIRD CLASS IS NOW A RULE**, with two data-free tests and an ordering; three slots hit it independently | section 25 |
+| 28 | **Method result: the inventory was worth more than the GPU run.** 35 records existed; the barrier was an unrun inventory | section 26 |
+| 29 | Item 5's mechanism in register-liftable form; d21's accessor finding does not reach my grades, checked | section 27 |
 
 ---
 
@@ -1881,4 +1884,210 @@ One correction to my own reasoning on the way: I first asserted this pass would
 take "seconds", the tool call timed out at 60 s, and only then did I measure. The
 estimate was wrong by an order of magnitude in the direction that would have made
 me confident. Measuring cost 2 commands.
+
+---
+
+## 25. THE THIRD CLASS, WRITTEN AS A RULE
+
+Section 1.1 named a third class in passing and did not say what to do with it.
+Three slots have now hit it independently, from three directions, so it needs a
+rule rather than a footnote:
+
+- **me**, `final_disp_mag_m`: a single terminal frame, neither a verdict nor a
+  mean over any window;
+- **d17-moving**: a load ratio that is neither a verdict nor an error bar;
+- **d21-jobb**: an estimate that moves with the analysis window by more than the
+  effect being measured, so no quantity of data fixes it.
+
+### 25.1 Why the original rule was incomplete
+
+The binary rule asks **"which window?"**. That question presupposes a window
+exists that makes the number stable. For a large class of quantities no window
+does, and asking the question anyway produces a confident answer with nothing
+behind it. **The prior question is not which window, but whether this quantity has
+a value that survives the choice at all.**
+
+### 25.2 The three classes
+
+| class | the question it answers | rule |
+|---|---|---|
+| **1. EVENT** | did it happen, and when? | **FULL RECORD.** Trimming can only delete an event, never create one, proved by exhaustion in section 23. Verdicts live here. |
+| **2. STEADY PROPERTY** | what value does it settle to? | **DEMONSTRATED-STATIONARY WINDOW**, with `N_eff` and not the frame count, and a stationarity test that is able to fail. |
+| **3. NEITHER** | it does not answer either | **NO WINDOW IS CORRECT.** Report the sensitivity, not the value. |
+
+Known class-3 members: instantaneous terminal values; extrema; ratios of
+quantities measured at different times or under different conditions; and any
+estimate whose value is set more by an analyst-chosen boundary than by the data.
+
+### 25.3 The two tests, both of which need no new data
+
+**Test A, `N_eff` against record length.** Compute `N_eff` at two record lengths.
+If it grows, class 2 is available. **If it saturates or falls, there is no steady
+value to estimate and the quantity is class 3 no matter how smooth its time series
+looks.** This is the test that catches an impostor: displacement looks exactly
+like a steady property, you can take its mean and it has a tidy standard error,
+and its `N_eff` is 5.12 at 91 frames and 2.89, 2.86 and 3.16 at 250, 250 and 400
+across three independent populations. A quantity whose independent-sample count
+does not grow with the record has nothing for a longer record to converge to.
+
+**Test B, the specification sweep, which is d21's.** Compute the number under two
+or three defensible analyst choices. **If the spread exceeds the effect, the
+estimator is producing the number rather than the physics, and it is class 3.**
+
+The tests catch different failures and are both cheap. A catches "this never
+settles". B catches "this is my choice, not a measurement". My Q2 passed A on
+direction and **failed B on magnitude**, which is why section 23 withdrew the size
+while keeping the sign.
+
+### 25.4 Ordering, which is the operationally important part
+
+**Run test B before spending compute.** This is d21's correction to me and it is
+the part I got wrong: I proved frames were nearly free and then recommended
+spending them. If a quantity is specification-limited, more frames buy exactly
+nothing. Test B costs one loop.
+
+The full order:
+
+1. Classify the quantity. If it is an event, use the full record and stop.
+2. Run test B, the specification sweep. If the estimate moves more than the
+   effect, it is class 3 and no amount of data will change that.
+3. Run test A, `N_eff` against length. If `N_eff` saturates, it is class 3.
+4. Only if it survives both is it class 2, and only then does a longer record help.
+
+### 25.5 What to do with a class-3 quantity
+
+Four options, in preference order:
+
+1. **Change the observable.** The strongest move and the one available more often
+   than it looks. Displacement is class 3 and velocity is class 2, and they
+   describe the same motion.
+2. **Report direction, withdraw magnitude**, if the direction survives the
+   specification sweep. This is d21's practice and it is what section 23 does.
+3. **Report the envelope or the distribution**, not a point estimate.
+4. **Report the sensitivity itself** as the result, which is often the honest
+   finding.
+
+What is never acceptable is choosing one window, getting a clean fit, and
+reporting the fit rather than its sensitivity to the choice. That is the error
+d21 made twice in one night, that I made once, and that this rule exists to stop.
+
+### 25.6 One thing this rule does NOT cover
+
+It classifies a quantity, not a scene. It says nothing about whether two runs are
+comparable, which is section 24's problem and needs provenance rather than
+statistics. A class-2 quantity measured on two incomparable runs is still a wrong
+number.
+
+---
+
+## 26. A METHOD RESULT: THE INVENTORY WAS WORTH MORE THAN THE RUN
+
+Worth separating from the data result in section 24, because the lesson is about
+process and transfers to slots doing nothing like settling.
+
+**A claim that appeared to need new GPU runs did not need them.** I asserted that
+nobody had run a longer record, submitted a job to produce one, and then found 35
+comparable long records that already existed. The velocity-versus-displacement
+finding now rests on **35 pre-existing records across two independent jobs** plus
+my 52, rather than on one arm, **and the 35 cost nothing.**
+
+The thing standing between this project and a 35-record result was **an inventory
+nobody had done.** Not compute, not access, not a missing method. The data had
+been sitting on `/work` for weeks in trees named after the experiments that
+produced them, which is why nobody looking for settle data found it: `d4_jobA` and
+`r7_inflow_918506` are named for a job route and a boundary-condition study, and
+their 250-frame repeat sets are invisible to anyone searching for the word
+"settle".
+
+Three transferable points:
+
+1. **Inventory before compute, and make the inventory reproducible.** Both scripts
+   are committed for this reason. The inventory took minutes and returned more
+   than the GPU job did.
+2. **Classify by checkable property, not by name.** My first exclusion rule cut
+   the whole `r7_inflow` tree by name and would have discarded 15 of the 35
+   records, because that tree mixes boundary conditions and only some arms are
+   non-canonical. Directory names describe intent; schema and parameters describe
+   what a run IS.
+3. **A record produced for one question is often evidence for another.** Nobody
+   ran those 250-frame sets to study settling. They answer a settling question
+   anyway, and better than a purpose-built single arm, because they carry repeats.
+
+The negative that makes this honest: **the run was not wasted, but it was not
+necessary either.** Job 922622 remains the only 400-frame arm and the only one
+with a same-job 90-frame control, which is why section 20's Gate 0 exists. Had I
+inventoried first I would have run a smaller confirmation, or none.
+
+---
+
+## 27. FOR THE REGISTER: ITEM 5's MECHANISM, IN LIFTABLE FORM
+
+Section 22 explains it. This section is the text to lift, written so it can be
+pasted into `docs/CANONICAL_CORRECTIONS_REGISTER_2026-08-06.md` or into
+CLAUDE.md item 5 without editing. Every number in it was measured on Vista job
+922622, `long_f400`, and is reproducible from
+`$WORK/r9_settle_longrecord/long_f400/metrics.csv`.
+
+> **ITEM 5's NON-MONOTONE `final_disp_mag_m` HAS A MECHANISM, 2026-08-20.**
+> Item 5 records that `final_disp_mag_m` moves +87.8 percent from g48 to g64 then
+> -59.2 percent from g64 to g96 at 1100 kg, and +22.3 then -50.3 at 1609 kg, and
+> instructs readers to cite the binary verdict and never the displacement
+> magnitude. **That instruction is correct and is now explained rather than
+> merely observed.**
+>
+> `final_disp_mag_m` is a SINGLE TERMINAL FRAME: `sim_standing.py:501` is
+> `d = scene.history.displacement[-1]`. It is not a mean over any window and not
+> a verdict.
+>
+> **The trajectory it samples is not monotonic in time.** Measured on a 400-frame
+> run at the canonical g64 m1100 configuration, Vista job 922622: `dmag` **peaks
+> at 0.667127 m at row 64 and ends at 0.290845 m, 43.6 percent of its own peak.**
+> The vehicle moves downstream and then comes back. The same configuration
+> therefore reports 0.657 m or 0.291 m depending only on the frame at which the
+> record stops, and the canonical 91-frame record stops near the peak.
+>
+> **So g48, g64 and g96 are not disagreeing about a converged displacement. They
+> are sampling an oscillating trajectory at an arbitrary phase**, and the sign of
+> any pairwise difference is set by where frame 90 falls in each run's
+> oscillation. A grid-to-grid swing of +/-88 percent needs no numerical
+> explanation once one configuration is known to swing by a factor of 2.3 within
+> a single run at fixed grid.
+>
+> **Three consequences.** (a) Item 5's instruction is STRENGTHENED: the SLIDE
+> verdict is unchanged at 400 frames while the displacement fell to 43.6 percent
+> of peak over the same frames. (b) The non-monotonicity is NOT evidence of a
+> solver defect and should stop being cited as though it might be; it is the
+> expected reading of a terminal-frame sample of an oscillating quantity.
+> (c) A grid-convergence claim remains possible but not on this observable: it
+> needs a time-averaged quantity over a demonstrated-stationary window with a GCI,
+> and displacement has no such window at any record length while velocity does.
+> See `docs/R9_SETTLE_FRAMES_2026-08-18.md` sections 20.4, 20.5 and 24.3.
+>
+> This does NOT supersede Syamlal, Celik and Benyahia 2017, already cited in
+> CLAUDE.md for the same non-monotonicity. That is the statistical reason an
+> instantaneous quantity is not expected to converge under refinement; this is the
+> physical reason it does not, in this scene. Both hold and they are not two
+> sources for one claim.
+
+### 27.1 d21's force-accessor finding does not reach my grades, checked
+
+d21 established that both force accessors share a numerator, so a disagreement
+between them is about a denominator rather than about the measurement. The
+coordinator asked whether that changes what my grades mean.
+
+**It does not, and I checked rather than assumed.** My settle and stationarity
+work reads exactly four channels, `OBSERVABLES = ["dx", "dmag", "vx", "vmag"]` at
+`settle_audit.py:97`, and grades SLIDE on `failure_modes.py`'s distance and speed
+gates, `slide_m` 0.05 m and `slide_speed_ms` 0.05 m/s. A grep of all four of my
+analysis modules for force, `fz`, wrench or accessor returns only the string
+`noforce`, which is a directory-name flag in the Vista inventory classifier and
+not a physical quantity. **No number in this document is computed from a force
+accessor.**
+
+**Where it WOULD reach, for whoever extends this.** `failure_modes.py` gates
+TOPPLE on `surge_accel_g` against `ssf` and computes `weight_n`, which are
+force-adjacent. Nothing in my work reads them, because all 17 canonical verdicts
+are SLIDE or STUCK and neither gate involves force. **If anyone extends settle or
+stationarity analysis to the TOPPLE or FLOAT modes, d21's denominator question
+becomes live and must be resolved first.**
 
