@@ -878,3 +878,139 @@ shared and unowned this round, and the board's format is a fleet convention.
 What I can do and have done: measure them, give each a threshold and a control
 so the next session argues with a number instead of an opinion, and adopt the
 one rule that needs no permission, the sub-1024-byte board row.
+
+---
+
+# PART 5. The coordination layer, its failure mechanism, a detector, and the migration
+
+## 25. The mechanism, stated plainly
+
+A shell append (`printf ... >> file`) is atomic only up to a **1024-byte** write
+chunk. Above that the kernel splits the write, and a second process appending at
+the same moment can land its own chunk **between** the two halves of the first.
+
+Measured, eight concurrent writers, 25 rows each, the board's exact pattern:
+
+| row bytes | lines written | corrupted |
+|---|---|---|
+| 200 | 200 | **0** |
+| 500 | 200 | **0** |
+| 1000 | 200 | **0** |
+| 1023 | 200 | **0** |
+| 1500 | 200 | 30 |
+| 2000 | 200 | 23 |
+| 4000 | 200 | 83 |
+
+The boundary is sharp and it is exactly 1024. One corrupted line read
+`C x 1024, A x 1024, C x 976`.
+
+### 25.1 ROW COUNT IS NOT A DETECTOR, and that is the whole problem
+
+**200 lines went in and 200 lines came out.** The corruption does not change how
+many lines exist; it changes what is *inside* them. So every check a person
+would naturally run on an append-only log, *"did my row land"*, *"how many rows
+are there"*, *"is the file growing"*, **passes on a corrupted file**.
+
+That is what makes this an instrument failure rather than a bug. The artifact
+eleven sessions were told to trust for cross-session coordination has a failure
+mode that its obvious integrity check cannot see.
+
+### 25.2 Two denominators, both correct, so state which
+
+An earlier figure in this document said 64 percent of rows exceed 1024 bytes.
+The checker reports 76 percent. Both are right and they divide by different
+things: 64 percent is oversize lines over **all non-blank lines** (which
+includes the preamble), 76 percent is oversize rows over **headered rows only**.
+The second is the meaningful one, because only a row is written by an appender.
+Live at time of writing: **153 of 201 rows, median 1460 bytes, max 5252.**
+
+## 26. The migration, and why it is the fix rather than a mitigation
+
+The corpus document recommends **append-only, one-file-per-session handoffs plus
+an INDEX** in place of one shared file. The measurement above is the local
+evidence for why that is the right shape and not merely a tidier one:
+
+> **A per-session file has exactly one writer. With one writer there is no
+> second process to interleave with, so the failure cannot occur at any row
+> size.** The shared file makes correctness depend on every session's discipline
+> about row length; per-session files make it structural.
+
+That is a stronger guarantee than the sub-1024-byte rule, which only shrinks the
+window. Recommended shape, matching the document:
+
+```
+.claude/handoffs/2026-08-19_d18-platform.md     one writer, any row size
+.claude/handoffs/INDEX.md                        one short line per handoff
+```
+
+The INDEX still has many writers, so **the sub-1024-byte rule still applies
+there** and it is easy to honour, because an index line is a path plus a
+one-clause summary.
+
+**Interim rule, in force now and costing nothing: keep every board row under
+1023 bytes.** Measured safe at every length tested up to that. Long findings go
+in a committed document; the row cites the path and the SHA, which is what a row
+was always supposed to do.
+
+**Do not rewrite the existing board to fix anything.** It is append-only by
+design, and a rewrite is the single operation that would destroy another
+session's rows. If a splice is found, append a correction row naming the damaged
+line numbers.
+
+## 27. The detector, and the input that makes it fail
+
+`.claude/checks/board_splice_check.py`. Per the falsifier rule added at
+`e81bc9c` (*"any commit adding a check must name the input that makes it fail; a
+check with no such input cannot fail and is not a check"*), every detector in it
+is exercised by an input that makes it fire, and the negative controls prove it
+can also stay quiet.
+
+| test | the named input | expected |
+|---|---|---|
+| T1 | one row's text inserted into the middle of another, so the line carries **two** `\| date time \|` headers | **fires** |
+| T2 | two clean, separate rows | silent |
+| T3 | a 900-byte line with no header and no leading pipe, i.e. a displaced tail | **fires** |
+| T4 | short preamble prose | silent |
+| T5 | a row padded past 1024 bytes / a 75-byte row | counted / not counted |
+| T6 | **a 1024-byte MIDDLE chunk spliced in, carrying no header** | **NOT detected, by design** |
+| T7 | a nonexistent board path | raises, exit 2 |
+
+### 27.1 T6 is the honest part
+
+A splice only carries a header if the interleaved chunk happens to be the
+**start** of another row. If it is a middle chunk, byte 1024 onward, it has no
+header, the merged line has exactly one header and a leading pipe, and it looks
+well formed. **This check cannot see that**, and T6 demonstrates it with a
+concrete input rather than describing it in a comment.
+
+So a PASS means *"no splice of the catchable kinds"*, never *"the board is
+intact"*. The check prints that sentence on every pass. The oversize-row count
+is the only warning that covers the invisible case, which is why it is reported
+on every run.
+
+### 27.2 Why oversize rows do not fail the check
+
+76 percent of rows already exceed the boundary. A check that exits non-zero from
+birth gets wrapped in `continue-on-error` and stops meaning anything, and this
+round has the receipts: that is precisely what happened to `count_claims`.
+**Splices fail. Oversize rows are counted and reported.** The check is built to
+be able to pass, so that its failing means something.
+
+Live run at time of writing: 240 lines, 201 rows, **0 splices, 0 orphans**, 153
+oversize. The hazard is latent, not realised.
+
+## 28. A correction to my own earlier finding, from register `e81bc9c`
+
+Earlier in this round I reported that eleven live worktrees never see the
+connector and CI block at session start, and I framed it as a gap.
+
+**The banner those worktrees were missing was itself wrong.** `e81bc9c` records
+that `orient_live.sh` printed *"CI NOT LIVE ... so it runs nowhere"* to every
+session, while `canford-checks` had in fact run **seven times**, because its
+trigger is a bare `on: push:` with no branch filter. *Absent from main* and
+*runs nowhere* are different claims and only the first was true.
+
+So the eleven worktrees were **better off** without that line, and my finding
+was correct about the mechanism (a tracked hook is frozen at a branch point) and
+wrong about the direction of the harm. The measurement stands; the framing does
+not, and it is corrected here rather than quietly dropped.
