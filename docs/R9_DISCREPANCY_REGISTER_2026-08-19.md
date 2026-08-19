@@ -68,10 +68,30 @@ the same scope sensitivity the file documents for `DRIFT_THRESHOLD`. Do not "cor
 | `make_phase_space.py` | 70 | 2 | 35 read `FORD' if h <= 0.60`, 35 read `NO-FORD" if haz > 0.60`. **These are the SAME rule inverted.** No operator fork exists inside this repo |
 | `sim_standing.py` | 71 | 3 | all three variants carry `settle_frames=8`; the divergence is elsewhere |
 
-**C1. The `openchannel_bc.py` hashes independently confirm d4-bcmerge's refutation.** I claimed
-an add/add conflict from two separate writes. The hash shows the short copy is a strict
-ancestor state (one class where the tip has three), not a rival lineage. Confirmed by content
-identity, which is the signal the audit method says to trust.
+**C1. CORRECTED 2026-08-19 by slot d16-landing, and the correction is sharper than the row.**
+This row originally concluded that the content hashes "refute the add/add conflict" and asked
+that no resolution be planned. **The premise is right and the conclusion about git is wrong,
+because I conflated two independent propositions:**
+
+1. *Is `9a94e247` a lineal ancestor state of the tip?* **YES.** The hashes say so, d4-bcmerge
+   said so, and d16 reached it a third way via line containment plus symbol counts.
+2. *Does merging produce an add/add conflict?* **ALSO YES.** Re-run live against tip `e0d2beb`:
+   exit 1 for both `r8-bc-merge` and `r8-persistence`.
+
+Mechanism, two commands: `merge-base(add-ci-checks, r8-bc-merge)` is `1a868f3`, and
+`ls-tree 1a868f3 -- simulation/openchannel_bc.py` returns **0 files**. The path is ABSENT from
+the merge base, so both sides ADD it and git has no base blob to three-way-merge against.
+**Lineal content ancestry is invisible to git unless it is in the DAG, and here it is not.**
+
+d16 distinguished both arms so the control could not be vacuous: two branches adding the same
+path with IDENTICAL blobs merge clean at exit 0; with DIFFERING blobs they conflict. The
+resolution it planned is kept.
+
+I have now been wrong about this file twice in opposite directions: first asserting a conflict
+from two separate writes, then asserting no conflict from content ancestry. The lesson is that
+"same lineage" and "merges cleanly" are different predicates measured by different means, which
+is the same shape as *reach* versus *cited* and *assignment* versus *occurrence* elsewhere in
+this register.
 
 **C2. The 0.60 boundary fork is NOT visible from inside this repo.** CLAUDE.md records seven
 copies at `h <= 0.60` against two pre-history-purge trees at `h < 0.60`. Inside this repo all
