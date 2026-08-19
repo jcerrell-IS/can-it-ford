@@ -17,6 +17,7 @@ import plotly.graph_objects as go
 
 import surface as S
 import speed_surface as SS
+import arr_verdict as AV
 
 RUNS = S.load_table("canonical_runs.csv")
 
@@ -271,6 +272,31 @@ def build() -> gr.Blocks:
             "ensemble behind a point, and lets you move the threshold that decides a "
             "verdict so you can see which results depend on it."
         )
+
+        with gr.Tab("AR&R verdict calculator"):
+            gr.Markdown(
+                "The **stationary-vehicle** check this page has always served. "
+                "All three AR&R conditions must hold for FORD: depth, velocity, "
+                "and the depth-velocity hazard product, each against the limit "
+                "for the selected class. Pure arithmetic, live.\n\n"
+                "This is a *different* experiment from the load surface tab: the "
+                "vehicle here is stationary and free, and the verdict has a "
+                "validation basis in AR&R. The load surface has a prescribed "
+                "body and carries **no verdict at all**."
+            )
+            with gr.Row():
+                arr_depth = gr.Slider(0.0, 1.5, value=0.30, step=0.05,
+                                      label="Flood depth D (m)")
+                arr_vel = gr.Slider(0.0, 4.0, value=1.5, step=0.1,
+                                    label="Flow velocity V (m/s)")
+            arr_class = gr.Radio(choices=list(AV.CLASS_BY_LABEL.keys()),
+                                 value=AV.DEFAULT_LABEL, label="AR&R vehicle class")
+            arr_out = gr.Markdown()
+            arr_inputs = [arr_depth, arr_vel, arr_class]
+            arr_depth.change(AV.evaluate, arr_inputs, arr_out)
+            arr_vel.change(AV.evaluate, arr_inputs, arr_out)
+            arr_class.change(AV.evaluate, arr_inputs, arr_out)
+            demo.load(AV.evaluate, arr_inputs, arr_out)
 
         with gr.Tab("Where the verdict flips"):
             gr.Markdown(
