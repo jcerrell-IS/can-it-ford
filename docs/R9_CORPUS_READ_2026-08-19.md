@@ -136,3 +136,44 @@ it must be a PAIRED comparison against a flat plane at otherwise identical condi
 A separate search, "Dynamic Vehicle Traction in Floodwater", adds that tire-scale flooded
 pavement work supplies a DEPTH AND SPEED DEPENDENT tire-force law rather than a fixed
 friction coefficient, which is what `floor_friction = 0.55` currently is.
+
+## 8. THE SOLVER HAS NO LOCKING MITIGATION, read live from the pinned source
+
+Added 2026-08-19 after section 1, because a hypothesis about our solver should be
+checked against our solver rather than argued from a paper. Read from
+`third_party/mpm-engine-544c93dd-solver-core/`, the pinned vendored core.
+
+A search of the whole vendored tree for `fbar|f_bar|volumetric lock|locking|jbar|
+j_bar|assumed deformation|volume.averag` returns exactly ONE hit, and it is the word
+"blocking" inside a comment about merging wheel wells into the solid. A second search
+for pressure smoothing, projection, averaging or filtering returns only velocity and
+collision projection sites. So THERE IS NO F-BAR, NO J-AVERAGING, NO PRESSURE
+SMOOTHING AND NO LOCKING MITIGATION OF ANY KIND.
+
+And the fluid stress update is precisely the per-particle form F-bar replaces
+(`kernels/mpm_utils.py`, the `mat == 6 or mat == 10 or mat == 12` branch):
+
+    J = wp.determinant(state.particle_F_trial[p])
+    Jcbr = J**(1.0 / 3.0)
+    state.particle_F[p] = wp.mat33(Jcbr,0,0, 0,Jcbr,0, 0,0,Jcbr)
+
+J is taken PER PARTICLE from that particle's own trial deformation gradient. Zha22d's
+Algorithm 1 changes exactly this: it volume-averages the Jacobian to the nodes,
+`Jbar_i = sum_p w_ip V_p (Jbar_p dJ_p) / V_i`, and pulls back before the stress
+update. The branch already computes J and already builds an isotropic F, so the
+remedy lands on these three lines.
+
+ONE NUANCE THAT MUST TRAVEL WITH THE CLAIM, so it is not overstated. The fluid's F is
+FORCED ISOTROPIC here, discarding the deviatoric part, so the classical
+deviatoric-locking picture does not apply directly. What applies is the other half of
+the same failure, the per-particle pressure evaluation that produces spurious pressure
+oscillation, which is what J-averaging cures and what Chen et al 2018's v-p MPM paper
+names when it says WCMPM exhibits volumetric locking AND interface pressure
+oscillation. State it as the pressure-oscillation channel, not as deviatoric locking.
+
+WHY THIS MATTERS FOR d11's COLUMN. A column whose kinetic energy GROWS rather than
+decays, 11 orders above the well-balanced reference, immune to a boundary fix that
+repaired 96.4 percent of the mass loss, is what a per-particle pressure evaluation
+with no smoothing would be expected to produce. The column is a better test bed than
+the sphere scene because it has no body, no coupling and no surface estimator to
+confound it.
