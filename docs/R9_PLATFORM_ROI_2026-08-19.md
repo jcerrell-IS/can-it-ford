@@ -1241,3 +1241,56 @@ nothing looked broken.** A missing value announces itself; a value that is
 merely about something else does not. The defence that worked every time was
 cheap and identical, and it is the only recommendation in this document that
 costs nothing: **ask what the field measures before asking what it says.**
+
+---
+
+# PART 8. Is tonight's wave in W&B? One run, and it is not from a job.
+
+## 38. The answer, measured with two API calls
+
+**The entire r9 wave is invisible to Weights and Biases except one run I pushed
+by hand from the Mac after the fact.**
+
+Project `jcerrell29-claremont-mckenna-college/can-it-ford`, **106 runs total**,
+by creation day:
+
+| day | runs |
+|---|---|
+| 2026-07-01 | 18 |
+| 2026-07-07 | 70 |
+| 2026-08-17 | 17 |
+| **2026-08-19** | **1** |
+
+That single run is `solar-music-106` (`3w9sk50e`), group
+`speed-surface-2026-08-19`, tags `distributions, load-surface, v_car_x_v_water,
+warpmpm`, which is the surface table I logged from `analysis/wandb_speed_surface.py`.
+
+**No Vista job logged anything.** Not d17's 368-record speed surface, not the
+g128 work, not the batch still running. The wave produced the project's most
+substantial dataset of the round and W&B contains none of it, because nothing in
+the simulation path calls `wandb.init`: the six `wandb.init` sites live in
+post-hoc analysis and backfill scripts, never in a driver.
+
+## 39. What that means for the recommendation in section 33
+
+Section 33 named the highest-leverage W&B addition as logging the deciding
+thresholds and the retained window as run `config`. **That recommendation now
+has a prerequisite that is larger than it is.** Adding fields to a logger that
+no job calls improves nothing.
+
+Restated in order:
+
+1. **First, log at all from the job.** A single `wandb.init` in the simulation
+   driver, writing the run's own identifiers, is the difference between a
+   telemetry system and an archive of three days in July and August.
+   `WANDB_MODE=offline` plus a later `wandb sync` is the compute-node-safe form
+   and avoids assuming outbound network from a GH200.
+2. **Then add the scope fields**, thresholds and retained window, as in
+   section 33. They are cheap and they are what makes a logged verdict
+   re-derivable, but they are step two.
+
+**A caution against over-correcting.** 368 rows already live in a committed TSV,
+a pinned git blob, and a published dataset. Duplicating that into W&B buys
+nothing on its own. The thing W&B has that those do not is **cross-run
+comparison over time**: which threshold, which window, which grid, which seed,
+queryable without re-reading four files. Log the axes, not the arrays.
