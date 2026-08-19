@@ -135,6 +135,25 @@ family of methods the ladder work keeps having to justify node hours against.
 
 ## 2. The transcription audit: CONFIRMED, 43 of 44
 
+> **WHAT RESTS ON THE TRANSCRIPTION, AND WHAT DOES NOT. Read this before repeating the
+> finding outward.** Added 2026-08-19 because the coordinator, correcting an earlier
+> outward statement, twice described "section 2's authorship and laminar-turbulence
+> finding" as resting on `CODE_META`. **The existence of the transcription is right. The
+> dependency is wrong for both halves, and an over-broad correction is still an error.**
+>
+> | claim | routes through `CODE_META`? | primary route |
+> |---|---|---|
+> | 3 of 5 "RANS" codes run no turbulence model | **NO** | `_turbulence_from_description():284` keyword-reads the authors' own free-text Description cells `G7` to `G17`. It never imports `CODE_META`. The audit then compares the two and flags DRIFT on disagreement; turbulence produced **zero** findings, so all eleven agree. |
+> | the six-group author partition | **NO** | `grouping_keys():365` consumes `model_table()`, which opens the xlsx and resolves the ditto marks (`E14:E17` to `E13`). Live proof rather than a code reading: `--groups` **prints the sheet's own typo "Budapest Univeristy"**, whereas `CODE_META` carries the corrected spelling, so the output demonstrably came from the sheet. |
+> | **the choice of the author key itself** | **YES** | `CODE_META[code]["group"]`, consumed at `:422`. This is the one field with no independent route. It encodes a hand-made grouping the sheet never states. |
+>
+> So the residue is **one field**, and it is the same issue as section 3's grouping key, not
+> a separate one. **`CODE_META` is a provenance defect, not a content defect**: 43 of 44
+> fields match exactly and the load-bearing risk (a code assigned to the wrong group or the
+> wrong turbulence treatment) did not materialise. The numbers were right. They just could
+> not be checked, until now.
+
+
 `kramer_benchmark.CODE_META` (`simulation/r5_physics/kramer_benchmark.py:135`) is a hand
 transcription. That it is a transcription was not previously recorded anywhere, and two
 written claims say the opposite:
@@ -412,6 +431,45 @@ ordering contradicts their own headers, universally, on every series, against an
 that is as-declared on all twelve repetitions. The swap diagnosis is mine and it did not
 survive, so it should not be put to them as though it had.
 
+**THE FORK, ANSWERED. It is the universal branch, which is the less damaging one.** The
+question put to this slot was: universal across every series those codes ship, or
+inconsistent between them? Regenerated live with `--order`:
+
+```
+RANS2   3 series  AS DECLARED
+RANS3   1 series  AS DECLARED
+RANS4   3 series  REVERSED
+RANS5   3 series  REVERSED
+codes reversed on EVERY series they ship: ['RANS4', 'RANS5']
+codes INCONSISTENT across their series:   []
+reversal is universal where it occurs:    True
+```
+
+**`codes INCONSISTENT across their series` is empty.** That matters for what a reader can
+trust. A code that reversed on some series and not others would mean the archive's column
+order is unreliable *per file*, and nothing in the supplementary could be read without
+checking each series individually. Instead the property is **per code**: two of eleven are
+consistently inverted and the other nine are consistently as-declared, so a reader who knows
+which two codes are affected can use the rest of the archive as shipped. That is a
+correctable defect rather than a trust collapse.
+
+**Two sentences, for whoever drafts the contact. The difference is not cosmetic.**
+
+- **Defensible:** on every series these two codes ship, the WG columns are in reversed
+  radial order, all ten strictly monotone, against an experimental control that is
+  as-declared on all twelve repetitions and against nine other series that are not.
+- **NOT defensible, and it is my own withdrawn claim:** that this is a pure column swap and
+  can be corrected by relabelling. Drop-matched, inverting the ratio misses on all three
+  RANS4 drops (+0.7, +1.7, +13.3 percent) and by +37.6 to +68.0 percent on RANS5.
+
+So the contact should **ask a question, not offer corrected data**. **Whether to make it at
+all is Josie's decision**, not this slot's and not the coordinator's.
+
+One property that makes the finding unusually robust and is easy to miss: **the ordering test
+uses no radii at all**, only the monotone ordering. It is therefore independent of the
+weakest provenance in this document, the gauge radii read off Figure 8 (section 7). Those
+literals could be wrong and this finding would stand unchanged.
+
 ---
 
 ## 6. The workbook no committed code in this repo has opened
@@ -683,6 +741,15 @@ explicit `opus` override. A general-purpose adversarial reviewer was then launch
 substitute and **failed with the identical error**. Subagent review is broken in this session,
 not merely unavailable for this agent type. **No second party has checked anything below.**
 
+**CONFIRMED FLEET-WIDE 2026-08-19, commit `c621931`.** This was not a local fault and not a
+bad agent definition: the failure is reproduced across **nine origins**, including two
+attempts with different agent types producing the identical error, and an explicit `model`
+override does not reach the agent. So the UNREVIEWED marking made in `c2f3592` stands for
+the whole round, and it is a property of the fleet rather than a shortcut taken here. **Every
+claim in this document, including the sections added on 2026-08-19, is unreviewed by a
+second party.** Where I have attacked my own claims, section 5.1 and section 12.2, those are
+self-run controls and are not a substitute for adversarial review.
+
 **So I ran the attacks against myself instead, and wrote out the prompts I would have sent.**
 Three landed, and all three were against my own claims:
 
@@ -784,6 +851,17 @@ shipped**, which nothing had done. Route A, the three `*_CI95_Normalized.txt` se
 
 **The abstract reproduces from its own supplementary data, to the digit it states.** That
 is a confirmation and it is reported with the same weight as a refutation would be.
+
+**BUT SAY IT THIS WAY, AND NOT MORE STRONGLY.** What has been established is that **this
+benchmark is precise by its own account, and that its own account is internally consistent
+with the data it shipped**. That is a self-consistency result, not a validation: the CI95
+series and the abstract come from the same measurement campaign by the same group, so
+reproducing one from the other cannot detect a systematic error common to both. **No
+independent assessment of the benchmark's precision is in hand.** This matters downstream,
+because `d11-accessor`'s Job B verdict and `d21-jobb-route`'s localisation both lean on how
+good the reference is, and "precise by its own account, unverified independently" is a
+weaker premise than "independently confirmed precise". Anyone carrying this figure forward
+should carry that qualifier with it.
 
 ### 12.2 The number is normalisation dependent, by a factor of 5 to 50
 
