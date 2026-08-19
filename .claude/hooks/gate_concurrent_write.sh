@@ -25,7 +25,21 @@ INPUT=$(cat)
 TOOL=$(printf '%s' "$INPUT" | python3 -c 'import json,sys;print(json.load(sys.stdin).get("tool_name",""))' 2>/dev/null)
 SESSION=$(printf '%s' "$INPUT" | python3 -c 'import json,sys;print(json.load(sys.stdin).get("session_id","") or "unknown")' 2>/dev/null)
 FILE=$(printf '%s' "$INPUT" | python3 -c 'import json,sys;print((json.load(sys.stdin).get("tool_input",{}) or {}).get("file_path",""))' 2>/dev/null)
-CMD=$(printf '%s' "$INPUT" | python3 -c 'import json,sys;print((json.load(sys.stdin).get("tool_input",{}) or {}).get("command",""))' 2>/dev/null)
+# COMMAND, WITH HEREDOC BODIES REMOVED. tool_input.command was already the right
+# field, but a heredoc carries the file's CONTENT inside the command string, so
+# writing a file that merely MENTIONS bulk staging was indistinguishable from
+# running it. Measured 2026-08-20: a session prompt containing the forbidden
+# string was denied, blocking real work, while nothing was being staged. Falls
+# back to the raw command if the helper is absent or errors, so a bug here can
+# only over-block visibly, never silently under-block.
+_SHD="$(dirname "$0")/_strip_heredoc.py"
+CMD=""
+if [ -f "$_SHD" ]; then
+  CMD=$(printf '%s' "$INPUT" | python3 "$_SHD" 2>/dev/null)
+fi
+if [ -z "$CMD" ]; then
+  CMD=$(printf '%s' "$INPUT" | python3 -c 'import json,sys;print((json.load(sys.stdin).get("tool_input",{}) or {}).get("command",""))' 2>/dev/null)
+fi
 
 deny() {
   python3 -c '
@@ -49,8 +63,13 @@ print(json.dumps({"hookSpecificOutput": {
 
 # ---- guard 1: bulk staging -------------------------------------------------
 if [ "$TOOL" = "Bash" ] && [ -n "$CMD" ]; then
-  # Normalise so `git   add   -A` and `git -C . add -A` still match.
-  NORM=$(printf '%s' "$CMD" | tr '\n' ' ' | tr -s ' ')
+  # Normalise so `git   add   -A` and `git -C <path> add -A` still match.
+  # THE -C FORM WAS NOT ACTUALLY MATCHED UNTIL 2026-08-20. This comment claimed it
+  # was, but every pattern below needs the literal substring "git add", and
+  # `git -C /repo add -A` does not contain it, so the guard passed a real bulk
+  # stage while asserting it did not. Found by testing the case the comment
+  # named. The sed strips the -C option and its argument before matching.
+  NORM=$(printf '%s' "$CMD" | tr '\n' ' ' | tr -s ' ' | sed 's/git -C [^ ]* /git /g')
   case "$NORM" in
     *"git add -A"*|*"git add --all"*|*"git add ."*|*"git add -a"*|\
     *"git add"*" -A"*|*"git add"*" --all"*|\
