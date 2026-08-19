@@ -125,3 +125,28 @@ The physics-skeptic subagent is dead fleet-wide this round, so every number here
 UNREVIEWED. The waterline geometry is reproducible from `scene_yaris/hull.ply` and
 `scene.json` with the script recorded in the session; the search claims are reproducible
 by reading the search itself.
+
+## 7. Which view I searched, stated correctly
+
+A dispatch reached this slot asserting that none of the six closest prior-art DOIs is in
+the 332-record corpus and that a query for Al-Qadami returns zero. **That was withdrawn
+by its author, and it is false: d14-corpusbib measured all six present, 6 of 6, with
+five records carrying Al-Qadami in the authors field.** No caption or document in this
+slot ever repeated it; checked by search across every file authored here, zero hits.
+
+What survives is a different and narrower statement, and it is the one to carry:
+
+- `analysis/research_index.py --query` matches **title and abstract only, never
+  authors**, so an author query returns zero regardless of what the index holds.
+- On `origin/main` **the tool does not exist at all**; the author-search fix is on an
+  unmerged branch.
+
+So the correct sentence is not "the corpus lacks this project's prior art", which is
+untrue, but "the query predicate does not match authors, and on origin/main the tool is
+absent entirely". Only the second is a statement about the instrument rather than about
+the literature, and only the second is true.
+
+The same discipline applies to the mesh search this document rests on. Its negative
+result is bounded to its own result set, which is why every mention of it here carries
+that scope, and it is a statement about what one named search retrieved, not about what
+exists.
