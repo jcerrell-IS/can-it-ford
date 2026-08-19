@@ -645,11 +645,11 @@ it converts a systematic error into a measured one.
   diagnose it. Section 13.3 shows the SURFACE DROP converges in PPC (82 to 24.6 mm), so
   particle resolution is part of it, but I did not run the `--ghost-layers` arm that would
   test B-spline stencil truncation directly.
-- **The PPC sweep is at ONE grid.** Wal07's plateau is defined as grid-set, so the
-  complementary test is a `dx` sweep at FIXED PPC, which I did not run. The g64/g96 arms in
-  section 7.2a differ in leak as well as `dx`, so they do not serve. **Flatness in PPC is
-  measured; that the plateau MOVES with `dx` is not, and the paper's own analytic reference
-  (Vshivkov) says `h^2` where the relayed claim said `O(h)`.**
+- **The `dx` prong is now measured (section 14.2) but at only 1.86 sigma end-to-end**,
+  below this project's 3 sigma bar, with the finest point resting on 35 frames. Job 923291
+  (g192) is the arm that settles it, pre-registered.
+- **My own convergence claim in sections 3.2 and 7.2a is WITHDRAWN** (section 14.3). It was
+  computed at unmatched submergence.
 - **Wal07 claim (a) is withdrawn, not adopted.** Section 13.2. Nothing here rests on it.
 - **Section 12.3's `n_grid` recommendation is arithmetic, not a measured result.** That an
   exactly-aligned constrained plane is best is measured at g64; that it will hold at other
@@ -1022,6 +1022,13 @@ coarser particle lattice drains and compacts more, so `sub` runs 67.9 to 125.4 m
 the collider inflation in units of `dx` that reproduces the measured force AT THAT
 submergence, so it removes the operating-point difference; the raw excess does not.
 
+**SECTION 14 SUPERSEDES THE NUMBERS BELOW AND CONFIRMS THEIR CONCLUSION.** Three of these
+four arms are NOT stationary on the last-50 window and they sit at different submergences,
+so the `k_fit` column below carries two confounds. Section 14.2 redoes it at matched
+submergence with the trend regressed out and blocked residual errors: the flatness in PPC
+holds and tightens, every step under 0.62 sigma. The `k` rise to 0.829 at PPC 64 shown
+below is an ARTIFACT of the unmatched operating point and does not survive. Read 14.2.
+
 **RESULT, against the pre-registration.** Over the resolved subset, PPC 8 to 64, an **8.0x
 span** with particle count from 0.6 to 4.8 million:
 
@@ -1067,3 +1074,126 @@ pressure effect on the measured one. Section 12.4 measured that directly: three 
 `ratio = 0.03474*(percent below floor) + 1.35922`, extrapolating to **+35.9 percent at zero
 leak**. Their result and mine agree: **the leak is not the explanation**, they by showing
 the pressure field is clean and I by showing the excess survives the leak's removal.
+
+---
+
+## 14. Locking against projection, and a correction to my own section 13.3
+
+The coordinator supplied a clean discriminator with Zhao, Jiang and Choo 2023 (Zha22d,
+volumetric locking, arXiv 2209.02466): **locking predicts an error that GROWS with
+particles per cell** (more integration points per element, more incompressibility
+constraints) **and is insensitive or ADVERSE to grid refinement**, while **Wal07's
+projection bias predicts a plateau set by the grid and INSENSITIVE to PPC**. Opposite
+predictions on one sweep.
+
+**The sweep had already run.** Job 923239 landed and was committed as `d826c8a` before the
+dispatch arrived. What follows re-analyses it properly rather than re-running it, and the
+re-analysis corrects my own numbers.
+
+### 14.1 THREE OF MY FOUR PPC ARMS WERE NOT STATIONARY, AND I COMPARED THEM ANYWAY
+
+By the project's own `blocking.stationarity` at 3 sigma, on the graded last-50 window:
+
+| arm | stationary? | halves | slope |
+|---|---|---|---|
+| PPC 3.375 | **False** | 4.56 | 8.24 |
+| PPC 8 | **False** | 3.71 | 4.77 |
+| PPC 27 | **False** | 3.12 | 3.62 |
+| PPC 64 | True | 2.25 | 2.70 |
+
+**Stationarity improves monotonically with PPC, and only the finest arm had settled.**
+Section 13.3 compared four last-50 means of which three were still drifting, and it did so
+eleven days after this project's own settle-transient finding recorded that a transient
+"inflated a spread 6.07 to 1.94x and INVERTED a gate ordering". The arms also sat at
+different submergences, 67.9 to 125.4 mm, because a coarser lattice drains more. **Two
+confounds, both mine.**
+
+### 14.2 The corrected estimator, and it is the one the question deserved
+
+Compare the force **at a matched submergence of 130 mm**, with the trend inside the band
+regressed out and the residual standard error **blocked**. The matched band is a transient
+slice, so a raw mean carries the trend into its own error bar; regressing `sub` out first
+answers the question actually asked, which is force at a stated submergence.
+
+**PPC PRONG**, bcfix engine, g64, floor on-node, 19x span in PPC:
+
+| PPC | frames | excess at 130 mm | +/- |
+|---|---|---|---|
+| 3.375 | 17 | +32.23% | 22.97 |
+| 8 | 88 | +46.17% | 8.04 |
+| 27 | 168 | +40.49% | 4.45 |
+| 64 | 223 | +41.69% | 3.32 |
+
+Pairwise: 3.375→8 **0.57 sigma**, 8→27 **0.62**, 27→64 **0.22**, end-to-end **0.41**.
+
+**FLAT IN PPC. Every step is under two-thirds of one blocked standard error, across a 19x
+span topping out at 4.8 million particles.** Locking's first prong requires the force to
+RISE with PPC. It does not. **Locking is refuted as the dominant term, and the projection
+plateau is what the data looks like.**
+
+**GRID PRONG**, same engine, PPC 8, 2x span in dx:
+
+| dx | frames | excess at 130 mm | +/- |
+|---|---|---|---|
+| 18.75 mm | 88 | +46.17% | 8.04 |
+| 12.50 mm | 85 | +28.11% | 6.14 |
+| 9.375 mm | 35 | +21.50% | 10.55 |
+
+Pairwise: **1.79 sigma**, **0.54**, end-to-end **1.86**. The excess is **linear in dx**,
+`excess = 2.669*dx_mm - 4.217`, extrapolating to **-4.2 percent at dx -> 0**.
+
+**Locking's second prong requires refinement to make it worse or leave it alone. The sign
+is against locking: refinement makes it monotonically BETTER by 24.68 points. But at 1.86
+sigma end-to-end that is BELOW this project's 3 sigma bar, so it is suggestive and not
+established**, and the g128 point rests on 35 frames.
+
+### 14.3 THIS OVERTURNS MY OWN PUBLISHED CLAIM, AND THE CORRECTION MATTERS FOR JOB C
+
+Sections 3.2 and 7.2a of this document say the discrepancy "is NOT converging to zero under
+refinement" and estimate a non-zero asymptote near +24 percent. **That estimate was computed
+from last-window ratios at UNMATCHED submergence and it is withdrawn.** At matched
+submergence with the trend removed the same three runs give a straight line in `dx` through
+approximately the origin.
+
+The two are not in conflict about the data; they are two readings of the same three runs,
+and the earlier one compared arms sitting at 102 to 114 mm submergence as though they were
+the same state. **A resolution ladder whose operating point moves with resolution cannot be
+read as a convergence study without matching the operating point first.** That is the
+general form of the error and it is worth more than the particular number.
+
+**Consequence for job C, which moves again**: if the excess really is O(dx) and convergent,
+then refinement is a remedy rather than a dead end, and section 8's "do not run job C at
+`n_grid 117`" should become "run it finer". At 1.86 sigma that is not yet a recommendation.
+
+**Vista job 923291 is the arm that settles it**: g192, `dx = 6.25 mm`, doubling the lever to
+3x end-to-end. `0.075/6.25e-3 = 12` exactly, so the floor stays on a grid node where the
+`<=` engine suppresses the leak. **Pre-registered before submission: the O(dx) line predicts
++12.5 percent at 130 mm submergence; a value near the g128 21.5 percent or above refutes
+convergence and restores a non-zero asymptote.**
+
+### 14.4 What is NOT settled, and the third channel
+
+- **Zha22d's magnitude overlap is not a diagnosis and I have not read it.** The coordinator
+  read it; I did not, and its strip footing is an elastoplastic solid rather than weakly
+  compressible water. What I tested is its stated PPC signature, and that fails. **Locking
+  could still contribute a sub-dominant term**; refuting "dominant" is not refuting "present".
+- **The decisive locking test is a compressibility sweep, and I did not run it.** Locking is
+  a nearly-incompressible phenomenon, so raising the bulk modulus should worsen it while
+  leaving a projection bias alone. `BULK` is a module constant in the scene, reachable by
+  monkeypatch from my own file without editing it. That is the one-parameter test that would
+  settle locking directly rather than by its PPC signature.
+- **Sch19e remains a LEAD and no more.** It has no DOI, resolves only to a Semantic Scholar
+  record, and its PDF is not retrievable, so the "wall momentum zeroing distorts stress
+  several grid lengths into an object" claim reaches me only through a search summary.
+  **Ste08, which I did read, supplies a verified relative of it**: "The geometric errors are
+  exacerbated when smoother, and necessarily wider, basis functions are used, such as uGIMP,
+  or B-splines." This engine uses quadratic B-splines, and that is a boundary-region
+  geometric error with a primary source behind it.
+- **The searches prescribed my controls hours before I ran them.** The 17:44 search called
+  for nested exclusion radii including zero, local vertical columns, a level-set
+  reconstruction, and "a body-off hydrostatic run provides the estimator bias independently
+  of body loading". I ran three of those four and d11-accessor ran the fourth. **The
+  index reads 8 of 21 searches, so neither of us could see it.** The cost was not the GPU
+  time, which was three minutes; it was that we could not know the design was already
+  vetted, and a design nobody has vetted gets pre-registered thresholds and a self-test,
+  which is what those three minutes actually bought.
