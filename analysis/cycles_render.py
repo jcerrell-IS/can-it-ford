@@ -73,6 +73,9 @@ def parse():
                    help="draw a flat water surround beyond the solver domain so "
                         "the simulated patch does not read as a floating slab. "
                         "PRESENTATIONAL: it carries no data, see mat_far_water().")
+    p.add_argument("--legacy-face-split", action="store_true",
+                   help="assign paint/glazing/tyre per FACE, as before. Kept only so "
+                        "the staircase artefact it produces can be reproduced.")
     p.add_argument("--far-reach", type=float, default=240.0)
     p.add_argument("--city", type=int, default=0,
                    help="number of massed buildings PER SIDE. PRESENTATIONAL.")
@@ -471,6 +474,18 @@ def mat_facade(seed):
     rgh.inputs[3].default_value = 0.16
     nt.links.new(win.outputs[0], rgh.inputs[0])
     nt.links.new(rgh.outputs[0], b.inputs["Roughness"])
+
+    # RECESS THE WINDOWS. Without this the facade is one plane with a pattern
+    # painted on it, which is what makes a massed block read as a backdrop rather
+    # than a building: real glazing sits behind the wall, so it carries its own
+    # shading and a reveal shadow down one side. A bump is enough at this distance
+    # and costs nothing; real geometry would cost 18 more meshes for no visible gain.
+    bmp = nt.nodes.new("ShaderNodeBump")
+    bmp.inputs["Strength"].default_value = 0.85
+    bmp.inputs["Distance"].default_value = 0.22
+    bmp.invert = True
+    nt.links.new(win.outputs[0], bmp.inputs["Height"])
+    nt.links.new(bmp.outputs["Normal"], b.inputs["Normal"])
     nt.links.new(b.outputs[0], out.inputs["Surface"])
     return m
 
@@ -498,12 +513,40 @@ def add_city(cx, cy, base_z, setback, count, reach):
             hgt = 7.0 + ((k // 7) % 13) * 2.4
             gap = setback + ((k // 5) % 7) * 1.1
             x = cx + side * (gap + 0.5 * w)
-            bpy.ops.mesh.primitive_cube_add(size=1.0,
-                                            location=(x, y, base_z + 0.5 * hgt))
-            ob = bpy.context.object
-            ob.scale = (w, d, hgt)
-            ob.name = "Bldg_%d_%d" % (side, i)
-            ob.data.materials.append(mat_facade(k % 97))
+            mat = mat_facade(k % 97)
+
+            def box(bx, by, bz, sx, sy, sz, nm, mtl):
+                bpy.ops.mesh.primitive_cube_add(size=1.0, location=(bx, by, bz))
+                o = bpy.context.object
+                o.scale = (sx, sy, sz)
+                o.name = nm
+                o.data.materials.append(mtl)
+
+            # A FLAT-TOPPED SLAB HAS NO SILHOUETTE, which is half of why the first
+            # city read as a poster: every block ended in the same straight line
+            # against the sky. Three pieces per building instead of one, and the
+            # proportions vary with the index, so the roofline steps.
+            main_h = hgt
+            tower = ((k // 11) % 3 == 0) and hgt > 14.0
+            if tower:
+                main_h = hgt * 0.62
+            box(x, y, base_z + 0.5 * main_h, w, d, main_h,
+                "Bldg_%d_%d" % (side, i), mat)
+            # parapet: a thin lip PROUD of the wall, so the top edge catches light
+            # and casts a line rather than ending in nothing
+            box(x, y, base_z + main_h + 0.35, w + 0.45, d + 0.45, 0.7,
+                "Para_%d_%d" % (side, i), mat)
+            if tower:
+                tw, td = w * 0.62, d * 0.62
+                th = hgt - main_h
+                box(x, y, base_z + main_h + 0.7 + 0.5 * th, tw, td, th,
+                    "Twr_%d_%d" % (side, i), mat)
+                box(x, y, base_z + main_h + 0.7 + th + 0.3, tw + 0.4, td + 0.4, 0.6,
+                    "TwrP_%d_%d" % (side, i), mat)
+            # ground floor set BACK, which gives the street a reveal shadow at the
+            # waterline instead of a wall meeting the flood at a hard corner
+            box(x + side * 0.5, y, base_z + 1.7, w * 0.98, d * 0.92, 3.4,
+                "Gnd_%d_%d" % (side, i), mat)
             made += 1
     print("[cycles] city: %d massed buildings, setback %.1f m from the crown, over "
           "%.0f m of road. PRESENTATIONAL, nothing measurable." %
@@ -698,6 +741,137 @@ def mat_ground(asphalt_dir, wet, water_z=None, markings=None):
     return m
 
 
+def mat_hull_unified(obj, paint_rgb):
+    """ONE material for the whole hull, with paint / glazing / tyre resolved in the
+    SHADER rather than by assigning a material index per face.
+
+    WHY THIS REPLACES THE FACE SPLIT. The hull is a single closed shell with no
+    separate window geometry, so the three regions have always been a geometric
+    partition. Done per FACE, the boundary can only follow triangle edges: it is
+    quantised to the mesh, and on a 655,308-face hull whose faces are still large
+    compared to an A-pillar, that renders as a jagged staircase of body colour
+    stepping through the windscreen surround. A viewer reads a staircase as a
+    rendering bug, and it sat directly above a caption asking to be trusted.
+
+    Evaluated per SHADING POINT the same predicates are continuous, and each
+    threshold becomes a narrow smoothstep band instead of a hard test, so the
+    boundary follows the curve it is meant to follow. The partition itself is
+    unchanged and is still an APPEARANCE decision: this hull has no windows, and
+    nothing here claims to identify real parts.
+    """
+    me = obj.data
+    co = np.array([v.co[:] for v in me.vertices], dtype=np.float64)
+    lo, hi = co.min(0), co.max(0)
+    H = max(hi[2] - lo[2], 1e-9)
+    L = max(hi[1] - lo[1], 1e-9)
+    Wd = max(hi[0] - lo[0], 1e-9)
+    ymid, xmid = 0.5 * (lo[1] + hi[1]), 0.5 * (lo[0] + hi[0])
+
+    m = bpy.data.materials.new("Hull")
+    nt, out = nodes(m)
+    b = principled(nt)
+    geo = nt.nodes.new("ShaderNodeNewGeometry")
+    ps = nt.nodes.new("ShaderNodeSeparateXYZ")
+    ns = nt.nodes.new("ShaderNodeSeparateXYZ")
+    nt.links.new(geo.outputs["Position"], ps.inputs["Vector"])
+    nt.links.new(geo.outputs["Normal"], ns.inputs["Vector"])
+
+    def mth(op, src=None, v1=None, v2=None):
+        n = nt.nodes.new("ShaderNodeMath")
+        n.operation = op
+        if src is not None:
+            nt.links.new(src, n.inputs[0])
+        if v1 is not None:
+            n.inputs[0].default_value = v1
+        if v2 is not None:
+            n.inputs[1].default_value = v2
+        return n
+
+    def band(src, a, bb, rising):
+        """A smoothstep threshold. Hard tests are what produced the staircase, so
+        every boundary here is a band a few percent of the vehicle wide."""
+        n = nt.nodes.new("ShaderNodeMapRange")
+        n.interpolation_type = "SMOOTHSTEP"
+        n.clamp = True
+        nt.links.new(src, n.inputs["Value"])
+        n.inputs["From Min"].default_value = a
+        n.inputs["From Max"].default_value = bb
+        n.inputs["To Min"].default_value = 0.0 if rising else 1.0
+        n.inputs["To Max"].default_value = 1.0 if rising else 0.0
+        return n.outputs["Result"]
+
+    fz = mth("DIVIDE", src=mth("SUBTRACT", src=ps.outputs["Z"], v2=lo[2]).outputs[0],
+             v2=H).outputs[0]
+    fy = mth("DIVIDE",
+             src=mth("ABSOLUTE",
+                     src=mth("SUBTRACT", src=ps.outputs["Y"], v2=ymid).outputs[0]
+                     ).outputs[0], v2=L).outputs[0]
+    fx = mth("DIVIDE",
+             src=mth("ABSOLUTE",
+                     src=mth("SUBTRACT", src=ps.outputs["X"], v2=xmid).outputs[0]
+                     ).outputs[0], v2=Wd).outputs[0]
+    anz = mth("ABSOLUTE", src=ns.outputs["Z"]).outputs[0]
+
+    def mul(a_, b_):
+        n = nt.nodes.new("ShaderNodeMath")
+        n.operation = "MULTIPLY"
+        nt.links.new(a_, n.inputs[0])
+        nt.links.new(b_, n.inputs[1])
+        return n.outputs[0]
+
+    glaz = mul(mul(band(fz, 0.55, 0.61, True), band(fz, 0.92, 0.98, False)),
+               mul(band(fy, 0.32, 0.40, False), band(anz, 0.47, 0.63, False)))
+    rub = mul(mul(band(fz, 0.26, 0.34, False), band(fy, 0.20, 0.28, True)),
+              band(fx, 0.30, 0.38, True))
+    notg = mth("SUBTRACT", v1=1.0)
+    nt.links.new(glaz, notg.inputs[1])
+    rub = mul(rub, notg.outputs[0])          # tyres never inside the greenhouse
+
+    def mixc(fac, c1, c2):
+        n = nt.nodes.new("ShaderNodeMixRGB")
+        n.inputs["Color1"].default_value = (*c1, 1.0)
+        n.inputs["Color2"].default_value = (*c2, 1.0)
+        nt.links.new(fac, n.inputs["Fac"])
+        return n
+
+    def mixc2(fac, prev, c2):
+        n = nt.nodes.new("ShaderNodeMixRGB")
+        n.inputs["Color2"].default_value = (*c2, 1.0)
+        nt.links.new(prev, n.inputs["Color1"])
+        nt.links.new(fac, n.inputs["Fac"])
+        return n
+
+    def mixf(fac, v1, v2, prev=None):
+        n = nt.nodes.new("ShaderNodeMix")
+        n.data_type = "FLOAT"
+        nt.links.new(fac, n.inputs[0])
+        if prev is None:
+            n.inputs[2].default_value = v1
+        else:
+            nt.links.new(prev, n.inputs[2])
+        n.inputs[3].default_value = v2
+        return n.outputs[0]
+
+    c1 = mixc(glaz, paint_rgb, (0.012, 0.014, 0.017))
+    c2 = mixc2(rub, c1.outputs[0], (0.016, 0.016, 0.018))
+    nt.links.new(c2.outputs[0], b.inputs["Base Color"])
+    nt.links.new(mixf(rub, None, 0.0, mixf(glaz, 0.80, 0.0)), b.inputs["Metallic"])
+    nt.links.new(mixf(rub, None, 0.85, mixf(glaz, 0.38, 0.055)), b.inputs["Roughness"])
+    if "Coat Weight" in b.inputs:
+        nt.links.new(mixf(rub, None, 0.0, mixf(glaz, 1.0, 0.35)),
+                     b.inputs["Coat Weight"])
+        b.inputs["Coat Roughness"].default_value = 0.06
+    b.inputs["IOR"].default_value = 1.52
+    nt.links.new(b.outputs[0], out.inputs["Surface"])
+
+    me.materials.clear()
+    me.materials.append(m)
+    print("[cycles] hull: ONE shader-evaluated material, boundaries are smoothstep "
+          "bands (fz 0.55-0.61 and 0.92-0.98, fy 0.32-0.40, |nz| 0.47-0.63), so the "
+          "paint/glazing edge follows the curve instead of the triangle edges.")
+    return m
+
+
 def assign_hull_materials(obj, paint_rgb):
     """Split the single closed shell into paint / glazing / rubber by geometry.
 
@@ -862,7 +1036,10 @@ def main():
                  for c in a.paints.split(";") if c.strip()] or [paint]
         for k, v in enumerate(sc["vehicles"]):
             h = imp_ply(Path(a.scene) / v["hull"], "Hull%d" % k)
-            assign_hull_materials(h, plist[k % len(plist)])
+            if a.legacy_face_split:
+                assign_hull_materials(h, plist[k % len(plist)])
+            else:
+                mat_hull_unified(h, plist[k % len(plist)])
             h.data.polygons.foreach_set("use_smooth", [True] * len(h.data.polygons))
             h.data.update()
             w = imp_ply(Path(a.scene) / v["water"], "Water%d" % k)
@@ -890,7 +1067,10 @@ def main():
                              float(sc.get("surround_spread_m", 0.0))))
     else:
         hull = imp_ply(Path(a.scene) / "hull.ply", "Hull")
-        assign_hull_materials(hull, paint)
+        if a.legacy_face_split:
+            assign_hull_materials(hull, paint)
+        else:
+            mat_hull_unified(hull, paint)
         hull.data.polygons.foreach_set("use_smooth", [True] * len(hull.data.polygons))
         hull.data.update()
         if not sc.get("no_water"):

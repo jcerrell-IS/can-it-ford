@@ -556,3 +556,71 @@ strength was raised. `--hdri-strength` exists for that reason.
 The patch rectangles. `922582 r9_render_motion` and `922593 r9_crowned_road` are the
 fix, they are queued, and hand-tuning the surround further would be building
 scaffolding for a problem that is about to stop existing.
+
+## 16. The viewing report, and one correction to it
+
+A reader ran the `21bfca3` pipeline end to end and reported three defects. Two were
+exactly right. The third named a real number that turns out not to be the cause, and
+chasing it would have fixed nothing.
+
+### 16.1 The glazing staircase: right, and fixed with proof
+
+The jagged boundary along the windscreen surround and A-pillar was the paint/glazing
+partition being assigned per FACE. A per-face partition can only follow triangle
+edges, so on a 655,308-face hull whose faces are still large compared to an A-pillar
+it renders as a staircase of body colour stepping through the trim.
+
+The partition is now evaluated per SHADING POINT from the same predicates, with each
+threshold a narrow smoothstep band instead of a hard test. Identical hull, identical
+camera, identical face count: only the evaluation changed. The old path is retained
+behind `--legacy-face-split` so the artefact can be reproduced rather than described.
+
+This mattered beyond looks. The staircase reads as a rendering bug, and it sat
+directly above a caption asking to be trusted about what is solver output.
+
+### 16.2 The water square: the number is real, the mechanism is not
+
+The report cited `surround height 0.7365 m against a particle free surface of
+0.6446 m, offset +0.0919 m` and called that 9 cm step the seam. Measured directly:
+
+- The renderer sets the annulus from `surround_z`, which is derived from the
+  reconstructed MESH at its own boundary. It does NOT use the particle statistic.
+- The particle statistic is a measure of particle CENTRES. The SPH isosurface sits
+  above them by construction, and that offset is 2.01 particle radii here, 1.26 on
+  the Rogue and 0.71 on the Silverado. It is a property of the reconstruction and it
+  never enters the scene.
+- **The actual step between the patch boundary and the annulus is 0.3 mm** (median
+  over 735 boundary columns), not 90 mm.
+
+What does make the square visible is that **the patch boundary is WAVY: 0.396 m from
+p10 to p90.** The crop cuts through mid-wave, and a flat sheet cannot meet a 40 cm
+ragged edge however well the mean heights agree. So the fix is not a height
+correction; it is a taper, ramping the outermost band of the patch to the surround
+height with a smoothstep, which makes the two meet exactly.
+
+**The taper's guard refused its own first default, and that is the useful part.** A
+0.8 m band leaves only 0.71 m between it and the hull bounding box, under the 0.75 m
+minimum, so it was refused. The g64 patch is 6.6 m wide for a 4.3 m car: 1.51 m of
+edge to work with, so the usable maximum is 0.76 m. **A graceful amplitude transition
+needs several metres and this geometry offers under one.** That is the same
+domain-too-small conclusion as section 12, arriving from a different direction, and it
+is why the residual contrast is left for the queued runs rather than tuned further.
+
+Failing input for that guard, per the register rule: `--edge-taper 3.0` on this
+geometry, which reports a clearance of -1.49 m and refuses.
+
+### 16.3 A bug this found in my own logging
+
+The taper message originally printed the Yaris's measured step and edge spread on
+every run, including the Rogue and Silverado. One run's measurement reported as
+another's is the exact failure this project keeps finding in its own documents, and it
+was in a line I had just written. Both figures are now measured per run by
+`edge_stats()` and printed from that run's own mesh.
+
+### 16.4 The facade: right, and improved rather than solved
+
+The report is correct that the two independent duty cycles fixed the ALTERNATION and
+left one flat plane. Added: window recess by bump from the same mask, a parapet proud
+of the wall so the top edge casts a line, a set-back ground floor, and tower setbacks
+on a third of the blocks so the roofline steps against the sky. It is massing, not
+architecture, and at 20 to 60 m from camera that is the right level of investment.

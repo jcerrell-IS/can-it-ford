@@ -87,7 +87,8 @@ def read_ply_vertices_faces(path: Path):
     return np.asarray(m.vertices, dtype=np.float64), np.asarray(m.faces, dtype=np.int64)
 
 
-def water_surface(w, h, window, cube_mult, iso, smooth_mult, smooth_iters, floor_z):
+def water_surface(w, h, window, cube_mult, iso, smooth_mult, smooth_iters,
+                  floor_z, taper, hull_lo, hull_hi):
     """splashsurf reconstruction of the water, cropped to the render window.
 
     TWO CORRECTIONS LIVE HERE, both measured on 2026-08-19, both of which made the
@@ -234,6 +235,18 @@ def water_surface(w, h, window, cube_mult, iso, smooth_mult, smooth_iters, floor
     sz, ncol = surround_height(V3, rect, h)
     print("[prep] surround height %.4f m, median of %d column maxima in the "
           "0.45 m band inside the clip boundary" % (sz, ncol))
+    # Measure this run's OWN edge statistics before tapering. An earlier version
+    # printed the Yaris's 1.9 mm step and 0.379 m edge spread on every run, which
+    # is a measurement from one run reported as though it were this one's.
+    step_mm, spread = edge_stats(V3, rect, sz)
+    V3, nmoved, dmax = taper_edge_to(V3, F3, rect, floor_z, sz, taper,
+                                     hull_lo, hull_hi)
+    if nmoved:
+        print("[prep] edge taper: %d top-surface verts ramped to %.4f m over a "
+              "%.2f m band, largest move %.4f m. The seam is NOT a height offset "
+              "here either: the median step was %.1f mm while the patch EDGE itself "
+              "varies by %.3f m p10-p90, and that is what a flat surround cannot "
+              "meet." % (nmoved, sz, taper, dmax, step_mm, spread))
     return V3, F3, int(m.sum()), int(len(w)), rect, sz
 
 
@@ -274,6 +287,76 @@ def surround_height(V, rect, h, band=0.45):
     bnd = np.flatnonzero(np.diff(ks)) + 1
     tops = [zs[a:b].max() for a, b in zip(np.r_[0, bnd], np.r_[bnd, len(zs)])]
     return float(np.median(tops)), len(tops)
+
+
+def edge_stats(V, rect, target_z, band=0.45, cell=0.15):
+    """Median step between the patch boundary and `target_z`, and the boundary's own
+    p10-p90 spread. Both per RUN, because the two numbers differ between runs and a
+    figure quoting one run's value for another is the failure this project keeps
+    finding in its own documents."""
+    x0, x1, y0, y1 = rect
+    inb = ((V[:, 0] < x0 + band) | (V[:, 0] > x1 - band) |
+           (V[:, 1] < y0 + band) | (V[:, 1] > y1 - band))
+    P = V[inb] if inb.sum() > 200 else V
+    key = (np.floor(P[:, 0] / cell).astype(np.int64) * 1000003 +
+           np.floor(P[:, 1] / cell).astype(np.int64))
+    o = np.argsort(key, kind="stable")
+    ks, zs = key[o], P[o, 2]
+    b = np.flatnonzero(np.diff(ks)) + 1
+    tops = np.array([zs[a:c].max() for a, c in zip(np.r_[0, b], np.r_[b, len(zs)])])
+    return (1000.0 * (target_z - float(np.median(tops))),
+            float(np.percentile(tops, 90) - np.percentile(tops, 10)))
+
+
+def taper_edge_to(V, F, rect, floor, target_z, width, hull_lo, hull_hi):
+    """Ramp the patch's TOP surface to `target_z` in a band inside its boundary.
+
+    WHY, and it is not the reason a viewer first reaches for. The seam between the
+    simulated patch and the flat surround is NOT a height offset: measured on
+    g64_yaris_regression frame 60, the annulus sits at 0.7366 m and the patch's own
+    boundary has median 0.7347 m, a step of 1.9 MILLIMETRES. What makes the square
+    visible is that the patch boundary is WAVY, p10 to p90 of 0.3791 m, because the
+    water at the edge of the crop is mid-wave, while the surround is a plane. A flat
+    sheet meeting a 38 cm ragged edge shows a seam however well the heights agree on
+    average.
+
+    So the outermost `width` metres of the reconstruction are ramped to the surround
+    height with a smoothstep, which makes the two surfaces meet exactly instead of
+    approximately. This MODIFIES the reconstructed surface, so:
+
+      - it touches only the top surface, never the floor face or the skirt;
+      - it is a presentational edge treatment at the DOMAIN boundary, which is the
+        one place the simulation has nothing to say anyway, since the tank wall is
+        not a real feature of a flooded street;
+      - it is refused outright if the band comes near the vehicle, because the
+        vehicle's surroundings are the part of the field that carries the result.
+
+    The failing input for that last guard is a taper width large enough to reach the
+    hull: on this 6.6 m patch, --edge-taper 3.0 or more.
+    """
+    if width <= 0:
+        return V, 0, 0.0
+    x0, x1, y0, y1 = rect
+    d = np.minimum.reduce([V[:, 0] - x0, x1 - V[:, 0], V[:, 1] - y0, y1 - V[:, 1]])
+    band_lo = np.array([x0 + width, y0 + width])
+    band_hi = np.array([x1 - width, y1 - width])
+    clear = min(hull_lo[0] - band_lo[0], hull_lo[1] - band_lo[1],
+                band_hi[0] - hull_hi[0], band_hi[1] - hull_hi[1])
+    if clear < 0.75:
+        raise SystemExit(
+            "EDGE TAPER REFUSED: a %.2f m band leaves only %.2f m between it and the "
+            "hull bounding box. The taper is an edge treatment for the domain "
+            "boundary; within 0.75 m of the vehicle it would be editing the part of "
+            "the field that carries the result." % (width, clear))
+    top = V[:, 2] > floor + 0.02
+    w = np.clip(1.0 - d / width, 0.0, 1.0)
+    w = w * w * (3.0 - 2.0 * w)                    # smoothstep, C1 at both ends
+    w = np.where(top, w, 0.0)
+    z0 = V[:, 2].copy()
+    V = V.copy()
+    V[:, 2] = z0 * (1.0 - w) + target_z * w
+    moved = int((w > 1e-6).sum())
+    return V, moved, float(np.abs(V[:, 2] - z0).max())
 
 
 def clip_to_rect(V, F, rect, floor):
@@ -467,6 +550,15 @@ def main():
                     help="Taubin smoothing iterations on the RENDER hull. Use for "
                          "the Poisson-reconstructed Rogue and Silverado hulls; the "
                          "Yaris hull does not need it. APPEARANCE ONLY.")
+    ap.add_argument("--edge-taper", type=float, default=0.6,
+                    help="metres of the patch edge ramped to the surround height so "
+                         "the two meet exactly. 0 disables. Refused if the band "
+                         "comes within 0.75 m of the hull. 0.6 rather than 0.8 "
+                         "because the guard REFUSES 0.8 on this geometry: the "
+                         "g64 patch is 6.6 m for a 4.3 m car, leaving 1.51 m of "
+                         "edge, so the usable maximum is 0.76 m. That the default "
+                         "had to be tuned down to fit is the same domain-too-small "
+                         "problem the queued larger-domain runs exist to end.")
     ap.add_argument("--smooth-iters", type=int, default=25,
                     help="weighted-Laplacian smoothing iterations on the water "
                          "surface (Loschner et al 2023). 0 disables.")
@@ -529,7 +621,7 @@ def main():
     if not a.no_water:
         WV, WF, kept, tot, wrect, surz = water_surface(
             z["water"][f], h, window, a.cube_mult, a.iso, a.smooth_mult,
-            a.smooth_iters, floor)
+            a.smooth_iters, floor, a.edge_taper, Qw.min(0), Qw.max(0))
         print("[prep] surround vs particle free surface: %.4f m against %.4f m, "
               "offset %+.4f m = %.2f particle radii"
               % (surz, swl, surz - swl,
@@ -553,6 +645,7 @@ def main():
         "car_center": [cx, cy], "half": a.half,
         "still_water_z": swl, "still_water_columns": ncol,
         "water_rect": None, "surround_z": None,
+        "edge_taper_m": float(a.edge_taper),
         "hull_bbox_lo": Qw.min(0).tolist(), "hull_bbox_hi": Qw.max(0).tolist(),
         "veh_zmin": float(vpf[:, 2].min()),
         "transform_max_err_m": worst,
