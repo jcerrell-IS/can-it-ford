@@ -785,3 +785,77 @@ Do not overstate it either: Chrono's error here is measured on **one shape at on
 resolution with one BCE setting**, with no attempt to use its own recommended
 resolution. It is evidence that the effect is generic, not evidence that Chrono is
 inaccurate.
+
+## 18. The vehicle-fording case is ONE BUILD TARGET AWAY, and I did not run it
+
+A 105-paper deep search names Chrono::FSI vehicle-fording models [Paz14, Paz16,
+Was15] as the closest published analogue to this project. I checked the tree I
+already had, on the machine. **[read]**
+
+- There is **no** demo named for fording, wading or amphibious operation anywhere
+  in `src/demos`. The capability is not a dedicated fording case.
+- The closest thing is **`src/demos/vehicle/cosimulation/demo_VEH_Cosim_WheeledVehicle_SPH.cpp`**:
+  a full wheeled vehicle co-simulated against SPH terrain. That is the Pazouki
+  and Wasfy lineage.
+- It is **not built**. The only cosim binaries present are `demo_COSIM_data_exchange`,
+  `demo_COSIM_hydraulics` and `demo_COSIM_socket`.
+
+**But every precondition for building it is already satisfied**, which is why this
+is a recommendation and not a lament:
+
+| precondition | state |
+|---|---|
+| `CH_ENABLE_MODULE_VEHICLE:BOOL` | `ON` |
+| `CH_ENABLE_MODULE_VEHICLE_COSIM:BOOL` | `ON` |
+| `libChrono_vehicle_cosim.so` | built, 2026-08-14 |
+| MPI | `/opt/apps/nvidia24/openmpi/5.0.5/bin/mpicxx` present |
+
+So the highest-value next GPU unit is **build that one target and run it**, not
+another generic demo and not a rebuild from scratch. It is the only route in this
+survey that puts a *vehicle* rather than a *box* in front of an independent
+solver, and the vehicle side (suspension, wheels, tire/ground contact) is exactly
+what our single-rigid-body abstraction throws away.
+
+**I did not attempt it.** The window went on getting a force number out of a
+simpler case that I could fully control, and I would make the same call again: an
+uncontrolled vehicle number would have been worth less than a controlled box
+number with a passing no-forcing control. Recording the readiness so the next
+session does not re-derive it.
+
+## 19. Review status of this addendum: UNREVIEWED, and I tried twice
+
+The `physics-skeptic` subagent was invoked **twice** in this session and failed
+**both** times with the identical error: `There's an issue with the selected model
+(deepseek-ai/DeepSeek-V4-Flash:deepinfra)`. A second attempt through a different
+agent type with an explicit model override failed the same way, so this is an
+environment fault, not a prompt fault.
+
+**Nothing in sections 13 to 18 has had independent adversarial review.** I am
+saying so rather than implying it happened. The claims I most want attacked, in
+order:
+
+1. **Is `rho*g*V` the right analytic target at all?** The body is submerged in a
+   0.5 m column, spanning z = 0.17 to 0.33, so clearances are 0.17 m to the free
+   surface and 0.17 m to the floor, both about 5.7 spacings at 0.030 m. If that is
+   too close, part of the +48 percent is wall and free-surface proximity rather
+   than a force-extraction error, and the headline weakens.
+2. **Is 0.25 s a settled state?** With `max_velocity = 5.0` and Tait, the
+   artificial sound speed is order 50 m/s, so a 1.6 m tank sees roughly 8 acoustic
+   transits in the settle window. That is probably enough acoustically, but the
+   gravity-wave timescale is much slower and I did not check it. sd is 14.5 percent
+   of the mean, which is not the signature of a fully settled record.
+3. **Are the drag means distinguishable from zero?** With sd exceeding the mean and
+   serially correlated samples, the effective sample size is far below the row
+   count, exactly as `stationarity.py` shows for our own runs. I did not compute
+   `N_eff` here. Until someone does, treat the drag table as sign-and-order only.
+
+**One claim I verified myself instead, since it was the highest-risk one.** Does
+`GetFsiBodyForce` include the body's own weight? If it did, the buoyancy
+comparison would be meaningless. It does not: `ChFsiInterface.cpp:94-96` returns
+`m_fsi_bodies[i]->fsi_force`, a member initialised to `VNULL` at `:115` and
+populated by a **dedicated FSI force accumulator** created at
+`AddFsiBody`, `fsi_body->fsi_accumulator = fsi_body->body->AddAccumulator()`.
+It is the fluid load alone, and the measured value being positive while body
+weight is 100.45 N confirms it independently. **[read]** This also re-confirms on
+this rev what section 2 established on another: **no `dt` appears anywhere in the
+accessor path.**
