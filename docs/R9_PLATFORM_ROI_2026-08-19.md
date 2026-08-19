@@ -171,6 +171,39 @@ range. The card therefore states that the sweep **bounds the sensitivity from be
 because it varies one threshold at a time and this project has already published and
 retracted a claim built on a one-at-a-time sweep.
 
+### 5.1a A PUBLIC, EMPTY DATASET ALREADY EXISTS, and it was not created by this session
+
+Found while confirming that nothing had been published [read]:
+
+```
+josiecerrell/can-it-ford-sweep-v1
+  private      : False          <- PUBLIC
+  gated        : False
+  files        : ['.gitattributes']   <- no data, no card, no licence
+  downloads    : 22
+  created      : 2026-07-14
+```
+
+**It is public, it is empty, and it has 22 downloads.** It contains a single
+`.gitattributes` file: no data, no README, no licence tag. It is a name reserved on a
+public index with the project's identity on it and nothing behind it.
+
+Three consequences:
+
+1. **It is the obvious place a future session would push**, and its name says
+   `sweep-v1`. The v1 and v2 sweeps are the superseded box-proxy lineage, not the hull
+   runs. Anything pushed there under that name inherits a misleading label.
+2. **Publishing my dataset would create a second public repo** rather than resolving
+   this one, leaving two dataset names for one project.
+3. **22 downloads of an empty repository** means it is being fetched by something,
+   probably indexers. Whatever pushes there first becomes what those fetches return.
+
+**I did not touch it.** Deleting or renaming a public repository is irreversible and
+outward-facing, so it is Josie's call. **The recommendation is to decide this before
+creating anything new**: either reuse it with a corrected name and a real card, or delete
+it. Creating a second dataset while this one sits empty and public is the worst of the
+three options.
+
 ### 5.2 Space, WORTH IT, built and launched
 
 `hf_space/` was rewritten. **It launches and serves HTTP 200 locally**, every callback
@@ -308,6 +341,7 @@ Space is a local directory.
 
 | item | currently | flips public when | who decides |
 |---|---|---|---|
+| `can-it-ford-sweep-v1` | **already PUBLIC and EMPTY** | n/a. Decide reuse or delete **before** creating anything new (§5.1a) | Josie |
 | HF dataset | not created | licence question in §3 answered; card reviewed | Josie |
 | HF Space | local only | dataset decision made; three corrections reviewed | Josie |
 | Zenodo record | not created | licence answered. **Access can stay restricted** | Josie |
