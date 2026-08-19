@@ -1770,3 +1770,85 @@ whole `v_car` 6.7 m/s row, which ran legally at applied 4 against auto 4.
 **Blast radius, measured not assumed:** exactly the four `v_car` = 8.9 m/s cells
 of the g64 matrix, 20 runs across five seeds. The g96 arm is unaffected, applied
 8 against auto 7. The measured cost is bounded at 1.471 percent (T13).
+
+## T26. The video: frames verified, and a render defect that was NOT a physics defect
+
+Job 922582 COMPLETED, ExitCode 0:0, 36:43 elapsed. **The frame counts were
+verified from the arrays, not from the exit code**, because an exit code cannot
+tell you a dump is short:
+
+| cell | v_car | frames requested | frames in `frame_index` | contiguous | `water_xyz` |
+|---|---|---|---|---|---|
+| A | 2.2 m/s | 150 | **150** | yes, 1 to 150 | (150, 352844, 3) |
+| B | 4.5 m/s | 100 | **100** | yes, 1 to 100 | (100, 352844, 3) |
+
+**No frame is missing, so nothing was renumbered.** Four further checks, all
+passing, none of which the exit code covers:
+
+- **The car actually moves.** Hull y goes 3.1771 to 14.1039, travel **10.9267 m**
+  against a predicted `v_car * n * dt` of 11.0000 m. The 0.073 m difference is
+  exactly one frame step: travel spans 149 intervals, not 150.
+- **It drives straight.** Hull x and z spans are **exactly 0.00e+00**, which is
+  the signature of a prescribed body and would not hold for a free one.
+- **The step is uniform**, 0.073333 to 0.073334 m per frame.
+- **No particle leaves the domain**, 0 of 52,926,600 positions outside in x or y.
+
+### The defect the picture exposed, and it was in the picture
+
+The first render drew the vehicle in elevation from `hull_center_z - ext_z/2`,
+which put **0.76 m of the car underneath the roadway**. It looked like a physics
+bug and it was not one.
+
+`canonicalize()` shifts the mesh by `[(lo+hi)/2, (lo+hi)/2, lo[2]]`: x and y are
+centred on the bounding box, but **z is shifted so the mesh minimum sits at 0**,
+so the hull's origin is its UNDERSIDE. A collider centre at `z = floor`
+therefore puts the wheels on the road, which is correct, and is verbatim the
+convention `sim_standing.py` uses. The renderer assumed a centred origin.
+
+This is the more dangerous way round. **The physics was right and the picture
+was wrong, and the picture is what people believe.** Fixed, and the comment in
+`r9_render_frames.py` records why.
+
+### The caption is on the frame, not in a README
+
+A rendered fluid image is the most persuasive artefact this project makes and
+the least self-describing: nothing in a picture of water says which parts came
+out of the solver. Every frame names three categories separately, following
+d13-renders' pattern:
+
+- **SOLVER**: water particle positions and hull pose, warpmpm MPM and not
+  Genesis, 352,844 particles, n_grid 160, dx 0.1375 m.
+- **MEASURED**: v_car and v_water on perpendicular axes, depth, domain, frame
+  dt and the hull travel, all read from the npz rather than retyped.
+- **DRAWN**: colour, camera, scale, and the vehicle as its **bounding box**,
+  because the dump carries the centre and extents but not the mesh.
+
+And the run's own warning travels with it, in red, on every frame: **this is a
+ground-frame sequence, it failed C4 at 34 percent, it is a VISUALISATION and no
+force from it may be quoted.** A caption in a README travels separately from the
+file and does not get read.
+
+### Two rendering choices that are not cosmetic
+
+- **Particles are sorted by height before drawing.** Unsorted scatter paints in
+  array order, so whether spray is visible depends on particle indexing rather
+  than on height, and splash vanishes behind bulk water at random.
+- **Colour limits are fixed across the whole sequence** and anchored to the still
+  surface. Autoscaling per frame is the classic way to make still water look
+  like it is surging: the colour of a given height would change frame to frame
+  and the eye reads that as motion that is not in the data.
+
+### Encoding refuses to hide a gap
+
+The encode uses ffmpeg's `concat` demuxer over an explicit file list, not
+`-start_number` with a glob. The image2 demuxer **stops at the first missing
+index**, so a gap would silently produce a shorter video that still looks
+continuous, which is exactly the failure that reads as a jump in the physics
+rather than as a missing file. The job also prints `PNG_COUNT` per cell so the
+count is checkable after the fact.
+
+### Walltime, sized from measurement
+
+One frame renders in about 1.5 s measured on the node, so 250 frames across both
+cells is about 7 minutes. The encode job asks **25 minutes**, that plus a margin,
+rather than the hour a guess would have taken.
