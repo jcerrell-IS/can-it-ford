@@ -8,8 +8,14 @@ description: Query the project's own 332-paper external research index before ma
 This project holds **332 distinct external papers** across eight Undermind
 deep-research reports, 37 Claude artifacts, five Perplexity reports and two
 Elicit extracts. Measured 2026-08-15: only **43 of the 332 reach a reader-facing
-document** (`paper/`, `docs/`, `deliverables/`, `citations/`), and 256 are cited
-nowhere at all. The failure mode this skill exists to stop is **asserting
+document** (`paper/`, `docs/`, `deliverables/`, `citations/`).
+
+**DO NOT SAY "256 ARE CITED NOWHERE".** That clause was WITHDRAWN 2026-08-18: it took
+the complement of *reach* (332 - 76 = 256) and reported it as *cited*, which are
+different predicates measured different ways. The correct ladder is
+**332 in the corpus / 76 with a DOI anywhere in the tracked tree / 43 reaching a
+reader-facing directory / 4 in the shipped bibliography / 3 actually `\cite`d and
+printing.** State the scope in the same sentence as any of these numbers. The failure mode this skill exists to stop is **asserting
 something the corpus already answers**, in either direction: claiming novelty
 that prior art contradicts, or proposing a method the reports already evaluated.
 
@@ -108,8 +114,12 @@ quadrature. Standard MPM, GIMP, CPDI and B-spline MPM are not interchangeable.
 ## Validation targets that exist and are unused
 
 `--method validation-dataset` returns 76 papers, 65 of them uncited. The repo has
-**no physics regression test**; `tests/` holds only `test_count_claims_check.py`
-and `test_csv_schema.py`.
+a physics regression test **as of 2026-08-18**: `tests/test_physics_gates.py`,
+added by `df52bee` ("Run the solver's own analytic suite on a GH200, and wire it in"),
+carrying 12 test functions and covering Poiseuille, Couette and closed-form analytics.
+`tests/` also holds `test_count_claims_check.py` and `test_csv_schema.py`.
+**The earlier claim that no physics regression test exists is STALE. Do not build a
+second one without reading that file first.**
 
 - **Analytical, no download needed:** Poiseuille and Couette flow are the standard
   MPM fluid verification cases with exact closed-form solutions
@@ -150,3 +160,90 @@ and `test_csv_schema.py`.
 - The index excludes `.claude/worktrees/` when computing cited status, per the
   standing H0 rule. An earlier version did not and reported 269 of 332 as cited
   because another session's cross-reference file holds 489 DOIs.
+
+---
+
+# THE INDEX IS NOT THE WHOLE CORPUS. THE DEEP-SEARCH LAYER IS MISSING FROM IT.
+
+Added 2026-08-19 after a session manually re-derived a vehicle-mesh finding that a
+completed deep search had answered in full on 21 July.
+
+`data/research_corpus_index.json` was built from **44 documents that are Claude
+artifacts and Perplexity reports.** The Undermind workspace holds **19 completed deep
+searches**, and eight checked by name are **all absent from those 44**. So querying the
+index and finding nothing is NOT evidence the project has not researched something.
+
+**Workspace id `17299f2a-8dc8-438b-8c84-5abf19395e2c`.** Query it directly:
+
+```
+mcp__undermind__inspect_deep_searches(workspace_id=..., names=[])        # list all 19
+mcp__undermind__inspect_deep_searches(workspace_id=..., names=['/NAME']) # goal + summary + ranked papers
+```
+
+The nineteen, with what each actually settles:
+
+| deep search | settles |
+|---|---|
+| Simulation Ready Vehicle Mesh Assets | the CCSA/NCAC vehicle models, below |
+| Moving Rigid Body Free Surface Validation | validation cases for a moving body |
+| Quantitative MPM Wall Penetration | the mechanism behind the seven P-2 failures |
+| Multi-resolution MPM for Large-domain Flooding | refinement windows, and the moving-frame gap |
+| moving vehicle floodwater GPU particle simulation | the moving-vehicle prior art |
+| which realism effects change a flood vehicle stability verdict | which realism upgrades move a verdict |
+| MPM SPH buoyancy force overestimation and hydrostatic validation benchmarks | the buoyancy error |
+| Settling and Force Reporting in Free Surface Flow | settle length and force statistics |
+| GPU particle solver portability scaling and surrogate fidelity | engine and GH200 portability |
+| Dynamic Vehicle Traction in Floodwater | traction under partial flotation |
+| Validated MPM Vehicle Water Coupling | coupling validation |
+| Incipient / stability searches (Jul 15) | threshold provenance |
+| how computational researchers audit and defend simulation credibility | verification practice |
+| plus 6 more, see the live listing |
+
+## THE VEHICLE MESH ANSWER, so nobody re-derives it again
+
+From "Simulation Ready Vehicle Mesh Assets", 21 July, 36 papers. The NHTSA-grade assets
+are the **CCSA/NCAC reverse-engineered LS-DYNA finite-element vehicles**:
+
+    2010 Toyota Yaris         passenger sedan           MASH 1100 kg vehicle
+    2012 Toyota Camry         MIDSIZE sedan             teardown part-by-part; parts
+                                                        catalogued, scanned, thickness
+                                                        measured, material classified;
+                                                        mass and inertia checked against
+                                                        the production vehicle
+    2007 Chevrolet Silverado  quad-cab light pickup     MASH 2270 kg vehicle
+
+All three carry NHTSA NCAP full-scale validation. Yaris and Silverado include working
+suspension and steering.
+
+**THE NISSAN ROGUE IS NOT ONE OF THEM.** The documented midsize is the Camry. This
+repo's `MASS = {"rogue": 1571.3}` has no MASH anchor and no teardown provenance, while
+`silverado: 2270.0` and the Yaris 1100 kg ARE the MASH designations exactly.
+
+**HARD NEGATIVE, stated as a finding by that search:** no citable, publicly
+redistributable OBJ / PLY / glTF / USD conversion of the Yaris, Silverado or Rogue
+models is verified to exist anywhere, including GitHub, Kaggle and Hugging Face.
+So this repo's `.ply` hulls are its OWN conversions, there is no external artifact to
+check them against, and `vehicle_mesh_pipeline.py` (in `~/Downloads/vehicle_meshes/`,
+UNTRACKED, with `_v5` and `_v6` revisions) is the only provenance any hull has.
+
+Measured hull fidelity, from PLY headers 2026-08-19:
+
+    yaris_coarse_v1l_watertight.ply                 327,212 vertices
+    rogue_g96_pd6_coarse_watertight.ply              31,357 vertices
+    silverado_g32_pd8_dq0.02_coarse_watertight.ply    2,108 vertices   <-- 155x coarser
+
+Better hulls exist unused in `~/Downloads/vehicle_meshes/` (52 files):
+`rogue_coarse_watertight.ply` 66,987 and `silverado_coarse_watertight.ply` 48,706.
+
+# `--query` CANNOT FIND WHAT YOU PROBABLY WANT
+
+`analysis/research_index.py:518-521` is a **literal substring match over `title` and
+`abstract` only.** It does NOT search `authors`, `methods`, `journal` or `doi`.
+
+- An author query can never match. `--query "Al-Qadami"` returns 0 while **five records
+  carry Al-Qadami as an author**. A zero here is structurally guaranteed, not measured.
+- 110 of 332 records have no abstract, so for a third of the corpus it is title-only.
+- Any paraphrase fails: "moving reference frame" misses "moving frame of reference".
+
+Use `--doi` for a known paper, read the JSON fields directly for anything else, and
+never report an absence measured with `--query` alone.
