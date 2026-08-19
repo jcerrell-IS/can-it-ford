@@ -1944,3 +1944,110 @@ carry h = 0.00625 m and 2,048,000 particles at different `dx`, which would direc
 `Zha22d`'s claim that refinement does not remedy the oscillation. **The g96 run predates the
 velocity instrumentation, so it has no KE/PE and the comparison cannot be made from disk.**
 It needs one more arm.
+
+---
+
+# 35. Provenance audit of `03cd132`: the direction held, the MAGNITUDE was not re-derivable
+
+An independent audit (`e9ff33f`, `docs/R9_PROVENANCE_AUDIT_2026-08-19.md`) read the run JSONs
+on Vista directly rather than my commit message. **It upheld the direction and it caught a
+real defect in how I published the magnitude.** Both halves are recorded here.
+
+## 35.1 Upheld: the direction is T1 on three independent field definitions
+
+| field | ppc 8 | ppc 27 | change |
+|---|---|---|---|
+| `ke_over_pe_above_floor_final` | 0.009252180 | 0.011997877 | **+29.68 %** |
+| `ke_over_pe_above_floor_min` | 0.008458624 | 0.010423584 | **+23.23 %** |
+| `ke_over_pe_all_final` | 0.009334239 | 0.012468973 | **+33.58 %** |
+
+**All three rise, and two are larger than the +25.86 percent I published.** The exclusion of
+quadrature and sampling rests on the **sign**, so it stands on primary data independently of
+my reduction.
+
+## 35.2 The defect: my headline existed only inside a shell command
+
+The audit could not match 1.0913e-02, 1.3735e-02, +25.86 percent or 9.89 sigma to anything in
+the JSON, **and it was right that it could not.** Diagnosis, stated exactly:
+
+- `config.quiescence` stores `ke_over_pe_above_floor_FINAL` and `_MIN`. **Both are single
+  frames.** My number is the **mean over the graded window**, which the emitter never stored.
+- `verdict.blocked.se_blocked` is 0.0331 and 0.0505 and is computed on **`dpdz_rel_error`,
+  the pressure gradient**. My 9.89 sigma is the blocked SE of the **KE/PE series**, which the
+  emitter never blocks.
+
+So the JSON was not missing data. **It was missing that reduction, and the reduction lived in
+an uncommitted scratchpad one-liner.** That is precisely the shape this project condemned in
+`failure_modes_result.json`: a number with no script behind it. The rule adopted after the
+`DRIFT_THRESHOLD` total moved three times in one day is that **a published number must be
+enumerable by a command someone else can run**, and mine was not.
+
+**Closed by `analysis/r9_column_stats.py`**, which names the field and the window in code and
+reproduces the published figures exactly:
+
+```
+$ python3 analysis/r9_column_stats.py data/r9_column/column_923270_ppc*.json
+
+field = ke_over_pe_above_floor   window = last 50 percent, frames 100 to 199
+ ppc/cell   n_water          mean    blockedSE    tau  gradRange%  stat3s   leak%
+        1     75843    1.1171e-02   1.4727e-03   8.78        4.98    True  11.919
+        8    606797    1.0913e-02   2.3752e-04   4.75      113.34    True   4.039
+       27   2048000    1.3735e-02   1.5803e-04   1.35      137.60    True   3.434
+
+GRADED LEG, 8 -> 27 particles per cell (pre-registered 9d82ed2):
+  1.0913e-02 -> 1.3735e-02   change +25.86 percent
+  difference 2.8220e-03 +/- 2.8529e-04 blocked (quadrature) = 9.89 sigma
+  DIRECTION: RISES
+```
+
+**The figures were right; the provenance was not.** Being right by luck and being right
+reproducibly are not the same standard, and only the second one counts here.
+
+## 35.3 The data is now in the repository
+
+`03cd132` carried one markdown file while the JSONs lived only under `/work` on Vista, where
+no reader of this repository can see them and git does not back them up. **Five run files are
+now committed under `data/r9_column/`, named by job id**, so the command above can be run by
+anyone with a checkout:
+
+`column_923270_ppc{1,2,3}.json` and `column_923219_{control,bcfix}.json`.
+
+They are force-added past `.gitignore:10`'s `data/*`. **I did not edit `.gitignore`**: this
+project's own notes record its line numbers being wrong three times in one day because it is
+edited too often, and a force-add achieves the same result without touching a shared file.
+
+## 35.4 UNREPORTED AND MATERIAL: the gradient swings inside the graded window
+
+The audit flagged that the ppc 27 arm's gradient relative error reads -94.988 percent at
+frame 0, +49.883 at frame 140 and -29.379 at frame 180 while `stationary_3sigma` is True.
+**Confirmed, and it is broader than the arm they flagged.** From the new `gradRange%` column,
+measured over the graded window only:
+
+| ppc/cell | gradient range **within the graded window** | stationary at 3 sigma |
+|---|---|---|
+| 1 | 4.98 points | True |
+| 8 | **113.34 points** | True |
+| 27 | **137.60 points** | True |
+
+**Both the ppc 8 and ppc 27 arms swing by more than a full 100 points inside the window that
+is being averaged, while the slope test reports stationary.** Both can hold at once because
+the series **oscillates rather than drifts**, which is the same distinction section 31 already
+paid for: a stationarity gate tests the slope and says nothing about the spread.
+
+**This is material and it was absent from `03cd132`.** Nobody reading that commit would know
+the series does this. It is now a printed column of the reduction script so it cannot go
+unreported again.
+
+**What it does and does not touch.** It is a property of the **pressure gradient**, and the
+KE/PE claim does not depend on the gradient, so **the +25.86 percent and its 9.89 sigma are
+unaffected**. But any statement about the *gradient* in the ppc 8 or ppc 27 arms must carry
+this range, and the `dp/dz` verdicts for those arms should be read as **not gradeable on
+dispersion** by exactly the gate added in `1f98170`.
+
+## 35.5 Register class C, and it makes the respecification cheaper
+
+The audit's register class C confirms independently what section "READ THIS FIRST" states:
+`sphere_heave.py` has **five copies on this machine and exactly one distinct content, so
+there is no code fork**. The accessor dispute is therefore **purely a specification problem
+with no divergent implementation under it**. That is the cheap case, not the expensive one,
+and the respecification in criterion 3 stands on it.
