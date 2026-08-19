@@ -732,6 +732,122 @@ def index_self_defects() -> list:
     return out
 
 
+# Snapshot of the Undermind workspace, read live 2026-08-19 from
+# `inspect_deep_searches` on workspace 17299f2a-8dc8-438b-8c84-5abf19395e2c.
+# THIS IS A DATED SNAPSHOT, NOT A LIVE VIEW, and it will go stale the next time
+# anyone runs a deep search. It is recorded anyway because the alternative was
+# nothing: the builder has no way to see the workspace, so without this the gap
+# is invisible from inside the repo. Re-derive rather than trust:
+#     inspect_deep_searches(workspace_id=..., names=[], status_only=True)
+WORKSPACE_SNAPSHOT_DATE = "2026-08-19"
+WORKSPACE_DEEP_SEARCHES = [
+    # (name, created, relevant-paper count, ingested-as-slug or None)
+    ("moving vehicle floodwater simulation open source implementations",
+     "2026-08-19", 105, None),
+    ("how computational researchers audit and defend simulation credibility",
+     "2026-08-18", 92, None),
+    ("MPM SPH buoyancy force overestimation and hydrostatic validation benchmarks",
+     "2026-08-18", 32, None),
+    ("GPU particle solver portability scaling and surrogate fidelity",
+     "2026-08-18", 56, None),
+    ("which realism effects change a flood vehicle stability verdict",
+     "2026-08-18", 47, None),
+    ("moving vehicle floodwater GPU particle simulation",
+     "2026-08-18", 48, None),
+    ("Moving Rigid Body Free Surface Validation", "2026-08-14", 44,
+     "moving-rigid-body"),
+    ("Settling and Force Reporting in Free Surface Flow", "2026-08-14", 68,
+     "settling-force"),
+    ("Quantitative MPM Wall Penetration", "2026-08-14", 16, "wall-penetration"),
+    ("Multi-resolution MPM for Large-domain Flooding", "2026-08-14", 78,
+     "multi-resolution"),
+    ("Trustworthy AI Assisted Scientific Simulation", "2026-08-08", 13,
+     "trustworthy-ai"),
+    ("MPM Simulation Verification Provenance", "2026-08-07", 68,
+     "mpm-verification"),
+    ("Reliable AI Scientific Software", "2026-08-07", 79, "reliable-ai"),
+    ("Validated MPM Vehicle Water Coupling", "2026-07-30", 60,
+     "validated-coupling"),
+    ("Simulation Ready Vehicle Mesh Assets", "2026-07-21", 36, None),
+    ("Dynamic Vehicle Traction in Floodwater", "2026-07-21", 43, None),
+    ("Small Data Physics Surrogates at 36 Conditions", "2026-07-15", 47, None),
+    ("Physics Simulation Validation Protocol", "2026-07-15", 81, None),
+    ("Quantitative Flood Traversability Connections", "2026-07-15", 82, None),
+    ("Optical Vehicle Collision Geometry", "2026-07-15", 23, None),
+]
+
+
+def report_coverage() -> int:
+    """What this index DOES and DOES NOT contain, as a ladder of containers.
+
+    Exists because the containers get confused for one another. A session
+    checked deep-search names against the `documents` list, found nothing, and
+    concluded the deep searches were absent. `documents` holds Claude artifacts,
+    Perplexity reports, Elicit extracts and bibliographies, and NEVER holds a
+    deep search: those live in `source_reports`. Three of the eight it reported
+    absent were in fact ingested.
+    """
+    idx = load()
+    built = idx["built"]
+    ingested = {slug for slug in idx["source_reports"]}
+    print("CONTAINER COVERAGE. Five rungs, five questions. Never one number.\n")
+    print(f"  index built {built}   workspace snapshot "
+          f"{WORKSPACE_SNAPSHOT_DATE}\n")
+
+    have = [w for w in WORKSPACE_DEEP_SEARCHES if w[3]]
+    miss = [w for w in WORKSPACE_DEEP_SEARCHES if not w[3]]
+    stale = [w for w in miss if w[1] > built]
+    gap = [w for w in miss if w[1] <= built]
+
+    print(f"  RUNG 1  deep searches      {len(have)} of "
+          f"{len(WORKSPACE_DEEP_SEARCHES)} ingested")
+    print(f"            never ingested   {len(gap)}  (predate the build: a real "
+          "ingestion gap)")
+    print(f"            newer than index {len(stale)}  (postdate the build: "
+          "staleness, not a defect)")
+    from collections import Counter
+    kinds = Counter(d.get("type", "?") for d in idx.get("documents", []))
+    print(f"  RUNG 2  documents          {idx.get('n_documents', 0)}  "
+          f"{dict(kinds)}")
+    print("            NOTE: holds ZERO deep searches, by construction. Do not "
+          "test deep-search")
+    print("            membership against this list; use source_reports.")
+    print(f"  RUNG 3  papers             {idx['n_papers']} distinct")
+    print("  RUNG 4  shipped bib         run --bib-audit")
+    print("  RUNG 5  reference list      run --bib-audit\n")
+
+    if gap:
+        print("  NEVER INGESTED AND OLDER THAN THE INDEX, so nothing explains "
+              "these away:")
+        for name, created, n, _ in gap:
+            print(f"    {created}  {n:>4} papers  {name}")
+        print(f"    subtotal {sum(w[2] for w in gap)} relevant-paper slots\n")
+    if stale:
+        print("  CREATED AFTER THE INDEX WAS BUILT, so rebuild rather than "
+              "blame the merge:")
+        for name, created, n, _ in stale:
+            print(f"    {created}  {n:>4} papers  {name}")
+        print(f"    subtotal {sum(w[2] for w in stale)} relevant-paper slots\n")
+
+    print("  THOSE SLOT COUNTS ARE NOT A PAPER COUNT. They overlap each other "
+          "and the existing")
+    print("  corpus by an unmeasured amount; the ingested layer merged 426 raw "
+          "rows into 332")
+    print("  distinct, and the builder details only each report's top 50.\n")
+    print("  STRUCTURAL LIMIT, and it is the actual defect: REPORTS is a "
+          "hardcoded list of")
+    print("  eight local file paths. The builder has no directory scan, no glob "
+          "and no API")
+    print("  call, so --build CANNOT discover or reach a new deep search. "
+          "Adding one means")
+    print("  exporting it to markdown in the catalogue-table format and editing "
+          "the REPORTS")
+    print("  literal by hand. Nothing notices when a new search appears, so "
+          "this gap grows")
+    print("  silently every time anyone runs one.")
+    return 0
+
+
 def _evaluable_summary(doi: str, author_evaluable: bool) -> str:
     """Which of the five routes COULD have returned a hit for this work.
 
@@ -969,7 +1085,13 @@ def main() -> int:
                     help=f"rev:path of the paper source (default "
                          f"{TEX_REF_DEFAULT})")
     ap.add_argument("--tsv", help="also write the census as TSV to this path")
+    ap.add_argument("--coverage", action="store_true",
+                    help="what this index does and does not contain, as a "
+                         "ladder of containers")
     a = ap.parse_args()
+
+    if a.coverage:
+        return report_coverage()
 
     if a.bib_audit:
         res = audit_bibliography(a.bib_ref, a.tex_ref)

@@ -11,6 +11,33 @@ Elicit extracts. The failure mode this skill exists to stop is **asserting
 something the corpus already answers**, in either direction: claiming novelty
 that prior art contradicts, or proposing a method the reports already evaluated.
 
+## READ THIS FIRST: the index holds 8 of the project's 20 deep searches
+
+Measured 2026-08-19 against the live Undermind workspace
+`17299f2a-8dc8-438b-8c84-5abf19395e2c`. **A negative result from this index is
+NOT a negative result for the project's research.** Twelve completed deep
+searches are not in it: six predate the index build of 2026-08-15 and were never
+ingested, six postdate it. Run `python3 analysis/research_index.py --coverage`
+for the current ladder and the full list.
+
+**Why `--build` will not fix it:** `REPORTS` in `analysis/research_index.py` is a
+hardcoded list of eight local file paths. The builder has no directory scan, no
+glob and no API call, so it cannot discover or reach a deep search. Adding one is
+two manual steps that nothing automates or checks. **The gap therefore grows
+silently every time anyone runs a search.**
+
+**What this has already cost:** the `Simulation Ready Vehicle Mesh Assets` search
+of 21 July answers the vehicle-mesh provenance question in full, covering the
+CCSA/NCAC LS-DYNA models, the MASH designations (the 2010 Yaris is the MASH
+**1100 kg** vehicle, this project's exact vehicle and mass), and the explicit
+negative finding that no citable public OBJ/PLY/glTF/USD conversion of the Yaris,
+Silverado or Rogue models exists. None of it is indexed, and `--query` returns
+**0** for `Silverado`, `Camry` and `Toyota Yaris`. A session re-derived part of it
+by hand on 2026-08-19.
+
+**So before concluding the project has not researched something, check the
+workspace, not just this index.**
+
 ## The ladder. Five numbers, five different predicates, never one number.
 
 Scope, stated here because it decides every figure below: index built 2026-08-15,
@@ -67,6 +94,7 @@ python3 analysis/research_index.py --query "wall penetration" # free text
 python3 analysis/research_index.py --doi 10.1002/nme.7217     # one paper
 python3 analysis/research_index.py --gaps --method validation-dataset
 python3 analysis/research_index.py --bib-audit                 # corpus vs the bib
+python3 analysis/research_index.py --coverage                  # what is NOT indexed
 ```
 
 `--bib-audit` censuses the shipped bibliography against the corpus AND against
@@ -90,7 +118,7 @@ added.
 
 25 method tags exist. Run `--stats` rather than guessing tag names.
 
-### Three traps that return a FALSE ZERO. A zero from any of them looks exactly like absence.
+### Four traps that return a FALSE ZERO. A zero from any of them looks exactly like absence.
 
 **1. `--query` searched only titles and abstracts until 2026-08-19, never authors.**
 So every author-name query returned zero regardless of the corpus contents.
@@ -118,8 +146,16 @@ papers from the Shah/Mustaffa flood-vehicle group and **not** `shah2018`
 in the other direction too: a substring search for "Xia" returns **23** records,
 nearly all of them hits inside given names such as "Lingxiao" and "Xiao-Guang".
 
+**4. Testing deep-search membership against the `documents` list.** `documents`
+holds Claude artifacts, Perplexity reports, Elicit extracts and bibliographies,
+and **never holds a deep search**: those live in `source_reports`. A session
+checked eight deep-search names against `documents` on 2026-08-19, got nothing,
+and reported "eight of eight absent". Three of the eight were ingested. Use
+`--coverage`, which reads the right container.
+
 **Before writing "the corpus has nothing on X", run at least two of: `--query`
-against the term, a direct DOI check, and an author check. State which you ran.**
+against the term, a direct DOI check, an author check, and `--coverage` to see
+whether the relevant deep search is even indexed. State which you ran.**
 A single search that could not match the field you care about is not evidence of
 absence.
 

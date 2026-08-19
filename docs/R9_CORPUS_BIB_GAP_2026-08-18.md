@@ -337,6 +337,126 @@ share a value, which is what `routes_evaluable` and `NOT-EVALUABLE(reason)` are.
 
 ---
 
+## 5c. The gap is a LADDER OF CONTAINERS, and the deep-search rung is the big one
+
+Added 2026-08-19, after a coordinating session reported that the index is missing
+the project's own Undermind deep searches. **The substance is right and it is a
+bigger finding than the bibliography gap I was sent for. Three of its specifics
+are wrong, and the way they are wrong is the same false-absence pattern this
+document is about, so they are corrected rather than quietly fixed.**
+
+### What the check got wrong, and why
+
+It reported "eight of eight absent", having checked the deep-search names against
+the index's `documents` list. **`documents` is the wrong container.** DERIVED,
+from the index: `documents` holds 44 entries and by type they are 35
+`claude-artifact`, 5 `perplexity-report`, 2 `bibliography` and 2
+`elicit-extract`. **Zero deep searches, by construction.** Deep searches live in
+a different key, `source_reports`.
+
+Checked against `source_reports`, **three of those eight are INGESTED**:
+
+| reported ABSENT | actually |
+|---|---|
+| Moving Rigid Body Free Surface Validation | **ingested** as `moving-rigid-body` |
+| Quantitative MPM Wall Penetration | **ingested** as `wall-penetration` |
+| Multi-resolution MPM for Large-domain Flooding | **ingested** as `multi-resolution` |
+
+Searching a container that cannot hold the thing you are looking for, and
+reporting the empty result as absence, is the same defect as `--query` never
+reading `authors` (section 5a) and my own author route reporting a skip as zero
+(section 5b). That is the **fourth** instance tonight, and the first one where I
+was the recipient rather than the author.
+
+The workspace also holds **20** completed deep searches, not 19. READ, live from
+`inspect_deep_searches` on workspace `17299f2a-8dc8-438b-8c84-5abf19395e2c`.
+
+### The ladder, which is what was asked for
+
+Five containers, five different questions. Never merge them into one number.
+
+| rung | container | ingested | not |
+|---|---|---|---|
+| 1 | **Undermind deep searches** in the workspace | **8 of 20** | **12** |
+| 2 | `documents` (artifacts, Perplexity, Elicit, bib) | 44 indexed | holds no deep searches at all |
+| 3 | `papers` merged from rung 1 | 332 distinct, from 426 raw rows | anything in the 12 un-ingested searches |
+| 4 | shipped bibliography, `overleaf/main` | 4 of 15 in the corpus | 11 |
+| 5 | reference list, what prints | 3 | 12 |
+
+**Rung 1 splits in two, and the split changes who owns the fix.** DERIVED, by
+comparing each search's creation date against the index build date of 2026-08-15:
+
+- **6 searches PREDATE the build and were never ingested.** This is the genuine
+  ingestion gap: `Simulation Ready Vehicle Mesh Assets` (Jul 21, 36 relevant
+  papers), `Dynamic Vehicle Traction in Floodwater` (Jul 21, 43), `Small Data
+  Physics Surrogates at 36 Conditions` (Jul 15, 47), `Physics Simulation
+  Validation Protocol` (Jul 15, 81), `Quantitative Flood Traversability
+  Connections` (Jul 15, 82), `Optical Vehicle Collision Geometry` (Jul 15, 23).
+  **312 relevant-paper slots.**
+- **6 searches POSTDATE the build**, all Aug 18 and Aug 19, totalling **380
+  slots**, the largest being `moving vehicle floodwater simulation open source
+  implementations` (Aug 19, 105) and `how computational researchers audit and
+  defend simulation credibility` (Aug 18, 92). These are **not an ingestion
+  defect at all**, they are staleness: the index cannot contain research that did
+  not exist when it was built.
+
+Merging those two would repeat exactly the error this document opens with.
+
+**Do not read 692 as "692 missing papers."** Those are per-search relevant-paper
+slots with unknown overlap between searches and with the existing 332. The only
+calibration available is the ingested layer itself, where 426 raw rows merged to
+332 distinct, a 22 percent reduction. And the builder details only each report's
+top 50, so even full ingestion would not create a record per slot. The honest
+statement is that the un-ingested layer is **comparable in size to the entire
+current corpus**, and that its exact unique contribution is unmeasured.
+
+### The structural defect, which is the real finding
+
+READ, from `analysis/research_index.py`: `REPORTS` is a **hardcoded
+module-level list of eight local file paths**, iterated at `:372` inside
+`build()`. There is no directory scan, no glob, and no API call anywhere in the
+builder.
+
+**So `--build` cannot ingest a nineteenth or twentieth deep search, and it never
+could.** It cannot discover one, and it cannot reach the workspace. Adding a
+search requires two manual steps that nothing in the repo automates or checks:
+export the search to markdown in the catalogue-table format `parse_report`
+expects, and edit the `REPORTS` literal. **The count is the symptom; the fixed
+eight-entry list is the defect.** No mechanism exists that would ever notice a
+new search, so this gap grows silently by construction every time anyone runs a
+deep search.
+
+### It has already cost real work, and it reaches into my own census
+
+The coordinating session re-derived the vehicle-mesh provenance problem by hand,
+when `Simulation Ready Vehicle Mesh Assets` had answered it on 21 July. READ,
+live from that search: it covers the CCSA/NCAC LS-DYNA models, records the MASH
+designations (`Extended Validation of the Finite Element Model for the 2010
+Toyota Yaris Passenger Sedan (MASH 1100kg Vehicle)`, and the 2007 Silverado as
+MASH 2270kg), and carries the explicit negative finding that **no citable,
+publicly redistributable OBJ/PLY/glTF/USD conversion of the Yaris, Silverado or
+Rogue models is verified**. DERIVED: `--query` returns **0** for `Silverado`,
+`Camry` and `Toyota Yaris`.
+
+That 1100 kg Yaris is this project's canonical vehicle and canonical mass.
+
+**SELF-CORRECTION TO SECTION 4.** I classified `ccsa2016yaris` as absent for a
+category reason, on the argument that "an Undermind deep search returns published
+literature, it does not return a George Mason crash-test finite-element model."
+**That argument is too strong and I withdraw it for this row.** A deep search DID
+return exactly that class of work, in depth, including the validation reports for
+this very model. The model's own DOI may still be absent, but the literature
+about it exists and was commissioned by this project. The correct statement for
+`ccsa2016yaris` is not "outside what a literature search returns", it is
+**"covered by a deep search that was never ingested"**, which moves it from the
+category-boundary group to the ingestion-gap group.
+
+That does not change the headline. `shah2018` remains the one in-scope absence
+from the corpus **as built**. But the count of works whose absence is explained by
+category drops from ten to nine, and `ccsa2016yaris` joins the rung-1 gap.
+
+---
+
 ## 6. `shand2011arr` is uncertain to the tool, and a human read resolves it
 
 The census returns `UNCERTAIN_RELATED_WORK` for `shand2011arr` and refuses to
