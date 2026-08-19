@@ -146,3 +146,111 @@ retraction, applied by it to someone else.
 
 **Unreviewed.** Every child `claude` process on this machine still dies on
 `deepseek-ai/DeepSeek-V4-Flash:deepinfra`, so no adversarial pass was possible.
+
+---
+
+# Addendum, 2026-08-20 00:55: why the report is absent, and the 784 KB nobody can reach
+
+Written after the coordinator supplied the run's failure mode. Everything below the first
+paragraph is my own measurement, not a relay.
+
+## The run did not fail silently, it hit a spend limit
+
+The coordinator reports 22 of 25 agents completed and three errored, all three with
+"You've hit your monthly spend limit", and that the three were `synth:report`,
+`synth:critic` and `rx:vista`, i.e. exactly the agents that produce the deliverable. The run
+was resumed at 00:41; completed agents replay from cache.
+
+**Do not read the missing report as a silent failure.** I had it recorded as "has not
+landed", which is true and uninformative. A workflow that loses only its synthesis stage
+leaves a tree that looks like an abandoned run and is not one.
+
+## Measured: the findings exist, and they exist nowhere a person will look
+
+Read directly from the run journal at
+`~/.claude/projects/-Users-josie-can-it-ford/529261e9-.../subagents/workflows/wf_5266ee59-fb9/journal.jsonl`:
+
+| quantity | measured |
+|---|---|
+| journal records | 50 |
+| records carrying a result payload | **23** |
+| total result payload | **784,798 bytes** |
+| agent identification | opaque `v2:<hash>` keys, **no labels** |
+| of that, reachable in `docs/` | `connector_revision.md` 33,546 + `corpus_revision.md` 50,504 = **84,050 bytes** |
+
+**About 700 KB of findings from 23 completed agents exist only in that journal.** Three
+properties make that worse than it sounds:
+
+1. **It is outside the repository.** The path is under `~/.claude/projects/`, not under
+   `/Users/josie/can-it-ford`. It is in no commit, on no branch and in no bundle, which is
+   the same condition the shared board was in earlier tonight.
+2. **The results are not addressable.** The `key` field is a content hash. Nothing in the
+   journal says which agent produced which payload, so recovering a specific finding means
+   reading payloads until one matches.
+3. **It is transient by design.** Session scratch directories are cleaned. Nothing warns
+   before that happens.
+
+**This is the same shape as the C-10 finding about session transcripts, one level up.** There
+the index of the wave covered 38.7 percent of it; here the deliverable covers 10.7 percent of
+what the run produced, and the rest is in a file whose only copy is outside version control.
+
+**Recommendation, and it does not need the workflow to finish:** dump the 23 payloads to
+`docs/r10/` as numbered files before anything cleans that directory. That is recoverable now
+and unrecoverable later. I have not done it: writing 700 KB of another agent's unreviewed
+output into the repo is a decision about what the repo carries, not a mechanical step, and it
+is the workflow owner's call.
+
+**One number corrected in passing:** the coordinator says 22 completed; the journal carries
+23 result payloads. I have not reconciled the difference and it does not change anything
+here. Quote whichever you can re-derive.
+
+## The spend limit supersedes a published artifact this project relies on
+
+`Console Against Can It Ford`, https://claude.ai/code/artifact/62a71c41-2845-436c-b777-61d901b8e65b,
+updated 2026-08-17, concludes from 28 days and 72,126 turns that there were **zero** Anthropic
+rate or usage limits and therefore no headroom problem to solve.
+
+**That conclusion is now superseded.** Tonight the fleet spent roughly 8.8 million subagent
+tokens across two workflows, hit the monthly spend limit, and lost the three agents that
+produce a report. Every pane reads "Now using usage credits".
+
+It was true when written. The artifact is not wrong about its own measurement window; it is
+wrong as a standing statement, and the difference is exactly the one this project keeps
+paying for. **An absence measured over a window is not a property of the system.** 28 days
+without a limit does not establish that no limit exists, and the artifact's own headline
+invites that reading.
+
+**I did not edit the artifact.** My write scope is repo paths, an artifact is an
+outward-facing surface, and I have not read its full text so I could not amend it without
+risking content loss. The URL above is the exact target. What the correction needs to say is
+one sentence: the zero-limits finding holds for 2026-07-20 to 2026-08-17 and was **falsified
+on 2026-08-19**, when a 25-agent workflow lost its synthesis stage to a monthly spend limit.
+
+## Two corrections accepted, and one of them is my own pattern used on me
+
+The coordinator withdrew two claims from its audit of this slot, unprompted.
+
+1. **"d20-reader is STALLED, silent five hours since 19:29" was false.** I was mid-turn. A
+   commit-based liveness check cannot distinguish "not committing" from "working a long
+   turn". **That is C-2's shape exactly**, a check that returns a confident verdict on a
+   state it cannot observe, and it was applied to me rather than by me. It is the ninth
+   instance of that class tonight and the first where I was the subject.
+2. **"One live approval prompt in every pane" was false**, matching the word "permission" in
+   a status bar. Corrected sweep: zero fleet-wide.
+
+Both were caught by their author. That is now the third time tonight a correction has not
+needed an auditor, which is worth more than any of the individual corrections.
+
+## Confirmed: I am running outside my declared permission mode
+
+`r8_plan.tsv` sets `d20-reader` to `acceptEdits` in its scope column while the pane reads
+`bypasspermissions on`. Permission mode is fixed at launch, so the plan file describes an
+intent the running session does not honour. I flagged this at 23:44 from my own transcript,
+which records `bypassPermissions` and no `plan` record at all, and the coordinator's sweep
+now confirms it fleet-wide.
+
+**It is not academic.** Everything I have written tonight, including this file, was written
+with access the plan says I should not have. Nothing here is unapplied, and that is the
+opposite of what the brief predicted. The general form belongs in the coordinator audit's
+section on the launcher: **a per-slot permission column that is read after launch configures
+nothing.**
