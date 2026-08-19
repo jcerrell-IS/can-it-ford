@@ -574,8 +574,13 @@ Only what I actually exercised this session appears with a verdict. The rest is
 listed as untested, because an untested connector reported as working is the
 same defect this document is about.
 
+**The highest-value item on this list is not on the Hub.** It is making the CI
+able to fail. Everything below it is an artifact; that one is the thing that
+decides whether any future artifact can be trusted.
+
 | capability | verdict | evidence | effort to use |
 |---|---|---|---|
+| **CI: make `canford-checks` ABLE TO FAIL** | **HIGHEST VALUE, above anything on the Hub** | green at job level for two days while `count_claims` emits 25 BLOCK lines and exits 1 inside it; masked at `canford-checks.yml:25` | ~2 h, and it is two steps in order, see 18a |
 | **`hf` CLI + Hub API** | **WORTH IT** | created a dataset, uploaded 3 repos, verified each by re-reading | minutes; already authenticated, write scope |
 | **Weights and Biases** | **WORTH IT, and the gap is now filled** | run `3w9sk50e`, 20 cells x 5 seeds = 100 draws logged as a distribution table | ~20 min; the script existed, only its column names were stale |
 | **Scholar Sidekick** | **WORTH IT, and it earned its keep immediately** | `checkRetraction` on the Nihei DOI returned the correct title and surfaced an **erratum** I would otherwise have cited past | seconds per citation, works anonymously |
@@ -654,3 +659,222 @@ Three separate defences caught things tonight, and they generalise:
 - **compare at the level you claim**: my first CRLF/LF comparison normalised away
   the exact thing that differed and printed "no columns differ". `cmp` found it
   at byte 513.
+
+---
+
+# PART 3, 19:0x. C-1 closed upstream, and a relay I was given was one commit stale.
+
+## 19. THE RULE, in liftable form
+
+For CLAUDE.md, if a slot owns that file. Four lines:
+
+> **Read before you write to a public target.** Before any upload that can
+> overwrite a remote file, fetch the remote's current file list and the current
+> contents of every path you are about to write, and diff them. A filename
+> collision is not a merge conflict: nothing is merging, so nothing warns you.
+> The standing "read the board before each commit" rule does not cover this,
+> because **a publish is not a commit.**
+
+Applied to this dataset before the most recent upload: fetched the remote
+`siblings` list and the live `README.md`, diffed it, confirmed 62 changed lines
+and that every file was authored by me in this session with no third-party
+content at risk, and only then uploaded.
+
+## 20. C-1 is closed, and the closure I was handed was superseded before I read it
+
+I was told d17-moving's `050ff22` closed C-1 by stating the pair "belongs to the
+late window and is **2.24x**, and does not invert", and that both computations
+were right with only a missing window label between them.
+
+**That is not what closed it, and it is not the outcome.** Read live:
+
+- `050ff22` computes **a different pair**: pure broadside against the -22.5 deg
+  split at fixed |v_rel| 3.0. That is an *arc* comparison. Mine is two *surface*
+  cells with **different** |v_rel|, 3.720 and 4.528. That commit says in its own
+  body *"I COULD NOT REPRODUCE AN INVERSION... If d18's inversion came from a
+  different window, depth or pair, name it."*
+- **`51c158b`** is the commit that closes C-1, and it reverses the relayed
+  conclusion: *"BOTH ARE CORRECT. They are different windows of the same
+  experiment, and the 2.3x is the transient one."* d17 states plainly that their
+  own T16 *"answered a DIFFERENT pair and did not close this. That was my
+  misreading."*
+
+**The outcome is not "both right, label missing". The 2.3x is WITHDRAWN**, marked
+in place at the R5 table so the error stays visible.
+
+I reproduced d17's resolution table independently from the shipped data, and it
+agrees to four digits:
+
+| arm | grid | frames/discard | seeds | (2.2, 3.0) | (4.5, 0.5) | ratio |
+|---|---|---|---|---|---|---|
+| `c3full` | g64 | 60/20 | 1 | 8621.4 N | 3811.1 N | **2.2622** |
+| `L2full` | g64 | 400/250 | 1 | 5028.4 N | 5534.7 N | **0.9085** |
+| `M1s*` | g64 | 400/250 | 5 | 5176.5 N | 5675.3 N | **0.9121** |
+| `M2s*` | g96 | 400/250 | 2 | 5315.9 N | 6246.4 N | **0.8510** |
+
+So the inversion survives a change of seed, of BC rate, and of grid.
+
+**My open confound is also closed, by d17 and correctly.** `hull_y_m` is empty
+in exactly twelve arms and all twelve are from their first session; every arm
+run since records it *and* records the same value. A recording gap, not a
+placement difference. I had labelled it "not recorded rather than a different
+placement" and that reading held.
+
+**And d17 is right about something I understated.** The pair was always the
+weakest way to state the result, because the two cells differ in *both*
+variables **and** in |v_rel|. The iso-|v_rel| arcs hold relative speed exactly
+fixed and vary only the split, and that is where the finding actually lives.
+The dataset card now leads the arcs and demotes the pair accordingly.
+
+### 20a. Why this belongs in a document about instruments
+
+The relay I was given was accurate about a commit and wrong about the outcome,
+because a newer commit on the same branch reversed it. Checking cost one
+`git log`. **A claim about a repository's state has a cheap live check, and a
+relayed one is stale the moment someone else commits.** That is the same class
+as everything in section 18: the difference between a report and a measurement.
+
+## 21. The dataset is PROVISIONAL and deliberately not frozen
+
+Batch `922514 r9_speed_surface` is running and `922515 ciford_dtrefine` is queued
+behind it, so the ensembles will grow, including on g128. The card now carries a
+**Status: PROVISIONAL** block at the top saying exactly that: the numbers are
+measured rather than estimated, but a later version with larger ensembles is the
+better one. Freezing it now would have published single-draw language for a
+result whose entire argument is that it has distributions.
+
+The reproducibility record now carries **every field the 105-paper search named
+as missing from the literature in one place**, and the particle counts, `dx` and
+depth-in-cells are measured from the shipped table rather than transcribed:
+
+| | n_grid 64 | n_grid 96 |
+|---|---|---|
+| water particles | 41,636 to 41,674 | 164,351 to 164,382 |
+| cell size `dx` | 0.147215 m | 0.098143 m |
+| depth in cells | 2.038 | 3.057 |
+| wall clock per simulated second | 0.417 s/s | 2.213 s/s |
+| GPU memory | about 630 MiB | (g128 about 3 GB) |
+
+GPU: NVIDIA GH200 120GB, driver 590.48.01, **one card, single GPU**, partition
+`gh`. **Peak observed GPU memory across the whole session was 4,069 MiB of
+97,871 MiB**, so memory was never the binding constraint, which is more useful
+to state than to imply a limit was approached.
+
+---
+
+# PART 4. The tooling and coordination ROI, sourced, and one hazard I measured rather than argued
+
+Source: `~/Downloads/Claude Code for Multi-Pane HPC Simulation Workflows_
+Effectiveness, Guardrails, and Coordination Analysis.md`, 134 lines, dated
+2026-07-24. **Read live this session**, and all five findings relayed to me
+reproduce in it at the lines cited below. This relay checked out, unlike the C-1
+one in section 20, which is why both are recorded.
+
+## 22. THE HEADLINE IS NOT ON THE HUB. IT IS THAT CI CANNOT FAIL.
+
+Restated at the top of this part because it outranks every artifact in this
+document. `canford-checks` has been **green at job level for two days** while,
+inside it, `count_claims` emits **25 BLOCK lines** and exits **1**. Masked by
+`continue-on-error: true` at `canford-checks.yml:25`.
+
+**The recommendation is not "make CI run". It runs. It is "make CI able to
+fail".** A workflow that never ran supplies no assurance; one that runs and
+swallows a failing check supplies **false** assurance, which is worse, and it
+has been doing so in production. Sixth instance of this round's dominant defect
+and the only one shipping. Ordered fix in section 18a. Owner: d16-landing.
+
+## 23. The five findings, measured against what we actually do
+
+| # | the document says | our measured state | verdict |
+|---|---|---|---|
+| 1 | ceiling of **~3-5 concurrent agents on a shared codebase** (:16, :110) | 35 worktrees, **33 distinct branches** | **already mitigated, do not cap tonight** |
+| 2 | replace a single shared handoff with **append-only, one-file-per-session plus an INDEX** (:107) | one shared board, append-only by policy, **untracked**; 148 of 232 rows exceed the safe append size | **CHEAPEST REAL FIX, do tonight** |
+| 3 | destructive-command protection **in hooks, not prose** (:11) | hooks exist and fired 8+ times on my writes tonight | **principle already implemented; the gap is hooks that cannot fail** |
+| 4 | **lean CLAUDE.md under 200 lines** (:11, :26, :93) | **939 lines**, and it grew 33 during this session | **worth doing, NOT tonight** |
+| 5 | two HPC Claude Code bugs: `XDG_RUNTIME_DIR` on compute nodes (#21026), `claude -p` when interactive exits (#12507) (:87, :119) | absent from every dispatch and from CLAUDE.md | **worth adding, cheap, not my file** |
+
+### 23.1 On the writer cap, the document is being quoted slightly against itself
+
+Its ceiling is explicitly for agents **"on the same shared codebase"**, and the
+mitigation it names in the very next breath is the one we already run: *"put
+every write-heavy pane in its own git worktree/branch"* (:112). It also says the
+twelve-session figure is *"more defensible than typical because they are
+heterogeneous"* (:110), which ours are: paper, licence, solver, renders, corpus,
+platform, landing.
+
+**So capping writers is the wrong lever.** But the document is right about the
+cost, and **the cost is being paid tonight**: it says the binding constraint
+becomes *"the human ... merge/review bottleneck"*, and d16-landing found **five
+conflicting files across four merges**, one of which silently reverted a
+published physics fix on a public page. That is the predicted failure, realised,
+in the same round. The lever is to fund the review side, not to reduce the panes.
+
+### 23.2 The board hazard, measured, with a threshold and a control
+
+The document's concern is last-writer-wins on whole-file rewrites. **Ours is a
+different and sharper mechanism, and I measured it rather than asserting it.**
+
+Eight concurrent shell processes appending one line each to a shared file,
+exactly the board's pattern:
+
+| row bytes | lines written | corrupted |
+|---|---|---|
+| 200 | 200 | **0** |
+| 500 | 200 | **0** |
+| 1000 | 200 | **0** |
+| 1023 | 200 | **0** |
+| 1500 | 200 | 30 |
+| 2000 | 200 | 23 |
+| 4000 | 200 | 83 |
+
+The mechanism is visible in the wreckage: writes chunk at **exactly 1024 bytes**
+and interleave at that boundary. One corrupted line read
+`C x 1024, A x 1024, C x 976` — writer A's row spliced into the middle of
+writer C's. **The line count stays correct**, so a row count is not a detector.
+
+Against the live board: **232 rows, 148 of them (64 percent) are at or above
+1024 bytes**, median 1284, max 5252. My own rows are among the worst offenders.
+
+**No damage has occurred yet.** A splice detector (any row carrying more than
+one `| YYYY-MM-DD HH:MM |` header) returns **zero**, and the 35 non-pipe lines
+are the file's preamble, not fragments. So this is a **latent** hazard: the
+pattern is unsafe at the sizes we use, and we have been lucky or sufficiently
+staggered.
+
+Two fixes, and the cheap one needs no infrastructure:
+
+1. **Tonight, zero cost: keep every board row under 1023 bytes.** Measured safe
+   at every length tested up to that. Long findings go in a committed document
+   and the row cites the path and SHA, which is what a row is supposed to do.
+   **I am adopting this for my own rows from here on.**
+2. **Next round: one file per session plus an INDEX**, as the document
+   recommends, which is conflict-free by construction rather than by discipline.
+
+One more thing the document does not raise: **the board is untracked**. So a
+spliced row is unrecoverable, has no history, and is invisible to review or CI.
+That is a second reason the long-row pattern is worse here than the document's
+own framing implies.
+
+### 23.3 Why the CLAUDE.md diet is right and still not tonight
+
+939 lines against a recommended 200 is a 4.7x overrun, and it grew during this
+session. But it is the **highest-risk edit in the repo**: every slot reads it,
+its content is quoted verbatim by people outside the repo, and it already
+carries a standing rule against positional citation *because it changes several
+times a night*. Cutting it 939 -> 200 while eleven sessions are live would
+invalidate citations mid-flight, including citations in work being merged
+tonight.
+
+**Next round, one owner, and by moving content into referenced files rather than
+deleting it.** The facts in it are load-bearing; its length is the problem, not
+its content.
+
+## 24. What is actually mine to fix, stated plainly
+
+Of the five, **none of the fixes sits in this slot's write scope**:
+`.github/workflows/` is d16-landing's, `CLAUDE.md` and `.claude/hooks/` are
+shared and unowned this round, and the board's format is a fleet convention.
+
+What I can do and have done: measure them, give each a threshold and a control
+so the next session argues with a number instead of an opinion, and adopt the
+one rule that needs no permission, the sub-1024-byte board row.

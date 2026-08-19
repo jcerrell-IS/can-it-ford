@@ -225,6 +225,47 @@ def headline_pair(rows: list[dict] | None = None) -> dict:
     return res
 
 
+ial_ARMS = [
+    ("c3full", ["c3full"], "g64", "60/20", "transient"),
+    ("L2full", ["L2full"], "g64", "400/250", "settled"),
+    ("M1s*", CANONICAL_SURFACE_FAMILIES, "g64", "400/250", "settled"),
+    ("M2s*", ["M2s0", "M2s1"], "g96", "400/250", "settled"),
+]
+
+
+def arm_ratio_table(rows: list[dict] | None = None) -> list[dict]:
+    """The headline pair recomputed in every arm that holds both cells.
+
+    Exists because d17-moving WITHDREW the 2.3x figure in 51c158b once the two
+    numbers were shown to be different windows of the same experiment. The
+    inversion is not one arm's opinion: it survives a change of seed, of
+    bc_per_frame rate, and of grid. This table is the evidence for that, and it
+    is computed rather than transcribed.
+    """
+    rows = rows if rows is not None else load_records()
+    out = []
+    for name, fams, grid, window, kind in ial_ARMS:
+        by: dict = {}
+        for r in _select(rows, list(fams)):
+            c = _cell(r)
+            v = _f(r, "force_horiz_mag_N")
+            if c is not None and v is not None:
+                by.setdefault(c, []).append(v)
+        if HEADLINE_A not in by or HEADLINE_B not in by:
+            continue
+        a = statistics.mean(by[HEADLINE_A])
+        b = statistics.mean(by[HEADLINE_B])
+        out.append({
+            "arm": name, "grid": grid, "frames_discard": window, "window_kind": kind,
+            "n_seeds": len(by[HEADLINE_A]),
+            "lower_vrel_N": round(a, 1), "higher_vrel_N": round(b, 1),
+            "ratio": round(a / b, 4) if b else None,
+        })
+    if not out:
+        raise NoDataError("no arm held both headline cells; cannot build the ratio table")
+    return out
+
+
 def iso_vrel_arcs(rows: list[dict] | None = None) -> list[dict]:
     """SPREAD 2. S = (max-min)/mean across each iso-|v_rel| arc.
 

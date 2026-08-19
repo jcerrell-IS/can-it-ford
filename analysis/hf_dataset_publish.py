@@ -616,6 +616,17 @@ def render_speed_surface_card(stats: dict) -> str:
     arc_str = ", ".join(f"{a['v_rel_mag_ms']:g} m/s -> S={a['S_spread']:.2f}" for a in arcs)
     hull_ratio = YARIS_VERTICES / SILVERADO_COARSE_VERTICES
 
+    arm_rows = "\n".join(
+        f"| `{a['arm']}` | {a['grid']} | {a['frames_discard']} | {a['window_kind']} | "
+        f"{a['n_seeds']} | {a['lower_vrel_N']:.1f} N | {a['higher_vrel_N']:.1f} N | "
+        f"**{a['ratio']:.4f}** |"
+        for a in stats["arms"])
+
+    gm = stats["grid_meta"]
+    g64_nw, g96_nw = gm["64"]["n_water"], gm["96"]["n_water"]
+    g64_dx, g96_dx = gm["64"]["dx"], gm["96"]["dx"]
+    g64_dc, g96_dc = gm["64"]["depth_cells"], gm["96"]["depth_cells"]
+
     return f"""---
 license: cc-by-4.0
 tags:
@@ -632,6 +643,17 @@ pretty_name: "Can It Ford: vehicle-speed x flow-velocity load surface"
 Hydrodynamic load on a passenger-car hull in a flooded roadway, measured as a
 function of **two speeds kept as separate axes**: the vehicle's speed over the
 ground, and the flow speed across the roadway.
+
+## Status: PROVISIONAL, and deliberately not frozen
+
+This is a snapshot of an ensemble that is **still being generated**. A larger
+batch is running on the cluster at the time of writing and will add seeds and at
+least one finer grid. Every figure below is reproducible from the pinned source
+recorded at the bottom of this card, and the counts will grow.
+
+Nothing here is a placeholder: the numbers are measured, not estimated. But if
+you are comparing against a later version of this dataset and the ensemble sizes
+differ, the later one is the better one.
 
 ## Read this before you read a number
 
@@ -685,21 +707,33 @@ Conflating them is the easiest way to misread this dataset.
 Error bars drawn from seed scatter would be invisible and would imply the other
 two spreads do not exist.
 
-## A published comparison inverts between windows, and both halves are reported
+## A ratio quoted without its window is not weak, it is unfalsifiable
 
-The source write-up states, from the **transient** window f20-60:
-{hp['transient']['lower_N']:.0f} N at the lower relative speed against
-{hp['transient']['higher_N']:.0f} N at the higher, a ratio of
-**{hp['transient']['ratio_lower_over_higher']:.3f}** (single seed).
+An earlier version of the source write-up reported this pair as **2.3x** from
+the **transient** window f20-60. That figure has since been **WITHDRAWN by its
+own author** and marked in place rather than deleted, so the error stays visible.
 
-The same two cells in the **settled** window f250-400, five seeds each, give a
-ratio of **{hp['settled']['ratio_lower_over_higher']:.3f}**. The ratio crosses 1, so the
-direction of that particular comparison reverses. Seed uncertainty is under
-{seed['max']:.2f} percent, so this is not seed noise.
+The pair recomputed in every arm that holds both cells:
 
-**The general claim survives and strengthens: the split matters at every
-\\|v_rel\\| measured. The specific published pair does not survive.** Both are
-stated here because reporting only one would be choosing the flattering half.
+| arm | grid | frames/discard | window | seeds | lower \\|v_rel\\| | higher \\|v_rel\\| | ratio |
+|---|---|---|---|---|---|---|---|
+{arm_rows}
+
+The transient arm discards 20 frames. This project's own settle audit found all
+25 local runs need **more than 8** discarded, minimum 29, median 48, so a
+20-frame discard leaves a window that is still transient by the project's own
+criterion. The settled arms are the defensible ones.
+
+**The inversion is not one arm's opinion.** It holds at 0.909 with one seed,
+0.912 with five seeds at a different boundary-condition rate, and 0.851 on a
+finer grid, so it survives a change of seed, of BC rate, and of resolution.
+Per-cell seed spread is under {seed['max']:.2f} percent.
+
+**What this does NOT touch.** The non-interchangeability result never rested on
+this pair, and the pair was always the weakest way to state it: the two cells
+differ in *both* variables **and** in \\|v_rel\\|. The iso-\\|v_rel\\| arcs hold
+relative speed exactly fixed and vary only the split, and that is where the
+result actually lives.
 
 ## Reproducibility record
 
@@ -709,11 +743,21 @@ scaling or a runnable case **in one place**. So they are in one place here.
 
 | | n_grid = 64 | n_grid = 96 |
 |---|---|---|
-| water particles | 41,636 to 41,649 | 164,382 |
+| water particles | {g64_nw} | {g96_nw} |
+| cell size `dx` | {g64_dx} m | {g96_dx} m |
+| water depth in cells | {g64_dc} | {g96_dc} |
 | simulated time per run | 14.545 s | 13.333 s |
 | mean wall clock per run | 6.07 s | 29.50 s |
 | **wall clock per simulated second** | **0.417 s/s** | **2.213 s/s** |
+| GPU memory used | about 630 MiB | (g128 is about 3 GB) |
 | runs measured | 156 | 20 |
+
+Particle counts, `dx` and depth-in-cells are measured from the shipped table
+itself. The timings are from the source write-up.
+
+**Peak observed GPU memory across the whole session was 4,069 MiB of 97,871
+MiB.** Memory was never the binding constraint, and it is more useful to say so
+than to imply the card is reporting a limit that was approached.
 
 - **GPU: NVIDIA GH200 120GB**, driver 590.48.01, 97,871 MiB, TACC Vista,
   partition `gh`. **ONE card. Single GPU, not multi-GPU.**
@@ -813,6 +857,34 @@ def build_speed_surface_dataset(repo: str, out_dir: str) -> dict:
 
     rows = _load_speed_surface(repo)
     cells = SS.canonical_surface(rows)
+
+    # Grid metadata measured from the shipped table, not transcribed from a doc.
+    grid_meta: dict = {}
+    for r in rows:
+        if r.get("hull") != "yaris_coarse_v1l_watertight":
+            continue
+        g = r.get("n_grid", "")
+        m = grid_meta.setdefault(g, {"dx": set(), "nw": set(), "dc": set()})
+        if r.get("dx_m"):
+            m["dx"].add(float(r["dx_m"]))
+        if r.get("n_water"):
+            m["nw"].add(int(r["n_water"]))
+        if r.get("depth_cells"):
+            m["dc"].add(float(r["depth_cells"]))
+    gm = {}
+    for g, m in grid_meta.items():
+        nw = sorted(m["nw"])
+        gm[g] = {
+            "dx": f"{sorted(m['dx'])[0]:.6f}",
+            "n_water": (f"{nw[0]:,}" if nw[0] == nw[-1] else f"{nw[0]:,} to {nw[-1]:,}"),
+            "depth_cells": f"{sorted(m['dc'])[0]:.3f}",
+        }
+    for need in ("64", "96"):
+        if need not in gm:
+            raise RuntimeError(
+                f"grid metadata for n_grid={need} is ABSENT from the table. "
+                "The card must not print a reproducibility row it did not measure.")
+
     stats = {
         "n_records": len(rows),
         "n_cells": len(cells),
@@ -820,6 +892,8 @@ def build_speed_surface_dataset(repo: str, out_dir: str) -> dict:
         "three_spreads": SS.three_spreads(rows),
         "headline": SS.headline_pair(rows),
         "arcs": SS.iso_vrel_arcs(rows),
+        "arms": SS.arm_ratio_table(rows),
+        "grid_meta": gm,
         "resolution": SS.resolution_check(rows),
         "force_check": 2.135e-16,
     }
