@@ -87,31 +87,73 @@ def read_ply_vertices_faces(path: Path):
     return np.asarray(m.vertices, dtype=np.float64), np.asarray(m.faces, dtype=np.int64)
 
 
-def water_surface(w, h, window, cube_mult, iso, smooth_mult):
-    """splashsurf reconstruction of the water, cropped to the render window."""
+def water_surface(w, h, window, cube_mult, iso, smooth_mult, smooth_iters, floor_z):
+    """splashsurf reconstruction of the water, cropped to the render window.
+
+    TWO CORRECTIONS LIVE HERE, both measured on 2026-08-19, both of which made the
+    water effectively invisible in the first export.
+
+    1. THE UNIT CONVENTION OF `reconstruct_surface` IS NOT WHAT ITS OWN DOCSTRING
+       SAYS. The installed build documents "Note that all parameters use absolute
+       distance units and are not relative to the particle radius", and that is
+       FALSE for smoothing_length and cube_size: they are read as MULTIPLES of the
+       particle radius, exactly like the sibling `reconstruction_pipeline`, whose
+       docstring says so explicitly. Held-fixed measurement on one frame, 3779
+       particles of median spacing 0.0404 m, particle_radius 0.04566 m:
+
+         smoothing_length=2.0*r, cube_size=0.75*r  (absolute, per the docstring)
+             -> 3779 connected bodies, enclosed volume 0.0002 m3
+         smoothing_length=2.0,   cube_size=0.75    (relative)
+             -> 6 connected bodies, enclosed volume 1.4570 m3
+
+       3779 bodies for 3779 particles is one blob per particle: passing absolute
+       units shrinks the kernel support by a factor of the radius, here to about
+       8 mm against a 40 mm particle spacing, so no particle ever reaches a
+       neighbour and the fluid never becomes a fluid. The docstring is a secondary
+       source and it is wrong; the sweep above is the primary one.
+
+    2. THE PARTICLE RADIUS MUST CARRY THE PARTICLE'S VOLUME, not half the grid
+       spacing. warpmpm seeds one particle per h^3 of water (measured: 48367
+       particles * h^3 = 19.29 m3 against a slab of 8.30 x 8.31 x 0.294 m), so the
+       radius of the equivalent sphere is (3 h^3 / 4 pi)^(1/3) = 0.6204 h, not
+       0.5 h. The old 0.5 h understated each particle's volume by 47 percent.
+    """
     import pysplashsurf
     (x0, x1, y0, y1) = window
     pad = 6.0 * h
     m = ((w[:, 0] >= x0 - pad) & (w[:, 0] <= x1 + pad) &
          (w[:, 1] >= y0 - pad) & (w[:, 1] <= y1 + pad))
     wc = np.ascontiguousarray(w[m].astype(np.float64))
-    pr = 0.5 * h
-    rec = pysplashsurf.reconstruct_surface(
+    # sphere of volume h^3: one warpmpm water particle's share of space
+    pr = (3.0 / (4.0 * np.pi)) ** (1.0 / 3.0) * h
+    # `reconstruction_pipeline` rather than `reconstruct_surface`: it applies the
+    # WEIGHTED Laplacian smoothing of Loschner, Bottcher, Jeske and Bender 2023,
+    # which is the published method for this exact artefact. Raw marching cubes
+    # over an SPH color field is bumpy at the scale of the particle spacing, and
+    # unsmoothed it reads as wet gravel rather than as water: the bumps are a
+    # sampling artefact of the reconstruction, NOT structure in the solver's
+    # particle field, so removing them removes an artefact rather than data.
+    # Its docstring states the relative unit convention explicitly, which is the
+    # convention `reconstruct_surface` also uses in practice, see above.
+    md, _rec = pysplashsurf.reconstruction_pipeline(
         wc, particle_radius=pr, rest_density=1000.0,
-        smoothing_length=smooth_mult * pr, cube_size=cube_mult * pr,
-        iso_surface_threshold=iso, multi_threading=True, subdomain_grid=True)
-    mesh = rec.mesh
+        smoothing_length=smooth_mult, cube_size=cube_mult,
+        iso_surface_threshold=iso, multi_threading=True, subdomain_grid=True,
+        mesh_cleanup=True, mesh_smoothing_weights=True,
+        mesh_smoothing_weights_normalization=13.0,
+        mesh_smoothing_iters=int(smooth_iters),
+        compute_normals=False)
+    mesh = md.mesh
     V = np.asarray(mesh.vertices, dtype=np.float64)
     F = np.asarray(mesh.triangles, dtype=np.int64)
 
     # CONSISTENT WINDING IS LOAD-BEARING, not cosmetic. A path tracer decides
-    # "inside the water" from the surface normal, so an inconsistently wound mesh
-    # makes a transmissive material render as near-invisible glass with no
-    # refraction and no volume absorption. Measured on the first export: the mesh
-    # was edge-manifold (is_watertight True) but enclosed 0.0005 m3 for a body
-    # roughly 6 x 7 x 0.5 m, because the signed volume was cancelling. The water
-    # was simply absent from the render, which read as "the water is invisible"
-    # rather than as a geometry bug.
+    # "inside the water" from the surface normal, so an inward-wound mesh renders
+    # as near-invisible glass with no refraction and no volume absorption.
+    # NOTE, correcting an earlier note in this same function: winding was NOT the
+    # cause of the 0.0005 m3 first export. That was correction 1 above, the unit
+    # convention. fix_normals() was measured to change nothing there (0.0005 m3
+    # before and after), so do not credit it with a fix it did not perform.
     import trimesh
     tm = trimesh.Trimesh(vertices=V, faces=F, process=False)
     tm.fix_normals()
@@ -119,14 +161,183 @@ def water_surface(w, h, window, cube_mult, iso, smooth_mult):
     if vol < 0:                       # fix_normals can settle on inward
         tm.invert()
         vol = float(tm.volume)
-    print("[prep] water mesh: watertight=%s enclosed volume %.4f m3 after winding fix"
-          % (tm.is_watertight, vol))
-    if vol < 0.1:
-        print("[prep] WARNING: enclosed volume is implausibly small. The volume "
-              "absorption will not read. Do not present this frame as showing "
-              "water depth.")
-    return (np.asarray(tm.vertices, dtype=np.float64),
-            np.asarray(tm.faces, dtype=np.int64), int(m.sum()), int(len(w)))
+
+    # THE FALSIFIER. The reconstructed surface must enclose roughly the volume the
+    # particles actually carry, n_kept * h^3, because warpmpm seeds one particle
+    # per h^3 of water. A surface that fragments into one blob per particle passes
+    # every other check available here: it is edge-manifold, `is_watertight` is
+    # True, its bounding box matches the particle cloud exactly, and it has more
+    # triangles than a correct mesh. Only the enclosed volume separates it from a
+    # real free surface, so this ratio is checked and PRINTED on every export
+    # rather than left as a thing someone might notice in the picture.
+    n_kept = int(m.sum())
+    expect = n_kept * h ** 3
+    ratio = vol / expect if expect > 0 else float("nan")
+    bodies = int(tm.body_count)
+    print("[prep] water mesh: %d verts %d tris, %d connected bodies, watertight=%s"
+          % (len(V), len(F), bodies, tm.is_watertight))
+    print("[prep] water volume: enclosed %.4f m3 against particle-carried %.4f m3 "
+          "(n_kept %d * h^3), ratio %.3f" % (vol, expect, n_kept, ratio))
+    if not (0.5 <= ratio <= 1.6):
+        raise SystemExit(
+            "WATER SURFACE REJECTED: enclosed volume %.4f m3 is %.3f of the "
+            "%.4f m3 the particles carry. Outside [0.5, 1.6] the surface is not a "
+            "reconstruction of this fluid and must not be rendered. A ratio near "
+            "zero with a body count near the particle count is the units bug "
+            "documented at the top of this function." % (vol, ratio, expect))
+    if bodies > 0.02 * n_kept:
+        raise SystemExit(
+            "WATER SURFACE REJECTED: %d connected bodies for %d particles. The "
+            "project standing rule is that water reads as ONE connected fluid "
+            "body; a body count near the particle count is the units bug."
+            % (bodies, n_kept))
+    V2 = np.asarray(tm.vertices, dtype=np.float64)
+    F2 = np.asarray(tm.faces, dtype=np.int64)
+    # Inset from the actual water extent, not from the requested window: the water
+    # body may end at the solver domain well inside the window, and the bead forms
+    # wherever the PARTICLES stop.
+    bead = 3.5 * pr
+    rect = (max(x0, V2[:, 0].min() + bead), min(x1, V2[:, 0].max() - bead),
+            max(y0, V2[:, 1].min() + bead), min(y1, V2[:, 1].max() - bead))
+    V3, F3, nb = clip_to_rect(V2, F2, rect, floor_z)
+    print("[prep] clipped to %.2f x %.2f m (bead inset %.3f m), %d boundary edges "
+          "skirted to the floor, %d -> %d tris"
+          % (rect[1] - rect[0], rect[3] - rect[2], bead, nb, len(F2), len(F3)))
+    sz, ncol = surround_height(V3, rect, h)
+    print("[prep] surround height %.4f m, median of %d column maxima in the "
+          "0.45 m band inside the clip boundary" % (sz, ncol))
+    return V3, F3, int(m.sum()), int(len(w)), rect, sz
+
+
+def surround_height(V, rect, h, band=0.45):
+    """The height the presentational surround must sit at to meet the water mesh.
+
+    Measured ON THE MESH THE SURROUND ACTUALLY TOUCHES, in a band just inside the
+    clipped boundary, as the median of per-column MAXIMA. Column maxima because
+    the mesh is a closed volume and its vertices are half top surface, half floor;
+    a plain median lands between the two and was the first version of this bug.
+
+    Why not reuse still_water_level(): that measures the PARTICLE field, and the
+    reconstructed isosurface sits ABOVE the topmost particle centre, by
+    construction of the SPH color field. MEASURED, not assumed: on
+    g64_yaris_regression frame 60 the offset is +0.0920 m, which is 2.01 particle
+    radii, not the one radius a first guess suggested. Small in absolute terms and
+    glaringly visible as a step running round the patch. The two numbers answer
+    different questions, so both are computed and both are reported rather than
+    one being reused.
+
+    CHECK WORTH KEEPING: this height minus the floor came out 0.2950 m against the
+    run's own realized_depth_m of 0.2944 m, agreeing to 0.2 percent. That is an
+    independent confirmation that the reconstruction reproduces the solver's water
+    depth away from the vehicle, arrived at through splashsurf and a column-maxima
+    statistic rather than from the summary field.
+    """
+    x0, x1, y0, y1 = rect
+    inb = ((V[:, 0] < x0 + band) | (V[:, 0] > x1 - band) |
+           (V[:, 1] < y0 + band) | (V[:, 1] > y1 - band))
+    P = V[inb]
+    if len(P) < 200:
+        P = V
+    cell = 2.0 * h
+    key = (np.floor(P[:, 0] / cell).astype(np.int64) * 1000003 +
+           np.floor(P[:, 1] / cell).astype(np.int64))
+    o = np.argsort(key, kind="stable")
+    ks, zs = key[o], P[o, 2]
+    bnd = np.flatnonzero(np.diff(ks)) + 1
+    tops = [zs[a:b].max() for a, b in zip(np.r_[0, bnd], np.r_[bnd, len(zs)])]
+    return float(np.median(tops)), len(tops)
+
+
+def clip_to_rect(V, F, rect, floor):
+    """Cut the reconstructed water to `rect` and re-close it with a vertical skirt.
+
+    WHY. splashsurf closes the isosurface at the edge of the particle support, and
+    that closing surface curls UP into a raised bead a few centimetres proud of the
+    free surface, running right round the patch. Against a flat presentational
+    surround the bead reads as a rectangular plateau with a lip, which is the
+    single most artificial thing left in the frame. It is an artefact of where the
+    particles stop, not a feature of the flow, so removing it removes an artefact.
+
+    Faces are dropped whole, never split, so no vertex position is ever moved and
+    no new water is invented: the surviving surface is exactly the reconstruction.
+    The skirt then joins the cut boundary straight down to the floor plane, which
+    keeps the mesh a CLOSED volume. That matters beyond tidiness: Cycles decides
+    what is inside the fluid by counting surface crossings, so an open shell makes
+    the volume absorption leak and the water stops carrying depth.
+    """
+    import trimesh
+    from trimesh.grouping import group_rows
+    x0, x1, y0, y1 = rect
+    c = F.reshape(-1)
+    inside = ((V[:, 0] >= x0) & (V[:, 0] <= x1) &
+              (V[:, 1] >= y0) & (V[:, 1] <= y1))
+    keep = inside[c].reshape(-1, 3).all(axis=1)
+    F2 = F[keep]
+    if len(F2) == 0:
+        return V, F, 0
+    used = np.unique(F2)
+    remap = -np.ones(len(V), dtype=np.int64)
+    remap[used] = np.arange(len(used))
+    V2 = V[used]
+    F2 = remap[F2]
+
+    tm = trimesh.Trimesh(vertices=V2, faces=F2, process=False)
+    es = tm.edges_sorted
+    # group_rows with require_count=1 returns a FLAT index array, not a list of
+    # groups; indexing it as groups raises "invalid index to scalar variable".
+    bnd = (np.asarray(group_rows(es, require_count=1), dtype=np.int64)
+           if len(es) else np.zeros(0, dtype=np.int64))
+    if len(bnd) == 0:
+        return V2, F2, 0
+    be = es[bnd]                                   # (M,2) boundary edges
+    base = len(V2)
+    lo = V2[np.unique(be)].copy()
+    idx = {int(v): base + i for i, v in enumerate(np.unique(be))}
+    lo[:, 2] = floor
+    Vs = np.vstack([V2, lo])
+    quads = []
+    for a, b in be:
+        a2, b2 = idx[int(a)], idx[int(b)]
+        quads.append((a, b, b2))
+        quads.append((a, b2, a2))
+    Fs = np.vstack([F2, np.array(quads, dtype=np.int64)])
+    return Vs, Fs, len(be)
+
+
+def still_water_level(w, cx, cy, h, r_excl=3.2):
+    """The undisturbed free-surface height, MEASURED from the particle field.
+
+    Needed because the presentational surround has to meet the reconstructed
+    patch at the right height, and two cheaper answers are both wrong:
+
+      - the median z of the reconstructed SURFACE mixes the top of the water with
+        its bottom, since the mesh is a closed volume resting on the floor. On
+        g64_yaris_regression frame 60 that returns 0.506 m against a true free
+        surface near 0.73 m, so the surround sat 0.16 m low and the simulated
+        water rendered as a raised plateau with a lip round it.
+      - summary.json depth_m is the NOMINAL depth, not the realised one, and the
+        realised surface also moves during the run.
+
+    So: drop every particle within r_excl of the vehicle, because those are the
+    bow wave and the wake and are exactly the disturbed part; bin the rest into
+    columns 2h wide; take the highest particle in each column, which is that
+    column's free surface; and report the median across columns. Median rather
+    than mean so a few spray particles cannot lift it.
+    """
+    d = np.hypot(w[:, 0] - cx, w[:, 1] - cy)
+    far = w[d > r_excl]
+    if len(far) < 200:
+        return float(np.percentile(w[:, 2], 99.0)), 0
+    cell = 2.0 * h
+    ix = np.floor(far[:, 0] / cell).astype(np.int64)
+    iy = np.floor(far[:, 1] / cell).astype(np.int64)
+    key = ix * 1000003 + iy
+    order = np.argsort(key, kind="stable")
+    key_s, z_s = key[order], far[order, 2]
+    bnd = np.flatnonzero(np.diff(key_s)) + 1
+    tops = [z_s[a:b].max() for a, b in
+            zip(np.r_[0, bnd], np.r_[bnd, len(z_s)])]
+    return float(np.median(tops)), len(tops)
 
 
 def place_hull(hull_ply: Path, pv, h):
@@ -168,10 +379,16 @@ def main():
     ap.add_argument("--hull", required=True, help="hull .ply, READ not copied")
     ap.add_argument("--outdir", required=True)
     ap.add_argument("--half", type=float, default=3.4)
-    ap.add_argument("--cube-mult", type=float, default=1.0,
-                    help="marching-cubes voxel, in particle radii")
-    ap.add_argument("--smooth-mult", type=float, default=2.0)
+    ap.add_argument("--cube-mult", type=float, default=0.75,
+                    help="marching-cubes voxel, in MULTIPLES OF THE PARTICLE "
+                         "RADIUS. Passed straight through; see water_surface().")
+    ap.add_argument("--smooth-mult", type=float, default=2.0,
+                    help="SPH smoothing length, in MULTIPLES OF THE PARTICLE "
+                         "RADIUS, despite what the library docstring claims.")
     ap.add_argument("--iso", type=float, default=0.6)
+    ap.add_argument("--smooth-iters", type=int, default=25,
+                    help="weighted-Laplacian smoothing iterations on the water "
+                         "surface (Loschner et al 2023). 0 disables.")
     ap.add_argument("--no-water", action="store_true",
                     help="hull only. For a class with no rollout data on this "
                          "machine, so no water field is invented for it.")
@@ -221,15 +438,26 @@ def main():
     write_ply(out / "hull.ply", Qw, HF)
 
     window = (cx - a.half, cx + a.half, cy - a.half, cy + a.half)
+    swl, ncol = still_water_level(z["water"][f], cx, cy, h)
+    print("[prep] still-water level %.4f m, measured as the median of %d column "
+          "maxima beyond 3.2 m from the vehicle (floor %.4f, so %.4f m of water)"
+          % (swl, ncol, floor, swl - floor))
 
     nwater = 0
     if not a.no_water:
-        WV, WF, kept, tot = water_surface(z["water"][f], h, window,
-                                          a.cube_mult, a.iso, a.smooth_mult)
+        WV, WF, kept, tot, wrect, surz = water_surface(
+            z["water"][f], h, window, a.cube_mult, a.iso, a.smooth_mult,
+            a.smooth_iters, floor)
+        print("[prep] surround vs particle free surface: %.4f m against %.4f m, "
+              "offset %+.4f m = %.2f particle radii"
+              % (surz, swl, surz - swl,
+                 (surz - swl) / ((3.0 / (4.0 * np.pi)) ** (1.0 / 3.0) * h)))
         write_ply(out / "water.ply", WV, WF)
         nwater = len(WF)
         print("[prep] water surface: %d verts %d tris from %d of %d particles "
-              "(splashsurf, radius %.5f m)" % (len(WV), len(WF), kept, tot, 0.5 * h))
+              "(splashsurf, radius %.5f m)"
+              % (len(WV), len(WF), kept, tot,
+                 (3.0 / (4.0 * np.pi)) ** (1.0 / 3.0) * h))
 
     scene = {
         "run": run.name, "frame": f, "fps": int(z["fps"]),
@@ -238,6 +466,8 @@ def main():
         "hull_fit_nn_m": score, "hull_faces": int(len(HF)),
         "water_faces": nwater, "no_water": bool(a.no_water),
         "car_center": [cx, cy], "half": a.half,
+        "still_water_z": swl, "still_water_columns": ncol,
+        "water_rect": None, "surround_z": None,
         "hull_bbox_lo": Qw.min(0).tolist(), "hull_bbox_hi": Qw.max(0).tolist(),
         "veh_zmin": float(vpf[:, 2].min()),
         "transform_max_err_m": worst,
@@ -247,6 +477,9 @@ def main():
             "final_disp_mag_m", "passthrough_max_frac", "C2_veh_zmin_rise",
             "realized_rho", "solid_volume_m3", "label")},
     }
+    if not a.no_water:
+        scene["water_rect"] = [float(v) for v in wrect]
+        scene["surround_z"] = float(surz)
     (out / "scene.json").write_text(json.dumps(scene, indent=2))
     print("[prep] wrote %s" % (out / "scene.json"))
 
