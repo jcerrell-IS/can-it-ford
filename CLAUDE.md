@@ -937,3 +937,46 @@ distance. It was unavailable. Sessions d11, d12, d14, d15, d18 and d19 all corre
 their claims UNREVIEWED rather than faking the review. **Those claims remain unreviewed.**
 Do not treat any of them as adversarially checked, and do not re-attempt the subagent
 expecting a different result until the model id is fixed.
+
+
+## ENVIRONMENT TRUTH THE PROJECT ALREADY PAID FOR AND FILED WHERE NOTHING READS IT
+
+Added 2026-08-19 from the coordinator audit, finding V7. Both items below are Claude Code
+bugs affecting HPC work. The first appears TEN TIMES in `_inbox/LIVE_SESSION_LOG.md` and
+ZERO times in this file, the skills, or the register, so every session that needed it had
+to rediscover it.
+
+**1. `XDG_RUNTIME_DIR` on SLURM COMPUTE nodes (issue #21026).** The Bash tool can fail on a
+compute node with `EACCES ... mkdir '/run/user/...'` because it hard-codes a runtime dir and
+ignores `XDG_RUNTIME_DIR`. It works on login nodes. First line on any compute node:
+
+    export XDG_RUNTIME_DIR="/tmp/xdg_runtime_${USER}" && mkdir -p "$XDG_RUNTIME_DIR"
+
+This did NOT apply on 2026-08-19, because every session ran Claude Code on the Mac and
+reached Vista through `ssh` and `scripts/tacc.sh`, which is the right architecture for
+exactly this reason. Keep it that way.
+
+**2. Interactive mode exiting immediately (issue #12507), and `claude -p` as the
+workaround.** Reported cause is stdin being consumed by shell-detection subprocesses.
+`claude -p` non-interactive mode is the documented workaround and appears ZERO times in
+`scripts/r8/`.
+
+The 2026-08-19 relaunch produced this SYMPTOM exactly: nine windows fell back to a bare zsh
+prompt and a sender then pasted 4 KB of markdown into a shell, which executed it line by
+line. The recorded MECHANISM was different, session-id reuse, and which one applied has not
+been resolved. Two things hold regardless: the documented workaround was unavailable to the
+launcher, and **the real defect was that a launcher failure degraded into pasting a prompt
+into a shell.** A launcher must verify what it is talking to before it speaks.
+
+## A NOVELTY CLAIM IN THIS PROJECT'S OWN TOOLING CORPUS IS REFUTED
+
+The corpus document "AI Research Tools and Scientific-Computing Infrastructure" states that
+"no published Material Point Method (or SPH) simulation of a road vehicle in floodwater yet
+exists ... so Can It Ford is genuinely first-of-kind". It attributes that to a SUBAGENT
+ABSENCE RESULT and names its own falsifier.
+
+**The falsifier has been met.** This file already records four prior fording or wading
+simulations, and the 2026-08-19 deep-search layer adds at least four more, including
+`[Lyu23]` `10.1016/j.compfluid.2023.106144`, an entirely particle-based 3D SPH vehicle
+wading model. A document that shaped this project's priorities rested a novelty claim on an
+absence found by a search nobody could inspect. Do not cite that claim.
