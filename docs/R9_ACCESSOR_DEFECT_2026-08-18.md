@@ -1653,3 +1653,127 @@ rather than answering it.
 0.32 sigma, and **the blocked SE is 2.0 to 2.6 times the effect being predicted.** The column
 as run cannot resolve its own compressibility correction. Confirming that needs either a longer
 window or damping of the acoustic ringing that sets `tau_int`, and neither was done here.
+
+---
+
+# 33. The column never goes quiet, and that WEAKENS my own exoneration of the solver
+
+Job **923219**, same two arms, now instrumented for the well-balancedness test that
+`Qui18b` defines. **Citation verified two independent ways before use**, not taken on
+report: the workspace index and a Crossref resolution agree on title, author
+(Nathan J. Quinlan), journal, volume 177, pages 33-45 and year 2018,
+doi `10.1016/j.compfluid.2018.09.019`, `verifyCitation` verdict **matched** at high
+confidence. Its own reference list carries Botta 2004 "Well balanced finite volume methods
+for nearly hydrostatic flows", so the framing is native to that literature.
+
+**I could not do this from the runs I already had: I never recorded velocity.** Row keys
+carried no `v` and no kinetic energy. Saying so cost one 1:40 job and is cheaper than a
+number I could not source.
+
+## 33.1 The result: it does not decay, it GROWS
+
+| arm | KE/PE above floor, graded window | frame 0 to final | vmax/sqrt(gH) | vrms/sqrt(gH) |
+|---|---|---|---|---|
+| control | 1.0914e-02 | 5.187e-03 to 9.252e-03, **ratio 1.784** | 0.2868 | 0.0994 |
+| bcfix | 5.4951e-03 | 3.981e-03 to 4.513e-03, **ratio 1.134** | 0.2520 | 0.0716 |
+| **Qui18b** | **1e-13 to 1e-18** | decays to machine zero | **~1e-4** | |
+
+**KE/PE is 11.0 orders of magnitude above Quinlan's machine zero, and the maximum velocity
+is 2200 to 2600 times the reference.** Neither arm decays; both **increase** across the
+run. The one-line floor fix halves KE/PE and does not remotely repair it.
+
+**So the scheme is not well balanced, by a wide margin, and that is a structural property
+rather than a tolerance, which is why it transfers across methods where a number would
+not.** Three things are now separable and all three are decoupled from each other:
+
+| property | status | changed by the floor fix? |
+|---|---|---|
+| mass conservation at the floor | 4.04 % lost, **fixed 96.4 %** | **yes** |
+| mean hydrostatic gradient | correct to ~1 % | no, 0.32 sigma |
+| **quiescence / well-balancedness** | **fails by 11 orders** | no, still 1e-2 to 1e-3 |
+
+## 33.2 THIS WEAKENS SECTION 32'S CONCLUSION AND I AM CORRECTING IT RATHER THAN LETTING IT STAND
+
+Section 32 said the falsifier fires and "this solver carries no static pressure bias
+remotely large enough to explain job B", and the coordinator relayed to `d21-jobb-route`
+that the ambient pressure field is exonerated. **That was too strong and the correction is
+mine to make.**
+
+**What survives:** the solver's **time-averaged pressure gradient** is right to
+-0.67 +/- 3.31 percent, and job B's +34 to +64 percent is 10 to 19 blocked SE from it. **A
+systematic error in the mean hydrostatic gradient is excluded.**
+
+**What does NOT survive:** "the ambient pressure field is exonerated" as a general claim.
+**The column never reaches hydrostatic rest.** It carries persistent numerical agitation at
+`vmax` of 0.25 to 0.29 `sqrt(gH)` that never decays, and because the scheme is not well
+balanced that motion is an artifact, not physics. **A correct mean gradient sitting on top
+of a velocity field that should be zero and is not is a weaker exoneration than I claimed.**
+It also explains my own error bar: the blocked SE of 3.31 percent and the dynamic pressure
+of the residual motion are the same quantity seen twice.
+
+## 33.3 A candidate for job B that nobody has raised, with its own falsifier
+
+The residual motion carries dynamic pressure. Evaluated at 918240's own geometry
+(waterplane 0.062729 m2, analytic denominator 35.7139 N):
+
+| scale | velocity | dynamic pressure | force over the waterplane |
+|---|---|---|---|
+| control vrms | 0.2202 m/s | 24.20 Pa | 1.52 N |
+| control vmax | 0.6352 m/s | 201.37 Pa | 12.63 N |
+| **job B's actual excess** | | **285.00 Pa** | **17.88 N** |
+
+**Job B's excess sits between the rms and max dynamic pressure of the residual motion this
+column carries, and closer to the max.** That is an order-of-magnitude coincidence, and it
+is a **hypothesis, not a result**: persistent non-quiescence could be contributing to the
+measured reaction, and it is neither the coupling nor the surface estimator, so it is not on
+anyone's current candidate list.
+
+**FALSIFIER, and it is `d21-jobb-route`'s to run since they are already instrumenting the
+near field:** measure the residual velocity field in the sphere scene. **If its dynamic
+pressure near the body is an order of magnitude below 285 Pa, this hypothesis dies.** If it
+is comparable, then part of the +50 percent is the scheme failing to go quiet, and no amount
+of work on the surface estimator will remove it.
+
+**What I have NOT established, said plainly because the arithmetic invites it.** The sign.
+Isotropic agitation should largely cancel over a closed body, and the leak drives net
+*downward* flow, which would push the sphere down and reduce `fz`, the wrong direction. So
+the order of magnitude is established and **the mechanism and sign are not**. I am not
+claiming this explains job B. I am claiming it is the right size to matter and has never
+been checked.
+
+## 33.4 The convergence question, answered: it is a ratio and not an order
+
+Asked whether the pressure RMS residual falling 80.531 to 11.848 Pa for a 1.5x resolution
+change is second order. Formally `ln(6.797)/ln(1.5)` = **4.73**, and 4.18 on the max
+residual. **I do not believe either is a convergence order**, for three reasons:
+
+1. **Two grids give one number.** An order cannot be fitted to two points, and "order 4.7"
+   is not distinguishable from "order 2 plus a large non-converging component".
+2. **The max-residual variant is an extremal quantity**, and this project's standing rule
+   forbids a convergence claim from one. That rule bites here.
+3. **The two runs are not the same physical state.** g64 loses 4.039 percent of its
+   particles and g96 loses 2.451, a factor of 1.65, so part of the apparent convergence may
+   be the leak converging rather than the pressure discretisation.
+
+**And the absolute level is the more useful number than the rate.** Non-dimensionalised by
+`rho*g*H`:
+
+| | H/dx | RMS non-dimensional pressure error |
+|---|---|---|
+| my g64 | 26.67 | 1.64e-02 |
+| my g96 | 40.00 | 2.42e-03 |
+| `Qui18b` | 100 | **~1e-07** |
+
+Extrapolating my g96 to H/dx = 100 at second order gives 3.87e-04, still about **3900x**
+Quinlan's. **The honest framing is not "the gradient passes". It is that the gradient passes
+while the scheme fails a published well-balancedness standard that other particle methods
+meet, by 11 orders of magnitude in KE/PE and ~3900x in pressure residual.** Both are true
+and stating both is stronger than stating either.
+
+## 33.5 One candidate retired
+
+`Ste00` (Steffen, Kirby and Berzins, quadrature error in MPM) analyses B-spline quadrature
+error at length and **does not find a one-signed bias**, characterising the errors as force
+kicks and noise. **Quadrature is therefore not a candidate for a systematic offset** and I
+have stopped carrying it as one. Noted that the workspace record for `Ste00` lists no year
+and no DOI; the 2008 date is from this project's own CLAUDE.md L-5, not from the index.
