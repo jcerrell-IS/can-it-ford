@@ -1815,18 +1815,64 @@ speed and the CFL substep count all fixed, and changes **only** the number of vo
 constraints per cell. Job **923270**, three arms at g64, ppc 1, 2 and 3, so 1, 8 and 27
 particles per cell, everything else identical including the seed.
 
-**PRE-REGISTERED, and the two candidate explanations predict OPPOSITE SIGNS, which is what
-makes this a discriminator rather than a measurement:**
+**AMENDED 2026-08-19 BEFORE ANY RESULT WAS READ, and the amendment is recorded rather than
+folded in silently, because a grading rule changed after seeing the data is worth nothing.
+The job had already been submitted; its output had not been opened when this was written.**
+
+**THERE ARE THREE CANDIDATES, NOT TWO, AND THE THIRD IS THE ONE A READER RAISES FIRST.**
 
 | hypothesis | prediction for KE/PE as ppc rises |
 |---|---|
-| **volumetric locking** | **RISES** (1 to 8 to 27 constraints per cell) |
-| acoustic ringing / sampling noise | **FLAT or FALLS** (more particles, better sampling) |
+| **volumetric locking / pressure oscillation** | **RISES** |
+| acoustic ringing or sampling | FLAT or FALLS |
+| **quadrature error (`Ste08`)** | **FALLS** (quadrature error falls as ppc rises) |
 
-**FALSIFIER: if KE/PE does not rise with ppc, locking is not the source of the
-non-quiescence and the hypothesis dies on these three arms.** If it does rise, F-bar becomes
-worth the engineering and there is a measured reason to ask for it rather than a literature
-analogy.
+**So a rise excludes quadrature as well as sampling**, which matters because quadrature is
+the first thing anyone will propose, and section 33.5 already retired it on a different
+ground (no one-signed bias). Two independent reasons to drop it is better than one.
+
+**GRADE THE HYPOTHESIS ON THE 8-TO-27 LEG. `ppc = 1` IS DEGENERATE FOR MPM** and is reported
+as context, not as a third point on a trend. One particle per cell is the worst case for
+exactly the quadrature and cell-crossing errors `Ste08` measures, so that arm can read high
+for reasons unrelated to locking, and a monotone rise across 1, 8, 27 would then be partly
+an artifact of its own low end. **Over the 8-to-27 interval the three candidates still
+disagree in sign, so the discriminator survives the restriction.**
+
+**FALSIFIER, as restricted: if KE/PE does not rise from ppc 8 to ppc 27, locking is not the
+source of the non-quiescence and the hypothesis dies on these arms.**
+
+### The mechanism has to be narrowed, and I verified this at the primary source
+
+The coordinator reported that our fluid branch forces `F` isotropic. **Checked live rather
+than relayed**, at `third_party/mpm-engine-544c93dd-solver-core/kernels/mpm_utils.py`:
+
+```
+1086|  elif mat == 6 or mat == 10 or mat == 12:  # fluid / newtonian / tabulated (viscous)
+1087|      J = wp.determinant(state.particle_F_trial[p])
+1088|      Jcbr = J**(1.0 / 3.0)
+1089|      state.particle_F[p] = wp.mat33(Jcbr, 0.0, 0.0, 0.0, Jcbr, 0.0, 0.0, 0.0, Jcbr)
+```
+
+`newtonian` is `mat == 10`, so this is our path. **`F` is replaced by `Jcbr*I` from the
+particle's own trial gradient: purely isotropic, the deviatoric part discarded.** So the
+**classical deviatoric locking picture does not apply to this fluid**, and writing it up as
+"volumetric locking" without qualification would be wrong.
+
+**What does apply is the per-particle pressure evaluation with no smoothing**, which is the
+half that J-averaging cures, and which Chen 2018's v-p MPM paper names when it reports that
+WCMPM exhibits volumetric locking **and** interface pressure oscillation. **The prediction
+survives the narrowing**, because more particles per cell still means more independent
+per-particle pressures per cell, but **the mechanism must be written as the
+pressure-oscillation channel, not as deviatoric locking.**
+
+**Also verified live, and my first search was too narrow.** Searching the whole vendored
+tree for `fbar`, `f_bar`, `jbar`, `j_bar`, `volumetric lock`, `locking`, `assumed
+deformation` and `volume-averag` returns **no locking mitigation anywhere**. My first pass
+searched only `mpm-engine-544c93dd-solver-core/` and returned zero hits; searching **both**
+vendored trees reproduces the coordinator's single spurious hit, the word "blocking" in a
+wheel-well comment at `mpm-engine-544c93dd/vehicle_main.py:65`. **Stating which view was
+searched matters here**, because a zero from the narrower view is not the same evidence as a
+zero from the whole tree.
 
 **Note the standing caveat that applies to my own sweep:** ppc = 2 is what every run before
 today used, including `sphere_heave.py`. So arm 2 must reproduce the control arm of job
