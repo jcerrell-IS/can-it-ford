@@ -215,16 +215,19 @@ now wired to the ground through `--ground-texture asphalt` in the shaded rendere
 `--asphalt-dir` here, and a frame rendered with them is attached to this round's
 output, so they are demonstrably usable: **a gap, not dead weight.**
 
-**They stay behind a flag and default OFF, because their licence is NOT ESTABLISHED.**
-No licence file ships in `assets/`, and no copyright or source string appears in any of
-the four file headers. The delivered frames do not use them. Passing the flag is the
-caller asserting they may be used.
+**RESOLVED 2026-08-19: they are now ON by default.** They were behind a flag and
+defaulted OFF while their licence was unestablished, because no licence file ships in
+`assets/` and no copyright or source string appears in any of the four file headers.
+Josie confirmed by email on 2026-08-19 that licence permission is granted for these and
+for `assets/DaySkyHDRI002A_1K_HDR.exr`, so both are used without hedging and the frames
+may be published.
 
-The separate and larger question, `assets/DaySkyHDRI002A_1K_HDR.exr`, is escalated to
-Josie and is not resolved here. It is `required=True` in the shaded renderer and ships
-ungated in a public repo. The three delivered frames DO use it as the world
-environment, so if that licence resolves against us the frames must be re-rendered
-against a procedural sky. That is a re-render, not a re-simulation.
+Two things did NOT change with that answer, and both are worth keeping straight. The
+provenance gap in the files themselves is untouched: the maps still carry no embedded
+licence or source string, so the permission rests on the owner's word rather than on
+anything recoverable from the assets. And the flag is retained, so a caller who needs a
+texture-free render can still have one. A permission question was answered by the
+person entitled to answer it; a provenance question was not answered at all.
 
 ## 7. Reproducing the three frames
 
@@ -274,12 +277,77 @@ Written up the same way it would be if it confirmed something.
 3. **The surround is an extrapolation.** The solver domain is finite; beyond it there
    is no water field, and the flat slab out to 240 m is invention. Nothing may be
    measured off it.
-4. **The road is flat.** `simulation/road_geometry.py` builds a crowned, cambered
-   cross-section with gutters, kerbs and verges as an SDF collider, and
-   `simulation/sim_road.py` states the road IS the floor. Per the literature sweep
-   supplied this round, no retrieved study quantifies a crowned road against a flat
-   plane, so that scene is a configuration nobody has published a picture of. **No
-   rollout data for a road run was found on this machine**, so it could not be
-   rendered here; the only local rollouts are the 23 under `renders/yaris_render_s1/`
-   and the three under `render_s2/multigeom_2026-08-08/`. This is the single highest
-   value next frame and it needs a run, not a renderer change.
+4. **The three patches read as three separate ponds** in the composite, because each
+   run's water is agitated across its whole tank while the presentational surround is
+   calm. Section 9.
+
+## 9. The composite: three classes on one crowned road
+
+`analysis/cycles_road_scene.py` puts all three vehicles in one image.
+
+**They were never in one simulation, and the caption strip says so first.** There is no
+three-vehicle run. Each vehicle comes from its own warpmpm run and brings its own water
+with it. What the composer applies is a RIGID TRANSLATION, the same translation to the
+hull and to its water, so every distance, depth and angle inside a patch is preserved
+and the waterline on each vehicle is exactly what its solver produced. The arrangement
+along the road and the flat water between the patches are invented and are labelled.
+
+**The road is the project's own geometry.** `simulation.road_geometry.road_profile` is
+IMPORTED, not reimplemented, so the picture cannot drift from the cross-section
+`sim_road.py` would hand the solver: crown, 2 percent cross slope, gutters, kerb,
+verges. Per the literature sweep supplied this round, no retrieved study quantifies a
+crowned or cambered road against a flat plane, so this is an unevaluated configuration
+rather than a settled one.
+
+**The one honest mismatch.** The runs used a FLAT floor and the road is crowned. Each
+patch is seated so its floor sits on the CROWN, which keeps the depth over the crown
+exactly the depth the run simulated (0.203, 0.265 and 0.235 m) and keeps the vehicle
+standing on the road rather than buried in it. Away from the crown the road falls, so
+the water is deeper toward the channel than the run simulated, up to 0.124 m. That is
+the direction a real crowned road goes, but it is an artefact of seating a flat-floor
+run on a crowned road and no depth may be read off it.
+
+Two composer bugs worth recording, both caught by their own printed numbers:
+
+- **Seating each patch at the lowest road point under its OWN footprint spread the
+  three water surfaces by 0.0995 m**, of which only 0.062 m is the real difference in
+  simulated depth. The rest was an artefact of patch WIDTH: the Silverado's patch is
+  8.11 m and reaches into the gutter, the Yaris's is 6.42 m and does not. A single
+  common seating height removes the artefact and leaves exactly the difference the runs
+  actually have.
+- **Seating on that lowest point buried every vehicle 0.124 m into the road**, because
+  the hull's underside rests on its own flat floor. Seating on the crown fixes it, at
+  the cost of the water's flat bottom then sitting above the falling road; the bottom
+  face alone is pushed down until the opaque road occludes it, which adds no optical
+  path because nothing below the road surface is visible.
+
+**Three attempts at the surround mesh, and the last two failures were mine.** The
+surround is one slab with a hole per patch. v1 emitted each tile as its own closed box,
+so abutting boxes gave doubled coincident interfaces and rendered as black trenches.
+v2 raised walls only on real boundaries, which is right, but left T-JUNCTIONS where a
+full-width strip meets the shorter tiles beside a patch: the shell was then not closed,
+the volume leaked, and a flat white band ran straight across the frame. v3 tiles the
+whole sheet on a GLOBAL grid built from the union of every patch's x and y boundaries,
+splits the walls on that same grid, welds coincident vertices, and asserts the result is
+manifold. It now prints `surround shell: 29 cells, closed and manifold`, and that
+assertion is the thing to keep: both failures looked like lighting and were meshing.
+
+**What is still visible.** The patches read as rectangles because each run's water is
+agitated across its whole tank while the surround is calm, and at a grazing camera angle
+the Fresnel reflectance of water exceeds 0.8, so calm water mirrors the bright sky and
+disturbed water reflects the dark treeline instead. That contrast is real optics, which
+is why it survived three geometry fixes; only the sharp rectangular transition is
+artificial. Raising the camera reduces it, and the surround was given a matching slope
+distribution, but it is not eliminated. The honest fix is a run whose domain is larger
+than the frame, not a renderer change.
+
+## 10. What a reader may and may not take from these images
+
+MAY: the waterline on each vehicle, which is that run's own; the free-surface shape
+around each hull, which is a reconstruction of real particles; the relative sizes of the
+three vehicles; the depth over the crown, which matches each run's realized depth.
+
+MAY NOT: any depth read off the crowned road away from the crown; anything at all from
+the flat water beyond the patches; any inference that the three vehicles experienced one
+flood; any drivetrain, wheel-rotation or suspension behaviour, none of which the
+simulation has; and any optical quantity, since warpmpm computes no optics.

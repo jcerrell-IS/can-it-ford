@@ -62,6 +62,8 @@ def parse():
                         "the simulated patch does not read as a floating slab. "
                         "PRESENTATIONAL: it carries no data, see mat_far_water().")
     p.add_argument("--far-reach", type=float, default=240.0)
+    p.add_argument("--cam-tgt-z", type=float, default=0.0,
+                   help="metres above the road/floor the camera aims at (0 = 0.62)")
     p.add_argument("--far-inset", type=float, default=0.10,
                    help="metres the surround overlaps INTO the simulated patch, "
                         "to close the ragged-boundary slot. See main().")
@@ -207,12 +209,21 @@ def mat_far_water():
     # a 0.05 m ripple at all.
     tc = nt.nodes.new("ShaderNodeTexCoord")
     n1 = nt.nodes.new("ShaderNodeTexNoise")
-    n1.inputs["Scale"].default_value = 5.5
-    n1.inputs["Detail"].default_value = 10.0
-    n1.inputs["Roughness"].default_value = 0.62
+    # AMPLITUDE SET BY WHAT THE GRAZING VIEW NEEDS, not by taste. At a 3 to 7
+    # degree camera elevation the Fresnel reflectance of water is above 0.8, so a
+    # perfectly flat surround becomes a mirror of the bright sky while the
+    # simulated patch, whose normals vary by tens of degrees, reflects the dark
+    # treeline instead. The patch then reads as a black rectangular trench cut into
+    # bright water. That contrast is REAL optics and not a meshing error, which is
+    # why it survived three geometry fixes; the artificial part is only that the
+    # transition is a sharp rectangle. Giving the surround a comparable slope
+    # distribution removes the rectangle without touching the simulated surface.
+    n1.inputs["Scale"].default_value = 2.2
+    n1.inputs["Detail"].default_value = 12.0
+    n1.inputs["Roughness"].default_value = 0.68
     bmp = nt.nodes.new("ShaderNodeBump")
-    bmp.inputs["Strength"].default_value = 0.42
-    bmp.inputs["Distance"].default_value = 0.022
+    bmp.inputs["Strength"].default_value = 0.85
+    bmp.inputs["Distance"].default_value = 0.055
     nt.links.new(tc.outputs["Object"], n1.inputs["Vector"])
     nt.links.new(n1.outputs["Fac"], bmp.inputs["Height"])
     nt.links.new(bmp.outputs["Normal"], b.inputs["Normal"])
@@ -273,12 +284,109 @@ def far_water_annulus(cx, cy, zlev, floor, inner, reach):
     return ob
 
 
+def far_water_multi(cx, cy, zlev, floor, rects, reach):
+    """One surround slab for the whole road, with one hole per simulated patch.
+
+    TILED ON A GLOBAL GRID, which is the third version and the first correct one.
+
+    v1 emitted each tile of the decomposition as its own closed box. Adjacent boxes
+    share a face plane, so a ray crossing between them traverses two coincident
+    interfaces, refracts twice and z-fights.
+
+    v2 emitted top and bottom quads with walls only on the real boundaries, which
+    is the right idea but left T-JUNCTIONS: a full-width strip between two patches
+    has one long edge running the whole width, while the row beside a patch has two
+    short edges plus the hole. The strip's edge carries no vertex at the patch's x
+    boundaries, so the surfaces meet along an edge that is shared geometrically but
+    not topologically. The shell is then not closed, the volume leaks, and the strip
+    renders as a flat white band straight across the frame. It looks like a lighting
+    bug and it is a meshing bug.
+
+    v3, here: take the union of every x boundary and every y boundary as global cut
+    lines, tile the whole outer rectangle with the resulting grid, and skip the
+    cells that fall inside a hole. Every cell edge then matches its neighbour's
+    exactly, so there are no T-junctions anywhere and welding coincident vertices
+    closes the shell.
+
+    Holes must not overlap; that is asserted rather than assumed.
+    """
+    import bmesh
+    rs = sorted(rects, key=lambda r: r[2])
+    for p_, q_ in zip(rs, rs[1:]):
+        if q_[2] <= p_[3]:
+            raise SystemExit("far_water_multi: patch y-ranges overlap (%.3f..%.3f "
+                             "and %.3f..%.3f). Increase --spacing."
+                             % (p_[2], p_[3], q_[2], q_[3]))
+    ox0, ox1 = cx - reach, cx + reach
+    oy0, oy1 = cy - reach, cy + reach
+    xs = sorted({ox0, ox1} | {v for r in rs for v in (r[0], r[1])})
+    ys = sorted({oy0, oy1} | {v for r in rs for v in (r[2], r[3])})
+
+    def in_hole(x, y):
+        return any(r[0] < x < r[1] and r[2] < y < r[3] for r in rs)
+
+    V, F = [], []
+
+    def quad(a, b, c, d):
+        base = len(V)
+        V.extend([a, b, c, d])
+        F.append((base, base + 1, base + 2, base + 3))
+
+    ncell = 0
+    for x0, x1 in zip(xs, xs[1:]):
+        for y0, y1 in zip(ys, ys[1:]):
+            if in_hole(0.5 * (x0 + x1), 0.5 * (y0 + y1)):
+                continue
+            ncell += 1
+            quad((x0, y0, zlev), (x1, y0, zlev), (x1, y1, zlev), (x0, y1, zlev))
+            quad((x0, y0, floor), (x1, y0, floor), (x1, y1, floor), (x0, y1, floor))
+    # WALLS MUST BE SPLIT ON THE SAME GRID. A wall raised as one long quad along a
+    # hole edge re-creates the T-junction the grid was introduced to remove: the
+    # widest patch is 9.41 m and the narrowest 7.92 m, so a wall spanning one hole
+    # crosses another hole's x boundary, and the cells beside it carry a vertex
+    # there that the wall does not. That was 84 non-manifold edges.
+    def cuts(vals, lo, hi):
+        return [v for v in vals if lo - 1e-9 <= v <= hi + 1e-9]
+
+    for (x0, x1, y0, y1) in [(ox0, ox1, oy0, oy1)] + list(rs):
+        for a, b in zip(cuts(xs, x0, x1), cuts(xs, x0, x1)[1:]):
+            quad((a, y0, zlev), (b, y0, zlev), (b, y0, floor), (a, y0, floor))
+            quad((b, y1, zlev), (a, y1, zlev), (a, y1, floor), (b, y1, floor))
+        for a, b in zip(cuts(ys, y0, y1), cuts(ys, y0, y1)[1:]):
+            quad((x1, a, zlev), (x1, b, zlev), (x1, b, floor), (x1, a, floor))
+            quad((x0, b, zlev), (x0, a, zlev), (x0, a, floor), (x0, b, floor))
+
+    me = bpy.data.meshes.new("FarWater")
+    me.from_pydata(V, [], F)
+    me.update()
+    ob = bpy.data.objects.new("FarWater", me)
+    bpy.context.scene.collection.objects.link(ob)
+    bm = bmesh.new()
+    bm.from_mesh(me)
+    bmesh.ops.remove_doubles(bm, verts=bm.verts[:], dist=1e-6)
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces[:])
+    nonman = sum(1 for e in bm.edges if not e.is_manifold)
+    bm.to_mesh(me)
+    bm.free()
+    if nonman:
+        print("[cycles] WARNING: surround has %d non-manifold edges; the volume "
+              "will leak and the sheet may render as a bright band." % nonman)
+    else:
+        print("[cycles] surround shell: %d cells, closed and manifold" % ncell)
+    return ob
+
+
 def mat_ground(asphalt_dir, wet):
     """Asphalt. Textured if the maps are supplied, procedural otherwise.
 
-    THE MAPS ARE OPT-IN. assets/Asphalt015* carry no licence record: no licence
-    file ships in assets/ and no copyright or source string appears in any of the
-    four headers. Passing --asphalt-dir is the caller asserting they may be used.
+    LICENCE, UPDATED 2026-08-19. These maps were opt-in and defaulted OFF while
+    their licence was unestablished: no licence file ships in assets/ and no
+    copyright or source string appears in any of the four headers, so the position
+    was that the caller had to assert the right to use them. Josie confirmed by
+    email on 2026-08-19 that licence permission is granted, so they are now used by
+    default. The flag is KEPT so a caller can still render without them, and the
+    provenance gap in the files themselves is unchanged: that was a permission
+    question, and it was answered by the owner, not by the files.
     """
     m = bpy.data.materials.new("Asphalt")
     nt, out = nodes(m)
@@ -441,6 +549,7 @@ def main():
 
     cx, cy = sc["car_center"]
     floor = sc["floor_z"]
+    composite = sc.get("kind") == "road_composite"
 
     # ---- ground ------------------------------------------------------------
     # THE ROAD SITS 3 mm BELOW THE WATER'S FLOOR, and that offset is load-bearing.
@@ -452,70 +561,101 @@ def main():
     # looked like a water material problem for three iterations and was a
     # z-fighting problem. 3 mm is far below anything the solver resolves: its grid
     # cell here is 0.147 m, so the offset is 2 percent of one cell.
-    bpy.ops.mesh.primitive_plane_add(size=260.0, location=(cx, cy, floor - 0.003))
+    if composite:
+        # A real crowned road solid replaces the infinite plane. The plane is still
+        # laid far below as a ground fill so the horizon is not empty, but it is
+        # 1.2 m down and never visible next to the road.
+        road = imp_ply(Path(a.scene) / sc["road"], "Road")
+        road.data.materials.append(mat_ground(a.asphalt_dir, a.wet))
+        print("[cycles] road: %d polys, %s, width %.1f m, carriageway %.1f m, "
+              "cross slope %.3f" % (len(road.data.polygons),
+                                    sc.get("road_profile_source", "?"),
+                                    sc.get("road_width_total", 0.0),
+                                    sc.get("road_carriageway", 0.0),
+                                    sc.get("road_cross_slope", 0.0)))
+    # Beyond the modelled road solid the terrain is the VERGE height, not the road
+    # solid's base. Laying the fill plane at that base put the countryside 1.2 m
+    # below the carriageway, so the road read as a causeway across a lake and the
+    # off-road water went black through 1.5 m of absorption. The verge is the
+    # highest point of road_profile(), so this is the flat ground the kerb runs up
+    # to, continued outward. Presentational, like everything past the domain.
+    fill_z = float(sc["verge_z"]) if composite and sc.get("verge_z") is not None \
+        else floor - 0.003
+    bpy.ops.mesh.primitive_plane_add(size=520.0, location=(cx, cy, fill_z - 0.003))
     ground = bpy.context.object
     ground.name = "Ground"
     ground.data.materials.append(mat_ground(a.asphalt_dir, a.wet))
 
-    # ---- hull --------------------------------------------------------------
-    hull = imp_ply(Path(a.scene) / "hull.ply", "Hull")
+    # ---- vehicles and their water -----------------------------------------
     paint = tuple(float(x) for x in a.paint.split(","))
-    assign_hull_materials(hull, paint)
-    hull.data.polygons.foreach_set("use_smooth", [True] * len(hull.data.polygons))
-    hull.data.update()
-
-    # ---- water -------------------------------------------------------------
-    if not sc.get("no_water"):
-        water = imp_ply(Path(a.scene) / "water.ply", "Water")
-        water.data.materials.append(mat_water())
-        water.data.polygons.foreach_set("use_smooth", [True] * len(water.data.polygons))
-        water.data.update()
-        print("[cycles] water: %d polys" % len(water.data.polygons))
+    if composite:
+        # Each vehicle carries its OWN water patch, from its own run. They are
+        # loaded as separate objects rather than merged: the paint / glazing / tyre
+        # partition is computed in each hull's own bounding box, and merging three
+        # hulls of different sizes into one mesh would compute that partition in a
+        # box spanning all three and paint the wrong faces on every one of them.
+        allw = []
+        for k, v in enumerate(sc["vehicles"]):
+            h = imp_ply(Path(a.scene) / v["hull"], "Hull%d" % k)
+            assign_hull_materials(h, paint)
+            h.data.polygons.foreach_set("use_smooth", [True] * len(h.data.polygons))
+            h.data.update()
+            w = imp_ply(Path(a.scene) / v["water"], "Water%d" % k)
+            w.data.materials.append(mat_water())
+            w.data.polygons.foreach_set("use_smooth", [True] * len(w.data.polygons))
+            w.data.update()
+            allw.append((v, w))
+            print("[cycles] vehicle %d: %s, hull %d faces, water %d faces, "
+                  "simulated depth %.3f m" %
+                  (k, v.get("name", "?"), len(h.data.polygons),
+                   len(w.data.polygons), v.get("still_water_depth_m", 0.0)))
         if a.far_water:
-            co = np.array([v.co[:] for v in water.data.vertices], dtype=np.float64)
-            # The hole is the EXACT rectangle prep clipped the water to, not the
-            # mesh bounding box. They differ: the bbox is set by whichever stray
-            # splash droplet flew furthest, so a bbox hole leaves a ring of bare
-            # ground between the two surfaces.
-            inner = tuple(sc["water_rect"]) if sc.get("water_rect") else \
-                (co[:, 0].min(), co[:, 0].max(), co[:, 1].min(), co[:, 1].max())
-            # AND THEN PULL THE HOLE IN. prep drops a triangle if ANY of its three
-            # vertices falls outside the clip rectangle, so the surviving boundary
-            # is ragged and lies INSIDE that rectangle by up to one triangle. A
-            # hole cut at the rectangle therefore leaves a slot a few centimetres
-            # wide running all the way down to the road, which renders as a bright
-            # or dark step round the patch and was the last thing in these frames
-            # that still looked built rather than photographed. Overlapping inward
-            # costs a thin band where two water volumes coincide; since both are
-            # the same material that is invisible, whereas the slot is not.
+            # ONE surround for the whole road, with one hole per patch. Cut as a
+            # separate frame per patch would leave the strips between them bare.
+            zlev = float(sc["surround_z"])
+            rects = [tuple(v["water_rect"]) for v, _ in allw]
             ins = a.far_inset
-            inner = (inner[0] + ins, inner[1] - ins, inner[2] + ins, inner[3] - ins)
-            # HEIGHT OF THE SURROUND. Use the free-surface level MEASURED from
-            # the particle field by prep_cycles_scene.still_water_level(), not
-            # any statistic of the reconstructed mesh. The mesh is a CLOSED
-            # volume resting on the floor, so its vertices are half top surface
-            # and half bottom; a median over them lands between the two. That
-            # error was 0.16 m here and it is what made the simulated patch read
-            # as a raised plateau with a lip round it in the first two frames.
-            zlev = float(sc.get("surround_z") or sc.get("still_water_z")
-                         or np.median(co[:, 2]))
-            print("[cycles] surround height %.4f m from the measured free "
-                  "surface (%d columns); the mesh-vertex median would have been "
-                  "%.4f m, low by %.3f m"
-                  % (zlev, int(sc.get("still_water_columns", 0)),
-                     float(np.median(co[:, 2])),
-                     zlev - float(np.median(co[:, 2]))))
-            fw = far_water_annulus(cx, cy, zlev, floor, inner, a.far_reach)
+            rects = [(r[0] + ins, r[1] - ins, r[2] + ins, r[3] - ins) for r in rects]
+            fw = far_water_multi(cx, cy, zlev, floor, rects, a.far_reach)
             fw.data.materials.append(mat_far_water())
-            print("[cycles] far water: annulus at z=%.4f m, hole %.2f x %.2f m, "
-                  "reach %.0f m. PRESENTATIONAL, carries no data." %
-                  (zlev, inner[1] - inner[0], inner[3] - inner[2], a.far_reach))
+            print("[cycles] far water: sheet at z=%.4f m with %d holes, reach "
+                  "%.0f m. PRESENTATIONAL, carries no data. The %d patches sit "
+                  "%.4f m apart in surface height because they are independent "
+                  "runs." % (zlev, len(rects), a.far_reach, len(rects),
+                             float(sc.get("surround_spread_m", 0.0))))
+    else:
+        hull = imp_ply(Path(a.scene) / "hull.ply", "Hull")
+        assign_hull_materials(hull, paint)
+        hull.data.polygons.foreach_set("use_smooth", [True] * len(hull.data.polygons))
+        hull.data.update()
+        if not sc.get("no_water"):
+            water = imp_ply(Path(a.scene) / "water.ply", "Water")
+            water.data.materials.append(mat_water())
+            water.data.polygons.foreach_set("use_smooth", [True] * len(water.data.polygons))
+            water.data.update()
+            print("[cycles] water: %d polys" % len(water.data.polygons))
+            if a.far_water:
+                co = np.array([v.co[:] for v in water.data.vertices], dtype=np.float64)
+                inner = tuple(sc["water_rect"]) if sc.get("water_rect") else \
+                    (co[:, 0].min(), co[:, 0].max(), co[:, 1].min(), co[:, 1].max())
+                ins = a.far_inset
+                inner = (inner[0] + ins, inner[1] - ins, inner[2] + ins, inner[3] - ins)
+                zlev = float(sc.get("surround_z") or sc.get("still_water_z")
+                             or np.median(co[:, 2]))
+                fw = far_water_annulus(cx, cy, zlev, floor, inner, a.far_reach)
+                fw.data.materials.append(mat_far_water())
+                print("[cycles] far water: annulus at z=%.4f m, hole %.2f x %.2f m, "
+                      "reach %.0f m. PRESENTATIONAL, carries no data."
+                      % (zlev, inner[1] - inner[0], inner[3] - inner[2], a.far_reach))
 
     # ---- camera ------------------------------------------------------------
     el = math.radians(a.cam_elev)
     az = math.radians(a.cam_azim)
     d = a.cam_dist
-    tgt = mathutils.Vector((cx, cy, floor + 0.62))
+    # For the road composite, floor is the road SOLID's base, 1.2 m under the
+    # carriageway, so aiming at floor+0.62 would aim the camera into the tarmac.
+    base_z = float(sc["road_crown_z"]) if composite else floor
+    tgt = mathutils.Vector((cx, cy, base_z + (a.cam_tgt_z if a.cam_tgt_z else 0.62)))
     loc = tgt + mathutils.Vector((d * math.cos(el) * math.cos(az),
                                   d * math.cos(el) * math.sin(az),
                                   d * math.sin(el)))

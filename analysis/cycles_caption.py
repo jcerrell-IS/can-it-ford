@@ -42,6 +42,54 @@ def font(sz):
     return ImageFont.load_default()
 
 
+def caption_composite(sc, im, a):
+    """Caption for a multi-vehicle road scene.
+
+    Says up front that the three vehicles never met: they are three independent
+    runs, rigidly translated onto one road. An image of three cars in one flood is
+    read as one event unless it says otherwise, and it was not one event.
+    """
+    W, H = im.size
+    pad, lh = int(W * 0.016), int(W * 0.0142)
+    vs = sc.get("vehicles", [])
+    bar = lh * (4 + len(vs)) + pad * 2
+    out = Image.new("RGB", (W, H + bar), (14, 15, 17))
+    out.paste(im, (0, 0))
+    d = ImageDraw.Draw(out)
+    fb, fs = font(int(lh * 0.72)), font(int(lh * 0.60))
+    d.text((pad, H + pad), a.title or "Flooded roadway, three vehicle classes",
+           font=fb, fill=(238, 238, 240))
+    d.text((pad, H + pad + lh),
+           "THESE THREE VEHICLES WERE NEVER IN ONE SIMULATION. Three independent "
+           "warpmpm runs, each rigidly TRANSLATED onto one road: hull and its own "
+           "water move together, so every waterline is that run's, unaltered.",
+           font=fs, fill=(206, 176, 176))
+    for i, v in enumerate(vs):
+        ph = v.get("physics", {})
+        d.text((pad, H + pad + lh * (2 + i)),
+               "  %-24s %s   mass %s kg   depth %.3f m at the crown   n_grid %s   "
+               "dx %.5f m   render hull %s vertices"
+               % (v.get("name", "?"), ph.get("label", ""), ph.get("mass_kg"),
+                  v.get("still_water_depth_m", 0.0), ph.get("n_grid"),
+                  ph.get("dx", 0.0), "{:,}".format(v.get("hull_verts", 0))),
+               font=fs, fill=(176, 180, 186))
+    d.text((pad, H + pad + lh * (2 + len(vs))),
+           "ROAD: crowned section from simulation/road_geometry.road_profile, width "
+           "%.1f m, carriageway %.1f m, cross slope %.3f. The runs used a FLAT floor, "
+           "so the crown is PRESENTATIONAL; read no depth off it."
+           % (sc.get("road_width_total", 0.0), sc.get("road_carriageway", 0.0),
+              sc.get("road_cross_slope", 0.0)),
+           font=fs, fill=(176, 180, 186))
+    d.text((pad, H + pad + lh * (3 + len(vs))),
+           "ALSO PRESENTATIONAL: vehicle spacing, the flat water between and beyond "
+           "the patches (%.4f m apart in height, three runs at three depths), and "
+           "all optics. No wheels, no suspension, no rolling degree of freedom."
+           % sc.get("surround_spread_m", 0.0),
+           font=fs, fill=(176, 180, 186))
+    out.save(a.out)
+    print("[caption] wrote %s (%dx%d)" % (a.out, out.size[0], out.size[1]))
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--scene", required=True)
@@ -62,6 +110,9 @@ def main():
     out.paste(im, (0, 0))
     d = ImageDraw.Draw(out)
     fb, fs = font(int(lh * 0.70)), font(int(lh * 0.58))
+
+    if sc.get("kind") == "road_composite":
+        return caption_composite(sc, im, a)
 
     hull = Path(sc.get("hull_ply_source", "")).name
     title = a.title or "%s, %s" % (ph.get("label", "?"), sc.get("run", "?"))
