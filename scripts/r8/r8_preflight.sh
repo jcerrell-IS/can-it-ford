@@ -106,10 +106,22 @@ SK_MAIN="$REPO/.claude/skills/research-corpus/SKILL.md"
 SK_MINE="$HERE/.claude/skills/research-corpus/SKILL.md"
 say ""
 if [ -f "$SK_MAIN" ]; then
+  # COMPARE CONTENT, NOT LINE COUNT. The first version of this check compared
+  # `wc -l`, which cannot distinguish two different files that happen to have the
+  # same length, and this project's own directory-provenance-audit skill says in
+  # terms to establish identity by content hash and never by size or mtime. Line
+  # count is the same class of test as size. FALSIFYING INPUT, the one that made
+  # the old form pass when it should have failed: two SKILL.md copies of equal
+  # length whose text differs. That now reports a mismatch.
   A_SK=0; [ -f "$SK_MINE" ] && A_SK=$(wc -l < "$SK_MINE" | tr -d ' ')
   B_SK=$(wc -l < "$SK_MAIN" | tr -d ' ')
+  H_MINE=""; [ -f "$SK_MINE" ] && H_MINE=$(md5 -q "$SK_MINE" 2>/dev/null || md5sum "$SK_MINE" 2>/dev/null | cut -d' ' -f1)
+  H_MAIN=$(md5 -q "$SK_MAIN" 2>/dev/null || md5sum "$SK_MAIN" 2>/dev/null | cut -d' ' -f1)
   say "research-corpus skill   mine $A_SK lines, main checkout $B_SK lines"
-  if [ "$A_SK" != "$B_SK" ]; then
+  if [ -n "$H_MAIN" ] && [ "$H_MINE" != "$H_MAIN" ] && [ "$A_SK" = "$B_SK" ]; then
+    say "SKILL CONTENT DIFFERS AT EQUAL LINE COUNT. A length check would have passed this."
+  fi
+  if [ "$H_MINE" != "$H_MAIN" ] || [ "$A_SK" != "$B_SK" ]; then
     say "SKILL VERSION MISMATCH. Your copy is not the corrected one."
     say "    READ $SK_MAIN BY THAT ABSOLUTE PATH before citing the corpus."
     say "    An old copy has asserted a withdrawn claim before."

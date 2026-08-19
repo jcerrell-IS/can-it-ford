@@ -27,8 +27,16 @@ PROVENANCE
   SSF           vehicle_params.get_vehicle('compact_sedan')['ssf'] = 1.42. get_vehicle
                 accepts only compact_sedan|midsize_suv|light_pickup, NOT the AR&R labels
                 in the inventory's `label` column.
-  G             9.80665, failure_modes.py:14 (post-processing only; the solver itself
-                hardcodes 9.81, core/solver.py:167-169, a 0.034 percent fork).
+  G             9.81, failure_modes.py:14. CORRECTED 2026-08-20: this comment read
+                <WITHDRAWN, DO NOT CITE THIS LINE AS THIS FILE'S CLAIM: it named the
+                value 9.806-65 and a 0.034 percent fork> until today, and both halves went
+                stale on 2026-08-12 when e495b56 unified failure_modes.py to 9.81 and
+                regenerated the artifacts in the same commit. THE FORK IS CLOSED. The
+                solver hardcodes 9.81 at core/solver.py:167-169 and post-processing now
+                agrees. Exactly one 9.80665 survives in tracked Python, an assignment at
+                analysis/viability_dashboard_scaffold.py:11 that is never read, so it is
+                dead code and cannot reach a verdict. Carried as register row B7, listed
+                OPEN and UNOWNED for a day while already fixed on r9-settle.
 
 OUTCOME STRUCTURE
   Three possible outcomes per run: SLIDE, TOPPLE, FLOAT. STUCK is not a fourth mode
