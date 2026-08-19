@@ -1238,3 +1238,132 @@ zero penetration, have been inline on the shared board since 18:35, and the boar
 lives in the main checkout where every session can read it without checking out my
 branch. The general three-step floor test is in section 24 and was also posted in
 full to the board. The write-up has existed since `a863ee7`.
+
+---
+
+# ADDENDUM 7: RENDERING AND MOVING DOMAINS, READ FROM CHRONO'S SOURCE
+
+Commissioned as three questions about how published work renders a free surface
+and handles a domain larger than the body. Answers below are **read from
+Chrono::FSI-SPH source at rev `1b90a9f` on Vista**, not from a search summary.
+**[read]** Q3 I did not do and say so in section 32.
+
+## 30. Q1: THEY RECONSTRUCT A MESH, AND THE UNITS ARE IN PARTICLE RADII
+
+Chrono does **not** use a screen-space method. It writes the particles to JSON,
+calls `splashsurf`, and writes a **Wavefront `.obj` mesh**:
+
+```
+ChFsiProblemSPH.cpp:628   std::string out_filename = dir + "/" + name + ".obj";
+ChFsiProblemSPH.cpp:630   m_splashsurf->WriteParticleFileJSON(in_filename);
+ChFsiProblemSPH.cpp:631   m_splashsurf->WriteReconstructedSurface(in_filename, out_filename, quiet);
+```
+
+**The units convention, which is the part that has been costing this project
+time.** `ChFsiFluidSystemSPH.h:136-140` documents all three parameters
+unambiguously:
+
+```cpp
+double smoothing_length;   ///< ... (in multiplies of the particle radius)
+double cube_size;          ///< cube edge length used for marching cubes (in multiplies of the particle radius)
+double surface_threshold;  ///< isosurface threshold for the density (in multiplies of the rest density)
+```
+
+and the radius itself is set at `ChFsiProblemSPH.cpp:287`:
+
+```cpp
+m_splashsurf->SetParticleRadius(m_spacing / 2);
+```
+
+**So particle radius is HALF the particle spacing, and the two length parameters
+are relative to the radius, not to the spacing and not absolute.** Converting
+Chrono's own values into spacing units:
+
+| parameter | Chrono default | demo override | in units of **spacing** |
+|---|---|---|---|
+| `smoothing_length` | 1.5 radii | 2.0 radii | **0.75 to 1.0 x spacing** |
+| `cube_size` | 0.5 radii | 0.3 radii | **0.25 to 0.15 x spacing** |
+| `surface_threshold` | 0.6 | 0.6 | 0.6 x rest density |
+
+**Answering the question as asked, "at what resolution relative to the particle
+spacing":** the marching-cubes grid is **4 to 6.7 times finer than the particle
+spacing**, and the kernel smoothing length is **about one particle spacing**.
+
+**Why this matters here specifically.** This project has a recorded failure where
+`splashsurf` produced a one-blob-per-particle mesh that passed watertight,
+edge-manifold and bounding-box checks while enclosing 0.0002 m3 instead of 1.457,
+traced to the docstring being unclear about absolute versus relative units. **A
+one-blob-per-particle mesh is the exact signature of a smoothing length that is far
+too small relative to the spacing.** Chrono's numbers are a working calibration
+from an independent implementation, so the check is arithmetic rather than
+guesswork: with spacing `h`, pass `particle_radius = h/2`, then `smoothing_length`
+1.5 to 2.0 and `cube_size` 0.3 to 0.5 **as multiples of that radius**. If a
+pipeline is passing `0.75*h` where `1.5` is expected, it is off by the radius
+factor and blobs are the predicted result.
+
+## 31. Q2: THE BODY-FOLLOWING DOMAIN EXISTS, AND ITS OWN AUTHORS FORBID IT FOR WATER
+
+This is the important one and the answer is a negative that saves work.
+
+Chrono ships exactly the mechanism the render blocker wants,
+`ChFsiFluidSystemSPH.h:187` and `:191`:
+
+```cpp
+/// Set dimensions of the active domain AABB.
+/// This value activates only those SPH particles that are within an AABB of the specified size from an object
+/// interacting with the "fluid" phase.
+/// Note that this setting should *not* be used for CFD simulations, but rather only when solving problems using the
+/// CRM (continuum representation of granular dynamics) for terramechanics simulations.
+void SetActiveDomain(const ChVector3d& box_dim);
+
+/// Disable use of the active domain for the given duration at the beginning of the simulation (default: 0).
+/// This parameter is used for settling operations where all particles must be active through the settling process.
+void SetActiveDomainDelay(double duration);
+```
+
+**A body-following activation box is implemented, is used in production for
+terramechanics, and is explicitly ruled out for CFD by the people who wrote it.**
+
+**The mechanism behind the prohibition, stated as inference not as their words.**
+In granular CRM, material far from the tool is genuinely static and stress is
+transmitted locally, so deactivating it changes nothing. Water is different: it is
+connected, nearly incompressible, and transmits pressure globally, so deactivating
+distant particles severs the pressure field, the free surface and mass
+conservation. **[inf]** I have not found a statement of the reason in the source
+and am not attributing this argument to Chrono.
+
+**The consequence for the render blocker, which is what was actually asked.** The
+cheap route to "a water domain bigger than the camera frame", simulating only near
+the vehicle, is **not** available in the one production code that implements it,
+because that code restricts it to granular. So a big water domain costs what a big
+water domain costs, and with warpmpm's grid forced cubic that cost is cubic. The
+options that survive are: accept the cost, decouple render extent from simulated
+extent (extend the *road and environment* geometry beyond the simulated water
+rather than extending the water), or composite. **Extending the visible road while
+leaving the water domain alone is the only one of those that is free**, and it
+directly addresses the reported artifact of three floating road patches on an
+infinite plane.
+
+**This also explains why unclaimed-ground item 2 is unclaimed.** A body-following
+refinement window "appears unreported" for this problem, and the nearest production
+implementation says it is invalid for fluid. That is a reason, not just an absence,
+and it raises the bar for anyone proposing it: the proposal now has to answer the
+pressure-connectivity objection first.
+
+**One free detail worth taking.** `SetActiveDomainDelay` exists because "all
+particles must be active through the settling process". An independent code has
+the same settle-transient problem this project documented across 25 of 25 runs,
+and solved it by making the optimisation wait rather than by shortening the settle.
+
+## 32. What I did not do
+
+- **Q3 is unanswered.** I did not establish whether any published vehicle-in-water
+  work releases a video or frame sequence with the paper. It needs the deep-search
+  records rather than a code read, and I ran out of window. `[Lyu23]`
+  `10.1016/j.compfluid.2023.106144` is the first place to look, being
+  particle-based 3D SPH vehicle wading.
+- **I did not read DualSPHysics or IBAMR output conventions**, so "what do they
+  actually write out" is answered for Chrono only. DualSPHysics ships
+  visualisation tooling and is the obvious second read.
+- Nothing here is adversarially reviewed; `physics-skeptic` is dead fleet-wide per
+  `c621931`, verified at `CLAUDE.md:925`.
