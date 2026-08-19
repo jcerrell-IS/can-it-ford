@@ -313,7 +313,7 @@ heading reading ESTABLISHED.
    `splashsurf`, `Loschner`, `marching cubes`, `visualization` and `rendering`, against 17
    for `free surface`, which is the positive control proving the query path evaluates.
    Those 17 are solver-side MPM free-surface methods, a different question from display
-   reconstruction. **The 332-paper corpus has no rendering coverage at all.**
+   reconstruction. **The corpus has no rendering coverage at all.** Its size is 332 RECORDS which are 319 DISTINCT WORKS, per CLAUDE.md as corrected by c621931; an earlier version of this line said "the 332-paper corpus", which conflates the two.
 
 ---
 

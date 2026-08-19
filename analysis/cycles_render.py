@@ -47,7 +47,15 @@ def parse():
     p.add_argument("--scene", required=True)
     p.add_argument("--out", required=True)
     p.add_argument("--hdri", default="")
-    p.add_argument("--asphalt-dir", default="")
+    # DEFAULT ON, and this is a correction to c0fa82b. That commit updated
+    # mat_ground()'s docstring to say the maps "are now used by default" once the
+    # licence was granted, but left this default at "", so the code did not do what
+    # the docstring claimed. A docstring asserting behaviour the code does not have
+    # is exactly the failure this project keeps finding elsewhere; caught here by
+    # re-reading the argument list against the prose rather than by a render.
+    # Pass --asphalt-dir "" to render without them.
+    p.add_argument("--asphalt-dir",
+                   default=str(Path(__file__).resolve().parent.parent / "assets"))
     p.add_argument("--samples", type=int, default=256)
     p.add_argument("--res", type=int, default=1600)
     p.add_argument("--res-y", type=int, default=1000)
