@@ -60,6 +60,27 @@ NOT REACHABLE without a credential. **The hook is sound and needs no fix.** I ha
 initially recorded a doubt about it without testing; testing it took one command, and the
 doubt was wrong. The general warning above stands for anything written in future.
 
+**But eleven live worktrees never run that check at all** [read]. `orient_live.sh` exists
+in **two distinct contents** across 29 copies, compared by content hash rather than mtime:
+
+| version | lines | connector + CI block | copies |
+|---|---|---|---|
+| `f31356f1` | 129 | **yes**, added by `3714aec` | 11, including the main checkout |
+| `9e38a7e0` | 32 | **no**: zero occurrences of `wandb`, `connector` or `CI NOT LIVE` | 18 |
+
+The hook is tracked, so a worktree branched before `3714aec` is frozen without the block.
+That is the standing worktree-frozen-at-branch-point property, not a new defect.
+
+Live slots **without** the block: `r7-collect`, `r7-inflow`, `r7-pinned-span`,
+`r8-bc-merge`, `r8-force`, `r8-kramer`, `r8-licence`, `r8-persistence`, `r8-priorart`,
+`r9-accessor`, `r9-kramer-extract`. `r5-research` has no hook file at all.
+
+**This is a silent absence, not a false OK**, which is the safer failure. But it means
+eleven sessions are never told `CI NOT LIVE` at startup, which is exactly d16-landing's
+subject, and it means **a slot cannot infer connector health from its own banner being
+quiet**. Not fixed here: `.claude/hooks/` is outside this slot's write scope and is shared
+by every worktree.
+
 Other live reads:
 
 - Repo `jcerrell-IS/can-it-ford` is **PUBLIC** [read].
