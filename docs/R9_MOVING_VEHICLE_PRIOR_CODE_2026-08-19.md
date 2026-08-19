@@ -1475,3 +1475,113 @@ Batch job **922601** submitted, `PENDING`, 1:30:00 on `gh`, reconfiguring with
 `build_veh`, deliberately not `build_fsi`**, because `build_fsi` is what every
 buoyancy number above was produced against and reconfiguring it in place could
 invalidate published results for the cost of some disk.
+
+---
+
+# ADDENDUM 9: A THIRD CONVERGENCE CATEGORY, AND THE VEHICLE TARGET BUILT
+
+## 37. THREE CATEGORIES, AND ONLY TWO OF THEM ARE ABOUT THE DISCRETISATION
+
+d15-settle's `da0e8ce` (verified live, 2026-08-19 23:11:10, 2 files) supplies a
+category my convergence work did not have. Stating all three together, because the
+distinction is what stops a real result being read as a solver defect:
+
+| category | why it does or does not converge | example | what to report |
+|---|---|---|---|
+| **1. Converges** | discretisation error shrinks with resolution | Chrono buoyancy, +48.04 -> +15.72 across four rungs | the converged value plus the ladder |
+| **2. Fails to converge, for a discretisation reason** | the scheme loses consistency under refinement at fixed particles-per-cell | Steffen, Kirby and Berzins 2008, cited at L-5 for our g48/g64/g96 | the failure, as a limitation, with the mechanism |
+| **3. CANNOT converge, because of what the observable IS** | **the quantity is an unbounded functional of the state, so no record length and no resolution can stabilise it** | `final_disp_mag_m`; any displacement under non-zero mean velocity | **a different observable** |
+
+**Category 3 is not a weaker version of category 2, and that is the whole point.**
+Category 2 is a property of the *method* and might be fixed by a better scheme.
+Category 3 is a property of the *question*: displacement is the time integral of
+velocity, so if velocity equilibrates to any non-zero mean, displacement drifts
+without bound and **no window of it is stationary at any length**. Refining the
+grid cannot help. Lengthening the record cannot help. **[recv]**
+
+**The measurement behind it**, from `da0e8ce` and not re-derived by me: in a
+400-frame record `final_disp_mag_m` peaks at 0.667127 m at row 64 and **ends at
+0.290845 m, 43.6 percent of its own peak**, so the same configuration reports 0.657
+or 0.291 depending only on when you stop looking. And the N_eff diagnostic
+separates the categories cleanly: at 400 frames `vx` and `vmag` scale as expected
+(N_eff 4.33 to 58.92, and 4.12 to 201.80) while `dx` and `dmag` **saturate** (6.40
+to 3.50, 6.42 to 5.59), with `dx`'s N_eff going **down** on a record 4.4x longer.
+**A statistic that gets worse on a longer record is the signature of category 3.**
+
+**What this does to CLAUDE.md item 5.** Item 5 records `final_disp_mag_m` moving
++87.8 percent then -59.2 percent across g48/g64/g96 and instructs that the verdict
+may be cited but never the displacement magnitude. **That instruction was right and
+now has a mechanism that is not a solver defect.** The non-monotonicity across
+grids is at least partly the terminal-frame problem: three grids stopped at the
+same frame index are three different points on three drifting curves. Syamlal,
+Celik and Benyahia 2017 already say a transient instantaneous value has no GCI;
+this reaches the same place from a stationarity statistic on our own data, which is
+a **separate origin** and therefore corroboration rather than restatement.
+
+**Where my own buoyancy result sits.** Category 1, and it is worth saying why it is
+allowed to be: the settle-window mean `Fz` on a **stationary** body is a bounded
+functional of an equilibrated state with an exact closed form, `rho g V`. It is not
+an integral of a drifting quantity. **That is precisely why it was a legitimate
+convergence target and `final_disp_mag_m` is not**, and it is the practical test to
+apply before demanding convergence of anything: ask whether the observable is
+bounded and whether a true value exists independent of when you stopped.
+
+## 38. THE FLOAT32 FINDING, TURNED ON MY OWN LADDER
+
+`da0e8ce` also reports two arms differing only in `--frames` diverging by 1.94e-02
+at `vz[26]`, traced to **7.8e-08 at frame 0, float32 epsilon, amplified five orders
+of magnitude by frame 26**. So two arms are **two draws**, not one trajectory seen
+at two lengths. **[recv]**
+
+**That obliges me to ask whether my four-rung ladder is two-draws-in-disguise, and
+I should answer it rather than wait to be asked.** My four rungs differ in spacing,
+so they are genuinely different discretisations and not repeats; but they are also
+four separate runs, so rung-to-rung differences conflate resolution with
+run-to-run variation, exactly as d15 warns.
+
+**I have one bound on that variation and it is reassuring but not a repeat.** The
+two spacing-0.020 runs, which differ only in `dt` (1e-4 against 6.667e-5), gave
++57.87 and +57.95 percent, **agreeing to 0.08 percentage points**. My rung-to-rung
+changes are +9.91, -28.41 and -13.82 points, i.e. **124x to 355x larger than the
+only variation estimate I have**. So the ladder's signal sits far above that bound
+and the convergence conclusion survives.
+
+**Stated honestly: that is a bound, not a repeat.** Those two runs differ in `dt`,
+so they are not two draws of an identical configuration and cannot measure
+run-to-run variation directly. **The clean test is trivially cheap and I have not
+run it: rerun one rung unchanged and difference it.** Anyone quoting my ladder
+should know that repeats were not done.
+
+## 39. THE VEHICLE TARGET BUILT, AND IT IS GRANULAR, NOT WATER
+
+Batch **922601 COMPLETED, ExitCode 0:0, in 4 minutes 36 seconds**, and it built.
+**[read]**
+
+```
+CONFIGURE RC: 0
+BUILD_DEMOS_VEHICLE:BOOL=ON          <- did not exist before the reconfigure
+[100%] Built target demo_VEH_Cosim_WheeledVehicle_SPH
+build_veh/bin/demo_VEH_Cosim_WheeledVehicle_SPH   TARGET BUILT
+```
+
+So my section 22 correction was right that it needed a reconfigure rather than a
+`make`, and **wrong to imply it was a big job**: the full reconfigure plus the
+entire `ChronoModels_vehicle` library took under five minutes as a batch job.
+
+**But a qualification that matters more than the build, and it cuts against the
+premise I was sent.** The demo's own header reads: *"Demo for Polaris wheeled
+vehicle cosimulation on **CRM terrain**"*, and it requires **exactly 6 MPI ranks**
+(`:79`), one MBS node plus one terrain node plus four tire nodes. **CRM is the
+continuum representation of granular dynamics. This is a TERRAMECHANICS case, not a
+fording case.** It puts a vehicle on deformable *soil*, not in *water*.
+
+That is consistent with everything else I have found in this codebase and the
+pieces now agree: there is **no demo named for fording, wading or amphibious
+operation** anywhere in `src/demos` (section 18), and `SetActiveDomain` is
+restricted to CRM and explicitly forbidden for CFD (section 31). **Chrono's vehicle
+capability is terramechanics.** Whether `[Paz14, Paz16, Was15]` used this machinery
+for water, or whether describing them as "vehicle-fording models" overstates them,
+is a question about those papers that I have not read and cannot settle from the
+code. **Nobody should expect a vehicle-in-water force number to fall out of this
+demo.** Run submitted as batch **923199** on 6 ranks to establish that the
+vehicle-scale pipeline executes end to end, which is worth knowing on its own.
