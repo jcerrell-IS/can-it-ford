@@ -859,3 +859,109 @@ It is the fluid load alone, and the measured value being positive while body
 weight is 100.45 N confirms it independently. **[read]** This also re-confirms on
 this rev what section 2 established on another: **no `dt` appears anywhere in the
 accessor path.**
+
+---
+
+# ADDENDUM 3: sdfibm OVERTURNS MY OWN HEADLINE, AND TWO SELF-CORRECTIONS
+
+## 20. THE dt IS NOT IDIOSYNCRATIC. IT IS WHAT THE FORMULATION IMPLIES.
+
+My section 2 headline, repeated on the board and carried to d17 twice, was: **ours
+is the only one of three implementations that accumulates body force over time and
+therefore the only one needing a caller-supplied `dt`.** A fourth code refutes it.
+
+`sdfibm` [Zha20o], signed-distance immersed boundaries in OpenFOAM, GPL-3,
+`github.com/ChenguangZhang/sdfibm` at `3627269` (2025-06-22). Read locally, not
+cited from the search. **[read]** `src/solidcloud.cpp:411-451`:
+
+```cpp
+vector us    = solid.evalPointVelocity(cc);
+vector force = alpha * (uf - us);          // :412-413  velocity difference
+...
+scalar dtINV = 1.0 / dt;                   // :425
+force += f_ * cv[cellid] * dtINV;          // :441  * cell volume / dt
+...
+force *= m_rhof;                           // :450
+```
+
+So `F = rho_f * SUM_cells [ alpha * (u_f - u_s) * V_cell ] / dt`. Units check:
+`[kg/m^3][m/s][m^3]/[s] = N`. That is **a momentum difference divided by a
+timestep**, which is architecturally *our* pattern, not Anura3D's and not
+Chrono's. And `dt` is **caller-supplied**, the same exposure our accessor has:
+`SolidCloud::interact(scalar time, scalar dt)` at `:462` passes it straight to
+`solidFluidInteract(solid, dt)`.
+
+**Corrected architecture table, four codes, three philosophies:**
+
+| code | force is obtained by | needs a `dt`? |
+|---|---|---|
+| Anura3D | nodal traction from particle stress, over nodal lumped mass | no |
+| Chrono::FSI-SPH | surface integral over BCE markers | no |
+| **sdfibm** | **direct-forcing IB: momentum difference / dt** | **yes** |
+| **ours (warpmpm SDF collider)** | **accumulated momentum / dt** | **yes** |
+
+**The two that need a `dt` are the two immersed-boundary/SDF formulations.** The
+`dt` is not sloppiness and it is not ours alone: it is what direct forcing means.
+This should *reassure* rather than alarm, and my earlier framing overstated our
+isolation. [Bha19] IBAMR's "force constraints rather than surface-stress
+integration" is the same family again, which I have not read and am not claiming.
+
+**But the sharper finding survives, and it is now better targeted.** What is
+idiosyncratic is **not** that we need a `dt`. It is **where we expose it.**
+sdfibm zeroes its accumulators at `:465-467`, at the top of `interact()`,
+*immediately* before the loop that consumes them, and overwrites the per-solid
+force through `setFluidForceAndTorque` rather than accumulating across steps.
+Chrono zero-fills on the line before the kernel launch. **Both codes that could
+have the reset bug structure it away by putting the reset adjacent to the use.**
+Ours does not: the reset and the `dt` live at call sites a caller can get wrong
+independently. So the recommendation to d17 is unchanged and now rests on two
+codes instead of one: **wrap reset, step and read in one helper that owns the
+`dt`.** That is not a workaround, it is what both comparable implementations do.
+
+## 21. sdfibm is GROUND-FIXED, so unclaimed ground item 1 survives contact
+
+A live search of the whole `sdfibm` source for `MRF`, `movingMesh`, `moveMesh`,
+`referenceFrame` and `frameVelocity` returns **zero hits**. **[read]** The mesh is
+a stationary OpenFOAM Eulerian mesh and the solid is evaluated at fixed cell
+centres, `solid.evalPointVelocity(cc)` where `cc = m_mesh.cellCentres()`.
+
+So the single most comparable published implementation to our SDF collider does
+**not** solve the frame problem d17 measured. It sidesteps it by never leaving the
+ground-fixed frame. That is consistent with the search's own statement that
+body-fixed formulations are established for Eulerian IB/level-set solvers but are
+**not evident as a developed moving-reference formulation for MPM**, and it means
+**item 1 is not closed by prior art in the nearest neighbour to our own method.**
+I checked one codebase, not the field, so this narrows the gap rather than
+proving it.
+
+## 22. SELF-CORRECTION: the vehicle-fording case is NOT one build target away
+
+Section 18 said `demo_VEH_Cosim_WheeledVehicle_SPH` was "one build target away"
+because the cosim module was ON, the library existed and `mpicxx` was present. **I
+then tried it and that was wrong.** **[read]**
+
+```
+make demo_VEH_Cosim_WheeledVehicle_SPH
+make: *** No rule to make target 'demo_VEH_Cosim_WheeledVehicle_SPH'.  Stop.
+```
+
+`make help` knows only `Chrono_vehicle_cosim` plus the three socket-cosimulation
+demos. The cache lists `BUILD_DEMOS_BASE / COSIMULATION / FEA / FSI / ROBOT` and
+**no `BUILD_DEMOS_VEHICLE` at all**, because the real blocker is one line up:
+
+```
+CH_ENABLE_MODULE_VEHICLE_MODELS:BOOL=FALSE
+```
+
+Without the vehicle *models* library the vehicle demo directory is never added, so
+the flag and the target never come into existence. The fix is a **CMake
+re-configure** with `-DCH_ENABLE_MODULE_VEHICLE_MODELS=ON` followed by a rebuild,
+not a `make` of an existing target. That is a materially bigger job than I implied
+and it will not fit in a short window.
+
+**Why I am recording the failed attempt rather than quietly fixing the sentence.**
+The claim was checkable in one command and I published it without running that
+command, in the same document where I criticise exactly that habit. The general
+lesson is the one already in this project's rules: an inference from
+preconditions ("the module is on, the lib exists, MPI is present") is not a
+measurement of the outcome, and it took 40 seconds to find out.
