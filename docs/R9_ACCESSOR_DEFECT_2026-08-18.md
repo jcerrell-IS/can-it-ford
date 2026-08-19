@@ -2051,3 +2051,81 @@ The audit's register class C confirms independently what section "READ THIS FIRS
 there is no code fork**. The accessor dispute is therefore **purely a specification problem
 with no divergent implementation under it**. That is the cheap case, not the expensive one,
 and the respecification in criterion 3 stands on it.
+
+---
+
+# 36. B2 reframed: one instrument, two normalisations. And B2 is NOT respecified yet.
+
+## 36.1 Both accessors share a numerator, verified by me at the kernel
+
+Slot `d21-jobb` reported (`ea1d385`) that both readings share one force accumulator.
+**Checked at primary source rather than relayed**, in the pinned vendored core:
+
+| site | what it shows |
+|---|---|
+| `kernels/mpm_solver_warp.py:2711` | `if sd <= param.band:` the gate |
+| `kernels/mpm_solver_warp.py:2733-2734` | `impulse = m * (v_free - v_new)`, `wp.atomic_add(param.force, 0, impulse)` |
+| `core/solver.py:354-361` | `sdf_wrench` returns that accumulator divided by `dt` |
+| `sphere_heave.py:865` | **one** call, `w = self.solver.sdf_wrench(self.collider, self.tick)` |
+| `sphere_heave.py:873-875` | both accessors divide that same `fz` |
+
+**There is one accumulator and one force.** Nothing in this scene has ever read the force by
+a second route.
+
+**This sharpens what B2 is.** It is not two instruments disagreeing. **It is one instrument
+under two normalisations, so the factor-of-two disagreement between them says nothing
+whatever about the force.** I had the arithmetic (`sphere_heave.py` already says "one force
+lying between two denominators must read above one and below the other") but not the framing.
+**The task is choosing a denominator, not adjudicating between measurements**, and that is a
+smaller and better-posed job.
+
+## 36.2 I am NOT respecifying B2 yet, and that is deliberate
+
+A genuine second route is on the node as job **923343**: `control_volume_force()`, reading
+`Fz = p_face*A - W_fluid_above` from a tank-wide control volume that **never touches the
+body**. **When it lands there will be three numbers from two independent routes, which is the
+first real cross-check this scene has had.**
+
+**Respecifying the denominator now would be choosing by judgement a question that a
+measurement may settle within the hour.** Given that this whole document exists because a
+denominator was designated in the wrong place, choosing the next one hastily would be the
+same error with better manners. **B2 stays open pending 923343.**
+
+## 36.3 The debt flag on `3a6c9b3` was a false positive, and I have made it true instead
+
+The flag was "a check committed without a named failing input". As committed,
+`analysis/r9_column_stats.py` was a **reduction**: it printed numbers, had no pass/fail, no
+assertion and no exit-code semantics, so **no input could make it fail** and the requirement
+was not satisfiable. Rather than argue that away, `--check` now makes it a real guard.
+
+**Named failing inputs, each demonstrated rather than asserted:**
+
+| input | recomputed | exit |
+|---|---|---|
+| `WINDOW_FRAC` 0.5 to 0.25 | leg 31.81 % at 14.11 sigma, against 25.86 / 9.89 | **1** |
+| `FIELD` to `ke_over_pe_all` | leg 26.34 % at 9.96 sigma | **1** |
+| unmodified | 25.8578 %, 9.89177 sigma | **0** |
+
+Two more are named in the source and not run here: replacing either committed JSON with a
+different ppc, seed or frame count; and `blocking.blocked_se` changing its plateau rule,
+**which would move the sigma without touching any mean**. That last is the one a reader would
+never catch by eye, and is why the sigma is asserted and not only the means.
+
+**A trap I walked into inside this very demonstration.** My first run of the failing inputs
+printed the FAIL text and reported `EXIT=0`, because `echo $?` after a pipe through `tail`
+reports **tail's** status, not Python's. I had a check that appeared to pass while its subject
+failed. That is the "both arms failed, reported as agreement" family, in a harness I wrote to
+verify a guard, thirty seconds after writing the guard. **Re-run without the pipe: 1, 1, 0.**
+
+## 36.4 Two operating facts recorded
+
+**The account has hit its monthly spend limit and subagent calls fail.** That is consistent
+with, but distinct from, my three `physics-skeptic` failures earlier tonight, which returned a
+**model configuration** error rather than a spend error. Either way, **no adversarial subagent
+pass exists on any number in this document**, and every number remains unreviewed by a second
+party. Foreground work is unaffected.
+
+**This session sees 17 tool prefixes against 76 in the dispatching checkout.** Connectors used
+tonight were each exercised rather than assumed: Wolfram, undermind and scholar-sidekick all
+returned live results; DeepWiki disconnected mid-session and I did not rely on it. **I will
+keep verifying a connector by using it rather than by planning around its name.**
