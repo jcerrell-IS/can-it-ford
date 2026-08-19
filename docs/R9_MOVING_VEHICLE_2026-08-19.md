@@ -734,9 +734,16 @@ faked a feature in the arc.
 
 M4 exists because `V_WATER_GRID` is `[0.5, 1.0, 2.0, 3.0]` and **has no zero**,
 so the surface had no still-water column. That column is not a nicety: it is the
-pure vehicle-motion case, the one Al-Qadami et al. 2022 actually drove, and it
+pure vehicle-motion case, the one Al-Qadami et al. 2022 modelled, and it
 is the reference against which any statement of the form "the flow adds this
-much" has to be made. Its `(0, 0)` cell is also the no-forcing control, which
+much" has to be made.
+
+> **CORRECTED.** This read "the one Al-Qadami et al. 2022 actually drove".
+> `10.1111/jfr3.12828` is **numerical**, so nothing was driven in it; the
+> full-scale experimental paper is `10.1007/s11069-021-04949-6` (2021), and its
+> title does not announce vehicle speed as a swept variable. All three DOIs were
+> re-resolved against Crossref on 2026-08-20 and the titles, years and journals
+> in the table above match the records exactly. Its `(0, 0)` cell is also the no-forcing control, which
 until now had repeats at a single seed only, a spread this document itself says
 carries no information.
 
@@ -2039,3 +2046,68 @@ sound, but the literature does not support treating outlet formulation as
 verdict-critical, and it should stop being prioritised as though it were.
 
 **All of T30 is secondary source. I have read none of those papers.**
+
+## T31. The crowned road as a NOVELTY CLAIM, with the absence cited
+
+This section restates T27 as a contribution rather than a diagnostic, because
+the basis for the novelty claim changed after T27 was written.
+
+### The absence, cited by source
+
+An Undermind deep search commissioned **2026-08-18**, titled **"which realism
+effects change a flood vehicle stability verdict"**, states that **no retrieved
+study quantifies a crowned or cambered road against a flat plane.** Its goal text
+describes this project's own configuration, down to the 0.15 m cell against
+millimetre road texture and the c = 13 m/s sound speed.
+
+**Two things make this a usable basis where this project's previous novelty
+claim was not.** It is a documented absence from a search whose goal text anyone
+can read and re-run, rather than an inference from silence; and it is not the
+subagent-derived absence result this project already had to retract. It remains a
+**secondary source**: I have not read the retrieved papers, and a search's
+failure to retrieve is not proof of non-existence.
+
+### The design, stated so a reader can see it is paired
+
+Not a single arm. Three arms, and the flat side is **measured, not assumed**:
+
+| held identical across all three | value |
+|---|---|
+| relative speed and sweep | `\|v_rel\|` = 3.0 m/s, 9 angles, broadside to axial |
+| seeds | 0, 1, 2 (three per arm) |
+| grid, domain | g64, `lim` 9.421742 m, dx 0.1472147 m |
+| frames, discard, settle | 400, 250, 30 |
+| applied `bc_per_frame` | 4 (auto 2) on every arm |
+| hull, placement, flood level | Yaris, `hull_y` 4.710871 m, level surface at floor + 0.30 m |
+| **the one thing that varies** | **cross slope: 0.00, 0.02, 0.04** |
+
+### The result
+
+| cross slope | crown height | mean `\|F_h\|` | change vs flat | S |
+|---|---|---|---|---|
+| 0.00 (flat) | 0.0000 m | 3119.7 N | reference | 1.0703 |
+| **0.02**, the standard camber | 0.0942 m | **1979.8 N** | **-36.5 percent** | 1.1196 |
+| **0.04** | 0.1884 m | **1563.6 N** | **-49.9 percent** | 1.5347 |
+
+Every arm is three seeds. The per-arm seed spread on S is at the third decimal,
+against differences in the first, so the ordering is not seed scatter.
+
+### What the claim is, and what it is not
+
+**Claimed:** at a fixed flood level, crowning the roadway at a standard 2 percent
+camber reduces the horizontal hydrodynamic load on a stationary-to-moving vehicle
+by 36.5 percent in this model, and doubling the camber roughly halves the load.
+The comparison is paired and only the cross slope varies.
+
+**Not claimed:** any verdict. The body is prescribed and cannot be swept away, so
+this is a paired LOAD comparison and not a paired stability comparison. **Not
+claimed:** that the effect is subtle. `n_water` falls 16.1 and 32.0 percent, so
+most of it is the vehicle standing in shallower water, which is what a crown is
+for. **Not claimed:** that the magnitude is grid-converged; T28 shows the ladder
+does not converge and every absolute force here carries its grid.
+
+**The decomposition is running now**, job 923302: the same crowns at depths
+0.3942 m and 0.4884 m, chosen so the crown carries exactly 0.30 m and the depth
+AT THE VEHICLE matches the flat arm. If those reproduce the flat arm's 3119.7 N,
+the effect is entirely depth-at-vehicle; whatever they differ by is the bed
+geometry. The prediction was written into the job script before it ran.
