@@ -670,3 +670,350 @@ Josie's call.
 `analysis/r9_speed_surface.py --export` writes `data/r9_speed_surface.tsv`, one
 tidy row per run, **162 runs**, no per-frame series. The series stay on the node:
 they are ~400 rows per run and are a working artifact, not a result.
+
+---
+
+# RESULTS, THIRD SESSION (post-crash, node 922255 c642-091, 2026-08-19)
+
+## How this session started, and what the recovery commit did not say
+
+The tmux server died at approximately 17:40 taking all nine R9 sessions and the
+Vista ControlMaster with it. The coordinator committed this branch's staged tree
+as `98d4d9d`, whose own message says it "is NOT a checkpoint the session chose
+and it has not been reviewed by its author". Everything below treats that commit
+as unverified input, which is how it asked to be treated.
+
+Three things were checked before anything was run, and one of them changed the
+plan:
+
+1. The worktree was clean and the Vista copy of the driver had md5
+   `3ea7c487a25ec52a9279c53cd18747e6`, **identical to the committed one**, so no
+   sync was needed and no run below is from a different driver than the one in
+   git.
+2. The dispatch named node 920452 on c642-071. That node was **dead**: its
+   two-hour window had ended roughly sixteen hours earlier. The live node was
+   922255 on c642-091. A dispatch is not evidence about a running allocation.
+3. **THE FULL MATRIX HAD NEVER COMPLETED, AND NOTHING IN THE COMMITTED RECORD
+   SAID SO.** `uni.log` ends in a traceback:
+
+   ```
+   ValueError: bc_per_frame 4 is coarser than the 5 the CFL-style rule needs at
+   u_max 8.900 m/s; a particle would overshoot the recycle plane
+   RC=1
+   ```
+
+   The run died on the **first cell of the v_car = 8.9 m/s row**, so the fastest
+   vehicle speed in the entire study had no 400-frame data at all. The committed
+   TSV is not wrong about this, it is simply silent: a missing row looks exactly
+   like a row nobody asked for. This is the failure mode where an incomplete
+   sweep is indistinguishable from a complete one unless the runner's exit code
+   is stored next to the records, and it is not.
+
+## The four arms run this session
+
+All four use the hull, depth 0.30 m, 400 frames with 250 discarded, and
+`wrench_dt_mode=frame`. `bc_per_frame` was passed **explicitly and uniformly**
+in every arm, never left to the auto rule, for the reason the driver already
+records: the auto rule gives different cells different numbers of BC
+applications and therefore different physical frame durations, which previously
+faked a feature in the arc.
+
+| arm | what it is | cells | seeds |
+|---|---|---|---|
+| M1 | the full (v_car x v_water) matrix, g64 | 20 | 5 |
+| M2 | the same matrix at g96 | 20 | 2 |
+| M3 | five iso-`\|v_rel\|` arcs at 9 angles, g64 | 45 | 1 |
+| M4 | the still-water edge, v_water = 0 | 5 | 5 |
+
+M4 exists because `V_WATER_GRID` is `[0.5, 1.0, 2.0, 3.0]` and **has no zero**,
+so the surface had no still-water column. That column is not a nicety: it is the
+pure vehicle-motion case, the one Al-Qadami et al. 2022 actually drove, and it
+is the reference against which any statement of the form "the flow adds this
+much" has to be made. Its `(0, 0)` cell is also the no-forcing control, which
+until now had repeats at a single seed only, a spread this document itself says
+carries no information.
+
+## T1. The surface now carries a distribution in every cell
+
+Twenty cells, five seeds. The full table is reproduced by
+
+    python3 analysis/r9_speed_surface.py --from-tsv data/r9_speed_surface.tsv \
+        --surface-arm M1 --arc-prefix M3m
+
+**The seed noise floor across the whole surface is S = 0.0086**, that is 0.86
+percent, where S is the pre-registered `(max - min) / mean`. The largest
+within-cell standard deviation anywhere is 115 N on a cell whose mean is
+30,044 N.
+
+This number is what makes everything below a measurement rather than scatter,
+and it could only be obtained by varying `--seed`. Repeats at a fixed seed give
+a relative spread of 4.7e-6, because the SDF path is effectively deterministic
+and GPU atomic ordering is all that separates two identical runs. A "repeat"
+that does not vary the seed samples nothing.
+
+## T2. The split-dependence is NOT a property of 3.0 m/s, and it GROWS with speed
+
+This is the main new result. Each arc holds `|v_rel|` fixed and sweeps the angle
+from pure broadside (all water) to pure axial (all vehicle), so the spread along
+one arc **is** the split-dependence at that relative speed.
+
+| `\|v_rel\|` m/s | min `\|F_h\|` N | max `\|F_h\|` N | split S | S / seed noise | peak angle |
+|---|---|---|---|---|---|
+| 1.0 | 414.8 | 970.2 | 0.7589 | 88x | -67.50 deg |
+| 2.0 | 652.2 | 2208.2 | 0.9734 | 113x | -67.50 deg |
+| 3.0 | 923.7 | 4262.0 | 1.0689 | 124x | -67.50 deg |
+| 4.5 | 1457.2 | 8749.6 | 1.1202 | 130x | **-22.50 deg** |
+| 6.0 | 1928.4 | 16179.4 | 1.2809 | 149x | **-22.50 deg** |
+
+Angle is measured from broadside, so 0 deg is all water and -90 deg is all
+vehicle.
+
+Three separate statements, and they should not be merged:
+
+1. **The effect exists at every relative speed tested**, from 1.0 to 6.0 m/s. It
+   is not an artifact of the single magnitude the earlier arc used.
+2. **It grows monotonically with relative speed**, 0.76 to 1.28. So collapsing
+   v_car and v_water into one speed gets *worse* as conditions get *more*
+   dangerous, which is the opposite of the direction that would make the
+   simplification safe to keep.
+3. **The worst-case split MOVES.** At and below 3.0 m/s the peak load is at
+   -67.5 deg, which is mostly vehicle motion. At and above 4.5 m/s it jumps to
+   -22.5 deg, which is mostly water flow. The surface changes shape, it does not
+   merely scale. A single worst-case split quoted from one magnitude would be
+   wrong at another.
+
+Every S in that table exceeds the seed noise floor by between 88 and 149 times.
+
+## T3. A dip at exactly -45 deg survives the explanation that was supposed to kill it
+
+At every one of the five magnitudes, the equal-split cell at -45 deg sits well
+below both of its neighbours. At `|v_rel|` = 6.0 it reads 6,606 N between 13,770
+and 14,093 N.
+
+The driver already carries an explanation for a dip at this cell: the auto
+`bc_per_frame` rule put the 45 degree cell on a different number of BC
+applications than its neighbours, so it simulated a different physical duration.
+**That explanation does not apply here and the arms above were designed so that
+it could not.** Measured from the records rather than assumed:
+
+| quantity | across all 45 arc cells |
+|---|---|
+| `bc_per_frame` as applied | **4 everywhere** |
+| `substeps_effective` | **12 everywhere** |
+| `wrench_dt_s` | **0.0363636... everywhere** |
+| `bc_per_frame_auto` | varies, 1 to 3 |
+
+So the auto rule still *wants* different values, but nothing downstream of it
+differs: every cell got the same treatment and the same frame duration. The dip
+is therefore **not** the previously named artifact. It is recorded here as
+unexplained.
+
+**It does not drive the headline.** At every magnitude the arc's minimum is the
+pure-axial cell at -90 deg and the maximum is at -22.5 or -67.5 deg, so the dip
+lies strictly between the two extremes that set S. Removing it entirely would
+not change any S in T2.
+
+
+## T4. The still-water edge, and a defect it exposed in my own reporting
+
+`v_water = 0` with the vehicle moving is the pure vehicle-motion case, and it is
+consistently the **lowest** load on its arc. From M3, at matched relative speed:
+
+| `\|v_rel\|` m/s | still water, `\|F_h\|` N | worst split at the same `\|v_rel\|` | ratio |
+|---|---|---|---|
+| 1.0 | 414.8 | 970.2 | 2.3x |
+| 3.0 | 923.7 | 4262.0 | 4.6x |
+| 6.0 | 1928.4 | 16179.4 | **8.4x** |
+
+Driving at 6 m/s through still water and standing still in 6 m/s water are not
+the same loading. The still-water case is roughly **eight times lighter** at
+that speed, and the gap widens with speed. That asymmetry is the whole reason
+v_car and v_water cannot be collapsed into one number, and it is visible only
+because they are separate axes here.
+
+The M4 arm adds five seeds to that edge. Its per-cell seed spread is 0.46 to
+1.21 percent, the same order as the 0.86 percent floor of the main surface in
+T1 and slightly above it. **These figures are from the completed five-seed arm.**
+A two-seed reading taken while the arm was still running gave 0.25 to 0.41
+percent, which was not wrong so much as premature: a spread from two samples
+understates one from five, systematically and in a known direction. It is
+recorded because the earlier number was drafted into this document before the
+arm finished.
+
+**IT ALSO EXPOSED A DEFECT IN MY OWN REPORTING, WHICH IS RECORDED RATHER THAN
+QUIETLY FIXED.** M4 includes the `(0, 0)` no-forcing cell. Five seeds gave
+`|F_h|` of 0.573, 1.594, 1.699, 2.189 and 1.677 N, that is 0.013 to 0.049
+percent of analytic buoyancy, every one of them a pass by a factor of more than
+a hundred against the pre-registered 5 percent. But `S = (max - min) / mean` on
+those five numbers is **1.045**, a hundred times the floor of every forced
+cell, and my first version of the surface report published that as the noise
+floor of the whole arm. It divides by a quantity the experiment exists to drive
+to zero. This is precisely the failure the `spread()` docstring in this same
+file already warns about, committed by the same person who wrote the warning.
+No-forcing cells are now excluded from the floor and still printed.
+
+**A second, smaller inconsistency, reported not resolved.** The C1 control
+records 50.50 N of residual horizontal force where these five record 0.573 to
+2.189 N, a factor of 23 to 88. Both pass C1 by a wide margin (ratio 0.0113
+against these 0.000128 to 0.000490), and the arms differ in `bc_per_frame` and in
+frame budget, so the two are not run at the same settings. It is noted because
+"the control passes" is a weaker statement than it looks when the control's own
+value moves by two orders of magnitude between arms.
+
+## T5. Resolution: the LEVEL moves, the ORDER does not
+
+The same 20-cell matrix was run at g96 (M2, seed 0). Reproduced by
+`report_grid_compare` in the analysis script.
+
+| quantity | g64 to g96 |
+|---|---|
+| per-cell level change | mean +5.68 percent, min -19.54, max **+40.59** |
+| mean absolute change | **10.24 percent** |
+| rank inversions | **4 of 190 pairs, 2.1 percent** |
+
+So the absolute force at a cell is resolution-sensitive at the ten percent level
+and up to forty percent in one cell, while the ORDERING of the surface is 97.9
+percent preserved. Any claim of the form "these conditions load the vehicle more
+than those" survives the grid change; any claim of the form "the load is N
+newtons" does not.
+
+This is the same lesson CLAUDE.md's August 4 audit item 5 already records for
+`final_disp_mag_m` ("cite the verdict, never the displacement magnitude"),
+reached here by a different route and on a different quantity. Syamlal, Celik
+and Benyahia 2017 is the citable reason a transient quantity need not converge
+under refinement at all.
+
+**This is NOT a GCI and must not be quoted as one.** `n_grid`, `dt` and
+`bc_per_frame` all move together between the two arms, so it bounds sensitivity
+to a bundle of changes rather than to resolution alone. M2's second seed had not
+finished when the node window closed, so g96 carries no distribution and nothing
+above is graded against a g96 noise floor.
+
+## T6. Reproducibility record, which the literature does not supply
+
+A deep search over 105 papers, commissioned for this question and returned this
+session, found that the vehicle-wading studies "do not report, in one place,
+particle/grid counts, GPU model, wall time per simulated second, multi-GPU
+scaling, or a runnable case". So it is put here in one place. **This is a
+secondary-source claim about the literature and I have not read those papers.**
+
+| | g64 | g96 |
+|---|---|---|
+| water particles | 41,636 to 41,649 | 164,382 |
+| rigid particles | Yaris hull, SDF collider, `--sdf-res 32` | same |
+| simulated time per run | 14.545 s | 13.333 s |
+| mean wall clock per run | 6.07 s | 29.50 s |
+| **wall per simulated second** | **0.417 s/s** | **2.213 s/s** |
+| runs measured | 156 | 20 |
+
+GPU: **NVIDIA GH200 120GB**, driver 590.48.01, 97,871 MiB, TACC Vista, one card,
+partition `gh`. Engine: **warpmpm** (NOT Genesis) on warp 1.15.0.
+
+Two honest qualifications. The water particle count **varies with the seed**,
+41,636 to 41,649, which is the seed doing real work rather than reseeding a
+random number generator that nothing reads. And every timing above was measured
+with **up to four concurrent jobs sharing the one card**, so each is an upper
+bound on the cost of a single job, not a dedicated-card benchmark. The g64 and
+g96 rows also simulate slightly different durations because `bc_per_frame`
+differs between the arms, so the per-simulated-second figures are the
+comparable ones, not the per-run ones.
+
+## T7. Where this sits in the literature, in the literature's own words
+
+The same deep search states that the moving-vehicle studies "still reduce
+stability to failure thresholds (e.g., depth or depth x velocity), **not a
+continuous safe-speed surface resolving vehicle speed independently from current
+velocity**". That is the object built here, so the gap is confirmed in the
+field's own terms rather than asserted from this project's silence.
+
+It also reports that body-fixed formulations, while established for Eulerian
+immersed-boundary and level-set solvers, "are not evident as a developed
+moving-reference formulation for MPM", and that a body-following refinement
+window "appears unreported". The 34 percent rest-frame against ground-frame
+discrepancy recorded in R4b of the previous session is therefore a number on
+open ground, and it should be presented as an **upper bound with its confounds
+attached** (hull placement, undeveloped ground-frame stream, window length),
+because an upper bound with a number is worth more than an open question.
+
+**None of these citation claims has been checked against a primary record.**
+They are reported as what a search returned.
+
+## T8. Limitations this session did not remove
+
+- **The body is prescribed.** `RigidBody6DOF` raises `NotImplementedError` on a
+  non-zero COM offset, and the Yaris cloud CG sits 0.6312 m above the floor
+  against bbox mid-height 0.7427 m. Every number here is a load on a commanded
+  body. **No FORD or NO-FORD verdict follows**, because a prescribed body cannot
+  be swept away.
+- **There are no wheels.** The hull is a single rigid body with no wheels, no
+  suspension and no rolling degree of freedom. This matters quantitatively:
+  reported wheel friction spans an order of magnitude, near 0.3 locked against
+  near 0.024 free rolling, so a single hull-floor coefficient cannot represent
+  both and the choice is not neutral.
+- **The in/outflow treatment has no reference implementation.**
+  `openchannel_bc.py` implements Zhao, Bolognin, Liang, Rohe and Vardon 2019,
+  and slot d19-priorcode established this session that this BC is **not present
+  in public Anura3D**. Its correctness rests on the publication alone.
+- **What was deliberately NOT spent node time on.** The same search found that
+  no retrieved study shows air entrainment, spray, surface tension, turbulence
+  closure, reduced sound speed or outlet-boundary choice flipping a vehicle
+  motion verdict, and that the ten-times-flow-speed sound-speed rule has no
+  primary derivation in that corpus. The numerical sound speed was therefore
+  left alone. What the same source says DOES move a verdict, bed friction and
+  watertightness, is untouched here and is the better target for a next window.
+- **The -45 degree dip is unexplained**, see T3.
+- **`wrench_dt_mode=frame` is a design decision, not a detail.** The accumulator
+  is divided by the caller-supplied dt, so handing it the substep inflates every
+  force by exactly the substep count, plausibly and silently. d19-priorcode
+  established this session that this caller-supplied dt is peculiar to this
+  engine's accessor: Anura3D takes nodal traction from particle stress and
+  Chrono zero-fills its accumulator next to the kernel launch, so neither
+  exposes the trap. The mode is written into every row of the TSV so no reader
+  has to trust it was set correctly.
+
+## T9. What completed and what did not
+
+Reported separately, because the node window closed on a running job.
+
+**Completed:** M1 (full matrix, g64, 5 seeds, 100 runs), M3 (five arcs, 9
+angles, 45 runs), M2 seed 0 (full matrix, g96, 20 runs).
+
+**Did not complete:** M2 seed 1, so g96 has no ensemble and no noise floor. M4b
+was still running when the window closed; its completed cells are in the TSV and
+its `n` per cell is printed by the analysis rather than assumed.
+
+**Discarded deliberately:** the first M4 attempt. It gave all five cells of a
+seed the same `--label`, and the driver names its record
+`SUMMARY_<label>_g<n_grid>.json`, so each invocation overwrote the last and only
+the final cell of each seed survived. The file existed and parsed and held one
+cell where five had run, which is the quiet kind of wrong. Its records were
+deleted and the arm re-run as M4b with unique labels rather than being patched
+up in analysis.
+
+## T10. Tooling changes, and the defect adding them found
+
+`analysis/r9_speed_surface.py` gained `--from-tsv` this session. Until now the
+analysis could only read `SUMMARY_*.json` under `out/`, which lives on an idev
+node; when that allocation ends, the inputs to every published number end with
+it. The committed TSV now regenerates every table above with no GPU and no
+allocation, on stdlib alone, which matters because this Mac has numpy in no
+system interpreter.
+
+Adding it immediately found a real defect. `export_tidy` flattens
+`force_mean_N` into three scalar columns, so records loaded from the TSV were
+**not interchangeable** with records loaded from JSON, and the pre-existing C2
+section raised `KeyError: 'force_mean_N'` on its fourth print. It failed loudly
+only because that section indexes rather than `.get()`s. A section written with
+`.get()` would have printed `None` as a measurement and nothing would have
+complained. The loader now rebuilds the composite fields.
+
+**The seed is still not a first-class field.** It is written nowhere in the
+record and survives only inside the run label, recovered by parsing
+`<arm>s<seed>`. An arm named any other way is dropped from an ensemble silently
+rather than loudly, so every ensemble printed reports its own `n` and a silent
+drop shows up as a wrong count, which is visible, instead of a wrong mean, which
+is not. The pre-existing `seed0` to `seed4` labels do **not** match that pattern
+(the character before the digit is `d`, not `s`) and are correctly excluded
+rather than half-counted. Writing the seed into the record is the right fix and
+was not done tonight, because changing the driver mid-flight would have split
+the provenance of the very runs being collected.
