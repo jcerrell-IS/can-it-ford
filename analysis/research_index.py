@@ -383,11 +383,63 @@ def repo_cited_dois() -> tuple[set[str], set[str]]:
     return anywhere, reader
 
 
-def build() -> dict:
+def canonicalise_keys(recs: dict) -> dict:
+    """Re-key DOI-less records onto their stable identifier before merging.
+
+    THIS IS THE FIX FOR THE 332-VERSUS-319 GAP AND IT IS ALSO WHAT STOPS THE
+    EXPORT ROUTE FROM DUPLICATING THE MARKDOWN ROUTE. The markdown parser keys
+    a record with no DOI positionally as `slug#rank`. The export route keys the
+    same paper `s2:<hash>`. Merging the two without this step files one paper
+    under both, which is measurable: a trial build put Pazouki et al 2016 under
+    THREE keys, `moving-rigid-body#39`, `validated-coupling#15` and
+    `s2:61da26b6...`, all with identical titles.
+
+    A positional key is not an identifier. Re-running or re-ranking a search
+    moves it. So wherever a stable id exists, it wins.
+    """
+    out: dict[str, dict] = {}
+    for key, r in recs.items():
+        if not key.startswith("10.") and not key.startswith(("s2:", "arxiv:")):
+            k2, kind = join_key(r, "", 0)
+            if kind in ("s2", "arxiv"):
+                key = k2
+        if key in out:                       # same id twice within one source
+            _merge_into(out, {key: r})
+        else:
+            out[key] = r
+    return out
+
+
+def _merge_into(merged: dict, recs: dict) -> None:
+    """Merge one source's records into the accumulator.
+
+    Factored out of build() so the markdown route and the exported-search route
+    merge by IDENTICAL rules. Two merge implementations would drift, and the
+    difference would show up as a paper count nobody could explain.
+    """
+    for key, r in recs.items():
+        if key in merged:
+            m = merged[key]
+            for s in r["reports"]:
+                if s not in m["reports"]:
+                    m["reports"].append(s)
+            m.setdefault("report_index", {}).update(r.get("report_index", {}))
+            if r.get("abstract") and not m.get("abstract"):
+                m["abstract"] = r["abstract"]
+                m["has_abstract"] = True
+            for f in ("year", "authors", "journal", "cit_per_year", "link",
+                      "doi", "s2"):
+                if not m.get(f) and r.get(f):
+                    m[f] = r[f]
+        else:
+            merged[key] = dict(r)
+
+
+def build(export_dir: str = "", built: str = "") -> dict:
     merged: dict[str, dict] = {}
     per_report = {}
     for slug, path in REPORTS:
-        recs = parse_report(slug, path)
+        recs = canonicalise_keys(parse_report(slug, path))
         per_report[slug] = len(recs)
         for key, r in recs.items():
             if key in merged:
@@ -405,6 +457,20 @@ def build() -> dict:
             else:
                 merged[key] = dict(r)
 
+    # THE MCP-SOURCED INGEST PATH. The builder cannot call Undermind: it is
+    # pure stdlib and runs outside any MCP session. A session that HAS the
+    # connector writes `data/deep_searches/<slug>.json` (see
+    # docs/R9_CORPUS_BIB_GAP_2026-08-18.md section 23) and this reads them.
+    # The markdown route above is kept because eight searches exist only in
+    # that form, and re-exporting them would move counts for no gain.
+    per_search = {}
+    for p in discover_search_exports(export_dir or SEARCH_EXPORT_DIR):
+        recs = parse_search_export(p)          # raises on a gate failure
+        with open(p, encoding="utf-8") as fh:
+            slug = json.load(fh)["slug"]
+        per_search[slug] = len(recs)
+        _merge_into(merged, recs)
+
     docs = index_documents()
     cited, reader = repo_cited_dois()
     for r in merged.values():
@@ -414,9 +480,13 @@ def build() -> dict:
         r["cited_reader_facing"] = bool(r["doi"]) and r["doi"] in reader
 
     return {
-        "built": "2026-08-15",
+        # Was hardcoded "2026-08-15", so every rebuild misdated itself as the
+        # original build. Caught while wiring the export path.
+        "built": built or _today(),
         "source_reports": {s: p for s, p in REPORTS},
+        "source_searches": per_search,
         "papers_per_report": per_report,
+        "papers_per_search": per_search,
         "n_papers": len(merged),
         "n_with_abstract": sum(1 for r in merged.values() if r["has_abstract"]),
         "n_cited_in_repo": sum(1 for r in merged.values() if r["cited_in_repo"]),
@@ -429,6 +499,11 @@ def build() -> dict:
         "n_documents": len(docs),
         "n_documents_on_topic": sum(1 for d in docs if d["on_topic"]),
     }
+
+
+def _today() -> str:
+    import datetime
+    return datetime.date.today().isoformat()
 
 
 def load() -> dict:
@@ -757,9 +832,15 @@ def index_self_defects() -> list:
 # is invisible from inside the repo. Re-derive rather than trust:
 #     inspect_deep_searches(workspace_id=..., names=[], status_only=True)
 WORKSPACE_ID = "17299f2a-8dc8-438b-8c84-5abf19395e2c"
-WORKSPACE_SNAPSHOT_DATE = "2026-08-19"
+WORKSPACE_SNAPSHOT_DATE = "2026-08-19 23:20 BST"
 WORKSPACE_DEEP_SEARCHES = [
     # (name, created, relevant-paper count, ingested-as-slug or None)
+    # 21 as of 2026-08-19 23:2x. Was 20 five hours earlier, and 19 the day
+    # before. THE LIST GROWS FASTER THAN THE INDEX IS REBUILT, which is the
+    # whole point: re-derive with --source-audit's printed call, never trust
+    # this constant's length.
+    ("free surface elevation estimator error in particle method buoyancy "
+     "validation", "2026-08-19", 88, None),
     ("moving vehicle floodwater simulation open source implementations",
      "2026-08-19", 105, None),
     ("how computational researchers audit and defend simulation credibility",
@@ -1364,6 +1445,20 @@ def report_source_audit(export_dir: str) -> int:
     print("  and if the count differs from "
           f"{len(WORKSPACE_DEEP_SEARCHES)}, this constant is stale, not the "
           "workspace.")
+    # Exit non-zero when a completed search reaches the corpus by no route.
+    # Nothing can ingest a search the moment it completes: the builder cannot
+    # call the connector. What CAN happen the moment it completes is that this
+    # goes red, so the gap is loud instead of silent. Wire it into preflight or
+    # CI and a new search stops being something a session discovers by
+    # accident three days later.
+    if blind:
+        print()
+        print(f"  FAIL: {len(blind)} completed deep search(es) reach the "
+              "corpus by no route.")
+        print("  Export them (see docs/R9_CORPUS_BIB_GAP_2026-08-18.md "
+              "section 23) or record")
+        print("  a deliberate decision not to. Exit 1.")
+        return 1
     return 0
 
 
@@ -1570,6 +1665,12 @@ def main() -> int:
     ap.add_argument("--ingest-check", metavar="PATH",
                     help="validate one exported deep search against the "
                          "adapter's gates without importing it")
+    ap.add_argument("--out", metavar="PATH",
+                    help="with --build, write the index HERE instead of "
+                         "data/research_corpus_index.json. Use it to measure "
+                         "what a rebuild would change before changing it: the "
+                         "committed index is read by every session and a "
+                         "rebuild moves the published 332/60/76/43 rungs.")
     ap.add_argument("--against-slug", metavar="SLUG",
                     help="with --ingest-check, compare the export against the "
                          "records the markdown route already produced for "
@@ -1690,12 +1791,17 @@ def main() -> int:
         return 0
 
     if a.build:
-        idx = build()
-        os.makedirs(os.path.dirname(INDEX), exist_ok=True)
-        with open(INDEX, "w", encoding="utf-8") as fh:
+        idx = build(a.export_dir)
+        target = a.out or INDEX
+        if target == INDEX:
+            print("REBUILDING THE COMMITTED INDEX. Every session reads this "
+                  "file and the\n332 / 60 / 76 / 43 rungs are published in "
+                  "CLAUDE.md. Use --out to measure\nthe change first.\n")
+        os.makedirs(os.path.dirname(target) or ".", exist_ok=True)
+        with open(target, "w", encoding="utf-8") as fh:
             json.dump(idx, fh, indent=1, sort_keys=True)
             fh.write("\n")
-        print(f"wrote {INDEX}")
+        print(f"wrote {target}")
         print(f"  papers            {idx['n_papers']}")
         print(f"  with abstract     {idx['n_with_abstract']}")
         print(f"  cited anywhere    {idx['n_cited_in_repo']}")
@@ -1705,7 +1811,9 @@ def main() -> int:
         print(f"  documents          {idx.get('n_documents', 0)}"
               f"  ({idx.get('n_documents_on_topic', 0)} on-topic)")
         for s, n in idx["papers_per_report"].items():
-            print(f"    {s:22} {n}")
+            print(f"    {s:22} {n}   (markdown)")
+        for s, n in idx.get("papers_per_search", {}).items():
+            print(f"    {s:22} {n}   (exported search)")
         return 0
 
     idx = load()

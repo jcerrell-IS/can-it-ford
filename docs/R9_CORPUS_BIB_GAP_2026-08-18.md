@@ -1216,3 +1216,168 @@ stale line-number citations against in one day, so I have not edited it.**
 Whoever owns it should add the pair and verify with `git check-ignore -v`.
 Until then, every export needs `-f` and nothing warns you.
 
+
+---
+
+# PART 4, 2026-08-19 23:20: THE INGEST PATH IS WIRED, AND THE INDEX HOLDS NO FULL TEXT
+
+## 27. THE HEADLINE THAT SHOULD HAVE BEEN FIRST: nothing here has been read
+
+VERIFIED against the schema, not relayed. A record in
+`data/research_corpus_index.json` has exactly **15 fields**: `title`, `authors`,
+`journal`, `year`, `doi`, `link`, `abstract`, `methods`, `reports`,
+`report_index`, `n_reports`, `cit_per_year`, `has_abstract`, `cited_in_repo`,
+`cited_reader_facing`.
+
+**There is no full-text field, no body field and no PDF field.**
+
+- 222 of 332 records carry a non-empty `abstract`. **110 carry nothing but
+  bibliographic metadata.**
+- The single largest text blob anywhere in the file is **3,477 characters**.
+  The median non-empty abstract is **1,305**.
+
+A research paper is tens of thousands of characters. So the most this index has
+ever held of any paper is its abstract, and for a third of the corpus not even
+that. **"The corpus was read" has never been true of any session and could not
+have been.** Every method claim, novelty claim and "nobody has done this" this
+project has sourced from the index has been sourced from titles, abstracts and
+an AI-written summary, one to three removes from the paper.
+
+That is not a reason to distrust the index. It is a reason to state what it is:
+a **discovery** instrument, not a reading one. Reading means
+`mcp__undermind__read_pdfs` against the workspace and nothing else does. This is
+now the first paragraph of the skill every session loads.
+
+## 28. It is 21 searches and 13 absent, and the count outran two documents today
+
+READ, live 2026-08-19 23:20, all 21 completed. A twenty-first landed at 17:44:
+`free surface elevation estimator error in particle method buoyancy validation`,
+88 papers.
+
+| when | searches | in the corpus | absent |
+|---|---|---|---|
+| 2026-08-18 | 19 | 8 | 11 |
+| 2026-08-19 18:00 | 20 | 8 | 12 |
+| **2026-08-19 23:20** | **21** | **8** | **13** |
+
+**The ingested number has not moved in five weeks while the total has moved
+three times in two days.** My own Part 2 said "12 of 20" and was correct when
+written and stale within five hours. `WORKSPACE_DEEP_SEARCHES` is updated to 21
+and carries a comment saying not to trust its length.
+
+The durable answer is not a better constant. `--source-audit` now **exits 1**
+when a completed search reaches the corpus by no route, and prints the connector
+call that re-derives the list. Nothing can ingest a search the moment it
+completes, because the builder cannot call the connector. What can happen the
+moment it completes is that a check goes red. Wire `--source-audit` into
+preflight or CI and a new search stops being discovered by accident three days
+later.
+
+## 29. `build()` now reads the exports, and doing it found a real defect first
+
+`build()` takes the eight markdown reports as before and then merges every
+export in `data/deep_searches/`, through the same `_merge_into` both routes
+share. The markdown path is kept because eight searches exist only in that form.
+
+**The first wiring was wrong, and the control I built in Part 2 is what caught
+it.** A trial build put Pazouki et al 2016 under **three** keys with identical
+titles: `moving-rigid-body#39`, `validated-coupling#15` and
+`s2:61da26b6...`. The markdown parser keys a DOI-less record positionally, the
+export route keys it by Semantic Scholar id, so the same paper entered twice
+more instead of merging. **The export route made an existing duplication worse.**
+
+The fix is `canonicalise_keys`, applied to both routes before merging: wherever
+a stable identifier exists it replaces the positional key. After it, the trial
+build has **zero titles under more than one key**, and Pazouki is one record
+carrying `['moving-rigid-body', 'validated-coupling', 'vehicle-mesh-assets']`.
+
+### What a rebuild would change, measured and decomposed
+
+Run with `--out` to a scratch path. **The committed index was NOT overwritten.**
+
+| | committed | + dedup only | + the 2 exports |
+|---|---|---|---|
+| papers | 332 | **319** | 369 |
+| with abstract | 222 | 211 | 211 |
+| cited anywhere | 76 | 66 | 98 |
+| reader-facing | 43 | 52 | 52 |
+| no DOI | 60 | 47 | 64 |
+
+Three things worth reading carefully.
+
+**319 reproduces exactly, by a route independent of how it was first derived.**
+Part 2 got 319 by counting Semantic Scholar groups in the committed file. This
+gets 319 by actually rebuilding with the duplicates collapsed. Two different
+methods, same integer.
+
+**`cited anywhere` FALLS from 76 to 66 under dedup alone.** The published 76 was
+inflated by the same duplicate counting as the 332: one paper cited once was
+counted several times. That number is used in the ladder.
+
+**`reader-facing` RISES from 43 to 52 under dedup alone, and this one is a
+measurement change I introduced, not new research.** `_merge_into` now fills a
+missing `doi` from a merged sibling, so a record that was positional and
+DOI-less can inherit a DOI and become diffable. It is a correct improvement, but
+it means the 43-to-52 move says the measurement got better, NOT that nine more
+papers reached the reader. **Do not republish 52 as a reach figure without
+re-deriving it deliberately.**
+
+**I did not run `--build` against the committed index.** Every session reads that
+file and `CLAUDE.md` publishes the 332 / 60 / 76 / 43 rungs from it. The rebuild
+moves all four, and one of them in a direction that needs review. That is a
+decision for whoever owns the index and the CLAUDE.md text, not a side effect of
+my unit. `--build` now prints a warning when its target is the committed index.
+
+## 30. FOR d21-jobb-route: the new search says the error may be in the DENOMINATOR
+
+`free surface elevation estimator error in particle method buoyancy validation`,
+run at 17:44 today, 88 papers, **not exported** (see section 31). Its goal text
+carries d21's configuration exactly, including the 35 to 64 percent excess over
+six runs and four windows. RECALLED from its summary, NOT checked against its 88
+sources.
+
+**It reframes the problem as three separable channels rather than one "MPM
+buoyancy error": surface reconstruction, pressure and hydrostatics, and
+body-boundary coupling.**
+
+The first is the one this project has not tested and it is the cheapest:
+
+> Near-body exclusion is **not established as a benign operation**. A cheap
+> discriminator is to recompute elevation with **nested exclusion radii
+> including zero**, local vertical columns, and a geometric or level-set
+> reconstruction, then compare the resulting analytic buoyancy against the same
+> raw force. **A body-off hydrostatic run gives the estimator bias independently
+> of body loading.**
+
+If the surface estimator excludes an annulus of two sphere radii, that annulus is
+exactly where the surface is deformed by the body and where the pressure
+generating the vertical force acts. A surface-elevation offset under two
+centimetres, about one grid cell, would account for the entire discrepancy **with
+no solver error at all**. Both discriminators run on existing data, no GPU.
+
+One more, and it collides with something another slot has already concluded:
+the search cites `[Sch19e]` for **traditional MPM wall momentum zeroing
+distorting stress several grid lengths into an object, with image-particle
+boundaries reducing the artifact.** Slot d19-priorcode has reported
+`simulation/image_particles.py` as implemented, run and **refuted**. Those two
+statements are about the same mechanism and point opposite ways. **Not resolved
+here, and I am flagging rather than adjudicating it:** one of them is about a
+method's potential and the other about this repo's implementation of it, which
+is exactly the distinction that gets collapsed. Whoever owns the boundary
+treatment should read `[Sch19e]` before the refutation is treated as settled.
+
+## 31. What I did not do, stated so it is not mistaken for done
+
+- **11 of 21 searches are still unexported**, including the 88-paper one this
+  section is about and the 105-paper open-source one. I exported 2 of 13 and
+  stopped; the remaining 11 are roughly 40 connector calls. `--source-audit`
+  exits 1 naming every one of them, so this is loud rather than silent.
+- **The 88-paper search is quoted from its own summary**, not exported and not
+  read. Its `[Wal07]` (Wallstedt and Guilkey 2007, `10.3970/CMES.2007.019.223`)
+  is reported by the coordinator to give the mechanism for Job B; that is a
+  `read_pdfs` result I have not independently reproduced, and it is already in
+  the corpus and in the buoyancy export.
+- **The committed index is untouched**, so no other session's view changed
+  during this unit. Everything in section 29 is from `--out` builds.
+- **`data/deep_searches/` is still gitignored** by `data/*` and needs an
+  un-ignore pair. Section 26. Every export still needs `git add -f`.

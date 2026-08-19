@@ -1,10 +1,22 @@
 ---
 name: research-corpus
-description: Query the project's own external research index (332 records, 319 distinct works) before making any method claim, novelty claim, citation, or "nobody has done this" statement, and before proposing a numerical method or a validation target. The index is blind to 12 of the project's 20 deep searches, so a zero from it is not an absence. Trigger on "has anyone done X", "is this novel", "what do we know about", "which paper says", "what should we cite", "how should we validate", "what method should I use", any DOI about to enter paper/ or docs/, any claim that a technique is untried, and before writing Methods or Limitations text. Also trigger before proposing a settle length, a convergence claim, or a verdict threshold.
+description: Query the project's own external research index (332 records, 319 distinct works) before making any method claim, novelty claim, citation, or "nobody has done this" statement, and before proposing a numerical method or a validation target. The index is blind to 13 of the project's 21 deep searches and holds NO FULL TEXT, so a zero from it is not an absence. Trigger on "has anyone done X", "is this novel", "what do we know about", "which paper says", "what should we cite", "how should we validate", "what method should I use", any DOI about to enter paper/ or docs/, any claim that a technique is untried, and before writing Methods or Limitations text. Also trigger before proposing a settle length, a convergence claim, or a verdict threshold.
 ---
 
 # The project's own research is indexed. Query it before asserting.
 
+> **THIS INDEX HOLDS NO FULL TEXT. NO SESSION HAS EVER READ A PAPER FROM IT,
+> AND NONE COULD HAVE.** Verified against the schema 2026-08-19: a record has
+> exactly 15 fields, `title`, `authors`, `journal`, `year`, `doi`, `link`,
+> `abstract`, `methods`, `reports`, `report_index`, `n_reports`,
+> `cit_per_year`, `has_abstract`, `cited_in_repo`, `cited_reader_facing`.
+> There is no full-text, body or PDF field. **222 of 332 records have an
+> abstract; 110 have nothing but bibliographic metadata.** The single largest
+> text blob anywhere in the file is **3,477 characters**, and the median
+> abstract is 1,305. So "the corpus says X" means an abstract says X, or a
+> deep search's summary says X. **Reading a paper means
+> `mcp__undermind__read_pdfs` against the workspace, and nothing else does.**
+>
 > **An absence found by a search that cannot match is not an absence.**
 > Every false zero in this file is one instance of it: a query that never
 > searched authors, a membership test against the wrong container, a DOI join
@@ -26,14 +38,20 @@ dedup, keyed positionally as `slug#rank`, so the same paper appearing in three
 reports became three records. Say "332 records / 319 distinct works". The 76,
 43, 4 and 3 rungs below are DOI-keyed and unaffected.
 
-## READ THIS FIRST: the index holds 8 of the project's 20 deep searches
+## READ THIS FIRST: the index holds 8 of the project's 21 deep searches
 
 Measured 2026-08-19 against the live Undermind workspace
 `17299f2a-8dc8-438b-8c84-5abf19395e2c`. **A negative result from this index is
-NOT a negative result for the project's research.** Twelve completed deep
+NOT a negative result for the project's research.** THIRTEEN completed deep
 searches are not in it: six predate the index build of 2026-08-15 and were never
-ingested, six postdate it. Run `python3 analysis/research_index.py --coverage`
-for the current ladder and the full list.
+ingested, seven postdate it.
+
+**THE COUNT MOVES FASTER THAN ANY DOCUMENT DESCRIBING IT.** It was 19 on
+2026-08-18, 20 at 18:00 on 2026-08-19 and **21 by 23:20 the same day**. Any
+number in this file is a snapshot; `--source-audit` prints the connector call
+that re-derives it and now EXITS 1 when a completed search reaches the corpus by
+no route, so wire it into preflight rather than reading a figure here.
+`--coverage` prints the ladder, `--source-audit` the live split.
 
 **Why `--build` will not fix it:** `REPORTS` in `analysis/research_index.py` is a
 hardcoded list of eight local file paths. The builder has no directory scan, no
@@ -63,10 +81,11 @@ mcp__undermind__get_paper_info(workspace_id=..., cite_keys=[...], show_doi=True)
 `inspect_deep_searches` pages at 50 papers and its listing carries **no DOIs**;
 `get_paper_info` is the only route to one and batches 50 cite keys per call.
 
-### The twenty, and what each one settles
+### The twenty-one, and what each one settles
 
-Ingested as markdown (8), exported and awaiting a `--build` (2), still invisible
-(10). Run `--source-audit` for the live split; this table is what each is FOR.
+Ingested as markdown (8), exported and awaiting a `--build` (2), reaching the
+corpus by no route at all (11). Run `--source-audit` for the live split; this
+table is what each one is FOR.
 
 | deep search | settles | state |
 |---|---|---|
@@ -80,6 +99,7 @@ Ingested as markdown (8), exported and awaiting a `--build` (2), still invisible
 | Trustworthy AI Assisted Scientific Simulation | AI-assisted simulation credibility | ingested |
 | MPM SPH buoyancy force overestimation and hydrostatic validation benchmarks | **the buoyancy error and how buoyancy is actually validated** | exported |
 | Simulation Ready Vehicle Mesh Assets | **the CCSA/NCAC vehicle models, above** | exported |
+| free surface elevation estimator error in particle method buoyancy validation | **whether the buoyancy excess is in the FORCE or in the DENOMINATOR**, 88 papers, run 2026-08-19 17:44 | invisible |
 | moving vehicle floodwater simulation open source implementations | moving-body open-source couplings, 105 papers | invisible |
 | how computational researchers audit and defend simulation credibility | verification practice | invisible |
 | GPU particle solver portability scaling and surrogate fidelity | engine and GH200 portability | invisible |
