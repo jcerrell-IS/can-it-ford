@@ -922,14 +922,37 @@ particle/grid counts, GPU model, wall time per simulated second, multi-GPU
 scaling, or a runnable case". So it is put here in one place. **This is a
 secondary-source claim about the literature and I have not read those papers.**
 
-| | g64 | g96 |
-|---|---|---|
-| water particles | 41,636 to 41,649 | 164,351 to 164,382 |
-| rigid body | Yaris hull as SDF collider, `--sdf-res 32` | same |
-| simulated time per run | 14.545 s | 13.333 s |
-| mean wall clock per run | 5.99 s | 28.38 s |
-| **wall per simulated second** | **0.412 s/s** | **2.129 s/s** |
-| runs measured | 170 | 40 |
+All rows are the **Yaris** hull. Read the `dx` caveat below before comparing
+grids across vehicles.
+
+| | g64 | g96 | g128 |
+|---|---|---|---|
+| `n_grid` | 64 | 96 | 128 |
+| `grid_lim` (domain, m) | 9.42174 | 9.42174 | 9.42174 |
+| **`dx` (m)** | **0.1472147** | **0.0981431** | **0.0736074** |
+| water depth (m) | 0.30 | 0.30 | 0.30 |
+| depth in cells | 2.04 | 3.06 | 4.08 |
+| water particles | 41,636 to 41,649 | 164,351 to 164,382 | 413,878 to 413,880 |
+| rigid body | Yaris hull as SDF collider, `--sdf-res 32` | same | same |
+| simulated time per run | 14.545 s | 13.333 s | 13.968 s |
+| mean wall clock per run | 5.99 s | 28.38 s | 91.3 s |
+| **wall per simulated second** | **0.412 s/s** | **2.129 s/s** | **6.54 s/s** |
+| runs measured | 170 | 40 | 2 |
+
+**`n_grid` DOES NOT FIX RESOLUTION ACROSS VEHICLES, and this table would mislead
+without the warning.** `grid_lim` is derived from the loaded hull's extent, so a
+different vehicle at the same `n_grid` gets a different `dx`. Measured in this
+very dataset: g64 carries **three** distinct `dx` values, 0.1472147, 0.1998810
+and 0.2046201, at three domains 9.42174, 12.79239 and 13.09569 m, because the
+Silverado arms load a larger hull. Never describe two vehicles at one `n_grid`
+as "the same resolution".
+
+**Memory, measured on the card rather than estimated.** One g64 job: **630 MiB**
+of 97,871 MiB. Three concurrent jobs (two g64, one g96): 2,289 MiB. Five
+concurrent (adding g128): **4,069 MiB peak observed**. A per-job g128 figure was
+never isolated, so none is quoted. The honest headline is that **memory was
+never the binding constraint**: this scene cannot fill a 98 GB card at any grid
+reached, and utilization rather than capacity is what was worth raising.
 
 GPU: **NVIDIA GH200 120GB**, driver 590.48.01, 97,871 MiB, TACC Vista, one card,
 partition `gh`. Engine: **warpmpm** (NOT Genesis) on warp 1.15.0.
@@ -1624,3 +1647,71 @@ was understated.
 **"Seed noise floor" is now "total repeatability floor" in this document and in
 `report_seeded_surface` itself**, not only in a commit message, because the name
 was doing the misleading and the name is what people copy.
+
+## T23. A crowned road against a flat plane, submitted with its gate first
+
+The 105-paper realism search reports that **no retrieved study quantifies a
+crowned or cambered road against a flat plane**, while ranking bed friction and
+watertightness as the things that do move an incipient-motion verdict, and
+finding **no** study where air entrainment, spray, surface tension, turbulence
+closure, reduced sound speed or outlet-boundary choice flips one. So the crown
+is unclaimed ground with a named gap behind it, and the numerical sound speed,
+which was the tempting thing to fix, is not.
+
+### What varies, and what deliberately does not
+
+**Only the cross slope.** `road_geometry.road_profile` (tracked, committed at
+`1e6732b`, owned by another slot and read-only from here) also carries gutters
+and kerbs, and a 0.15 m kerb is a wall that ponds water. Including it would
+confound three features and could not answer the question, so the carriageway is
+widened to the whole domain and gutter and kerb are switched off. The profile
+then reduces to a pure crown.
+
+**The axes are the real ones.** The crown runs along the centreline in x, which
+is the axis the WATER crosses, so the water must climb it; the car drives along
+y, that is ALONG the road. Dropping the road module in unrotated would have put
+the crown 90 degrees out, so that the car drove across the road's width and the
+water ran along its length.
+
+**The water surface is level and the DEPTH varies.** That is the entire point of
+a crown and the only mechanism by which it could matter: the centreline is
+shallower than the edges. Depth is 0.30 m at the edges and the crown removes
+`cross_slope * lim / 2`, which is 0.094 m at 2 percent and 0.188 m at 4 percent.
+Seeding a constant-depth film over the profile instead would drape water on the
+road and destroy the effect being measured.
+
+### The equivalence gate, and why it is not a formality
+
+`--road-cross-slope 0.0` is **not** the same as omitting the flag. Omitting it
+takes the scalar clamp, which is byte-identical to every run made before the
+road existed. Passing `0.0` takes the **array** clamp with a flat profile. If
+the array plumbing is wrong, the gate disagrees with the committed flat arm
+`M5m3.0s*` at identical settings and everything after it is void. It is phase 0
+of the job and it costs 27 runs against an existing baseline, so it needs no new
+control of its own.
+
+### Two selftests, each naming the input that makes it fail
+
+- **ST14, the crown must be a crown.** The failing input is a sign error in
+  `crown_profile`, returning `z - 0.5*slope*lim` instead of `z + ...`. That
+  turns the road into a **trough** that is deepest on the centreline, ponding
+  water exactly where the vehicle sits. It would look like a physical result
+  rather than a bug, because a dished road really does hold more water.
+  **Verified to fire**: the mutant raises `AssertionError: crown height wrong`
+  while the real file passes.
+- **ST15, the array clamp.** The failing input is `w[below, 2] = z_floor` in the
+  array branch, which broadcasts the whole floor array into the selected rows.
+  The test also asserts a constant array reproduces the scalar path exactly, so
+  the backward-compatibility claim is checked rather than asserted.
+
+### Submitted, not yet analysed
+
+Job **922593**, `r9_crowned_road`, one hour on `gh`: the `|v_rel|` = 3.0 arc,
+9 angles, three seeds each at cross slopes 0.0 (gate), 0.02 and 0.04, 81 runs at
+g64. **No result is claimed here.** If the gate fails, the arm is void and that
+is what will be reported.
+
+**One thing the node did not have.** `road_geometry.py` was absent from the
+node. The guarded import means a crowned run would have **raised** rather than
+silently running on a flat floor, which is what the guard is for; the module was
+shipped read-only and its own selftest passes there, 8 checks.

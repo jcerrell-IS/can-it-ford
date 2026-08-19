@@ -147,6 +147,18 @@ from pathlib import Path
 
 import numpy as np
 
+# road_geometry.py is TRACKED and owned elsewhere (commit 1e6732b). It is read,
+# never written, from here. The guard exists because a worktree can be missing a
+# file its branch point predates, and a crowned-road run should fail with a clear
+# message rather than an ImportError at module load that also kills every flat run.
+try:
+    from road_geometry import road_profile
+except ImportError:                                        # pragma: no cover
+    try:
+        from simulation.road_geometry import road_profile
+    except ImportError:
+        road_profile = None
+
 REPO = Path(__file__).resolve().parent.parent
 LOADER_PATH = REPO / "analysis" / "render_v1" / "as_ran_local_copies" / "vehicle_live.py"
 
@@ -364,6 +376,32 @@ class InflowSlab:
         return n
 
 
+def crown_profile(x, lim, cross_slope):
+    """Road surface height ABOVE the flat floor, as a function of the CROSS-ROAD
+    coordinate x. Returns 0 everywhere when cross_slope is 0.
+
+    Geometry, and why it is this and not the full cross-section. The literature
+    gap named is a crowned or cambered road AGAINST A FLAT PLANE, so the only
+    feature allowed to vary is the crown. `road_geometry.road_profile` also
+    carries gutters and kerbs, and a 0.15 m kerb is a wall that ponds water: a
+    comparison including it would confound three features and could not answer
+    the question. This calls that same committed function with the carriageway
+    widened to the whole domain and the gutter and kerb switched off, so the
+    profile reduces to the pure cross slope and the provenance stays with the
+    module that owns road geometry.
+
+    The crown sits at x = lim/2 and the EDGES sit at zero, so the flat case and
+    the crowned case share their lowest point. Crown height is cross_slope*lim/2.
+    """
+    if not cross_slope:
+        return np.zeros_like(np.asarray(x, dtype=np.float64))
+    z = road_profile(np.asarray(x, dtype=np.float64), width_total=lim,
+                     carriageway=lim, cross_slope=float(cross_slope),
+                     gutter_depth=0.0, gutter_width=0.5, kerb_height=0.0,
+                     crown_z=0.0)
+    return z + 0.5 * float(cross_slope) * lim
+
+
 def clamp_floor_only(x, v, n_water, z_floor):
     """Vertical containment only.
 
@@ -372,11 +410,17 @@ def clamp_floor_only(x, v, n_water, z_floor):
     carry through-flow, so a y wall would block the very flow the y recycler
     imposes. Only the floor is clamped. Returns the number of clamps.
     """
+    # z_floor may be a SCALAR (a flat plane) or a PER-PARTICLE ARRAY (a road
+    # profile). The scalar branch is left exactly as it was, so every run made
+    # before the road existed is reproduced bit for bit rather than merely
+    # closely; that is what makes the crowned-road arm a controlled comparison
+    # instead of a new experiment with a new baseline.
     w = x[:n_water]
+    arr = not np.isscalar(z_floor)
     below = w[:, 2] < z_floor
     n = int(below.sum())
     if n:
-        w[below, 2] = z_floor
+        w[below, 2] = z_floor[below] if arr else z_floor
         vv = v[:n_water]
         vz = vv[:, 2]
         vz[below] = np.maximum(vz[below], 0.0)
@@ -393,7 +437,8 @@ class MovingVehicleChannelScene:
     def __init__(self, mesh, sdf, depth, v_car, v_water, n_grid,
                  ground_frame=False, device="auto", seed=0, bc_target_frac=0.5,
                  wrench_dt_mode="frame", inflow_cells=6.0, no_hull=False,
-                 hull_y=None, bc_per_frame_force=None, lim_override=None):
+                 hull_y=None, bc_per_frame_force=None, lim_override=None,
+                 road_cross_slope=None):
         from warpmpm.core.solver import GridConfig, Solver
         from warpmpm.materials import newtonian
 
@@ -456,6 +501,18 @@ class MovingVehicleChannelScene:
                 "ever cross the plane" % (pad, wall_band / dx))
         self.wall_band = wall_band
         self.lim, self.dx, self.h, self.floor, self.pad = lim, dx, h, floor, pad
+        # ROAD CROWN. None means the flat plane and the SCALAR clamp path, which
+        # is byte-identical to every run made before this existed. A value of 0.0
+        # is NOT the same as None: it switches on the array path with a flat
+        # profile, which is exactly the equivalence gate.
+        self.road_slope = (None if road_cross_slope is None
+                           else float(road_cross_slope))
+        if self.road_slope is not None and road_profile is None:
+            raise RuntimeError("road_cross_slope was given but road_geometry "
+                               "could not be imported; refusing to run a "
+                               "crowned-road arm on a flat floor silently")
+        self.crown_height = (0.0 if self.road_slope is None
+                             else 0.5 * self.road_slope * lim)
         self.n_grid = int(n_grid)
 
         # free stream in the solved frame
@@ -477,7 +534,10 @@ class MovingVehicleChannelScene:
         if ground_frame:
             half_len = float(ext[1]) / 2.0
             self.y_start = pad + half_len + 2.0 * dx
-            self.center0 = np.array([0.5 * lim, self.y_start, floor])
+            # the hull rides the CROWN, which is the domain centreline in x.
+            # Leaving it at `floor` would bury it in the road by crown_height.
+            self.center0 = np.array([0.5 * lim, self.y_start,
+                                     floor + self.crown_height])
             self.travel_available = (lim - pad - 2.0 * dx) - (self.y_start + half_len)
         else:
             # hull_y ISOLATES THE PLACEMENT CONFOUND IN THE FRAME COMPARISON.
@@ -490,7 +550,7 @@ class MovingVehicleChannelScene:
             # quantity instead of a caveat.
             self.center0 = np.array([0.5 * lim,
                                      0.5 * lim if hull_y is None else float(hull_y),
-                                     floor])
+                                     floor + self.crown_height])
             self.travel_available = float("inf")
         self.hull_y = float(self.center0[1])
 
@@ -504,6 +564,15 @@ class MovingVehicleChannelScene:
         self.water_layers = len(zs)
         water = np.stack(np.meshgrid(xs, ys, zs, indexing="ij"), -1).reshape(-1, 3)
         water = water + rng.uniform(-0.2 * h, 0.2 * h, water.shape)
+        # LEVEL SURFACE, VARYING DEPTH. A flooded road has a level water surface
+        # and the crown makes the centreline SHALLOWER; that is the entire point
+        # of a crown and the whole reason it could matter. Seeding a
+        # constant-depth film over the profile instead would drape water on the
+        # road and destroy the effect being measured. So the top stays at
+        # floor+depth and particles below the road surface are dropped.
+        if self.road_slope is not None:
+            zroad = floor + crown_profile(water[:, 0], lim, self.road_slope)
+            water = water[water[:, 2] >= zroad]
         n_before = len(water)
 
         # no_hull is the CONTROL that separates a defect in this file's own
@@ -617,7 +686,10 @@ class MovingVehicleChannelScene:
         for sl in self.slab:
             ns += sl.apply(x, v, self.n_water)
         self.slab_frac = ns / float(self.n_water)
-        self.n_clamped_floor += clamp_floor_only(x, v, self.n_water, self.floor)
+        zf = (self.floor if self.road_slope is None
+              else self.floor + crown_profile(x[:self.n_water, 0],
+                                              self.lim, self.road_slope))
+        self.n_clamped_floor += clamp_floor_only(x, v, self.n_water, zf)
         self.solver.set_x(x)
         self.solver.set_v(v)
         return moved
@@ -907,6 +979,46 @@ def _selftest():
         "zero stream must inject nothing, or the no-forcing control is not a control"
     ok += 1
 
+    # ST14 the crown must be a CROWN, not a dish, and must vanish at slope 0.
+    #
+    # THE INPUT THAT MAKES THIS FAIL: a sign error in crown_profile, i.e.
+    # returning `z - 0.5*slope*lim` instead of `z + 0.5*slope*lim`, or dropping
+    # the offset. Either turns the road into a TROUGH that is deepest on the
+    # centreline. That models a dished road, ponds water exactly where the
+    # vehicle sits, and would look like a physical result rather than a bug,
+    # because a dished road really does hold more water. The assertions below
+    # fail immediately on it.
+    if road_profile is not None:
+        lim_t = 9.421742314
+        xs = np.linspace(0.0, lim_t, 41)
+        flat = crown_profile(xs, lim_t, 0.0)
+        assert np.allclose(flat, 0.0), "slope 0 must be a flat road"
+        cr = crown_profile(xs, lim_t, 0.02)
+        mid = int(np.argmin(np.abs(xs - 0.5 * lim_t)))
+        assert cr[mid] == cr.max(), "the crown must be the MAXIMUM, not a dish"
+        assert abs(cr[mid] - 0.5 * 0.02 * lim_t) < 1e-9, "crown height wrong"
+        assert abs(cr[0]) < 1e-9 and abs(cr[-1]) < 1e-9, "edges must sit at zero"
+        assert cr.min() >= -1e-12, "no part of the road may fall below the flat floor"
+        ok += 1
+
+        # ST15 the array clamp must clamp EACH particle to ITS OWN floor, and a
+        # CONSTANT array must reproduce the scalar path exactly.
+        #
+        # THE INPUT THAT MAKES THIS FAIL: writing `w[below, 2] = z_floor` in the
+        # array branch, which broadcasts the WHOLE floor array into the selected
+        # rows and raises, or silently mis-assigns if the shapes happen to match.
+        xa = np.array([[0.0, 0.0, 0.05], [1.0, 0.0, 0.40]], dtype=float)
+        va = np.array([[0.0, 0.0, -1.0], [0.0, 0.0, -1.0]], dtype=float)
+        zf = np.array([0.10, 0.10])
+        n = clamp_floor_only(xa, va, 2, zf)
+        assert n == 1 and abs(xa[0, 2] - 0.10) < 1e-12 and va[0, 2] == 0.0, "array clamp"
+        assert abs(xa[1, 2] - 0.40) < 1e-12 and va[1, 2] == -1.0, "untouched particle"
+        xb = np.array([[0.0, 0.0, 0.05], [1.0, 0.0, 0.40]], dtype=float)
+        vb = np.array([[0.0, 0.0, -1.0], [0.0, 0.0, -1.0]], dtype=float)
+        assert clamp_floor_only(xb, vb, 2, 0.10) == n, "scalar and constant-array must agree"
+        assert np.array_equal(xa, xb) and np.array_equal(va, vb), "paths must be identical"
+        ok += 1
+
     print("SELFTEST OK: %d groups passed" % ok)
     return 0
 
@@ -920,7 +1032,8 @@ def run_cell(args, mesh, sdf, v_car, v_water, f_buoy, tag):
         device=args.device, seed=args.seed,
         wrench_dt_mode=args.wrench_dt_mode, no_hull=args.no_hull,
         hull_y=args.hull_y, bc_per_frame_force=args.bc_per_frame,
-        lim_override=getattr(args, "lim", None))
+        lim_override=getattr(args, "lim", None),
+        road_cross_slope=getattr(args, "road_cross_slope", None))
     if scene.ground_frame:
         need = v_car * (args.frames / FPS)
         if need > scene.travel_available:
@@ -990,6 +1103,8 @@ def run_cell(args, mesh, sdf, v_car, v_water, f_buoy, tag):
         "depth_m": scene.depth, "depth_cells": scene.depth_cells,
         "band_over_depth": scene.band_over_depth,
         "no_hull": scene.no_hull,
+        "road_cross_slope": scene.road_slope,
+        "road_crown_height_m": scene.crown_height,
         "hull_y_m": scene.hull_y,
         "ground_y_start_m": (scene.y_start if scene.ground_frame else None),
         "travel_available_m": (scene.travel_available if scene.ground_frame else None),
@@ -1069,6 +1184,12 @@ def main():
                          "sizes the box to the hull, which leaves a ground-frame "
                          "car only 3.16 m of travel at the default. Recorded in "
                          "lim_m either way.")
+    ap.add_argument("--road-cross-slope", type=float, default=None,
+                    help="crown the floor at this cross slope (e.g. 0.02). "
+                         "OMITTING it is the flat plane and the scalar clamp, "
+                         "byte-identical to every run made before this existed. "
+                         "Passing 0.0 is DIFFERENT: it enables the array path "
+                         "with a flat profile, which is the equivalence gate.")
     ap.add_argument("--dump-frames", action="store_true",
                     help="write FRAMES_<label>_g<n>.npz: water positions and hull "
                          "pose every frame, for rendering. Off by default because "
