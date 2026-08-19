@@ -469,8 +469,15 @@ All 20 cells established their free stream (minimum 0.666). The load rises
 monotonically in both variables, and the two variables are **not
 interchangeable**: compare (v_car 2.20, v_water 3.00) at 8621 N with
 (v_car 4.50, v_water 0.50) at 3811 N, whose `|v_rel|` are 3.720 and 4.528 m/s.
-**The cell with the LOWER relative speed carries 2.3x the load.** That single
-comparison is the contribution stated as a number.
+The cell with the LOWER relative speed carries 2.3x the load.
+
+> **WITHDRAWN, see T17.** This table is the `c3full` arm: 60 frames with 20
+> discarded, so 40 frames retained. That window is TRANSIENT by this project's
+> own settle audit, which found 25 of 25 runs need more than 8 frames discarded
+> with a MINIMUM of 29, and this arm discards 20. Over the developed-flow window
+> the same pair **inverts** to 0.912x. The "2.3x" figure must not be used. The
+> claim that the two variables are not interchangeable survives and is much
+> stronger elsewhere; only this particular pair and number are withdrawn.
 
 ## R6. What was NOT done, and is not claimed
 
@@ -1389,3 +1396,127 @@ solver defect. A convergence claim would need a time-averaged observable over a
 demonstrated-stationary window with a GCI, and none of the windows above has
 been shown stationary. That is stated so a reader does not infer divergence is a
 bug, and it is not claimed either way here.
+
+## T17. C-1 RESOLVED: the pair really does invert, and it is a WINDOW effect
+
+Raised as an open contradiction by slot d18-platform, who computed 0.912x where
+this document had committed 2.3x, and correctly said it was not theirs to close.
+**Both numbers are right. They are different windows of the same experiment.**
+
+My T16 above answered a DIFFERENT pair (broadside against the -22.5 deg split)
+and did not touch this one. That was my error in reading the report, and T16's
+content stands on its own but does not close C-1. This does.
+
+The cells are (v_car 2.20, v_water 3.00), `|v_rel|` 3.720, against
+(v_car 4.50, v_water 0.50), `|v_rel|` 4.528. Measured across every arm that
+holds both:
+
+| arm | grid | frames / discard | retained | bc | seeds | (2.2, 3.0) | (4.5, 0.5) | ratio |
+|---|---|---|---|---|---|---|---|---|
+| `c3full` | g64 | 60 / 20 | **40** | 2 | 1 | 8621.4 N | 3811.1 N | **2.262x** |
+| `L2full` | g64 | 400 / 250 | 150 | 2 | 1 | 5028.4 N | 5534.7 N | 0.909x |
+| `M1s*` | g64 | 400 / 250 | 150 | 4 | **5** | 5176.5 N | 5675.3 N | **0.912x** |
+| `M2s*` | g96 | 400 / 250 | 150 | 8 | 2 | 5315.9 N | 6246.4 N | 0.851x |
+
+**The inversion is real and it is clean.** Over a 40-frame retained window the
+lower-relative-speed cell carries 2.26x the load. Over a 150-frame retained
+window it carries 0.85x to 0.91x. The sign of the comparison flips.
+
+**Which window is defensible, under d15-settle's rule.** A load ratio is not a
+verdict, so the "full record" half of that rule does not apply; what applies is
+that the window must not be transient. The project's settle audit applied
+`stationarity.py` to all 25 local runs and found **every one needs more than 8
+frames discarded, minimum 29, median 48**. The `c3full` arm discards **20**,
+which is below that minimum. Its retained window is therefore contaminated by
+the starting transient by this project's own criterion, and the 2.262x is a
+transient measurement.
+
+**Resolution: the 2.3x figure is WITHDRAWN. The pair is 0.912x**, over frames
+250 to 400 of 400, at g64, applied `bc_per_frame` 4, five seeds. It has been
+marked withdrawn in place at the R5 table above rather than deleted, so the
+error stays visible.
+
+**The late-window answer is not a single arm's opinion.** Three arms agree on
+the inverted side, 0.909x at bc 2, 0.912x at applied bc 4 with five seeds, and
+0.851x at g96, so it survives a change of seed, of BC rate and of grid.
+
+**What this does NOT touch.** The claim that v_car and v_water are not
+interchangeable never rested on this pair, and the pair was always the weakest
+possible way to state it: a single two-cell comparison on a product grid, where
+the two cells differ in BOTH variables and in `|v_rel|`. The iso-`|v_rel|` arc
+is the right instrument, because it holds relative speed EXACTLY fixed and
+varies only the split. S there is 1.0681 at g64 over five seeds with sd 0.0026,
+and between 0.61 and 1.19 across every grid and BC rate tried, against a
+fixed-seed repeatability floor of 0.076 percent. **That is the result. The pair
+was a convenience and it should not have been quoted as "the contribution stated
+as a number".**
+
+**A general lesson this cost, worth more than the pair.** Every load figure in
+this project is a mean over a retained window, and the window is a free
+parameter that can flip the SIGN of a comparison between two cells. A ratio
+quoted without its window is not a weak claim, it is an unfalsifiable one.
+
+## T18. The novelty claim, narrowed and strengthened
+
+**All of this section is SECONDARY SOURCE.** The numbers come from a reader
+who read the primary text tonight and from a 105-paper deep search. I have not
+opened Shah 2018 myself and nothing below is a primary-source claim.
+
+**The strongest form of the gap.** The nearest published moving-vehicle
+experiment, Shah 2018 `[Sha18c]`, **did not treat vehicle speed as an
+independent variable** in its methodology. So the gap is not only that nobody
+has produced a continuous safe-speed surface; the closest experiment did not
+sweep the axis at all. The `(v_car x v_water)` matrix here does, and that is the
+narrowest true statement of what is new.
+
+Reported with the handling both numbers require, because this project has a
+documented history of conflating scales:
+
+| quantity | value | scale |
+|---|---|---|
+| vehicle | Perodua Viva | **1:10 model** |
+| critical depth | 0.0457 m | **MODEL scale**, not comparable to a full-scale 0.38 m without conversion |
+| drive force | 0.00169 to 0.02115 N | **1:10**, needs x1000 for full scale |
+
+**Correction to a prior-art count I would otherwise have inherited.** "Four
+prior vehicle fording or wading simulations" is an **undercount**. At least
+`[Lyu23]` (`10.1016/j.compfluid.2023.106144`, particle-based 3D SPH vehicle
+wading), `[Ols18b]`, `[Xin21b]` and `[Var21]` are additional. Corrected in
+CLAUDE.md at `c621931`. **The novelty here is the surface and the separated
+axes, not being first to move a vehicle**, and no text in this document should
+imply otherwise.
+
+**The refinement-window negative, narrowed as asked.** Two compatible but
+non-identical claims exist and they should not be merged. The project's own
+record says no moving-vehicle refinement window was found across 206 papers; the
+later search says a **body-following** window "appears unreported". **The claim
+I am making is the second and narrower one**: no body-following refinement
+window appears in the searched corpus. I am not claiming the broader negative,
+and neither claim has been checked against a primary record.
+
+## T19. Final state of the interactive window
+
+**GPU utilization achieved, measured not asserted.** The node was found at
+`0 %, 1 MiB` of 97,871 MiB. Over the session it ran at 17, 58, 62, 76, 84 and
+95 percent at various points, with a peak observed memory of 4,069 MiB. It was
+also observed at 9 to 10 percent twice, between arms, and refilled both times.
+**Memory was never the binding constraint and it is honest to say so**: g64 uses
+about 630 MiB and g128 about 3 GB, so a 98 GB card cannot be filled by this
+scene at any grid reached. Utilization, not capacity, was the thing worth
+raising, and concurrency rather than a bigger grid is what raised it.
+
+**Completed:** M1 (matrix g64, 5 seeds, 100 runs), M2 (matrix g96, 2 seeds, 40),
+M3 (5 arcs x 9 angles, 45), M4b (still-water edge, 5 cells x 5 seeds, 25), M5
+(5 arcs x 9 angles x 5 seeds, 225), M6 (g128 arc, 9), M7 (bc guard control, 20),
+M8 and M9 (g96 arcs x 4 seeds, g128 arc seed 1, 45), and two BC-frequency
+controls (18). **694 records in the committed TSV, 532 runs added this session.**
+
+**Did not complete:** nothing that was left running. The one arm killed was
+killed deliberately, the first M4, whose shared labels made each invocation
+overwrite the last.
+
+**Continues after this window:** batch job **922514** on `c634-111`, four hours
+on the `gh` production partition, verified before submission to checkpoint at
+invocation granularity and to put **five seeds on g128**, which was the only
+n=1 rung. It also runs ten further matrix seeds, a g160 arc, and the Silverado
+mesh-fidelity control.
