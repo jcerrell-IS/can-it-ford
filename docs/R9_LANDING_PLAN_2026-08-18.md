@@ -2152,8 +2152,56 @@ command.**
 
 ## 14. EXECUTION CARD. Read only this. Nothing above it is needed to run the first merge.
 
-**Revision 8, 2026-08-20 01:00 BST. Re-verified at tip `03d2bd6`, ahead 88, behind 5.
+**Revision 9, 2026-08-20 02:05 BST. Re-verified at local tip `21a9f4e`, ahead 93, behind 5.
 NOT EXECUTED. Requires a go.**
+
+### 14.0 THE CARD STILL HOLDS AFTER THE PUSH. Re-verified, not assumed.
+
+`claude/add-ci-checks` was pushed to `origin` at `617f34b`, 2026-08-20 01:17:26 BST. **Three
+things changed and none of them changes the card.**
+
+**(a) The merge is still CLEAN and still 7 files.** Re-run at local tip `21a9f4e`: `rc=0`, same
+seven paths. That is the ninth tip at which phase 1 has measured clean.
+
+**(b) The B5 pair is now `5 / 93`, and the behind half did not move.** Pushing a feature branch
+does not touch `main`, so `origin/main` is still `c7f0a16`. **Eight measurements, behind = 5 every
+time, while ahead went 64 to 93.** The push is the cleanest possible demonstration of rule B5: a
+large, deliberate, verified change to the remote moved the ahead half by five and the behind half
+by nothing.
+
+**(c) "Local equals remote, zero ahead" was true at the push and is already false.** MEASURED at
+02:04: `git rev-list --left-right --count 617f34b...claude/add-ci-checks` returns **`0 4`**. Local
+is four commits ahead of the copy on origin, forty-seven minutes later. Stated without blame,
+because it is the same property this document has been measuring all along and it applies to
+everyone including me: **on this repository, a count is a timestamped observation, not a fact.**
+
+**A new risk that phase 1 could plausibly have introduced, checked and NOT present.** Phase 1
+brings `sync-to-hub.yml` onto a branch that is now on `origin`, so the obvious worry is that a
+later push of `add-ci-checks` would sync to the public Space as a side effect. READ from both
+versions: `origin/main`'s triggers on `push: branches: [main]` **with a `paths` filter** on
+`hf_space/**`, and `add-ci-checks`'s current copy triggers on `push: branches: [main]`. **Both are
+branch-filtered to `main`. Pushing `add-ci-checks` does not write to the Space.** Section 5.5's
+precondition zero is unchanged and correctly scoped: it applies to a merge into `main`, not to
+this branch.
+
+### 14.0a The masked-failure prediction was tested against the push, in advance, and held
+
+Section 6.1a predicted that any new run would go green with `count_claims` exiting 1 inside it.
+The push triggered run **`32316726832`** on `617f34b` at 00:17:28Z. MEASURED afterwards:
+
+| | result |
+|---|---|
+| job conclusion | **success** |
+| API step conclusion for `count_claims` | **success** |
+| the log | **25 `BLOCK` lines** and `##[error]Process completed with exit code 1` |
+| `params_check` / `register_integrity` BLOCK lines | 0 / 0 |
+
+**Third consecutive run with the same masked failure, and the first one predicted before it
+existed.** That moves 6.1a from an observation to a validated prediction. The log also shows the
+check printing "Two independent binary choices give four defensible totals, 22 / 23 / 23 / 24"
+while computing a tracked-only total, which is section 6.3 item 1 exactly: **the check states
+item 13's two-axis framing while measuring a population that needs a third axis item 13 does not
+contain.**
 
 ### THE FIRST MERGE
 
