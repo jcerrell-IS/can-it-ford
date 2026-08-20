@@ -826,7 +826,29 @@ is the documented expected behaviour for an instantaneous value, not necessarily
 solver defect. If grid convergence is the claim, report a time-averaged observable
 over a demonstrated-stationary window with a GCI.
 
-## THE ADVERSARIAL REVIEW PATH IS DEAD FLEET-WIDE, 2026-08-19
+## THE ADVERSARIAL REVIEW PATH WAS DEAD FLEET-WIDE ON 2026-08-19. THE OUTAGE ENDED.
+
+**OUTAGE OVER, measured 2026-08-20 03:40.** A `general-purpose` agent asked to run one
+`git log` returned the correct SHA in 6.05 seconds, and a 15-agent workflow ran on the same
+path immediately after. The section below is kept verbatim because it was true when written,
+nine origins measured it, and the record of a fleet-wide outage is worth keeping. **Do not
+delete it and do not act on it as current.**
+
+Two things follow, and the second is the one that matters:
+
+1. **A "do not re-attempt" instruction is advice against a retry LOOP, never a licence to
+   carry a dated infrastructure claim as standing fact.** One probe costs six seconds; a
+   fan-out launched onto a dead path costs the round. The verification rule at the top of this
+   file already covers this, and this section is the worked example of what happens when an
+   infrastructure claim is allowed to age into a fact.
+2. **THE CLAIMS ARE STILL UNREVIEWED.** Every physics claim from 2026-08-18 and 2026-08-19 was
+   marked UNREVIEWED because this layer was unavailable, and sessions d11, d12, d14, d15, d18
+   and d19 were right to mark them so. **The path being alive does not review them
+   retroactively.** Do not upgrade any of those claims until somebody actually runs the review.
+
+---
+
+### The outage as recorded on 2026-08-19, kept verbatim
 
 Recorded here because it existed in five sessions' transcripts and **zero committed files**,
 and a transcript is not a deliverable. Nine independent origins confirm it.
