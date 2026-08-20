@@ -71,10 +71,35 @@ WANTED = [
      ("sound_speed_ms", "bulk_modulus", "water_eta", "floor_friction")),
     ("code provenance", "summary.json",
      ("canitford_git_commit", "solver_git_sha", "mesh_sha256_recorded")),
-    ("GPU model", "ABSENT", ()),
-    ("wall time per simulated second", "ABSENT", ()),
-    ("multi-GPU scaling", "ABSENT", ()),
+    ("GPU model", "MEASURED", ()),
+    ("wall time per simulated second", "UNJOINABLE", ()),
+    ("multi-GPU scaling", "N/A", ()),
 ]
+
+# MEASURED ON A COMPUTE NODE 2026-08-20, not relayed. srun -p gh -N1 -n1 -t 00:10:00,
+# job 924231, node c608-062. An independent second session measured the identical
+# hardware on c611-021 under job 924230, so this is two origins and not one.
+VISTA_GPU = {
+    "name": "NVIDIA GH200 120GB",
+    "memory_total_mib": 97871,
+    "driver_version": "590.48.01",
+    "compute_capability": "9.0",
+    "host_arch": "aarch64",
+    "host_cpu": "Neoverse-V2",
+    "host_cpus": 72,
+    "measured": "2026-08-20, Vista job 924231 on c608-062, partition gh",
+}
+
+# LS6 for contrast, measured the same day: srun -p gpu-a100-dev, job 3378048, c301-003.
+# This is the direct confirmation that LS6 is x86_64, which had only been INFERRED from a
+# build directory named chrono_x86_build.
+LS6_GPU = {
+    "name": "NVIDIA A100-PCIE-40GB", "count_per_node": 3,
+    "memory_total_mib": 40960, "driver_version": "570.195.03",
+    "compute_capability": "8.0", "host_arch": "x86_64",
+    "host_cpu": "AMD EPYC 7763 64-Core Processor",
+    "measured": "2026-08-20, LS6 job 3378048 on c301-003, partition gpu-a100-dev",
+}
 
 
 def sh(*args):
@@ -173,8 +198,13 @@ def main() -> int:
     print()
     print("  what the literature asks for, and whether this project has it:")
     for label, where, keys in WANTED:
-        if where == "ABSENT":
-            print(f"    ABSENT   {label:34} not on local disk; lives in Slurm accounting on Vista")
+        if where == "MEASURED":
+            print(f"    PRESENT  {label:34} {VISTA_GPU['name']}, {VISTA_GPU['compute_capability']}, "
+                  f"driver {VISTA_GPU['driver_version']}  [measured on a node]")
+        elif where == "UNJOINABLE":
+            print(f"    ABSENT   {label:34} NOT recoverable: no join key exists")
+        elif where == "N/A":
+            print(f"    N/A      {label:34} single-GPU runs; no scaling study was ever done")
         else:
             have = all(all(r.get(k) is not None for r in runs) for k in keys) if runs else False
             print(f"    {'PRESENT ' if have else 'PARTIAL '} {label:34} {', '.join(keys)}")
@@ -198,10 +228,25 @@ def main() -> int:
         "n_runs": len(runs),
         "fields_complete_across_all_runs": complete,
         "canonical_mesh_sha256": mesh_live,
+        "hardware_vista": VISTA_GPU,
+        "hardware_ls6_for_contrast": LS6_GPU,
         "absent_and_why": {
-            "gpu_model": "not on local disk; Slurm accounting on Vista",
-            "wall_time_per_simulated_second": "not on local disk; Slurm accounting on Vista",
-            "multi_gpu_scaling": "single-GPU runs; no scaling study exists",
+            # CORRECTED 2026-08-20. The first version said wall time "lives in Slurm
+            # accounting on Vista", which implies go and fetch it. IT CANNOT BE FETCHED.
+            # Slurm accounting DOES still hold 212 job records from 2026-07-01 to
+            # 2026-08-10, but NOTHING JOINS THEM TO A RUN: all 17 summary.json files
+            # carry zero job, host, or timestamp keys (the only pattern match is
+            # C2_veh_zmin_start, a geometry field caught on the substring "start"), and
+            # file mtimes do not help because summary.json was regenerated on 2026-08-12
+            # while rollout.npz dates from 2026-07-26. A missing remote value and an
+            # unjoinable one are different findings and the first understated it.
+            "wall_time_per_simulated_second":
+                "UNJOINABLE, not merely remote. Slurm accounting holds 212 records for "
+                "the era but no summary.json carries a job id, host or timestamp, so "
+                "there is no key to join on. Recoverable only for FUTURE runs, by "
+                "emitting SLURM_JOB_ID into summary.json.",
+            "multi_gpu_scaling":
+                "single-GPU runs throughout; no scaling study was ever performed",
         },
         "missing_summary": missing_summary,
         "unresolved_commits": unresolved,
