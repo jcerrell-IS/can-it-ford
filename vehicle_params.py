@@ -54,7 +54,13 @@ IMPORTANT PHYSICS NOTES for lateral-flow / overturning behavior (L2):
      because real vehicle mass hugs the floor and center. Prefer a genuinely
      MEASURED `inertia_kg_m2` when the target model matches one of these
      classes; fall back to box_inertia() only for models with no NHTSA match.
-     Read note 3 first: VEHICLE_PARAMS["compact_sedan"] has NO measured tensor.
+     Read note 3 first: the compact_sedan tensor IN THIS FILE is a box
+     fallback, not a measurement. Corrected 2026-08-20: a measured tensor for
+     an actual 2010 Yaris DOES exist, on slide 7 of DOI 10.13021/G8JS5D
+     (1078 kg; roll 388, pitch 1498, yaw 1647 kg m^2; CG Z 558 mm). It is not
+     in this file, and note 3 says why wiring this file's numbers is still
+     wrong: they are 19 to 26 percent off that measurement, while the solver's
+     own particle cloud is within 2.3 percent.
 
   3. DO NOT WIRE `inertia_kg_m2` INTO THE MPM SOLVER FOR compact_sedan.
      Verified 2026-08-08 against live source and measured rollout data; see

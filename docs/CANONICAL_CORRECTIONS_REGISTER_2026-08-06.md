@@ -2247,3 +2247,61 @@ makes that check FAIL.** If no such input can be named, the check cannot fail an
 check. `analysis/r9_session_reader.py --self-test` demonstrates the cheap form: assert that
 each guard fires, and assert a known limitation explicitly so a later "fix" cannot silently
 remove the caveat.
+
+---
+
+## ADDENDUM 2026-08-20, the second-eyes pass. T1, measured from primary source.
+
+**D20. THE VERDICT BOUNDARY IS A PRODUCT OF TWO FLOATS AND MUST BE ROUNDED BEFORE
+COMPARISON.** Read-directly, reproduced live 2026-08-20.
+
+    0.1 * 3.0          = 0.30000000000000004
+    p  > 0.30          -> True     spurious NO-FORD
+    round(p, 6) > 0.30 -> False    correct
+
+Across the depth-velocity grid, **2 cells flip at the 0.30 cap, 0 at 0.45, 2 at 0.60**: four
+in total across the three AR&R class caps, which reproduces the count asserted at
+`deliverables/paper/overleaf/sections/results.tex:7`.
+
+**The canonical path is ALREADY correct and this entry exists so nobody "simplifies" it away.**
+`vehicle_params.py:239` and `renders/yaris_render_s1/gates.py:29` both read
+`if round(depth_m * velocity_ms, 6) > lim["haz_m2s"]`. Removing that `round` silently flips
+four cells of the published phase space on floating-point representation alone. Any new code
+comparing a D x V product against a cap must round to six decimals first.
+
+**E9. A MEASURED 2010 YARIS INERTIA TENSOR AND CG EXIST, AT A DOI THIS PROJECT ALREADY CITES.**
+Read-directly from `~/Downloads/2010-toyota-yaris-coarse-validation-v1.pdf` (5,035,861 bytes,
+`10.13021/G8JS5D`, the same report register E1 names as hull provenance) with
+`/opt/homebrew/bin/pdftotext -layout`. Slide 7, "Inertia Comparisons", **Actual Vehicle**
+column: mass **1078 kg**; roll **388**, pitch **1498**, yaw **1647** kg m^2; CG X 1022 mm,
+CG Y -8.3 mm, **CG Z 558 mm**. The FE Model column reads 1101 kg / 396 / 1545 / 1718 / 557 mm.
+
+This **refutes** `CLAUDE.md` item 4 leg (a) as it stood ("No measured Yaris tensor exists
+anywhere"), and the same false sentence sat in `README.md` and `vehicle_params.py` note 3.
+All three corrected 2026-08-20.
+
+**It strengthens the DO-NOT-WIRE conclusion rather than weakening it.** Mapping through the
+axis transposition of item 4 leg (c), measured roll <-> Iyy, pitch <-> Ixx, yaw <-> Izz:
+
+| axis | measured | solver particle cloud | box fallback |
+|---|---|---|---|
+| roll | 388 | 395.0 (+1.8%) | 463.0 (+19.3%) |
+| pitch | 1498 | 1501.5 (+0.2%) | 1893.0 (+26.4%) |
+| yaw | 1647 | 1685.4 (+2.3%) | 1959.8 (+19.0%) |
+
+The measured vehicle is 1078 kg against the canonical 1100 kg, **+2.0 percent**, and inertia
+scales roughly linearly with mass, so **the residual is the mass difference**. The box fallback
+is 19 to 26 percent off a measured vehicle; the solver's own particle cloud is within 2.3
+percent before mass correction. **This is the first external validation anchor the project has
+for its rigid-body representation.**
+
+CG against the same source: measured **0.558 m**; solver cloud 0.6312 m (+13.1 percent); the
+0.51 m estimate (-8.6 percent); hull bbox mid-height 0.7427 m (+33.1 percent). Item 4's
+conservatism argument survives and now rests on a measurement.
+
+**FALSIFIER for both entries**, per the falsifier rule above: D20 dies if
+`round(0.1*3.0, 6) > 0.30` ever evaluates True, or if a grid sweep finds a different flip
+count. E9 dies if slide 7 of `10.13021/G8JS5D` does not read as transcribed; the command is
+`/opt/homebrew/bin/pdftotext -layout <pdf> - | /usr/bin/grep -A16 "Inertia Comparisons"`.
+
+Full working: `docs/MERGED_RESEARCH_READER_CORPUS_2026-08-20.md` sections 1.1 and 1.2.

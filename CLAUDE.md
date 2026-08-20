@@ -60,10 +60,16 @@ restate them in chat prompts.
   hidden" is true only of the top-level copy, and register D4a records
   `_incoming/` as the canonical per-run tree, so check which copy you
   are reading.
-  ALSO CORRECTED 2026-08-12, verified live: `./.claude/worktrees/` holds
-  2 directories, not 27, so the "multiplies every hit ~20x" figure is
-  stale; re-measure before quoting it. And `./can-it-ford/` no longer
-  exists, so excluding it is now a no-op, see the section below.
+  RE-MEASURED 2026-08-20 AND THE 2 IS NOW STALE IN THE OTHER DIRECTION.
+  This clause read "`./.claude/worktrees/` holds 2 directories, not 27, so
+  the multiplies-every-hit-~20x figure is stale". Live today,
+  `git worktree list` returns **33 worktrees, 28 of them under
+  `.claude/worktrees/`**. So the exclusion is load-bearing again and the
+  ~20x inflation is real again. The lesson is the clause itself: this
+  number has now been wrong in both directions within eight days, so
+  RE-MEASURE IT rather than quoting any figure here, including 28.
+  And `./can-it-ford/` no longer exists, so excluding it is now a no-op,
+  see the section below.
 - Any parameter assigned to a variable (rho, coup_friction, box
   dimensions, mass, thresholds) must trace to a primary source before
   being written into a script or command.
@@ -201,11 +207,40 @@ not by file read from the Mac, see the item for its evidence path.
    data, full working in docs/REALISM_UPGRADE_ASSESSMENT_2026-08-08.md
    section 1, guard enforced at .claude/checks/params_check.py
    check_inertia_wired():
-   (a) It is not measured. compact_sedan's {463.0, 1893.0, 1960.0} reproduces
-       EXACTLY from box_inertia(1100, 4.30, 1.70, 1.47), a solid rectangular
-       box. No measured Yaris tensor exists anywhere: SAE 1999-01-1336 ends
-       Nov 1998. vehicle_params.py:15-19 already says the compact_sedan
-       cg/inertia/ssf are estimates.
+   (a) THE TABULATED NUMBER is not measured. compact_sedan's
+       {463.0, 1893.0, 1960.0} reproduces EXACTLY from
+       box_inertia(1100, 4.30, 1.70, 1.47), a solid rectangular box.
+       vehicle_params.py:15-19 already says the compact_sedan cg/inertia/ssf
+       are estimates.
+       CORRECTED 2026-08-20. THIS LEG USED TO READ "No measured Yaris tensor
+       exists anywhere: SAE 1999-01-1336 ends Nov 1998." THAT IS FALSE, and
+       the correction makes item 4 STRONGER, not weaker. A measured tensor for
+       an actual 2010 Yaris is printed on slide 7 of the CCSA/NCAC validation
+       report at DOI 10.13021/G8JS5D, which is the document this project
+       already cites as its own hull provenance (register E1). Read directly
+       from the PDF with pdftotext, slide 7 "Inertia Comparisons", the
+       "Actual Vehicle" column: mass 1078 kg, roll 388, pitch 1498, yaw 1647
+       kg m^2, CG X 1022 mm, CG Y -8.3 mm, CG Z 558 mm. The SAE 1999-01-1336
+       half was correct and is irrelevant: that is not where the measurement
+       lives. The same false sentence still sits in README.md and in
+       vehicle_params.py note 3; both are corrected in the same pass.
+       DO NOT WIRE remains the conclusion, and the reason is now a measurement
+       rather than an absence. Mapping through leg (c)'s axis transposition,
+       measured roll <-> Iyy, pitch <-> Ixx, yaw <-> Izz:
+         roll   388  vs cloud  395.0 (+1.8%)  vs box  463.0 (+19.3%)
+         pitch 1498  vs cloud 1501.5 (+0.2%)  vs box 1893.0 (+26.4%)
+         yaw   1647  vs cloud 1685.4 (+2.3%)  vs box 1959.8 (+19.0%)
+       The measured vehicle is 1078 kg against the canonical 1100 kg, +2.0
+       percent, and inertia scales roughly linearly with mass, so the residual
+       IS the mass difference. The box fallback is 19 to 26 percent off a
+       measured vehicle; the solver's own particle cloud is within 2.3 percent
+       before mass correction. This is the first external validation anchor
+       this project has for its rigid-body representation.
+       CG height against the same source: measured 0.558 m; solver cloud
+       0.6312 m (+13.1 percent); the 0.51 m estimate (-8.6 percent); hull bbox
+       mid-height 0.7427 m (+33.1 percent). The conservatism argument below
+       still holds and now rests on a measured number, not an estimate.
+       Full working: docs/MERGED_RESEARCH_READER_CORPUS_2026-08-20.md section 1.1.
    (b) The solver already computes a better one, from the real hull particle
        cloud at kernels/mpm_solver_warp.py:859-871. Measured from g64_m1100's
        8905 rigid particles about the true centroid: Ixx 1501.5, Iyy 395.0,
