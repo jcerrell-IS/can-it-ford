@@ -146,9 +146,9 @@ sphere's +34 to +64 percent:
 1. **Wrong part of the stress tensor.** Elastic solid, Hooke's law at Poisson
    ratio 0, and the reported quantity is **von Mises stress**, which is by
    construction blind to the hydrostatic part. A buoyancy force IS that part.
-2. **Refinement fixes their artefact.** A fivefold grid cut leaves "the stress
-   distribution now correctly modelled inside the object" [read]. Ours survives
-   24 gradings.
+2. **Refinement fixes their artefact.** After a fivefold grid cut, "The stress
+   distribution is now correctly modelled inside the object" [read]. Ours
+   survives 24 gradings.
 3. **Defined for boxes only.** "complex boundaries are not supported, but only
    boxes" [read]. Undefined on a sphere or a hull.
 
@@ -327,6 +327,177 @@ On vehicles:
 
 ---
 
+## 3.10 THE TOOL THIS SLOT BUILT, AND WHY IT MATTERS BEYOND THIS DOCUMENT
+
+**`docs/r10/pdftext.swift`.** Named here with its path at the coordinator's
+request, because the constraint it lifts silently shaped the whole night.
+
+This Mac has **no `pdftotext`, no numpy in any interpreter, and no PyObjC**
+[read]. Until tonight, the only way to read a paper here was the Read tool
+rendering it as page images, at most twenty pages a call. That is expensive
+enough that most sessions read abstracts and relayed summaries instead of
+reading full text, which is a large part of why so little of this corpus has ever
+actually been read.
+
+macOS does ship **Swift**, and PDFKit handles the subset-font CMaps that make a
+stdlib zlib extractor return pure garbage. Measured on Bau23: zlib extraction
+returns unreadable bytes, PDFKit returns clean text [read]. Usage:
+
+    swift docs/r10/pdftext.swift <file.pdf> [maxPages] [maxChars]
+
+Everything downstream depends on it: identity verification of 40 files, the
+quote check in 3.11, the local-tree sweep in 3.12, and reading Fou19's results
+without rendering a single page. **A future session should reach for this rather
+than rediscovering the constraint.**
+
+One limit, found by using it: **a PDF with no text layer yields only what its
+typesetter left extractable.** Sch19e returns 187 characters from page 1, the
+running header and title, and no body at all. Identity still verifies, because
+the title is in that layer. Quotations do not. See 3.11.
+
+## 3.11 EVERY DIRECT QUOTATION RE-CHECKED AGAINST ITS SOURCE, AND ONE WAS WRONG
+
+Commissioned because a 15 percent wrong-file rate on scraped PDFs conditions
+every claim sourced from one. Confirming a file is the right paper is necessary
+but not sufficient; the claim that actually matters is that the sentence inside
+my quotation marks is in it. `docs/r10/verify_quotes.py` checks the sentence.
+
+Thirty quotations across this slot's documents, matched whitespace- and
+ligature-insensitively against the source PDFs [read]:
+
+| outcome | count |
+|---|---|
+| found in the source | **21** |
+| source has no extractable body text, human-read only | **9** (all Sch19e) |
+| found to be misquoted | **1**, and it is inside the 21 |
+
+**The misquote, corrected in both documents.** I had written, inside quotation
+marks, "the stress distribution now correctly modelled inside the object". The
+source reads "**The stress distribution is now correctly modelled inside the
+object**". One dropped word, inside quotation marks, in the sentence carrying
+reason 2 of three for why Sch19e cannot explain the sphere result. The
+*substance* is unaffected, the *quotation* was not exact, and it is now exact.
+
+**The nine that could not be machine-checked are all Sch19e**, and that is an
+extraction limit rather than a doubt: I read those pages as rendered images and
+re-read page 8 to confirm the wording above. But they are **human-read only, and
+not independently re-verifiable by this tooling**, so anyone re-quoting them
+should open the page rather than trust this document.
+
+Every other paper passed at 21 of 21, including all five Zha19e quotes, all six
+Bau23 quotes and all five Fou19 quotes.
+
+## 3.12 THE LOCAL TREES DO NOT HOLD THE MISSING PAPERS: 0 OF 154
+
+The coordinator asked whether the acquisition plan had been aimed at the wrong
+place, by re-running resolution with local trees in the route list, including two
+never in this slot's brief. Searched: `~/can-it-ford-refs/` and its dated
+subdirectories, `~/Zotero/storage/`, `~/Downloads/vehicle_meshes/` (never
+searched before tonight) and
+`~/Desktop/CAN_IT_FORD_RESEARCH_CORPUS_2026-08-13/`. Pool of **136 PDFs**,
+excluding this slot's own downloads, which would be circular [read].
+
+**Result: 0 of the 154 unreachable works are present as the work itself.**
+
+The sweep first reported 3, and all three were false positives that the same
+tightening caught: Mil20 and Xia13b both "matched" the Azhar 2023 PDF because
+"vehicle", "stability" and "flood" appear in its opening page, and Sci19 matched
+a Kramer OES Task 10 **workshop presentation**, which is from the same activity
+as the wanted report but is not it [read]. Token overlap cannot separate a paper
+from a paper that cites it, so `title_matches` gained a `strict` mode requiring
+the match to sit in the title-page region. Under it, 154 of 154 are absent.
+
+**This is a clean negative and it is worth having.** The acquisition effort was
+aimed at the right place: the missing works are missing, not mislaid. It also
+sharpens the pattern in 3.13, which is about unchecked *records*, not a hidden
+library.
+
+## 3.13 THE SAME METHOD FAILURE THREE TIMES IN ONE NIGHT
+
+Stated once, as a finding about method rather than about any one file. Three
+times tonight, "we do not have it" turned out to be "we never looked properly at
+what we already own":
+
+1. **Kramer 2021** sat at `~/can-it-ford-refs/2026-08-16/` with a full
+   `PROVENANCE.txt` since 16 August, while three separate passes called it the
+   most valuable unretrieved item [relayed, and the file verified present here].
+2. **d15 found 35 comparable long records already on Vista** when a claim was
+   believed to need new runs [relayed].
+3. **Roy11's DOI, `10.1016/j.cma.2011.03.016`, is recorded in this project's own
+   corrections register**, and this project's own resolver reported the work
+   unfindable. I then published "49 works carry no DOI" on the strength of that
+   [read, mine].
+
+The common shape is not a missing library, which 3.12 rules out. It is that the
+project's own records were not consulted before an external search was declared
+to have failed. **Cheap standing fix: before recording any work as unobtainable,
+grep the register and `~/can-it-ford-refs/` for its title and DOI.** That single
+step would have caught all three.
+
+## 3.14 RE-AIMING, GIVEN THAT THE ACCESSOR QUESTION SETTLED THE OTHER WAY
+
+[relayed from the coordinator, 2026-08-20, and **explicitly flagged as under
+adversarial review at the time it was relayed**: whether the two readings are
+genuinely independent or two readings of the same corrupted fluid state has not
+returned. Treat as strong but unreviewed. I did not re-derive any of it.]
+
+A third accessor, `control_volume_force`, reads `cauchy()` and `vol()` only and
+agrees with `sdf_wrench` to 0.9 to 1.9 percent across three boxes. The instrument
+is exonerated, so **the fluid really is pushing about 1.35x analytic**, the bulk
+pressure field is hydrostatic, and the disturbance is confined to the bottom
+boundary.
+
+That changes what this slot should have been acquiring, and I am recording the
+correction rather than leaving the section 3 ordering to imply otherwise:
+
+- **Section 3.1 gets stronger, for a second and independent reason.** I ruled
+  Sch19e out because it measures von Mises stress and refines away. If the bulk
+  field is hydrostatic and the disturbance sits at the floor, then a mechanism
+  reaching "multiple grid lengths into the object" is doubly the wrong shape:
+  the object is not where the problem is.
+- **Section 3.5 becomes the most on-target thing I acquired, not a near miss.**
+  Fou19's measured defect is *specifically* a pressure dip **near the wall
+  boundary** in a **still-water tank**, which is exactly "the fluid is wrong near
+  a floor". Its 10 percent is still well short of 35 percent, so it does not
+  close the gap, but it is the right family and it is measured.
+- **Section 3.4 gains a second reading.** Zha19e's well-posedness point was
+  filed under question b. If the disturbance is at the bottom boundary, then a
+  domain with kinematic control at inflow and no outflow, closed by slip walls,
+  is a statement about where momentum accumulates, not only about settling.
+- **What should be acquired next is narrower than what I was acquiring.** Not
+  force-extraction papers, and not general locking. Papers on **wall and floor
+  boundary treatment for weakly compressible particle methods with a free
+  surface**, measured at the boundary. From my own want list that is Ada12,
+  Val15b, Mon09, Tao21b and Mar10b, five of which are closed and none of which I
+  obtained. From section 3.9 it is `10.1002/nme.70054`, arbitrary-grid MPM for
+  nonconforming boundary conditions, and `10.2312/egs.20241022`, augmented grid
+  points for MLS-MPM boundaries.
+
+**I then tried to acquire those five, serially, and got none of them.** Barriers
+established per paper by two independent sources, Unpaywall/OpenAlex and
+Semantic Scholar's `isOpenAccess` [read]:
+
+| paper | DOI | barrier |
+|---|---|---|
+| Ada12, generalized wall BC for SPH | `10.1016/j.jcp.2012.05.005` | closed, both sources agree |
+| Val15b, solid wall models for WCSPH | `10.1016/j.jcp.2015.07.033` | closed, both sources agree |
+| Mar10b, free-surface detection and level set | `10.1016/j.jcp.2010.01.019` | closed, both sources agree |
+| Tao21b, semi-fixed ghost particle boundary | `10.3390/jmse9040416` | **nominally gold OA**, MDPI returns 403 to every client I have, with and without a Referer, versioned and unversioned |
+| Mon09, SPH particle boundary forces | `10.1016/j.cpc.2009.05.008` | S2 lists an OA copy, but the figshare record `22986665` is a **metadata-only stub with no files attached** |
+
+Three are genuinely paywalled. Two are recorded as open and are not actually
+retrievable by any route available here. **Tao21b is the one worth a human
+minute**: it is gold OA in a fully open MDPI journal and a browser will almost
+certainly download it where curl cannot.
+
+Separately [relayed, d23-overleaf]: the paper falls back on displacement
+magnitude as its safe quantity, and that quantity is unconverged, falling on both
+resolution legs at 2337 kg while rising then falling at 1100 kg, so the sign of
+the resolution effect is not consistent across masses. Nothing I acquired bears
+on that; recorded so it is not lost.
+
+---
+
 ## 4. Method failures, mine included
 
 **Filenames lie, embedded metadata lies, and they lie in opposite directions.**
@@ -385,6 +556,9 @@ year test caught all six [read].
 | open-access residue unfetched | fifth pass run; recovered Zha17c, Jou20 and the correct Gro18, all verified |
 | WebSearch, WebFetch, DuckDuckGo, arXiv `sortBy` | diagnosed, documented, and replaced by working API routes |
 | `data/r10_acquired/` is gitignored | settled by mirroring every manifest into `docs/r10/`, which is tracked |
+| were the missing papers actually on local disk? | swept 136 PDFs across 4 trees including two never in my brief: **0 of 154**, so the acquisition effort was aimed at the right place |
+| do my quotations actually appear in the sources? | 21 of 21 machine-checkable found, **1 misquote caught and corrected**, 9 unverifiable because Sch19e has no body text layer |
+| my matcher false-positived on same-domain papers | `title_matches` gained a `strict` mode requiring the match in the title-page region; it rejects Mil20/Xia13b against the Azhar PDF and keeps Azh23 |
 | two verifiers disagreeing about the same file | `verify_acquired.sh` retired in favour of `verify_acquired.py`, which imports the fetcher's matcher, so there is one source of truth |
 
 **Not settled, and why:**
@@ -404,6 +578,15 @@ year test caught all six [read].
 - **Bau23 is read at 13 of 49 pages.**
 - **A safe-speed surface does not exist to be acquired** (section 3.8). That is
   the one result arguing for generating data rather than fetching it.
+- **Nine Sch19e quotations are human-read only.** That PDF has no extractable
+  body text, so this tooling cannot re-check them. Open the page before
+  re-quoting.
+- **The re-aim in 3.14 is not acted on.** The accessor exoneration says the
+  fluid is wrong near a floor, which makes floor and wall boundary treatment for
+  weakly compressible free-surface particle methods the right target. The five
+  want-list papers that sit there (Ada12, Val15b, Mon09, Tao21b, Mar10b) are all
+  closed and none was obtained. That is the single most on-target unfinished
+  acquisition.
 
 ---
 

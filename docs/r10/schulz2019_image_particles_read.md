@@ -55,8 +55,8 @@ buoyancy error is not made of.
 
 **2. Refinement fixes the Schulz artefact, and refinement does not fix ours.**
 Section 3.1, read directly: reducing the grid width by a factor of five, from
-dh = 0.05 m to dh = 0.01 m (64,000 particles to 8,000,000), leaves "the stress
-distribution now correctly modelled inside the object." The project's sphere
+dh = 0.05 m to dh = 0.01 m (64,000 particles to 8,000,000) gives this, quoted
+exactly: "The stress distribution is now correctly modelled inside the object." The project's sphere
 excess persists across 24 gradings under refinement. A mechanism that refines
 away cannot be the mechanism behind an error that does not.
 

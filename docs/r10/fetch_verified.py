@@ -56,10 +56,27 @@ def squash(s):
     return re.sub(r"[^a-z0-9]", "", s.lower())
 
 
-def title_matches(text, want):
-    """True if the PDF's own opening text carries the wanted title."""
+def title_matches(text, want, strict=False):
+    """True if the PDF's own opening text carries the wanted title.
+
+    strict=True additionally requires the match to sit in the TITLE-PAGE region
+    rather than anywhere in the opening text. Needed when candidates are
+    same-domain papers that cite each other: a local-tree search matched Mil20
+    and Xia13b to Azhar 2023 purely because "vehicle", "stability" and "flood"
+    all appear in its opening page. Token overlap alone cannot separate a paper
+    from a paper that cites it.
+    """
     if not text.strip():
         return False, "no text"
+    if strict:
+        head = text[:1200]
+        if squash(want)[:40] and squash(want)[:40] in squash(head):
+            return True, "title-page containment"
+        wt = toks(want)
+        ht = set(toks(head))
+        if wt and sum(1 for w in wt if w in ht) / len(wt) >= 0.85:
+            return True, "title-page token overlap"
+        return False, "not in title-page region"
     # route 1: squashed containment, survives ligature loss only if none occur
     if squash(want)[:40] and squash(want)[:40] in squash(text):
         return True, "squashed containment"
