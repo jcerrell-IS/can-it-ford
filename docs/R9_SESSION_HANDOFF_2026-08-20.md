@@ -914,6 +914,143 @@ Before asserting novelty, before citing a mechanism, before spending GPU on a qu
 
 ---
 
+# 7C. WHAT `deep-research` RUN `wf_d942bc1a-e29` ACTUALLY FOUND
+
+**135 extracted claims across 100 agent results.** The synthesis step died on the weekly limit,
+so nothing merged them into a report. These are the ones that change a decision, read from the
+run journal at
+`~/.claude/projects/-Users-josie-can-it-ford/1d537aee-.../subagents/workflows/wf_d942bc1a-e29/journal.jsonl`.
+
+**Provenance warning, and it is load-bearing.** Only three of these went through the 3-voter
+refutation panel (section 5.2). The rest are single-agent extractions whose verifier panels died
+on the account limits. **Treat everything in 7C.2 to 7C.6 as a LEAD WITH A SOURCE, not as a
+verified finding.** Apply `CANDIDATE_PAPER_SCOPE_TEST.md` before citing any of it as a mechanism.
+
+## 7C.1 THE ANSWER TO THE QUESTION THIS PROJECT COULD NOT ANSWER
+
+**A published cross-check of a momentum/impulse-exchange force against a surface-stress integral
+EXISTS, on the same analytic benchmark.** This project spent the round unable to adjudicate
+between two accessors and concluded no published cross-check existed. It does.
+
+- Method A computes force as the negative volume integral of the IBM forcing term plus a
+  rigid-body inertia correction `(pi*d_p^3/6)*dv_p/dt`. Methods B, C and the overset method
+  integrate the stress tensor over the surface. **Both converge at roughly first order and
+  agree.**
+- **And the same paper contains an explicit instance of TWO ACCESSORS ON THE SAME SIMULATION
+  DISAGREEING BY MORE THAN AN ORDER OF MAGNITUDE, WITH THE CAUSE NAMED.** Substituting the Kempe
+  and Frohlich force procedure, which was developed for freely-moving particles at density ratio
+  below 1.2, into a prescribed-motion case raised the force error **from about 2.95 percent to
+  42.2 percent**. The cause is applying a force procedure outside its design regime. **That is
+  the closest published analogue to this project's factor-of-two accessor disagreement.**
+
+## 7C.2 THE BENCHMARK TOLERANCE EXISTS AFTER ALL, AND IT NARROWS SECTION 4.3
+
+Section 4.3 records that no canonical floating-body benchmark states a tolerance on a force.
+That stands for SPHERIC Test 12 and for Kramer. **But a rigid-sphere exact-solution benchmark in
+this run DOES state a protocol and a standard**, and it answers every question this project
+asked:
+
+- Errors reported as percentages of the analytic norms in **BOTH L-infinity (max over space and
+  time) and L2 (RMS)**.
+- Measured over a **fixed half-period window `t = [0.1, 0.6]` chosen to discard the initial
+  transient**.
+- At **three resolutions, `d_p/h` = 16, 32, 64**.
+- **The tolerance the author treats as the achievable standard is 1 PERCENT IN THE MAXIMUM NORM
+  AT 32 GRID POINTS per diameter.**
+
+**Revise section 4.3 to: no FLOATING-BODY benchmark states a force tolerance, but a fixed-sphere
+exact-solution benchmark does, and it is 1 percent in the max norm.** That is a far harder
+standard than this project's 10 percent bands and it should be quoted when criterion 3 is
+rewritten.
+
+## 7C.3 THE FINDING THAT MOST DIRECTLY THREATENS THE PROJECT'S GRID LADDER
+
+**A near-boundary treatment defect that destroys local pressure and velocity-gradient convergence
+does NOT prevent the INTEGRATED force from converging.** For both diffuse-interface and
+sharp-interface IBM, L-infinity errors in pressure and velocity gradient have estimated
+convergence orders of **-0.2 to 0.2**, i.e. no convergence at all, and one method's max-norm
+pressure error actually grows, **while the integrated force still converges.**
+
+**Consequence: a converging force is not evidence of a converging field, and a non-converging
+field does not by itself invalidate a force.** This project has been reasoning in both
+directions from grid ladders.
+
+**And the companion finding:** an empirical near-interface offset, Breugem's interface retraction
+by 0.3h, **reduces force error by almost a factor of 3, from 8.11 to 2.95 percent**, while NOT
+fixing the underlying non-convergence, whose order stayed at approximately zero. **A documented
+case of an error whose magnitude is tunable by an empirical constant without the underlying
+defect being fixed.** That is exactly the shape of a tuned band passing a gate.
+
+## 7C.4 THE BOUND ON HOW LONG A QUIESCENT TANK STAYS TRUSTWORTHY
+
+**A quiescent weakly-compressible tank DEGRADES OVER LONG INTEGRATION.** The still-water pressure
+field stays noise-free to about **20 seconds** and develops noise by around **200 seconds**. The
+static hydrostatic case in that work is analysed over only **4 seconds** of physical time.
+
+**This directly bounds d11's column**, which never goes quiet and whose kinetic energy GROWS.
+Before concluding the solver is defective, establish where the column sits on that timescale: a
+record long enough to enter the degradation regime would show growth in a code with no defect at
+all. **This is the single cheapest test of d11's headline and it needs no GPU beyond a
+re-analysis of existing frames.**
+
+Related, same source: **the paper states NO quantitative error tolerance anywhere and never
+integrates pressure into a force.** Every validated quantity is pointwise. Acceptance is
+asserted qualitatively as "close agreement".
+
+## 7C.5 BOUNDARY TREATMENT, NOT RESOLUTION, SETS THE FLOOR
+
+- **In DualSPHysics standard dynamic boundary conditions, the repulsion mechanism holds fluid off
+  the wall, leaving an unphysical fluid-void gap of order the smoothing length h**, so boundary
+  particle density and hence pressure take unphysical values at the surface. The established
+  workaround is to **relocate the numerical gauge a full h into the fluid**. A reading taken at
+  the nominal surface is systematically wrong regardless of how well the bulk is resolved.
+- **In the canonical static test, a 2.4 x 1.2 m still-water tank with H = 0.5 m and a 0.24 m
+  trigonal wedge giving a sharp corner, DBC FAILS to recover hydrostatic pressure at BOTH
+  resolutions tested (dp = 0.02 and 0.01 m), while mDBC recovers it down to the solid surface at
+  both. The defect is removed by CHANGING THE BOUNDARY TREATMENT, not by halving the particle
+  spacing.**
+- **Han and Cundall compare two force/coupling accessors inside ONE solver** and find the
+  immersed boundary scheme both more accurate AND less sensitive to lattice resolution than
+  momentum exchange. **Both schemes derive from the SAME underlying boundary concept**, so the
+  gap is attributable to how the interface is discretised and how momentum is accounted at it,
+  not to a different physical model.
+- **Momentum-exchange force accuracy is CONDITIONAL on the bounce-back scheme paired with it**;
+  second-order force is attained only "with appropriate bounce-back schemes". **A momentum or
+  impulse-exchange accessor and its boundary treatment cannot be validated separately.**
+
+## 7C.6 TWO CLAIMS THAT BEAR ON THE EXONERATION WITHDRAWAL
+
+- **Inter-code agreement is not evidence of correctness.** Across eleven independent codes
+  solving one specified case, the inter-code spread EXCEEDS the experimental uncertainty and
+  individual RANS models fall outside the measured 95 percent confidence interval at various
+  times. **Membership in an envelope is not validation.** This is the general form of exactly
+  what d21 concluded about two readings agreeing by construction.
+- **The momentum-exchange accessor carries an intrinsic Galilean variance error**, naming the
+  ACCESSOR rather than the fluid or the wall closure. **Falsifiable extension the run supplied
+  itself:** a Galilean mechanism scales with relative frame velocity, so on a body held FIXED at
+  rest relative to the grid it predicts ZERO contribution and therefore **cannot explain a steady
+  over-prediction on a stationary sphere.** Related: the dominant named source of MEM force error
+  is the sub-grid geometric offset between boundary nodes and the solid surface, whose
+  fluctuating character comes from that distance being TIME-DEPENDENT as the body moves. **For a
+  fixed body the oscillatory component vanishes and a constant offset remains** — which is a
+  candidate for a steady bias and is the one lead in this section pointing at a fixed-body
+  steady error.
+- **The citation lead to chase:** Dong et al., cited as reference [1] of the 2025 moving-wall
+  paper, is a prior published error analysis of MEM force evaluation **for STATIC FLAT WALLS**.
+  That is geometrically the closest published match to a body held fixed in a tank, and it is
+  the error budget this project has been trying to construct from scratch.
+
+## 7C.7 ONE MORE, ON MODEL FORM RATHER THAN DISCRETISATION
+
+**A linearised hydrostatic buoyancy force law is a named model-form error of about 50 percent at
+full submergence**, established by direct force-sensor measurement against the analytic
+submerged-volume expression, and in a dynamic model it systematically inflates the body's
+acceleration. **Because it lives in the FORCE LAW rather than the discretisation, no grid
+refinement removes it.** The magnitude brackets this project's 35 percent. Worth checking whether
+anything in the chain linearises a buoyancy term.
+
+---
+
 # 7B. THE WORKFLOW AND AGENT OUTPUTS, IN FULL
 
 Every background workflow and agent run tonight, what it returned, and where the raw result
