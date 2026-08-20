@@ -510,3 +510,114 @@ unretrieved items in their respective questions:
 
 Opening each in a browser and saving the PDF into `~/can-it-ford-refs/2026-08-20/` would
 close both. That is the single highest-value manual step available.
+
+---
+
+## 9. BOTH MDPI PAPERS READ AT SOURCE, AND BOTH DIE. THE PATTERN IS NOW A RULE.
+
+I assigned these two to Josie as "the highest-value human minute" because MDPI returns HTTP 403
+to WebFetch and the Undermind connector reported no PDF. **That was my error: I have browser
+tools, and MDPI serves open-access full text as HTML.** Both were read in full at 04:0x on
+2026-08-20 through the in-app browser. Neither is on local disk; a full-disk search across 2,590
+PDFs in five stores returned nothing for either.
+
+### 9.1 `Was26` FAILS THE SCOPE TEST, AND THE PAPER SAYS SO ABOUT ITSELF
+
+**Waseem and Hong 2026, `10.3390/math14111845`, Mathematics 14(11):1845**, in the special issue
+*Mathematical Applications in Computer Graphics*. Section 8.1 flagged it as the closest analogue
+to Job B on four axes. Read in full, it is a **PRECEDENT and NOT A MECHANISM**, and three of the
+five questions fail.
+
+| question | verdict |
+|---|---|
+| 1. discretisation | **FAIL.** Pure WCSPH with a Tait equation of state. The uniform grid is neighbour search ONLY, cell size equal to the smoothing radius. **There is no velocity projection onto grid nodes anywhere.** Delete the grid and the method still works, which is the test's own diagnostic. |
+| 2. coupling scheme | **PASS, and strongly.** Per-particle analytic SDF, penetration correction along the gradient, velocity split into normal and tangential with restitution and friction, impulse `J_i = m_i(v_i' - v_i)` accumulated atomically. Genuinely the same family as `sdf_wrench`. |
+| 3. regime | **PASS.** A rigid sphere released on a still fluid surface, converging over 25 s, 397 data points. Quiescent flotation equilibrium. |
+| 4. quantity | **FAIL.** The number is a submergence RATIO, `s_eq = 0.613` against `0.700`. The "14 percent more upward force per unit submerged volume" is the extraction's inference, not the paper's number. |
+| 5. evidence strength | **FAIL, hardest.** |
+
+**Question 5 is where it dies, and the authors write the refutation themselves.** Their
+buoyancy is Equation 17:
+
+    F_buoyancy = -n_colliding * s_buoyancy * m_i * g
+
+**A particle COUNT times a scale factor.** And `s_buoyancy` is auto-calibrated at initialisation
+by Equation 18 to hit a TARGET submergence. Section 3.4.4, verbatim: *"This collision-count-based
+approach prioritizes GPU efficiency over exact hydrostatic accuracy."* Section 6, verbatim:
+
+> "The buoyancy model (Equation (17)) approximates the Archimedean force by scaling the
+> contribution of colliding particles rather than integrating fluid pressure over the submerged
+> surface or computing the exact displaced volume... This trade-off prioritizes GPU efficiency
+> and real-time performance over exact hydrostatic accuracy, **which is acceptable for
+> interactive applications but may not satisfy the requirements of engineering-grade
+> simulations.**"
+
+And their own future work item (ii) is *"replacing the collision-count buoyancy model with
+pressure-integrated buoyancy... to reduce the equilibrium submergence error."*
+
+**So the 12.46 percent is the acknowledged residual of a deliberately approximate, hand-tuned
+heuristic that its authors already plan to replace. It is not a discovered defect in a
+momentum-exchange accessor.** And the mechanism it names as the cause, a collision count times
+a calibration constant, **does not exist in this project's solver**, which accumulates the actual
+momentum-exchange impulse. Cite it as a precedent that SDF-coupled particle methods report
+static-buoyancy error at the tens-of-percent scale. Never cite it as a mechanism.
+
+**TWO THINGS DO TRANSFER, and both are worth more than the headline.**
+
+1. **An exclusion, quantified.** They bound the error from non-deterministic parallel impulse
+   accumulation: worst case `O(N_c * eps_mach)` with `eps_mach = 1.19e-7`, giving relative force
+   error of order **1e-3** at tens of thousands of simultaneous collisions. This project also
+   accumulates impulses in parallel, so **atomic-accumulation non-determinism is bounded near 0.1
+   percent and cannot explain 35 percent.** That is a live candidate closed by arithmetic.
+2. **A checkable question for this repo.** If any part of this project's chain scales a force by
+   a particle count times a constant rather than integrating, it has Equation 17's defect. Worth
+   one grep before the next accessor claim.
+
+### 9.2 `Tao21b` FAILS FOR THE SAME REASON, AND IT IS THE SIXTH TO DO SO
+
+**Tao, Zhang and Ren, `10.3390/jmse9040416`, "A Local Semi-Fixed Ghost Particles Boundary Method
+for WCSPH".** The acquisition slot named it one of the five most on-target wall and floor
+treatment papers and could not obtain it.
+
+Read in full: it is a **fictitious/ghost particle** boundary method. Its fictitious particles
+carry a **hydrostatic pressure correction**, `P_f = P_i + rho_0 * g . r_if` (Equation 12), with
+density from the equation of state and velocity assigned by the Takeda method.
+
+- **Question 1 FAILS**: pure SPH, no grid-node projection.
+- **Question 2 FAILS**: it is a boundary-PARTICLE method carrying an extrapolated PRESSURE. This
+  solver's floor **writes a velocity onto a grid node, never a pressure, and has no boundary
+  particle of any kind.** Re-verified live tonight: a search of the vendored core's `kernels/`
+  and `core/` for dummy, ghost, mirror and fictitious particle returns **zero files**.
+- **Question 4 FAILS**: no force number appears anywhere in the paper. Every validated quantity
+  is a pressure or a surface elevation.
+
+**What transfers, and it is not nothing.** It validates on a still-water tank AND a water tank
+with a wedge, i.e. a sharp corner, and it states that *"the fluid particle with larger smoothing
+length is more sensitive to the boundary and takes more time to reach a stable position in the
+hydrostatic simulation"* — a settling-time-versus-resolution statement in a hydrostatic tank,
+which is the closest published remark to d11's column that never goes quiet.
+
+### 9.3 THE RULE THIS ESTABLISHES, AND IT SHOULD REDIRECT THE ACQUISITION EFFORT
+
+Six candidates have now died on the scope test, and **five of them died on the same structural
+ground**: Amicarelli, the two MDPI findings demoted in handoff 5.2, and now `Was26` and
+`Tao21b`. Every one is SPH, every one's boundary mechanism requires either boundary particles or
+pressure extrapolation, and **this solver has neither.** Its entire floor boundary condition is
+five lines that project out a normal velocity component on a grid node.
+
+> **The SPH boundary-treatment literature cannot supply a MECHANISM for this solver's floor.**
+> It can only ever supply a precedent. Any paper whose fix is a dummy particle, a ghost particle,
+> a pressure extrapolation or a gauge offset fails question 2 before it is read.
+
+**So stop acquiring SPH wall-treatment papers for the floor question.** The remaining three of
+the acquisition slot's five, Ada12, Val15b and Mon09, are all SPH wall models and will fail the
+same test; they are no longer worth a paywall fight. Aim instead at **MPM and PIC/FLIP grid-node
+boundary conditions**, where the mechanism is a velocity projection on a grid node. From the
+acquisition slot's own section 3.9, the two that match are `10.1002/nme.70054`, arbitrary-grid
+MPM for nonconforming boundary conditions, and `10.2312/egs.20241022`, augmented grid points for
+MLS-MPM boundaries. Neither has been read.
+
+**And a method note.** The browser reached both papers in under a minute where WebFetch got 403
+and the connector reported no PDF. Any future "unretrievable" verdict on a gold-OA paper should
+try the browser before it is recorded, and the acquisition slot's 57 open-access-but-host-refuses
+count should be re-measured with a browser in the route list.
