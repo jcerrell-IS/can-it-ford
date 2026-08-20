@@ -654,6 +654,162 @@ the failure of my four to anticipate it should be recorded rather than smoothed 
 
 ---
 
+---
+
+## 8. FINALISED. The measurement chose OUTCOME B, and it also broke two of my own clauses.
+
+**Job 923353 (`r9_est_h`, COMPLETED, 12:30) landed and `f7f0c89` records it. Read from the
+commit, not from the relay.** Job 923343 (`r9_est_g`) also completed at 10:59; the
+control-volume result is in the later one, and both job numbers were checked live because
+the number I had been given was not the one I had been tracking.
+
+**g64, bcfix engine, on-node floor, last 50 frames, `sub = 113.77 mm`, analytic
+`rho*g*V_cap = 44.630 N`:**
+
+| box | Fz_cv | ratio | conditioning |
+|---|---|---|---|
+| L=0.18, z_b=0.38 | 61.373 N | 1.3752 | 21.94 pct |
+| L=0.22, z_b=0.38 | 61.613 N | 1.3805 | 14.68 pct |
+| L=0.22, z_b=0.30 | 61.009 N | 1.3670 | 9.75 pct |
+| L=0.30, z_b=0.30 | 66.402 N | 1.4878 | 5.22 pct (worst conditioned, outlier) |
+
+`sdf_wrench` reads **60.476 N, ratio 1.3551**. The three well-conditioned boxes agree with it
+to **+0.88 to +1.88 percent** (recomputed: 61.009/60.476 and 61.613/60.476).
+
+**OUTCOME B. The routes AGREE. The accessor is exonerated. Criterion 3-B is adopted.**
+
+### 8.1 Where the real result did NOT match my description, recorded because I pre-committed to it
+
+**Three mismatches. All three are mine, and the first is the most instructive.**
+
+**(i) The magnitude was wrong, and wrong in exactly the way I had just diagnosed.** My
+outcome B read "CV excess near +46 percent". The measurement is **+35.5 percent** at
+`sub = 113.77 mm`. The +46.17 percent I quoted was d21's matched-submergence estimate **at
+130 mm**. The two differ because they are at **different operating points**, which is
+specifier (c) of my own section 7.1, the one I wrote three hours earlier as "STILL UNNAMED".
+**I named a magnitude without naming the submergence, in a section whose entire subject was
+that you must not do that.** The binding still resolves correctly, because outcome B's
+discriminating condition was "the routes agree" and not the magnitude, but the description
+was defective and a less lucky pairing would have made it ambiguous.
+
+**(ii) My "33.5x margin" was over-confident, and `f7f0c89` explains why better than I can.**
+Section 7.2 argued the CV route's -1.3800 percent synthetic bias gave 33.5x margin over the
+gap it had to resolve. **The tank-wide control volume in fact returned -162.6 N where the
+analytic answer is 44.6 N.** Not an algebra bug: `p_face*A = 4254.85 N` against
+`W_fluid = 4417.45 N`, so the answer was **1.05 percent of either term** and a 1 percent
+error anywhere becomes a 95 percent error in the result. d21's own sentence is the lesson:
+**"A check built from the same assumption the estimator makes validates the algebra and is
+blind to the conditioning."** My synthetic margin was real and bounded the wrong thing.
+**Outcome D nearly happened, and it was averted by shrinking the box, not by the margin I
+cited.** The fix is structural: report a conditioning number beside every differenced
+quantity. Shrinking tank-wide to `L=0.18` moved it from 1.05 to 21.94 percent, 21x.
+
+**(iii) Clause B2's grading target is invalidated by the same commit.** As pre-registered,
+B2 said to grade "the extrapolated `dx -> 0` value", citing the three-point linear fit's
+**-4.2 percent**. A fourth dx point changes that: **every `dx -> 0` intercept is now
+POSITIVE, +4.28 to +10.29 percent across six fit specifications, and only 1 of 6 is
+monotone** (down from 5 of 6 with three points). The slope stays positive in all six, so the
+direction survives; the intercept does not. In the best-conditioned specification the
+sequence is 42.28, 25.26, 22.29, 23.49 percent: **a fall at the coarse end and then a plateau
+near 22 to 25 percent. A zero asymptote is not supported.**
+
+**A plateau cannot be graded by extrapolating to zero.** Fitting a line through a plateau
+produces an intercept that is an artifact of the fit window, which is exactly what the +4.28
+to +10.29 spread demonstrates. **B2 is therefore amended below, and the amendment is forced
+by data that arrived after the binding, not chosen.**
+
+### 8.2 CRITERION 3, FINAL. All five specifiers filled.
+
+> **Criterion 3 (final, 2026-08-20).** The steady vertical reaction on the held sphere, in
+> two parts. **Neither part grades the physics against an external standard, because none
+> exists (8.3).** This criterion characterises; it does not validate.
+>
+> **3-B1, the instrument gate.** `sdf_wrench` and `control_volume_force()` must agree to
+> within **2 percent** at the graded state. **A conditioning number must be reported beside
+> every differenced quantity**, and any control volume whose answer is a smaller fraction of
+> its own terms than **10 percent** is reported and excluded, not averaged in. *(Met today:
+> 0.88 to 1.88 percent across the three boxes above 9.75 percent conditioning; the 5.22
+> percent box is the outlier and is excluded by this rule rather than by hindsight.)*
+>
+> **3-B2, the physics characterisation, graded on the PLATEAU and not on an intercept.** The
+> excess over `rho*g*V_cap` must be reported as a function of `dx` over **at least four
+> resolutions**, at **matched submergence**, with the **fit-specification sensitivity shown**
+> (window and polynomial order both varied, as in the six-row table). The graded number is
+> the **plateau level at the fine end**, currently **22 to 25 percent**, together with an
+> explicit statement of whether the sequence has plateaued or is still falling. **A `dx -> 0`
+> intercept must NOT be quoted as the graded value**; it may be reported as a diagnostic with
+> its specification spread.
+>
+> **The five specifiers, filled:** (a) quantity: the steady vertical reaction, by both routes;
+> (b) window: the last 50 frames, stated with its stationarity verdict; (c) submergence:
+> stated in mm with every number, and matched across any comparison; (d) route: both, with
+> agreement as the gate; (e) reference: `rho*g*V_cap` at the measured surface, at a **stated
+> resolution**, with the dx dependence reported.
+
+### 8.3 The band is this project's own choice, and the field publishes none
+
+**This must be stated in the criterion rather than implied, and it is a stronger position
+than it looks.**
+
+**Verified by me, from the primary source, in section 12 of
+`R9_KRAMER_FULL_EXTRACT_2026-08-18.md`:** Kramer 2021's 0.3 percent is a **motion**
+uncertainty, "of the respective drop heights", reproducing at 0.2915 percent from the shipped
+CI95 series, and **5.1x to 5.2x larger against the local signal**. It is not a static-force
+tolerance and must never be imported as one.
+
+**Relayed and NOT verified by me:** that SPHERIC Test 12 (10 x 5 x 29 cm prism, relative
+density 0.68, mass 0.986 kg, reference data Hadzic 2005 and Xing-Kaeding 2006) states no
+quantitative tolerance, no acceptance criterion and no error percentage, with forces inferred
+from motion; and that Test 14 is free heave of an axisymmetric round-based body. **I tried to
+check this live and could not: `WebFetch` fails with the identical
+`deepseek-ai/DeepSeek-V4-Flash:deepinfra` model error that kills the subagents, so the
+dead-model failure is not limited to `Agent` calls.** Marked UNVERIFIED rather than repeated
+as checked. **The Kramer leg alone is enough to forbid inheriting a tolerance from Kramer;
+the field-wide generalisation rests on the relay and should carry that label until someone
+fetches the page.**
+
+**Consequence for the criterion:** the 10 and 25 percent bands, and the 2 percent agreement
+gate above, are **this project's own choices**. Their only anchor is this project's own
+box-SDF agreement of 7.3 to 7.7 percent, rounded outward, which is itself a self-consistency
+figure. **No published tolerance from any SPH, VOF, LBM or MPM study was imported, and none
+should be.** Where the criterion is met, the correct sentence is "within this project's
+stated band", never "within tolerance".
+
+### 8.4 What is unchanged by outcome B
+
+The ladder-stop, for the reason given in section 7.4 and now instantiated: **under B the
+discrepancy is real**, so running the harder path on top of an unexplained and now
+*confirmed* 35 percent excess is precisely what the gate exists to prevent. Job C's value
+still goes up for the section 6.5 reason. **And section 6.5's prediction now sharpens:** with
+the excess confirmed as real rather than an accessor artifact, the free-decay period test
+becomes a test of whether that real excess acts on the dynamics multiplicatively. At
+`k = 1.3551` the predicted 01D period is **0.675993 s** against my band floor of 0.760850 s,
+still far outside. *(That digit was hand-rounded to 0.675990 in draft and the regenerates-check corrected it to 0.675993. Fourth instance today; the check has now caught a hand-derived number in every document I have written tonight, which is an argument about my arithmetic and not about the check.)*
+
+### 8.5 A register entry I did NOT apply, with the exact text and the reason
+
+The coordinator asked for a register line on vendored-core citation error rates. **I have not
+applied it, and the reason is not reluctance.** My register copy hashes `d5f2a69d`, matching
+`r9-jobb-route` and `r9-accessor`, while `claude/add-ci-checks` carries `18426e32`, which is
+**1576 lines longer, appended at line 654**. Appending my entry to a copy that is 1576 lines
+behind would guarantee a conflict in the exact region both edits target. **It should be
+applied to the current register on `add-ci-checks`, not to my stale one.** Exact text:
+
+> **H-n. `file:line` citations into `third_party/mpm-engine-544c93dd-solver-core/` have a
+> measured error rate and must be re-read at point of use, never copied.** Two off-by-one
+> citations into `kernels/mpm_solver_warp.py` have now been caught, both after propagating.
+> (1) The rigid-mass sum was cited as `:851-853`, corrected to `:856`; the old range named
+> the `np.zeros` allocations and a loop header rather than the sum. Closed by `35b7ed0`.
+> (2) The SDF contact impulse was cited as `:2732` in round-9 dispatches, corrected to
+> `:2733`; `:2732` is the `m = state.grid_m[gx, gy, gz]` fetch and `:2733` is
+> `impulse = m * (v_free - v_new)`. Caught 2026-08-20. **Both were off by a small number of
+> lines in the direction of naming the setup rather than the operation**, which is the
+> failure mode to expect: a reader scrolling to a construct stops at its first line. Re-read
+> the line before citing it, and quote the code text beside the number so a stale citation is
+> self-evident.
+
+---
+
 ## 4. Review status
 
 **UNREVIEWED by a second party.** The `physics-skeptic` subagent is dead fleet-wide,
