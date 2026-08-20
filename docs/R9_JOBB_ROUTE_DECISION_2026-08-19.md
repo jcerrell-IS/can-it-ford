@@ -1395,7 +1395,17 @@ scope. The sender flagged this themselves before I checked, which is why the che
 
 ---
 
-## 17. A THIRD accessor confirms the force. The accessor family is exonerated
+## 17. A THIRD accessor agrees with the force to under 2 percent
+
+**SECTION 18 WITHDRAWS THIS SECTION'S HEADLINE. Read it first.** Two adversarial attacks
+land: the two readings share the fluid STATE even though they share no code, and in a steady
+state momentum conservation makes their agreement largely automatic; and the "three
+well-conditioned boxes" was a post hoc selection, with the honest spread being +0.9 to +9.8
+percent rather than +0.9 to +1.9. The verdict branch is unchanged; the strength of the claim
+is not. The original text stands below because the numbers in it are correct and only the
+inference from them was wrong.
+
+### 17.0 (original heading: "the accessor family is exonerated", WITHDRAWN)
 
 Job **923353**. `control_volume_force` reads `cauchy()` and `vol()` only: fluid state, with
 no knowledge that a collider exists. Tight control boxes around the sphere, top face above
@@ -1506,3 +1516,124 @@ It remains an explanation and not a proof: nobody has measured the excluded volu
 **That is the next test, and it is cheap** -- count grid cells the collider gates at
 `sd <= band` and compare their volume to the cap. It needs no new physics and no new run
 longer than three minutes.
+
+---
+
+## 18. Both attacks on section 17 land. "Exonerated" is withdrawn
+
+No subagent reviewed `f7f0c89`: two adversarial reviews died on parent-process crashes and
+the third on the account's weekly limit, which resets 2026-08-21. **Section 17 was
+self-reviewed only.** Running both attacks myself.
+
+### 18.1 ATTACK ONE. The reading paths ARE disjoint. The STATE is not, and that is what matters
+
+**The narrow claim survives, verified by source read on the pinned engine.** No collider
+path writes particle stress or `particle_F` anywhere: `/usr/bin/grep -n "particle_stress\[|
+particle_F\["` over `mpm_solver_warp.py` returns **nothing**. Every collider writes
+`state.grid_v_out` and only that. So `sdf_wrench` and `control_volume_force` genuinely share
+no code and no node set.
+
+**The broad claim does not.** The substep order in `p2g2p` is: `compute_stress_from_F_trial`
+("F and stress are updated"), then p2g, then the grid operations **including the collider's
+projection onto `grid_v_out`**, then g2p. So particle `F` at substep n+1 is computed from a
+grid velocity the collider modified, and `cauchy()` is `stress()/det(F)`. **Particle stress
+is causally downstream of every collider projection that has occurred.**
+
+**And worse for my framing: in a steady state, momentum conservation makes the two readings
+approximately equivalent BY CONSTRUCTION.** The control-volume balance
+`Fz = p_face*A - W_fluid` is the same momentum bookkeeping the impulse sum performs, read at
+a different surface. A momentum-conserving solver must satisfy both. **Their agreement is
+therefore mostly a check that the bookkeeping is consistent, not evidence that the fluid
+state is physically right.**
+
+**WHAT IS WITHDRAWN**: "THE ACCESSOR IS EXONERATED", and "the whole family of 'the force is
+mis-read' explanations is closed". Section 17's headline over-claims and the attack is
+correct.
+
+**WHAT SURVIVES, and it is not nothing**: the agreement to under 2 percent rules out the
+class of implementation defects that would break the momentum balance, which is most of the
+ways an accessor is actually wrong: a wrong `dt`, a sign error, a double count, a missing or
+duplicated node set, a wrong mass. **Those are excluded.** What is not excluded is a fluid
+state that is itself biased, and that is a physics problem rather than an accessor problem.
+The correct sentence is: **`sdf_wrench`'s momentum bookkeeping is self-consistent to under
+2 percent against an independent surface, which is what a momentum-conserving solver forces
+and therefore mostly tests the bookkeeping.**
+
+### 18.2 The non-tautological byproduct I hoped for does NOT survive either
+
+The `W_fluid` term is not forced by the momentum balance in the same way, so it looked like
+a direct measurement of the excluded volume, which is exactly the quantity section 17.4 said
+was the next test. Extracting it:
+
+| box | V_excluded | V_cap | excess | implied b/dx |
+|---|---|---|---|---|
+| L=0.18, z_b=0.38 | 6.0744 L | 4.5576 L | +33.28% | 0.684 |
+| L=0.22, z_b=0.38 | 5.9864 | 4.5576 | +31.35% | 0.648 |
+| L=0.22, z_b=0.30 | 5.7177 | 4.5576 | +25.45% | 0.535 |
+| L=0.30, z_b=0.30 | 5.3656 | 4.5576 | +17.73% | 0.381 |
+
+**The implied inflation runs 0.684 to 0.381 of a cell depending on which box measures it, a
+factor of 1.8. A physical excluded volume cannot depend on the box used to measure it, so
+this is not a measurement of one.** It is withdrawn.
+
+**And checking it found a real defect in my own estimator.** The weight term uses
+`RHO_W_BENCHMARK * G * sum(vol())`, but `vol()` is `vol0 * det(F)`, the CURRENT volume. Mass
+is conserved, so the fluid weight is `rho * g * sum(vol0)`, the INITIAL volume. The two
+differ by the compression strain, 0.68 to 2.97 percent by section 4's bound, in a term
+roughly four times the answer. **That is a 3 to 12 percent error in the reported `Fz_cv`
+and it is mine.** It does not change section 17's branch, because all four boxes remain far
+from 1.0 either way, but every `Fz_cv` number carries it.
+
+### 18.3 ATTACK TWO. The selection was post hoc. The verdict is not
+
+**Answered from git history in one command.** `git log -S"conditioning"` and
+`git log -S"well-conditioned"` both return exactly one commit: **`f7f0c89`, the commit that
+reports the result.** The pre-registration in `run_r9g.sh` names two outcomes and a
+null, and says nothing about conditioning or about excluding any box.
+
+**So "the three well-conditioned boxes" is post hoc and the honest spread is all four:**
+
+    1.3670, 1.3752, 1.3805, 1.4878   against sdf_wrench's 1.3551
+    that is +0.9 to +9.8 percent, NOT the +0.9 to +1.9 percent section 17 quotes.
+
+One thing genuinely in my favour, stated without overweighting it: **the conditioning
+ORDERING was computed before the run, from geometry alone**, predicting 22.15 / 14.83 / 9.86
+/ 5.30 percent, and the measured deviation is largest in the box that ordering ranked worst.
+That is a consistency check that happens to hold. **It is not a pre-registered criterion and
+I am not treating it as one.**
+
+**THE VERDICT BRANCH IS UNCHANGED.** The pre-registration asked whether `cv_fz` lands near
+`rho*g*V_cap` (accessor at fault) or near `1.35x` it (fluid really pushing). **All four
+boxes give 1.367 to 1.488. None is within 30 percent of 1.0.** The post hoc selection
+changes the quoted precision, not which branch was taken.
+
+### 18.4 What unwinds downstream, and what does not
+
+The coordinator names three things resting on the exoneration. Checking each:
+
+- **Criterion 3's PASS band being the size of the instrument's resolution at g64
+  (section 5).** Rests on `A_w/V_cap = 14.605 per metre`, arithmetic from the cap-volume
+  derivative, verified independently by Wolfram, and corroborated by a measured 9.8-point
+  estimator spread. **It does not touch the accessor. UNAFFECTED.**
+- **The redirection onto the floor (sections 11, 12).** Rests on the one-character A/B, the
+  2x2, and the no-body control, all measured on leak counts and surface heights.
+  **UNAFFECTED.**
+- **The decision to stop hunting the accessor. WEAKENED, and its justification has to be
+  rewritten.** It is no longer "an independent reader confirms the force". It is "the
+  momentum bookkeeping is self-consistent, so the remaining accessor-side failure modes are
+  ones that preserve momentum, which is a much smaller set than the ones excluded". That is
+  still a reason to look elsewhere first, and it is a weaker reason than section 17 gave.
+
+### 18.5 What would actually settle it, since neither attack leaves a clean answer
+
+**A reader that does not conserve momentum with the collider by construction.** The obvious
+one: integrate the pressure over the body's wetted surface directly, from the SDF geometry
+and the local fluid pressure, and compare with the impulse sum. **A pressure integral and a
+momentum impulse are not forced to agree** when the contact treatment excludes a volume
+different from the geometric body, which is precisely the hypothesis under test. That is the
+measurement section 17.4 should have proposed instead of the excluded-volume extraction, and
+it is still cheap.
+
+**Third correction of the night on a result that looked clean**, and the same shape as the
+first two: a number that survived my own check because my own check shared the assumption
+being tested. Sections 15.3 and 17.1 record the other two.
