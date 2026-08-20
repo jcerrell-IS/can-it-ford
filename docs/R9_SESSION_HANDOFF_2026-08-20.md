@@ -1051,6 +1051,111 @@ anything in the chain linearises a buoyancy term.
 
 ---
 
+# 7D. THE R10 JOURNAL: 399 FINDINGS NOBODY READ, AND SEVEN THAT CHANGE THE PAPER
+
+The R10 report is 1024 lines distilled from **399 agent findings** in its run journal. The
+report kept the five that changed the most. These are the ones it left behind that still change
+a decision. All are tagged `read-directly` by the agent that produced them, which means the
+agent read the source rather than recalling it, but **none has been independently re-verified,
+so treat each as a lead with a named source until checked.**
+
+Journal at `~/.claude/projects/-Users-josie-can-it-ford/529261e9-.../subagents/workflows/wf_5266ee59-fb9/journal.jsonl`.
+
+## 7D.1 THE FRICTION COEFFICIENT IS THE WEAKEST NUMBER IN THE PROJECT, AND TWO SOURCES SAY SO
+
+**AR&R's `mu = 0.30` is a SAFETY-FACTORED DESIGN VALUE carrying a documented 40 percent reduction
+from a physical measurement, not a measured friction coefficient. Directly measured stationary
+flooded road-tyre friction is 0.85 to 1.15.**
+
+**And Nihei et al 2025 measured the ROLLING RESISTANCE coefficient of an unbraked full-scale
+vehicle at the exact moment of flood washaway: 0.0250 and 0.0242. That is an ORDER OF MAGNITUDE
+BELOW the `mu_s` of about 0.30 that every existing criterion assumes.**
+
+Those two together are the most consequential pair in this section. This project runs
+`floor_friction = 0.55` on all 17 gated runs. **The literature now brackets the physically
+relevant value between 0.024 and 1.15 depending on whether the vehicle is braked, rolling, or
+being washed away, and the criteria everyone cites use a number that is neither measured nor at
+the physically relevant end.** Section 4.4 of the realism search already ranked bed friction as
+the single strongest verdict-changing effect. This is why.
+
+## 7D.2 A VALIDATION TARGET THIS PROJECT HAS BEEN CITING RESTS ON THREE DATA POINTS
+
+**Shah et al 2018's formula validation rests on THREE data points.** The regression is
+`y = 0.3858x + 0.3946` with `R2 = 0.995`. **A slope of 0.386 means the theoretical velocity would
+have to change 2.6 times as much as the experimental one, and the fit looks good only because all
+three points lie inside a 0.05 m/s window: 0.55, 0.57 and 0.60 m/s.**
+
+An R-squared of 0.995 across three points spanning 5 cm/s is not validation. **Anyone citing Shah
+2018 as a validation target must state this**, and it belongs beside the existing correction that
+Shah's drive force is at 1:10 scale.
+
+The replicable numbers, if the case is ever reproduced: 1:10 Perodua Viva, prototype
+3575 x 1475 x 1530 mm at about 800 kg kerb, model 357.5 x 147.5 x 153.0 mm at 880 g
+(`W_T = 8.628 N`), **critical water depth 0.0457 m at model scale which Froude-scales to 0.457 m
+full scale**, water 1000 kg/m3, `C_D` set to 1.1 or 1.15 by depth-to-chassis ratio.
+
+## 7D.3 THE AR&R CLASS TABLE, READ DIRECTLY AND REPRODUCED IN FULL
+
+Every L1 verdict in this project rests on this table, and it is now on the record from a direct
+source read rather than from a summary:
+
+| class | geometry gate | limiting still depth | limiting depth at 3 m/s | limiting velocity | D.V |
+|---|---|---|---|---|---|
+| small passenger | L < 4.3 m, kerb < 1250 kg, clearance < 0.12 m | 0.3 m | 0.1 m | 3.0 m/s | <= 0.3 |
+| large passenger | L > 4.3 m, kerb > 1250 kg, clearance > 0.12 m | 0.4 m | 0.15 m | 3.0 m/s | <= 0.45 |
+| large 4WD | L > 4.5 m, kerb > 2000 kg, clearance > 0.2 m | (see source) | | | |
+
+**This is the table that makes the paper's class claim checkable in one line**, and it is why
+"no AR&R class is satisfied on all three axes" is an arithmetic statement rather than a judgement.
+The canonical Yaris is 4.30 m, 1100 kg and 0.1737 m clearance, so it fails the small-passenger
+kerb-and-clearance gates and the large-passenger length-and-kerb gates simultaneously.
+
+## 7D.4 A CITATION ERROR IN CLAUDE.md's OWN LITERATURE SECTION
+
+**CLAUDE.md's AUGUST 5 LITERATURE REVIEW item L-7 names "arXiv 2607.00673 (Low, Hsiao, Li,
+Thorpe, Topcu, Kumar, July 2026)". The file on disk is arXiv 2605.30542v1, dated 28 May 2026,
+with author list Thorpe, Tretiakov, Hsiao, Low, Li, Iqbal, Bhatt, Topcu, Kumar**, Thorpe and
+Tretiakov marked equal contribution. Either two distinct papers exist and L-7 cites the one
+nobody has, or L-7's identifier and author order are wrong. **Resolve before the paper cites it**,
+because L-7 is the item CLAUDE.md uses to argue that this project's novelty is the validation
+step rather than the pipeline.
+
+## 7D.5 A ZERO-ORDER BOUNDARY SCHEME IS A PUBLISHED MECHANISM FOR REFINEMENT-INSENSITIVE ERROR
+
+**A peer-reviewed WCSPH verification study documents boundary-condition implementations that are
+ZERO-ORDER CONVERGENT while the interior scheme is second order.** That is a concrete, published
+mechanism for a force error that refinement does not fix, and it is the general form of what
+sections 5.2 and 7C.5 found in specific cases.
+
+**This is the single most on-target unread lead for the floor question**, because it does not
+require the solver to have dummy particles or pressure extrapolation, which is what disqualified
+the MDPI findings when d11 checked them against the source.
+
+## 7D.6 AN IRREDUCIBLE ERROR FLOOR IN THE GROUP'S OWN ADJACENT WORK
+
+**Hsiao and Kumar 2025 report MAE of 0.64 to 1.38 degrees on inverted friction angle, standard
+deviation 0.71 to 1.36, across 10 Bayesian-optimisation trials per ground truth, and diagnose an
+IRREDUCIBLE ERROR FLOOR: image differences persist even when the simulated friction angle exactly
+equals ground truth, because the material points are sampled rather than identical.**
+
+That is a directly relevant precedent from the same group: **a validation loop with a floor set by
+representation rather than by physics.** It is the closest thing this project has to a
+sanity-check on how small an error it is reasonable to chase.
+
+## 7D.7 TWO PLATFORM FINDINGS WITH IMMEDIATE COST
+
+- **The Hugging Face account is PRO**, which grants **HF Jobs, ZeroGPU and Inference Endpoints,
+  and NONE of them is in use anywhere in the repo.** HF Jobs in particular is a second compute
+  venue that does not touch the Vista allocation at all.
+- **The two W&B loggers disagree on entity, and one of them writes OFFLINE, so its runs never
+  reach the cloud project.** That is a second and independent reason the r9 wave is invisible,
+  beyond the missing artifact calls. Any offline-then-sync design must fix the entity mismatch
+  first or it will sync into the wrong project.
+- **`flood-mpm-debugging-reference` is STALE**: it still says coupling-force validation is
+  "currently zero". It is loaded by any session before writing Methods or Limitations text.
+
+---
+
 # 7B. THE WORKFLOW AND AGENT OUTPUTS, IN FULL
 
 Every background workflow and agent run tonight, what it returned, and where the raw result
