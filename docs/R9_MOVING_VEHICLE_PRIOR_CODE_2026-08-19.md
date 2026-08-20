@@ -1956,3 +1956,79 @@ currently ships citing **one** work from the vehicle fording and wading literatu
 The literature contains **at least fourteen**. Adding the six above does not weaken
 the contribution; **failing to add them makes the novelty claim unsupportable**, and
 two of them (Lyu, He) constrain how that claim can be phrased at all.
+
+---
+
+# ADDENDUM 14: THE VEHICLE COSIM RAN, AND I SEARCHED FOR A DOI I HAD JUST WRITTEN
+
+## 52. A vehicle-scale coupled run on a GH200 costs RTF 92.4
+
+Batch **923199 COMPLETED, ExitCode 0:0**, 6 MPI ranks on `c609-001`. **[read]**
+
+```
+Loaded JSON ../data/vehicle/Polaris/Polaris.json
+RTF: 437.076 ... 208.217 ... 128.993 ... 100.406 ... 92.3967
+```
+
+**Real-time factor settles at 92.4**, from a 437 start, monotonically decreasing as
+startup cost amortises. So a **Polaris wheeled vehicle co-simulated against CRM/SPH
+terrain on one GH200 runs about 92 times slower than real time.** One simulated
+second costs about a minute and a half of wall clock.
+
+**Stated plainly: this run did NOT finish its intended duration.** I wrapped it in
+`timeout 1800` and the 30:09 elapsed is that timeout firing, not the demo
+completing. `rc=0` in my log is the exit status of the `tail` in my pipeline, not of
+the solver, which is a defect in my own script and I am not reading it as success.
+What is established is that **the pipeline runs end to end on aarch64 across 6
+ranks**, and the RTF, which had clearly converged.
+
+**Why the number is worth keeping even though the run was truncated.** It is the
+only vehicle-scale cost figure this project has from an independent code on its own
+hardware, and it bounds what a vehicle-in-fluid coupled simulation costs before
+anyone plans one. **It is CRM terrain, not water**, so it is not a fording cost, and
+nobody should quote it as one.
+
+## 53. I CLAIMED LYU 2024 APPEARS "NOWHERE IN THE REPO AT ALL". THAT WAS A SELF-REFERENCE TRAP.
+
+A full-tree scan I had abandoned as too slow completed afterwards and returned
+**31 hits** for `10.1016/j.compfluid.2023.106144`. My committed claim in section 45
+was "0 in `papers[]`, 0 in `documents[]`, in neither bibliography and **nowhere in
+the repo at all**". The last clause is **false as written**.
+
+**What it actually is, with the scope stated this time:** **[read]**
+
+| scope | Lyu 2024 |
+|---|---|
+| `origin/main`, tracked | **zero** |
+| `claude/r9-priorcode`, tracked | **1 file, and it is my own document** |
+| whole working tree, untracked included | 31 hits, all written tonight |
+
+**I searched for a DOI I had myself introduced into the repo hours earlier.** The
+31 hits are this document, the shared board, and sibling sessions' notes, all
+created after I first wrote the DOI down. The defensible claim is **"absent from
+`origin/main`, from the corpus index, and from all three bibliographies"**, which is
+what I actually established and which is fully sufficient for the conclusion. The
+sweeping version added nothing and was wrong.
+
+**This is my fourth self-correction tonight and the third of the same class: a
+count published without its scope.** The others were the DRIFT_THRESHOLD-style
+container question in section 45, the tree-provenance error in section 48, and this.
+**The pattern is now unambiguous enough to state as a rule of its own:** when the
+thing you are counting is a string you have recently written, **a repo-wide search
+measures your own activity**, and the only honest scopes are a ref that predates
+your work or an explicitly tracked-file view. Neither is expensive.
+
+## 54. One thing that DID corroborate cleanly, from two independent scans
+
+The abandoned slow scan and the fast scoped scan were written separately and run
+against different file sets, and **they agree exactly on the bibliography column**:
+`10.1111/jfr3.12828`, `10.1115/1.4071177`, `10.1115/DETC2015-47142`,
+`10.4271/2014-01-0936` and `10.1016/j.compfluid.2018.10.007` each appear in exactly
+**1** file under `paper/`, and `10.1051/matecconf/201820307003` in **2**. The
+positive control returned 10 hits repo-wide and 0 under `paper/`, so the predicate
+could return a hit and did.
+
+**That is two separate origins agreeing, which is the standard this project holds
+itself to, and it is the reason the section 51 must-cite list survives everything
+above.** The prior-art table's identity and citation columns are the part I would
+defend; the sweeping absence claim in section 45 is the part that needed the scope.
