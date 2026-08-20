@@ -1,0 +1,38 @@
+cite_key	verdict	file	wanted_title
+Alq23	CONFIRMED	Alq23_10.3390_su151713262.pdf	Understanding the Stability of Passenger Vehicles Exposed 
+Arr19	MISMATCH	Arr19_10.3850_38wc092019-1786.pdf	Sensitivity of Transport Model to Hydraulic Model for Floo
+Arr19b	CONFIRMED	Arr19b_10.1016_j.scitotenv.2018.11.191.pdf	Preparedness against mobility disruption by floods
+Bau23	CONFIRMED	Bau23_10.1002_nme.7217.pdf	Analysis and mitigation of spatial integration errors for 
+Bha19	CONFIRMED	Bha19_10.1016_j.apor.2019.101932.pdf	Simulating water-entry/exit problems using Eulerian-Lagran
+Bha26	CONFIRMED	Bha26_10.21203_rs.3.rs-9889935_v1.pdf	Bridging the Gap on AI-Assisted Scientific Software Develo
+Boc21	CONFIRMED	Boc21_10.1111_jfr3.12737.pdf	Determining the vehicle instability risk in stream crossin
+Cre15	CONFIRMED	Cre15_10.1016_j.cpc.2014.10.004.pdf	DualSPHysics: Open-source parallel CFD solver based on Smo
+Doc08	CONFIRMED	Doc08_10.5957_jsr.2008.52.4.263.pdf	Unsteady effects during resistance tests on a ship model i
+Dom21	CONFIRMED	Dom21_10.1007_s40571-021-00404-2.pdf	DualSPHysics: from fluid dynamics to multiphysics problems
+Eva23	CONFIRMED	Eva23_10.1016_j.scitotenv.2023.168237.pdf	A combined stability function to quantify flood risks to p
+Fou19	CONFIRMED	Fou19_10.1016_j.compfluid.2019.06.009.pdf	Local uniform stencil (LUST) boundary condition for arbitr
+Jen21	CONFIRMED	Jen21_10.1007_s00348-021-03151-5.pdf	Challenges and procedures for experiments with steady and 
+Kra16	MISMATCH	Kra16_10.1016_j.ijdrr.2016.04.003.pdf	Safety criteria for the trafficability of inundated roads 
+Lam18	CONFIRMED	Lam18_10.1016_j.ress.2018.01.015.pdf	Stress tests for a road network using fragility functions 
+Mad21	CONFIRMED	Mad21_10.1145_3528223.3530093.pdf	Fast evaluation of smooth distance constraints on co-dimen
+Mar17	MISMATCH	Mar17_10.1080_1573062x.2017.1301501.pdf	A new experiments-based methodology to define the stabilit
+Mol19	CONFIRMED	Mol19_10.1016_j.ijdrr.2018.10.022.pdf	Validation of flood risk models: Current practice and poss
+Nas25b	CONFIRMED	Nas25b_10.1093_rasti_rzag008.pdf	Task-parallelism in SWIFT for heterogeneous compute archit
+Neg19	CONFIRMED	Neg19_10.1016_j.cma.2020.113119.pdf	An improved non-reflecting outlet boundary condition for w
+Obe04	CONFIRMED	Obe04_10.2172_918370.pdf	Verification, Validation, and Predictive Capability in Com
+Pre17	CONFIRMED	Pre17_10.1016_j.trd.2017.06.020.pdf	The impact of flooding on road transport: A depth-disrupti
+Pre17b	CONFIRMED	Pre17b_10.1061_(asce)is.1943-555x.0000372.pdf	Impact of climate change on disruption to urban transport 
+Pre24	CONFIRMED	Pre24_10.3390_wevj15060266.pdf	Mass, Centre of Gravity Location and Inertia Tensor of Ele
+Rie20	CONFIRMED	Rie20_10.1007_s11831-020-09473-7.pdf	Unified Framework and Survey for Model Verification, Valid
+Sch19e	CONFIRMED	Schulz2019_ImageParticles_Particles2019_522-531.pdf	A Consistent Boundary Method for the Material Point Method
+Sha19d	CONFIRMED	Sha19d_10.1016_j.rineng.2019.100032.pdf	Hazard risks pertaining to partially submerged non-station
+Sha20	CONFIRMED	Sha20_10.1111_jfr3.12657.pdf	Hydrodynamic effect on non-stationary vehicles at varying 
+Sha21	CONFIRMED	Sha21_10.31436_iiumej.v22i1.1502.pdf	Froude Number Variance with Respect to the Hydrodynamic Re
+Sik24	CONFIRMED	Sik24_10.3390_app14020639.pdf	Enabling Bitwise Reproducibility for the Unstructured Comp
+Val12	CONFIRMED	Val12_10.1016_j.jpdc.2012.07.010.pdf	Towards accelerating smoothed particle hydrodynamics simul
+WRONG-FILE	QUARANTINED	WRONG-FILE_not-Gro18_actually-JCGM200-2012-VIM.pdf	
+Wei22	CONFIRMED	Wei22_10.1145_3528223.3530103.pdf	Approximate convex decomposition for 3D meshes with collis
+Xio24	CONFIRMED	Xio24_10.1029_2023wr036739.pdf	Simulation of the Full-Process Dynamics of Floating Vehicl
+Zha17	CONFIRMED	Zha17_10.1016_j.proeng.2017.01.041.pdf	Numerical Simulations of Dam-break Floods with MPM
+Zha19e	CONFIRMED	Zha19e_10.1016_j.compfluid.2018.10.007.pdf	Development of in/outflow boundary conditions for MPM simu
+Zhe17	CONFIRMED	Zhe17_10.1016_j.ijnaoe.2017.08.001.pdf	An improved solid boundary treatment for wave-float intera
