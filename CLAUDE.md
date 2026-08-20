@@ -498,8 +498,21 @@ L-3. No accepted particle force-convergence criterion exists for MPM.
      0.2944294473039918 / 0.1472147236519959, exactly 2.000. State
      this as a limitation, not as a converged resolution.
 
-L-4. Coarse resolution usually OVER-predicts peak hydrodynamic force.
-     Over-threshold NO-FORD verdicts are therefore conservative.
+L-4. NO LONGER A FLAT RULE, amended 2026-08-20. It used to read "Coarse
+     resolution usually OVER-predicts peak hydrodynamic force.
+     Over-threshold NO-FORD verdicts are therefore conservative." Two
+     independent hits, both from the R10 journal, both read-directly:
+     a COUNTER-EXAMPLE exists, Smith and Mack 2014 reported in WRL
+     2014/07 section 6.3.2, where numerical models at 1 m, 5 m and 10 m
+     grids UNDER-predicted peak local velocity around a building
+     against both a physical model and observed damage; and the
+     register's Section I already lists this sentence for deletion on
+     sight, so the constitution and the corrections authority
+     disagreed. An under-predicted force makes a NO-FORD verdict LESS
+     conservative, not more, so the direction of the error matters.
+     State the "usually" with its exception, and never use L-4 alone to
+     argue the published verdicts are safe-side. Working in
+     docs/R10_LITERATURE_IMPLEMENTATION_2026-08-20.md section 3.3.
 
 L-5. Steffen, Kirby and Berzins 2008 is the citable mechanism for MPM
      losing convergence under grid refinement at fixed
@@ -516,8 +529,21 @@ L-7. arXiv 2607.00673 (Low, Hsiao, Li, Thorpe, Topcu, Kumar, July
      without external validation. The novelty for this project is the
      validation step, not the pipeline.
 
-L-8. Engine decision: do not switch. DualSPHysics ships x86-only
-     static libraries, a hard aarch64 blocker on GH200.
+L-8. Engine decision: do not switch. THE DECISION STANDS AND ITS STATED
+     REASON IS UNVERIFIED, separated 2026-08-20. The reason used to read
+     "DualSPHysics ships x86-only static libraries, a hard aarch64
+     blocker on GH200." The deep search commissioned to test exactly
+     that, "GPU particle solver portability scaling and surrogate
+     fidelity", 56 papers, returns: "The supplied literature neither
+     confirms that the cited SPH package is intrinsically x86-only
+     today nor documents an ARM-host CUDA build failure." Separately,
+     Chrono::FSI-SPH builds and runs on Vista aarch64 in 94 seconds.
+     So do not switch, and do not restate the x86-only claim as
+     established. If the engine question reopens, that search names the
+     portable options, Kokkos-based Karamelo among them, and the one
+     hard Grace Hopper datapoint, a SWIFT SPH prototype at 15 million
+     particle-updates per second with near-perfect strong scaling
+     across four nodes.
 
 ## git filter-repo standing note
 Moved to the `git-history-rewrite` skill (.claude/skills/git-history-rewrite/).
@@ -670,10 +696,33 @@ whether it reaches a reader-facing document. Built 2026-08-15 by
 `~/Downloads`, because a prior session lost a pass when Downloads returned EPERM
 and a recursive search silently reported zero hits.
 
-Headline numbers, measured not estimated: **43 of 332 papers reach `paper/`,
-`docs/`, `deliverables/` or `citations/`.** 60 carry no
-DOI and are undiffable. 222 have an abstract; the other 110 are metadata-only
-because each report details its top 50 only, so never describe those as read.
+**THE INDEX COVERED 8 OF 21 DEEP SEARCHES FOR FIVE WEEKS, AND NOW COVERS 21.**
+Fixed 2026-08-20. `REPORTS` is a hardcoded list of markdown files under
+`~/Downloads`, so a search entered only if somebody exported it by hand. The
+builder is pure standard library and CANNOT call an MCP connector, so the fix is
+two-phase: an agent turn pulls the searches to `data/deep_searches/`, now
+tracked, and the builder reads them. `--searches` lists and greps them and
+`--source-audit` exits 1 when a completed search reaches the corpus by no route.
+Four of the thirteen that were invisible answered live project questions,
+including the one whose summary states that NO STUDY QUANTIFIES A CROWNED OR
+CAMBERED ROAD AGAINST A FLAT PLANE.
+
+**`--query` NOW MATCHES AUTHORS.** It covered title and abstract only, so an
+author query could not return a hit and its zero read as coverage. That is how
+"none of the six closest prior-art DOIs is in the corpus" was relayed to three
+sessions on 2026-08-19. All six were present. A MISS IS NOT AN ABSENCE UNTIL YOU
+KNOW WHAT THE PREDICATE SEARCHED.
+
+Headline numbers, measured not estimated. **THE 43 IS INFLATED BY EXACTLY 9,
+measured both ways 2026-08-20**: `docs/Dynamic_Vehicle_Traction_in_Floodwater.md`
+is a raw connector dump carrying 34 DOI strings, and nine papers had that dump as
+their only reader-facing route. The honest ladder is **34 reaching written
+project prose, 43 counting the raw dump, 3 actually printing in the paper**. The
+builder now excludes the dump, so a rebuild reports the lower figure and the
+absolute number moves as new prose is added; the DELTA of 9 is the stable fact.
+60 carry no DOI and are undiffable. 222 have an abstract; the other 110 are
+metadata-only because each report details its top 50 only, so never describe
+those as read.
 
 **"REACH" IS NOT "CITED" AND THIS BLOCK USED TO CONFLATE THEM.** Corrected
 2026-08-18. The clause "256 are cited nowhere" is WITHDRAWN: it took the
@@ -731,6 +780,13 @@ wading simulations exist and `paper/` cites NONE of them: He et al 2026
 the last of which is cited nowhere in the repo at all. Al-Qadami et al 2022
 `10.1111/jfr3.12828` separately claim a first moving full-scale vehicle
 simulation, with critical depth 0.38 m and minimum D x V 0.39 m^2/s.
+NEVER QUOTE THAT D x V FIGURE WITHOUT NAMING THE PAPER, added 2026-08-20.
+The same group's `10.3390/su151713262` (2023) reports the SAME 0.38 m depth
+and a sliding threshold of **0.36 m^2/s**, not 0.39. The depth agrees exactly
+and the depth-velocity figure does not, so a bare "Al-Qadami's D x V" is
+ambiguous between two of their own papers. The 2023 paper also reports drag
+DECREASING with Froude number and flow velocity, which runs against the
+intuition behind this project's velocity sweep.
 
 ## AUGUST 15 2026, THE FIXED SETTLE LENGTH IS CONTRADICTED BY OUR OWN DATA
 
