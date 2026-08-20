@@ -24,12 +24,18 @@ description: Query the project's own external research index (332 records, 319 d
 > X", say which predicate you used and whether it COULD have returned a hit.
 > This applies to your own numbers, not only to numbers you are checking.
 >
-> **A MISS IS NOT AN ABSENCE, AND HERE IS THE WORKED EXAMPLE THAT HAS NOW FOOLED
-> THREE READERS.** `--query "Al-Qadami"` returns **0**. Three separate sessions
-> have taken that zero as evidence the corpus is silent on this project's
-> closest prior art, and the third escalated it to "the index cannot answer
-> questions about its own prior art". **Measured live 2026-08-20, all six of the
-> closest prior-art DOIs are PRESENT, 6 of 6:**
+> **A MISS IS NOT AN ABSENCE. A ZERO FROM THIS TOOL MEANS "THE PREDICATE I RAN
+> DID NOT MATCH", AND NOTHING ELSE.** It does not mean the corpus lacks the
+> work, and it never means the project has not researched the question. Before
+> a zero becomes a sentence anyone else reads, say which field you searched and
+> whether it could have contained the answer.
+>
+> Here is what that costs when it is skipped, and it is the failure that cost
+> this fleet a night. `--query "Al-Qadami"` returns **0**. One session ran it,
+> read the zero as coverage, and **relayed "none of the six closest prior-art
+> DOIs is in the corpus" to three sessions. Two of them acted on it.** The
+> conclusion then escalated to "the index cannot answer questions about its own
+> prior art". **Measured live 2026-08-20, all six are PRESENT, 6 of 6:**
 >
 > ```
 > 10.1111/jfr3.12828              Al-Qadami 2022, numerical moving vehicle
@@ -44,7 +50,17 @@ description: Query the project's own external research index (332 records, 319 d
 > guaranteed**, not measured: on `claude/add-ci-checks` and every other ref,
 > `--query` matches `title` and `abstract` only and never `authors`. **The index
 > CAN answer by DOI and CANNOT answer by author, and the conclusion drawn from
-> the zero was the exact opposite of the truth.** Check a DOI before reporting
+> the zero was the exact opposite of the truth.**
+>
+> **THE AMPLIFIER IS THE RELAY, NOT THE QUERY.** One unchecked zero became three
+> briefed sessions and two changed pieces of work, and none of the three could
+> have caught it, because a relayed conclusion arrives without the predicate
+> that produced it. So the rule has a second half: **when you pass on someone
+> else's negative result, pass on the command that produced it**, and when you
+> receive one, ask what was searched before you act. A zero is a measurement of
+> a tool; only a stated predicate makes it a measurement of the world.
+>
+> Check a DOI before reporting
 > that the corpus lacks a paper.
 
 > **DO NOT QUOTE A COUNT FROM THIS FILE. RUN THE CHECK.** Every number here is a
@@ -382,6 +398,15 @@ author-route search keyed on the workspace spelling misses it.
 Beware short surnames
 in the other direction too: a substring search for "Xia" returns **23** records,
 nearly all of them hits inside given names such as "Lingxiao" and "Xiao-Guang".
+
+**THE FALSE POSITIVE IS THE SAME DEFECT WEARING THE OTHER FACE, AND IT IS EASIER
+TO MISS BECAUSE A NON-ZERO LOOKS LIKE SUCCESS.** Measured 2026-08-20:
+`--query "bed"` returns **32**, of which only **11** contain `bed` as a word.
+The other 21 are `embedded` and `bedding`. Nobody double-checks a result that
+came back full, so an inflated count travels further than an empty one. **For
+any token under about five characters, re-check with a word-boundary regex over
+the JSON before you quote the number**, and prefer `--method` to `--query`
+wherever a tag exists: it is curated rather than matched.
 
 **4. Testing deep-search membership against the `documents` list.** `documents`
 holds Claude artifacts, Perplexity reports, Elicit extracts and bibliographies,

@@ -1415,6 +1415,34 @@ This is not a documentation problem. Nine worktrees are sitting on a copy that
 predates even the coordinator's corrections, and no amount of writing in my copy
 reaches them.
 
+### 32a. THREE TREES, THREE STATES OF THE SAME CAPABILITY. Know which you are on.
+
+The corpus tool is not "present or absent". It exists in three states, and each
+one fails differently. **Whoever lands this must identify their starting tree
+first, because the same command produces a different answer in each.**
+
+| tree | tool | `--query` searches | `--query "Al-Qadami"` | how it fails you |
+|---|---|---|---|---|
+| `origin/main` | **does not exist** | n/a | command not found | Honest failure. A fresh clone has NO corpus tool, so a session told to "query the index before asserting" simply cannot, and knows it. |
+| `claude/add-ci-checks` | exists, blob `b775b31` | title + abstract | **0** | **The dangerous state.** The tool runs, returns a confident empty list, and the zero is indistinguishable from absence. This is the state that cost the fleet a night. |
+| `claude/r9-corpus-bib` | exists, fixed | title + abstract + authors | **5** | Returns the answer, and on a zero prints what it could not match. |
+
+**The middle row is worse than the top row.** A missing tool announces itself; a
+half-fixed one does not. So "land it onto `add-ci-checks`" is not a tidy-up, it
+is the removal of a silent failure mode, and until it happens every session on
+that tree is one author query away from the same mistake.
+
+Verified 2026-08-20: `git ls-tree origin/main` returns nothing for
+`analysis/research_index.py`, `.claude/skills/research-corpus/SKILL.md` or
+`data/research_corpus_index.json`; `add-ci-checks` carries `--query` matching
+title and abstract only.
+
+**A consequence for the landing order.** The skill and the tool must land
+TOGETHER. The skill on `add-ci-checks` already tells sessions to run `--query`,
+and this branch's skill tells them a zero prints its own warning. Landing the
+skill without the tool produces a document promising a safety net that the code
+does not have, which is a fourth state and the worst of them.
+
 ## 33. What actually conflicts is ONE file, and it is smaller than reported
 
 Merge base `af62473`, which is a commit on this branch. Since then:
@@ -1600,3 +1628,84 @@ across, until the union collapsed to a take-mine. It cost five PLY header reads.
 The general form: when two documents conflict, check whether the conflict can be
 **dissolved by making one of them complete** before planning how to resolve it.
 A merge you no longer have to make cannot go wrong.
+
+---
+
+# PART 6, 2026-08-20: AIMING THE CORPUS AT FLOOR AND BED BOUNDARY TREATMENT
+
+The accessor question is reported settled: a third independent reading agrees
+with `sdf_wrench` to 0.9 to 1.9 percent, so the fluid really is pushing 1.35x
+analytic and the physics has moved to the floor. RECALLED from the coordinator,
+not re-derived here. This part answers only the corpus question that follows:
+**what does the project already hold on floor and bed boundary treatment in
+particle methods, and where is it.**
+
+## 39. It is in three places and only the first is reachable today
+
+**(a) The indexed corpus, reachable now.** `--method boundary-treatment` returns
+**18 records**. It is MPM-heavy and includes Zhang 2017 incompressible MPM for
+free surface (`10.1016/j.jcp.2016.10.064`), Mao 2016 improved MPM with adaptive
+refinement (`10.1061/(asce)em.1943-7889.0000981`), Zhao 2019 in/outflow BCs
+(`10.1016/j.compfluid.2018.10.007`, the one already cited in `paper/`), and
+Steffen's implementation-choices paper.
+
+**(b) The exported buoyancy search, on disk and NOT reachable.**
+`data/deep_searches/buoyancy-overestimation.json` passes the gates and
+`build()` can read it, but no build has consumed it, so `--query` cannot see it.
+It carries the SPH boundary-treatment material specifically:
+
+    Mon09   SPH particle boundary forces for arbitrary boundaries
+            10.1016/j.cpc.2009.05.008
+    Neg22   How to train your solver: Verification of boundary conditions
+            for smoothed particle hydrodynamics    10.1063/5.0126234
+    Gar19   Pressure applied to submerged bodies, explicit and semi-implicit
+            SPH                                    10.1109/OCEANSE.2019.8867480
+    Jou20   3D gradient corrected SPH for fully resolved particle-fluid
+            interactions                           10.1016/j.apm.2019.09.030
+
+Neg22 is the one to read first: it is *verification of boundary conditions* as
+its subject, which is the shape of the current question rather than an
+application that happens to have a floor.
+
+**(c) The 17:44 search, invisible.** `free surface elevation estimator error in
+particle method buoyancy validation`, 88 papers, not exported. It cites
+`[Sch19e]` for **traditional MPM wall momentum zeroing distorting stress several
+grid lengths into an object, with image-particle boundaries reducing the
+artifact**, which is the most directly on-point claim anywhere in this survey and
+is currently reachable by nobody. Exporting that one search is roughly four
+connector calls.
+
+**So the answer to "aim the corpus at the floor" is mostly a build and one
+export, not a new deep search.** The material is largely already bought.
+
+## 40. What the index CANNOT tell you here, stated so the gap is not mistaken for a finding
+
+`--query` returns **0** for `basal`, `ghost particle` and `wall boundary`.
+**None of those zeros is an absence**, for two independent reasons: the query is
+a literal substring over title, abstract and authors, and 13 of 21 deep searches
+reach the corpus by no route at all. A count from this index is a lower bound on
+what the project holds, never a measure of it.
+
+The opposite error showed up in the same pass and is worth recording because it
+is the one nobody re-checks: `--query "bed"` returns **32**, and only **11**
+contain `bed` as a word. The other 21 are `embedded` and `bedding`. **An
+inflated count travels further than an empty one**, because a full result looks
+like success. Both traps are now in the skill.
+
+## 41. A caution on the redirect itself
+
+Three confirmed wall-treatment findings, all SPH, is a useful result and it is
+also a warning. **This project's 17 gated runs are MPM, not SPH**, and the floor
+is `add_plane` with friction 0.55 plus a hard-coded restitution, which is a
+grid-velocity projection and not an SPH boundary force. Transferring an SPH
+boundary-treatment conclusion to it is a cross-method inference, and this
+document has already recorded one cross-vehicle comparison and one
+cross-container count that were reported as if they were like-for-like.
+
+`[Sch19e]` is the exception worth chasing precisely because it is about MPM wall
+momentum zeroing, which IS what this solver does. **And note the standing
+tension: `d19-priorcode` reports `simulation/image_particles.py` as implemented,
+run and refuted, while `[Sch19e]` is cited for image-particle boundaries fixing
+the artifact.** One is a claim about a method, the other about this repo's
+implementation of it. Still not adjudicated, and still worth adjudicating before
+the floor work is planned.
