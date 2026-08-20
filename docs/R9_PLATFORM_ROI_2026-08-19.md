@@ -1294,3 +1294,156 @@ a pinned git blob, and a published dataset. Duplicating that into W&B buys
 nothing on its own. The thing W&B has that those do not is **cross-run
 comparison over time**: which threshold, which window, which grid, which seed,
 queryable without re-reading four files. Log the axes, not the arrays.
+
+---
+
+# PART 9. W&B from a compute node, scoped not built; and three licences are live
+
+## 40. What W&B actually holds, measured, including two corrections
+
+| claim | measured | verdict |
+|---|---|---|
+| 106 runs each carry exactly one history row | **36 runs have exactly 1 row; 70 have no `_step` at all** | **substance holds and is worse**: no run carries a time series, and most logged no history whatsoever |
+| zero `wandb.Artifact` in the project | the API returns **18 artifacts**, and **all 18 are type `wandb-history`**, auto-created by W&B itself | **the code-level claim stands**: there is no deliberate artifact, no version, no lineage. Do not let the 18 mislead a later reader into thinking lineage exists |
+
+So the 91-frame time series that every stationarity and settle-length finding
+rests on **has never been logged**, and there is no artifact with a producing
+run anywhere in the project.
+
+## 41. Can a compute node log at all? Scoped, with the boundary stated
+
+**Verified on Vista's login node**, credential tested by authentication rather
+than by reading it, and no value printed:
+
+| fact | result |
+|---|---|
+| `~/.netrc` present | **yes**, and it names `api.wandb.ai` |
+| `WANDB_API_KEY` in the environment | **unset**, so `.netrc` is the route a job would take |
+| `wandb` importable | **yes, 0.26.1** |
+| does that stored credential authenticate? | **YES, `viewer = jcerrell29`** |
+
+That last row is the one worth having: this project's key history is messy, a
+dead key sat in `~/.netrc` and `.zshrc` until 2026-08-17, and the credential on
+Vista **is the live one**. Anyone designing around it can stop worrying about
+which key is there.
+
+**NOT VERIFIED: whether a compute node has outbound reach to `api.wandb.ai`.**
+There was no running job to `srun --overlap` into when I checked (`922514` had
+finished, only a `PENDING` job in the queue), and I declined to submit a job
+purely to probe, because the instruction was to scope rather than build and the
+allocation is finite. The one-line test, for whoever next holds a live
+allocation:
+
+```
+srun -p gh -N 1 -n 1 -t 00:05:00 --overlap --jobid=<JOBID> \
+  python3 -c "import wandb; print(wandb.Api().viewer.username)"
+```
+
+A username means live logging is possible. A timeout or connection error means
+it is not.
+
+### 41.1 The recommendation does not depend on that unknown
+
+**Offline-then-sync is correct either way, so the probe is worth running for
+knowledge, not for the decision.**
+
+- **If a compute node has no egress**, offline is the only option.
+- **If it does**, offline is *still* the better choice: live logging puts a
+  network dependency inside a GPU job, where a stall or a retry burns allocation
+  rather than wall-clock on a laptop. Adding a fan-out dependency is especially
+  wrong this week, with the account already on usage credits.
+
+**Smallest change to the sbatch template: two exported variables and one
+post-job line.**
+
+```bash
+# in the sbatch script, before the python call
+export WANDB_MODE=offline
+export WANDB_DIR=$SCRATCH/wandb/$SLURM_JOB_ID
+
+# once, afterwards, ON THE LOGIN NODE where egress and the credential are both confirmed
+wandb sync $SCRATCH/wandb/$SLURM_JOB_ID/offline-run-*
+```
+
+The driver itself needs one `wandb.init` and the run's own parameters. Nothing
+else changes, no network assumption is added to the job, and the sync step runs
+where this section already proved the credential works.
+
+**What to log, in the order that pays.** Not the arrays: 368 rows already live
+in a committed TSV, a pinned blob and a published dataset. Log the **axes** and
+the **scope**, which is what nothing currently holds: the deciding thresholds,
+the retained frame window, seed, grid, and the artifact path. That is the
+combination that would have made tonight's `/work`-only results self-locating,
+and it is the same fix as CLAUDE.md item 8 (gate verdicts exist only in stdout
+and are never persisted) and item 5 (two disagreeing displacement measures for
+one run, 0.658537 against 0.637019 for `g64_m1100`).
+
+## 42. THREE licences are published right now, not two, and one of them is mine
+
+Read live from each surface:
+
+| surface | declares |
+|---|---|
+| `CITATION.cff` | **ODC-By-1.0** |
+| repo `LICENSE` | **BSD 3-Clause** |
+| Space card, live on the Hub | **bsd-3-clause** |
+| **speed-surface dataset card, live on the Hub** | **cc-by-4.0** |
+| results archive card | **cc-by-4.0** |
+
+Code under BSD and data under ODC-By is a normal split and probably the
+intent. **But `cc-by-4.0` is a third answer and I introduced it**, on two
+published surfaces, by writing a plausible dataset licence into a card without
+checking it against `CITATION.cff`. That is the same failure this document keeps
+recording, committed by me in the licence field rather than in a number.
+
+**This is Josie's to settle, in one sentence: which licence covers the data.**
+I have not changed any licence field, because guessing again is how there came
+to be three. Once it is stated, the fix is three one-line edits and a redeploy.
+
+## 43. A DOI does not come from Zenodo here, and Spaces cannot carry one
+
+Correcting my own section 3, which recommended Zenodo first. **Hugging Face
+mints DOIs through DataCite**, and they are documented for **models and datasets
+only, not Spaces**. Two consequences:
+
+1. The Space cannot be the citable object. Any run data that a paper needs to
+   cite has to live in a **dataset** repo, which is now the case:
+   `can-it-ford-speed-surface` and `can-it-ford-results` both hold it.
+2. Zenodo is still available and still mints a DOI for a **restricted** record,
+   which section 3 verified. So there are two routes, and the HF one is cheaper
+   because the data is already there.
+
+**Neither is blocked by the licence question above, but both are made worse by
+it**: a DOI record with a licence that contradicts `CITATION.cff` is a permanent
+citable artifact carrying a contradiction.
+
+## 44. The published dataset's viewer was dark, and the fix is applied but NOT yet confirmed
+
+Measured before the fix: `is-valid` returned `"viewer": false` with only
+`"preview": true`, and the preview was showing **`iso_vrel_arcs.csv`, 7 columns
+and 5 rows**, in place of the 368-row surface. The cause, from the statistics
+endpoint:
+
+```
+DatasetGenerationCastError
+All the data files must have the same columns, but at some point
+there are 35 new columns
+```
+
+The Hub auto-loader globbed all four CSVs into one config; their schemas are 35,
+10, 7 and 4 columns; the build failed; and the preview fell back to the smallest
+file. **A reader looking for the load surface saw a five-row summary and no
+error**, which is this document's recurring shape in yet another place: a
+surface that returns something rather than nothing.
+
+**Fix applied**, a `configs:` block declaring one config per CSV with
+`load_surface` as default, with a comment in the card saying why it must not be
+deleted. **Verification is PENDING, not passed**: the datasets-server returned
+"the server is busier than usual" on six consecutive polls, which is the normal
+rebuild state after a push. Re-check with:
+
+```
+curl -s "https://datasets-server.huggingface.co/is-valid?dataset=josiecerrell/can-it-ford-speed-surface"
+```
+
+`"viewer": true` means it took. I am not claiming it did.

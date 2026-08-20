@@ -650,7 +650,26 @@ tags:
   - computational-fluid-dynamics
   - civil-engineering
 pretty_name: "Can It Ford: vehicle-speed x flow-velocity load surface"
+configs:
+  - config_name: load_surface
+    data_files: load_surface.csv
+    default: true
+  - config_name: surface_cells
+    data_files: surface_cells.csv
+  - config_name: iso_vrel_arcs
+    data_files: iso_vrel_arcs.csv
+  - config_name: window_comparison
+    data_files: window_comparison.csv
 ---
+
+<!-- The configs block above is load-bearing, do not delete it. Without it the
+     Hub auto-loader globs all four CSVs into ONE config, they have different
+     schemas (35, 10, 7 and 4 columns), and the build fails with
+     DatasetGenerationCastError: "All the data files must have the same columns,
+     but at some point there are 35 new columns". The viewer then goes dark and
+     the PREVIEW silently falls back to the smallest file, so a reader sees a
+     5-row summary table where the 368-row surface should be. Declaring one
+     config per file is the fix. -->
 
 # Can It Ford: a (vehicle speed x flow velocity) load surface
 
