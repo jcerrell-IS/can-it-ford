@@ -143,3 +143,7 @@ render_s2/
 # The external centre-of-mass falsifier's output. Small, and it is the first
 # gate result in this project that can fail for a reason outside the pipeline.
 !data/cm_floor_check.json
+
+# The one-place reproducibility record the GPU-portability deep search says no study
+# publishes. Small, verified on every run, and the artifact a paper would cite.
+!data/reproducibility_manifest.json
