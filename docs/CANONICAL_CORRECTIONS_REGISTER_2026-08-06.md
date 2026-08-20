@@ -2193,7 +2193,24 @@ L7. **SKILL DRIFT, RE-VERIFIED, and the previously recorded drift is FIXED.** Fi
 Three rows in this register asserted things this register or a sibling had already
 refuted. Recorded here rather than edited in place, so the retraction is visible.
 
-**A2 is RETRACTED.** It read "None of these six papers is in the 332-paper corpus index.
+**IDS RELABELLED 2026-08-20, AND THE COLLISION WAS DANGEROUS.** This section originally
+wrote its three rows as `A2`, `B1` and `B7`. Those are ids from
+`docs/R9_DISCREPANCY_REGISTER_2026-08-19.md`, and **all three collide with unrelated
+canonical items in THIS file**, roughly 2,100 lines above:
+
+| id | canonical item, this file | R9 discrepancy row, this section |
+|---|---|---|
+| A2 | **Gravity is -9.81 and was never unknown** | the corpus-index claim, retracted |
+| B1 | two depth-resolution numbers, both correct for different engines | the corpus-skill item, closed |
+| B7 | no pressure field exists anywhere in warpmpm | the 9.80665 item, re-scoped |
+
+The A2 collision is the one that could do real damage: **"A2 is RETRACTED" sitting in the
+same document as "A2. Gravity is -9.81 and was never unknown"** means a reader who quotes
+"register A2 is retracted" reopens the gravity claim, which is precisely the claim item 15
+spent two separate corrections killing. Every row below is therefore prefixed `R9D-` for
+the register it actually comes from. Do not restore the bare ids.
+
+**R9D-A2 is RETRACTED.** It read "None of these six papers is in the 332-paper corpus index.
 `--query "Al-Qadami"` returns zero." Both halves are false. `--query` matched title and
 abstract only and NEVER authors, so an author query could not succeed; d14-corpusbib fixed
 it in `8bad9b4` and the same query now returns 5. Four of the six ARE in the corpus,
@@ -2201,12 +2218,12 @@ including `10.1111/jfr3.12828`. The coordinator withdrew this VERBALLY on a boar
 17:44 and never updated this file, which is exactly the failure this register exists to
 prevent: the corrections authority served a claim its own author had withdrawn.
 
-**B1 is CLOSED.** It was listed "OPEN, UNOWNED". It is closed on `r9-corpus-bib`
+**R9D-B1 is CLOSED.** It was listed "OPEN, UNOWNED". It is closed on `r9-corpus-bib`
 (`8bad9b4`) and on `add-ci-checks` itself (`faf53d1`), where the skill now reads
 "DO NOT SAY 256 ARE CITED NOWHERE". The register listed as open an item its own branch
 had fixed.
 
-**B7 is RE-SCOPED, not open-unowned.** Fixed on `r9-settle` (`0861b52`, which reads 9.81
+**R9D-B7 is RE-SCOPED, not open-unowned.** Fixed on `r9-settle` (`0861b52`, which reads 9.81
 with a dated correction block). Still stale on the landing target, where
 `classify_failure_modes.py:30` reads 9.80665. The row was right about the target and wrong
 that nobody owns it.
