@@ -300,6 +300,31 @@ rather than a precedent.**
    moves the force **2.6 percent at unchanged resolution**, and the authors state outright they
    could not demonstrate resolution independence.
 
+**CORRECTION, 02:07, AND IT DEMOTES ALL THREE. d11-accessor applied the scope test to them
+against the pinned vendored core and BOTH MDPI FINDINGS FAIL QUESTION 1, so they are PRECEDENT
+and NOT MECHANISM.** The floor here `add_plane` at `core/solver.py:212` registers a GRID
+collider, surface_type 1, slip, friction 0, restitution 0, and the entire boundary condition is
+five lines in `mpm_solver_warp.py`: guard on `grid_m <= 0` at :1942, the `dotproduct < 0.0` site
+at :1955, read `grid_v_out` at :1974, **project out the normal component** at :1977, write back
+at :1990.
+
+**IT WRITES VELOCITY ONTO A GRID NODE. IT NEVER WRITES PRESSURE, AND THERE IS NO BOUNDARY
+PARTICLE OF ANY KIND.** A whole-tree search of `kernels/` and `core/` for dummy, ghost particle,
+mirror particle, extrapolat, free surface, `C_van` and `C_cut` returns nothing relevant.
+
+| what the finding requires | what this solver has |
+|---|---|
+| dummy particles carrying pressure | NONE EXIST |
+| pressure extrapolation onto an edge point | NONE EXISTS |
+| `C_van`, excluding dummies above the surface | NOTHING TO EXCLUDE, and no free-surface test anywhere in the BC |
+| `C_cut`, a cutoff conditioning extrapolation | NO CUTOFF OF ANY KIND |
+
+**So the floor question is now OPEN IN A SHARPER FORM, which is a better place to be than a
+borrowed explanation:** the disturbance is at the bottom boundary, the boundary only projects out
+a normal velocity component, and no published mechanism this project has found applies to that.
+Commit `c621539`. This is the sixth candidate the coordinator relayed that died on a source read,
+and the FIRST killed by a purpose-built tool rather than by luck.
+
 **Refuted by the panel, do not cite:** the DBC depletion-gap mechanism, the +h gauge offset, and
 the ghost-node density extrapolation fix, all from `link.springer.com/article/10.1007/s40571-021-00403-3`,
 which lost 1-2, 0-3 and 0-3 respectively.
@@ -363,8 +388,19 @@ and a `dx`-only sweep cannot separate any of them.
 **One citation key resolves to two different papers.** `paper/...IEEE.bib` maps `alqadami2022` to
 `10.1111/jfr3.12828` (2022, numerical); `overleaf_sync/...IEEE.bib` maps the same key to
 `10.3390/su151713262` (2023, 3D CFD). The two bibs are 42 and 21 entries, so they are not two
-copies of one list. **The collision is NOT in the shipped bibliography**, so it is a landmine
-rather than a live error.
+copies of one list. **CORRECTED 02:07 by d19-priorcode, commit `dc1a949`: the question as posed was a FALSE
+DICHOTOMY and choosing either file would be wrong.** The authoritative bibliography is
+**`overleaf/main:can_it_ford_references_IEEE.bib`, AT THE REPO ROOT, 15 entries.** Three reasons,
+all read: it is the only bib on the only ref carrying `conference_101719_1.tex`, the tex the
+paper actually builds from, and note the `_1` because the two local `conference_101719.tex` files
+are a DIFFERENT DOCUMENT; it is the only one consistent with the shipped paper at 15 entries, 14
+distinct cite keys, all 14 present and exactly one never cited (`xiong2024`), reproducing
+CLAUDE.md's independently recorded ladder from a separate origin; and `paper/...bib` is NOT
+STABLE ACROSS REFS, 21 entries on origin/main against 42 on two unmerged branches, and a file
+differing by 21 entries depending on checkout cannot be canonical.
+
+**`alqadami2022` appears ZERO times on `overleaf/main`**, so the collision is a landmine in the
+repo copies rather than a live error in the deliverable.
 
 **Prior art is at least fourteen works with resolved DOIs and the shipped paper cites ONE.**
 Three Al-Qadami papers exist across three years and three methods: `10.1007/s11069-021-04949-6`
@@ -695,7 +731,14 @@ Recorded because they will recur and because a handoff that hides them is worth 
    as the paper's text.
 2. The same paper's O(h) plateau scaling — measured off a figure by eye.
 3. "None of the six prior-art DOIs is in the corpus" — **all six are present**. The true finding
-   was narrower: the query predicate cannot see authors.
+   was narrower: the query predicate cannot see authors. **AND THE MECHANISM IS SHARPER THAN
+   "five errors", per d14 `de18180`: this was not three sessions each misreading a zero. ONE
+   session ran the query, read the zero as coverage, and RELAYED the conclusion to THREE
+   sessions, TWO OF WHICH ACTED ON IT. That is RELAY AMPLIFICATION and it has a different fix:
+   when you pass on someone else's negative result, pass on the COMMAND that produced it, and
+   when you receive one, ask what was searched before acting. None of the three receiving
+   sessions could have caught it, because a relayed conclusion arrives without the predicate
+   that produced it.**
 4. "Six public empty HuggingFace repos" — `usedStorage` counts LFS only. Two are bare, not eight,
    and the one called an empty public dataset named after the field's open gap is fully populated.
 5. Amicarelli relayed as a mechanism match; it fails three independent scope tests.
