@@ -501,6 +501,11 @@ def hook_mode(data, root):
     if not asserts:
         sys.exit(0)
     readings = claim.recompute(root, None)
+    # SAME GUARD ON THE HOOK PATH. Without it, an Edit made from a worktree is DENIED
+    # against a total the worktree cannot derive, which is a hard stop on correct work.
+    partial, _ = view_is_partial(readings)
+    if partial:
+        sys.exit(0)
     bad = []
     for a in asserts:
         allowed = (readings.name_allowed(a.label, a.scope) if a.kind == "per-name"
@@ -556,6 +561,43 @@ def read_stdin_json():
         return None
 
 
+# CLAUDE.md item 13 records the four defensible totals as 22, 23 and 24, arrived at
+# by two independent binary choices (archive/ in or out; bare literals only, or also
+# the gp_surrogate CLI-overridable default). Any root deriving a maximum below 22
+# CANNOT SEE ALL THE DECLARATION SITES, so its totals are a property of the checkout
+# and not of the claim.
+#
+# MEASURED 2026-08-20, and this is why the guard exists. Run against the main
+# checkout the script derives 22/23/24 and reports 0 blocking defects. Run against
+# `.claude/worktrees/r8-register` it derives 16/17 and reports 25 BLOCKING DEFECTS,
+# every one asserting that a CORRECT number is stale. The worktree sees 0 of the 24
+# declaration sites, because `renders/yaris_render_s1/gates.py` and the ignored
+# contents of `data/` are not materialised there.
+#
+# That is CLAUDE.md's own rule inverted inside a guardrail: absence of evidence from
+# a partial view is not evidence of absence. A check that cannot evaluate must say
+# NOT-EVALUABLE and exit 0, never BLOCK. The `continue-on-error: true` mask on this
+# job in canford-checks.yml exists only because this branch was missing, and that
+# mask is what hid the step already exiting 1.
+CANONICAL_MIN_TOTAL = 22
+
+
+def view_is_partial(readings):
+    """(is_partial, explanation). True when the root cannot see all declaration sites."""
+    if readings is None:
+        return True, "no live re-derivation was produced at all"
+    totals = sorted(set(readings.totals.values()))
+    if not totals:
+        return True, "the live re-derivation produced no totals"
+    if max(totals) < CANONICAL_MIN_TOTAL:
+        return True, (
+            "this root derives a maximum total of %d, below the canonical floor of "
+            "%d recorded in CLAUDE.md item 13. The declaration sites are not all "
+            "visible from here, so every comparison below would grade the checkout "
+            "rather than the claim." % (max(totals), CANONICAL_MIN_TOTAL))
+    return False, ""
+
+
 def main():
     ap = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -594,6 +636,25 @@ def main():
             for line in readings.describe():
                 print("    %s" % line)
     if args.show_live:
+        return 0
+
+    partial, why = view_is_partial(last)
+    if partial:
+        # NOT-EVALUABLE is a THIRD outcome, distinct from pass and from fail. Emitting
+        # it as a pass would be the same defect one level out, so it is printed loudly
+        # and the findings are still shown, labelled, so nobody mistakes them for real.
+        print("")
+        print("count_claims_check.py: NOT EVALUABLE from this root")
+        print("  root   %s" % root)
+        print("  reason %s" % why)
+        print("  %d finding(s) suppressed: they compare an assertion against a total "
+              "this checkout cannot derive." % len(all_findings))
+        if not args.quiet:
+            for f in all_findings[:5]:
+                print("      SUPPRESSED  %s" % f)
+            if len(all_findings) > 5:
+                print("      ... and %d more" % (len(all_findings) - 5))
+        print("  Run it against the main checkout, or pass --root <main tree>.")
         return 0
 
     blocking = [f for f in all_findings if f.level == "BLOCK"]
