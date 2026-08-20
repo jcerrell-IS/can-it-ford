@@ -323,3 +323,91 @@ To apply once approved:
 The adversarial `physics-skeptic` path is dead fleet-wide. Nothing here has been through it.
 Every number above is instead tagged with how it was obtained, and every one of them names a
 file that can be re-read in one command.
+
+---
+
+## 8. Figure audit. The build is sound; one figure cannot be regenerated.
+
+`read-directly`, 2026-08-20, against the Overleaf project working tree.
+
+**Every figure path resolves.** All seven `\includegraphics` targets exist at the project
+root, which is what the flat-path convention requires: `pipeline_diagram_v2.pdf`,
+`l0l1_two_rules_v2.pdf`, `L1_three_class_corrected.pdf`, `force_balance_v2.pdf`,
+`l2_divergence_real_v2.pdf`, `mass_grid_sweep_v2.pdf`, `l2_render_g64_m1100_f0045.png`. The
+only unreferenced file in the project is `IEEEtran_HOWTO.pdf`, which ships with the class file
+and is harmless. **No figure needs regenerating for the corrections in this document**, and in
+particular Figure 1 is not touched, so the "Genesis MPM" reversion trap is not in play.
+
+**`force_balance_v2.pdf` has no generator anywhere.** A `/usr/bin/grep` sweep, so gitignored
+paths were reached, across the whole working tree excluding `.git/`, `third_party/` and
+`.claude/worktrees/`, plus the archived `_inbox/can-it-ford-main.zip` snapshot, finds **no
+script that produces it**, and none of its caption's distinctive numbers (5.4825, 16.135,
+0.201) appears in any `.py` file in the repository. For contrast, the other six are
+reproducible: four from `analysis/paper_fig_*.py`, `L1_three_class_corrected.pdf` from
+`analysis/plot_l1_three_class.py`, and the render frame from run `g64_m1100` itself.
+
+This matters because `force_balance_v2.pdf` is the figure whose caption edits C and D touch,
+and the figure the paper describes as "pinned to primary sources".
+
+**What could be done about it was done.** `analysis/paper_fig_force_balance_v2_check.py`
+recomputes every number the caption states from the inputs the caption names, and asserts, so
+it fails loudly. It **does not redraw the figure**: producing a second, subtly different
+artwork under the same name would be worse than an honest gap. Run live this session, all
+checks pass:
+
+| quantity | computed | caption |
+|---|---:|---:|
+| effective plan area, 0.75 x 4.30 x 1.70 | 5.482500 m2 | 5.4825 |
+| weight, 1100 x 9.81 | 10.791000 kN | 10.791 |
+| buoyancy at 0.30 m, rho g A d | 16.134997 kN | 16.135 |
+| flotation depth, m / (rho A) | 0.200638 m | 0.201 |
+| nominal prism, 4.30 x 1.70 x 1.47 | 10.745700 m3 | 10.7457 |
+| fill vs prism | 0.329685 | 0.33 |
+| fill vs mesh extent | 0.312041 | 0.312 |
+
+**The caption is arithmetically sound.** That is a clean pass and is reported as one. Note in
+passing that the flotation depth does not depend on g at all, since g cancels when buoyancy is
+set equal to weight, so that particular number is immune to the 9.81 versus 9.80665 fork
+recorded elsewhere in this project.
+
+What the check does **not** establish: the figure itself is unvalidated, the solid-prism
+assumption remains the model's one unpinned choice, and the caption already says so.
+
+---
+
+## 9. Two things left for Josie rather than patched
+
+**9a. The AR&R thresholds are for STATIONARY vehicles and the paper never says so.**
+`read-directly` from `vehicle_params.AR_R_SOURCE`: Table 3 is titled "Proposed DRAFT Stability
+Criteria for **Stationary Vehicles**" and the source string adds "not an endorsed safety
+standard". The paper already handles half of this well: it says the thresholds are labelled
+"draft interim" by the report itself and that L1 is "treated as a documented decision rule to
+be tested rather than as a validated safety standard". It never uses the word stationary, in a
+paper titled *Can It Ford*.
+
+This is **not** a scenario mismatch and must not be written up as one. CLAUDE.md's literature
+item L-1 is explicit that the stationary framing makes the tank scenario the **correct** match
+for L1, and that the word "ford" in the title is what mismatches, not the setup. So the
+suggested addition is a qualifier that *defends* the comparison, not one that undermines it.
+It changes framing rather than correcting a falsehood, so it is left as a recommendation.
+
+**9b. Cite Azhar alongside Smith for the 1.0 to 1.8 drag range**, per section 4. Provenance
+improvement, not a correction.
+
+---
+
+## 10. A numeral caution, same shape as the 0.05 trap
+
+`read-directly`: **1.83 currently means three different things in this project.**
+
+| site | meaning | unit |
+|---|---|---|
+| `citations/smith_modra_felder_2019_velocity_grounding.md` | lower bound of Smith's supercritical range | Froude number, dimensionless |
+| `docs/R10_FULL_CONTEXT_AUDIT_2026-08-19.md` | proposed upper endpoint of Smith's drag range | drag coefficient, dimensionless |
+| `analysis/plot_traction_bias.py`, `MU_SPREAD = 1.83` | a spread ratio, plotted as "1.83x" | ratio |
+
+All three are dimensionless, so a units check will not separate them. This is the same trap
+CLAUDE.md records for 0.05, where `slide_m`, `slide_speed_ms` and `float_m` share one numeral
+across two units: **deduplicate by name and meaning, never by value.** It is also a live
+candidate explanation for how a Froude bound could have been reported as a drag-coefficient
+endpoint, which is section 4's open question.
