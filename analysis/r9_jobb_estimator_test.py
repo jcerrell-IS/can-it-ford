@@ -539,7 +539,53 @@ def _build_instrumented(scene_dir: str):
             lo_w, hi_w = self.WALL, self.lim - self.WALL
             inside = ((x[:, 0] >= lo_w) & (x[:, 0] <= hi_w)
                       & (x[:, 1] >= lo_w) & (x[:, 1] <= hi_w))
-            out = {"cv_n_inside": int(inside.sum())}
+            out: dict[str, float] = {"cv_n_inside": float(inside.sum())}
+            # --- TIGHT BOXES. The tank-wide version below is ILL-CONDITIONED and job
+            # 923343 proved it: p_face*A came to 4254.85 N and W_fluid to 4417.45 N, whose
+            # difference should be 44.63. THE ANSWER IS 1.05 PERCENT OF EITHER TERM, so a 1
+            # percent error anywhere is a 95 percent error in the result, and the measured
+            # p_face was 4.87 percent off. A tight box shrinks both terms while leaving the
+            # answer fixed, which is the only way to improve that ratio. Its vertical side
+            # faces carry only SHEAR into the vertical balance, which is computed here
+            # rather than assumed away.
+            cx, cy = self.center_xy
+            for L, z_b in ((0.18, 0.38), (0.22, 0.38), (0.22, 0.30), (0.30, 0.30)):
+                tag = f"L{L:g}_z{z_b:g}"
+                box_xy = ((np.abs(x[:, 0] - cx) <= L) & (np.abs(x[:, 1] - cy) <= L))
+                face = box_xy & (np.abs(x[:, 2] - z_b) <= 3.0 * self.h)
+                above = box_xy & (x[:, 2] >= z_b)
+                if face.sum() < 80 or above.sum() < 80:
+                    out[f"cvb_fz_{tag}_N"] = float("nan")
+                    continue
+                cfit = np.polyfit(x[face, 2], p[face], 1)
+                p_face = float(np.polyval(cfit, z_b))
+                a_box = (2.0 * L) ** 2
+                w_box = RHO_W_BENCHMARK * G_ENGINE * float(vol[above].sum())
+                # Vertical shear on the four vertical side faces, from thin slabs.
+                shear = 0.0
+                for ax_i, sgn, comp in ((0, +1, 0), (0, -1, 0), (1, +1, 1), (1, -1, 1)):
+                    ctr = (cx if ax_i == 0 else cy) + sgn * L
+                    sl = above & (np.abs(x[:, ax_i] - ctr) <= 0.5 * self.h)
+                    if sl.sum():
+                        shear += sgn * float((sig[sl, 2, comp] * vol[sl]).sum()) / self.h
+                out[f"cvb_fz_{tag}_N"] = p_face * a_box - w_box + shear
+                out[f"cvb_traction_{tag}_N"] = p_face * a_box
+                out[f"cvb_weight_{tag}_N"] = w_box
+                out[f"cvb_shear_{tag}_N"] = shear
+                out[f"cvb_n_face_{tag}"] = int(face.sum())
+
+            # --- PRESSURE GRADIENT PROFILE. The tank-wide fit gave dp/dz = -3074 Pa/m
+            # against -rho*g = -9792, but its band was the bottom 56 mm, exactly where the
+            # floor BC acts. That is a NEAR-FLOOR reading and says nothing about the bulk.
+            # Fit at several heights, outside the body's radial footprint, so the profile
+            # shows WHERE the field departs from hydrostatic instead of asserting that it does.
+            r_far = np.hypot(x[:, 0] - cx, x[:, 1] - cy) > 2.0 * self.radius
+            for zc in (0.12, 0.20, 0.28, 0.36, 0.44):
+                bnd = inside & r_far & (np.abs(x[:, 2] - zc) <= 4.0 * self.h)
+                if bnd.sum() >= 200:
+                    out[f"dpdz_z{zc:g}_Pa_m"] = float(np.polyfit(x[bnd, 2], p[bnd], 1)[0])
+                    out[f"dpdz_n_z{zc:g}"] = int(bnd.sum())
+
             scopes = (((hi_w - lo_w) ** 2, inside, "in"),
                       (self.lim ** 2, np.ones(len(x), bool), "all"))
             for area, sel, scope in scopes:

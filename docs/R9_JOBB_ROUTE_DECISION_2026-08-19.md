@@ -1392,3 +1392,117 @@ as the cause" is a comparison, not an attribution, and its scope is SPH, dummy p
 a stagnation jet. **In all three the direction survived and the specificity did not**, and in
 all three the failure was the same: a headline carried with its confidence and without its
 scope. The sender flagged this themselves before I checked, which is why the check was cheap.
+
+---
+
+## 17. A THIRD accessor confirms the force. The accessor family is exonerated
+
+Job **923353**. `control_volume_force` reads `cauchy()` and `vol()` only: fluid state, with
+no knowledge that a collider exists. Tight control boxes around the sphere, top face above
+the free surface (zero traction), bottom face well clear of the floor, vertical side faces
+carrying only shear into the vertical balance, which is computed rather than assumed away.
+
+g64, bcfix engine, on-node floor, last 50 frames. `sub = 113.77 mm`, analytic
+`rho*g*V_cap = 44.630 N`, and the published `sdf_wrench` reads **60.476 N, ratio 1.3551**:
+
+| box | traction | weight | shear | **Fz_cv** | ratio | conditioning |
+|---|---|---|---|---|---|---|
+| L=0.18, z_b=0.38 | 203.39 N | 142.01 N | 0.000 | **61.373** | 1.3752 | 21.94% |
+| L=0.22, z_b=0.38 | 303.99 | 242.38 | 0.000 | **61.613** | 1.3805 | 14.68% |
+| L=0.22, z_b=0.30 | 457.68 | 396.67 | 0.000 | **61.009** | 1.3670 | 9.75% |
+| L=0.30, z_b=0.30 | 855.59 | 789.19 | -0.000 | 66.402 | 1.4878 | 5.22% |
+
+**The three well-conditioned boxes give 61.0 to 61.6 N against `sdf_wrench`'s 60.48, an
+agreement of 0.9 to 1.9 percent.** The fourth is the worst-conditioned and drifts, exactly
+as its conditioning number predicts.
+
+**PRE-REGISTERED VERDICT, taken verbatim from `run_r9g.sh` before the run: "cv_fz also
+~1.35x rho\*g\*V_cap -> THE FLUID REALLY IS PUSHING THAT HARD and the accessor is sound;
+the defect is upstream in the coupling."**
+
+**THE ACCESSOR IS EXONERATED.** A force reader sharing no code, no grid nodes and no
+knowledge of the collider with `sdf_wrench` independently reproduces its value to under 2
+percent. The whole family of "the force is mis-read" explanations is closed, and that
+includes reading Wal07's projection bias as an ACCESSOR artifact. It does not close Wal07
+as a bias on the FLUID STATE, which the projection also feeds.
+
+### 17.1 The first version was ill-conditioned and the synthetic check could not see it
+
+The tank-wide control volume gave -162.6 N where the analytic answer is 44.6. Not a bug in
+the algebra: `p_face*A = 4254.85 N` and `W_fluid = 4417.45 N`, so **the answer is 1.05
+percent of either term** and a 1 percent error anywhere is a 95 percent error in the result.
+The measured `p_face` was 4.87 percent low, and that alone accounts for it.
+
+**The synthetic check passed this at -1.38 percent and could not have caught it**, because
+its pressure field and its weight were exactly consistent by construction. **A check built
+from the same assumption the estimator makes validates the algebra and is blind to the
+conditioning.** The fix is not a better check, it is to report a conditioning number beside
+every differenced quantity: shrinking the box from tank-wide to `L=0.18` moved it from 1.05
+to 21.94 percent, a 21x improvement, with the answer unchanged by construction.
+
+### 17.2 The bulk pressure field IS hydrostatic. The disturbance is confined to the floor
+
+Free diagnostic, fitted `dp/dz` outside the body's radial footprint (`r > 2R`),
+against `-rho*g = -9792.3 Pa/m`:
+
+| height | dp/dz | percent of hydrostatic |
+|---|---|---|
+| z = 0.12 m | -36305 Pa/m | **371%** |
+| z = 0.20 | -12266 | 125% |
+| z = 0.28 | -10156 | 104% |
+| z = 0.36 | -9307 | 95.0% |
+| z = 0.44 | -9250 | 94.5% |
+
+**Above about z = 0.28 the field is hydrostatic to within 5 percent.** The near-floor
+readings are not trustworthy and I am not claiming them: an earlier tank-wide fit over an
+overlapping band gave -3074 Pa/m where this gives -36305, so the bottom region is strongly
+non-linear and any linear fit there is meaningless. **What survives is the bulk, and the
+bulk is clean**, which corroborates d11-accessor's column from inside the sphere scene and
+means the control boxes at `z_b = 0.30` and `0.38` sit in well-behaved fluid.
+
+### 17.3 The fourth grid point weakens convergence further, and my withdrawal was right
+
+g192 (`dx = 6.25 mm`) landed from job 923322 and joins the grid prong. Excess at 130 mm
+submergence, all six specifications:
+
+| specification | 18.75 mm | 12.50 | 9.375 | **6.250** | slope | dx->0 |
+|---|---|---|---|---|---|---|
+| lin [126,140] | 46.17 | 28.11 | 21.50 | **26.96** | 1.742 | +10.28 |
+| lin [115,150] | 31.55 | 16.80 | 23.91 | **14.35** | 1.175 | +7.88 |
+| lin [105,155] | 31.45 | 24.40 | 16.74 | **13.69** | 1.475 | +4.28 |
+| quad [126,140] | 49.15 | 32.71 | 13.86 | **32.81** | 1.864 | +10.29 |
+| quad [115,150] | 44.42 | 28.72 | 20.62 | **24.79** | 1.766 | +8.95 |
+| quad [105,155] | 42.28 | 25.26 | 22.29 | **23.49** | 1.595 | +9.64 |
+
+**Only 1 of 6 is monotone now, down from 5 of 6 with three points. The slope stays positive
+in all six, so the DIRECTION survives a fourth point. But every dx -> 0 intercept is now
+POSITIVE, +4.28 to +10.29 percent**, where the three-point linear fit gave -4.2.
+
+**Section 15.3's withdrawal was correct and the fourth point confirms it.** A zero asymptote
+is not supported. In the best-conditioned specification the sequence is 42.28, 25.26, 22.29,
+23.49: **a substantial fall at the coarse end and then a plateau near 22 to 25 percent.**
+That shape is Wal07's plateau, reduced by refinement and not eliminated by it, and it is
+what section 13.2 quoted the paper as saying: the plateau "could be reduced independently by
+fixing PPC and reducing grid cell size".
+
+### 17.4 What is left standing, by elimination plus three independent measurements
+
+1. **The force is real.** Two accessors sharing nothing agree to under 2 percent (17).
+2. **The denominator's surface is right.** E1 refuted at six-plus arms (7, 12.5, 13.3).
+3. **The bulk pressure field is hydrostatic** to 5 percent above z = 0.28 (17.2).
+4. **It is not particle count.** Flat in PPC across 19x in all six specifications (15.2).
+5. **It is not the floor leak.** That accounts for about a third and the excess survives
+   its removal (11.3, 12.4).
+6. **It is not compressibility.** Bounded out by two orders of magnitude (4).
+
+**So the fluid genuinely exerts about 1.37x the Archimedes force computed at the measured
+surface, while its own pressure field is hydrostatic. The only way both can hold is if the
+volume the fluid is actually excluded from is larger than the sphere's geometric cap** --
+which is the contact-band inflation of section 3.2, fitted there at `k = 0.84` to `0.86` of
+one band width across every distinct run. **That is now the surviving explanation, reached
+by elimination with three independent measurements rather than by a fit alone.**
+
+It remains an explanation and not a proof: nobody has measured the excluded volume directly.
+**That is the next test, and it is cheap** -- count grid cells the collider gates at
+`sd <= band` and compare their volume to the cap. It needs no new physics and no new run
+longer than three minutes.
