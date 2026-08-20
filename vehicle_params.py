@@ -67,9 +67,12 @@ IMPORTANT PHYSICS NOTES for lateral-flow / overturning behavior (L2):
      docs/REALISM_UPGRADE_ASSESSMENT_2026-08-08.md section 1 for the full working.
 
      (a) It is not measured. {463.0, 1893.0, 1960.0} reproduces EXACTLY from
-         box_inertia(1100, 4.30, 1.70, 1.47), i.e. a solid rectangular box. No
-         measured Yaris tensor exists anywhere: the NHTSA Light Vehicle Inertial
-         Parameter Database (SAE 1999-01-1336) ends Nov 1998 and has no Yaris.
+         box_inertia(1100, 4.30, 1.70, 1.47), i.e. a solid rectangular box. A
+         measured tensor for an actual 2010 Yaris DOES exist (DOI 10.13021/G8JS5D,
+         slide 7), but it is not in this file. Wiring this file's box values would
+         introduce 19 to 26 percent error against that measurement, while the
+         solver's own particle cloud is already within 2.3 percent. See note 3
+         above for the full comparison.
 
      (b) The solver already computes a strictly better one. warpmpm derives the
          tensor from the actual hull particle cloud at
