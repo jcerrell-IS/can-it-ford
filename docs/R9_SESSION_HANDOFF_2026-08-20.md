@@ -1634,6 +1634,110 @@ verdict into the caption or pull the claim.
 
 ---
 
+# 13A. STANDING TASK: AUDIT EVERY CORPUS SOURCE PARENTED FROM THIS SESSION, THEN IMPLEMENT
+
+**This is not a summary. It is a task list with commands, and it is unfinished work.** Every
+source below was produced by or parented from the coordinating session of 2026-08-19/20. Each was
+mined for the findings in sections 5.2, 7A, 7C and 7D, and **none was mined exhaustively.** The
+extraction was keyword-filtered and hand-picked under time pressure, so what is in this handoff is
+the high-payload subset, not the contents.
+
+**Run this before starting new literature work. Re-reading a journal is minutes; re-deriving what
+is in it cost this project a night.**
+
+## 13A.1 THE SOURCES, WITH WHAT WAS AND WAS NOT EXTRACTED
+
+| source | size | extracted | NOT extracted |
+|---|---|---|---|
+| `deep-research` journal, run `wf_d942bc1a-e29` | **135 claims / 100 results** | ~20, in 5.2 and 7C | **~115 claims**, including every one whose verifier panel died |
+| R10 journal, run `wf_5266ee59-fb9` | **399 findings** | 5 in the report, 7 in 7D | **~387 findings**, filtered only by `read-directly` plus a number-or-negation regex |
+| `docs/r10/corpus_revision.md` | 925 lines | its proposals summarised in R10 s7.1 | **the file itself, unread end to end** |
+| `docs/r10/connector_revision.md` | 339 lines | its two routing defects, in 7A | the rest |
+| `docs/r10/connector_revision_AUDIT_d20.md` | 256 lines | the 76-vs-17 finding | the rest |
+| `R9_CROSS_SESSION_READOUT` (worktree only) | 773 lines | C-1, C-2, C-8, C-10 to C-12, C-17 to C-20 | **C-3 to C-7, C-9, C-13 to C-16** |
+| `R9_COORDINATOR_AUDIT` (worktree only) | 372 lines | referenced, not read | **all of it** |
+| `R10_WEB_ACQUISITION` (worktree only) | d22's | the counts, in 7A.5 | the per-paper findings |
+| 21 Undermind deep searches | 8 ingested, 13 not | 4 of the 13, in 7A.2 | **9 of the 13 never opened** |
+| 38 verified acquired PDFs | d22's set | none read by the coordinator | **all 38** |
+| Claude artifacts | 6 | 1 read in full | **5** |
+
+## 13A.2 THE COMMANDS
+
+Extract every claim from the deep-research journal, not a filtered subset:
+
+```
+python3 - <<'EOF'
+import json, glob
+for p in glob.glob("/Users/josie/.claude/projects/-Users-josie-can-it-ford/*/subagents/workflows/wf_d942bc1a-e29/journal.jsonl"):
+    for line in open(p):
+        d = json.loads(line)
+        if d.get("type") != "result": continue
+        r = d.get("result")
+        if isinstance(r, dict):
+            for c in (r.get("claims") or []):
+                print(c.get("claim", ""), "||", c.get("source", ""))
+EOF
+```
+
+Same for the R10 journal, replacing the run id with `wf_5266ee59-fb9` and `claims` with
+`findings`, and reading `claim`, `evidence`, `bears_on`, `confidence` and `actionable` on each.
+
+Open the nine unopened deep searches:
+
+```
+ToolSearch "select:mcp__undermind__inspect_deep_searches,mcp__undermind__read_pdfs"
+inspect_deep_searches(workspace_id="17299f2a-8dc8-438b-8c84-5abf19395e2c", names=[])
+```
+
+The nine never opened: moving vehicle floodwater simulation open source implementations; moving
+vehicle floodwater GPU particle simulation; how computational researchers audit and defend
+simulation credibility; GPU particle solver portability scaling and surrogate fidelity; Small
+Data Physics Surrogates at 36 Conditions; Physics Simulation Validation Protocol; Quantitative
+Flood Traversability Connections; Optical Vehicle Collision Geometry; Dynamic Vehicle Traction in
+Floodwater (partially opened, its friction finding is in 7D.1).
+
+List and read the Claude artifacts:
+
+```
+Artifact action="list" scope="all"
+WebFetch <artifact url>  # claude.ai/code/artifact URLs ARE fetchable with the session login
+```
+
+## 13A.3 WHAT "IMPLEMENT" MEANS, PER FINDING CLASS
+
+A finding is not implemented when it is written down. Route it:
+
+1. **Contradicts a standing register or CLAUDE.md item** → write it to `r8-register`, NOT to the
+   integration branch, and cite the source line. Three such contradictions are already open:
+   the measured Yaris inertia tensor against item 4(a); the L-7 arXiv identifier; and
+   `flood-mpm-debugging-reference` still saying coupling validation is "currently zero".
+2. **Changes a parameter that reaches a run** → it must pass the primary-source rule in
+   CLAUDE.md's standing rules before it is written into any script. The friction bracket in 7D.1
+   is the live case: 0.024 to 1.15 across three regimes against a hardcoded 0.55.
+3. **Names a mechanism for an open question** → run `CANDIDATE_PAPER_SCOPE_TEST.md` FIRST and
+   record MECHANISM or PRECEDENT. Three candidates have already died on this test.
+4. **Supplies a benchmark or tolerance** → it goes to whoever owns the criterion, with the
+   protocol quoted, not the number alone. 7C.2's 1-percent-in-max-norm standard is the live case.
+5. **Is a platform or tooling capability** → cost it before adopting. HF Jobs and ZeroGPU in
+   7D.7 are a second compute venue that does not touch the Vista allocation, which is the
+   highest-ratio unexploited item found tonight.
+6. **Anything else** → it goes in the register with its source and a date, or it will be
+   rediscovered. This project rediscovered the same Kramer motion-tolerance finding three times.
+
+## 13A.4 THE RULE THAT MAKES THIS WORTH DOING
+
+**Every source above was already paid for.** The deep-research run cost 4,079,261 subagent tokens
+and its synthesis never ran. The R10 run cost 678,161 on its resume alone and its report kept
+five findings out of 399. **The marginal cost of reading a journal that already exists is a few
+minutes; the marginal cost of not reading it is a wave.**
+
+And the specific failure mode to avoid: **the report is not the run.** Three of the four most
+decisive findings in sections 7C and 7D were in a journal that a report had already summarised
+past. A summary is a lossy view of its own evidence, and in this project the loss has twice been
+the load-bearing part.
+
+---
+
 # 14. THE FIRST FIVE THINGS TO DO
 
 1. **Settle the independence question.** It is the only thing that can void the night's headline,
