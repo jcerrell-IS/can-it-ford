@@ -1,0 +1,113 @@
+{
+ "workspace": "17299f2a-8dc8-438b-8c84-5abf19395e2c",
+ "pulled": "2026-08-20",
+ "n_searches": 21,
+ "n_not_previously_ingested": 13,
+ "searches": [
+  {
+   "slug": "mpm-sph-buoyancy-overestimation",
+   "name": "MPM SPH buoyancy force overestimation and hydrostatic validation benchmarks",
+   "ingested_before": false
+  },
+  {
+   "slug": "free-surface-estimator-error",
+   "name": "free surface elevation estimator error in particle method buoyancy validation",
+   "ingested_before": false
+  },
+  {
+   "slug": "realism-effects-verdict",
+   "name": "which realism effects change a flood vehicle stability verdict",
+   "ingested_before": false
+  },
+  {
+   "slug": "vehicle-mesh-assets",
+   "name": "Simulation Ready Vehicle Mesh Assets",
+   "ingested_before": false
+  },
+  {
+   "slug": "moving-vehicle-open-source",
+   "name": "moving vehicle floodwater simulation open source implementations",
+   "ingested_before": false
+  },
+  {
+   "slug": "moving-vehicle-gpu",
+   "name": "moving vehicle floodwater GPU particle simulation",
+   "ingested_before": false
+  },
+  {
+   "slug": "simulation-credibility-audit",
+   "name": "how computational researchers audit and defend simulation credibility",
+   "ingested_before": false
+  },
+  {
+   "slug": "gpu-portability-surrogate",
+   "name": "GPU particle solver portability scaling and surrogate fidelity",
+   "ingested_before": false
+  },
+  {
+   "slug": "small-data-surrogates",
+   "name": "Small Data Physics Surrogates at 36 Conditions",
+   "ingested_before": false
+  },
+  {
+   "slug": "physics-validation-protocol",
+   "name": "Physics Simulation Validation Protocol",
+   "ingested_before": false
+  },
+  {
+   "slug": "flood-traversability-connections",
+   "name": "Quantitative Flood Traversability Connections",
+   "ingested_before": false
+  },
+  {
+   "slug": "optical-vehicle-geometry",
+   "name": "Optical Vehicle Collision Geometry",
+   "ingested_before": false
+  },
+  {
+   "slug": "dynamic-vehicle-traction",
+   "name": "Dynamic Vehicle Traction in Floodwater",
+   "ingested_before": false
+  },
+  {
+   "slug": "wall-penetration",
+   "name": "Quantitative MPM Wall Penetration",
+   "ingested_before": true
+  },
+  {
+   "slug": "trustworthy-ai",
+   "name": "Trustworthy AI Assisted Scientific Simulation",
+   "ingested_before": true
+  },
+  {
+   "slug": "moving-rigid-body",
+   "name": "Moving Rigid Body Free Surface Validation",
+   "ingested_before": true
+  },
+  {
+   "slug": "validated-coupling",
+   "name": "Validated MPM Vehicle Water Coupling",
+   "ingested_before": true
+  },
+  {
+   "slug": "settling-force",
+   "name": "Settling and Force Reporting in Free Surface Flow",
+   "ingested_before": true
+  },
+  {
+   "slug": "mpm-verification",
+   "name": "MPM Simulation Verification Provenance",
+   "ingested_before": true
+  },
+  {
+   "slug": "multi-resolution",
+   "name": "Multi-resolution MPM for Large-domain Flooding",
+   "ingested_before": true
+  },
+  {
+   "slug": "reliable-ai",
+   "name": "Reliable AI Scientific Software",
+   "ingested_before": true
+  }
+ ]
+}
