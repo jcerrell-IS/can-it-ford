@@ -1,0 +1,231 @@
+cite_key	n_pdf_hits	first_pdf_hit	title
+Sch19e	0		A Consistent Boundary Method for the Material Point Method - Using Image Particles to Reduce Boundary Artefacts
+Kra21b	1	/Users/josie/can-it-ford-refs/2026-08-16/Kramer2021_SphereHeaveDecay_Energies_14_269.pdf	Highly Accurate Experimental Heave Decay Tests with a Floating Sphere: A Public Benchmark Dataset for Model Validation of Fluid-Structure Interaction
+Gar19	0		Towards real-time simulation of physically realistic pressure applied to submerged bodies using explicit and semi-implicit SPH algorithms
+Che18c	0		v-p material point method for weakly compressible problems
+Zha17c	0		Incompressible material point method for free surface flow
+Neg22	0		How to train your solver: Verification of boundary conditions for smoothed particle hydrodynamics
+Neg22b	0		Identifying second order accurate boundary conditions for WCSPH
+Val15b	0		A study of solid wall models for weakly compressible SPH
+Zha22d	0		Circumventing volumetric locking in explicit material point methods: A simple, efficient, and general approach
+Fou19	0		Local uniform stencil (LUST) boundary condition for arbitrary 3-D boundaries in parallel smoothed particle hydrodynamics (SPH) models
+Neg21d	0		Numerical Investigation of Accuracy, Convergence, and Conservation of Weakly-Compressible SPH
+Tao21b	0		A Local Semi-Fixed Ghost Particles Boundary Method for WCSPH
+Li23f	0		A Modified MPS Method with a Split-Pressure Poisson Equation and a Virtual Particle for Simulating Free Surface Flows
+Yan18	0		Smoothing algorithm for stabilization of the material point method for fluid-solid interaction problems
+Bau23	0		Analysis and mitigation of spatial integration errors for the material point method
+Ada12	9	/Users/josie/Desktop/_ARCHIVE_2026-07-26/02_snapshots_older/CAN_IT_FORD_ARCHIVE_2026-07-25_2355/01_figures/2026-07-13__Amicarelli et al. - 2015 - A Smoothed Particle Hydrodynamics model for 3D solid body transport in free surface flows.pdf	A generalized wall boundary condition for smoothed particle hydrodynamics
+Mar10b	0		Fast free-surface detection and level-set function definition in SPH solvers
+Ski13	0		Incompressible smoothed particle hydrodynamics (SPH) with reduced temporal noise and generalised Fickian smoothing applied to body-water slam and efficient wave-body interaction
+Yan17	0		An Enhanced Smoothing Algorithm for MPM to Stabilize Hydrodynamic Impact Problems with Embedded Solids
+Zhe17	0		An improved solid boundary treatment for wave-float interactions using ISPH method
+Neg21e	1	/Users/josie/Downloads/2109.09697v2.pdf	How to train your solver: A method of manufactured solutions for weakly-compressible SPH
+Li22b	0		An immersed finite element material point (IFEMP) method for free surface fluid-structure interaction problems
+Jou20	0		3D gradient corrected SPH for fully resolved particle-fluid interactions
+Tou13b	0		A critical investigation of smoothed particle hydrodynamics applied to problems with free-surfaces
+Ban18b	0		Pressure Boundaries for Implicit Incompressible SPH
+Omi17	0		SPH for impact force and ricochet behavior of water-entry bodies
+Van11	0		Modeling Floating Object Entry and Exit Using Smoothed Particle Hydrodynamics
+Sci19	2	/Users/josie/can-it-ford-refs/2026-08-16/Kramer2021_SphereHeaveDecay_Energies_14_269.pdf	Ocean Energy Systems Wave Energy Modelling Task: Modelling, Verification and Validation of Wave Energy Converters
+Ste00	0		Analysis and Reduction of Quadrature Errors in the Material Point Method (MPM)
+Hu18	9	/Users/josie/Zotero/storage/3XI9YTM2/Sanchez-Gonzalez et al. - 2020 - Learning to Simulate Complex Physics with Graph Networks.pdf	A moving least squares material point method with displacement discontinuity and two-way rigid body coupling
+Aki12	0		Versatile rigid-fluid coupling for incompressible SPH
+Ste08	0		Examination and Analysis of Implementation Choices within the Material Point Method (MPM)
+Dav24	0		Exploiting Axisymmetry to Optimize CFD Simulations - Heave Motion and Wave Radiation of a Spherical Buoy
+Wal07	0		Improved Velocity Projection for the Material Point Method
+Miy23	0		Strongly coupled simulation of incompressible fluid and rigid bodies with velocity-based constraints using particle method
+Qui18b	0		Extensions of the meshless Finite Volume Particle Method (FVPM) for static and dynamic free-surface flows
+Mon09	4	/Users/josie/Zotero/storage/8U6HDR4P/Amicarelli et al. - 2015 - A Smoothed Particle Hydrodynamics model for 3D solid body transport in free surface flows.pdf	SPH particle boundary forces for arbitrary boundaries
+Sun15b	4	/Users/josie/Zotero/storage/CBRRWEQK/Albano et al. - 2016 - Modelling large floating bodies in urban area flash-floods via a Smoothed Particle Hydrodynamics mod.pdf	Numerical simulation of interactions between free surface and rigid body using a robust SPH method
+Sun16	0		Material point method and smoothed particle hydrodynamics simulations of fluid flow problems: a comparative study
+Mao16	0		Modeling of Free Surface Flows Using Improved Material Point Method and Dynamic Adaptive Mesh Refinement
+Zho21	0		Numerical investigation of non-Newtonian power law flows using B-spline material point method
+Zha19e	2	/Users/josie/can-it-ford/_inbox/CanItFord_Research_Dossier_26_Documents.pdf	Development of in/outflow boundary conditions for MPM simulation of uniform and non-uniform open channel flows
+Tel24	0		A displacement-based material point method for weakly compressible free-surface flows
+Sun19c	0		Benchmarking the material point method for interaction problems between the free surface flow and elastic structure
+Cha24c	0		Mixed material point method formulation, stabilization, and validation for a unified analysis of free-surface and seepage flow
+He25	0		An improved MPM formulation for free surface flow problems based on finite volume method
+Vau20	0		Material point method after 25 years: Theory, implementation, and applications
+Rem19	0		Implementation of non-trivial boundary conditions in MPM for geotechnical applications
+Zha17	0		Numerical Simulations of Dam-break Floods with MPM
+Bro19	0		Random uncertainty of statistical moments in testing: Mean
+Jen21	0		Challenges and procedures for experiments with steady and unsteady model velocities in a water towing tank
+Tho07	0		Water stilling for towing tank seakeeping experiments
+Ste15	0		Uncertainty Analysis in Ship-Model Resistance Test
+Cho15	0		A simple method for automated equilibration detection in molecular simulations
+Fly89	0		Error estimates on averages of correlated data
+Gro18	0		Best Practices for Quantification of Uncertainty and Sampling Quality in Molecular Simulations
+Dur20	0		Accurate experimental benchmark study of a catamaran in regular and irregular head waves including uncertainty quantification
+Doc08	0		Unsteady effects during resistance tests on a ship model in a towing tank
+Ber21d	0		Statistical Error Estimation Methods for Engineering-Relevant Quantities From Scale-Resolving Simulations
+Dan02	0		Probability of Individual Grain Movement and Threshold Condition
+Xu19b	0		Full-neighbor-list based numerical reproducibility method for parallel molecular dynamics simulations
+Sik24	0		Enabling Bitwise Reproducibility for the Unstructured Computational Motif
+Lin21d	0		Quantifying uncertainty in turbulence resolving ship airwake simulations
+Tod19	0		Experimentally Measured Hydroelastic Effects on Impact-Induced Loads During Flat Water Entry and Related Uncertainties
+Par23b	0		Analysis of Roll Decay for Surface-ship Model Experiments with Uncertainty Estimates
+Sya17	0		Quantifying the uncertainty introduced by discretization and time-averaging in two-fluid model predictions
+Sch85	0		Statistical errors in molecular dynamics averages
+Pap16	0		Statistical processing and convergence of finite-record-length time-series measurements from turbulent flows
+Tho06	0		Water Stilling for Towing Tank Experiments of High Performance Craft
+Mof82	0		Contributions to the Theory of Single-Sample Uncertainty Analysis
+Str86	0		Estimation of statistical errors in molecular simulation calculations
+He26d	0		Predicting Vehicle-Water Interaction in Shallow Water: Simulations and Experimental Validation
+Smi19	57	/Users/josie/can-it-ford/deliverables/for_kumar/01_deliverables/Cerrell_final_paper.pdf	Full-scale testing of stability curves for vehicles in flood waters
+Xin21b	0		Analysis and research on vehicle wading performance
+Sha20	2	/Users/josie/can-it-ford-BACKUP-2026-08-11/_inbox/CanItFord_Research_Dossier_26_Documents.pdf	Hydrodynamic effect on non-stationary vehicles at varying Froude numbers under subcritical flows on flat roadways
+Mar17	9	/Users/josie/Downloads/1-s2.0-S259012302503244X-main.pdf	A new experiments-based methodology to define the stability threshold for any vehicle exposed to flooding
+Kra16	18	/Users/josie/Downloads/1-s2.0-S259012302503244X-main.pdf	Safety criteria for the trafficability of inundated roads in urban floodings
+Teo12	9	/Users/josie/Downloads/1-s2.0-S259012302503244X-main.pdf	Experimental studies on the interaction between vehicles and floodplain flows
+Arr15	9	/Users/josie/Zotero/storage/6Y7VPLP7/Azhar et al. - 2023 - Confirmation of vehicle stability criteria through a combination of smoothed particle hydrodynamics.pdf	Drag and lift contribution to the incipient motion of partly submerged flooded vehicles
+Alq22	2	/Users/josie/can-it-ford/_inbox/CanItFord_Research_Dossier_26_Documents.pdf	A numerical approach to understand the responses of passenger vehicles moving through floodwaters
+Mor14	0		Stability and Drag Analysis of Wheeled Amphibious Vehicle Using CFD and Model Testing Techniques
+Alq21	2	/Users/josie/can-it-ford/_inbox/CanItFord_Research_Dossier_26_Documents.pdf	Full-scale experimental investigations on the response of a flooded passenger vehicle under subcritical conditions
+Hu23	0		Experimental testing to determine stability thresholds for partially submerged vehicles at different flow orientations
+Xia13b	28	/Users/josie/can-it-ford/deliverables/for_kumar/01_deliverables/Cerrell_final_paper.pdf	Criterion of vehicle stability in floodwaters based on theoretical and experimental studies
+Shu11	19	/Users/josie/Downloads/1-s2.0-S259012302503244X-main.pdf	Incipient velocity for partially submerged vehicles in floodwaters
+Bon67	20	/Users/josie/Documents/CAN_IT_FORD_ARCHIVE_2026-07-17/research_reports_and_citations/source_pdfs/wrl-flood-hazard-techinical-report-september-2014.pdf	Low Level Causeways
+Bur12	0		Analysis of the process of water entry of an amphibious vehicle
+Smi17	0		Experimental testing of flood hazard curves for a partially submerged vehicle
+Sha19d	0		Hazard risks pertaining to partially submerged non-stationary vehicle on low-lying roadways under subcritical flows
+Ran20b	0		A Blind Comparative Study of Focused Wave Interactions with Floating Structures (CCP-WSI Blind Test Series 3)
+Rus07	0		A Comprehensive Set of Code Validation Data for Planing Boat Forces in Calm Water and Regular Waves
+Can18	0		Extending DualSPHysics with a Differential Variational Inequality: modeling fluid-mechanism interaction
+Was15	0		Coupled Multibody Dynamics and Smoothed Particle Hydrodynamics for Modeling Vehicle Water Fording
+Lyu23	0		Numerical investigation of vehicle wading based on an entirely particle-based three-dimensional SPH model
+Bha19	0		Simulating water-entry/exit problems using Eulerian-Lagrangian and fully-Eulerian fictitious domain methods within the open-source IBAMR library
+Sha18c	4	/Users/josie/Zotero/storage/4HIZ7KZB/Shah et al. - 2018 - Instability Criteria for Vehicles in Motion Exposed to Flood Risks.pdf	Instability Criteria for Vehicles in Motion Exposed to Flood Risks
+Paz16	0		Investigation of the Vehicle Mobility in Fording
+Roe23	0		A robust algorithm for computational floating body dynamics
+Yam22	0		Coupled multibody dynamics and computational fluid dynamics approach for amphibious vehicles in the surf zone
+Zha23h	0		3D large-scale SPH modeling of vehicle wading with GPU acceleration
+Paz14	0		A comparative study of four fluid-solid coupling methods for applications in ground vehicle mobility
+Cre15	0		DualSPHysics: Open-source parallel CFD solver based on Smoothed Particle Hydrodynamics (SPH)
+Maz18	0		A differential variational approach for handling fluid-solid interaction problems via smoothed particle hydrodynamics
+Sha21	0		Froude Number Variance with Respect to the Hydrodynamic Response of a Non-Static Vehicle at a Low-Lying Flooded Roadway
+Che25l	0		A new CFD-MBD wave-structure interaction model: Coupling OpenFOAM with Chrono
+Azh23	14	/Users/josie/Desktop/_ARCHIVE_2026-07-26/02_snapshots_older/CAN_IT_FORD_ARCHIVE_2026-07-25_2355/01_figures/2026-07-26__Cerrell_final_paper.pdf	Confirmation of vehicle stability criteria through a combination of smoothed particle hydrodynamics and laboratory measurements
+Kaz16	0		SPH modelling of depth-limited turbulent open channel flows over rough boundaries
+Taf18	2	/Users/josie/can-it-ford/_inbox/CanItFord_Research_Dossier_26_Documents.pdf	A versatile algorithm for the treatment of open boundary conditions in Smoothed particle hydrodynamics GPU models
+Neg19	0		An improved non-reflecting outlet boundary condition for weakly-compressible SPH
+Alq23	2	/Users/josie/can-it-ford/_inbox/CanItFord_Research_Dossier_26_Documents.pdf	Understanding the Stability of Passenger Vehicles Exposed to Water Flows through 3D CFD Modelling
+Las09	1	/Users/josie/Downloads/1909.04504v3.pdf	Permeable and non-reflecting boundary conditions in SPH
+Vac12	0		SPH Modeling of Shallow Flow with Open Boundaries for Practical Flood Simulation
+Hol20	0		Novel pressure inlet and outlet boundary conditions for Smoothed Particle Hydrodynamics, applied to real problems in porous media flow
+Kaz20	0		SPH modelling of turbulent open channel flow over and within natural gravel beds with rough interfacial boundaries
+Shi19d	0		A Meshless WCSPH Boundary Treatment for Open-Channel Flow over Small-Scale Rough Bed
+Lop18b	0		Smoothed Particle Hydrodynamics Method for Three-Dimensional Open Channel Flow Simulations
+Mil20	4	/Users/josie/Desktop/_ARCHIVE_2026-07-26/02_snapshots_older/CAN_IT_FORD_ARCHIVE_2026-07-25_2355/01_figures/2026-07-10__Azhar et al. - 2023 - Confirmation of vehicle stability criteria through a combination of smoothed particle hydrodynamics.pdf	A conceptual model of vehicles stability in flood flows
+Pah17	0		Robust boundary treatment for open-channel flows in divergence-free incompressible SPH
+Yam24b	0		Modeling of Vehicle Mobility in Shallow Water with Data-Driven Hydrodynamics Model
+Var22	0		Transient, 3D CFD, Moving Mesh Simulation of Vehicle Water Wading in a Water Tunnel with Inclined Entry-Exit
+Kha14	0		Wading Simulation - Challenges and Solutions
+Tis21	0		Amphibious Vehicle Water Egress Modeling and Simulation Using CFD and Bekker's Methodology
+Liu23e	0		Research on launching, water exiting, and river crossing of an amphibious vehicle
+Beh20	0		Experimental and computational study of operation of an amphibious craft in calm water
+Xio24	8	/Users/josie/can-it-ford/deliverables/paper/Cerrell_final_paper.pdf	Simulation of the Full-Process Dynamics of Floating Vehicles Driven by Flash Floods
+Mar13	0		Extended Validation of the Finite Element Model for the 2010 Toyota Yaris Passenger Sedan (MASH 1100kg Vehicle)
+Mar13b	0		Extended Validation of the Finite Element Model for the 2007 Chevrolet Silverado Pick-Up Truck (MASH 2270kg Vehicle)
+Kha15	0		Development and Validation of Finite Element Models of Mid-Size Sedan Including Interiors for Crashworthiness Simulations
+Mar14b	0		Development and Validation of a Finite Element Model for a Mid-Sized Passenger Sedan
+Sed16	0		Development and Validation of a Finite Element Model for the 2012 Toyota Camry
+Moh10	0		Modeling, Testing, and Validation of the 2007 Chevy Silverado Finite Element Model
+Opi12	0		Extended Validation of the Finite Element Model for the 2010 Toyota Yaris Passenger Sedan
+Var93	0		Development of a Passenger Vehicle Finite Element Model. Final Report
+Opi07	0		NCAC Vehicle Model Development Update
+Elr26	0		CarCrashNet: A Large-Scale Dataset and Hierarchical Neural Solver for Data-Driven Structural Crash Simulation
+Ray07	0		Quantitative Evaluation of the Fidelity of Public-Domain Vehicle Models for Roadside Hardware Research
+Gup99	0		Reverse Engineering Method for Developing Passenger Vehicle Finite Element Models
+Mcc03	0		NHTSA's vehicle parameter database and NHTSA's crash test database
+Kir99	0		Development and Validation of High Fidelity Vehicle Crash Simulation Models
+Elr24b	0		DrivAerNet++: A Large-Scale Multimodal Car Dataset with Computational Fluid Dynamics Simulations and Deep Learning Benchmarks
+Ash24	0		DrivAerML: High-Fidelity Computational Fluid Dynamics Dataset for Road-Car External Aerodynamics
+Elr24	0		DrivAerNet: A Parametric Car Dataset for Data-Driven Aerodynamic Design and Graph-Based Drag Prediction
+Sol04	0		Crashworthiness Simulations Comparing PAM-CRASH and LS-DYNA
+Azh26	2	/Users/josie/can-it-ford/_inbox/CanItFord_Research_Dossier_26_Documents.pdf	Assessment of Vehicle Stability Processes Under Unsteady Flow Conditions
+Mar19b	0		Estabilidad de vehiculos frente a inundaciones: estudio numerico-experimental
+Ma06	0		Structured mesh refinement in generalized interpolation material point (GIMP) method for simulation of dynamic problems
+Zha21g	0		Truncated hierarchical B-spline material point method for large deformation geotechnical problems
+Sun20d	0		A local grid refinement scheme for B-spline material point method
+Lia15	0		A mesh-grading material point method and its parallelization for problems with localized extreme deformation
+He25c	0		A Multi-Resolution Material Point Method Based on Penalty Formulation
+Gao17c	0		An adaptive generalized interpolation material point method for simulating elastoplastic materials
+Ma05	0		Multiscale Simulations Using Generalized Interpolation Material Point (GIMP) Method And SAMRAI Parallel Processing
+Shi10	0		Dynamic Meshing for Material Point Method Computations
+Lia12b	0		An adaptive finite element material point method and its application in extreme deformation problems
+Slo69	0		Studies of Off-Road Vehicles in the Riverine Environment. Volume II. Analytical Method for Egress Evaluation
+Jur74	0		Mathematical Model of Wheeled Vehicles Exiting from the Riverine Environment
+Els18	0		Development of In-Plane Truck Tire-Flooded Surface Interaction Models Using FEA-SPH Techniques
+Pre17	2	/Users/josie/can-it-ford-BACKUP-2026-08-11/_inbox/CanItFord_Research_Dossier_26_Documents.pdf	The impact of flooding on road transport: A depth-disruption function
+He24	0		Functionality assessment of road network combining flood roadworthiness and graph topology
+Arr19b	0		Preparedness against mobility disruption by floods
+Eva23	0		A combined stability function to quantify flood risks to pedestrians and vehicle occupants
+Das25	12	/Users/josie/can-it-ford/citations/J Flood Risk Management - 2025 - Dasallas - Integration of Stability Functions Into a Transport Flood Risk Modelling.pdf	Integration of Stability Functions Into a Transport Flood Risk Modelling Framework
+Boc21	0		Determining the vehicle instability risk in stream crossings
+Con18	0		Reliability-Based Estimation of Traffic Interruption Probability due to Road Waterlogging
+Lam18	0		Stress tests for a road network using fragility functions and functional capacity loss functions
+Pre17b	0		Impact of climate change on disruption to urban transport networks from pluvial flooding
+Arr19	0		Sensitivity of Transport Model to Hydraulic Model for Flood Risk Assessment of Road Infrastructures
+Buc21	0		Quantitative flood risk evaluation to improve drivers route choice decisions during disruptive precipitation
+Xia11	4	/Users/josie/Desktop/_ARCHIVE_2026-07-26/02_snapshots_older/CAN_IT_FORD_ARCHIVE_2026-07-25_2355/01_figures/2026-07-13__Albano et al. - 2016 - Modelling large floating bodies in urban area flash-floods via a Smoothed Particle Hydrodynamics mod.pdf	Numerical assessment of flood hazard risk to people and vehicles in flash floods
+Ros15	0		The Performance of Photo Based Vehicle Models using HVE DyMesh Algorithm
+Eri13	0		The Accuracy of Photo-Based Three-Dimensional Scanning for Collision Reconstruction Using 123D Catch
+Pfa25	0		Scalable Real2Sim: Physics-Aware Asset Generation Via Robotic Pick-and-Place Setups
+Pre24	0		Mass, Centre of Gravity Location and Inertia Tensor of Electric Vehicles: Measured Data for Accurate Accident Reconstruction
+Far25b	0		The Accuracy of 3D Mesh Generation of Neuralangelo Versus Photogrammetry and LiDAR Technology
+Mor25	0		Splatting Physical Scenes: End-to-End Real-to-Sim from Imperfect Robot Data
+Wei22	0		Approximate convex decomposition for 3D meshes with collision-aware concavity and tree search
+Mac97	0		A Comparison of Moment of Inertia Estimation Techniques for Vehicle Dynamics Simulation
+Su26	0		Automated Collision Proxy Reconstruction for Non-Manifold Meshes by Multi-Directional Ray Casting
+Gob14	0		InTenso+ System: Measured Centre of Gravity Locations and Inertia Tensors of Road Vehicles
+Mad21	0		Fast evaluation of smooth distance constraints on co-dimensional geometry
+Kno26	0		Convex Primitive Decomposition for Collision Detection
+Bon25	0		Validating High-Performance Multi-GPU MPM for Debris-Fluid-Structure Interaction
+Dom21	0		DualSPHysics: from fluid dynamics to multiphysics problems
+Wan20d	0		A massively parallel and scalable multi-GPU material point method
+Nas25b	0		Task-parallelism in SWIFT for heterogeneous compute architectures
+Val12	0		Towards accelerating smoothed particle hydrodynamics simulations for free-surface flows on multi-GPU clusters
+Zha23r	0		Multi-GPU multi-resolution SPH framework towards massive hydrodynamics simulations and its applications in high-speed water entry
+Qiu22	0		A Sparse Distributed Gigascale Resolution Material Point Method
+Che22f	0		Learning Physics with a Hierarchical Graph Network
+Wee25	0		The use of cross validation in the analysis of designed experiments
+Mec02	0		Computationally Inexpensive Metamodel Assessment Strategies
+Sim01b	0		Sampling Strategies for Computer Experiments: Design and Analysis
+Mar05	0		Use of Kriging Models to Approximate Deterministic Computer Models
+Con07	0		On Using Standard Residuals as a Metric of Kriging Model Quality
+Kle19	0		Statistical Tests for Cross-Validation of Kriging Models
+Mec01	0		Metamodeling of Combined Discrete/Continuous Responses
+Loe09	0		Choosing the Sample Size of a Computer Experiment: A Practical Guide
+Ali19	0		Ensemble of surrogates and cross-validation for rapid and accurate predictions using small data sets
+Naf24	0		Enhanced Drag Force Estimation in Automotive Design: A Surrogate Model Leveraging Limited Full-Order Model Drag Data
+Kuy11	0		Multifidelity surrogate modeling of experimental and computational aerodynamic data sets
+Bon21	0		Gaussian processes for shock test emulation
+Roy11	0		A comprehensive framework for verification, validation, and uncertainty quantification in scientific computing
+Obe04	0		Verification, Validation, and Predictive Capability in Computational Engineering and Physics
+Eca20	0		On the Interpretation and Scope of the V&V 20 Standard for Verification and Validation in CFD and Heat Transfer
+Ste01	0		Comprehensive Approach to Verification and Validation of CFD Simulations Part 1: Methodology and Procedures
+Col97	0		Uncertainties and CFD Code Validation
+Cel07	0		Procedure for Estimation and Reporting of Uncertainty Due to Discretization in CFD Applications
+Roa94	0		Perspective: A Method for Uniform Reporting of Grid Refinement Studies
+Roa98	0		Verification of Codes and Calculations
+Mol19	0		Validation of flood risk models: Current practice and possible improvements
+Abe14	0		Material Point Method for Coupled Hydromechanical Problems
+Obe02b	0		Verification and Validation in Computational Fluid Dynamics
+Rie20	0		Unified Framework and Survey for Model Verification, Validation and Uncertainty Quantification
+Roy10	0		Review of Discretization Error Estimators in Scientific Computing
+Roy05	0		Review of code and solution verification procedures for computational simulation
+Son26b	0		Your Simulation Runs but Solves the Wrong Physics: PDE-Grounded Intent Verification for LLM-Generated Multiphysics Simulation Code
+Bha26	0		Bridging the Gap on AI-Assisted Scientific Software Development Through Transparency and Traceability
+Ho26	0		Auto-Configuring Scientific Simulators with Lightweight Coding-Agent Adapters
+Hol26	0		Evaluating LLM-generated code for domain-specific languages: molecular dynamics with LAMMPS
+Zha26k	0		An Agentic Evaluation Framework for AI-Generated Scientific Code in PETSc
+Kum26	0		MDGYM: Benchmarking AI Agents on Molecular Simulations
+Lie26	0		Agentic Scientific Simulation: Execution-Grounded Model Construction and Reconstruction
+Fan26b	0		PhyNiKCE: A Neurosymbolic Agentic Framework for Autonomous Computational Fluid Dynamics
+Dus25	0		AInsteinBench: Benchmarking Coding Agents on Scientific Repositories
+Han26	0		PDEAgent-Bench: A Multi-Metric, Multi-Library Benchmark for PDE Solver Generation
+Van25	0		AI-Generated Code Is Not Reproducible (Yet): An Empirical Study of Dependency Gaps in LLM-Based Coding Agents
+Bra11	0		Establishing credibility of particle methods through verification testing
+Zha23i	0		A method for automated regression test in scientific computing libraries: illustration with SPHinXsys
+Kam06	0		Verification of Computational Constitutive Models using the Method of Manufactured Solutions
+Li14	0		Sloshing impact simulation with material point method and its experimental validations

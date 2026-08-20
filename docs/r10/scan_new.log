@@ -1,0 +1,693 @@
+want-list titles loaded: 229
+
+[locking] 25 returned, 24 not already in the want list
+   A generalized projection algorithm for overcoming volumetric locking in explicit material point  (2025) oa=closed cites=7
+      https://doi.org/10.1016/j.compgeo.2025.107391
+   An implicit stabilized material point method for modelling coupled hydromechanical problems in t (2024) oa=closed cites=9
+      https://doi.org/10.1016/j.compgeo.2023.106049
+   Stabilized explicit material point method for fluid flow and fluid-structure interaction simulat (2025) oa=closed cites=6
+      https://doi.org/10.1016/j.cma.2025.118428
+   Mitigation Techniques for Volumetric Locking in the Implicit Material Point Method (MPM) (2024) oa=hybrid cites=3
+      https://doi.org/10.1002/pamm.202400033
+      pdf https://onlinelibrary.wiley.com/doi/pdfdirect/10.1002/pamm.202400033
+   Layered construction process with the material point method (2024) oa=hybrid cites=5
+      https://doi.org/10.1016/j.compgeo.2024.106401
+   Application of the random material point method to 3D slope failures (2025) oa=hybrid cites=6
+      https://doi.org/10.1007/s11440-025-02542-w
+   Sequential Hybrid Finite Element and Material Point Method to Simulate Slope Failures (2024) oa=green cites=7
+      https://doi.org/10.1016/j.compgeo.2024.106525
+      pdf https://arxiv.org/pdf/2407.05185
+   A stabilised semi-implicit double-point material point method for soil–water coupled problems (2025) oa=hybrid cites=8
+      https://doi.org/10.1007/s40571-025-01027-7
+      pdf https://link.springer.com/content/pdf/10.1007/s40571-025-01027-7.pdf
+   Research Advances in Large Deformation Analysis and Applications of the Material Point Method (2025) oa=gold cites=5
+      https://doi.org/10.3390/app15126617
+      pdf https://www.mdpi.com/2076-3417/15/12/6617/pdf?version=1749721232
+   Application of the material point method (MPM) to characterise the impact forces of granular lan (2024) oa=hybrid cites=6
+      https://doi.org/10.1016/j.soildyn.2024.108726
+   Implicit partitioned-integration material point method for saturated porous media with an incomp (2026) oa=closed cites=2
+      https://doi.org/10.1016/j.compgeo.2026.108154
+   An Efficient Arbitrary Grid Material Point Method for Problems With Nonconforming Boundary Condi (2025) oa=bronze cites=3
+      https://doi.org/10.1002/nme.70054
+      pdf https://onlinelibrary.wiley.com/doi/pdfdirect/10.1002/nme.70054
+   Smoothed Total Lagrangian Material Point Method for Dynamic Large Deformation Analysis of Soft M (2025) oa=closed cites=2
+      https://doi.org/10.1002/nme.70132
+   A novel coupled bES-FEM formulation with SUPG stabilization for thermo-hydro-mechanical analysis (2024) oa=green cites=18
+      https://doi.org/10.1016/j.compgeo.2024.106454
+      pdf https://arxiv.org/pdf/2406.05138
+   Extended B-spline-based mixed material point method stabilized by the variational multiscale met (2025) oa=hybrid cites=1
+      https://doi.org/10.3934/acse.2025013
+   B-spline-based material point method with dynamic load balancing technique for large-scale simul (2025) oa=hybrid cites=3
+      https://doi.org/10.1007/s00366-024-02099-4
+      pdf https://link.springer.com/content/pdf/10.1007/s00366-024-02099-4.pdf
+   Unstructured moving least squares material point methods: a stable kernel approach with continuo (2024) oa=green cites=4
+      https://doi.org/10.1007/s00466-024-02524-x
+      pdf https://escholarship.org/content/qt7184p1mw/qt7184p1mw.pdf
+   Laboratory‐Scale Free Fall Cone Penetrometer Test on Marine Clay: A Numerical Investigation Usin (2024) oa=hybrid cites=3
+      https://doi.org/10.1002/nag.3929
+      pdf https://onlinelibrary.wiley.com/doi/pdfdirect/10.1002/nag.3929
+   A novel implicit FEM-MPM coupling framework using convex cone programming for elastoplastic prob (2024) oa=closed cites=24
+      https://doi.org/10.1016/j.cma.2024.117153
+   An implicit coupled MPM formulation for static and dynamic simulation of saturated soils based o (2024) oa=closed cites=7
+      https://doi.org/10.1007/s00466-024-02549-2
+   Portable, Massively Parallel Implementation of a Material Point Method for Compressible Flows (2024) oa=green cites=1
+      https://doi.org/10.48550/arxiv.2404.17057
+      pdf https://arxiv.org/pdf/2404.17057
+   A Robust Lagrangian Implicit Material Point Method for Accurate Large-Deformation Analysis (2025) oa=gold cites=1
+      https://doi.org/10.3390/sym17111876
+      pdf https://www.mdpi.com/2073-8994/17/11/1876/pdf?version=1762332937
+   Reduction of stress oscillations in the material point method based on the random grid-shift tec (2025) oa=hybrid cites=1
+      https://doi.org/10.1007/s40571-025-01026-8
+      pdf https://link.springer.com/content/pdf/10.1007/s40571-025-01026-8.pdf
+   A stable poro-mechanical formulation for Material Point Methods leveraging overlapping meshes an (2024) oa=green cites=1
+      https://doi.org/10.48550/arxiv.2405.12814
+      pdf https://arxiv.org/pdf/2405.12814
+
+[locking-sph] 17 returned, 15 not already in the want list
+   A remedy to mitigate tensile instability in SPH for simulating large deformation and failure of  (2024) oa=closed cites=5
+      https://doi.org/10.1016/j.advengsoft.2024.103848
+   A Lagrangian particle model for one-dimensional transient pipe flow with moving boundary (2025) oa=gold cites=23
+      https://doi.org/10.1080/19942060.2025.2452360
+      pdf https://www.tandfonline.com/doi/pdf/10.1080/19942060.2025.2452360?needAccess=true
+   Investigation of friction modeling on numerical Ti6Al4V cutting simulations (2024) oa=hybrid cites=31
+      https://doi.org/10.1016/j.ijmecsci.2024.109231
+      pdf https://ars.els-cdn.com/content/image/1-s2.0-S002074032400273X-ga1_lrg.jpg
+   Adaptive Compressible Smoothed Particle Hydrodynamics (2025) oa=green cites=4
+      https://doi.org/10.1016/j.jcp.2025.114257
+      pdf https://arxiv.org/pdf/2504.11350
+   Localized kernel gradient correction for SPH simulations of water wave propagation (2025) oa=green cites=0
+      https://doi.org/10.48550/arxiv.2511.10064
+      pdf https://arxiv.org/pdf/2511.10064
+   Assessment of the Smoothed Particle Hydrodynamics formulations available in LS-DYNA for multiple (2026) oa=hybrid cites=0
+      https://doi.org/10.1016/j.cpms.2026.07.005
+   Development of a Meshless Kernel-Based Scheme for Particle-Field Brownian Dynamics Simulations (2024) oa=hybrid cites=2
+      https://doi.org/10.1021/acs.jpcb.4c01441
+   $\nabla\cdot{B}=0$ versus the Universe (2026) oa=green cites=1
+      https://doi.org/10.1093/mnras/stag1121
+      pdf http://arxiv.org/pdf/2511.19615
+   The Lattice Boltzmann Method with Deformable Boundary for Colonic Flow Due to Segmental Circular (2025) oa=gold cites=4
+      https://doi.org/10.3390/fluids10020022
+      pdf https://www.mdpi.com/2311-5521/10/2/22/pdf?version=1737476159
+   A MPM Lagrangian‐Eulerian hydrocode for simulating buried explosions in transversely isotropic g (2024) oa=bronze cites=2
+      https://doi.org/10.1002/nag.3717
+      pdf https://onlinelibrary.wiley.com/doi/pdfdirect/10.1002/nag.3717
+   Simulation of a Non-Newtonian drop impact on a rigid surface: A mess-free approach (2025) oa=green cites=0
+      no doi
+      pdf https://arxiv.org/pdf/2511.02308
+   Improving divergence cleaning in cosmological SPMHD simulations (2026) oa=gold cites=0
+      https://doi.org/10.1093/mnras/stag1121
+   A Review of the Application of Smoothed-Particle Hydrodynamics in the Computation of Boiling Flo (2025) oa=diamond cites=0
+      https://doi.org/10.21278/tof.493079625
+      pdf https://hrcak.srce.hr/file/487839
+   A REVIEW ON RECENT STUDIES IN THE AREA OF CONJUGATE HEAT TRANSFER MODELLING IN TRANSFORMERS (2026) oa=diamond cites=0
+      https://doi.org/10.17794/rgn.2026.1.14
+      pdf https://hrcak.srce.hr/file/495527
+   Mathematical Models of Tsunami Propagation (2024) oa=green cites=0
+      https://doi.org/10.20944/preprints202408.0659.v1
+      pdf https://www.preprints.org/frontend/manuscript/958d9354efae69671d35a2c869124fb4/download_pub
+
+[force-rigid] 25 returned, 19 not already in the want list
+   Simulating landslides with the material point method: Best practices, potentialities, and challe (2024) oa=hybrid cites=63
+      https://doi.org/10.1016/j.enggeo.2024.107614
+   An implicit material point-to-rigid body contact approach for large deformation soil–structure i (2024) oa=hybrid cites=11
+      https://doi.org/10.1016/j.compgeo.2024.106646
+   Critical Comparison of Motion Integration Strategies and Discretization Choices in the Material  (2024) oa=green cites=9
+      https://doi.org/10.1007/s11831-024-10170-y
+      pdf https://hal.inrae.fr/hal-04707839v1/document
+   Material Point Method Modeling of Granular Flow Considering Phase Transition From Solid‐Like to  (2025) oa=bronze cites=15
+      https://doi.org/10.1002/nag.3947
+      pdf https://onlinelibrary.wiley.com/doi/pdfdirect/10.1002/nag.3947
+   CK-MPM: A Compact-Kernel Material Point Method (2025) oa=hybrid cites=4
+      https://doi.org/10.1145/3731155
+      pdf https://dl.acm.org/doi/pdf/10.1145/3731155
+   A unified numerical framework for the soil and fluid coupling problem considering mixture and se (2025) oa=closed cites=5
+      https://doi.org/10.1016/j.compgeo.2025.107373
+   A B-spline material point method for deformation failure mechanism of soft–hard interbedded rock (2024) oa=gold cites=5
+      https://doi.org/10.1007/s40948-024-00865-8
+      pdf https://link.springer.com/content/pdf/10.1007/s40948-024-00865-8.pdf
+   Toward engineering lattice structures with the material point method (MPM) (2025) oa=hybrid cites=3
+      https://doi.org/10.1007/s00366-024-02098-5
+      pdf https://link.springer.com/content/pdf/10.1007/s00366-024-02098-5.pdf
+   Soil surface erosion simulation using material point method (2026) oa=hybrid cites=2
+      https://doi.org/10.1016/j.ijmecsci.2026.111470
+   A semi-conservative depth-averaged material point method for fast flow-like landslides and mudfl (2024) oa=hybrid cites=4
+      https://doi.org/10.1016/j.cnsns.2024.108202
+   Modeling of Metal Cutting Processes Within the Material Point Method Using the Johnson–Cook Mate (2024) oa=hybrid cites=3
+      https://doi.org/10.1002/pamm.202400181
+      pdf https://onlinelibrary.wiley.com/doi/pdfdirect/10.1002/pamm.202400181
+   Structural identification of material properties and load parameters using a differentiable mate (2025) oa=hybrid cites=2
+      https://doi.org/10.1111/mice.70042
+      pdf https://onlinelibrary.wiley.com/doi/pdfdirect/10.1111/mice.70042
+   An Overview of Coupled Lagrangian–Eulerian Methods for Ocean Engineering (2024) oa=hybrid cites=10
+      https://doi.org/10.1007/s11804-024-00404-7
+      pdf https://link.springer.com/content/pdf/10.1007/s11804-024-00404-7.pdf
+   Enforcement of non-conforming dirichlet boundary conditions in the implicit material point metho (2025) oa=hybrid cites=1
+      https://doi.org/10.1007/s00466-025-02663-9
+      pdf https://link.springer.com/content/pdf/10.1007/s00466-025-02663-9.pdf
+   Numerical Homogenization of Sand from Grain-level Simulations (2025) oa=hybrid cites=2
+      https://doi.org/10.1145/3763344
+   Computational synthesis of locomotive soft robots by topology optimization (2024) oa=gold cites=23
+      https://doi.org/10.1126/sciadv.adn6129
+      pdf https://www.science.org/doi/pdf/10.1126/sciadv.adn6129?download=true
+   Investigation of offshore landslides impact on bucket foundations using a coupled SPH–FEM method (2024) oa=gold cites=26
+      https://doi.org/10.1186/s40677-024-00266-9
+      pdf https://geoenvironmental-disasters.springeropen.com/counter/pdf/10.1186/s40677-024-00266-9
+   Subspace graph networks for real-time granular flow simulation with applications to machine-terr (2024) oa=hybrid cites=2
+      https://doi.org/10.1016/j.engappai.2024.108765
+   Bioinspired Design and Experimental Validation of an Aquatic Snake Robot (2024) oa=gold cites=17
+      https://doi.org/10.3390/biomimetics9020087
+
+[wellbalanced] 25 returned, 23 not already in the want list
+   A scalable well-balanced numerical scheme for the modeling of two-phase shallow granular landsli (2024) oa=hybrid cites=8
+      https://doi.org/10.1016/j.jcp.2024.112798
+   A depth‐integrated SPH framework for slow landslides (2024) oa=hybrid cites=5
+      https://doi.org/10.1002/nag.3814
+      pdf https://onlinelibrary.wiley.com/doi/pdfdirect/10.1002/nag.3814
+   Development of Pipeline Transient Mixed Flow Model with Smoothed Particle Hydrodynamics Based on (2024) oa=gold cites=6
+      https://doi.org/10.3390/w16081108
+      pdf https://www.mdpi.com/2073-4441/16/8/1108/pdf?version=1712931250
+   How to enforce an entropy inequality of (fully) well-balanced Godunov-type schemes for the shall (2025) oa=hybrid cites=1
+      https://doi.org/10.1051/m2an/2025012
+      pdf https://www.esaim-m2an.org/articles/m2an/pdf/2025/02/m2an240047.pdf
+   A New Depth-Averaged Eulerian SPH Model for Passive Pollutant Transport in Open Channel Flows (2025) oa=gold cites=1
+      https://doi.org/10.3390/w17152205
+      pdf https://www.mdpi.com/2073-4441/17/15/2205/pdf?version=1753343064
+   Rheology and bathymetry effects captured by a multilayer landslide-tsunami model (2025) oa=gold cites=7
+      https://doi.org/10.1093/gji/ggaf232
+      pdf https://academic.oup.com/gji/advance-article-pdf/doi/10.1093/gji/ggaf232/63607905/ggaf232.pdf
+   Adaptive finite volume-particle method for free surface flows (2026) oa=green cites=0
+      no doi
+      pdf https://arxiv.org/pdf/2603.25130
+   Advances in Dam-Break Modeling for Flood Hazard Mitigation: Theory, Numerical Models, and Applic (2024) oa=gold cites=17
+      https://doi.org/10.3390/w16081093
+      pdf https://www.mdpi.com/2073-4441/16/8/1093/pdf?version=1712809113
+   How to make fully discrete entropy stability of three-point well-balanced finite-volume schemes (2025) oa=green cites=0
+      no doi
+      pdf https://hal.science/hal-05378579v1/document
+   Fully well-balanced entropy stable Godunov numerical schemes for the Shallow Water equations wit (2024) oa=green cites=0
+      no doi
+      pdf https://hal.science/hal-04394378/document
+   Numerical approaches to capture fluid–structure interaction considering interfaces for offshore  (2025) oa=diamond cites=11
+      https://doi.org/10.1063/5.0226161
+      pdf https://pubs.aip.org/hgmri/ijfe/article-pdf/doi/10.1063/5.0226161/20352581/020601_1_5.0226161.pdf
+   Numerical investigation of a potential landslide-induced tsunami at the Suofengying reservoir in (2024) oa=green cites=7
+      https://doi.org/10.1007/s10346-024-02217-9
+      pdf https://dspace.mit.edu/bitstream/1721.1/159425/1/10346_2024_2217_ReferencePDF.pdf
+   Combination of intrusive POD-based reduced-order models and augmented Riemann solvers applied to (2024) oa=hybrid cites=5
+      https://doi.org/10.1016/j.cma.2024.117702
+   Solving the discretised shallow water equations using neural networks (2025) oa=hybrid cites=10
+      https://doi.org/10.1016/j.advwatres.2025.104903
+   Reconstruction of 3D Floating Body Motion on Shallow Water Flows Using the Smoothed Particle Hyd (2026) oa=diamond cites=0
+      https://doi.org/10.3311/ppme.42722
+      pdf https://pp.bme.hu/me/article/download/42722/24328
+   Tailings Dam Breach Outflow Modelling: A Review (2024) oa=hybrid cites=11
+      https://doi.org/10.1007/s10230-024-01015-y
+      pdf https://link.springer.com/content/pdf/10.1007/s10230-024-01015-y.pdf
+   Application of a cloud method in simulating mountain waves over steep topography (2025) oa=bronze cites=0
+      https://doi.org/10.1002/qj.70062
+      pdf https://onlinelibrary.wiley.com/doi/pdfdirect/10.1002/qj.70062
+   Transient Sand Scour Dynamics Induced by Pulsed Submerged Water Jets: Simulation Analysis (2024) oa=gold cites=2
+      https://doi.org/10.3390/jmse12112041
+      pdf https://www.mdpi.com/2077-1312/12/11/2041/pdf?version=1731384694
+   Physics-informed neural networks for tsunami inundation modeling (2024) oa=green cites=1
+      https://doi.org/10.48550/arxiv.2406.16236
+      pdf https://arxiv.org/pdf/2406.16236
+   An analysis of rheological models for lahar modelling with Iber (2025) oa=diamond cites=1
+      https://doi.org/10.22201/igc.20072902e.2025.3.1882
+      pdf https://rmcg.unam.mx/index.php/rmcg/article/download/1882/1781/11971
+   Review on tsunami research and risk mitigation: from prediction models to resilient coastal comm (2026) oa=gold cites=4
+      https://doi.org/10.1038/s44304-026-00195-7
+      pdf https://www.nature.com/articles/s44304-026-00195-7.pdf
+   Numerical analysis of dynamics between debris flows and wave propagation using multi-layer shall (2025) oa=gold cites=0
+      https://doi.org/10.5194/egusphere-2025-1383
+      pdf https://egusphere.copernicus.org/preprints/2025/egusphere-2025-1383/egusphere-2025-1383.pdf
+   A Discrete Boltzmann Approach for Numerical Simulation of Wetting and Drying in Shallow Flows (2025) oa=gold cites=0
+      https://doi.org/10.1029/2025wr041568
+      pdf https://onlinelibrary.wiley.com/doi/pdfdirect/10.1029/2025WR041568
+
+[hydrostatic] 25 returned, 24 not already in the want list
+   Compact stars in Rastall gravity: hydrostatic equilibrium and radial pulsations (2024) oa=green cites=23
+      https://doi.org/10.1007/s10714-024-03225-9
+      pdf https://arxiv.org/pdf/2403.02440
+   Advances in Nanoarchitectonics: A Review of “Static” and “Dynamic” Particle Assembly Methods (2024) oa=gold cites=30
+      https://doi.org/10.3390/ma17051051
+      pdf https://www.mdpi.com/1996-1944/17/5/1051/pdf?version=1708773941
+   Anisotropic dark energy stars within vanishing complexity factor formalism: Hydrostatic equilibr (2024) oa=diamond cites=19
+      https://doi.org/10.1016/j.physletb.2024.138901
+   Galaxy clusters in Milgromian dynamics: Missing matter, hydrostatic bias, and the external field (2024) oa=diamond cites=14
+      https://doi.org/10.1051/0004-6361/202449968
+      pdf https://www.aanda.org/articles/aa/pdf/2024/08/aa49968-24.pdf
+   Mechanism and Performance Control Methods of Sulfate Attack on Concrete: A Review (2024) oa=gold cites=89
+      https://doi.org/10.3390/ma17194836
+      pdf https://www.mdpi.com/1996-1944/17/19/4836/pdf
+   Smoothed particle hydrodynamics for free-surface and multiphase flows: a review (2025) oa=hybrid cites=31
+      https://doi.org/10.1088/1361-6633/ada80f
+   Numerical simulation of a flexible net in currents with the smoothed particle hydrodynamics meth (2024) oa=hybrid cites=13
+      https://doi.org/10.1016/j.oceaneng.2024.117102
+   Evaluation and correction methods for geometric errors of hydrostatic thrust bearings (2024) oa=gold cites=6
+      https://doi.org/10.1038/s41598-024-81812-1
+      pdf https://www.nature.com/articles/s41598-024-81812-1.pdf
+   Advancing the next generation of high-performance metal matrix composites through metal particle (2024) oa=hybrid cites=61
+      https://doi.org/10.1007/s42114-024-01057-4
+      pdf https://link.springer.com/content/pdf/10.1007/s42114-024-01057-4.pdf
+   A weighted shifted boundary method for immersed moving boundary simulations of Stokes' flow (2024) oa=green cites=16
+      https://doi.org/10.1016/j.jcp.2024.113095
+      pdf https://www.osti.gov/servlets/purl/2550713
+   Quantitative predictive theories through integrating quantum, statistical, equilibrium, and none (2024) oa=hybrid cites=28
+      https://doi.org/10.1088/1361-648x/ad4762
+   Trading particle shape with fluid symmetry: on the mobility matrix in 3-D chiral fluids (2024) oa=hybrid cites=13
+      https://doi.org/10.1017/jfm.2024.535
+      pdf https://www.cambridge.org/core/services/aop-cambridge-core/content/view/1B771DB2A4306630C748F3E906CD3AA5/S0022112024005354a.pdf/di
+   Hydrostatic equilibrium in multi-Weyl semimetals (2025) oa=diamond cites=1
+      https://doi.org/10.1007/jhep10(2025)055
+      pdf https://link.springer.com/content/pdf/10.1007/JHEP10(2025)055.pdf
+   Unusual plastic strain-induced phase transformation phenomena in silicon (2024) oa=gold cites=25
+      https://doi.org/10.1038/s41467-024-51469-5
+      pdf https://www.nature.com/articles/s41467-024-51469-5.pdf
+   Fluid-mineral Equilibrium Under Nonhydrostatic Stress: Insight From Molecular Dynamics (2024) oa=hybrid cites=7
+      https://doi.org/10.2475/001c.92881
+      pdf https://ajsonline.org/article/92881.pdf
+   An efficient static solver for the lattice discrete particle model (2024) oa=hybrid cites=17
+      https://doi.org/10.1111/mice.13306
+      pdf https://onlinelibrary.wiley.com/doi/pdfdirect/10.1111/mice.13306
+   Hydrostatic mass bias for galaxy groups and clusters in the FLAMINGO simulations (2024) oa=gold cites=7
+      https://doi.org/10.1093/mnras/stae2798
+      pdf https://academic.oup.com/mnras/advance-article-pdf/doi/10.1093/mnras/stae2798/61249937/stae2798.pdf
+   Neutrino tomography of the earth: the earth total mass, moment of inertia and hydrostatic equili (2024) oa=diamond cites=3
+      https://doi.org/10.1140/epjc/s10052-024-13348-7
+      pdf https://link.springer.com/content/pdf/10.1140/epjc/s10052-024-13348-7.pdf
+   Methods for the Design and Analysis of Analytical Ultracentrifugation Experiments (2024) oa=hybrid cites=17
+      https://doi.org/10.1002/cpz1.974
+      pdf https://onlinelibrary.wiley.com/doi/pdfdirect/10.1002/cpz1.974
+   Revisiting the kinetics enhancement strategies of Si anodes through deconstructing particle–inte (2025) oa=hybrid cites=40
+      https://doi.org/10.1039/d4ee05595k
+      pdf https://pubs.rsc.org/en/content/articlepdf/2025/ee/d4ee05595k
+   Energetic particle activity in AD Leo: Detection of a solar-like type-IV burst (2024) oa=diamond cites=23
+      https://doi.org/10.1051/0004-6361/202347924
+      pdf https://www.aanda.org/articles/aa/pdf/forth/aa47924-23.pdf
+   Mechanics-modified equilibrium potential for linear-elastic electrode materials (2025) oa=diamond cites=4
+      https://doi.org/10.1039/d5eb00045a
+      pdf https://pubs.rsc.org/en/content/articlepdf/2025/eb/d5eb00045a
+   On the kinetics of internal gravity waves beyond the hydrostatic regime (2024) oa=green cites=8
+      https://doi.org/10.1017/jfm.2024.802
+      pdf https://hal.science/hal-04757445v1/document
+   Effect of gravitational cracking on energy exchange in relativistic fluids: a first approach (2025) oa=diamond cites=26
+      https://doi.org/10.1140/epjc/s10052-025-14458-6
+      pdf https://link.springer.com/content/pdf/10.1140/epjc/s10052-025-14458-6.pdf
+
+[fording] 25 returned, 25 not already in the want list
+   Strategies and sustainability in fast charging station deployment for electric vehicles (2024) oa=gold cites=159
+      https://doi.org/10.1038/s41598-023-50825-7
+      pdf https://www.nature.com/articles/s41598-023-50825-7.pdf
+   Batteries for electric vehicles: Technical advancements, environmental challenges, and market pe (2024) oa=diamond cites=94
+      https://doi.org/10.1002/sus2.234
+      pdf https://onlinelibrary.wiley.com/doi/pdfdirect/10.1002/sus2.234
+   Overview of Vehicle-to-Vehicle Energy Sharing Infrastructure (2024) oa=gold cites=33
+      https://doi.org/10.1109/access.2024.3388088
+      pdf https://ieeexplore.ieee.org/ielx7/6287639/6514899/10497564.pdf
+   A Survey on Path Planning for Autonomous Ground Vehicles in Unstructured Environments (2024) oa=gold cites=60
+      https://doi.org/10.3390/machines12010031
+      pdf https://www.mdpi.com/2075-1702/12/1/31/pdf?version=1704199158
+   Internet of Things: a comprehensive overview, architectures, applications, simulation tools, cha (2024) oa=gold cites=108
+      https://doi.org/10.1007/s43926-024-00084-3
+      pdf https://link.springer.com/content/pdf/10.1007/s43926-024-00084-3.pdf
+   Calibrating Microscopic Traffic Simulation Model Using Connected Vehicle Data and Genetic Algori (2025) oa=gold cites=18
+      https://doi.org/10.3390/app15031496
+      pdf https://www.mdpi.com/2076-3417/15/3/1496/pdf?version=1738398906
+   Privacy-Preserving Routing and Charging Scheduling for Cellular-Connected Unmanned Aerial Vehicl (2024) oa=closed cites=17
+      https://doi.org/10.1109/tsmc.2024.3392011
+   Gnss-denied unmanned aerial vehicle navigation: analyzing computational complexity, sensor fusio (2025) oa=diamond cites=76
+      https://doi.org/10.1186/s43020-025-00162-z
+      pdf https://satellite-navigation.springeropen.com/counter/pdf/10.1186/s43020-025-00162-z
+   Metal Additive Manufacturing (MAM) Applications in Production of Vehicle Parts and Components—A  (2024) oa=gold cites=55
+      https://doi.org/10.3390/met14020195
+      pdf https://www.mdpi.com/2075-4701/14/2/195/pdf?version=1707126020
+   Electric and gasoline vehicle total cost of ownership across US cities (2024) oa=hybrid cites=50
+      https://doi.org/10.1111/jiec.13463
+      pdf https://onlinelibrary.wiley.com/doi/pdfdirect/10.1111/jiec.13463
+   Optimization Schedule Schemes for Charging Electric Vehicles: Overview, Challenges, and Solution (2024) oa=gold cites=44
+      https://doi.org/10.1109/access.2024.3371890
+      pdf https://ieeexplore.ieee.org/ielx7/6287639/6514899/10453517.pdf
+   The electric vehicle transition (2024) oa=diamond cites=21
+      https://doi.org/10.1039/d3va00322a
+      pdf https://pubs.rsc.org/en/content/articlepdf/2024/va/d3va00322a
+   Artificial Intelligence-Driven Vehicle Fault Diagnosis to Revolutionize Automotive Maintenance:  (2024) oa=diamond cites=48
+      https://doi.org/10.32604/cmes.2024.056022
+      pdf https://cdn.techscience.press/files/CMES/2024/TSP_CMES-141-2/TSP_CMES_56022/TSP_CMES_56022.pdf
+   Physics-informed neural networks to advance pavement engineering and management (2024) oa=closed cites=16
+      https://doi.org/10.1080/14680629.2024.2315073
+   Bacteriophages as Targeted Therapeutic Vehicles: Challenges and Opportunities (2025) oa=gold cites=29
+      https://doi.org/10.3390/bioengineering12050469
+      pdf https://www.mdpi.com/2306-5354/12/5/469/pdf?version=1745918441
+   A comprehensive review of an electric vehicle based on the existing technologies and challenges (2024) oa=bronze cites=36
+      https://doi.org/10.1002/est2.70000
+      pdf https://onlinelibrary.wiley.com/doi/pdfdirect/10.1002/est2.70000
+   Autonomous Vehicles in Rural Areas: A Review of Challenges, Opportunities, and Solutions (2025) oa=gold cites=22
+      https://doi.org/10.3390/app15084195
+      pdf https://www.mdpi.com/2076-3417/15/8/4195/pdf?version=1744351234
+   Advancements in Battery Cooling Techniques for Enhanced Performance and Safety in Electric Vehic (2024) oa=hybrid cites=38
+      https://doi.org/10.1002/ente.202301404
+      pdf https://onlinelibrary.wiley.com/doi/pdfdirect/10.1002/ente.202301404
+   SDN-Based VANET Routing: A Comprehensive Survey on Architectures, Protocols, Analysis, and Futur (2024) oa=gold cites=57
+      https://doi.org/10.1109/access.2024.3355313
+      pdf https://ieeexplore.ieee.org/ielx7/6287639/6514899/10402120.pdf
+   Depreciation in the Electric Vehicle Transition: Sustainability of the Second-Hand Electric Vehi (2024) oa=gold cites=15
+      https://doi.org/10.3390/vehicles6040101
+      pdf https://www.mdpi.com/2624-8921/6/4/101/pdf?version=1733370441
+   Testing and Verification of Connected and Autonomous Vehicles: A Review (2025) oa=gold cites=21
+      https://doi.org/10.3390/electronics14030600
+      pdf https://www.mdpi.com/2079-9292/14/3/600/pdf?version=1739248217
+   Numerical modeling and simulation of cable barriers under vehicular impacts on a sloped median (2024) oa=closed cites=8
+      https://doi.org/10.1177/20414196241226725
+   Application of Machine Learning to Predict CO2 Emissions in Light-Duty Vehicles (2024) oa=gold cites=29
+      https://doi.org/10.3390/s24248219
+      pdf https://www.mdpi.com/1424-8220/24/24/8219/pdf?version=1734959135
+   Hybrid multimodule DC–DC converters accelerated by wide bandgap devices for electric vehicle sys (2024) oa=gold cites=23
+      https://doi.org/10.1038/s41598-024-55426-6
+   Advanced Deep Learning Techniques for Battery Thermal Management in New Energy Vehicles (2024) oa=gold cites=31
+      https://doi.org/10.3390/en17164132
+      pdf https://www.mdpi.com/1996-1073/17/16/4132/pdf?version=1724083075
+
+[floodveh] 25 returned, 24 not already in the want list
+   Floodwaters and vehicle hydrodynamics: A deep dive into risk mitigation unraveling vehicle stabi (2024) oa=gold cites=7
+      https://doi.org/10.1016/j.rineng.2024.102540
+   Rethinking urban street experiments through Lefebvre's rhythmanalysis: From vehicles and vibranc (2024) oa=hybrid cites=23
+      https://doi.org/10.1016/j.cities.2024.105175
+   An overview of flood evacuation planning: Models, methods, and future directions (2025) oa=hybrid cites=19
+      https://doi.org/10.1016/j.jhydrol.2025.133026
+   Predictive slope stability early warning model based on CatBoost (2024) oa=gold cites=66
+      https://doi.org/10.1038/s41598-024-77058-6
+      pdf https://www.nature.com/articles/s41598-024-77058-6.pdf
+   Collaborative Task Allocation and Optimization Solution for Unmanned Aerial Vehicles in Search a (2024) oa=gold cites=38
+      https://doi.org/10.3390/drones8040138
+      pdf https://www.mdpi.com/2504-446X/8/4/138/pdf?version=1712131411
+   Resilience of transportation infrastructure networks to road failures (2024) oa=hybrid cites=35
+      https://doi.org/10.1063/5.0165839
+      pdf https://pubs.aip.org/aip/cha/article-pdf/doi/10.1063/5.0165839/18626577/013124_1_5.0165839.pdf
+   Determining the threshold of issuing flash flood warnings based on people's response process sim (2024) oa=gold cites=9
+      https://doi.org/10.5194/hess-28-5229-2024
+      pdf https://hess.copernicus.org/articles/28/5229/2024/hess-28-5229-2024.pdf
+   Unmanned aerial vehicles (UAVs): an adoptable technology for precise and smart farming (2024) oa=gold cites=48
+      https://doi.org/10.1007/s43926-024-00066-5
+      pdf https://link.springer.com/content/pdf/10.1007/s43926-024-00066-5.pdf
+   Security Control of Autonomous Ground Vehicles Under DoS Attacks via a Novel Controller With the (2024) oa=green cites=32
+      https://doi.org/10.1109/tfuzz.2024.3381264
+      pdf https://hal.science/hal-04522881/document
+   Single-phase local-high-concentration solid polymer electrolytes for lithium-metal batteries (2024) oa=green cites=346
+      https://doi.org/10.1038/s41560-023-01443-0
+      pdf https://www.osti.gov/servlets/purl/2283303
+   Estimation of Plant Height and Biomass of Rice Using Unmanned Aerial Vehicle (2024) oa=gold cites=20
+      https://doi.org/10.3390/agronomy14010145
+      pdf https://www.mdpi.com/2073-4395/14/1/145/pdf?version=1704701526
+   Optimizing Distribution System Resilience in Extreme Weather Using Prosumer-Centric Microgrids w (2024) oa=gold cites=46
+      https://doi.org/10.3390/su16062379
+      pdf https://www.mdpi.com/2071-1050/16/6/2379/pdf?version=1710331342
+   Mapping Geospatial AI Flood Risk in National Road Networks (2024) oa=gold cites=26
+      https://doi.org/10.3390/ijgi13090323
+      pdf https://www.mdpi.com/2220-9964/13/9/323/pdf
+   Developing long-durability proton-exchange membrane fuel cells (2025) oa=bronze cites=151
+      https://doi.org/10.1016/j.joule.2025.101853
+      pdf https://www.cell.com/action/showPdf?pii=S2542435125000340
+   Unsupervised Color Based Flood Segmentation in UAV Imagery (2024) oa=green cites=8
+      https://doi.org/10.20944/preprints202404.1049.v1
+      pdf https://www.preprints.org/manuscript/202404.1049/v1/download
+   Review of Vehicle Scanning Method for Bridges from 2004 to 2024 (2024) oa=green cites=34
+      https://doi.org/10.1142/s0219455425300034
+      pdf https://research.monash.edu/files/728977338/624360135-oa.pdf
+   Considerations for first field trials of low-threshold gene drive for malaria vector control (2024) oa=gold cites=32
+      https://doi.org/10.1186/s12936-024-04952-9
+   Comprehensive Investigation of Unmanned Aerial Vehicles (UAVs): An In-Depth Analysis of Avionics (2024) oa=gold cites=40
+      https://doi.org/10.3390/s24103064
+   Battery Charging Simulation of a Passenger Electric Vehicle from a Traction Voltage Inverter wit (2025) oa=gold cites=17
+      https://doi.org/10.3390/wevj16070391
+      pdf https://www.mdpi.com/2032-6653/16/7/391/pdf?version=1752467403
+   A New Semi-Empirical Model to Predict Vehicle Instability in Urban Flooding (2025) oa=gold cites=2
+      https://doi.org/10.3390/w18010080
+      pdf https://www.mdpi.com/2073-4441/18/1/80/pdf
+   Advances in the Battery Thermal Management Systems of Electric Vehicles for Thermal Runaway Prev (2025) oa=gold cites=37
+      https://doi.org/10.3390/batteries11060216
+      pdf https://www.mdpi.com/2313-0105/11/6/216/pdf?version=1748765111
+   Dynamic Response of Urban Pluvial Flood Resilience Under a Multi-Dimensional Assessment Framewor (2025) oa=gold cites=5
+      https://doi.org/10.3390/su172210044
+   Identification of the dual roles of Al <sub>2</sub> O <sub>3</sub> coatings on NMC811-cathodes < (2025) oa=hybrid cites=81
+      https://doi.org/10.1039/d4ee03444a
+      pdf https://pubs.rsc.org/en/content/articlepdf/2025/ee/d4ee03444a
+   Optimized Collaborative Scheduling of Unmanned Aerial Vehicles for Emergency Material Distributi (2025) oa=hybrid cites=7
+      https://doi.org/10.56578/mits040101
+      pdf https://library.acadlore.com/MITS/2025/4/1/MITS_04.01_01.pdf
+
+[safespeed] 25 returned, 25 not already in the want list
+   A Dynamic Simulation Framework for Evaluating the Impacts of Urban Flooding on Transportation Sy (2026) oa=diamond cites=3
+      https://doi.org/10.1007/s13753-026-00697-y
+      pdf https://link.springer.com/content/pdf/10.1007/s13753-026-00697-y.pdf
+   Examining driving stability and traffic capacity: A simulation study on appropriate speed limits (2025) oa=gold cites=2
+      https://doi.org/10.1371/journal.pone.0317690
+      pdf https://journals.plos.org/plosone/article/file?id=10.1371/journal.pone.0317690&type=printable
+   Integrated approach for flood shelter site selection and emergency response accessibility analys (2024) oa=diamond cites=3
+      https://doi.org/10.2166/wcc.2024.475
+      pdf https://iwaponline.com/jwcc/article-pdf/15/10/5291/1502199/jwc2024475.pdf
+   Understanding e-scooter rider crash severity using a built environment typology: A two-stage clu (2025) oa=hybrid cites=14
+      https://doi.org/10.1016/j.aap.2025.108018
+   An In-Depth Analysis of Collision Avoidance Path Planning Algorithms inAutonomous Vehicles (2024) oa=bronze cites=2
+      https://doi.org/10.2174/0126662558258394231228080539
+      pdf https://www.rolls-royce.com/~/media/Files/R/Rolls-Royce/documents/customers/marine/ship-intel/aawa-whitepaper-210616.pdf
+   Parking and Public Health (2024) oa=hybrid cites=12
+      https://doi.org/10.1007/s40572-024-00465-4
+      pdf https://link.springer.com/content/pdf/10.1007/s40572-024-00465-4.pdf
+   2CAP: A Novel Curve Crash Avoidance Protocol to Handle Curve Crashes in Vehicular Ad-Hoc Network (2024) oa=gold cites=8
+      https://doi.org/10.1109/access.2024.3349474
+      pdf https://ieeexplore.ieee.org/ielx7/6287639/6514899/10379681.pdf
+   Machine learning-based detection and mitigation of cyberattacks in adaptive cruise control syste (2025) oa=gold cites=1
+      https://doi.org/10.1038/s41598-025-20096-5
+      pdf https://www.nature.com/articles/s41598-025-20096-5.pdf
+   Ngineering model on traffic volume at Bocimi toll gate (2025) oa=gold cites=2
+      https://doi.org/10.5937/jaes0-54055
+      pdf https://aseestant.ceon.rs/index.php/jaes/article/download/54055/27116
+   Evolutionary model and risk analysis of ship collision accidents based on complex networks and D (2024) oa=hybrid cites=84
+      https://doi.org/10.1016/j.oceaneng.2024.117965
+   A novel collaborative collision avoidance decision-making methodology based on potential collisi (2024) oa=green cites=14
+      https://doi.org/10.1016/j.oceaneng.2024.120126
+      pdf https://researchonline.ljmu.ac.uk/id/eprint/25959/3/A%20novel%20collaborative%20collision%20avoidance%20decision%20making%20method
+   Analysis and Design of a Robust Security System to Address Cybersecurity Vulnerabilities and Con (2025) oa=diamond cites=0
+      https://doi.org/10.18196/jrc.v6i2.25243
+      pdf https://journal.umy.ac.id/index.php/jrc/article/download/25243/11390
+   DEVELOPMENT OF A FUZZY-BASED DECISION SUPPORT SYSTEM FOR SUSTAINABLE TRACTOR SELECTION IN GREEN  (2025) oa=diamond cites=5
+      https://doi.org/10.22190/fume250610029y
+      pdf https://casopisi.junis.ni.ac.rs/index.php/FUMechEng/article/download/13862/5806
+   Challenges and Solutions to COLREGs on MASS Ethical Issues in Vessel Manoeuvring Practices (2024) oa=gold cites=3
+      https://doi.org/10.12716/1001.18.03.11
+      pdf https://www.transnav.eu/files/Challenges_and_Solutions_to_COLREGs_on_MASS_Ethical_Issues_in_Vessel_Manoeuvring_Practices,1431.pdf
+   Control Allocation Strategy Based on Min–Max Optimization and Simple Neural Network (2025) oa=gold cites=4
+      https://doi.org/10.3390/drones9050372
+      pdf https://www.mdpi.com/2504-446X/9/5/372/pdf?version=1747300787
+   Prediction of pavement water film depth and estimation of critical rainfall conditions for refin (2025) oa=gold cites=4
+      https://doi.org/10.1371/journal.pone.0318228
+   Structured Prompting and Collaborative Multi-Agent Knowledge Distillation for Traffic Video Inte (2025) oa=gold cites=2
+      https://doi.org/10.3390/computers14110490
+      pdf https://www.mdpi.com/2073-431X/14/11/490/pdf?version=1762677774
+   The potential of SDNs and multihoming in VANETs: A Comprehensive Survey (2025) oa=gold cites=0
+      https://doi.org/10.36227/techrxiv.24552964.v3
+      pdf https://www.techrxiv.org/doi/pdf/10.36227/techrxiv.24552964.v3
+   A Machine Vision–Based Method for Quantitative Spray Pattern Analysis and Nozzle Optimization in (2026) oa=green cites=0
+      https://doi.org/10.21203/rs.3.rs-9419383/v1
+      pdf https://www.researchsquare.com/article/rs-9419383/latest.pdf
+   AI Mobility, EV Scaling, and Road Safety: Indian State Comparison with G20 and BRICS Policies (2024) oa=bronze cites=0
+      https://doi.org/10.62311/nesx/rp-ai21
+      pdf https://www.nationaleducationservices.org/file-download/1547813/Download Full-Text Research Paper PDF Pp 352-376ai21.pdf
+   Multi-objective emergency allocation of snowmelt agents for urban roads under snow and ice disas (2025) oa=gold cites=0
+      https://doi.org/10.1038/s41598-025-23256-9
+      pdf https://www.nature.com/articles/s41598-025-23256-9.pdf
+   Risk-Averse Stochastic User Equilibrium on Uncertain Transportation Networks (2026) oa=green cites=0
+      no doi
+      pdf https://arxiv.org/pdf/2603.20207
+   Improving health and preventing cancer through a better transport system in Aotearoa/New Zealand (2024) oa=green cites=0
+      https://doi.org/10.1080/03036758.2024.2412092
+      pdf https://pmc.ncbi.nlm.nih.gov/articles/PMC12288191/pdf/TNZR_55_2412092.pdf
+   Assessment of Vehicular Accidents in Selected Municipalities in Northern Iloilo Philippines (2026) oa=bronze cites=0
+      https://doi.org/10.47772/ijriss.2026.10200309
+      pdf https://rsisinternational.org/journals/ijriss/uploads/vol10-iss2-pg4247-4252-202603_pdf.pdf
+   Autonomous inland shipping: Learning from regulation in air, rail, road and sea transport (2025) oa=hybrid cites=1
+      https://doi.org/10.1007/s13437-025-00377-6
+      pdf https://link.springer.com/content/pdf/10.1007/s13437-025-00377-6.pdf
+
+[safespeed2] 25 returned, 17 not already in the want list
+   Physical vulnerability of pedestrians under the joint effect of wind and floodwater and its appl (2024) oa=bronze cites=12
+      https://doi.org/10.1063/5.0191951
+      pdf https://pubs.aip.org/aip/pof/article-pdf/doi/10.1063/5.0191951/19872267/047116_1_5.0191951.pdf
+   Automated rapid estimation of flood depth using a digital elevation model and Earth Observation  (2025) oa=gold cites=7
+      https://doi.org/10.5194/nhess-25-2455-2025
+      pdf https://nhess.copernicus.org/articles/25/2455/2025/nhess-25-2455-2025.pdf
+   Probabilistic assessment of human instability in urban areas exposed to flood events (2025) oa=gold cites=3
+      https://doi.org/10.1038/s41598-025-25267-y
+      pdf https://www.nature.com/articles/s41598-025-25267-y.pdf
+   An Early Warning System for Urban Fluvial Floods Based on Rainfall Depth–Duration Thresholds and (2024) oa=gold cites=3
+      https://doi.org/10.3390/w16182599
+   Convolutional neural network model for rapid prediction of urban flash flood water depth and vel (2026) oa=hybrid cites=2
+      https://doi.org/10.1016/j.jhydrol.2026.135601
+   Enhanced Flood Detection Through Precise Water Segmentation Using Advanced Deep Learning Models (2024) oa=hybrid cites=19
+      https://doi.org/10.61186/jcer.6.1.1
+      pdf https://www.journals-researchers.com/ojs/index.php/jcer/article/download/114/107
+   Development of a hazard risk map for assessing pedestrian risk in urban flash floods: A case stu (2024) oa=gold cites=5
+      https://doi.org/10.1002/rvr2.78
+      pdf https://onlinelibrary.wiley.com/doi/pdfdirect/10.1002/rvr2.78
+   The impact of climate change induced extreme weather events on microbial dynamics and public hea (2025) oa=gold cites=10
+      https://doi.org/10.3389/fenvs.2025.1674490
+      pdf https://public-pages-files-2025.frontiersin.org/journals/environmental-science/articles/10.3389/fenvs.2025.1674490/pdf
+   Analysis of Self-Rescue Possibilities for Pedestrians in the Aftermath of Destabilization during (2024) oa=gold cites=3
+      https://doi.org/10.3390/w16091218
+      pdf https://www.mdpi.com/2073-4441/16/9/1218/pdf?version=1713966882
+   Robust and Fast Sensing of Urban Flood Depth with Social Media Images Using Pre-Trained Large Mo (2025) oa=gold cites=2
+      https://doi.org/10.3390/hydrology12110307
+      pdf https://www.mdpi.com/2306-5338/12/11/307/pdf
+   Flood simulation and risk assessment in urban underground spaces based on 3D laser scanning: cap (2026) oa=gold cites=2
+      https://doi.org/10.3389/frwa.2026.1777013
+      pdf https://public-pages-files-2025.frontiersin.org/journals/water/articles/10.3389/frwa.2026.1777013/pdf
+   Research on the disaster bearing characteristics system and capacity depth disaster response cur (2025) oa=gold cites=2
+      https://doi.org/10.1038/s41598-025-19649-5
+      pdf https://www.nature.com/articles/s41598-025-19649-5.pdf
+   FloodNet: Low‐Cost Ultrasonic Sensors for Real‐Time Measurement of Hyperlocal, Street‐Level Floo (2024) oa=gold cites=43
+      https://doi.org/10.1029/2023wr036806
+   Spatial Analysis of Exposure of Roads to Flooding and Its Implications for Mobility in Urban/Per (2024) oa=gold cites=6
+      https://doi.org/10.3390/ijgi13040111
+      pdf https://www.mdpi.com/2220-9964/13/4/111/pdf?version=1711505991
+   Research on the Heavy Rainstorm–Flash Flood–Debris Flow Disaster Chain: A Case Study of the “Hai (2024) oa=gold cites=13
+      https://doi.org/10.3390/rs16244802
+      pdf https://www.mdpi.com/2072-4292/16/24/4802/pdf?version=1734951563
+   Human decision-making in crowds in a virtual flood scenario (2026) oa=gold cites=1
+      https://doi.org/10.5194/nhess-26-981-2026
+      pdf https://nhess.copernicus.org/articles/26/981/2026/nhess-26-981-2026.pdf
+   Risk of compound flooding substantially increases in the future Mekong River delta (2024) oa=gold cites=13
+      https://doi.org/10.5194/nhess-24-3627-2024
+      pdf https://nhess.copernicus.org/articles/24/3627/2024/nhess-24-3627-2024.pdf
+
+[buoyancy-err] 25 returned, 25 not already in the want list
+   Exploring Wave–Vegetation Interaction at Stem Scale: Analysis of the Coupled Flow–Structure Inte (2024) oa=gold cites=13
+      https://doi.org/10.3390/jmse12071120
+      pdf https://www.mdpi.com/2077-1312/12/7/1120/pdf?version=1720084580
+   Implicit Incompressible Porous Flow using SPH (2025) oa=hybrid cites=2
+      https://doi.org/10.1145/3763325
+   Two-Way Coupling Simulation of Fluid-Multibody Dynamics for Estimating Power Generation Performa (2024) oa=gold cites=4
+      https://doi.org/10.3390/en17040930
+      pdf https://www.mdpi.com/1996-1073/17/4/930/pdf?version=1708330006
+   Impact of focused wave groups on pier structures: a case study of severe breaking waves at Pont  (2024) oa=gold cites=7
+      https://doi.org/10.3389/fbuil.2024.1372906
+      pdf https://www.frontiersin.org/articles/10.3389/fbuil.2024.1372906/pdf?isPublishedV2=False
+   A multi-horizon peridynamics for coupled fluid flow and heat transfer (2025) oa=hybrid cites=13
+      https://doi.org/10.1017/jfm.2025.367
+      pdf https://www.cambridge.org/core/services/aop-cambridge-core/content/view/BCCDE634A4F11D0F89FC50D80FCB4CEE/S0022112025003672a.pdf/di
+   Numerical modelling of wire arc additive manufacturing: methods, status, trends, and opportuniti (2025) oa=hybrid cites=15
+      https://doi.org/10.1088/1361-6463/adb3b0
+      pdf https://iopscience.iop.org/article/10.1088/1361-6463/adb3b0/pdf
+   Mechanically coupled wave farms: On the accuracy of a mid-fidelity hydrodynamic model under cons (2024) oa=hybrid cites=6
+      https://doi.org/10.1016/j.oceaneng.2024.117874
+   Simplified dynamics model of a sphere decelerating freely in a fluid (2024) oa=bronze cites=7
+      https://doi.org/10.1063/5.0187705
+      pdf https://pubs.aip.org/aip/pof/article-pdf/doi/10.1063/5.0187705/19371593/023104_1_5.0187705.pdf
+   Numerical simulation of wave-floater interactions using ISPH_GNN trained on data for wave-only c (2024) oa=hybrid cites=6
+      https://doi.org/10.1016/j.oceaneng.2024.118041
+   A Numerical Study of the Performance of Point Absorber Wave Energy Converters (2024) oa=gold cites=4
+      https://doi.org/10.3390/app14104039
+      pdf https://www.mdpi.com/2076-3417/14/10/4039/pdf?version=1715264898
+   Free-surface flow past a submerged horizontal cylinder: Reynolds-number dependence (2025) oa=hybrid cites=6
+      https://doi.org/10.1017/jfm.2025.10839
+      pdf https://www.cambridge.org/core/services/aop-cambridge-core/content/view/1BDD0DC1BBD8B265615444EE1A9D7C5B/S0022112025108392a.pdf/di
+   Direct Numerical Simulation of Mixed Convection Flow in Lid-Driven Cavities (2024) oa=diamond cites=2
+      https://doi.org/10.9734/psij/2024/v28i3831
+      pdf https://journalpsij.com/index.php/PSIJ/article/download/831/1647
+   Study on the Spatiotemporal Evolution Pattern of Frazil Ice Based on CFD-DEM Coupled Method (2024) oa=gold cites=3
+      https://doi.org/10.3390/w16233367
+      pdf https://www.mdpi.com/2073-4441/16/23/3367/pdf?version=1732346689
+   A seepage calculation method in geomaterials based on the novel improved DEM-FDM (2025) oa=gold cites=4
+      https://doi.org/10.1038/s41598-025-95777-2
+      pdf https://www.nature.com/articles/s41598-025-95777-2.pdf
+   Numerical Modelling of Wave–Vegetation Interaction: Embracing a Cross-Disciplinary Approach for  (2024) oa=gold cites=2
+      https://doi.org/10.3390/w16141977
+      pdf https://www.mdpi.com/2073-4441/16/14/1977/pdf?version=1721205380
+   Numerical study of flow boiling heat transfer in a mini-channel under hyper-gravity (2024) oa=bronze cites=6
+      https://doi.org/10.1063/5.0191199
+      pdf https://pubs.aip.org/aip/pof/article-pdf/doi/10.1063/5.0191199/19722610/037126_1_5.0191199.pdf
+   Dynamic behaviour of a thermal spheroid particle in shear flows (2025) oa=hybrid cites=1
+      https://doi.org/10.1017/jfm.2025.10280
+      pdf https://www.cambridge.org/core/services/aop-cambridge-core/content/view/3F9A46C6A9F1B9C4649C877E5AB90C77/S0022112025102802a.pdf/di
+   Flexible Terrain Erosion - A Fluid Simulation-Independent Approach Compatible with Multiple Repr (2024) oa=green cites=1
+      https://doi.org/10.21203/rs.3.rs-4256563/v1
+      pdf https://www.researchsquare.com/article/rs-4256563/latest.pdf
+   Silicone Replication Technology Reveals HPWJ Hole Formation Mechanisms (2025) oa=gold cites=1
+      https://doi.org/10.3390/app151810132
+      pdf https://www.mdpi.com/2076-3417/15/18/10132/pdf?version=1758104149
+   An interpolated bounce-back based lattice Boltzmann method for floating structures interacting w (2025) oa=hybrid cites=1
+      https://doi.org/10.1016/j.jcp.2025.114293
+   A critical comparison of one- and two-fluid approaches for the simulation of laser-induced melt  (2025) oa=gold cites=3
+      https://doi.org/10.1007/s43939-025-00434-0
+      pdf https://link.springer.com/content/pdf/10.1007/s43939-025-00434-0.pdf
+   Asteroseismic predictions for a massive main-sequence merger product (2025) oa=diamond cites=5
+      https://doi.org/10.1051/0004-6361/202453533
+   Influence of Vertical Force on Shields’ Curve and Its Extension in Rapidly Varied Flow (2024) oa=gold cites=2
+      https://doi.org/10.3390/w16202960
+      pdf https://www.mdpi.com/2073-4441/16/20/2960/pdf?version=1729164681
+   Improved phase field model for two-phase incompressible flows: Sharp interface limit, universal  (2025) oa=green cites=1
+      https://doi.org/10.48550/arxiv.2501.10167
+      pdf https://arxiv.org/pdf/2501.10167
+   Development and validation of a CFD-based model for simulating rotating drum separators (2024) oa=gold cites=0
+      https://doi.org/10.1080/19942060.2024.2368606
+      pdf https://www.tandfonline.com/doi/pdf/10.1080/19942060.2024.2368606?needAccess=true
+
+[freesurf-est] 25 returned, 21 not already in the want list
+   A particle-free stereo-video free-surface reconstruction method for wave-tank experiments (2024) oa=green cites=9
+      https://doi.org/10.1007/s00348-024-03887-w
+      pdf https://hal.science/hal-04744781v1/file/114213.pdf
+   Simulation of viscoelastic free-surface flows with the Particle Finite Element Method (2024) oa=hybrid cites=16
+      https://doi.org/10.1007/s40571-024-00730-1
+      pdf https://link.springer.com/content/pdf/10.1007/s40571-024-00730-1.pdf
+   A volume-conservation particle shifting scheme for moving particle method simulating free-surfac (2024) oa=hybrid cites=11
+      https://doi.org/10.1007/s40571-024-00758-3
+      pdf https://link.springer.com/content/pdf/10.1007/s40571-024-00758-3.pdf
+   Nominally identical microplastic models differ greatly in their particle-cell interactions (2024) oa=gold cites=109
+      https://doi.org/10.1038/s41467-024-45281-4
+      pdf https://www.nature.com/articles/s41467-024-45281-4.pdf
+   A hybrid method combining ISPH with graph neural network for simulating free-surface flows (2024) oa=hybrid cites=17
+      https://doi.org/10.1016/j.cpc.2024.109220
+   A consistent second order ISPH for free surface flow (2024) oa=hybrid cites=10
+      https://doi.org/10.1016/j.compfluid.2024.106224
+   Structure and energy transfer in homogeneous turbulence below a free surface (2024) oa=hybrid cites=13
+      https://doi.org/10.1017/jfm.2024.1017
+      pdf https://www.cambridge.org/core/services/aop-cambridge-core/content/view/359941CCA7EE949318C0E55899C60F50/S0022112024010176a.pdf/di
+   Numerical modelling of a vertical cylinder with dynamic response in steep and breaking waves usi (2024) oa=hybrid cites=15
+      https://doi.org/10.1016/j.jfluidstructs.2023.104049
+   Kinematics of nonlinear waves over variable bathymetry. Part I: Numerical modelling, verificatio (2024) oa=green cites=14
+      https://doi.org/10.1016/j.coastaleng.2024.104577
+      pdf https://edf.hal.science/hal-04681767/document
+   Tuning the Surface State and Zeta Potential of Aged CuO Nanoparticles by Additive‐Free Surface T (2025) oa=hybrid cites=17
+      https://doi.org/10.1002/adma.202513030
+      pdf https://onlinelibrary.wiley.com/doi/pdfdirect/10.1002/adma.202513030
+   sedInterFoam 1.0: a three-phase numerical model for sediment transport applications with free su (2025) oa=gold cites=8
+      https://doi.org/10.5194/gmd-18-1561-2025
+      pdf https://gmd.copernicus.org/articles/18/1561/2025/gmd-18-1561-2025.pdf
+   Coupling of non-hydrostatic model with unresolved point-particle model for simulating particle-l (2025) oa=hybrid cites=1
+      https://doi.org/10.1016/j.apm.2025.115962
+   Prior austenite grain measurement: A direct comparison of EBSD reconstruction, thermal etching a (2024) oa=hybrid cites=31
+      https://doi.org/10.1016/j.matchar.2024.113656
+      pdf https://ars.els-cdn.com/content/image/1-s2.0-S1044580324000366-ga1_lrg.jpg
+   Interactions between a toroidal bubble and a free surface (2024) oa=bronze cites=4
+      https://doi.org/10.1017/jfm.2024.892
+      pdf https://www.cambridge.org/core/services/aop-cambridge-core/content/view/B03C7C87E0357D8969F68233D00CE43E/S0022112024008929a.pdf/di
+   Different scenarios in sloshing flows near the critical filling depth (2024) oa=hybrid cites=21
+      https://doi.org/10.1017/jfm.2024.259
+      pdf https://www.cambridge.org/core/services/aop-cambridge-core/content/view/54FD143B8361FD0C8139611C088905B2/S0022112024002593a.pdf/di
+   A polynomial model with line-of-sight constraints for Lagrangian particle tracking under interfa (2024) oa=hybrid cites=6
+      https://doi.org/10.1088/1361-6501/ad34ec
+   DualSPHysics simulations of various wave-structure interactions (2025) oa=gold cites=5
+      https://doi.org/10.1016/j.rineng.2025.106927
+   Kinematics of nonlinear waves over variable bathymetry. Part II: Statistical distributions of or (2024) oa=green cites=9
+      https://doi.org/10.1016/j.coastaleng.2024.104589
+      pdf https://edf.hal.science/hal-04681768v1/document
+   Assessment of peak particle velocity of blast vibration using hybrid soft computing approaches (2025) oa=gold cites=12
+      https://doi.org/10.1093/jcde/qwaf007
+      pdf https://academic.oup.com/jcde/advance-article-pdf/doi/10.1093/jcde/qwaf007/61467015/qwaf007.pdf
+   Mapping Microplastic Movement: A Phase Diagram to Predict Nonbuoyant Microplastic Modes of Trans (2024) oa=hybrid cites=25
+      https://doi.org/10.1021/acs.est.4c08128
+      pdf https://pubs.acs.org/doi/pdf/10.1021/acs.est.4c08128?ref=article_openPDF
+   Simultaneous free-surface profilometry and subsurface velocimetry with fringe projection and PIV (2026) oa=hybrid cites=1
+      https://doi.org/10.1007/s00348-026-04242-x
+      pdf https://link.springer.com/content/pdf/10.1007/s00348-026-04242-x.pdf
+

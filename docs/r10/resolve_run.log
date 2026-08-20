@@ -1,0 +1,230 @@
+Sch19e	2019		NO_DOI			NOMATCH_top=An implicit cell-based material point method coupled with finite eleme
+Kra21b	2021	10.3390/en14020269	gold	cc-by	https://www.mdpi.com/1996-1073/14/2/269/pdf?version=1610523833	Highly Accurate Experimental Heave Decay Tests with a Floating Sphere: A Public Benchmark 
+Gar19	2019	10.1109/oceanse.2019.8867480	green	other-oa		Towards real-time simulation of physically realistic pressure applied to submerged bodies 
+Che18c	2018	10.1016/j.compfluid.2018.09.005	closed			v-p material point method for weakly compressible problems
+Zha17c	2017	10.1016/j.jcp.2016.10.064	green	cc-by-nc-nd		Incompressible material point method for free surface flow
+Neg22	2022	10.1063/5.0126234	closed			How to train your solver: Verification of boundary conditions for smoothed particle hydrod
+Neg22b	2022		NO_DOI			NOMATCH_top=Second-Order Accurate Boundary Conditions for Compressible Flows
+Val15b	2015	10.1016/j.jcp.2015.07.033	closed			A study of solid wall models for weakly compressible SPH
+Zha22d	2022	10.1002/nme.7347	closed			Circumventing volumetric locking in explicit material point methods: A simple, efficient, 
+Fou19	2019	10.1016/j.compfluid.2019.06.009	hybrid	cc-by	https://www.sciencedirect.com/science/article/pii/S0045793019301859/pdf	Local uniform stencil (LUST) boundary condition for arbitrary 3-D boundaries in parallel s
+Neg21d	2021		NO_DOI			NOMATCH_top=A robust weakly compressible SPH method and its comparison with an inc
+Tao21b	2021	10.3390/jmse9040416	gold	cc-by	https://www.mdpi.com/2077-1312/9/4/416/pdf?version=1618314227	A Local Semi-Fixed Ghost Particles Boundary Method for WCSPH
+Li23f	2023	10.3390/jmse11010215	gold	cc-by	https://www.mdpi.com/2077-1312/11/1/215/pdf?version=1673610348	A Modified MPS Method with a Split-Pressure Poisson Equation and a Virtual Particle for Si
+Yan18	2018	10.1016/j.cma.2018.04.041	closed			Smoothing algorithm for stabilization of the material point method for fluid–solid interac
+Bau23	2023	10.1002/nme.7217	hybrid	cc-by		Analysis and mitigation of spatial integration errors for the material point method
+Ada12	2012	10.1016/j.jcp.2012.05.005	closed			A generalized wall boundary condition for smoothed particle hydrodynamics
+Mar10b	2010	10.1016/j.jcp.2010.01.019	closed			Fast free-surface detection and level-set function definition in SPH solvers
+Ski13	2013	10.1016/j.cma.2013.05.017	hybrid	cc-by	https://www.sciencedirect.com/science/article/pii/S0045782513001448/pdf	Incompressible smoothed particle hydrodynamics (SPH) with reduced temporal noise and gener
+Yan17	2017	10.1016/j.proeng.2017.01.047	diamond	cc-by-nc-nd	https://www.sciencedirect.com/science/article/pii/S1877705817300474/pdf	An Enhanced Smoothing Algorithm for MPM to Stabilize Hydrodynamic Impact Problems with Emb
+Zhe17	2017	10.1016/j.ijnaoe.2017.08.001	gold	cc-by-nc-nd	https://www.sciencedirect.com/science/article/pii/S2092678217300821/pdf	An improved solid boundary treatment for wave–float interactions using ISPH method
+Neg21e	2021	10.1063/5.0072383	closed			How to train your solver: A method of manufactured solutions for weakly compressible smoot
+Li22b	2022	10.1016/j.cma.2022.114809	closed			An immersed finite element material point (IFEMP) method for free surface fluid–structure 
+Jou20	2020	10.1016/j.apm.2019.09.030	bronze		https://www.sciencedirect.com/science/article/am/pii/S0307904X19305608?via%3Dihub	3D gradient corrected SPH for fully resolved particle–fluid interactions
+Tou13b	2013	10.1002/fld.3819	closed			A critical investigation of smoothed particle hydrodynamics applied to problems with free‐
+Ban18b	2018	10.1145/3180486	closed			Pressure Boundaries for Implicit Incompressible SPH
+Omi17	2017	10.1142/s0129183117501194	closed			SPH for impact force and ricochet behavior of water-entry bodies
+Van11	2011	10.1061/(asce)ww.1943-5460.0000086	closed			Modeling Floating Object Entry and Exit Using Smoothed Particle Hydrodynamics
+Sci19	2019		NO_DOI			NOMATCH_top=Wave-to-wire Modelling of Wave Energy Converters
+Ste00	unk	10.1002/nme.2360	closed			Analysis and reduction of quadrature errors in the material point method (MPM)
+Hu18	2018	10.1145/3197517.3201293	closed			A moving least squares material point method with displacement discontinuity and two-way r
+Aki12	2012	10.1145/2185520.2185558	closed			Versatile rigid-fluid coupling for incompressible SPH
+Ste08	2008		NO_DOI			NOMATCH_top=Computer Implementation of the MPM
+Dav24	2024	10.20944/preprints202409.0095.v1	green	cc-by		Exploiting Axisymmetry to Optimize CFD Simulations -Heave Motion and Wave Radiation of a S
+Wal07	2007	10.1016/b978-0-12-407716-4.00003-x	closed			The Material Point Method
+Miy23	2023		NO_DOI			NOMATCH_top=Numerical simulation in 2D strongly coupled FSI problems for incompres
+Qui18b	2018	10.1016/j.compfluid.2018.09.019	closed			Extensions of the meshless finite volume particle method (FVPM) for static and dynamic fre
+Mon09	2009	10.1016/j.cpc.2009.05.008	green	cc-by		SPH particle boundary forces for arbitrary boundaries
+Sun15b	2015	10.1016/j.oceaneng.2015.01.019	closed			Numerical simulation of interactions between free surface and rigid body using a robust SP
+Sun16	2016	10.1504/pcfd.2018.089497	closed			Material point method and smoothed particle hydrodynamics simulations of fluid flow proble
+Mao16	2016	10.1061/(asce)em.1943-7889.0000981	closed			Modeling of Free Surface Flows Using Improved Material Point Method and Dynamic Adaptive M
+Zho21	2021	10.1016/j.jnnfm.2021.104678	closed			Numerical investigation of non-Newtonian power law flows using B-spline material point met
+Zha19e	2019	10.1016/j.compfluid.2018.10.007	bronze		https://www.sciencedirect.com/science/article/pii/S004579301830728X	Development of in/outflow boundary conditions for MPM simulation of uniform and non-unifor
+Tel24	2024	10.1007/s00466-024-02510-3	closed			A displacement-based material point method for weakly compressible free-surface flows
+Sun19c	2019	10.1504/pcfd.2019.097597	closed			Benchmarking the material point method for interaction problems between the free surface f
+Cha24c	2024	10.1016/j.jcp.2024.113457	hybrid	cc-by		Mixed material point method formulation, stabilization, and validation for a unified analy
+He25	2025	10.1016/j.cma.2025.118264	closed			An improved MPM formulation for free surface flow problems based on finite volume method
+Vau20	2020	10.1016/bs.aams.2019.11.001	green	cc-by		Material point method after 25 years: Theory, implementation, and applications
+Rem19	2019		NO_DOI			NOMATCH_top=A black hole toy model with non-local and boundary modes from non-triv
+Zha17	2017	10.1016/j.proeng.2017.01.041	diamond	cc-by-nc-nd	https://www.sciencedirect.com/science/article/pii/S1877705817300413/pdf	Numerical Simulations of Dam-break Floods with MPM
+Bro19	2019	10.1016/j.oceaneng.2019.04.068	closed			Random uncertainty of statistical moments in testing: Mean
+Jen21	2021	10.1007/s00348-021-03151-5	hybrid	cc-by	https://link.springer.com/content/pdf/10.1007/s00348-021-03151-5.pdf	Challenges and procedures for experiments with steady and unsteady model velocities in a w
+Tho07	2007	10.1080/14484846.2007.11464528	green	cc-by		Water stilling for towing tank seakeeping experiments
+Ste15	2015	10.1115/omae2015-41250	closed			Uncertainty Analysis in Ship-Model Resistance Test
+Cho15	2015	10.1021/acs.jctc.5b00784	closed			A Simple Method for Automated Equilibration Detection in Molecular Simulations
+Fly89	1989	10.1007/bfb0105461	closed			Error estimates on averages of correlated data
+Gro18	2018	10.33011/livecoms.1.1.5067	diamond	cc-by		Best Practices for Quantification of Uncertainty and Sampling Quality in Molecular Simulat
+Dur20	2020	10.1016/j.oceaneng.2019.106685	closed			Accurate experimental benchmark study of a catamaran in regular and irregular head waves i
+Doc08	2008	10.5957/jsr.2008.52.4.263	green		https://strathprints.strath.ac.uk/13659/6/Jrnl_Ship_Research_Unsteady_Effects_during_Resistance_Tests_on_a_ship.pdf	Unsteady Effects During Resistance Tests on a Ship Model in a Towing Tank
+Ber21d	2021	10.1115/1.4052402	bronze		https://asmedigitalcollection.asme.org/turbomachinery/article-pdf/144/3/031005/6764616/turbo_144_3_031005.pdf	Statistical Error Estimation Methods for Engineering-Relevant Quantities From Scale-Resolv
+Dan02	2002	10.1061/(asce)0733-9429(2002)128:12(1069)	closed			Probability of Individual Grain Movement and Threshold Condition
+Xu19b	2019	10.1016/j.parco.2019.04.002	closed			Full-neighbor-list based numerical reproducibility method for parallel molecular dynamics 
+Sik24	2024	10.3390/app14020639	gold	cc-by	https://www.mdpi.com/2076-3417/14/2/639/pdf?version=1704982818	Enabling Bitwise Reproducibility for the Unstructured Computational Motif
+Lin21d	2021	10.1016/j.oceaneng.2021.108983	closed			Quantifying uncertainty in turbulence resolving ship airwake simulations
+Tod19	2019	10.1115/1.4044632	closed			Experimentally Measured Hydroelastic Effects on Impact-Induced Loads During Flat Water Ent
+Par23b	2023	10.1115/1.4063010	closed			Analysis of Roll Decay for Surface-Ship Model Experiments With Uncertainty Estimates
+Sya17	2017	10.1002/aic.15868	green			Quantifying the uncertainty introduced by discretization and time‐averaging in two‐fluid m
+Sch85	1985	10.1063/1.449733	closed			Statistical errors in molecular dynamics averages
+Pap16	2016	10.1007/s00348-016-2211-z	closed			Statistical processing and convergence of finite-record-length time-series measurements fr
+Tho06	2006		NO_DOI			NOMATCH_top=The Effects of Propeller Tunnels on Propeller Performance for High Per
+Mof82	1982	10.1115/1.3241818	closed			Contributions to the Theory of Single-Sample Uncertainty Analysis
+Str86	1986	10.1080/00268978600100071	closed			Estimation of statistical errors in molecular simulation calculations
+He26d	2026	10.1115/1.4071177	closed			Predicting Vehicle–Water Interaction in Shallow Water: Simulations and Experimental Valida
+Smi19	2019	10.1111/jfr3.12527	closed			Full‐scale testing of stability curves for vehicles in flood waters
+Xin21b	2021	10.1177/0954407020942005	closed			Analysis and research on vehicle wading performance
+Sha20	2020	10.1111/jfr3.12657	gold	cc-by	https://onlinelibrary.wiley.com/doi/pdfdirect/10.1111/jfr3.12657	Hydrodynamic effect on non‐stationary vehicles at varying Froude numbers under subcritical
+Mar17	2017	10.1080/1573062x.2017.1301501	green	other-oa		A new experiments-based methodology to define the stability threshold for any vehicle expo
+Kra16	2016	10.1016/j.ijdrr.2016.04.003	green	cc-by-nc-nd		Safety criteria for the trafficability of inundated roads in urban floodings
+Teo12	2012	10.1080/15715124.2012.674040	closed			Experimental studies on the interaction between vehicles and floodplain flows
+Arr15	2015	10.1016/j.jfluidstructs.2015.06.010	closed			Drag and lift contribution to the incipient motion of partly submerged flooded vehicles
+Alq22	2022	10.1111/jfr3.12828	gold	cc-by	https://onlinelibrary.wiley.com/doi/pdfdirect/10.1111/jfr3.12828	A numerical approach to understand the responses of passenger vehicles moving through floo
+Mor14	2014	10.4028/www.scientific.net/amm.592-594.1210	hybrid	cc-by		Stability and Drag Analysis of Wheeled Amphibious Vehicle Using CFD and Model Testing Tech
+Alq21	2021	10.1007/s11069-021-04949-6	closed			Full-scale experimental investigations on the response of a flooded passenger vehicle unde
+Hu23	2023	10.1016/j.jhydrol.2023.129525	hybrid	cc-by-nc-nd		Experimental testing to determine stability thresholds for partially submerged vehicles at
+Xia13b	2013	10.1007/s11069-013-0889-2	closed		https://orca.cardiff.ac.uk/id/eprint/54002/1/Xia%202014.pdf	Criterion of vehicle stability in floodwaters based on theoretical and experimental studie
+Shu11	2011	10.1080/00221686.2011.616318	closed			Incipient velocity for partially submerged vehicles in floodwaters
+Bon67	1967	10.5040/9781350980365	closed			Low Level
+Bur12	2012		NO_DOI			NOMATCH_top=Numerical Analysis on Dynamic Behavior Characteristics of an Amphibiou
+Smi17	2017		NO_DOI			NOMATCH_top=The challenges of developing rainfall intensity-duration-frequency cur
+Sha19d	2019	10.1016/j.rineng.2019.100032	gold	cc-by-nc-nd	https://www.sciencedirect.com/science/article/pii/S2590123019300325?via%3Dihub	Hazard risks pertaining to partially submerged non-stationary vehicle on low-lying roadway
+Ran20b	2020	10.17736/ijope.2020.jc774	green	other-oa	http://hdl.handle.net/10026.1/15422	A Blind Comparative Study of Focused Wave Interactions with Floating Structures (CCP-WSI B
+Rus07	2007		NO_DOI			NOMATCH_top=Wave Height and Planing Hull Wave Slams in Regular Waves
+Can18	2018	10.1016/j.apor.2018.04.015	closed			Extending DualSPHysics with a Differential Variational Inequality: modeling fluid-mechanis
+Was15	2015	10.1115/detc2015-47142	closed			Coupled Multibody Dynamics and Smoothed Particle Hydrodynamics for Modeling Vehicle Water 
+Lyu23	2023	10.1016/j.compfluid.2023.106144	closed			Numerical investigation of vehicle wading based on an entirely particle-based three-dimens
+Bha19	2019	10.1016/j.apor.2019.101932	green		https://arxiv.org/pdf/1904.04078	Simulating water-entry/exit problems using Eulerian–Lagrangian and fully-Eulerian fictitio
+Sha18c	2018	10.1051/matecconf/201820307003	diamond	cc-by	https://www.matec-conferences.org/articles/matecconf/pdf/2018/62/matecconf_iccoee2018_07003.pdf	Instability Criteria for Vehicles in Motion Exposed to Flood Risks
+Paz16	2016		NO_DOI			NOMATCH_top=Sand to Mud to Fording: Modeling and Simulation for Off-Road Ground Ve
+Roe23	2023	10.1098/rsos.231453/v1/review2	closed			Review for "A robust algorithm for computational floating body dynamics"
+Yam22	2022	10.1016/j.oceaneng.2022.111607	closed			Coupled multibody dynamics and computational fluid dynamics approach for amphibious vehicl
+Zha23h	2023	10.1007/s11433-023-2137-5	closed			3D large-scale SPH modeling of vehicle wading with GPU acceleration
+Paz14	2014		NO_DOI			NOMATCH_top=Study on dynamic characteristic analysis of vehicle shock absorbers ba
+Cre15	2015	10.1016/j.cpc.2014.10.004	green	cc-by-nc-nd	https://www.investigo.biblioteca.uvigo.es/xmlui/bitstream/11093/6338/5/2015_crespo_dualsphysics.pdf	DualSPHysics: Open-source parallel CFD solver based on Smoothed Particle Hydrodynamics (SP
+Maz18	2018	10.1016/j.jcp.2018.05.013	closed			A differential variational approach for handling fluid–solid interaction problems via smoo
+Sha21	2021	10.31436/iiumej.v22i1.1502	gold	cc-by	https://journals.iium.edu.my/ejournal/index.php/iiumej/article/download/1502/786	FROUDE NUMBER VARIANCE WITH RESPECT TO THE HYDRODYNAMIC RESPONSE OF A NON-STATIC VEHICLE A
+Che25l	2025	10.1016/j.apor.2025.104824	gold	cc-by		A new CFD-MBD wave-structure interaction model: Coupling OpenFOAM with Chrono
+Azh23	2023	10.1111/jfr3.12885	gold	cc-by-nc-nd		Confirmation of vehicle stability criteria through a combination of smoothed particle hydr
+Kaz16	2016	10.1002/fld.4248	hybrid	cc-by	https://onlinelibrary.wiley.com/doi/pdfdirect/10.1002/fld.4248	SPH modelling of depth‐limited turbulent open channel flows over rough boundaries
+Taf18	2018	10.1016/j.cma.2018.08.004	closed			A versatile algorithm for the treatment of open boundary conditions in Smoothed particle h
+Neg19	2019	10.1016/j.cma.2020.113119	green		https://arxiv.org/pdf/1907.04034	An improved non-reflecting outlet boundary condition for weakly-compressible SPH
+Alq23	2023	10.3390/su151713262	gold	cc-by	https://www.mdpi.com/2071-1050/15/17/13262/pdf?version=1693827619	Understanding the Stability of Passenger Vehicles Exposed to Water Flows through 3D CFD Mo
+Las09	2009	10.1002/fld.1971	green		https://researchrepository.universityofgalway.ie/bitstreams/7e06b007-c44d-40d9-a0d4-537ff381dd6f/download	Permeable and non‐reflecting boundary conditions in SPH
+Vac12	2012	10.1061/(asce)hy.1943-7900.0000543	closed			SPH Modeling of Shallow Flow with Open Boundaries for Practical Flood Simulation
+Hol20	2020	10.1016/j.jcp.2020.110029	closed		https://eprints.qut.edu.au/207058/1/73370199.pdf	Novel pressure inlet and outlet boundary conditions for Smoothed Particle Hydrodynamics, a
+Kaz20	2020	10.1016/j.advwatres.2020.103557	closed		https://eprints.whiterose.ac.uk/158881/1/Manuscript%20ADWR_2019_493_R1.pdf	SPH modelling of turbulent open channel flow over and within natural gravel beds with roug
+Shi19d	2019	10.1155/2019/1573049	hybrid	cc-by	https://downloads.hindawi.com/journals/mpe/2019/1573049.pdf	A Meshless WCSPH Boundary Treatment for Open‐Channel Flow over Small‐Scale Rough Bed
+Lop18b	2018		NO_DOI			NOMATCH_top=Simulation of Rainfall-Runoff Flow Using Three-Dimensional Smoothed Pa
+Mil20	2020	10.1080/00221686.2019.1647887	closed			A conceptual model of vehicles stability in flood flows
+Pah17	2017	10.1016/j.jhydrol.2017.01.034	closed			Robust boundary treatment for open-channel flows in divergence-free incompressible SPH
+Yam24b	2024	10.1115/1.4064971	closed			Modeling of Vehicle Mobility in Shallow Water With Data-Driven Hydrodynamics Model
+Var22	2022	10.4271/2022-01-0768	closed			Transient, 3D CFD, Moving Mesh Simulation of Vehicle Water Wading in a Water Tunnel with I
+Kha14	2014	10.4271/2014-01-0936	closed			Wading Simulation - Challenges and Solutions
+Tis21	2021	10.4271/2024-01-3805	closed			Amphibious Vehicle Water Egress Modeling and Simulation Using CFD and Wong’s Methodology
+Liu23e	2023	10.1063/5.0174148	bronze		https://pubs.aip.org/aip/pof/article-pdf/doi/10.1063/5.0174148/18224231/113328_1_5.0174148.pdf	Research on launching, water exiting, and river crossing of an amphibious vehicle
+Beh20	2020	10.1016/j.oceaneng.2020.107460	bronze		https://www.sciencedirect.com/science/article/am/pii/S0029801820304790?via%3Dihub	Experimental and computational study of operation of an amphibious craft in calm water
+Xio24	2024	10.1029/2023wr036739	gold	cc-by	https://onlinelibrary.wiley.com/doi/pdfdirect/10.1029/2023WR036739	Simulation of the Full‐Process Dynamics of Floating Vehicles Driven by Flash Floods
+Mar13	2013		NO_DOI			NOMATCH_top=Strength enhancement of 2010 Toyota Yaris Passenger Sedan driver seat 
+Mar13b	2013		NO_DOI			NOMATCH_top=The Strength Analysis of an Agriculture Truck Pick-up using Finite Ele
+Kha15	2015		NO_DOI			NOMATCH_top=Development and validation of pedestrian sedan bucks using finite-elem
+Mar14b	2014		NO_DOI			NOMATCH_top=Development and Validation of an Older Occupant Finite Element Model o
+Sed16	2016		NO_DOI			NOMATCH_top=Validation of a Toyota Camry Finite Element Model for Multiple Impact 
+Moh10	2010		NO_DOI			NOMATCH_top=Testing and validation of finite element modeling for silicone based e
+Opi12	2012		NO_DOI			NOMATCH_top=Strength enhancement of 2010 Toyota Yaris Passenger Sedan driver seat 
+Var93	1993		NO_DOI			NOMATCH_top=Near Term Hybrid Passenger Vehicle Development Program. Phase I, Final
+Opi07	2007		NO_DOI			NOMATCH_top=OSPREY Model Development Status Update
+Elr26	2026		NO_DOI			NOMATCH_top=Hybrid hierarchical network decomposition and data-driven neural regio
+Ray07	2007		NO_DOI			NOMATCH_top=Evaluation of Existing Roadside Safety Hardware Using Manual for Asses
+Gup99	1999	10.4271/1999-01-0083	closed			Reverse Engineering Method for Developing Passenger Vehicle Finite Element Models
+Mcc03	2003		NO_DOI			NOMATCH_top=Querying the NHTSA Test Database for Vehicle Performance Characteristi
+Kir99	1999	10.4271/2000-01-0627	closed			Development and Validation of High Fidelity Vehicle Crash Simulation Models
+Elr24b	2024	10.52202/079017-0016	closed			DrivAerNet++: A Large-Scale Multimodal Car Dataset with Computational Fluid Dynamics Simul
+Ash24	2024		NO_DOI			NOMATCH_top=Predictions of External Car Aerodynamics on Distributed Memory Machine
+Elr24	2024	10.1115/detc2024-143593	closed			DrivAerNet: A Parametric Car Dataset for Data-Driven Aerodynamic Design and Graph-Based Dr
+Sol04	2004	10.4271/2004-01-1174	closed			Crashworthiness Simulations Comparing PAM-CRASH and LS-DYNA
+Azh26	2026	10.1111/jfr3.70181	gold	cc-by-nc-nd		Assessment of Vehicle Stability Processes Under Unsteady Flow Conditions
+Mar19b	2019		NO_DOI			NOMATCH_top=Estabilidad de vehículos frente a inundaciones: estudio numérico-exper
+Ma06	2006		NO_DOI			NOMATCH_top=Simulation of dynamic crack growth using the generalized interpolation
+Zha21g	2021	10.1016/j.compgeo.2021.104097	green			Truncated hierarchical B-spline material point method for large deformation geotechnical p
+Sun20d	2020	10.1002/nme.6312	closed			A local grid refinement scheme for B‐spline material point method
+Lia15	2015	10.1016/j.cma.2015.02.020	closed			A mesh-grading material point method and its parallelization for problems with localized e
+He25c	2025	10.1002/nag.70048	closed			A Multi‐Resolution Material Point Method Based on Penalty Formulation
+Gao17c	2017	10.1145/3130800.3130879	closed			An adaptive generalized interpolation material point method for simulating elastoplastic m
+Ma05	2005		NO_DOI			NOMATCH_top=Stability analysis of a slope under impact of a rock block using the g
+Shi10	2010		NO_DOI			NOMATCH_top=A coupled implicit material point-finite element method for modeling r
+Lia12b	2012	10.1016/j.cma.2012.06.015	closed			An adaptive finite element material point method and its application in extreme deformatio
+Slo69	1969	10.21236/ad0697160	closed			STUDIES OF OFF-ROAD VEHICLES IN THE RIVERINE ENVIRONMENT. VOLUME II. ANALYTICAL METHOD FOR
+Jur74	1974		NO_DOI			NOMATCH_top=Mathematical Model of the Tire Cornering Coefficient for Wheeled Vehic
+Els18	2018	10.1115/detc2018-85006	closed			Development of In-Plane Truck Tire-Flooded Surface Interaction Models Using FEA-SPH Techni
+Pre17	2017	10.1016/j.trd.2017.06.020	hybrid	cc-by	https://www.sciencedirect.com/science/article/pii/S1361920916308367/pdf	The impact of flooding on road transport: A depth-disruption function
+He24	2024	10.5194/egusphere-egu24-6148	gold	cc-by		Functionality assessment of road network combining flood roadworthiness and graph topology
+Arr19b	2019	10.1016/j.scitotenv.2018.11.191	hybrid	cc-by	https://ars.els-cdn.com/content/image/1-s2.0-S0048969718345388-ga1_lrg.jpg	Preparedness against mobility disruption by floods
+Eva23	2023	10.1016/j.scitotenv.2023.168237	hybrid	cc-by	https://ars.els-cdn.com/content/image/1-s2.0-S004896972306864X-ga1_lrg.jpg	A combined stability function to quantify flood risks to pedestrians and vehicle occupants
+Das25	2025	10.1111/jfr3.70154	gold	cc-by	https://onlinelibrary.wiley.com/doi/pdfdirect/10.1111/jfr3.70154	Integration of Stability Functions Into a Transport Flood Risk Modelling Framework
+Boc21	2021	10.1111/jfr3.12737	gold	cc-by	https://onlinelibrary.wiley.com/doi/pdfdirect/10.1111/jfr3.12737	Determining the vehicle instability risk in stream crossings
+Con18	2018	10.1155/2018/2850546	gold	cc-by	http://downloads.hindawi.com/journals/jat/2018/2850546.pdf	Reliability-Based Estimation of Traffic Interruption Probability due to Road Waterlogging
+Lam18	2018	10.1016/j.ress.2018.01.015	green	cc-by-nc-nd	https://discovery.ucl.ac.uk/10064090/1/Postprint%20-%20Stress%20tests%20for%20a%20road%20network%20using%20fragility%20functions%20and%20functional%20capacity%20loss%20functions.pdf	Stress tests for a road network using fragility functions and functional capacity loss fun
+Pre17b	2017	10.1061/(asce)is.1943-555x.0000372	hybrid	cc-by	https://ascelibrary.org/doi/pdf/10.1061/%28ASCE%29IS.1943-555X.0000372	Impact of Climate Change on Disruption to Urban Transport Networks from Pluvial Flooding
+Arr19	2019	10.3850/38wc092019-1786	green	cc-by-nc-nd	https://flore.unifi.it/bitstream/2158/1181254/1/322.pdf	SENSITIVITY OF TRANSPORT MODEL TO HYDRAULIC MODEL FOR FLOOD RISK ASSESSMENT OF ROAD INFRAS
+Buc21	2021	10.1016/j.ress.2021.108202	closed			Quantitative flood risk evaluation to improve drivers’ route choice decisions during disru
+Xia11	2011	10.1016/j.envsoft.2011.02.017	closed			Numerical assessment of flood hazard risk to people and vehicles in flash floods
+Ros15	2015		NO_DOI			NOMATCH_top=Set-Covering-Based Approximate Algorithm Using Enhanced Savings for So
+Eri13	2013	10.4271/2013-01-0784	closed			The Accuracy of Photo-Based Three-Dimensional Scanning for Collision Reconstruction Using 
+Pfa25	2025	10.1109/iros60139.2025.11246653	closed			Scalable Real2Sim: Physics-Aware Asset Generation Via Robotic Pick-and-Place Setups
+Pre24	2024	10.3390/wevj15060266	gold	cc-by		Mass, Centre of Gravity Location and Inertia Tensor of Electric Vehicles: Measured Data fo
+Far25b	2025	10.1109/access.2025.3567868	gold	cc-by		The Accuracy of 3D Mesh Generation of Neuralangelo Versus Photogrammetry and LiDAR Technol
+Mor25	2025		NO_DOI			NOMATCH_top=Robust Neural Network for Sim-to-Real Gap in End-to-End Autonomous Dri
+Wei22	2022	10.1145/3528223.3530103	hybrid	cc-by	https://dl.acm.org/doi/pdf/10.1145/3528223.3530103	Approximate convex decomposition for 3D meshes with collision-aware concavity and tree sea
+Mac97	1997	10.4271/970951	closed			A Comparison of Moment of Inertia Estimation Techniques for Vehicle Dynamics Simulation
+Su26	2026	10.1109/csecs69124.2026.11541955	closed			Automated Collision Proxy Reconstruction for Non-Manifold Meshes by Multi-Directional Ray 
+Gob14	2014	10.1115/detc2014-34300	closed			InTenso+ System: Measured Centre of Gravity Locations and Inertia Tensors of Road Vehicles
+Mad21	2021	10.1145/3528223.3530093	green		https://arxiv.org/pdf/2108.10480	Fast evaluation of smooth distance constraints on co-dimensional geometry
+Kno26	2026	10.1111/cgf.70411	closed			Convex Primitive Decomposition for Collision Detection
+Bon25	2025	10.1002/nme.70210	closed			Validating High‐Performance Multi‐GPU MPM for Debris‐Fluid‐Structure Interaction
+Dom21	2021	10.1007/s40571-021-00404-2	green	other-oa	https://arxiv.org/pdf/2104.00537	DualSPHysics: from fluid dynamics to multiphysics problems
+Wan20d	2020	10.1145/3386569.3392442	green			A massively parallel and scalable multi-GPU material point method
+Nas25b	2025	10.1093/rasti/rzag008	diamond	cc-by	https://arxiv.org/pdf/2505.14538	Task-parallelism in SWIFT for heterogeneous compute architectures
+Val12	2012	10.1016/j.jpdc.2012.07.010	bronze		https://www.sciencedirect.com/science/article/pii/S0743731512001712	Towards accelerating smoothed particle hydrodynamics simulations for free-surface flows on
+Zha23r	2023	10.1016/j.jcp.2023.112339	closed			Multi-GPU multi-resolution SPH framework towards massive hydrodynamics simulations and its
+Qiu22	2022	10.1145/3570160	bronze		https://dl.acm.org/doi/pdf/10.1145/3570160	A Sparse Distributed Gigascale Resolution Material Point Method
+Che22f	2022	10.1111/cgf.14643	closed			Learning Physics with a Hierarchical Graph Network
+Wee25	2025	10.1002/9781119102809.part5	closed			Analysis of Designed Experiments
+Mec02	2002	10.1115/detc2001/dac-21028	closed			Computationally Inexpensive Metamodel Assessment Strategies
+Sim01b	2001		NO_DOI			NOMATCH_top=Multivariate Analysis, Design of Experiments, and Survey Sampling
+Mar05	2005	10.1115/detc2004-57300	closed			On the Use of Kriging Models to Approximate Deterministic Computer Models
+Con07	2007	10.2514/6.2007-1928	closed			On Using Standard Residuals as a Metric of Kriging Model Quality
+Kle19	2019	10.2139/ssrn.3395872	green			Statistical Tests for Cross-Validation of Kriging Models
+Mec01	2001	10.1115/detc2000/dtm-14573	closed			Metamodeling of Combined Discrete/Continuous Responses
+Loe09	2009	10.1198/tech.2009.08040	closed			Choosing the Sample Size of a Computer Experiment: A Practical Guide
+Ali19	2019	10.1017/s089006041900026x	closed			Ensemble of surrogates and cross-validation for rapid and accurate predictions using small
+Naf24	2024	10.3390/computation12100207	gold	cc-by	https://www.mdpi.com/2079-3197/12/10/207/pdf?version=1729044403	Enhanced Drag Force Estimation in Automotive Design: A Surrogate Model Leveraging Limited 
+Kuy11	2011	10.2514/1.j050384	closed			Multifidelity Surrogate Modeling of Experimental and Computational Aerodynamic Data Sets
+Bon21	2021	10.1016/j.ress.2021.107624	closed			Gaussian processes for shock test emulation
+Roy11	2011		NO_DOI			NOMATCH_top=Verification, Validation, and Uncertainty Quantification Responsibilit
+Obe04	2004	10.2172/918370	gold		https://www.osti.gov/servlets/purl/918370	Verification, validation, and predictive capability in computational engineering and physi
+Eca20	2020		NO_DOI			NOMATCH_top=On the Interpretation and Scope of the V&amp;V 20 Standard for Verific
+Ste01	2001	10.1115/1.1412235	closed			Comprehensive Approach to Verification and Validation of CFD Simulations—Part 1: Methodolo
+Col97	1997	10.1115/1.2819500	closed			Uncertainties and CFD Code Validation
+Cel07	2007	10.1115/1.2960953	bronze		https://asmedigitalcollection.asme.org/fluidsengineering/article-pdf/130/7/078001/5491455/078001_1.pdf	Procedure for Estimation and Reporting of Uncertainty Due to Discretization in CFD Applica
+Roa94	1994	10.1115/1.2910291	closed			Perspective: A Method for Uniform Reporting of Grid Refinement Studies
+Roa98	1998	10.2514/2.457	closed			Verification of Codes and Calculations
+Mol19	2019	10.1016/j.ijdrr.2018.10.022	green	other-oa		Validation of flood risk models: Current practice and possible improvements
+Abe14	2014	10.1061/(asce)gt.1943-5606.0001011	green			Material Point Method for Coupled Hydromechanical Problems
+Obe02b	2002	10.2172/793406	gold		https://www.osti.gov/servlets/purl/793406	Verification and Validation in Computational Fluid Dynamics
+Rie20	2020	10.1007/s11831-020-09473-7	hybrid	cc-by	https://link.springer.com/content/pdf/10.1007/s11831-020-09473-7.pdf	Unified Framework and Survey for Model Verification, Validation and Uncertainty Quantifica
+Roy10	2010	10.2514/6.2010-126	closed			Review of Discretization Error Estimators in Scientific Computing
+Roy05	2005	10.1016/j.jcp.2004.10.036	closed			Review of code and solution verification procedures for computational simulation
+Son26b	2026		NO_DOI			NOMATCH_top=A Trustworthy Intent-Driven LLM-Agent Workflow with State Verification
+Bha26	2026	10.21203/rs.3.rs-9889935/v1	green	cc-by	https://www.researchsquare.com/article/rs-9889935/latest.pdf	Bridging the Gap on AI-Assisted Scientific Software Development Through Transparency and T
+Ho26	2026		NO_DOI			NOMATCH_top=Lightweight Chassis Frame for Lightweight Trucks
+Hol26	2026	10.1016/j.commatsci.2026.114839	closed			Evaluating LLM-generated code for domain-specific languages: Molecular dynamics with LAMMP
+Zha26k	2026		NO_DOI			NOMATCH_top=Evaluation Framework for Agentic AI Learning Systems Date
+Kum26	2026		NO_DOI			NOMATCH_top=Benchmarking the LigandHER2 Interactions Using Machine Learning and Mo
+Lie26	2026		NO_DOI			NOMATCH_top=A Semantically-Grounded Agentic Framework for Assisting BPMN Model Ins
+Fan26b	2026		NO_DOI			NOMATCH_top=An Agentic Framework for Autonomous Metamaterial Modeling and Inverse 
+Dus25	2025		NO_DOI			NOMATCH_top=Fingerprinting AI Coding Agents on GitHub
+Han26	2026		NO_DOI			NOMATCH_top=MMID-Bench: A Comprehensive Benchmark for Multi-domain Multi-category 
+Van25	2025		NO_DOI			NOMATCH_top=Security Weaknesses in LLM-Generated Source Code: An Empirical Vulnera
+Bra11	2011		NO_DOI			NOMATCH_top=Establishing the Credibility of Computational Models of Blood Pumps Th
+Zha23i	2023		NO_DOI			NOMATCH_top=Automated regression test method for scientific computing libraries: I
+Kam06	2006		NO_DOI			NOMATCH_top=Verification of RANS Turbulence Models in Loci-CHEM using the Method o
+Li14	2014	10.1016/j.compfluid.2014.07.025	closed			Sloshing impact simulation with material point method and its experimental validations
