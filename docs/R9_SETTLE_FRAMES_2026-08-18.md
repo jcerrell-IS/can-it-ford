@@ -189,6 +189,9 @@ licenses quoting `final_disp_mag_m` as converged.
 | 27 | **THE THIRD CLASS IS NOW A RULE**, with two data-free tests and an ordering; three slots hit it independently | section 25 |
 | 28 | **Method result: the inventory was worth more than the GPU run.** 35 records existed; the barrier was an unrun inventory | section 26 |
 | 29 | Item 5's mechanism in register-liftable form; d21's accessor finding does not reach my grades, checked | section 27 |
+| 30 | **The paper's fallback to displacement magnitude is class 3**, so its most conservative choice is its least defensible | section 28 |
+| 31 | **Item 5 understates the defect**: with 2337 included the resolution effect's SIGN is not consistent across masses | section 28.1 |
+| 32 | The denominator, in the auditable form to quote everywhere: **35 comparable long records of 369 on Vista, selected by X** | section 29 |
 
 ---
 
@@ -2090,4 +2093,122 @@ force-adjacent. Nothing in my work reads them, because all 17 canonical verdicts
 are SLIDE or STUCK and neither gate involves force. **If anyone extends settle or
 stationarity analysis to the TOPPLE or FLOAT modes, d21's denominator question
 becomes live and must be resolved first.**
+
+---
+
+## 28. THE PAPER'S FALLBACK QUANTITY IS CLASS 3. FOR d23-OVERLEAF.
+
+d23-overleaf found that the tex ends its sweep paragraph *"until it is placed on
+an independent empirical footing we report displacement magnitudes only"*.
+
+**The refusal is right and the fallback is the defect.** Dropping the L2 drift
+threshold is correct: CLAUDE.md item 13 and `gates.py:195-196` both record that
+`DRIFT_THRESHOLD` has no peer-reviewed source. But the quantity the paper retreats
+TO is class 3 by section 25's rule, so **the most conservative-looking choice in
+the paper is its least defensible one.** I am writing this with the rule attached
+rather than as an opinion, and `paper/` is d23's, not mine: this is a finding, not
+an edit.
+
+### 28.1 The evidence, measured live
+
+**Within one run, at fixed grid.** Job 922622 `long_f400`, canonical g64 m1100:
+`dmag` peaks at **0.667127 m at row 64** and ends at **0.290845 m**, 43.6 percent
+of its own peak. The same configuration reports 0.657 m or 0.291 m depending only
+on where the record stops. `final_disp_mag_m` is a single terminal frame,
+`sim_standing.py:501`, `d = scene.history.displacement[-1]`.
+
+**Across grids, and this is worse than item 5 records.** Recomputed live from
+`data/all_runs_inventory.csv`, restricted to the nine `mass_grid` runs:
+
+| mass | g48 | g64 | g96 | g48 to g64 | g64 to g96 | shape |
+|---|---|---|---|---|---|---|
+| 1100 | 0.350717 | 0.658537 | 0.268638 | **+87.8 pct** | -59.2 pct | up then down |
+| 1609 | 0.256830 | 0.314076 | 0.155959 | **+22.3 pct** | -50.3 pct | up then down |
+| 2337 | 0.187542 | 0.135559 | 0.089439 | **-27.7 pct** | -34.0 pct | **DOWN ON BOTH LEGS** |
+
+**CLAUDE.md item 5 records only the 1100 and 1609 rows and thereby understates the
+problem.** With 2337 included, the first-leg signs across masses are **+87.8,
++22.3 and -27.7**: the sign of the g48-to-g64 resolution effect is **not consistent
+across masses.** The defect is not merely "non-monotone under refinement", which
+sounds like a convergence-rate issue. It is that **the resolution effect does not
+have a stable direction**, which is what section 25's test A predicts for a
+quantity with no steady value to converge to.
+
+### 28.2 Why this is exactly the class-3 rule and not a separate complaint
+
+`final_disp_mag_m` fails both of section 25's tests:
+
+- **Test A**: `N_eff` on the displacement channel is 5.12 at 91 frames and 2.89,
+  2.86 and 3.16 at 250, 250 and 400, across three independent populations. It does
+  not grow. There is no steady value for a finer grid to converge to.
+- **Test B**: the reported value moves with the stopping frame by a factor of 2.3
+  within a single run, which is larger than most of the between-grid differences
+  the table above is being asked to interpret.
+
+A quantity failing both tests cannot be rescued by reporting it more carefully, by
+running more seeds, or by refining the grid. **Reporting it "only", as the safest
+available option, reports the analyst's stopping frame rather than the physics.**
+
+### 28.3 What the paper can retreat to instead, in preference order
+
+1. **THE VERDICT, which the paper already has.** 16 SLIDE / 1 STUCK is class 1,
+   computed under the correct rule from the start (section 1.1), and **verified
+   unchanged on a 4.4x longer record** while the displacement fell to 43.6 percent
+   of its peak over those same frames. It is the one quantity in this project
+   demonstrated stable against record length. This is the natural retreat and it
+   is stronger than the one taken.
+2. **A velocity-based observable**, which is class 2 by test A: `vx` `N_eff` grows
+   with record length in every population measured, so a time-averaged velocity
+   over a demonstrated-stationary window with a GCI is a defensible convergence
+   claim. Displacement admits no such window at any length.
+3. **The envelope**, peak and final together, if a displacement number must appear.
+   Quoting 0.667 m and 0.291 m as a range is honest; quoting either alone is not.
+
+**What should not happen** is the current form, a single terminal-frame value
+presented as the conservative choice. Item 5's standing instruction, cite the
+verdict and never the displacement magnitude, is the correct instruction and the
+paper's sweep paragraph does the opposite.
+
+### 28.4 A caveat on my own numbers, and an eighth instance
+
+My first computation of the table above gave **+281.6 percent** for the 1100 kg
+first leg instead of +87.8. Cause: I keyed a dict on `(mass, grid)` across all 17
+runs, and five velocity-sweep runs share `(1100, 64)` with the mass-grid run, so
+the dict **silently overwrote** the canonical row with `sweepV_g64_v3p0` at
+1.338420 m. No error was raised and the wrong number looked entirely plausible,
+being merely a larger version of a defect I already believed in.
+
+Caught only because +281.6 did not match item 5's published +87.8, so **the
+published figure I was auditing is what caught my error.** Fixed by restricting to
+the nine `mass_grid` rows, after which all three of item 5's published percentages
+reproduce exactly. This is the same shape as everything in section 17: a silent
+collapse producing a plausible value, in the one number I was about to send to the
+paper team.
+
+---
+
+## 29. THE DENOMINATOR, TO BE QUOTED WITH EVERY SETTLE RESULT
+
+This project's rule is that a bare count is what is wrong. The settle population
+has been corrected twice, from 25 to 22 distinct to 21 on-schema, and each of
+those was a local subset. **The auditable form, to be used wherever any settle or
+stationarity result from this document is quoted:**
+
+> **35 comparable long records of 369 `metrics.csv` on Vista under
+> `/work/11603/jcerrell0629`**, selected by: 15-column FloodHistory schema, free
+> body (not pinned), forced (not a no-force control), Yaris hull, canonical
+> closed-wall boundary condition, floor friction 0.55, and at least 20 rows.
+> Those 35 are the pre-existing 250-frame records: 20 in `d4_jobA` as 10-repeat
+> sets and 15 in `r7_inflow_918506`'s `__closed` arms as 5-repeat sets. Adding
+> the 52 records of `r9_canonical_400` at 400 frames gives **87 long records
+> across three independent jobs**. The comparable population at all lengths is
+> **163 of 369**; the remaining 206 are excluded as 50 pinned, 38 non-Yaris, 30
+> no-force, 26 non-canonical BC, 21 clamp, 10 other-engine, 9 off-schema, 6
+> image-particle, 6 non-canonical friction, 5 enhanced-render and 3 brake.
+> Reproduce with `analysis/r9_vista_inventory.py`.
+
+The earlier figures are not wrong, they are differently scoped, and each must
+carry its own: **"25 of 25"** is `renders/` with duplicates kept and no schema
+gate; **"21 of 21"** is `renders/` deduplicated and schema-gated; **"48 distinct"**
+is the whole Mac repo. All four reproduce. None is quotable bare.
 
