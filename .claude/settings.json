@@ -76,7 +76,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/gate_destructive.sh"
+            "command": "P=\"$CLAUDE_PROJECT_DIR/.claude/hooks/gate_destructive.sh\"; if [ -f \"$P\" ]; then bash \"$P\"; fi"
           }
         ],
         "matcher": "Bash"
@@ -85,7 +85,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/gate_concurrent_write.sh"
+            "command": "P=\"$CLAUDE_PROJECT_DIR/.claude/hooks/gate_concurrent_write.sh\"; if [ -f \"$P\" ]; then bash \"$P\"; fi"
           }
         ],
         "matcher": "Bash"
@@ -94,7 +94,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/gate_concurrent_write.sh"
+            "command": "P=\"$CLAUDE_PROJECT_DIR/.claude/hooks/gate_concurrent_write.sh\"; if [ -f \"$P\" ]; then bash \"$P\"; fi"
           }
         ],
         "matcher": "Edit|Write"
@@ -103,7 +103,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/gate_protected_files.sh"
+            "command": "P=\"$CLAUDE_PROJECT_DIR/.claude/hooks/gate_protected_files.sh\"; if [ -f \"$P\" ]; then bash \"$P\"; fi"
           }
         ],
         "matcher": "Edit|Write"
@@ -112,7 +112,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/gate_protected_files.sh"
+            "command": "P=\"$CLAUDE_PROJECT_DIR/.claude/hooks/gate_protected_files.sh\"; if [ -f \"$P\" ]; then bash \"$P\"; fi"
           }
         ],
         "matcher": "Read"
@@ -122,7 +122,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 $CLAUDE_PROJECT_DIR/.claude/hooks/pretooluse_git_commit_gate.py"
+            "command": "P=\"$CLAUDE_PROJECT_DIR/.claude/hooks/pretooluse_git_commit_gate.py\"; if [ -f \"$P\" ]; then python3 \"$P\"; fi"
           }
         ]
       },
@@ -131,7 +131,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 $CLAUDE_PROJECT_DIR/.claude/hooks/banned_phrase_guard.py"
+            "command": "P=\"$CLAUDE_PROJECT_DIR/.claude/hooks/banned_phrase_guard.py\"; if [ -f \"$P\" ]; then python3 \"$P\"; fi"
           }
         ]
       },
@@ -140,7 +140,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 $CLAUDE_PROJECT_DIR/.claude/hooks/stale_csv_guard.py"
+            "command": "P=\"$CLAUDE_PROJECT_DIR/.claude/hooks/stale_csv_guard.py\"; if [ -f \"$P\" ]; then python3 \"$P\"; fi"
           }
         ]
       },
@@ -149,7 +149,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 $CLAUDE_PROJECT_DIR/.claude/hooks/audit_integrity_guard.py"
+            "command": "P=\"$CLAUDE_PROJECT_DIR/.claude/hooks/audit_integrity_guard.py\"; if [ -f \"$P\" ]; then python3 \"$P\"; fi"
           }
         ]
       },
@@ -158,7 +158,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 $CLAUDE_PROJECT_DIR/.claude/checks/count_claims_check.py"
+            "command": "P=\"$CLAUDE_PROJECT_DIR/.claude/checks/count_claims_check.py\"; if [ -f \"$P\" ]; then python3 \"$P\"; fi"
           }
         ]
       },
@@ -177,7 +177,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/check_claims_posttool.sh",
+            "command": "P=\"$CLAUDE_PROJECT_DIR/.claude/hooks/check_claims_posttool.sh\"; if [ -f \"$P\" ]; then bash \"$P\"; fi",
             "statusMessage": "Checking for previously refuted claims"
           }
         ],
@@ -189,7 +189,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/live_state.sh",
+            "command": "P=\"$CLAUDE_PROJECT_DIR/.claude/hooks/live_state.sh\"; if [ -f \"$P\" ]; then bash \"$P\"; fi",
             "timeout": 10
           }
         ]
@@ -200,7 +200,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/session_end_idle_check.sh"
+            "command": "P=\"$CLAUDE_PROJECT_DIR/.claude/hooks/session_end_idle_check.sh\"; if [ -f \"$P\" ]; then bash \"$P\"; fi"
           }
         ]
       }
@@ -210,7 +210,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/orient_live.sh"
+            "command": "P=\"$CLAUDE_PROJECT_DIR/.claude/hooks/orient_live.sh\"; if [ -f \"$P\" ]; then bash \"$P\"; fi"
           }
         ]
       },
@@ -218,7 +218,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 $CLAUDE_PROJECT_DIR/.claude/hooks/session_start_protocol.py"
+            "command": "P=\"$CLAUDE_PROJECT_DIR/.claude/hooks/session_start_protocol.py\"; if [ -f \"$P\" ]; then python3 \"$P\"; fi"
           }
         ]
       }
@@ -228,7 +228,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/precompact_snapshot.sh",
+            "command": "P=\"$CLAUDE_PROJECT_DIR/.claude/hooks/precompact_snapshot.sh\"; if [ -f \"$P\" ]; then bash \"$P\"; fi",
             "statusMessage": "Freezing repo state before compaction"
           }
         ]
