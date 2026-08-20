@@ -5,10 +5,44 @@ description: Query the project's own 332-paper external research index before ma
 
 # The project's own research is indexed. Query it before asserting.
 
-This project holds **332 distinct external papers** across eight Undermind
-deep-research reports, 37 Claude artifacts, five Perplexity reports and two
-Elicit extracts. Measured 2026-08-15: only **43 of the 332 reach a reader-facing
-document** (`paper/`, `docs/`, `deliverables/`, `citations/`).
+This project holds **332 RECORDS, WHICH ARE 319 DISTINCT WORKS** (eleven Semantic
+Scholar ids appear under twenty-four record keys with byte-identical titles), drawn
+from Undermind deep searches, Claude artifacts, Perplexity reports and Elicit
+extracts. Say "332 records / 319 works", never "332 distinct papers".
+
+**A MISS IS NOT AN ABSENCE UNTIL YOU KNOW WHAT THE PREDICATE SEARCHED.** This is the
+first thing to know about this tool, because getting it wrong has already cost the
+project a night. On 2026-08-19 a session ran `--query` with an AUTHOR NAME, got zero,
+read the zero as coverage, and relayed "none of the six closest prior-art DOIs is in
+the corpus" to three sessions, two of which acted on it. **All six were present.**
+`--query` matched title and abstract and never authors. Fixed 2026-08-20; it now
+matches authors and journal too, and `--query Al-Qadami` returns 5 where it returned
+0. When you pass on a negative result, pass on the command that produced it. When you
+receive one, ask what was searched before you act.
+
+**THE INDEX COVERED 8 OF 21 DEEP SEARCHES AND NOW COVERS 21.** Fixed 2026-08-20.
+`REPORTS` is a hardcoded list of markdown files under `~/Downloads`, so a search
+entered only if somebody exported it by hand. The builder is pure standard library
+and cannot call an MCP connector, so the ingest is two-phase: an agent turn pulls the
+searches to `data/deep_searches/`, now tracked, and the builder reads them.
+
+    python3 analysis/research_index.py --searches              # all 21, with summaries
+    python3 analysis/research_index.py --searches --query X    # grep goals and summaries
+    python3 analysis/research_index.py --source-audit          # exits 1 if one is orphaned
+
+**Read the GOAL TEXT, not only the summary.** A commissioned search's goal often
+states this project's own configuration and constraints, which is the fastest way to
+tell whether it already answers the question you are about to spend GPU on. The
+buoyancy search's goal contains the sphere setup, the leak numbers and the tank
+control verbatim.
+
+**REACH IS INFLATED BY EXACTLY 9, and the honest ladder is three numbers not one.**
+`docs/Dynamic_Vehicle_Traction_in_Floodwater.md` is a raw connector dump sitting in a
+reader-facing directory and carrying 34 DOI strings; nine papers had that dump as
+their only reader-facing route. Measured both ways 2026-08-20, the delta is 9. So:
+**34 reaching written project prose, 43 counting the raw dump, 3 actually printing in
+the paper.** The builder now excludes the dump, so the absolute figure moves as new
+prose lands and the delta of 9 is the stable fact.
 
 **DO NOT SAY "256 ARE CITED NOWHERE".** That clause was WITHDRAWN 2026-08-18: it took
 the complement of *reach* (332 - 76 = 256) and reported it as *cited*, which are
@@ -42,9 +76,30 @@ nowhere. Rebuild with `--build` only when a new report is added.
 
 ## Facts already established. Do not re-derive, do not contradict without evidence.
 
-**Four prior vehicle fording or wading simulations exist and `paper/` cites none
-of them.** Any novelty claim about simulating a vehicle in floodwater has to be
-positioned against these first:
+**"FOUR PRIOR VEHICLE FORDING OR WADING SIMULATIONS EXIST" UNDERSTATES IT AND MUST
+NOT BE QUOTED.** Corrected 2026-08-20. The deep-search layer puts it at eight or
+nine; a pass that resolved every DOI against Crossref puts it at **at least fourteen
+works**, and **the shipped paper cites ONE**. The table below is the four this skill
+originally listed, kept because they are checked, not because the list is complete.
+Two further constraints on any novelty claim:
+
+- **The surviving narrow claim is method-specific**: no MPM simulation of a full road
+  vehicle in floodwater was found, in two named searched views, with the adjacent
+  precedent being tyre hydroplaning. **The SPH half of the old novelty claim is dead.**
+- **The claim is papers-only.** Nobody has searched patents, standards, OEM wading
+  specifications, theses, incident data, dashcam evidence or benchmark code suites.
+  One query found four Land Rover wading patents and a published 500 to 900 mm
+  per-model wading capability. Say "no paper we found", not "nobody has done this".
+
+Two structural gaps to state alongside any of this. **A body-following refinement
+window for MPM appears unreported**, and body-fixed formulations are established for
+Eulerian immersed-boundary and level-set solvers but not developed for MPM. And **no
+study quantifies a crowned or cambered road against a flat plane.** Both come from
+deep searches the index could not see until 2026-08-20; query them with
+`--searches --query moving` and `--searches --query crowned`.
+
+Any novelty claim about simulating a vehicle in floodwater has to be positioned
+against these first:
 
 | Work | Identifier |
 |---|---|
