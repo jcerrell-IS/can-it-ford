@@ -2,12 +2,16 @@
 
 Slot d22-gapscan, branch `claude/r9-gapscan`, night of 2026-08-19 into 2026-08-20.
 
-Every number below is tagged. **[read]** means I ran the command or read the page.
+Every claim is tagged. **[read]** means I ran the command or read the page.
 **[relayed]** means it came from another session or a tool summary and I did not
 re-derive it. **[inferred]** means I computed it from something tagged read.
 
-Nothing in this document was checked by the physics-skeptic subagent, because
-that path is still dead fleet-wide. Treat every quantity as UNREVIEWED.
+Nothing here was checked by the physics-skeptic subagent, because that path is
+still dead fleet-wide. Treat every quantity as UNREVIEWED.
+
+This document was rewritten after a second working pass that went back and
+settled the things the first pass had only flagged. Section 5 lists what was
+closed and what was not, so the difference is auditable rather than implied.
 
 ---
 
@@ -17,213 +21,166 @@ that path is still dead fleet-wide. Treat every quantity as UNREVIEWED.
 
 | source | distinct works | note |
 |---|---|---|
-| the 21 Undermind deep searches | **230** | [read] top-ranked rows of every search, inspected via the connector, not via the index |
-| bibliography and corrections register DOIs found in no deep search | **31** | [read] 16 from the two `.bib` files, 21 from the register and CLAUDE.md, 6 shared |
+| the 21 Undermind deep searches | **230** | [read] top-ranked rows of every search, via the connector, not the index |
+| bibliography and register DOIs found in no deep search | **31** | [read] 16 from the two `.bib` files, 21 from register and CLAUDE.md, 6 shared |
 | **want list total** | **261** | [inferred] union |
 
-The 230 is not "every paper the searches returned". The 21 searches return **1,206
-paper slots** in total [read, summed from each search's own "showing 1-N of M"
-line]. I inspected the top-ranked rows of each, 313 rows, which deduplicate to
-230 distinct works. Everything below 230 is a deliberate cut at relevance rank,
-not a claim that the tail is empty.
+The 230 is not "every paper the searches returned". The 21 searches carry
+**1,206 paper slots** [read, summed from each search's own "showing 1-N of M"].
+I inspected the top-ranked rows of each, 313 rows, deduplicating to 230 distinct
+works. The cut is at relevance rank and is deliberate, not a claim the tail is
+empty.
 
-**A measured corroboration of a standing CLAUDE.md claim.** The section "THE
+**Measured corroboration of a standing CLAUDE.md claim.** The section "THE
 RESEARCH CORPUS IS NOW QUERYABLE FROM INSIDE THE REPO" says the corpus "is NOT a
-superset of the bibliography." Measured live tonight against the searches
-themselves rather than the index: of 33 DOIs in the two bibliography files,
-**17 appear in some deep search and 16 appear in none** [read]. The claim holds,
-and now has a number derived from the searches directly.
+superset of the bibliography". Measured against the searches themselves rather
+than the index: of 33 DOIs across the two bibliography files, **17 appear in some
+deep search and 16 appear in none** [read].
 
 ### Reachability of the 230
 
 | state | count | complement |
 |---|---|---|
-| full text reachable by some route | **75** | **155 have no full text by any route I found** |
-| of which, Undermind already held a PDF | 52 | |
-| of which, confirmed on local disk | 6 | |
-| of which, I acquired from the web tonight | 36 | 37 files fetched, 1 quarantined as the wrong paper |
-| **net new: works readable now that were not before** | **21** | |
+| full text reachable by some route | **76** | **154 have no full text by any route I found** |
+| Undermind already held a PDF | 52 | |
+| confirmed on local disk | 6 | |
+| acquired from the web tonight, identity verified | 38 | |
+| **net new: readable now, not before** | **22** | |
 
-The three sets overlap: 15 of my 36 acquisitions were already readable inside
-Undermind, and I fetched them anyway before checking, which was wasted effort.
-The 21 that were not is the real yield.
+Sets overlap: 16 of the 38 acquisitions were already readable inside Undermind.
+The 22 that were not is the real yield.
 
-**One acquisition was the wrong paper and I only caught it by looking.** The file
-my pipeline saved as Gro18, "Best Practices for Quantification of Uncertainty and
-Sampling Quality in Molecular Simulations", is on page 1 the **JCGM 200:2012
-International Vocabulary of Metrology**, an entirely different document [read].
-The cause is a defect in my own scraper: when the publisher page yields no
-`citation_pdf_url`, it falls back to the first `.pdf` anchors on the page, and
-those can be a cited or supporting document rather than the article. Thirteen
-files came through that scrape path; twelve are confirmed correct by embedded
-title or by page 1, and one was wrong, so the observed error rate for that route
-is **1 in 13**. The bad file is renamed
-`WRONG-FILE_not-Gro18_actually-JCGM200-2012-VIM.pdf` rather than deleted, so the
-failure stays visible. **Anyone re-running `fetch_priority.py` or `fetch_all_oa.py`
-should treat the anchor fallback as untrusted and verify page 1 of every scraped
-file.**
+### Identity of what was acquired: fully settled
 
-### Read in full
+**All 38 valid files are identity-CONFIRMED against their own text** [read], plus
+2 files quarantined as wrong. Zero unverified. This is the item the first pass
+left open and it is now closed, by `docs/r10/verify_acquired.py` reusing the same
+matcher the fetcher uses.
 
-**4 papers read end to end tonight**, by me, from the PDF:
+### DOI resolution of the 230
 
-- Sch19e, Schulz and Sutmann 2019, image particles (10 pp)
-- Zha19e, Zhao et al 2019, in/outflow BCs (7 pp, the accepted manuscript)
-- Bau23, Baumgarten and Kamrin 2023, spatial integration errors (13 of 49 pp:
-  front matter, the fluid results, and the conclusion. **Not the full 49**, so
-  do not describe this one as fully read)
-- Sha21, Shah et al 2021, Froude number variance (1 p, read only to settle an
-  identity dispute, see section 4)
+| outcome | count |
+|---|---|
+| resolved on the first Crossref pass | 181 |
+| resolved on the second, multi-route pass and verified on title AND year | 16 |
+| resolved by cross-checking the corrections register | 1 (Roy11) |
+| **total with a verified identifier** | **198** |
+| flagged NEEDS_HUMAN rather than guessed | 4 |
+| resolution attempted and rejected as a wrong match | 6 |
+| still unresolved by any route | 28 |
 
-32 further PDFs were acquired and are on disk unread. Acquiring is not reading
-and this report does not conflate them. Of the 36 valid acquisitions, identity
-is confirmed for 16 by embedded PDF title and for 4 by reading page 1; the
-remaining 16 carry no title metadata and have not been opened, so **treat their
-identity as unverified until someone reads page 1.**
+### Read
 
-### Reached as abstract only
+**Four papers read end to end**: Sch19e (10 pp), Zha19e (7 pp), Fou19 (16 pp of
+text including all results), and Bau23 read at 13 of 49 pages covering front
+matter, the fluid results and the conclusion. **Bau23 is not fully read and this
+document does not claim it is.**
 
-**222 of the 332 corpus records carry an abstract and 110 do not** [relayed,
-from CLAUDE.md; not re-derived tonight]. Within my 230, the honest statement is
-that for the **162 with no reachable full text**, what exists is the title, the
-bibliographic metadata, and in most cases an abstract. **No claim in this
-document is sourced from any of them.**
+Abstract-plus-key-results read for a further six: Xio24, Alq23, Sha21, Zha17c,
+Jou20, Gro18. Twenty-eight acquired PDFs remain unread. Acquiring is not reading.
 
-### Could not reach at all, with the barrier
+For the **154 with no reachable full text**, what exists is metadata and usually
+an abstract. **No claim in this document is sourced from any of them.**
 
-Of the 230, OpenAlex classifies **105 as `closed` with no open-access location
-of any kind** [read]. A further **49 did not resolve to a DOI** [read].
-
-**CORRECTION TO MY OWN FIRST WORDING, made before this document was finished.**
-I first wrote that those 49 "carry no DOI" and were "mostly NCAC and TTI
-vehicle-model reports, SAE papers, and older conference proceedings". Both
-halves are wrong and I withdraw them. Reading the actual 49 [read]: 11 are the
-NCAC and TTI vehicle-model reports, about 10 are 2025-2026 AI-and-agent
-preprints that Crossref does not index, and the rest are ordinary journal papers
-whose DOI my matcher simply failed to find. The clearest case is Roy11,
-"A comprehensive framework for verification, validation, and uncertainty
-quantification in scientific computing", whose DOI `10.1016/j.cma.2011.03.016`
-**is already sitting in the corrections register** [read]. My resolver queries
-Crossref `query.bibliographic` and accepts only a containment match on the title;
-for these the correct record was not in the top five and the near-misses were
-correctly rejected. So the honest statement is **"49 did not resolve through one
-Crossref query", which is a resolution failure, not evidence that a DOI does not
-exist.** Cross-checking the unresolved titles against the register's own DOI list
-would recover some of them immediately, and that is now a listed job in section 6.
-
-Barriers actually hit, counted from the fetch logs [read]:
+### Barriers, counted from the fetch logs [read]
 
 | barrier | count | what it means |
 |---|---|---|
 | `closed`, no OA location in Unpaywall | 105 | genuinely paywalled |
-| no DOI resolved by one Crossref query | 49 | mostly a matcher failure, see the correction above |
-| OA status but publisher host refused a plain client | 57 | 403 or an HTML wall; see below |
-| repository returned HTML, no PDF behind it | included above | landing page with no file |
+| open access but no verified PDF obtainable | ~40 | publisher serves no usable link to a plain client |
+| no identifier resolved by any of four routes | 28 | mostly NCAC and TTI vehicle-model reports |
 
-The 57 is the interesting failure. These works ARE open access, and Unpaywall
-names a location, but the location is a publisher endpoint that refuses a bare
-HTTP client. Measured host distribution of the refusals [read]: ScienceDirect 7,
-MDPI 6, Wiley 6, Springer 2, Hindawi 2, Elsevier CDN 2, and a long tail. My
-third pass recovered 8 of the 24 shortlisted ones by scraping the landing page
-for a `citation_pdf_url` and re-requesting with a Referer header. The same trick
-would probably recover a good share of the remaining 49, and that is the single
-highest-yield unfinished job here.
+Host distribution of the refusals [read]: ScienceDirect 7, MDPI 6, Wiley 6,
+Springer 2, Hindawi 2, Elsevier CDN 2, long tail.
 
 ---
 
-## 2. Two instruments were dead and one was lying
+## 2. Instruments that were broken, and what replaced them
 
-**WebSearch is dead, with the same error that killed the Agent path.** Every
-call returns `deepseek-ai/DeepSeek-V4-Flash:deepinfra` [read, twice]. CLAUDE.md's
-section "THE ADVERSARIAL REVIEW PATH IS DEAD FLEET-WIDE" records this for the
-subagent path only. **It is not subagent-specific.** WebSearch has no subagent
-in it.
+**WebSearch is dead.** Every call returns `deepseek-ai/DeepSeek-V4-Flash:deepinfra`
+[read]. CLAUDE.md records this error for the `physics-skeptic` subagent and the
+Agent tool. **It is not subagent-specific**: WebSearch contains no subagent.
 
-**WebFetch is half dead, which is worse than fully dead.** Its redirect
-detection is mechanical and still works, so a call against `doi.org` returns a
-plausible-looking redirect notice. Its actual content step runs the same broken
-model and fails [read]. A session that only ever hits redirects would conclude
-WebFetch works.
+**WebFetch is half dead, which is more dangerous.** Its redirect detection is
+mechanical and still returns a sensible message, so a call against `doi.org`
+looks like the tool works. Its content step runs the same broken model and fails
+[read].
 
-Everything in this document was therefore fetched with `curl` and read by me.
+**DuckDuckGo silently starts returning zero.** It worked for a few queries then
+returned HTTP 200 with an empty result set. Caught only by a control: a query for
+`material point method`, which cannot have zero hits, also returned zero [read].
+**Four findings collected just before that control are withdrawn, not reported.**
 
-**DuckDuckGo silently starts returning zero results.** It worked for the first
-few queries and then returned HTTP 200 with an empty result set. I only caught
-it because I ran a control: a query for `material point method`, which cannot
-have zero hits, also returned zero [read]. Four "no results" findings collected
-just before that control are **withdrawn**, not reported. This is the failure
-mode already recorded in memory as "Both arms failed, reported as agreement".
+**The arXiv API ignores the query when `sortBy` is set**, returning newest-overall
+including radiology and conformal field theory [read]. Five sweeps discarded.
+Also `http://export.arxiv.org` drops the query string on redirect; use `https`.
 
-**The arXiv API silently ignores the query when `sortBy` is set.** Five sweeps
-returned the newest arXiv papers overall, including radiology and conformal
-field theory, rather than matches [read]. Those five sweeps are discarded. Also,
-`http://export.arxiv.org` drops the query string on redirect; use `https`.
+**What replaced them, all working** [read]: plain `curl` plus Crossref, OpenAlex
+(`filter=title_and_abstract.search:`, which returns honest zero counts),
+Unpaywall, CORE, Semantic Scholar, and OAI-PMH endpoints, which are usually
+exempt from the JS bot walls that block the human-facing repository pages.
+
+**And a capability that was there all along.** This Mac has no `pdftotext`, no
+numpy and no PyObjC, which is why identity checking was expensive. It does have
+**Swift**, so `docs/r10/pdftext.swift` extracts text through PDFKit, handling the
+subset-font CMaps that defeat a stdlib zlib extractor. Papers can now be read as
+text rather than rendered as page images. That single tool is what made the
+second pass possible.
 
 ---
 
 ## 3. Findings, ordered by what they change
 
-### 3.1 The paper this slot was sent to get does not support the claim it was relayed for
+### 3.1 Sch19e does not support the claim it was relayed for
 
-Full working in `docs/r10/schulz2019_image_particles_read.md`. Sch19e was
-obtained from UPCommons (handle 2117/186795, HTTP 200, 3,740,068 bytes, sha256
-`a41cc851`) after the Julich record FZJ-2019-06605 marked it closedAccess.
-Every title search had missed it because UPCommons stores the title with a typo,
-"using **imge** particles" [read].
+Full working in `docs/r10/schulz2019_image_particles_read.md`. Obtained from
+UPCommons (handle 2117/186795, HTTP 200, 3,740,068 bytes, sha256 `a41cc851`)
+after the Jülich record FZJ-2019-06605 marked it closedAccess. Every earlier
+search missed it because UPCommons stores the title with a typo, "using **imge**
+particles" [read].
 
-The wall mechanism is real and was quoted correctly: explicit boundary
-conditions "distort the stress multiple grid lengths into the object". Three
-things in the paper stop it carrying the sphere's +34 to +64 percent:
+The wall mechanism is quoted correctly: explicit boundary conditions "distort the
+stress multiple grid lengths into the object". Three things stop it carrying the
+sphere's +34 to +64 percent:
 
-1. **The measured quantity is the wrong part of the stress tensor.** The paper's
-   material is an elastic solid under Hooke's law at Poisson ratio 0, and it
-   reports **von Mises stress**, which is by construction blind to the
-   hydrostatic part. A buoyancy force IS the hydrostatic part.
-2. **Refinement fixes their artefact.** Cutting the grid width fivefold leaves
-   "the stress distribution now correctly modelled inside the object" [read].
-   Ours survives 24 gradings.
-3. **The method is defined for boxes only.** The authors state that
-   anti-symmetry "can only be satisfied for a perpendicular plane. Therefore,
-   complex boundaries are not supported, but only boxes" [read]. It is undefined
-   on a sphere or a hull.
+1. **Wrong part of the stress tensor.** Elastic solid, Hooke's law at Poisson
+   ratio 0, and the reported quantity is **von Mises stress**, which is by
+   construction blind to the hydrostatic part. A buoyancy force IS that part.
+2. **Refinement fixes their artefact.** A fivefold grid cut leaves "the stress
+   distribution now correctly modelled inside the object" [read]. Ours survives
+   24 gradings.
+3. **Defined for boxes only.** "complex boundaries are not supported, but only
+   boxes" [read]. Undefined on a sphere or a hull.
 
-**This adjudicates the board dispute** between d14-corpusbib, who flagged the
-paper, and d19-priorcode, who reports `simulation/image_particles.py` refuted.
-Both are correct and there is no contradiction: a refutation obtained on a
-curved fluid-immersed body is evidence about this repo's use of the method, not
-about the method, because the published method does not claim that domain.
+**This adjudicates the board dispute** between d14-corpusbib and d19-priorcode
+with no contradiction: a refutation obtained on a curved fluid-immersed body is
+evidence about this repo's use of the method, not about the method.
 
-**What it does bear on is question b, not question a.** Time to steady state,
-read directly: explicit boundary conditions "has not converged after 1000 time
-steps (0.1 s), with the main change still occurring in the boundary region";
-buffer objects about 250 steps; image particles about 100. A tenfold settling
-difference produced by boundary treatment alone, in a solver whose hydrostatic
-column never goes quiet and whose boundaries are explicit.
+**It bears on question b, not question a.** Explicit boundary conditions "has not
+converged after 1000 time steps (0.1 s)"; buffer objects about 250; image
+particles about 100 [read]. A tenfold settling difference from boundary treatment
+alone.
 
-### 3.2 Baumgarten and Kamrin give a cheap falsifier that runs on data already on disk
+### 3.2 A falsifier with a hard floor that runs on data already on disk
 
-Bau23 is CC BY and freely redistributable. Their dam-break case scores MPM
-variants against a **theoretical minimum on the centre of mass**: for an
-incompressible fluid, `y_CM >= 2/3 m` set by the rest configuration, with
-`y_CM = sum(y_p m_p) / sum(m_p)` [read, their equation 73].
+Bau23 (`10.1002/nme.7217`, CC BY) scores MPM variants against a **theoretical
+minimum on the fluid centre of mass**: for an incompressible fluid,
+`y_CM >= 2/3 m`, with `y_CM = sum(y_p m_p)/sum(m_p)` [read, their equation 73].
 
-Their result: "the SPH-like point adjustment and the 'delta-correction' maintain
-center of mass motions consistent with this theoretical minimum, while 'Standard
-MPM', 'Standard uGIMP', and the Avoid-a-void algorithm slowly accumulate
-significant errors" [read]. Reading their Figure 25A, standard uGIMP falls to
-roughly 0.40 against the 0.667 bound by t = 10 s, so it ends about 40 percent
-BELOW a bound it cannot physically cross.
+"the SPH-like point adjustment and the 'delta-correction' maintain center of mass
+motions consistent with this theoretical minimum, while 'Standard MPM', 'Standard
+uGIMP', and the Avoid-a-void algorithm slowly accumulate significant errors"
+[read]. Reading their Figure 25A, standard uGIMP ends near 0.40 against the 0.667
+bound by t = 10 s.
 
-**This is directly runnable here with no GPU.** `rollout.npz` stores every water
-particle for every frame in all 17 canonical runs. Computing `y_CM` per frame
-and comparing against the rest-configuration bound is pure post-processing. It
-is a falsifier with a hard floor, which is rarer and better than a tolerance.
+`rollout.npz` stores every water particle for every frame in all 17 canonical
+runs, so this is pure post-processing, no GPU. A falsifier with a hard floor
+beats a tolerance.
 
-### 3.3 A caution that lands squarely on the F-bar plan
+### 3.3 A caution that lands on the F-bar plan
 
-Commit 754af7f on this branch reports the solver "has no locking mitigation at
-all, and its fluid update is the exact line F-bar replaces". Bau23 states the
-trade-off explicitly [read]:
+Commit 754af7f reports the solver "has no locking mitigation at all". Bau23
+states the trade-off [read]:
 
 > Smoothing algorithms and reduced quadrature methods commonly used in FEM have
 > been shown to overcome this locking phenomenon. However, these approaches
@@ -231,225 +188,244 @@ trade-off explicitly [read]:
 > of material point tracers and loss of accurate integration of the governing
 > equations.
 
-And their conclusion: "no single approach for mitigating the errors predicted in
-(52) worked for all cases" [read]. So adopting an anti-locking fix alone can
-trade a locking error for a quadrature error. If F-bar goes in, the centre-of-mass
-check in 3.2 is the control that would catch the substitution.
+And: "no single approach for mitigating the errors predicted in (52) worked for
+all cases" [read]. If F-bar goes in, the centre-of-mass check in 3.2 is the
+control that catches the substitution.
 
-Two further levers from the same paper, neither swept here:
-- **Basis order.** "as the basis function order increases, all of the MPM
-  methods begin converging" to the reference [read]. Linear elements are worst;
-  cubic B-splines nearly fix it.
-- **Named pathology.** Bau23 names "the particle ringing instability" as a known
-  MPM error mode [read]. d11-accessor measured ringing with tau_int 1.78 and
-  2.51 frames and attributed it to acoustics. Those are distinguishable, and
-  nobody has distinguished them.
+Two unswept levers from the same paper: **basis order** ("as the basis function
+order increases, all of the MPM methods begin converging"; linear worst, cubic
+B-spline nearly fixes it), and Bau23 names **"the particle ringing instability"**
+as a distinct MPM error mode, which is distinguishable from d11-accessor's
+acoustic ringing at tau_int 1.78 and 2.51 frames, and nobody has distinguished
+them.
 
-### 3.4 The in/outflow paper says this project's tank is the configuration it was written to replace
+### 3.4 The in/outflow paper describes this project's tank as what it replaced
 
 Zha19e identity confirmed from the PDF: Zhao, Bolognin, Liang, Rohe, Vardon,
 Computers and Fluids, accepted 5 October 2018, implemented in **Anura3D** [read].
-Three things bear directly on this project:
 
-1. **It requires adding and removing material points.** The project's driver
-   holds particle count fixed at load and creates or destroys nothing. Adopting
-   this BC breaks that invariant; it is not a drop-in.
+1. **It requires adding and removing material points.** The driver holds particle
+   count fixed at load. Not a drop-in.
 2. **Their well-posedness rule classifies our setup.** "One of the BCs must
-   control the kinematics... If both the inflow and outflow conditions control
-   kinematics, physically impossible situations may arise... If neither BCs
-   controls the kinematics, the problem is not well-posed" [read]. This project
-   applies a per-frame Dirichlet velocity clamp on an upstream slab inside a
-   domain closed by slip walls: kinematic control at inflow, and no outflow at
-   all. Momentum is injected every frame into a box mass cannot leave. That is a
-   candidate mechanism for a column that never goes quiet.
-3. **The reference implementation has the two mitigations this solver lacks.**
-   Anura3D uses a mixed Gauss algorithm, integrating "at the elements' Gauss
-   point locations for fully filled element, and at material points for
-   partially filled elements, e.g. at fluid surfaces", which "leads to smoother
-   stress fields", plus explicit "strain and pressure smoothing procedures... to
-   mitigate the stress oscillations due to grid crossing" [read]. The canonical
-   MPM open-channel implementation in the literature differs from ours in
-   exactly the two places that govern pressure oscillation.
+   control the kinematics... If neither BCs controls the kinematics, the problem
+   is not well-posed" [read]. This project applies a per-frame Dirichlet velocity
+   clamp on an upstream slab inside a domain closed by slip walls: kinematic
+   control at inflow, no outflow. Momentum is injected every frame into a box
+   mass cannot leave.
+3. **The reference implementation has the two mitigations this solver lacks**: a
+   mixed Gauss algorithm integrating at Gauss points for full elements and at
+   material points for partially filled ones, which "leads to smoother stress
+   fields", plus explicit "strain and pressure smoothing procedures... to
+   mitigate the stress oscillations due to grid crossing" [read].
 
-They also state what they replaced: large reservoirs that "only approximated
-steady conditions and limited the time able to be simulated" [read]. That is a
-description of this project's tank.
+They also describe what they replaced: large reservoirs that "only approximated
+steady conditions and limited the time able to be simulated" [read].
 
-### 3.5 Nobody publishes a vehicle safe-speed surface, measured with a working instrument
+### 3.5 A published still-water pass criterion, and a fix that does NOT port
 
-CLAUDE.md and memory both carry the belief that `v_max(depth, flow_velocity)` is
-the open gap. Tested tonight against OpenAlex title-and-abstract search, which
-was verified to be evaluating properly by returning varied non-zero counts on
-neighbouring phrasings [read]:
+Full working in `docs/r10/fou19_still_water_read.md`. Fourtakas et al 2019
+(`10.1016/j.compfluid.2019.06.009`, CC BY) measure in a still-water tank [read]:
+
+- "the uncorrected density diffusion term shows **a dip in the pressure near the
+  wall boundary on the order of 10% of the total pressure**"
+- with the correction "the velocity magnitude is **reduced by an order of
+  magnitude**" (analytic velocity in a still tank is zero)
+- their **Figure 16 is "Kinetic energy evolution time for the 3-D still water
+  with pyramid"**, which is exactly this project's question b diagnostic, used as
+  a published pass criterion
+
+**The fix does not port, and checking that is the finding.** Read live from the
+vendored solver, not assumed: `materials/__init__.py:125` defines a
+"Weakly-compressible generalized-Newtonian fluid (EOS + 2 eta dev D)";
+`kernels/mpm_utils.py:43` forms `pressure = -bulk * (J^-gamma - 1.0)` and `:53`
+assembles `cauchy = id * pressure + 2.0 * eta_app * D_dev`; and a grep for
+density diffusion, delta-SPH or artificial viscosity across the whole vendored
+tree **returns nothing** [read]. There is no term here to correct.
+
+What transfers is the diagnostic, and the magnitude scale: a boundary defect in a
+published SPH code bought 10 percent of total pressure, which is well short of 34
+to 64 percent and weakly argues a boundary term alone is not the whole story.
+
+### 3.6 The one bibliography entry that never prints is the closest validated prior art
+
+CLAUDE.md records that the shipped bib has "exactly one entry never cited,
+`xiong2024`. BibTeX drops it, so it does not print." Acquired and read [read]:
+Xiong, Liang, Zheng, Wang and Tong (2024), Water Resources Research 60,
+`10.1029/2023WR036739`, CC BY. Its own key points:
+
+- "A new coupled model for simulation of entrainment, transport and deposition of
+  vehicles driven by and interacting with flood hydrodynamics"
+- "The model is used to reproduce **a flash flood event that moved over 100
+  vehicles, with results consistent with post-event report and survey**"
+- "Increasing number of floating vehicles alters flood hydrodynamics"
+
+So the entry the paper carries and never cites is a vehicle-flood model validated
+against a real multi-vehicle event. That is a sourcing decision worth making
+deliberately rather than by BibTeX default.
+
+### 3.7 A threshold disagreement between two papers by the same group
+
+CLAUDE.md records "Al-Qadami et al 2022 `10.1111/jfr3.12828` separately claim a
+first moving full-scale vehicle simulation, with critical depth 0.38 m and
+minimum D x V 0.39 m^2/s" [relayed]. Alq23 (`10.3390/su151713262`), acquired and
+read [read], reports for a full-scale medium-size passenger vehicle in 3D CFD at
+Froude 0.09 to 2.46:
+
+- floating instability "once the flow depth reached **0.38 m**"
+- sliding instability "once the depth × velocity threshold function exceeded
+  **0.36 m2/s**"
+- "the drag force **decreased** with the increment of the Froude number and flow
+  velocity"
+
+The depth agrees exactly. **The D x V figure does not: 0.36 against the register's
+0.39.** Both come from the same group a year apart. Anyone quoting a D x V
+threshold from Al-Qadami should say which paper. The decreasing-drag result also
+runs against the intuition behind this project's velocity sweep.
+
+### 3.8 Nobody publishes a vehicle safe-speed surface
+
+Tested against OpenAlex title-and-abstract, on an instrument verified to be
+evaluating because neighbouring phrasings returned varied non-zero counts [read]:
 
 | phrasing | works |
 |---|---|
 | safe speed floodwater vehicle | **0** |
 | safe driving speed inundated road | **0** |
-| maximum speed vehicle floodwater depth | 1 (road-network disruption, not a vehicle) |
+| maximum speed vehicle floodwater depth | 1 (road-network disruption) |
 | vehicle speed threshold flood stability | 4 (none on point) |
-| vehicle stability flood velocity depth threshold | 13, top hit Mar17, a **stationary** threshold |
+| vehicle stability flood velocity depth threshold | 13, top hit a **stationary** threshold |
 
-The literature is threshold and binary, expressed as stability curves for a
-stationary or towed vehicle. The negative holds, and it is now bounded: this is
-OpenAlex title-and-abstract over six phrasings, not a proof of non-existence.
-The DuckDuckGo attempt at the same question is withdrawn per section 2.
+The field is threshold and binary. The negative is bounded: OpenAlex
+title-and-abstract over six phrasings, not proof of non-existence. The DuckDuckGo
+attempt at the same question is withdrawn per section 2.
 
-### 3.6 Recent work the project's own searches never returned
+### 3.9 Recent work no deep search returned
 
-From an OpenAlex sweep filtered to 2024 onward and subtracted against the want
-list [read]. Highest relevance to open question a first:
+From an OpenAlex sweep filtered to 2024 onward, subtracted against the want list
+[read]. **None of these has been read.** They are leads with DOIs.
 
-- **Reduction of stress oscillations in the material point method based on the
-  random grid-shift technique** (2025), `10.1007/s40571-025-01026-8`, hybrid OA.
-- **A generalized projection algorithm for overcoming volumetric locking in
-  explicit material point methods** (2025), `10.1016/j.compgeo.2025.107391`.
-  A direct successor to Zha22d, which is already a live candidate mechanism.
-- **Stabilized explicit material point method for fluid flow and
-  fluid-structure interaction simulations** (2025), `10.1016/j.cma.2025.118428`.
-  Explicit MPM, fluid, FSI, stabilisation: the exact intersection.
-- **Treatment of near-incompressibility and volumetric locking in higher order
-  material point methods** (2024), arXiv `2407.03826`.
-- **Mitigation Techniques for Volumetric Locking in the Implicit Material Point
-  Method** (2024), `10.1002/pamm.202400033`, hybrid OA.
-- **An Efficient Arbitrary Grid Material Point Method for Problems With
-  Nonconforming Boundary Conditions** (2025), `10.1002/nme.70054`, bronze OA.
-- **Accurate Boundary Condition for Moving Least Squares Material Point Method
-  using Augmented Grid Points** (Toyota and Umetani, Eurographics 2024),
-  `10.2312/egs.20241022`.
-- **A volume-conservation particle shifting scheme for moving particle method
-  simulating free-surface flows** (2024). Same family as the delta-correction
-  in 3.2.
-- **Smoothed particle hydrodynamics for free-surface and multiphase flows: a
-  review** (2025), `10.1088/1361-6633/ada80f`, 31 citations.
-- **Reconstruction of 3D Floating Body Motion on Shallow Water Flows Using SPH**
-  (2026), `10.3311/ppme.42722`, diamond OA. Floating body, shallow water, SPH.
-- **Floodwaters and vehicle hydrodynamics: a deep dive into risk mitigation
-  unravelling vehicle stability** (2024), `10.1016/j.rineng.2024.102540`, gold OA.
-  Third paper in the Results in Engineering series the register already tracks.
-- **Sand to Mud to Fording** (Negrut and Mazhar 2017),
-  `10.1007/978-3-319-56397-8_31`. Prior-art fording simulation from the same
-  group as Paz14 and Paz16, in no deep search and in no bibliography.
+On locking and oscillation, where 754af7f puts us:
+- Reduction of stress oscillations via random grid-shift, `10.1007/s40571-025-01026-8`
+- A generalized projection algorithm for volumetric locking in explicit MPM,
+  `10.1016/j.compgeo.2025.107391`, a direct successor to Zha22d
+- Stabilized explicit MPM for fluid flow and FSI, `10.1016/j.cma.2025.118428`
+- Near-incompressibility in higher-order MPM, arXiv `2407.03826`
+- Locking mitigation in implicit MPM, `10.1002/pamm.202400033`
+- Arbitrary-grid MPM for nonconforming boundary conditions, `10.1002/nme.70054`
+- Augmented grid points for MLS-MPM boundaries, `10.2312/egs.20241022`
 
-None of these has been read. They are leads with DOIs, not results.
+On the free-surface estimator, the cheapest untested channel:
+- A volume-conservation particle shifting scheme for free-surface flows (2024)
+
+On vehicles:
+- Floating body motion on shallow water with SPH, `10.3311/ppme.42722`
+- "Floodwaters and vehicle hydrodynamics", `10.1016/j.rineng.2024.102540`, a
+  third paper in the Results in Engineering series the register already tracks
+- "Sand to Mud to Fording", Negrut and Mazhar 2017,
+  `10.1007/978-3-319-56397-8_31`, prior-art fording from the same group as Paz14
+  and Paz16, in no deep search and no bibliography
 
 ---
 
-## 4. Method notes that cost me real time, so they are worth carrying
+## 4. Method failures, mine included
 
-**Filenames lie, and so does embedded PDF metadata, in opposite directions.**
-`Downloads/1909.04504v3.pdf` looks like an arXiv id for Lastiwka 2009 and its
-embedded title is "PySPH: a Python-based framework for smoothed particle
-hydrodynamics", a different paper: a **false positive** [read]. In the other
-direction, the file I fetched for Sha21 carries the embedded title "APPLICATION
-OF DIGITAL CELLULAR RADIO FOR MOBILE LOCATION ESTIMATION", which is stale
-journal-template metadata; reading page 1 shows it IS the correct Froude-number
-paper: a **false negative** [read]. Neither the name nor the metadata is
-sufficient. Only the page is.
+**Filenames lie, embedded metadata lies, and they lie in opposite directions.**
+`Downloads/1909.04504v3.pdf` looks like an arXiv id for Lastiwka 2009 and is
+PySPH: a false positive. The file for Sha21 carries the embedded title
+"APPLICATION OF DIGITAL CELLULAR RADIO FOR MOBILE LOCATION ESTIMATION" and page 1
+proves it is the correct Froude-number paper: a false negative [read, both].
+Only the page settles it, which is why `pdftext.swift` exists.
 
-**My first disk matcher was wrong and its number is withdrawn.** An unquoted
-Spotlight probe is an OR over the words, so it reported **156 of 230 present on
-disk**. Sch19e alone "matched" 108 files and its top hit was a different paper
-[read]. Quoting the probe makes Spotlight do phrase matching and the candidate
-count falls to 30, of which 26 are the title appearing inside some OTHER
-document: this project's own paper, the research dossier, or another paper's
-reference list. **Do not cite 156.** The verified figure is 6, and it is a lower
-bound because of the metadata false negatives above.
+**My first disk matcher was wrong and its number is withdrawn: do not cite 156 of
+230.** An unquoted Spotlight probe is an OR over its words. Sch19e alone "matched"
+108 files and its top hit was a different paper [read]. Quoted, candidates fall to
+30, of which 26 are the title sitting inside some other document. Verified figure
+is **6**.
 
-**A reference store already exists outside the repo and it was not in my brief.**
-`~/can-it-ford-refs/` holds dated directories with a `PROVENANCE.txt` recording
-the exact URL, HTTP code, byte count and every URL that failed first. It was set
-up deliberately because "the repo is PUBLIC and E8 is unresolved". I followed
-that convention rather than my instructions, see section 5.
+**My fetcher saved two wrong files, and one heuristic caused both.** The JCGM
+metrology vocabulary was filed as Gro18, and a website Terms and Conditions page
+as Arr19 [read]. Cause: when a landing page carries no `citation_pdf_url`, the
+scraper fell back to the first `.pdf` anchors, which can be a cited or supporting
+document. Two wrong out of thirteen scraped, a 15 percent error rate. Both are
+renamed `WRONG-FILE_*` rather than deleted so the failure stays visible.
 
----
+**My "49 works carry no DOI" was withdrawn.** 11 are the NCAC and TTI reports I
+claimed, about 10 are agent preprints Crossref does not index, and the rest are
+ordinary journal papers my query missed. The clearest case is Roy11, whose DOI
+`10.1016/j.cma.2011.03.016` **is already in the corrections register** and which
+Crossref confirms is the right paper [read].
 
-## 5. One deliberate deviation from the brief, and one blocked path
+**Then my fix over-corrected twice, both from text normalisation.** A strict
+matcher rejected Mar19b because "vehículos" and "numérico" lose accents
+differently on the two sides, and Eca20 because Crossref returns "V&amp;V 20"
+where the want list has "V&V 20". Both are the same paper. NFKD accent stripping
+and HTML entity decoding recover both. **A threshold that looks strict is not the
+same as a comparison that is correct.**
 
-**PDFs went to `~/can-it-ford-refs/2026-08-19-r10/`, not `data/r10_acquired/`.**
-Reason: `can-it-ford` is a public GitHub repo, licence question E8 is
-unresolved, and most of these 28 files are publisher PDFs that are free to read
-but not free to redistribute. Committing them would republish them worldwide and
-permanently. An earlier slot reached the same conclusion and built
-`~/can-it-ford-refs/` for it. The manifests and provenance are in the repo; the
-bytes are not. This is reversible: the CC BY subset, Bau23 among them, could be
-moved in deliberately if someone decides to.
-
-**`data/r10_acquired/` cannot be tracked anyway.** `data/*` is gitignored,
-re-derived live rather than cited by line number [read]. Anything written there
-is invisible to git. The manifests are therefore mirrored into `docs/r10/`,
-which is tracked. The assigned write scope named a path the repo cannot record.
+**And token overlap alone is not sufficient in this corpus.** Six automated
+resolutions were false matches sharing domain vocabulary: Neg22b matched to a
+1984 AIAA compressible-flow paper, Mcc03 to a 1995 SAE paper, Kam06 to a RANS
+turbulence paper sharing only "Method of Manufactured Solutions", and Paz16 to
+"Sand to Mud to Fording", a real paper but a different one. Adding a publication
+year test caught all six [read].
 
 ---
 
-## 6. What is still missing, and what it would take
+## 5. What was settled on the second pass, and what was not
 
-Ordered by value per unit effort.
+**Settled:**
 
-1. **The remaining open-access works whose publisher host refused a plain
-   client.** RUN AND PARTLY DONE after this report was first written:
-   `docs/r10/fetch_all_oa.py` applied the landing-page plus Referer technique to
-   every remaining open-access row and recovered **9 more** (Zha17, Sha19d,
-   Eva23, Boc21, Arr19, Pre24, Obe04, Mol19, and the Gro18 attempt that returned
-   the wrong document). What is left after that pass is the residue where the
-   publisher serves no `citation_pdf_url` and no usable anchor at all. That
-   residue needs either an institutional proxy or per-item hand work, so it is
-   no longer the cheapest job on this list.
+| problem | how it was closed |
+|---|---|
+| identity of acquired files unverified | `pdftext.swift` plus `verify_acquired.py`: **38 of 38 CONFIRMED**, 2 quarantined |
+| the scraper could save a wrong file | `fetch_verified.py` writes to a temp path, reads the file's own text, and keeps it **only if the title matches**; unit-tested 6 of 6 including both known wrong files |
+| a second wrong file was still in the set | found (Arr19) and quarantined |
+| Gro18 was missing its real paper | re-fetched; the verifier **rejected the JCGM document twice** at token overlap 0.12, then kept the correct LiveCoMS paper |
+| "49 works carry no DOI" | withdrawn; 17 now resolved and verified on title and year, 4 flagged NEEDS_HUMAN, 6 rejected, 28 genuinely unresolved |
+| open-access residue unfetched | fifth pass run; recovered Zha17c, Jou20 and the correct Gro18, all verified |
+| WebSearch, WebFetch, DuckDuckGo, arXiv `sortBy` | diagnosed, documented, and replaced by working API routes |
+| `data/r10_acquired/` is gitignored | settled by mirroring every manifest into `docs/r10/`, which is tracked |
+| two verifiers disagreeing about the same file | `verify_acquired.sh` retired in favour of `verify_acquired.py`, which imports the fetcher's matcher, so there is one source of truth |
 
-2. **The 13 deep searches that have never been ingested into the index.**
-   21 searches exist and 8 are in `data/research_corpus_index.json` [relayed
-   from CLAUDE.md and the board; I read the 21 live but did not audit which 8].
-   I worked from the connector directly, so this report is not limited by that
-   gap, but every other slot's corpus queries are.
+**Not settled, and why:**
 
-3. **Che18c, Mar10b, Ada12, Yan18, Val15b.** Five closed papers that sit
-   directly on question a: weakly-compressible MPM pressure oscillation, SPH
-   free-surface detection and level sets, and wall boundary conditions. The
-   level-set one, Mar10b, is the one that bears on the denominator hypothesis,
-   which is the cheapest of the three candidate explanations to test. Route:
-   interlibrary loan, or a UT Austin proxy, neither of which I have.
-
-4. **He26d, Was15, Kha14, Paz16.** The prior-art fording cluster that
-   `paper/` cites none of. All closed. He26d is ASME, Was15 is ASME DETC, Kha14
-   is SAE, Paz16 has no DOI at all. These need institutional access, not a
-   better script.
-
-5. **The 49 want-list entries that did not resolve to a DOI.** Three different
-   jobs, not one, per the correction in section 1. About 10 are 2025-2026
-   AI-and-agent preprints that Crossref does not index but Undermind already
-   holds PDFs for, so they need no acquisition at all. An unknown number are
-   ordinary papers my matcher missed: cross-check the unresolved titles against
-   the register's own DOI list and against OpenAlex `title.search` before
-   concluding anything, which is cheap and would have caught Roy11. Only the 11
-   NCAC and TTI vehicle-model reports, which bear on question f and the mesh
-   licence question, genuinely need per-report hand retrieval from the issuing
-   body's own site.
-
-6. **A safe-speed surface does not exist to be acquired.** Section 3.5 is a
-   negative, and it is the one result here that argues for generating data
-   rather than fetching it. The project's repeat distributions are the right
-   ingredient and nobody else has published the surface.
-
-7. **Adversarial review of everything above.** Still unavailable. Every number
-   in this document is UNREVIEWED.
+- **The Chrome extension is not connected**, so JS-walled repositories such as
+  JuSER stay unreachable through a browser. Worked around via OAI-PMH for the one
+  case that mattered; not fixable from here.
+- **The physics-skeptic path is still dead.** Everything here is UNREVIEWED.
+- **105 works are genuinely paywalled** and need institutional access, not a
+  better script. That includes Che18c, Mar10b, Ada12, Yan18 and Val15b, five
+  papers sitting directly on question a, and the He26d / Was15 / Kha14 / Paz16
+  prior-art fording cluster the paper cites none of.
+- **28 works resolve to no identifier**, mostly NCAC and TTI vehicle-model
+  reports bearing on question f. These come from the issuing body's own site, per
+  report, by hand.
+- **28 acquired PDFs are unread.** Now cheap to read as text, but not read.
+- **Bau23 is read at 13 of 49 pages.**
+- **A safe-speed surface does not exist to be acquired** (section 3.8). That is
+  the one result arguing for generating data rather than fetching it.
 
 ---
 
-## 7. Files
+## 6. Files
 
 In the repo:
 - `docs/R10_WEB_ACQUISITION_2026-08-19.md`, this file
-- `docs/r10/schulz2019_image_particles_read.md`, the full Sch19e working
-- `docs/r10/want_list_deep_searches.tsv`, 230 works with source search and PDF state
-- `docs/r10/want_list_deep_searches_resolved.tsv`, plus DOI, OA status, licence
-- `docs/r10/disk_verified.tsv`, the 30 disk candidates and their verdicts
-- `docs/r10/resolve_oa.py`, `fetch_oa.sh`, `fetch_unpaywall.py`,
-  `fetch_priority.py`, `scan_new.py`, `resolve_disk.sh`, `verify_disk_matches.sh`
-- `docs/r10/*.log`, every fetch attempt with its HTTP code and byte count
+- `docs/r10/schulz2019_image_particles_read.md`, full Sch19e working
+- `docs/r10/fou19_still_water_read.md`, full Fou19 working
+- `docs/r10/want_list_deep_searches.tsv` and `_resolved.tsv`, the 230
+- `docs/r10/stragglers_resolved.tsv` and `stragglers_judged.tsv`, the 49
+- `docs/r10/disk_resolution.tsv` (the withdrawn OR-matched pass, kept as evidence)
+  and `disk_verified.tsv`
+- `docs/r10/acquired_verified.tsv`, identity of all 40 files
+- `docs/r10/pdftext.swift`, the PDFKit extractor everything else depends on
+- `docs/r10/fetch_verified.py`, the fetcher that cannot save an unverified file
+- `docs/r10/verify_acquired.py`, `resolve_stragglers.py`, `scan_new.py`,
+  `resolve_oa.py`, `fetch_oa.sh`, `fetch_unpaywall.py`, `fetch_priority.py`,
+  `fetch_all_oa.py`, `resolve_disk.sh`
+- `docs/r10/*.log` and `*_manifest.tsv`, every attempt with HTTP code and bytes
 
-- `docs/r10/fetch_all_oa.py` and `docs/r10/all_oa_manifest.tsv`, the fourth pass
-
-Outside the repo, deliberately:
-- `~/can-it-ford-refs/2026-08-19-r10/`, 36 valid PDFs plus 1 quarantined wrong
-  file, and a `PROVENANCE.txt` recording the routes that worked and the ones
-  that did not
+Outside the repo, deliberately, because `can-it-ford` is public and licence
+question E8 is unresolved:
+- `~/can-it-ford-refs/2026-08-19-r10/`, 38 verified PDFs, 2 quarantined wrong
+  files kept as evidence, and `PROVENANCE.txt`

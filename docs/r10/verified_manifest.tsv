@@ -1,0 +1,7 @@
+cite_key	doi	route	outcome	reason	bytes	url
+Zha17c	10.1016/j.jcp.2016.10.064	core	KEPT	squashed containment	2985181	https://core.ac.uk/download/84930596.pdf
+Jou20	10.1016/j.apm.2019.09.030	core	KEPT	squashed containment	5617120	https://core.ac.uk/download/528278407.pdf
+Gro18	10.33011/livecoms.1.1.5067	unpaywall+scrape	REJECTED	token overlap 1/8 = 0.12	4019623	https://www.bipm.org/utils/common/documents/jcgm/JCGM_200_2012.pdf
+Gro18	10.33011/livecoms.1.1.5067	unpaywall+scrape	REJECTED	token overlap 1/8 = 0.12	1888806	https://www.bipm.org/utils/common/documents/jcgm/JCGM_100_2008_E.pdf
+Gro18	10.33011/livecoms.1.1.5067	unpaywall+scrape	KEPT	squashed containment	1261399	https://livecomsjournal.org/index.php/livecoms/article/download/v1i1e5067/913
+Arr19	10.3850/38wc092019-1786	doi.org+scrape	REJECTED	token overlap 0/10 = 0.00	179587	https://iahr.oss-accelerate.aliyuncs.com//CommonFiles/20200130_IAHR_Terms_and_Conditions.pdf
