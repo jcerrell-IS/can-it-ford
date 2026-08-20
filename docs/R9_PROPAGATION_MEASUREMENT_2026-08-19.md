@@ -188,3 +188,104 @@ again, tonight, is that a wrong relayed claim got caught in under two hours.
 
 **Unreviewed.** Every child `claude` process on this machine is still dead, so no adversarial
 pass was possible. Self-measured only.
+
+---
+
+# Third measurement, 2026-08-20 02:05. The null became a decline.
+
+The second measurement closed W3 at 23:50 with 22 commits. W3 now holds 85. Same method,
+same regex, same cut points, so all three windows remain comparable.
+
+| window | span | commits | cross-slot ref | proportion |
+|---|---|---|---|---|
+| W1 pre-readout | wave start to 18:52 | 102 | 41 | 0.402 |
+| W2 post-readout | 18:52 to 20:12 | 45 | 22 | 0.489 |
+| W3 deliberate relay | 20:12 to 02:05 | **85** | 26 | **0.306** |
+
+    W1 -> W3   z = -1.36   (was +0.06 when W3 held 22 commits)
+    W2 -> W3   z = -2.06
+
+**Cross-slot referencing did not improve under deliberate relaying. It fell.** W2 to W3 is
+-2.06 sigma, which is a real move by any ordinary reading and still below the 3 sigma bar this
+project uses for a physics claim. The +0.06 I reported at 23:50 was a small-sample artifact of
+a 22-commit window, and I am recording that rather than quietly replacing it: **my own second
+measurement was underpowered and I published it without saying so.**
+
+## The confound I cannot remove, and it reframes what this metric can answer
+
+**A hub lowers spoke-to-spoke traffic by construction.** If the coordinator relays d15's
+statistic to d17 rather than d17 finding it, d17's commit cites the finding and need never
+name d15. The intervention and the metric therefore push in opposite directions: successful
+relaying *reduces* the need for slots to reference each other.
+
+So the honest statement is not "relaying made propagation worse". It is:
+
+> **Slot-to-slot referencing fell during the deliberate-relay era. That is consistent both
+> with relaying failing and with relaying working by centralising, and this measurement
+> cannot separate them.**
+
+What it does rule out is the encouraging reading. Nothing here supports "the coordination
+layer improved", which is the third measurement in a row to reach that conclusion by a
+different route.
+
+## The five refuted relays, verified individually
+
+The coordinator reports five relayed claims that receiving sessions refuted. All five located
+and read:
+
+| # | relayed claim | what the paper said | caught by |
+|---|---|---|---|
+| 1 | Wal07: a fixed body's projection error is a **constant systematic bias** | **Not in the paper.** Its section 2 carries the opposite emphasis | d21 `d826c8a` |
+| 2 | Wal07: the plateau scales as **O(h)** | Real and quoted correctly, but `O(h)` was read off Figure 10 by eye; the paper's own analytic reference is h^2 | d21 `d826c8a` |
+| 3 | Ami15: ~10 percent above analytic **with the boundary treatment named as the cause** | Half holds. **Purely SPH**, its background grid explicitly "non-computational", for neighbour searching only. Failed on three independent scope grounds, any one sufficient | d21 `aa20be2` |
+| 4 | the wall-artefact paper, cited for the P-2 mechanism | "Does not support the claim it was relayed for." The mechanism is real and quoted correctly; three things in the paper stop it applying | d22 `27f0996` |
+| 5 | a Smith Cd range for the paper | This project's page-by-page reading of Smith **records no Cd range at all** | `82640de` |
+
+**The coordinator's directional claim holds: five of five leaned toward the stronger version.**
+But the mechanism is sharper than distortion, and this is the finding:
+
+> **In four of the five, the quotation was accurate and the SCOPE was dropped.**
+
+Nobody exaggerated a number. A claim was carried with its source's confidence and without its
+source's boundary conditions, and the boundary condition is what decided every case. d21
+reached the identical conclusion independently and wrote it before I measured it: "All three
+had the direction right and the specificity wrong."
+
+## The architectural finding: the fix belongs to the receiver, not the sender
+
+The coordinator proposes that the durable fix is d21's `CANDIDATE_PAPER_SCOPE_TEST.md` rather
+than any instruction to itself. **The evidence supports that, and for a reason stronger than
+modesty.**
+
+1. **The sender cannot know which scope dimension will matter.** Ami15 failed on
+   discretisation, on coupling scheme and on regime, any one sufficient. Which one bites
+   depends on what the receiver is doing with it, which the sender does not hold.
+2. **Care did not prevent it.** The coordinator self-corrected within an hour on the first
+   two, tagged Ami15 as relayed, and still went five for five. An instruction to be more
+   careful is an instruction that was already being followed.
+3. **The receiver holds the use case**, so only the receiver can test relevance rather than
+   truth. Every one of the five was true about its paper and wrong about ours.
+
+d21's five questions (discretisation, boundary or coupling scheme, regime, quantity, evidence
+strength) are a receiver-side test, they carry a worked negative example so they are
+falsifiable, and the rule attached to them is the right shape: **pass all five to cite as a
+mechanism; passing some makes it context, not evidence.**
+
+**The one thing I would add.** The test needs a companion on the sender side that is a
+labelling convention, not a discipline: state the remove. "Wal07 says X", "a subagent reading
+Wal07 inferred X" and "X, relayed, unverified" are three different objects, and only the last
+two tell the receiver which of the five questions to run first. The coordinator already did
+this for Ami15 and it worked: d21 knew to read it.
+
+## Three findings closed
+
+- **C-17, skill-drift blindness in the preflight: FIXED.** With a detail worth keeping: the
+  first fix compared `wc -l`, and a three-line file differing only in its middle line compares
+  equal. Replaced with a content hash. **Length is not identity**, which is the same class as
+  reach-versus-cited and lineage-versus-mergeability elsewhere in this round.
+- **C-3, stale register rows: CLOSED**, A2 retracted in place rather than deleted.
+- **C-2, the dead reviewer: CONFIRMED DEAD FOR A SECOND, INDEPENDENT REASON.** The model pin
+  was the first. The account has now hit a **weekly** limit, resetting 2026-08-21 20:00, which
+  killed a fourth review attempt mid-sentence. Two independent causes means fixing the model
+  pin alone would not have restored review. **Nothing in this round has been adversarially
+  reviewed, and nothing can be until 2026-08-21.**
