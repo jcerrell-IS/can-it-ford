@@ -154,9 +154,56 @@ def tags_for(text: str) -> list[str]:
     return out
 
 
+MISSING_REPORTS: list[tuple[str, str]] = []
+
+# Raw connector exports that live under a reader-facing directory but are not
+# prose. See the comment in repo_cited_dois().
+RAW_SEARCH_DUMPS = {"Dynamic_Vehicle_Traction_in_Floodwater.md"}
+
+# Phase 2 of the two-phase ingest in docs/r10/corpus_revision.md section 2.1.
+# `research_index.py` is pure standard library and CANNOT call an MCP connector,
+# so an agent turn pulls the deep searches to disk and the builder reads them
+# here. Written 2026-08-20 from workspace 17299f2a-8dc8-438b-8c84-5abf19395e2c.
+SEARCH_DIR = os.path.join(REPO, "data", "deep_searches")
+
+
+def load_deep_searches() -> list[dict]:
+    """Every completed deep search, whether or not its papers reached the index.
+
+    The index covered 8 of 21 searches for five weeks because REPORTS is a
+    hardcoded list of markdown files under ~/Downloads, so a search entered only
+    if somebody exported it by hand. The 13 that never did include the four this
+    project most needed, among them the search whose GOAL TEXT states this
+    project's own sphere configuration and whose summary already said Kramer is
+    a motion benchmark and not a static-force tolerance.
+    """
+    if not os.path.isdir(SEARCH_DIR):
+        return []
+    out = []
+    for fn in sorted(os.listdir(SEARCH_DIR)):
+        if not fn.endswith(".json") or fn == "MANIFEST.json":
+            continue
+        try:
+            out.append(json.load(open(os.path.join(SEARCH_DIR, fn),
+                                      encoding="utf-8")))
+        except (OSError, ValueError):
+            continue
+    return out
+
+
 def parse_report(slug: str, path: str) -> dict[str, dict]:
-    """Return {key: record}. Catalog rows first, then abstracts merged in."""
+    """Return {key: record}. Catalog rows first, then abstracts merged in.
+
+    A MISSING PATH IS RECORDED, NOT SWALLOWED. This used to `return {}` in
+    silence. Seven of the eight REPORTS paths live under `~/Downloads` and none
+    lives inside the repo, so a macOS privacy denial or a moved file made
+    `--build` write a smaller index, print a smaller per-report count, and exit
+    0. The module docstring's claim that the design survives a `~/Downloads`
+    denial is true of the QUERY path only, never of `--build`. Measured
+    2026-08-20 by docs/r10/corpus_revision.md section 1.4.
+    """
     if not os.path.isfile(path):
+        MISSING_REPORTS.append((slug, path))
         return {}
     raw = open(path, encoding="utf-8", errors="replace").read()
     lines = raw.splitlines()
@@ -340,6 +387,14 @@ def repo_cited_dois() -> tuple[set[str], set[str]]:
     pat = re.compile(r"10\.\d{4,9}/[^\s\"'<>)\]},;]+")
     exts = {".md", ".tex", ".bib", ".txt", ".json", ".py", ".csv", ".tsv",
             ".yaml", ".yml"}
+    # A raw connector dump that happens to sit in docs/ is not prose a reviewer
+    # reads. `docs/Dynamic_Vehicle_Traction_in_Floodwater.md` carries 34 DOI
+    # strings and inflated `cited_reader_facing` from 34 to 43; NINE papers had
+    # that dump as their only reader-facing route. Verified live 2026-08-20:
+    # the file exists and holds exactly 34 distinct DOIs. The honest ladder is
+    # 34 reaching written project prose, 43 counting the dump, 3 printing in
+    # the paper. Add a filename to RAW_SEARCH_DUMPS when another raw export
+    # lands in docs/.
     skip = {".git", "__pycache__", "node_modules", "third_party", ".venv",
             "worktrees", "_archive", "archive", "session_archive"}
     reader_dirs = ("paper", "docs", "deliverables", "citations")
@@ -361,7 +416,7 @@ def repo_cited_dois() -> tuple[set[str], set[str]]:
                 continue
             hits = {m.lower().rstrip(".,;)") for m in pat.findall(txt)}
             anywhere |= hits
-            if top in reader_dirs:
+            if top in reader_dirs and fn not in RAW_SEARCH_DUMPS:
                 reader |= hits
     return anywhere, reader
 
@@ -396,10 +451,16 @@ def build() -> dict:
         r["cited_in_repo"] = bool(r["doi"]) and r["doi"] in cited
         r["cited_reader_facing"] = bool(r["doi"]) and r["doi"] in reader
 
+    searches = load_deep_searches()
     return {
-        "built": "2026-08-15",
+        "built": "2026-08-20",
         "source_reports": {s: p for s, p in REPORTS},
+        "missing_reports": [{"slug": s, "path": p} for s, p in MISSING_REPORTS],
         "papers_per_report": per_report,
+        "deep_searches": searches,
+        "n_deep_searches": len(searches),
+        "n_deep_searches_not_in_reports": sum(
+            1 for s in searches if not s.get("reached_index_before_2026_08_20")),
         "n_papers": len(merged),
         "n_with_abstract": sum(1 for r in merged.values() if r["has_abstract"]),
         "n_cited_in_repo": sum(1 for r in merged.values() if r["cited_in_repo"]),
@@ -453,6 +514,12 @@ def main() -> int:
     ap.add_argument("--docs", action="store_true",
                     help="search research DOCUMENTS (artifacts, Perplexity, "
                          "Elicit) instead of papers")
+    ap.add_argument("--searches", action="store_true",
+                    help="list the deep searches and their goals/summaries; "
+                         "combine with --query to grep them")
+    ap.add_argument("--source-audit", action="store_true",
+                    help="exit 1 if a completed deep search reaches the corpus "
+                         "by no route, or a REPORTS path is missing")
     a = ap.parse_args()
 
     if a.build:
@@ -476,6 +543,54 @@ def main() -> int:
 
     idx = load()
     papers = list(idx["papers"].values())
+
+    if a.source_audit:
+        # A check that goes RED when a completed search reaches the corpus by no
+        # route. The durable fix is not a better hardcoded constant: it is that
+        # a search which nobody exported must FAIL rather than be invisible.
+        searches = idx.get("deep_searches") or load_deep_searches()
+        orphan = [s for s in searches
+                  if not s.get("reached_index_before_2026_08_20")
+                  and not s.get("summary", "").strip()]
+        missing = idx.get("missing_reports", [])
+        print(f"deep searches known      : {len(searches)}")
+        print(f"  reachable via REPORTS  : "
+              f"{sum(1 for s in searches if s.get('reached_index_before_2026_08_20'))}")
+        print(f"  reachable via {os.path.relpath(SEARCH_DIR, REPO)}: "
+              f"{sum(1 for s in searches if not s.get('reached_index_before_2026_08_20'))}")
+        print(f"  reaching the corpus by NO route: {len(orphan)}")
+        for s in orphan:
+            print(f"    ORPHAN  {s['slug']}  {s['name']}")
+        for m in missing:
+            print(f"    MISSING REPORT  {m['slug']}  {m['path']}")
+        if not searches:
+            print("    ORPHAN  no deep-search records on disk at all")
+        bad = len(orphan) + len(missing) + (0 if searches else 1)
+        print(("FAIL" if bad else "OK") + f"  ({bad} problem(s))")
+        return 1 if bad else 0
+
+    if a.searches:
+        searches = idx.get("deep_searches") or load_deep_searches()
+        q = (a.query or "").lower()
+        if q:
+            searches = [s for s in searches
+                        if q in s.get("name", "").lower()
+                        or q in s.get("goal", "").lower()
+                        or q in s.get("summary", "").lower()]
+        print(f"{len(searches)} deep search(es)\n")
+        for s in searches:
+            flag = "" if s.get("reached_index_before_2026_08_20") else \
+                "   [PAPERS NOT IN THE PAPER INDEX]"
+            print(f"  {s['name']}{flag}")
+            print(f"      slug {s['slug']}   {s.get('created','')}   "
+                  f"{s.get('n_relevant_papers') or '?'} relevant papers")
+            if a.verbose and s.get("goal"):
+                print(f"      GOAL{' (truncated)' if s.get('goal_truncated') else ''}: "
+                      f"{s['goal'][:1400]}")
+            if s.get("summary"):
+                print(f"      {s['summary'][:900 if not a.verbose else 100000]}")
+            print()
+        return 0
 
     if a.docs:
         ds = [d for d in idx.get("documents", []) if d["on_topic"]]
@@ -516,9 +631,17 @@ def main() -> int:
         sel = [r for r in sel if a.method.lower()
                in [m.lower() for m in r["methods"]]]
     if a.query:
+        # AUTHORS ARE MATCHED. This predicate used to cover title and abstract
+        # only, so an author query could not return a hit and its zero read as
+        # coverage. On 2026-08-19 one session queried an author name, got zero,
+        # and relayed "none of the six closest prior-art DOIs is in the corpus"
+        # to three sessions, two of which acted on it. All six were present.
+        # A MISS IS NOT AN ABSENCE UNTIL YOU KNOW WHAT THE PREDICATE SEARCHED.
         q = a.query.lower()
         sel = [r for r in sel
-               if q in r["title"].lower() or q in r["abstract"].lower()]
+               if q in r["title"].lower() or q in r["abstract"].lower()
+               or q in r.get("authors", "").lower()
+               or q in r.get("journal", "").lower()]
     if a.doi:
         d = a.doi.lower().strip()
         sel = [r for r in sel if r["doi"] == d or d in r["doi"]]

@@ -129,3 +129,17 @@ render_s2/
 # never travels.
 !data/openchannel_2026-08-18/
 !data/openchannel_2026-08-18/**
+
+# Phase 1 of the two-phase corpus ingest, added 2026-08-20. An agent turn holding
+# the Undermind connector writes the deep-search records here and the plain-shell
+# builder in analysis/research_index.py reads them, because that builder is pure
+# standard library and cannot call an MCP connector. These files are the ONLY
+# route by which 13 of the project's 21 completed deep searches reach the corpus
+# at all, so they must survive a clone and a worktree. That is the whole point:
+# they were invisible for five weeks precisely because nothing tracked them.
+!data/deep_searches/
+!data/deep_searches/**
+
+# The external centre-of-mass falsifier's output. Small, and it is the first
+# gate result in this project that can fail for a reason outside the pipeline.
+!data/cm_floor_check.json
