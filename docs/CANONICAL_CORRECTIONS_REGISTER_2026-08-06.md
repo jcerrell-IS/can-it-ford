@@ -3007,3 +3007,142 @@ carrying higher numbers.** The number records identity, not chronology. In parti
     **CONFOUND CHECKED AND CLEARED, ONE WAY ONLY.** Realized depth is **exactly** invariant, 0.2944294473 m at both grids (3.000 and 4.000 cells), the same value item 5's g48/g64/g96 carry, and `grid_lim` is identical. **But the domain is not scale-invariant**: `wall = 4.0*dx` grows the tank side +2.27 percent, water volume +5.64 percent and fetch +2.61 percent from g96 to g128. Small against the 14-76 percent ratio changes, unbounded, so this is not a pure refinement. Bears on J13. The settle is also fixed-duration (`settle_frames = 8`), not gated, with residual velocity 2.4-2.9x larger at g96; do not call the initial conditions matched.
 
     **J15 STAYS OPEN, scope narrowed.** g192 costs about the same as this did (six runs, 6:15).
+
+---
+
+## ADDENDUM 2026-08-20, FROM THE 13A LITERATURE AUDIT
+
+Written by the session that executed section 13A of `docs/R9_SESSION_HANDOFF_2026-08-20.md`:
+all 21 deep searches opened live, both workflow journals mined, the five unread audit
+documents read. Full working in `docs/R10_JOURNAL_AUDIT_2026-08-20.md` and
+`docs/R10_LITERATURE_IMPLEMENTATION_2026-08-20.md` on `claude/add-ci-checks`. Filed here
+rather than on the integration branch because register rows belong here.
+
+### R1. THIS REGISTER CONTRADICTS ITSELF ON `floor_friction`. T1, OPEN.
+
+**Item 29 (2026-08-18) asserts `floor_friction = 0.55` IS UNSOURCED and that "nothing
+sources it". Items G4a (2026-08-07) and the submitted paper both source it to a
+spring-balance measurement by Azhar et al 2023.** Two rows of the same authority, opposite
+verdicts, eleven days apart. Whichever is right, a reader hitting item 29 first will write
+something the paper contradicts.
+
+This sits on top of a bracket the R10 journal establishes: **AR&R's `mu = 0.30` is a
+safety-factored DESIGN value carrying a documented 40 percent reduction from a physical
+measurement, directly measured stationary flooded road-tyre friction is 0.85 to 1.15, and
+Nihei et al 2025 measured the ROLLING RESISTANCE of an unbraked full-scale vehicle at the
+moment of washaway at 0.0250 and 0.0242**, an order of magnitude below the `mu_s` near 0.30
+every existing criterion assumes. So the physically relevant value spans **0.024 to 1.15**
+depending on whether the vehicle is braked, rolling, or being washed away, and the gated
+runs use 0.55, which is a lab rubber mat. G4b's distinction between 0.30 as convention and
+0.30 as measurement is the right frame; extend it to name the regime as well as the sense.
+
+**Owner: whoever reconciles item 29 against G4a. Do not change any run parameter on this.**
+
+### R2. ITEM 4 LEG (a) HAS THREE COUNTER-ORIGINS, AND LEGS (b) AND (c) ARE UNTOUCHED. T1.
+
+CLAUDE.md item 4 extension (a) states "It is not measured ... **No measured Yaris tensor
+exists anywhere**: SAE 1999-01-1336 ends Nov 1998." Three independent origins now say a
+measured 2010 Toyota Yaris inertia tensor and CG exist:
+
+1. R10 agent `a2bcb1f09`, read-directly.
+2. R10 agent `a25a0c14c`, read-directly, naming the address: **register E1's own document,
+   DOI `10.13021/G8JS5D`**, which this project already cites as its hull provenance.
+3. The `Simulation Ready Vehicle Mesh Assets` deep search, which records the CCSA/NCAC
+   Yaris as carrying measured or calibrated mass and inertial properties and functioning
+   suspension and steering, and the Camry as dismantled part-by-part with model mass and
+   inertia checked against the production vehicle.
+
+**THIS DOES NOT LICENSE WIRING INERTIA.** Item 4's legs (b) and (c) are untouched and are
+independently sufficient: the solver already computes a better tensor from the real hull
+particle cloud, and the documented axes are transposed against the gated scene, where a
+naive write gives Ixx -69.2 percent and Iyy +379.2 percent. Only leg (a) is in question.
+
+Corroborating from a different direction, the `Optical Vehicle Collision Geometry` search:
+inertia errors materially affect 3-D trajectories, and pendulum-based mass-property work
+cautions that **simple estimators are inadequate for accurate dynamics**, which is what
+`box_inertia` is. That strengthens item 4's refusal by a route item 4 does not currently use.
+
+### R3. THE AL-QADAMI DEPTH-VELOCITY THRESHOLD IS AMBIGUOUS BETWEEN TWO OF THEIR OWN PAPERS. T1.
+
+`10.1111/jfr3.12828` (2022) gives critical depth 0.38 m and minimum D x V **0.39 m2/s**.
+`10.3390/su151713262` (2023), same group, gives the **same 0.38 m** and a sliding threshold
+of **0.36 m2/s**. The depth agrees exactly and the depth-velocity figure does not. **Never
+quote an Al-Qadami D x V without naming the paper.** The 2023 paper additionally reports
+drag DECREASING with Froude number and flow velocity, which runs against the intuition
+behind this project's velocity sweep and should be read before that sweep is written up.
+
+Also on Al-Qadami: the `moving vehicle floodwater GPU particle simulation` search records
+that **their available record does not expose their motion algorithm or wheel model**, so
+the 0.38 m cannot be reproduced from the paper.
+
+### R4. `xiong2024` IS THE CLOSEST VALIDATED PRIOR ART AND BIBTEX DROPS IT. T1.
+
+CLAUDE.md records that the shipped bibliography carries exactly one entry that is never
+cited, `xiong2024`, so BibTeX does not print it. Acquired and read by the gapscan slot:
+Xiong, Liang, Zheng, Wang and Tong 2024, *Water Resources Research* 60,
+`10.1029/2023WR036739`, CC BY. It is "a new coupled model for simulation of entrainment,
+transport and deposition of vehicles driven by and interacting with flood hydrodynamics",
+and it is **used to reproduce a real flash flood event that moved over 100 vehicles, with
+results consistent with post-event report and survey**.
+
+So the one entry the paper carries and never cites is a vehicle-flood model validated
+against a real multi-vehicle event. **That is a sourcing decision currently being made by a
+BibTeX default.** Decide it deliberately.
+
+### R5. THE WELL-POSEDNESS CLASSIFICATION OF THIS PROJECT'S OWN DOMAIN. T1.
+
+Zhao, Bolognin, Liang, Rohe and Vardon's in/outflow rule, read from the PDF: "One of the
+BCs must control the kinematics... If neither BCs controls the kinematics, the problem is
+not well-posed." This project applies a per-frame Dirichlet velocity clamp on an upstream
+particle slab inside a domain closed by slip walls. **That is kinematic control at inflow,
+no outflow, and momentum injected every frame into a box mass cannot leave.** It belongs in
+the paper's limitations as a classification, not as a hedge.
+
+Two further facts from the same read. Their method **requires adding and removing material
+points**, and this driver holds particle count fixed at load, so it is not a drop-in. And
+their reference implementation carries **two mitigations this solver lacks**: a mixed Gauss
+algorithm integrating at Gauss points for full elements and material points for partially
+filled ones, and explicit strain and pressure smoothing to mitigate grid-crossing stress
+oscillation.
+
+### R6. A GATE THAT CAN FAIL FOR AN EXTERNAL REASON NOW EXISTS. T1, NEW.
+
+Item 6 of CLAUDE.md's AUGUST 4 AUDIT records that no gate in this project is a physics
+validation. `analysis/cm_floor_check.py` is the first that is not purely self-referential.
+Method from Baumgarten, Couchman and Kamrin `10.1002/nme.7217` equation 73: for a fluid of
+fixed volume above a floor, `z_cm >= z_bottom + (A_tank - A_hull)*depth/(2*A_tank)`. Runs on
+`rollout.npz`, no GPU.
+
+**Result on all 17 canonical runs: 11 violate over the full record, 4 survive the settle
+transient.** The structure matters more than the count:
+
+- **g48 x3 violate at FRAME 0 with ZERO particles below the clamp**, so it is the initial
+  condition and not dynamics. Those are the same three runs item 7 flags for gate P-3.
+  **Two gates now flag the same three, one internal and one external.**
+- g64 baseline sits ON the bound, -0.0002 to +0.0003 m.
+- The sweepV margin is **monotone in velocity**, -0.0035 m at 0.5 m/s to +0.0060 m at
+  3.0 m/s, and the below-clamp fraction rises monotonically with it too, 0.5 to 4.6 percent,
+  matching item 7's independently recorded P-2 rise across the same sweep.
+- The three largest violations, at -0.20 of depth, belong to `m1100`, `m1609` and `m2337`,
+  which are **NOT among the canonical 17**. The check reads membership from
+  `data/all_runs_inventory.csv` so that split cannot be lost.
+
+**A pass is not a validation**, it is a failure to falsify against a bound made conservative
+four ways. And one unexplained observation, recorded not resolved: at g64 about 2300 to 2800
+water particles sit below the `floor` scalar at frame 0, while at g48 and g96 the count is
+zero. Nobody has read the initialisation path to explain a resolution-dependent difference
+of that shape, and it should not be called a defect until somebody does.
+
+### R7. TWO CLAUDE.md RULES AMENDED, RECORDED HERE SO THE REGISTER AGREES WITH THE CONSTITUTION.
+
+- **L-4 is no longer a flat rule.** It said coarse resolution over-predicts peak force so
+  over-threshold NO-FORD verdicts are conservative. Smith and Mack 2014, in WRL 2014/07
+  section 6.3.2, found numerical models at 1 m, 5 m and 10 m grids **UNDER-predicting** peak
+  local velocity around a building, against both a physical model and observed damage. This
+  register's Section I already listed that exact sentence for deletion on sight, so the two
+  documents disagreed. An under-predicted force makes a NO-FORD verdict LESS conservative.
+- **L-8 keeps its decision and loses its reason.** "DualSPHysics ships x86-only static
+  libraries, a hard aarch64 blocker on GH200" is not established: the deep search
+  commissioned to test it returns that the literature neither confirms x86-only status today
+  nor documents an ARM-host CUDA build failure, and Chrono::FSI-SPH builds on Vista aarch64
+  in 94 seconds. Do not switch, and do not restate the premise as fact.
