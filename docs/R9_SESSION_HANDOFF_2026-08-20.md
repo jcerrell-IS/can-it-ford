@@ -519,6 +519,157 @@ scoped their probe and **only one scoped its conclusion.**
 
 ---
 
+# 7A. HOW TO USE THE LITERATURE LAYER, OPERATIONALLY
+
+This section exists because the findings above are useless without the procedure that produced
+them, and because the single most expensive mistake of the round was a session trusting a
+literature answer that arrived without the command that produced it.
+
+## 7A.1 THE FOUR RULES, in the order they will save you
+
+**RULE 1. A ZERO FROM A TOOL IS NOT AN ABSENCE UNTIL YOU KNOW WHAT THE TOOL SEARCHED.**
+`--query` matched title and abstract and NEVER authors. One session queried "Al-Qadami", got
+zero, read it as coverage, and relayed "none of the six closest prior-art DOIs is in the corpus"
+to three sessions, two of which acted on it. **All six are present.** WebSearch separately
+returned zero for a whole evening because its model pin was dead, which reads identically to a
+genuine absence.
+
+**RULE 2. WHEN YOU PASS ON A NEGATIVE RESULT, PASS ON THE COMMAND THAT PRODUCED IT. WHEN YOU
+RECEIVE ONE, ASK WHAT WAS SEARCHED BEFORE YOU ACT.** None of the three receiving sessions could
+have caught the error above, because a relayed conclusion arrives stripped of its predicate.
+This is d14's `de18180` and it is the generalisable fix; "be more careful" is not.
+
+**RULE 3. BEFORE CITING A PAPER AS A MECHANISM, RUN THE SCOPE TEST.**
+`docs/CANDIDATE_PAPER_SCOPE_TEST.md` on `claude/r9-jobb-route`. Five questions: discretisation,
+boundary or coupling scheme, regime, quantity, evidence strength. **Passing all five makes it a
+MECHANISM. Passing some makes it a PRECEDENT. The write-up must say which.** It has now killed
+three candidates the coordinator relayed, including one that matched on every memorable surface
+feature and failed on all three of discretisation, boundary scheme and regime.
+
+**RULE 4. CHECK LOCAL DISK BEFORE ACQUIRING ANYTHING.** Three separate passes called Kramer 2021
+"the most valuable unretrieved item" while it sat at `~/can-it-ford-refs/2026-08-16/` since 16
+August. d15 found 35 comparable long records already on Vista when a claim was thought to need
+new runs. d22's resolver reported a DOI unfindable that was sitting in this project's own
+register. **Three instances in one night of "we do not have it" meaning "we never looked at what
+we own".**
+
+## 7A.2 THE 21 DEEP SEARCHES, NAMED, AND WHICH ARE INVISIBLE
+
+Undermind workspace `17299f2a-8dc8-438b-8c84-5abf19395e2c`. The corpus index reads **8**. The
+other **13 are invisible to every corpus query** and four of them are the ones this project
+most needed.
+
+**INGESTED (8):** Quantitative MPM Wall Penetration; Trustworthy AI Assisted Scientific
+Simulation; Moving Rigid Body Free Surface Validation; Validated MPM Vehicle Water Coupling;
+Settling and Force Reporting in Free Surface Flow; MPM Simulation Verification Provenance;
+Multi-resolution MPM for Large-domain Flooding; Reliable AI Scientific Software.
+
+**NOT INGESTED (13), with what is in them:**
+
+| search | why it matters |
+|---|---|
+| **MPM SPH buoyancy force overestimation and hydrostatic validation benchmarks** | Its GOAL TEXT contains this project's exact configuration: the fixed half-submerged 0.15 m sphere, the accumulated-impulse-over-dt accessor, the leak fix from 4.5 to 0.008 percent leaving 36 percent error, the quadrupled tank moving the ratio 1 percent. Its summary already said the bias is more plausibly a discrete coupling error than a tank effect, and that Kramer is a MOTION benchmark not a static-force tolerance. **The project spent the round rediscovering both.** |
+| **free surface elevation estimator error in particle method buoyancy validation** | Run 2026-08-19 17:44, 88 papers. **It prescribed the exact controls two sessions then invented independently**, including "a body-off hydrostatic run provides the estimator bias independently of body loading". |
+| **which realism effects change a flood vehicle stability verdict** | Ranks what changes a VERDICT: bed friction, slope and orientation, watertightness. And what does NOT: air entrainment, spray, surface tension, turbulence closure, reduced sound speed, outlet boundary choice. **States plainly that no study quantifies a crowned road against a flat plane**, which is why d17's crown result is a contribution. |
+| **Simulation Ready Vehicle Mesh Assets** | The CCSA/NCAC documented set is **Yaris, Camry, Silverado**, not Rogue. No redistributable OBJ/PLY/glTF/USD conversion verified in that result set. DrivAerML is CC-BY-SA but parameter-morphed generic; 3DRealCar is scans with real dimensions and no mass. |
+| **Dynamic Vehicle Traction in Floodwater** | Tire-scale flooded pavement work supplies a **depth- and speed-dependent tire-force law**, not a fixed coefficient. `floor_friction = 0.55` is a fixed coefficient. |
+| moving vehicle floodwater simulation open source implementations | prior-art and code |
+| moving vehicle floodwater GPU particle simulation | prior-art |
+| how computational researchers audit and defend simulation credibility | the credibility framing |
+| GPU particle solver portability scaling and surrogate fidelity | portability |
+| Small Data Physics Surrogates at 36 Conditions | surrogate design |
+| Physics Simulation Validation Protocol | validation design |
+| Quantitative Flood Traversability Connections | hazard framing |
+| Optical Vehicle Collision Geometry | geometry |
+
+**HOW TO REACH THEM.** Not through the index. Load the connector and inspect the workspace:
+
+```
+ToolSearch "select:mcp__undermind__get_orientation,mcp__undermind__list_workspaces,mcp__undermind__inspect_deep_searches,mcp__undermind__read_pdfs"
+inspect_deep_searches(workspace_id="17299f2a-8dc8-438b-8c84-5abf19395e2c", names=[])
+```
+
+**READ THE GOAL TEXT, not just the summary.** The goal text of a commissioned search often
+contains the project's own configuration and constraints, and it is the fastest way to tell
+whether a search already answers the question you are about to spend GPU on.
+
+## 7A.3 THE CLAUDE ARTIFACTS, and what is stale in them
+
+Reachable with `Artifact` `action: "list"`, readable with `WebFetch` on the artifact URL.
+
+| artifact | status |
+|---|---|
+| **Console Against Can It Ford** (2026-08-17) | **Its headline finding is now FALSE.** It concluded ZERO Anthropic rate or usage limits across 28 days and 72,126 turns, and therefore no headroom problem to solve. Tonight hit BOTH a monthly spend limit and a weekly limit. **Mark it superseded.** Still correct and valuable: Console cannot see sessions or chats; the Admin, Usage-and-Cost and Claude Code Analytics APIs are CLOSED to individual accounts; **never export `ANTHROPIC_API_KEY`**, because it silently converts every session from subscription to metered billing, with a documented case of 1,122.83 dollars accrued; and the measured usage profile, 71.7 percent of tool calls are Bash, 11:1 tool round-trips per typed message. |
+| The Unbuilt Register (2026-08-17) | unread this session; check before relying on it |
+| RECONCILIATION_AND_DISPATCH (2026-08-14) | superseded by tonight's dispatch record |
+| RESEARCH_BRIEFS_REALISTIC_ENV (2026-08-14) | the realism brief that preceded the render work |
+| The Round That Refuted Itself (2026-08-19) | tonight's fleet board, published |
+| R9_Cross_Session_Readout.md (2026-08-19) | the 773-line readout, published for reading |
+
+## 7A.4 WHAT THE R10 CRITIC SAID ABOUT R10, and it applies to any future audit
+
+The R10 report has a built-in adversarial critic and it is harder on the report than any reader
+would be. Its four findings, all of which generalise:
+
+1. **The report NAMED its two highest-value unread items and SCHEDULED NEITHER.** Section 5
+   contained no retrieval task of any kind.
+2. **It proposed an untested retrieval route.** "Energies is open access so it should be
+   downloadable from MDPI" returns **HTTP 403**. The critic tested it. *And the critic then
+   proposed two more untested routes, both of which 404 when I tried them, while the paper was
+   on local disk all along.* Untested advice is the recurring failure, not any one route.
+3. **Coverage was inflated by roughly 23 works cited exactly once, in the coverage list itself.**
+   If a report says N papers were read, count how many are cited in its conclusions.
+4. **Seven source classes were searched by nobody:** patents, standards (ISO, SAE J-series,
+   MIL-STD-810 wading), OEM wading specifications, theses, incident and fatality data, dashcam
+   evidence, benchmark code suites. The self-refuting form: the report builds its recommended
+   reframing on an AR&R sentence recommending an analytical model **"using manufacturer
+   specifications"**, a class it never searched. One query later found four Land Rover wading
+   patents and a published 500 to 900 mm per-model wading capability.
+
+## 7A.5 THE ACQUISITION LAYER, and its measured error rate
+
+d22-gapscan's numbers, which condition every claim sourced from a scraped PDF tonight:
+
+- Want list **261 distinct works**: 230 from the deep searches plus **31 from the bibliography
+  and register that appear in NO search at all**.
+- **68 reachable, 162 not.** Barriers counted: 105 closed with no OA location, 49 that never
+  resolved to a DOI (**since reduced to 23** by using four resolver routes instead of one), and
+  **57 that ARE open access but whose publisher host refuses a plain client**, concentrated in
+  ScienceDirect, MDPI, Wiley and Springer. That last group is the recoverable one: scraping the
+  landing page for `citation_pdf_url` and re-requesting with a Referer got **8 of 24**.
+- **TWO WRONG FILES IN THIRTEEN SCRAPED, a 15 percent error rate**, one of them a website Terms
+  and Conditions page. Found only by building a tool that reads the file rather than trusting
+  its name.
+
+**The tools that fix it, and both are in `.claude/worktrees/r9-gapscan/`:**
+
+- **`docs/r10/pdftext.swift`** extracts PDF text via PDFKit, handling subset-font CMaps that
+  defeat a stdlib zlib extractor. **This Mac has no pdftotext, no numpy and no PyObjC**, and that
+  gap silently shaped the entire night: papers were read as rendered page images twenty at a
+  time, which is a large part of why so little full text got read and so much got relayed.
+- **`fetch_verified.py`** writes each candidate to a temp path, extracts its text, matches the
+  wanted title, and **keeps it ONLY if it matches**. An unverifiable candidate is DELETED, not
+  renamed and kept, because a quarantined file with a scary name is still a file something will
+  eventually glob.
+- **Four resolver routes, not one:** OpenAlex `title.search`, Semantic Scholar (which indexes
+  preprints Crossref does not), Crossref with token overlap rather than prefix containment, and
+  **this project's own register DOI list**.
+
+## 7A.6 THE DECISION PROCEDURE, condensed
+
+Before asserting novelty, before citing a mechanism, before spending GPU on a question:
+
+1. **Query by DOI, never only by author.** The predicate cannot see authors on most trees.
+2. **If the index returns nothing, inspect the 13 unindexed searches before concluding absence.**
+3. **Read the GOAL TEXT of any relevant search.** It may already contain your configuration.
+4. **Run the scope test before calling anything a mechanism.** Say MECHANISM or PRECEDENT.
+5. **Check `~/can-it-ford-refs/`, `~/Zotero/storage/` and the Desktop corpus directory before
+   acquiring.**
+6. **Verify any scraped PDF against its own text.** The prior is 15 percent wrong.
+7. **State which view you searched.** An absence from a partial view is not an absence.
+
+---
+
 # 8. VISTA AND THE ALLOCATION
 
 **The allocation was never the constraint.** 593 SU remain, expiring 2026-09-30, and tonight's
