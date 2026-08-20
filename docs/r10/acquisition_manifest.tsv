@@ -1,0 +1,72 @@
+cite_key	doi	oa_status	license	http	content_type	bytes	is_pdf	file	source_url
+Kra21b	10.3390/en14020269	gold	cc-by	403	text/html	413	NO	NONE	https://www.mdpi.com/1996-1073/14/2/269/pdf?version=1610523833
+Gar19	10.1109/oceanse.2019.8867480	green	other-oa	000		0	NO	NONE	Towards real-time simulation of physically realistic pressure applied to submerged bodies 
+Zha17c	10.1016/j.jcp.2016.10.064	green	cc-by-nc-nd	000		0	NO	NONE	Incompressible material point method for free surface flow
+Fou19	10.1016/j.compfluid.2019.06.009	hybrid	cc-by	403	text/html; charset=UTF-8	1207796	NO	NONE	https://www.sciencedirect.com/science/article/pii/S0045793019301859/pdf
+Tao21b	10.3390/jmse9040416	gold	cc-by	403	text/html	412	NO	NONE	https://www.mdpi.com/2077-1312/9/4/416/pdf?version=1618314227
+Li23f	10.3390/jmse11010215	gold	cc-by	403	text/html	413	NO	NONE	https://www.mdpi.com/2077-1312/11/1/215/pdf?version=1673610348
+Bau23	10.1002/nme.7217	hybrid	cc-by	000		0	NO	NONE	Analysis and mitigation of spatial integration errors for the material point method
+Ski13	10.1016/j.cma.2013.05.017	hybrid	cc-by	403	text/html; charset=UTF-8	1207796	NO	NONE	https://www.sciencedirect.com/science/article/pii/S0045782513001448/pdf
+Yan17	10.1016/j.proeng.2017.01.047	diamond	cc-by-nc-nd	403	text/html; charset=UTF-8	1207796	NO	NONE	https://www.sciencedirect.com/science/article/pii/S1877705817300474/pdf
+Zhe17	10.1016/j.ijnaoe.2017.08.001	gold	cc-by-nc-nd	403	text/html; charset=UTF-8	1207796	NO	NONE	https://www.sciencedirect.com/science/article/pii/S2092678217300821/pdf
+Jou20	10.1016/j.apm.2019.09.030	bronze	https://www.sciencedirect.com/science/article/am/pii/S0307904X19305608?via%3Dihub	000		0	NO	NONE	3D gradient corrected SPH for fully resolved particle–fluid interactions
+Dav24	10.20944/preprints202409.0095.v1	green	cc-by	000		0	NO	NONE	Exploiting Axisymmetry to Optimize CFD Simulations -Heave Motion and Wave Radiation of a S
+Mon09	10.1016/j.cpc.2009.05.008	green	cc-by	000		0	NO	NONE	SPH particle boundary forces for arbitrary boundaries
+Zha19e	10.1016/j.compfluid.2018.10.007	bronze	https://www.sciencedirect.com/science/article/pii/S004579301830728X	000		0	NO	NONE	Development of in/outflow boundary conditions for MPM simulation of uniform and non-unifor
+Cha24c	10.1016/j.jcp.2024.113457	hybrid	cc-by	000		0	NO	NONE	Mixed material point method formulation, stabilization, and validation for a unified analy
+Vau20	10.1016/bs.aams.2019.11.001	green	cc-by	000		0	NO	NONE	Material point method after 25 years: Theory, implementation, and applications
+Zha17	10.1016/j.proeng.2017.01.041	diamond	cc-by-nc-nd	403	text/html; charset=UTF-8	1207796	NO	NONE	https://www.sciencedirect.com/science/article/pii/S1877705817300413/pdf
+Jen21	10.1007/s00348-021-03151-5	hybrid	cc-by	200	text/html; charset=utf-8	3038	NO	NONE	https://link.springer.com/content/pdf/10.1007/s00348-021-03151-5.pdf
+Tho07	10.1080/14484846.2007.11464528	green	cc-by	000		0	NO	NONE	Water stilling for towing tank seakeeping experiments
+Gro18	10.33011/livecoms.1.1.5067	diamond	cc-by	000		0	NO	NONE	Best Practices for Quantification of Uncertainty and Sampling Quality in Molecular Simulat
+Doc08	10.5957/jsr.2008.52.4.263	green	https://strathprints.strath.ac.uk/13659/6/Jrnl_Ship_Research_Unsteady_Effects_during_Resistance_Tests_on_a_ship.pdf	000		0	NO	NONE	Unsteady Effects During Resistance Tests on a Ship Model in a Towing Tank
+Ber21d	10.1115/1.4052402	bronze	https://asmedigitalcollection.asme.org/turbomachinery/article-pdf/144/3/031005/6764616/turbo_144_3_031005.pdf	000		0	NO	NONE	Statistical Error Estimation Methods for Engineering-Relevant Quantities From Scale-Resolv
+Sik24	10.3390/app14020639	gold	cc-by	403	text/html	413	NO	NONE	https://www.mdpi.com/2076-3417/14/2/639/pdf?version=1704982818
+Sha20	10.1111/jfr3.12657	gold	cc-by	403	text/html; charset=UTF-8	5638	NO	NONE	https://onlinelibrary.wiley.com/doi/pdfdirect/10.1111/jfr3.12657
+Mar17	10.1080/1573062x.2017.1301501	green	other-oa	000		0	NO	NONE	A new experiments-based methodology to define the stability threshold for any vehicle expo
+Kra16	10.1016/j.ijdrr.2016.04.003	green	cc-by-nc-nd	000		0	NO	NONE	Safety criteria for the trafficability of inundated roads in urban floodings
+Alq22	10.1111/jfr3.12828	gold	cc-by	403	text/html; charset=UTF-8	5638	NO	NONE	https://onlinelibrary.wiley.com/doi/pdfdirect/10.1111/jfr3.12828
+Mor14	10.4028/www.scientific.net/amm.592-594.1210	hybrid	cc-by	000		0	NO	NONE	Stability and Drag Analysis of Wheeled Amphibious Vehicle Using CFD and Model Testing Tech
+Hu23	10.1016/j.jhydrol.2023.129525	hybrid	cc-by-nc-nd	000		0	NO	NONE	Experimental testing to determine stability thresholds for partially submerged vehicles at
+Sha19d	10.1016/j.rineng.2019.100032	gold	cc-by-nc-nd	403	text/html; charset=UTF-8	1207856	NO	NONE	https://www.sciencedirect.com/science/article/pii/S2590123019300325?via%3Dihub
+Ran20b	10.17736/ijope.2020.jc774	green	other-oa	404	text/html;charset=utf-8	6748	NO	NONE	http://hdl.handle.net/10026.1/15422
+Bha19	10.1016/j.apor.2019.101932	green	https://arxiv.org/pdf/1904.04078	000		0	NO	NONE	Simulating water-entry/exit problems using Eulerian–Lagrangian and fully-Eulerian fictitio
+Sha18c	10.1051/matecconf/201820307003	diamond	cc-by	403	text/html;charset=utf-8	784	NO	NONE	https://www.matec-conferences.org/articles/matecconf/pdf/2018/62/matecconf_iccoee2018_07003.pdf
+Cre15	10.1016/j.cpc.2014.10.004	green	cc-by-nc-nd	200	application/pdf	930415	YES	Cre15_10.1016_j.cpc.2014.10.004.pdf	https://www.investigo.biblioteca.uvigo.es/xmlui/bitstream/11093/6338/5/2015_crespo_dualsphysics.pdf
+Sha21	10.31436/iiumej.v22i1.1502	gold	cc-by	200	application/pdf	2114736	YES	Sha21_10.31436_iiumej.v22i1.1502.pdf	https://journals.iium.edu.my/ejournal/index.php/iiumej/article/download/1502/786
+Che25l	10.1016/j.apor.2025.104824	gold	cc-by	000		0	NO	NONE	A new CFD-MBD wave-structure interaction model: Coupling OpenFOAM with Chrono
+Azh23	10.1111/jfr3.12885	gold	cc-by-nc-nd	000		0	NO	NONE	Confirmation of vehicle stability criteria through a combination of smoothed particle hydr
+Kaz16	10.1002/fld.4248	hybrid	cc-by	403	text/html; charset=UTF-8	5632	NO	NONE	https://onlinelibrary.wiley.com/doi/pdfdirect/10.1002/fld.4248
+Neg19	10.1016/j.cma.2020.113119	green	https://arxiv.org/pdf/1907.04034	000		0	NO	NONE	An improved non-reflecting outlet boundary condition for weakly-compressible SPH
+Alq23	10.3390/su151713262	gold	cc-by	403	text/html	416	NO	NONE	https://www.mdpi.com/2071-1050/15/17/13262/pdf?version=1693827619
+Las09	10.1002/fld.1971	green	https://researchrepository.universityofgalway.ie/bitstreams/7e06b007-c44d-40d9-a0d4-537ff381dd6f/download	000		0	NO	NONE	Permeable and non‐reflecting boundary conditions in SPH
+Shi19d	10.1155/2019/1573049	hybrid	cc-by	403	text/html; charset=UTF-8	5840	NO	NONE	https://downloads.hindawi.com/journals/mpe/2019/1573049.pdf
+Liu23e	10.1063/5.0174148	bronze	https://pubs.aip.org/aip/pof/article-pdf/doi/10.1063/5.0174148/18224231/113328_1_5.0174148.pdf	000		0	NO	NONE	Research on launching, water exiting, and river crossing of an amphibious vehicle
+Beh20	10.1016/j.oceaneng.2020.107460	bronze	https://www.sciencedirect.com/science/article/am/pii/S0029801820304790?via%3Dihub	000		0	NO	NONE	Experimental and computational study of operation of an amphibious craft in calm water
+Xio24	10.1029/2023wr036739	gold	cc-by	403	text/html; charset=UTF-8	5644	NO	NONE	https://onlinelibrary.wiley.com/doi/pdfdirect/10.1029/2023WR036739
+Azh26	10.1111/jfr3.70181	gold	cc-by-nc-nd	000		0	NO	NONE	Assessment of Vehicle Stability Processes Under Unsteady Flow Conditions
+Pre17	10.1016/j.trd.2017.06.020	hybrid	cc-by	403	text/html; charset=UTF-8	1207796	NO	NONE	https://www.sciencedirect.com/science/article/pii/S1361920916308367/pdf
+He24	10.5194/egusphere-egu24-6148	gold	cc-by	000		0	NO	NONE	Functionality assessment of road network combining flood roadworthiness and graph topology
+Arr19b	10.1016/j.scitotenv.2018.11.191	hybrid	cc-by	200	image/jpeg	374581	NO	NONE	https://ars.els-cdn.com/content/image/1-s2.0-S0048969718345388-ga1_lrg.jpg
+Eva23	10.1016/j.scitotenv.2023.168237	hybrid	cc-by	200	image/jpeg	400121	NO	NONE	https://ars.els-cdn.com/content/image/1-s2.0-S004896972306864X-ga1_lrg.jpg
+Das25	10.1111/jfr3.70154	gold	cc-by	403	text/html; charset=UTF-8	5638	NO	NONE	https://onlinelibrary.wiley.com/doi/pdfdirect/10.1111/jfr3.70154
+Boc21	10.1111/jfr3.12737	gold	cc-by	403	text/html; charset=UTF-8	5638	NO	NONE	https://onlinelibrary.wiley.com/doi/pdfdirect/10.1111/jfr3.12737
+Con18	10.1155/2018/2850546	gold	cc-by	403	text/html; charset=UTF-8	5861	NO	NONE	http://downloads.hindawi.com/journals/jat/2018/2850546.pdf
+Lam18	10.1016/j.ress.2018.01.015	green	cc-by-nc-nd	200	application/pdf	2147101	YES	Lam18_10.1016_j.ress.2018.01.015.pdf	https://discovery.ucl.ac.uk/10064090/1/Postprint%20-%20Stress%20tests%20for%20a%20road%20network%20using%20fragility%20functions%20and%20functional%20capacity%20loss%20functions.pdf
+Pre17b	10.1061/(asce)is.1943-555x.0000372	hybrid	cc-by	403	text/html; charset=UTF-8	5693	NO	NONE	https://ascelibrary.org/doi/pdf/10.1061/%28ASCE%29IS.1943-555X.0000372
+Arr19	10.3850/38wc092019-1786	green	cc-by-nc-nd	403	text/html; charset=UTF-8	5680	NO	NONE	https://flore.unifi.it/bitstream/2158/1181254/1/322.pdf
+Pre24	10.3390/wevj15060266	gold	cc-by	000		0	NO	NONE	Mass, Centre of Gravity Location and Inertia Tensor of Electric Vehicles: Measured Data fo
+Far25b	10.1109/access.2025.3567868	gold	cc-by	000		0	NO	NONE	The Accuracy of 3D Mesh Generation of Neuralangelo Versus Photogrammetry and LiDAR Technol
+Wei22	10.1145/3528223.3530103	hybrid	cc-by	403	text/html; charset=UTF-8	5579	NO	NONE	https://dl.acm.org/doi/pdf/10.1145/3528223.3530103
+Mad21	10.1145/3528223.3530093	green	https://arxiv.org/pdf/2108.10480	000		0	NO	NONE	Fast evaluation of smooth distance constraints on co-dimensional geometry
+Dom21	10.1007/s40571-021-00404-2	green	other-oa	200	application/pdf	2150165	YES	Dom21_10.1007_s40571-021-00404-2.pdf	https://arxiv.org/pdf/2104.00537
+Nas25b	10.1093/rasti/rzag008	diamond	cc-by	200	application/pdf	1816694	YES	Nas25b_10.1093_rasti_rzag008.pdf	https://arxiv.org/pdf/2505.14538
+Val12	10.1016/j.jpdc.2012.07.010	bronze	https://www.sciencedirect.com/science/article/pii/S0743731512001712	000		0	NO	NONE	Towards accelerating smoothed particle hydrodynamics simulations for free-surface flows on
+Qiu22	10.1145/3570160	bronze	https://dl.acm.org/doi/pdf/10.1145/3570160	000		0	NO	NONE	A Sparse Distributed Gigascale Resolution Material Point Method
+Naf24	10.3390/computation12100207	gold	cc-by	403	text/html	414	NO	NONE	https://www.mdpi.com/2079-3197/12/10/207/pdf?version=1729044403
+Obe04	10.2172/918370	gold	https://www.osti.gov/servlets/purl/918370	000		0	NO	NONE	Verification, validation, and predictive capability in computational engineering and physi
+Cel07	10.1115/1.2960953	bronze	https://asmedigitalcollection.asme.org/fluidsengineering/article-pdf/130/7/078001/5491455/078001_1.pdf	000		0	NO	NONE	Procedure for Estimation and Reporting of Uncertainty Due to Discretization in CFD Applica
+Mol19	10.1016/j.ijdrr.2018.10.022	green	other-oa	000		0	NO	NONE	Validation of flood risk models: Current practice and possible improvements
+Obe02b	10.2172/793406	gold	https://www.osti.gov/servlets/purl/793406	000		0	NO	NONE	Verification and Validation in Computational Fluid Dynamics
+Rie20	10.1007/s11831-020-09473-7	hybrid	cc-by	200	text/html; charset=utf-8	3038	NO	NONE	https://link.springer.com/content/pdf/10.1007/s11831-020-09473-7.pdf
+Bha26	10.21203/rs.3.rs-9889935/v1	green	cc-by	200	application/pdf	5261124	YES	Bha26_10.21203_rs.3.rs-9889935_v1.pdf	https://www.researchsquare.com/article/rs-9889935/latest.pdf
