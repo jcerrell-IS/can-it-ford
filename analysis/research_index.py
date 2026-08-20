@@ -549,9 +549,20 @@ def main() -> int:
         # route. The durable fix is not a better hardcoded constant: it is that
         # a search which nobody exported must FAIL rather than be invisible.
         searches = idx.get("deep_searches") or load_deep_searches()
+        # ORPHAN IS NOT THE ONLY FAILURE, AND THE FIRST VERSION OF THIS CHECK
+        # PROVED IT. Shipped 2026-08-20 02:57, it tested only that a record
+        # existed with a non-empty summary. Eight records carried a PLACEHOLDER
+        # summary and an EMPTY goal, so `--searches --query` could grep 13 of 21
+        # while this reported OK. That is the same false pass the tool was built
+        # to stop, reproduced inside it within six hours. Caught by an
+        # adversarial verifier, not by me.
+        PLACEHOLDER = "Already reachable through the markdown export"
         orphan = [s for s in searches
                   if not s.get("reached_index_before_2026_08_20")
-                  and not s.get("summary", "").strip()]
+                  and not (s.get("summary") or "").strip()]
+        hollow = [s for s in searches
+                  if PLACEHOLDER in (s.get("summary") or "")
+                  or not (s.get("goal") or "").strip()]
         missing = idx.get("missing_reports", [])
         print(f"deep searches known      : {len(searches)}")
         print(f"  reachable via REPORTS  : "
@@ -559,13 +570,17 @@ def main() -> int:
         print(f"  reachable via {os.path.relpath(SEARCH_DIR, REPO)}: "
               f"{sum(1 for s in searches if not s.get('reached_index_before_2026_08_20'))}")
         print(f"  reaching the corpus by NO route: {len(orphan)}")
+        print(f"  present but NOT GREPPABLE (hollow): {len(hollow)}"
+              f"   <- --searches --query cannot match these")
         for s in orphan:
             print(f"    ORPHAN  {s['slug']}  {s['name']}")
+        for s in hollow:
+            print(f"    HOLLOW  {s['slug']}  {s['name']}")
         for m in missing:
             print(f"    MISSING REPORT  {m['slug']}  {m['path']}")
         if not searches:
             print("    ORPHAN  no deep-search records on disk at all")
-        bad = len(orphan) + len(missing) + (0 if searches else 1)
+        bad = len(orphan) + len(hollow) + len(missing) + (0 if searches else 1)
         print(("FAIL" if bad else "OK") + f"  ({bad} problem(s))")
         return 1 if bad else 0
 
@@ -573,10 +588,19 @@ def main() -> int:
         searches = idx.get("deep_searches") or load_deep_searches()
         q = (a.query or "").lower()
         if q:
-            searches = [s for s in searches
+            # STATE THE DENOMINATOR. A query that greps N of M records must say
+            # so, or a zero reads as absence when it is only non-coverage.
+            total = len(searches)
+            greppable = [s for s in searches
+                         if (s.get("goal") or "").strip()
+                         or (s.get("summary") or "").strip()]
+            searches = [s for s in greppable
                         if q in s.get("name", "").lower()
                         or q in s.get("goal", "").lower()
                         or q in s.get("summary", "").lower()]
+            print(f"searched {len(greppable)} of {total} records for {a.query!r}"
+                  + ("" if len(greppable) == total else
+                     "   <- NOT ALL RECORDS ARE SEARCHABLE, run --source-audit"))
         print(f"{len(searches)} deep search(es)\n")
         for s in searches:
             flag = "" if s.get("reached_index_before_2026_08_20") else \
