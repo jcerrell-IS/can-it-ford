@@ -49,6 +49,7 @@ import csv
 import hashlib
 import json
 import os
+import subprocess
 import sys
 
 # ---------------------------------------------------------------------------
@@ -532,6 +533,8 @@ def main() -> int:
     ap.add_argument("--repo-id", default="josiecerrell/can-it-ford")
     ap.add_argument("--speed-surface", action="store_true",
                     help="build the (v_car x v_water) load-surface dataset instead")
+    ap.add_argument("--results-archive", action="store_true",
+                    help="build the complete organised results archive instead")
     args = ap.parse_args()
 
     if args.self_test:
@@ -539,6 +542,17 @@ def main() -> int:
 
     if not args.out:
         ap.error("--out is required unless --self-test")
+
+    if args.results_archive:
+        m = build_results_archive(args.repo, args.out)
+        total = sum(f["bytes"] for f in m["files"])
+        print(f"wrote {len(m['files'])} files, {total/1048576:.2f} MB to {args.out}")
+        commits = sorted({f.get("source_commit", m["source_commit"]) for f in m["files"]})
+        print(f"  provenance commits: {', '.join(c[:12] for c in commits)}")
+        for s in m["sections"]:
+            mark = "" if "source_commit" not in s else f"  [{s['source_commit'][:8]}]"
+            print(f"  {s['folder']:32s} {s['n_files']:4d} files  {s['title']}{mark}")
+        return 0
 
     if args.speed_surface:
         stats = build_speed_surface_dataset(args.repo, args.out)
@@ -924,6 +938,314 @@ def build_speed_surface_dataset(repo: str, out_dir: str) -> dict:
     assert_publishable(written)
     stats["files"] = written
     return stats
+
+
+
+
+# ===========================================================================
+# RESULTS ARCHIVE. Everything committed and re-derivable, organised.
+#
+# Added 2026-08-20 at Josie's request: "fill it with absolutely everything and
+# organize it". "Everything" is bounded by three rules that are enforced in code
+# below rather than promised in prose:
+#
+#   1. Every file is read from a COMMIT (origin/main), never a working tree, so
+#      each one carries a provenance SHA a reader can re-resolve.
+#   2. assert_publishable() runs over every path. No image, texture, HDRI, mesh
+#      or binary leaves this script while asset licence provenance is open.
+#   3. Nothing goes in that cannot be re-derived. Results that live only on
+#      Vista's /work are NOT here, and their absence is stated in the card
+#      rather than leaving a silent gap.
+# ===========================================================================
+
+RESULTS_SOURCE_COMMIT = "c7f0a16ace0bf2f34b51f98bffde0c6bda33c00f"
+
+# folder -> (title, scope, [repo paths at RESULTS_SOURCE_COMMIT])
+ARCHIVE_LAYOUT = [
+    ("01_canonical_17_runs", "The 17 gated warpmpm runs",
+     "Stationary Yaris hull, free rigid body. The runs every published verdict rests on.",
+     ["data/all_runs_inventory.csv",
+      "data/failure_modes_by_run_classified.csv",
+      "data/failure_modes_by_run.json",
+      "data/four_rung_ladder.csv"]),
+
+    ("02_l1_scenario_sweep", "L1 AR&R stationary-vehicle sweep",
+     "Analytic joint-rule verdicts over a depth x velocity grid. No simulation involved.",
+     ["data/scenario_sweep.csv",
+      "data/phase_space_results.csv"]),
+
+    ("03_multivehicle_grid_sweep", "Rogue and Silverado across three grids",
+     "Cross-vehicle sweep. Fixed n_grid is NOT fixed resolution; see this folder's card.",
+     ["data/rogue_silverado_grid_sweep_2026-08-13.csv",
+      "data/rogue_silverado_slide_classification_2026-08-13.csv",
+      "data/rogue_silverado_sweep_2026-08-13/00_provenance.txt",
+      "data/rogue_silverado_sweep_2026-08-13/build_rs_csv.py",
+      "data/rogue_silverado_sweep_2026-08-13/run_rs_sweep.sh",
+      "data/rogue_silverado_sweep_2026-08-13/summary_rs_rogue_g64.json",
+      "data/rogue_silverado_sweep_2026-08-13/summary_rs_rogue_g96.json",
+      "data/rogue_silverado_sweep_2026-08-13/summary_rs_rogue_g128.json",
+      "data/rogue_silverado_sweep_2026-08-13/summary_rs_silverado_g64.json",
+      "data/rogue_silverado_sweep_2026-08-13/summary_rs_silverado_g96.json",
+      "data/rogue_silverado_sweep_2026-08-13/summary_rs_silverado_g128.json"]),
+
+    ("04_threshold_fragility", "How far the verdicts depend on their thresholds",
+     "The verdict counts are threshold-dependent. This folder is the evidence for that.",
+     ["data/slide_verdict_fragility_2026-08-13.csv",
+      "data/mu_sweep_results.csv"]),
+
+    ("05_depth_velocity_metrics", "Per-run metrics at fixed velocity",
+     "Time-resolved metrics for individual depth settings at v = 1.5 m/s.",
+     ["data/metrics_d0p15_v1p5.csv",
+      "data/metrics_d0p22_v1p5.csv",
+      "data/metrics_d0p30_v1p5_check.csv",
+      "data/metrics_d0p38_v1p5.csv",
+      "data/metrics_d0p45_v1p5.csv",
+      "data/flood_vehicle_metrics_default.csv",
+      "data/flood_vehicle_metrics_d0p3_v1p5.csv"]),
+
+    ("06_class_specific", "Class-specific runs",
+     "Per vehicle class. Geometry, not mass alone, governs the stability thresholds.",
+     ["data/class_specific_runs_2026-08-08.csv"]),
+
+    ("07_l2_export", "L2 results exported from Weights and Biases",
+     "A historical export. W&B holds 106 runs and only one is from the r9 wave.",
+     ["data/l2_results_from_wandb.csv"]),
+
+    ("99_provenance", "Licence and citation metadata",
+     "Read this before citing anything in this archive.",
+     ["CITATION.cff", "LICENSE"]),
+]
+
+# Quarantined. Present because deleting evidence is worse than labelling it.
+SUPERSEDED_DIRS = ["data/track1_sweep_v1/", "data/track1_sweep_v2/"]
+
+# The moving-vehicle load surface is NOT on origin/main yet: it lives on the
+# r9-platform branch. It is included because an archive called "everything" that
+# omits the project's headline result is mislabelled, but it carries its OWN
+# provenance commit so a reader is never told it came from origin/main.
+EXTRA_SOURCES = [
+    ("08_speed_surface_moving_vehicle",
+     "Moving-vehicle load surface, v_car x v_water",
+     "PRESCRIBED body, so NO ford verdict follows. Separate experiment, separate commit.",
+     "f07b17463020a03fe47f34e80ea18f2ac2e558a7",
+     ["hf_space/data/load_surface.csv",
+      "hf_space/data/load_surface_manifest.json"]),
+]
+
+
+def _git_show(repo: str, commit: str, path: str) -> bytes:
+    """Read a file AT A COMMIT. Never from the working tree."""
+    proc = subprocess.run(["git", "-C", repo, "show", f"{commit}:{path}"],
+                          capture_output=True)
+    if proc.returncode != 0:
+        raise RuntimeError(
+            f"cannot read {path} at {commit[:8]}: {proc.stderr.decode().strip()}")
+    return proc.stdout
+
+
+def _list_dir_at(repo: str, commit: str, prefix: str) -> list:
+    proc = subprocess.run(
+        ["git", "-C", repo, "ls-tree", "-r", "--name-only", commit, "--", prefix],
+        capture_output=True, text=True)
+    if proc.returncode != 0:
+        raise RuntimeError(f"cannot list {prefix}: {proc.stderr.strip()}")
+    return [ln for ln in proc.stdout.split("\n") if ln.strip()]
+
+
+def build_results_archive(repo: str, out_dir: str) -> dict:
+    """Assemble the organised archive. Raises rather than skipping a missing file."""
+    commit = RESULTS_SOURCE_COMMIT
+    os.makedirs(out_dir, exist_ok=True)
+    manifest = {"source_commit": commit, "sections": [], "files": []}
+
+    def emit(rel_dir: str, src_path: str) -> dict:
+        blob = _git_show(repo, commit, src_path)
+        dest_dir = os.path.join(out_dir, rel_dir)
+        os.makedirs(dest_dir, exist_ok=True)
+        name = os.path.basename(src_path)
+        dest = os.path.join(dest_dir, name)
+        assert_publishable([src_path, dest])
+        with open(dest, "wb") as fh:
+            fh.write(blob)
+        rec = {"archive_path": rel_dir + "/" + name, "source_path": src_path,
+               "bytes": len(blob), "sha256": hashlib.sha256(blob).hexdigest()}
+        manifest["files"].append(rec)
+        return rec
+
+    for folder, title, scope, paths in ARCHIVE_LAYOUT:
+        got = [emit(folder, p) for p in paths]
+        manifest["sections"].append(
+            {"folder": folder, "title": title, "scope": scope, "n_files": len(got)})
+        with open(os.path.join(out_dir, folder, "README.md"), "w") as fh:
+            fh.write(section_card(folder, title, scope, got, commit))
+
+    # Sources carried from a DIFFERENT commit, each labelled with its own.
+    for folder, title, scope, extra_commit, paths in EXTRA_SOURCES:
+        got = []
+        for p in paths:
+            blob = _git_show(repo, extra_commit, p)
+            dest_dir = os.path.join(out_dir, folder)
+            os.makedirs(dest_dir, exist_ok=True)
+            name = os.path.basename(p)
+            dest = os.path.join(dest_dir, name)
+            assert_publishable([p, dest])
+            with open(dest, "wb") as fh:
+                fh.write(blob)
+            rec = {"archive_path": folder + "/" + name, "source_path": p,
+                   "source_commit": extra_commit, "bytes": len(blob),
+                   "sha256": hashlib.sha256(blob).hexdigest()}
+            manifest["files"].append(rec)
+            got.append(rec)
+        manifest["sections"].append(
+            {"folder": folder, "title": title, "scope": scope,
+             "n_files": len(got), "source_commit": extra_commit})
+        with open(os.path.join(out_dir, folder, "README.md"), "w") as fh:
+            fh.write(section_card(folder, title, scope, got, extra_commit))
+
+    sup_files = []
+    for prefix in SUPERSEDED_DIRS:
+        lineage = prefix.rstrip("/").split("/")[-1]
+        for p in _list_dir_at(repo, commit, prefix):
+            sup_files.append(emit("90_SUPERSEDED_box_proxy/" + lineage, p))
+    manifest["sections"].append(
+        {"folder": "90_SUPERSEDED_box_proxy", "title": "Superseded box-proxy lineages",
+         "scope": "DO NOT CITE. Kept because deleting evidence is worse than labelling it.",
+         "n_files": len(sup_files)})
+    with open(os.path.join(out_dir, "90_SUPERSEDED_box_proxy", "README.md"), "w") as fh:
+        fh.write(superseded_card(sup_files, commit))
+
+    with open(os.path.join(out_dir, "MANIFEST.json"), "w") as fh:
+        json.dump(manifest, fh, indent=2, sort_keys=True)
+    with open(os.path.join(out_dir, "README.md"), "w") as fh:
+        fh.write(archive_card(manifest, commit))
+
+    all_paths = [os.path.join(out_dir, f["archive_path"]) for f in manifest["files"]]
+    assert_publishable(all_paths)
+    if not manifest["files"]:
+        raise RuntimeError("archive is empty; refusing to publish nothing")
+    return manifest
+
+
+def section_card(folder: str, title: str, scope: str, files: list, commit: str) -> str:
+    rows = "\n".join(
+        "| `{}` | {:,} B | `{}` | `{}` |".format(
+            os.path.basename(f["archive_path"]), f["bytes"],
+            f["source_path"], f["sha256"][:12])
+        for f in files)
+    return """# {title}
+
+{scope}
+
+**Engine, where one applies: warpmpm (NVIDIA Warp). NOT Genesis.** Genesis is an
+abandoned box-proxy path in this project and no Genesis scene ever loaded the
+Yaris hull.
+
+| file | size | source path in repo | sha256 (first 12) |
+|---|---|---|---|
+{rows}
+
+Every file above was read from commit `{commit}` of
+`github.com/jcerrell-IS/can-it-ford`, not from a working tree, so each is
+re-resolvable with `git show {short}:<source path>`.
+""".format(title=title, scope=scope, rows=rows, commit=commit, short=commit[:12])
+
+
+def superseded_card(files: list, commit: str) -> str:
+    by_lineage = {}
+    for f in files:
+        lin = f["archive_path"].split("/")[1]
+        by_lineage[lin] = by_lineage.get(lin, 0) + 1
+    lines = "\n".join("- `{}`: {} files".format(k, v) for k, v in sorted(by_lineage.items()))
+    return """# SUPERSEDED. Do not cite anything in this folder.
+
+These are the **box-proxy** sweep lineages. The vehicle in them is a rectangular
+solid standing in for a car, **not** the watertight hull used by the current
+work. Their solid volume differs materially from the real hull's, so densities,
+displaced volumes and every force derived from them are **not comparable** with
+the rest of this archive.
+
+{lines}
+
+**Why they are here at all.** Deleting evidence is worse than labelling it. A
+published figure or a downstream file may still point at these numbers, and a
+reader who finds the reference needs to be able to reach the data and see the
+warning attached to it. That is the only reason.
+
+**What to use instead.** `01_canonical_17_runs/` for the hull runs, and the
+separate `can-it-ford-speed-surface` dataset for the moving-vehicle load surface.
+
+Read from commit `{commit}`.
+""".format(lines=lines, commit=commit)
+
+
+def archive_card(manifest: dict, commit: str) -> str:
+    total = sum(f["bytes"] for f in manifest["files"])
+    rows = "\n".join(
+        "| `{}/` | {} | {} files |".format(s["folder"], s["title"], s["n_files"])
+        for s in manifest["sections"])
+    return """---
+license: cc-by-4.0
+pretty_name: "Can It Ford: complete committed results archive"
+tags:
+  - flood
+  - vehicle-stability
+  - material-point-method
+  - civil-engineering
+---
+
+# Can It Ford: the complete committed results archive
+
+Every result from this project that is **committed and re-derivable**, organised
+into one place, read from a single commit so each file has provenance.
+
+**{n} files, {mb:.2f} MB, all read from commit `{short}`.**
+
+| folder | contents | files |
+|---|---|---|
+{rows}
+
+## What this archive is, and is not
+
+**It is** the tabular output of the project: run inventories, failure-mode
+classifications, verdict sweeps, threshold-fragility studies and per-run
+metrics, each with the repo path and sha256 it came from, listed in
+`MANIFEST.json`.
+
+**It is not complete coverage of the work**, and the gaps are deliberate:
+
+- **Nothing that lives only on the cluster is here.** Several results from the
+  most recent wave exist only under Vista's `/work` and in commit messages. A
+  number that cannot be re-derived does not go into a published archive, so
+  those are absent rather than approximated.
+- **No images, meshes, textures, HDRIs or binaries.** Asset licence provenance
+  for this project is unresolved, and the build **refuses** those paths in code
+  rather than warning about them.
+- **No moving-vehicle load surface.** That is a separate dataset with its own
+  card, because the body there is *prescribed* and carries no verdict, which
+  makes it a different experiment from everything in this archive.
+
+## The one thing to read before using any number
+
+**Every verdict in this archive is threshold-dependent.** The published
+16 SLIDE / 1 STUCK count rests on three literals that share the numeral 0.05
+across two different units, plus an unsourced persistence count. Quote the
+thresholds with the count or the count means nothing. `04_threshold_fragility/`
+exists to make that checkable rather than assertable.
+
+**Engine: warpmpm (NVIDIA Warp), not Genesis**, for every simulated result here.
+
+## Superseded material is labelled, not deleted
+
+`90_SUPERSEDED_box_proxy/` holds two earlier lineages that used a rectangular
+box in place of the vehicle hull. They are kept so that a reader following an
+old reference can find both the data and the warning. Do not cite them.
+
+## Provenance
+
+`MANIFEST.json` lists every file with its archive path, its source path in
+`github.com/jcerrell-IS/can-it-ford`, its size and its sha256. Everything is
+re-resolvable with `git show {short}:<source path>`.
+""".format(n=len(manifest["files"]), mb=total / 1048576.0, short=commit[:12], rows=rows)
 
 
 if __name__ == "__main__":
