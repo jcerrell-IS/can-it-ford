@@ -170,3 +170,35 @@ test harness was wrong, which is the same class of error, one level out.
    but neither is wired into a launcher.
 4. **`disableClaudeAiConnectors` not taking effect is unreported upstream.** It is a
    one-command reproduction and worth an issue.
+
+---
+
+## 5. THE ADVERSARIAL REVIEW PATH IS ALIVE AGAIN, 2026-08-20 03:40
+
+`CLAUDE.md` carries a whole section titled **"THE ADVERSARIAL REVIEW PATH IS DEAD FLEET-WIDE,
+2026-08-19"**, recording that the `physics-skeptic` subagent and any `Agent` call died with
+`deepseek-ai/DeepSeek-V4-Flash:deepinfra`, that an explicit `model` override did not reach it,
+that nine independent origins confirmed it, and that sessions d11, d12, d14, d15, d18 and d19
+all correctly marked their claims UNREVIEWED rather than faking the review.
+
+**It works now.** A single cheap liveness probe at 03:40 on 2026-08-20, a `general-purpose`
+agent asked to run one `git log` command, returned the correct SHA in 6.05 seconds using
+125,849 subagent tokens and one tool use.
+
+**Why re-probing was right rather than a violation of that section's own instruction.** The
+section says "do not re-attempt the subagent expecting a different result until the model id is
+fixed". That is sound advice against a retry LOOP, and it is not a licence to carry a
+yesterday-dated infrastructure claim forward as a standing fact. This project's constitution
+says the opposite about exactly this class of claim: do not trust a doc, a memory or a written
+summary as current fact, and check it live before stating it. **One probe costs six seconds; a
+fan-out launched on a dead path costs the round.** The probe is the cheap version of the same
+caution the section was expressing.
+
+**What this unblocks, and it is the largest single item outstanding.** Every physics claim made
+on 2026-08-18 and 2026-08-19 was marked UNREVIEWED because this layer was unavailable, and the
+handoff's own section 15 lists "the exoneration is self-reviewed" as its first admission of low
+confidence. That layer is available again. The claims are still unreviewed until somebody
+actually runs the review; nothing about the path being alive reviews them retroactively.
+
+**Do not delete the CLAUDE.md section.** It was true when written, nine origins measured it,
+and the record of a fleet-wide outage is worth keeping. Amend it to say the outage ended.
