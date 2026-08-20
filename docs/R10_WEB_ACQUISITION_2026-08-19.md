@@ -38,15 +38,30 @@ and now has a number derived from the searches directly.
 
 | state | count | complement |
 |---|---|---|
-| full text reachable by some route | **68** | **162 have no full text by any route I found** |
+| full text reachable by some route | **75** | **155 have no full text by any route I found** |
 | of which, Undermind already held a PDF | 52 | |
 | of which, confirmed on local disk | 6 | |
-| of which, I acquired from the web tonight | 28 | |
-| **net new: works readable now that were not before** | **14** | |
+| of which, I acquired from the web tonight | 36 | 37 files fetched, 1 quarantined as the wrong paper |
+| **net new: works readable now that were not before** | **21** | |
 
-The three sets overlap: 14 of my 28 acquisitions were already readable inside
+The three sets overlap: 15 of my 36 acquisitions were already readable inside
 Undermind, and I fetched them anyway before checking, which was wasted effort.
-The 14 that were not is the real yield.
+The 21 that were not is the real yield.
+
+**One acquisition was the wrong paper and I only caught it by looking.** The file
+my pipeline saved as Gro18, "Best Practices for Quantification of Uncertainty and
+Sampling Quality in Molecular Simulations", is on page 1 the **JCGM 200:2012
+International Vocabulary of Metrology**, an entirely different document [read].
+The cause is a defect in my own scraper: when the publisher page yields no
+`citation_pdf_url`, it falls back to the first `.pdf` anchors on the page, and
+those can be a cited or supporting document rather than the article. Thirteen
+files came through that scrape path; twelve are confirmed correct by embedded
+title or by page 1, and one was wrong, so the observed error rate for that route
+is **1 in 13**. The bad file is renamed
+`WRONG-FILE_not-Gro18_actually-JCGM200-2012-VIM.pdf` rather than deleted, so the
+failure stays visible. **Anyone re-running `fetch_priority.py` or `fetch_all_oa.py`
+should treat the anchor fallback as untrusted and verify page 1 of every scraped
+file.**
 
 ### Read in full
 
@@ -60,8 +75,11 @@ The 14 that were not is the real yield.
 - Sha21, Shah et al 2021, Froude number variance (1 p, read only to settle an
   identity dispute, see section 4)
 
-24 further PDFs were acquired and are on disk unread. Acquiring is not reading
-and this report does not conflate them.
+32 further PDFs were acquired and are on disk unread. Acquiring is not reading
+and this report does not conflate them. Of the 36 valid acquisitions, identity
+is confirmed for 16 by embedded PDF title and for 4 by reading page 1; the
+remaining 16 carry no title metadata and have not been opened, so **treat their
+identity as unverified until someone reads page 1.**
 
 ### Reached as abstract only
 
@@ -74,16 +92,31 @@ document is sourced from any of them.**
 ### Could not reach at all, with the barrier
 
 Of the 230, OpenAlex classifies **105 as `closed` with no open-access location
-of any kind** [read]. A further **49 never resolved to a DOI at all** [read],
-which is a different barrier: these are mostly NCAC and TTI vehicle-model
-reports, SAE papers, and older conference proceedings that carry no DOI.
+of any kind** [read]. A further **49 did not resolve to a DOI** [read].
+
+**CORRECTION TO MY OWN FIRST WORDING, made before this document was finished.**
+I first wrote that those 49 "carry no DOI" and were "mostly NCAC and TTI
+vehicle-model reports, SAE papers, and older conference proceedings". Both
+halves are wrong and I withdraw them. Reading the actual 49 [read]: 11 are the
+NCAC and TTI vehicle-model reports, about 10 are 2025-2026 AI-and-agent
+preprints that Crossref does not index, and the rest are ordinary journal papers
+whose DOI my matcher simply failed to find. The clearest case is Roy11,
+"A comprehensive framework for verification, validation, and uncertainty
+quantification in scientific computing", whose DOI `10.1016/j.cma.2011.03.016`
+**is already sitting in the corrections register** [read]. My resolver queries
+Crossref `query.bibliographic` and accepts only a containment match on the title;
+for these the correct record was not in the top five and the near-misses were
+correctly rejected. So the honest statement is **"49 did not resolve through one
+Crossref query", which is a resolution failure, not evidence that a DOI does not
+exist.** Cross-checking the unresolved titles against the register's own DOI list
+would recover some of them immediately, and that is now a listed job in section 6.
 
 Barriers actually hit, counted from the fetch logs [read]:
 
 | barrier | count | what it means |
 |---|---|---|
 | `closed`, no OA location in Unpaywall | 105 | genuinely paywalled |
-| no DOI resolvable from the title | 49 | grey literature, reports, proceedings |
+| no DOI resolved by one Crossref query | 49 | mostly a matcher failure, see the correction above |
 | OA status but publisher host refused a plain client | 57 | 403 or an HTML wall; see below |
 | repository returned HTML, no PDF behind it | included above | landing page with no file |
 
@@ -353,10 +386,15 @@ which is tracked. The assigned write scope named a path the repo cannot record.
 
 Ordered by value per unit effort.
 
-1. **The 49 open-access works whose publisher host refused a plain client.**
-   These are already known to be free. The landing-page scrape plus Referer
-   trick in `docs/r10/fetch_priority.py` recovered 8 of 24 on the shortlist; run
-   it over the rest. Half a session, no GPU, no new tooling.
+1. **The remaining open-access works whose publisher host refused a plain
+   client.** RUN AND PARTLY DONE after this report was first written:
+   `docs/r10/fetch_all_oa.py` applied the landing-page plus Referer technique to
+   every remaining open-access row and recovered **9 more** (Zha17, Sha19d,
+   Eva23, Boc21, Arr19, Pre24, Obe04, Mol19, and the Gro18 attempt that returned
+   the wrong document). What is left after that pass is the residue where the
+   publisher serves no `citation_pdf_url` and no usable anchor at all. That
+   residue needs either an institutional proxy or per-item hand work, so it is
+   no longer the cheapest job on this list.
 
 2. **The 13 deep searches that have never been ingested into the index.**
    21 searches exist and 8 are in `data/research_corpus_index.json` [relayed
@@ -376,10 +414,16 @@ Ordered by value per unit effort.
    is SAE, Paz16 has no DOI at all. These need institutional access, not a
    better script.
 
-5. **The 49 want-list entries with no DOI.** Mostly NCAC and TTI vehicle-model
-   reports bearing on question f, the mesh licence question. These are usually
-   free from the issuing body's own site rather than from any aggregator, so the
-   route is per-report, by hand.
+5. **The 49 want-list entries that did not resolve to a DOI.** Three different
+   jobs, not one, per the correction in section 1. About 10 are 2025-2026
+   AI-and-agent preprints that Crossref does not index but Undermind already
+   holds PDFs for, so they need no acquisition at all. An unknown number are
+   ordinary papers my matcher missed: cross-check the unresolved titles against
+   the register's own DOI list and against OpenAlex `title.search` before
+   concluding anything, which is cheap and would have caught Roy11. Only the 11
+   NCAC and TTI vehicle-model reports, which bear on question f and the mesh
+   licence question, genuinely need per-report hand retrieval from the issuing
+   body's own site.
 
 6. **A safe-speed surface does not exist to be acquired.** Section 3.5 is a
    negative, and it is the one result here that argues for generating data
@@ -403,5 +447,9 @@ In the repo:
   `fetch_priority.py`, `scan_new.py`, `resolve_disk.sh`, `verify_disk_matches.sh`
 - `docs/r10/*.log`, every fetch attempt with its HTTP code and byte count
 
+- `docs/r10/fetch_all_oa.py` and `docs/r10/all_oa_manifest.tsv`, the fourth pass
+
 Outside the repo, deliberately:
-- `~/can-it-ford-refs/2026-08-19-r10/`, 28 PDFs, 143 MB
+- `~/can-it-ford-refs/2026-08-19-r10/`, 36 valid PDFs plus 1 quarantined wrong
+  file, and a `PROVENANCE.txt` recording the routes that worked and the ones
+  that did not
