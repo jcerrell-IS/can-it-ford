@@ -304,3 +304,85 @@ makes it a PRECEDENT, and the write-up must say which.
 7. **Four world-readable 0644 token files exist** and four byte-identical copies of `.env`
    mean any rotation must cover all four. The write-up is at
    `~/can-it-ford-audit/2026-08-20/` and deliberately OUTSIDE this public repo.
+
+---
+
+## 9. THE COMPLETE ARTIFACT INVENTORY, ADDED 01:38
+
+Every document produced by the literature readers and audits tonight, with where it lives.
+Written after finding three of them untracked, 2288 lines outside git, on the same night this
+fleet found 194 commits on no remote and two headline physics results whose data existed only
+on Vista. An artifact in a working tree is one crashed process from never having existed.
+
+**Committed on `claude/add-ci-checks`:**
+
+| file | lines | commit |
+|---|---|---|
+| `docs/R10_FULL_CONTEXT_AUDIT_2026-08-19.md` | 1024 | `6991626` |
+| `docs/r10/corpus_revision.md` | 925 | `6991626` |
+| `docs/r10/connector_revision.md` | 339 | `6991626` |
+| `docs/R9_SESSION_HANDOFF_2026-08-20.md` | 306 | `3f8fa42` |
+| `docs/r10/connector_revision_AUDIT_d20.md` | 256 | `03d2bd6` |
+| `docs/R9_CORPUS_READ_2026-08-19.md` | 208 | `ac0f0d8` |
+| `docs/R9_PROPAGATION_MEASUREMENT_2026-08-19.md` | 190 | `2c2e9e1` |
+| `docs/R9_DISCREPANCY_REGISTER_2026-08-19.md` | 133 | `7a0d08a` |
+| `docs/R9_PROVENANCE_AUDIT_2026-08-19.md` | 103 | `e9ff33f` |
+| `docs/R9_SESSION_TITLES_2026-08-19.md` | 76 | `436db70` |
+
+**Living ONLY in a worktree, unmerged, and therefore invisible to anyone reading the main
+checkout:**
+
+- `.claude/worktrees/r9-reader/docs/R9_CROSS_SESSION_READOUT_2026-08-19.md`, 773 lines. The
+  single most complete account of the round: 18 transcripts totalling 42,021,315 bytes and 42
+  commit bodies read in full. Contains findings C-1 through C-20 and section 5's list of what
+  no session was doing.
+- `.claude/worktrees/r9-reader/docs/R9_COORDINATOR_AUDIT_2026-08-19.md`, 372 lines.
+- `.claude/worktrees/r9-gapscan/docs/R10_WEB_ACQUISITION_2026-08-19.md`. The 261-work want
+  list with its complement: 68 reachable, 162 not, barriers counted at 105 closed, 49 no-DOI,
+  57 open-access-but-host-refuses.
+- `.claude/worktrees/r9-jobb-route/docs/R9_JOBB_ROUTE_DECISION_2026-08-19.md` and
+  `CANDIDATE_PAPER_SCOPE_TEST.md`. The scope test is the durable fix for the coordinator's
+  five relay failures and belongs in the main checkout.
+- `.claude/worktrees/r9-corpus-bib/docs/R9_CORPUS_BIB_GAP_2026-08-18.md`.
+
+**Outside the repository deliberately:**
+
+- `~/can-it-ford-audit/2026-08-20/R10_DIRECTORY_PROVENANCE_2026-08-20.md`, 296 lines. Moved
+  out because it maps credential file locations and this repository is public. It contains
+  ZERO token values, verified by scanning for token-shaped strings before the move.
+- `~/can-it-ford-bundles/2026-08-20/canitford-all-refs-0014.bundle`, 489 MB, 203 refs,
+  `git bundle verify` reports a complete history. Made at 00:14 when 194 commits were
+  reachable from no remote and in no bundle.
+
+## 10. BACKGROUND TASK STATE AND THE RESUME TRAP
+
+The parent process died twice tonight, at roughly 01:14 and 01:34, each time taking every
+background task with it. Restarted after each.
+
+**THE RESUME TRAP, and it cost four failed attempts.** `resumeFromRunId` resolves a run's
+agent cache relative to the CURRENT session's transcript directory. When the process dies the
+session id changes, so the same run id points at a nearly empty directory and every resume
+behaves like a fresh launch while reporting success. Measured: the real run held 244 journal
+lines with 170 started and 74 results under session `529261e9`, while the new session's copy
+of the same run id held 20. The fix is to merge the banked journal and agent files into the
+new session's run directory before resuming, with `cp -n` so nothing already written is
+clobbered, and to rebuild the journal keyed on `(type, key)` with destination lines winning.
+After merging: 266 lines, 190 started, 76 results, 196 agent files.
+
+A second, separate trap in the same tool: **`args` are NOT stored with the run.** A bare
+resume exits in 5 ms with "No research question provided". The question must be passed again
+on every resume; only the agent cache is restored.
+
+## 11. WHAT IS RUNNING RIGHT NOW, 01:38
+
+- `wpu2qcwx3`, deep-research resumed on run `wf_d942bc1a-e29` with its cache restored.
+- Follow-up debt monitor and the commit/job watcher, both restarted.
+- Twelve fleet sessions plus `d23-overleaf`, which has already landed `82640de`: the class the
+  paper calls its only genuine match is the one that fails the axis it claims to pass.
+
+**NOT running, and it matters:** the adversarial review was killed by the second crash before
+returning. Its transcript is on disk. It was attacking the exoneration on the one axis that
+could void it, whether the two accessors are genuinely independent or are two readings of the
+same corrupted fluid state, and whether "well-conditioned" was defined before or after the
+four box numbers were seen. **Until that returns, the headline result of the night is
+self-reviewed only.**
