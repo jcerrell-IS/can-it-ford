@@ -71,15 +71,29 @@ instrument for a database specifically. Whichever is chosen, it should be identi
 
 ---
 
-## 4. PROBLEM 2: TWO PUBLIC SPACES CARRY NO LICENCE AT ALL
+## 4. PROBLEM 2: ONE PUBLIC SPACE CARRIED NO LICENCE. RESOLVED.
 
-`josiecerrell/can-it-ford` and `josiecerrell/can-it-ford-demo` are both public and both show
-tags `gradio, region:us` with **no `license:` tag**. The local `hf_space/README.md` declares
-`bsd-3-clause`, so the intent exists; it has not reached the live Space.
+**THIS SECTION ORIGINALLY SAID TWO SPACES, AND THAT WAS MY OWN FALSE CLAIM.** Corrected the
+same day, before it could be quoted.
 
-Absent a licence, the default is all rights reserved, which is stricter than intended and
-inconsistent with the repo's own BSD-3-Clause `LICENSE`. This one has an obvious correct
-answer, BSD-3-Clause to match the code, and it is still a public write, so it waits for a go.
+What I did: read the Hub's repo listing, saw tags `gradio, region:us` on both public Spaces
+with no `license:` among them, and concluded neither declared one. What is actually true, from
+fetching both live READMEs:
+
+| Space | live README front matter | Hub tag listing |
+|---|---|---|
+| `josiecerrell/can-it-ford` | **`license: bsd-3-clause` was already there** | did not surface it |
+| `josiecerrell/can-it-ford-demo` | genuinely absent | did not surface it |
+
+**The Hub's tag listing is a partial view of a Space's front matter, and I read absence from
+it.** That is the same predicate-shaped false negative this project keeps recording, committed
+by me one commit after writing up two others. The tag list is not the licence.
+
+**Fixed on the one Space that needed it.** `can-it-ford-demo` now carries
+`license: bsd-3-clause`, one line added to the front matter and nothing else touched, matching
+the repo's own `LICENSE` and its sibling Space. Verified by re-downloading the live README
+rather than trusting the upload's exit code. Commit
+`59f1b9875419423439de70974142f3581fd251f3`.
 
 ---
 

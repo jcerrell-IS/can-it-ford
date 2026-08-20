@@ -9,7 +9,12 @@ authors:
   - given-names: Krishna
     family-names: Kumar
     affiliation: University of Texas at Austin
-license: ODC-By-1.0
+# Changed 2026-08-20 from ODC-By-1.0 on the authors' decision. All three Hugging
+# Face datasets already advertised cc-by-4.0, so this file was the outlier and the
+# one a data-availability statement points at. CC-BY-4.0 has covered sui generis
+# database rights since 4.0, so it is a defensible dataset licence, and aligning to
+# it re-licenses nothing that was already published.
+license: CC-BY-4.0
 keywords:
   - flood traversability
   - Gaussian splatting
