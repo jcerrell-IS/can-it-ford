@@ -192,6 +192,7 @@ licenses quoting `final_disp_mag_m` as converged.
 | 30 | **The paper's fallback to displacement magnitude is class 3**, so its most conservative choice is its least defensible | section 28 |
 | 31 | **Item 5 understates the defect**: with 2337 included the resolution effect's SIGN is not consistent across masses | section 28.1 |
 | 32 | The denominator, in the auditable form to quote everywhere: **35 comparable long records of 369 on Vista, selected by X** | section 29 |
+| 33 | Second liftable block: item 5 is missing its 2337 kg row, plus the keying trap that produces +281.6 pct | section 30 |
 
 ---
 
@@ -2211,4 +2212,53 @@ The earlier figures are not wrong, they are differently scoped, and each must
 carry its own: **"25 of 25"** is `renders/` with duplicates kept and no schema
 gate; **"21 of 21"** is `renders/` deduplicated and schema-gated; **"48 distinct"**
 is the whole Mac repo. All four reproduce. None is quotable bare.
+
+---
+
+## 30. SECOND LIFTABLE BLOCK: ITEM 5 IS MISSING ITS THIRD ROW
+
+Section 27 supplies the mechanism. This supplies a separate, smaller correction to
+the same item, in the same paste-without-editing form. I do not own CLAUDE.md, so
+both blocks are written for whoever does.
+
+Verified live against `/Users/josie/can-it-ford/CLAUDE.md` on 2026-08-20: item 5
+reads *"final_disp_mag_m for 1100 kg moves +87.8 percent from g48 to g64 then
+-59.2 percent from g64 to g96; 1609 kg moves +22.3 then -50.3."* **The 2337 kg row
+is absent.**
+
+> **ITEM 5 IS MISSING ITS THIRD MASS AND THEREBY UNDERSTATES THE DEFECT,
+> 2026-08-20.** The item gives the 1100 kg and 1609 kg rows, both of which rise
+> then fall. The third row behaves differently. Recomputed from the nine
+> `mass_grid` rows of `data/all_runs_inventory.csv`:
+>
+> | mass | g48 | g64 | g96 | g48 to g64 | g64 to g96 |
+> |---|---|---|---|---|---|
+> | 1100 | 0.350717 | 0.658537 | 0.268638 | +87.8 pct | -59.2 pct |
+> | 1609 | 0.256830 | 0.314076 | 0.155959 | +22.3 pct | -50.3 pct |
+> | **2337** | **0.187542** | **0.135559** | **0.089439** | **-27.7 pct** | **-34.0 pct** |
+>
+> **2337 kg falls on BOTH legs.** With it included, the g48-to-g64 signs across
+> the three masses are **+87.8, +22.3 and -27.7**, so **the sign of the resolution
+> effect is not consistent across masses.**
+>
+> That is a stronger statement than "non-monotone and unconverged", which reads as
+> a convergence-rate problem that a finer grid might resolve. The correct reading
+> is that there is no convergence target: `final_disp_mag_m` is a single terminal
+> frame (`sim_standing.py:501`) of a trajectory that is not monotonic in time, so
+> the between-grid differences are phase differences and their sign carries no
+> information. See the companion block on the mechanism.
+>
+> **Item 5's conclusion is unchanged and strengthened.** "The binary verdict is
+> grid-invariant, all nine are NO-FORD" and "cite the verdict, never the
+> displacement magnitude" both stand; the third row is further evidence for them,
+> not against.
+>
+> **A KEYING TRAP FOR ANYONE RECOMPUTING THIS.** The 17 rows of
+> `data/all_runs_inventory.csv` are **not uniquely keyed by (mass, n_grid)**. Five
+> velocity-sweep runs share `(1100, 64)` with the mass-grid run, so a dict keyed
+> that way silently overwrites `g64_m1100` (0.658537 m) with `sweepV_g64_v3p0`
+> (1.338420 m) and returns **+281.6 percent** for the first leg instead of +87.8.
+> No error is raised. **Filter on `sweep == 'mass_grid'` first.** This is not
+> hypothetical: it happened here, and item 5's own published +87.8 is what caught
+> it.
 
