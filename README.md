@@ -64,7 +64,7 @@ The splat-to-particle bridge is intended to reuse [PhysGaussian (Xie et al. 2023
 
 The `compact_sedan` bounding box above is the vehicle's published nominal specification, not the watertight hull's own measured extent. The mesh actually spans 4.2826 x 1.7464 x 1.5180 m (11.3533 m3 against the nominal 10.7457 m3). The paper carries both figures and uses the nominal box only as a reference prism; anything computing displaced volume should use the measured hull volume, 3.5427 m3.
 
-Curb weights and bounding boxes come from manufacturer spec sheets; center-of-gravity heights and full measured principal moment-of-inertia tensors (Ixx roll, Iyy pitch, Izz yaw) come from the NHTSA Light Vehicle Inertial Parameter Database. These are measured on instrumented rigs, not box estimates. Call `get_vehicle(vehicle_class)` for a simulation-ready dict. Not yet wired into the L2 scripts ([#7](../../issues/7)).
+Curb weights and bounding boxes come from manufacturer spec sheets. For `midsize_suv` and `light_pickup`, center-of-gravity heights and full principal moment-of-inertia tensors (Ixx roll, Iyy pitch, Izz yaw) come from the NHTSA Light Vehicle Inertial Parameter Database and are measured on instrumented rigs. `compact_sedan` is the exception, as the table above states: its CG height and tensor are estimates, because the NHTSA database ends Nov 1998 and holds no Yaris. A measured 2010 Yaris tensor does exist, on slide 7 of [DOI 10.13021/G8JS5D](https://doi.org/10.13021/G8JS5D) (1078 kg; roll 388, pitch 1498, yaw 1647 kg m^2; CG Z 558 mm), and is deliberately not wired in: see note 3 in `vehicle_params.py`. Call `get_vehicle(vehicle_class)` for a simulation-ready dict. Not yet wired into the L2 scripts ([#7](../../issues/7)).
 
 ---
 

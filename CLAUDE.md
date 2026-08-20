@@ -183,11 +183,20 @@ not by file read from the Mac, see the item for its evidence path.
    (:132-137). Gravity is confirmed 9.81 m/s^2 in -z, corrected 2026-08-07
    per docs/OPTION_A_SESSION1_FINDINGS.md F-2, against freshly vendored
    solver core at third_party/mpm-engine-544c93dd-solver-core/.
-   core/solver.py:167-169 hardcodes g=[0,0,-9.81] inside
-   Solver.set_material() unconditionally, not a library default,
-   this wrapper's own hardcoded value. sim_standing.py:127 calls
-   set_material(newtonian(...)) and newtonian() carries no g key to
-   override it. All 17 gated runs ran at exactly 9.81 m/s^2.
+   core/solver.py:167-169 writes g=[0,0,-9.81] inside
+   Solver.set_material(), this wrapper's own value, not a library default.
+   THE WORD "unconditionally" WAS WRONG AND IS WITHDRAWN, 2026-08-21,
+   refuted by direct read of the pinned solver at 544c93dd. :166 is
+   params = {**params, **overrides} and :167-169 is
+   set_parameters_dict({"material": name, "g": [0,0,-9.81], **params}),
+   so **params expands AFTER the g key and a caller-supplied g WINS. It
+   is a DEFAULT, not a constant, and no engine patch is needed to change
+   it. THE CONCLUSION IS UNCHANGED: newtonian() carries no g key
+   (materials/__init__.py:125-130) and the canonical driver passes no
+   override, so all 17 gated runs ran at exactly 9.81 m/s^2. The
+   set_material call is at sim_standing.py:205; the ":127" this line
+   carried until 2026-08-21 was stale by 78 lines, re-measure before
+   citing it.
    gates_all_runs.py:12 (G=9.81) matches. failure_modes.py:14 was ALSO
    unified to 9.81 by commit e495b56 on 2026-08-12, so the 0.034 percent
    post-processing fork this line used to record is CLOSED. Corrected

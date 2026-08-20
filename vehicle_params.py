@@ -146,15 +146,16 @@ VEHICLE_PARAMS = {
         "cg_height_m": 0.51,
         "cg_height_m_range": (0.49, 0.53),
         "cg_source": "estimate (no NHTSA-measured 2010 Yaris; subcompact-typical)",
-        # inertia: uniform-density box fallback from Yaris mass+bbox (no measured
-        # Yaris tensor exists). box_inertia() OVERESTIMATES Iyy/Izz; treat as upper bound.
+        # inertia: uniform-density box fallback from Yaris mass+bbox. A measured
+        # 2010 Yaris tensor DOES exist (DOI 10.13021/G8JS5D slide 7) and is not
+        # this; see note 3(a). box_inertia() OVERESTIMATES Iyy/Izz; upper bound.
         "inertia_kg_m2": {"Ixx": 463.0, "Iyy": 1893.0, "Izz": 1960.0},
         "inertia_kg_m2_range": {
             "Ixx": (430.0, 500.0),
             "Iyy": (1750.0, 2050.0),
             "Izz": (1800.0, 2100.0),
         },
-        "inertia_source": "uniform-density box fallback (no measured 2010 Yaris)",
+        "inertia_source": "uniform-density box fallback (measured 2010 Yaris tensor exists at DOI 10.13021/G8JS5D slide 7; not used here, see note 3)",
         "inertia_reference_vehicle": "uniform-density box (2010 Yaris mass+bbox; no NHTSA measured entry)",
         "ssf": 1.42,  # estimate: track/(2*cg), subcompact-typical; CONFIRM before use
     },
