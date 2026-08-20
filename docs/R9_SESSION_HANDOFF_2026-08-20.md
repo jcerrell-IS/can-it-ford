@@ -17,8 +17,38 @@ per-slot prompts, ready to send.
 
 # 1. THE RESULT: JOB B IS SOLVED, AND THE ANSWER IS UNCOMFORTABLE
 
-**The force accessor is exonerated. The fluid really is pushing about 35 percent harder than
-analytic buoyancy. The disturbance is confined to the floor.**
+**WITHDRAWN AT 02:10 BY ITS OWN AUTHOR, commit `87ae518`. Read this before anything else in
+the section.** The heading of this section as first written was "the force accessor is
+exonerated". **IT IS NOT.** d21-jobb ran both adversarial attacks itself, after three subagent
+reviews died (two on process crashes, one on the weekly limit), and BOTH LAND.
+
+**What survives, verified by source read.** The NARROW independence claim holds: no collider
+path writes particle stress or `particle_F` anywhere, a grep returns NOTHING, and every collider
+writes `state.grid_v_out` and only that. The two readers genuinely share no code and no node set.
+
+**What fails.** The p2g2p substep order is `compute_stress_from_F_trial`, then p2g, then GRID OPS
+INCLUDING THE COLLIDER'S PROJECTION onto `grid_v_out`, then g2p. So particle F at substep n+1
+comes from a grid velocity the collider modified, and `cauchy()` is `stress()/det(F)`.
+**PARTICLE STRESS IS CAUSALLY DOWNSTREAM OF THE COLLIDER.** Worse for the framing: in a steady
+state, **momentum conservation makes the two readings approximately equivalent BY CONSTRUCTION**,
+because the control-volume balance is the same bookkeeping read at a different surface.
+
+**WITHDRAWN: "the accessor is exonerated" and "the whole force-is-mis-read family is closed".**
+
+**WHAT STILL SURVIVES, AND IT IS NOT NOTHING.** Agreement to under 2 percent excludes every
+defect that would BREAK the momentum balance, which is most of the ways an accessor is actually
+wrong: a bad `dt`, a sign error, a double count, a missing or duplicated node set, a wrong mass.
+**Not excluded is a fluid state that is itself biased, which is a PHYSICS problem and not an
+ACCESSOR problem.**
+
+**The correct sentence, and the one to quote:** `sdf_wrench`'s momentum bookkeeping is
+self-consistent to under 2 percent against an independent surface, which is what a
+momentum-conserving solver forces.
+
+**So the standing position is:** the fluid appears to push about 35 percent harder than analytic
+buoyancy, the disturbance is confined to the floor, and the measurement chain is
+self-consistent but NOT independently validated. Treat the 1.35x as a property of the simulated
+fluid state, whose correctness is the open question.
 
 ## 1.1 The chain, each link killing a hypothesis
 
@@ -50,7 +80,13 @@ Three well-conditioned boxes agree with `sdf_wrench` to **0.9 to 1.9 percent**, 
 written into `run_r9g.sh` BEFORE the run: "cv_fz also ~1.35x means THE FLUID REALLY IS PUSHING
 THAT HARD and the accessor is sound". Commit `f7f0c89`.
 
-## 1.3 THE EXONERATION IS SELF-REVIEWED ONLY, AND THIS IS THE FIRST THING TO FIX
+## 1.3 THE REVIEW HAPPENED, AND THE AUTHOR RAN IT ON THEMSELVES
+
+**Resolved at 02:10.** The two attacks below were run by d21-jobb after every subagent route
+failed, and both landed. See the withdrawal at the top of section 1. This subsection is kept
+because the attacks are the reusable part, and because the sequence, three failed reviews then a
+self-run one that overturned the author's own headline, is the strongest single argument in this
+document for keeping an adversarial pass in the loop.
 
 Three adversarial reviews were launched tonight. The first two were killed by parent-process
 crashes. The third died on the account's **weekly limit**, having got as far as writing
@@ -541,8 +577,10 @@ sit unmerged on origin and 440 more never left this laptop.** The best-ratio unu
 load-bearing**, because `count_claims_check.py` false-BLOCKs in a tracked-only tree. Fix the
 check to report NOT-EVALUABLE before removing the mask.
 
-**Hugging Face: two licences are published right now for the same project.** `CITATION.cff`
-declares ODC-By-1.0 while the Space card declares bsd-3-clause. The public dataset's viewer is
+**Hugging Face: THREE licences are now published for the same project.** `CITATION.cff`
+declares ODC-By-1.0, the Space card declares bsd-3-clause, and d18-platform published a THIRD in
+the course of investigating the first two (`3f66ba1`). This is a live, public, self-inflicted
+exposure and it should be the first thing fixed on that surface. The public dataset's viewer is
 **broken by a schema cast error**, so its real 35-column file is invisible and a 4-row summary is
 previewed in its place. **HF DOIs go through DataCite, not Zenodo**, and are documented for
 models and datasets only, NOT Spaces, so run data must move out of the Space before a DOI is
