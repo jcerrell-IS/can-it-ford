@@ -2129,3 +2129,107 @@ party. Foreground work is unaffected.
 tonight were each exercised rather than assumed: Wolfram, undermind and scholar-sidekick all
 returned live results; DeepWiki disconnected mid-session and I did not rely on it. **I will
 keep verifying a connector by using it rather than by planning around its name.**
+
+---
+
+# 37. The floor treatment, read from source. NEITHER SPH FIX HAS AN ANALOGUE, AND THAT IS THE FINDING.
+
+Asked whether this solver's floor treatment writes pressure or velocity onto boundary state
+the way SPH dummy particles do, and whether anything answers to the `C_van` exclusion or the
+`C_cut` cutoff. **Answered from the pinned vendored core, not from the literature.**
+
+## 37.1 What the floor actually does
+
+`add_plane` (`core/solver.py:212`) registers a **grid** collider. Our floor is
+`surface_type == 1`, slip, friction 0, restitution 0. The kernel, `mpm_solver_warp.py`:
+
+```
+1942|  if state.grid_m[grid_x, grid_y, grid_z] <= 0.0:   return     # the ONLY guard
+1953|  dotproduct = wp.dot(offset, n)
+1955|  if dotproduct < 0.0:                                          # the one-line BC fix site
+1974|      v = state.grid_v_out[grid_x, grid_y, grid_z]
+1975|      normal_component = wp.dot(v, n)
+1976|      if param.surface_type == 1:
+1977|          v = v - normal_component * n                          # project out normal
+1984|      if normal_component < 0.0 and wp.length(v) > 1e-20:       # friction, mu = 0 here
+1990|      state.grid_v_out[grid_x, grid_y, grid_z] = wp.vec3(v[0], v[1], v[2])
+```
+
+**It writes VELOCITY onto a GRID NODE. It never writes pressure, and there is no boundary
+particle of any kind.** A whole-tree search of `kernels/` and `core/` for `dummy`, `ghost
+particle`, `mirror particle`, `extrapolat`, `free surface`, `C_van` and `C_cut` returns
+**nothing relevant**: the only `extrapolat` hits are flat extrapolation in an unrelated 1D
+table lookup.
+
+| SPH construct | analogue here |
+|---|---|
+| dummy particles carrying pressure | **none exist** |
+| pressure extrapolation onto a boundary edge point | **none exists** |
+| `C_van`, excluding dummy particles above the free surface | **nothing to exclude, and no free-surface test anywhere in the BC** |
+| `C_cut`, a cutoff conditioning the extrapolation | **no cutoff of any kind** |
+
+## 37.2 Scope test: PRECEDENT, not MECHANISM
+
+Applying `docs/CANDIDATE_PAPER_SCOPE_TEST.md` (`d1e07708` on `claude/r9-jobb-route`), whose
+question 1 is *does the paper's method share the mechanism you are invoking it for*, and
+which records that any single failure is sufficient:
+
+**Both MDPI findings fail question 1.** Their mechanism is a pressure assigned to dummy
+particles that then enter a renormalized SPH interpolation sum. **This solver has no dummy
+particles, assigns no pressure at a boundary, and performs no interpolation there**: it
+projects a component out of an already-computed grid velocity. **Cite them as PRECEDENT that
+boundary treatments can hold a column out of equilibrium. Do not cite them as the MECHANISM
+of this column's failure.** That is the same failure mode the scope test was written after,
+and I am recording the verdict rather than the resemblance.
+
+**The absence is the finding, exactly as anticipated: there is no analogue, so there is
+nothing here that a `C_van` or `C_cut` style fix could be ported onto.**
+
+## 37.3 The one structural parallel that IS real, and it is a candidate not a result
+
+The two papers' fixes share a shape: **condition a boundary operation on whether its
+neighbourhood actually supports it.** By that shape, this solver has **no conditioning at
+all**, and the numbers are worth stating.
+
+Grid velocity is formed at `mpm_utils.py:935-941`:
+
+```
+935|  if state.grid_m[grid_x, grid_y, grid_z] > 1e-15:
+936|      v_out = state.grid_v_in[...] * (1.0 / state.grid_m[...])
+940|      v_out = v_out + dt * model.gravitational_accelaration
+```
+
+**`v = p/m`, unconditioned, guarded only by a bare `1e-15`.** Against a fully occupied node's
+mass `rho*dx^3`:
+
+| grid | full-node mass | guard / full-node mass |
+|---|---|---|
+| g64 | 6.5799e-03 kg | 1.52e-13 |
+| g96 | 1.9496e-03 kg | 5.13e-13 |
+| g128 | 8.2249e-04 kg | 1.22e-12 |
+
+**The guard is thirteen orders of magnitude below a full node**, so any node holding even a
+sliver of a particle's weight passes it, gets an ill-conditioned `p/m` velocity, and is then
+handed to a floor projection whose own guard is weaker still (`grid_m <= 0.0`).
+
+**And it has the property the coordinator flagged as decisive: it does not scale away with
+resolution.** The guard is a **fixed absolute constant** while node mass falls as `dx^3`, so
+refining g64 to g96 shrinks a full node 3.375x and makes the guard a *smaller* fraction of
+it. **Conditioning gets weaker with refinement, not stronger**, which is consistent with a
+column that refinement has never quieted.
+
+**This is a CANDIDATE and I am not calling it more.** What is established is the source
+reading: no threshold, no free-surface test, no cutoff. **What is NOT established is that
+low-mass floor nodes actually occur in numbers that matter here.** I have not measured the
+node-mass distribution at the floor, and without it this is a mechanism that could operate,
+not one shown to.
+
+**FALSIFIABLE TEST, cheap and not yet run:** histogram `grid_m` over the nodes the floor
+kernel touches, as a fraction of `rho*dx^3`, across the ppc sweep already committed. **If the
+touched nodes are overwhelmingly well-occupied, this candidate dies.** If a significant tail
+sits many orders below a full node, it survives and the fix has a shape: a support-fraction
+threshold rather than an absolute epsilon. **Note the prediction interacts with the ppc
+result in section 34.2**: more particles per cell should *improve* node occupancy, so this
+candidate predicts KE/PE would *fall* with ppc, and it **rose** at 9.89 sigma. **That is
+evidence against this candidate**, and I would rather write that down now than discover it
+later.
