@@ -2316,6 +2316,15 @@ effect of X**. The camber case reverses at 4 percent, from -18.6 to +6.0 percent
 which is why it is the cleanest worked example of the three: the failure is not
 subtle there, it is a change of direction.
 
+**And the reversal is far outside its own noise**, which is what makes it usable
+as an example rather than a curiosity. Depth-matched against the flat reference,
+the 2 percent difference is -580.1 N with a standard error of 3.0 N, and the 4
+percent difference is +187.7 N with a standard error of 4.6 N: **194 and 41
+standard errors, on opposite sides of zero.** The three per-seed means of each
+arm do not overlap the reference at all. A reversal sitting inside seed scatter
+would prove nothing, so the significance is reported rather than the direction
+being taken on trust.
+
 ### The part that is easy to get wrong on the second pass
 
 **Matching Y usually moves a third quantity Z, and then the matched comparison is
