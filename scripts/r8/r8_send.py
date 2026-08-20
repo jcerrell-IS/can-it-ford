@@ -120,15 +120,44 @@ def main():
                  "session. Sending would paste the prompt into a shell and execute it. "
                  "Relaunch the slot first.")
 
-    # Idle check via the watcher's own view.
+    # Idle check via the watcher's own view, WITH A PANE FALLBACK WHEN THAT VIEW IS
+    # DEMONSTRABLY STALE.
+    #
+    # r8_watch resolves a slot's transcript through the session-id TSV, and for the
+    # slots whose ids rotated at the 2026-08-18 23:22 crash it is reading the PRE-CRASH
+    # file. Measured 2026-08-20: d11, d12, d15, d16 and d18 all report an IDENTICAL age
+    # of 26311 s. Five independent sessions do not fall silent in the same second, so an
+    # identical age across slots is a property of the file being read, not of the
+    # sessions. d18 was refused at age=27012 s while its pane sat at an empty prompt and
+    # it had committed one minute earlier.
+    #
+    # A guard that exists to prevent a blind interruption then becomes the likeliest
+    # cause of a missed dispatch. So past a threshold no live session can plausibly
+    # reach, consult the PANE, which is current by construction: a Claude session
+    # rendering a turn shows a spinner and an interrupt hint, and an idle one does not.
+    STALE_AGE_S = 3600
     if not a.force:
         st = subprocess.run([sys.executable, os.path.join(REPO, "scripts", "r8", "r8_watch.py"), "--status"],
                             capture_output=True, text=True).stdout
         for line in st.splitlines():
             if line.startswith(a.slot):
                 if "idle=False" in line:
-                    sys.exit(f"REFUSED: {a.slot} is mid-turn ({line.strip()}). "
-                             "Interrupting produces the blind reply. Wait, or pass --force.")
+                    m = re.search(r"age=\s*(\d+)s", line)
+                    age = int(m.group(1)) if m else 0
+                    if age > STALE_AGE_S:
+                        pane = subprocess.run(
+                            ["tmux", "capture-pane", "-p", "-t", name],
+                            capture_output=True, text=True).stdout
+                        busy = ("esc to interrupt" in pane.lower()) or ("tokens)" in pane)
+                        if busy:
+                            sys.exit(f"REFUSED: {a.slot} transcript age {age}s is stale, but the "
+                                     "PANE shows a live turn. Wait, or pass --force.")
+                        print(f"NOTE: {a.slot} transcript age {age}s is implausible "
+                              f"(stale pre-crash file); pane shows no live turn, proceeding.",
+                              file=sys.stderr)
+                    else:
+                        sys.exit(f"REFUSED: {a.slot} is mid-turn ({line.strip()}). "
+                                 "Interrupting produces the blind reply. Wait, or pass --force.")
                 break
 
     if a.dry_run:
