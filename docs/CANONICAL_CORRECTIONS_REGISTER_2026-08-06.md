@@ -2305,3 +2305,59 @@ count. E9 dies if slide 7 of `10.13021/G8JS5D` does not read as transcribed; the
 `/opt/homebrew/bin/pdftotext -layout <pdf> - | /usr/bin/grep -A16 "Inertia Comparisons"`.
 
 Full working: `docs/MERGED_RESEARCH_READER_CORPUS_2026-08-20.md` sections 1.1 and 1.2.
+
+**D21. GATE P-2 SPENDS 80 PERCENT OF ITS BUDGET ON BOUNDING-BOX VOID BEFORE ANY DYNAMICS.**
+Measured 2026-08-20 across all 17 gated runs by reproducing the gate's own arithmetic from
+`rollout.npz`, read-directly. Reproduce with the venv python
+(`/Users/josie/.venvs/canitford-mpm/bin/python3`, numpy 2.5.1; the system python has none).
+
+`sim_standing.py:463-465` is the whole metric:
+
+    lo_v, hi_v = veh.min(0), veh.max(0)
+    inbox = ((w >= lo_v) & (w <= hi_v)).all(axis=1)
+    frac_max = max(frac_max, float(inbox.mean()))
+
+`lo_v, hi_v` is the vehicle particles' **axis-aligned bounding box**, so `passthrough_max_frac`
+counts water inside the AABB, not inside the hull. `gates.py:146` labels it honestly ("max
+water fraction in vehicle bbox") and CLAUDE.md item 7 repeats that wording. **What nobody had
+measured is how much of the reading the box contributes.**
+
+Evaluated at **frame 0**, before any dynamics, on all 17 runs:
+
+| quantity | range | mean |
+|---|---|---|
+| P-2 metric at frame 0 (bbox) | 7.00 to 8.90 % | **7.97 %** |
+| same water, restricted to occupied hull voxels at spacing h | 0.14 to 1.35 % | **0.36 %** |
+| share of the P-2 count that is bbox VOID | 80.8 to 98.1 % | **95.3 %** |
+| hull volume / bbox volume | 32.7 to 37.0 % | 33.9 % |
+
+The hull-fill figure independently reproduces item 4 leg (b)'s "the hull fills only 33.2
+percent of its own bounding box", from a different array.
+
+**Consequences, stated precisely.**
+- The `gates.py:148` limit of 0.10 sits about **two percentage points above a geometric floor
+  of roughly 0.08**. The discriminating band is ~2 points wide, not 10.
+- **95.3 percent of what P-2 reports is water beside the car, inside the box and outside the
+  hull.** A P-2 percentage is not a passthrough percentage.
+- P-2 nevertheless **does discriminate**: the dynamic contribution, max minus frame 0, is
+  +7.67 points for `sweepV_g64_v3p0` (15.88 against a 8.21 baseline) and rises monotonically
+  across the velocity sweep. The signal is real; the offset is what is misleading.
+
+**FORMATTING CONSTRAINT, learned by breaking it here.** `register_integrity.py` parses a bare
+`1.` / `2.` / `3.` at the start of a line as an ITEM ID in the current section, so a numbered
+list inside a J-section entry defines phantom `J1`, `J2`, `J3` and the check exits 1 on
+`dup-item`. **Use bullets, never a numbered list, in this register.** The check was right and
+the prose was wrong.
+
+**PARTIAL REFUTATION of the claim that prompted this.** An unrouted R10-era claim asserted a
+"transparent-box baseline of 10.3 to 11.0 percent", i.e. that the null baseline already exceeds
+the limit. **That is refuted: 0 of 17 runs reach 0.10 at frame 0**, the maximum being 8.90
+percent. The direction of the claim is right and its magnitude is overstated.
+
+**Recommended reporting**, not applied here: quote `passthrough_max_frac - passthrough_frame0`,
+or restrict the count to occupied hull voxels. Do not restate the raw percentage without the
+~8 point geometric offset beside it.
+
+**FALSIFIER:** D21 dies if the frame-0 bbox fraction on any gated run is measured below 0.05 or
+at/above 0.10, or if `sim_standing.py:463-465` is found to use anything other than
+`veh.min(0)`/`veh.max(0)`.
