@@ -507,6 +507,153 @@ provisional in magnitude although not in sign.
 
 ---
 
+---
+
+## 7. DRAFT rewrite of criterion 3. NOT FINAL. The measurement picks the version.
+
+**STATUS: DRAFT, written 2026-08-20 at 01:02 while job 923343 was RUNNING at 9:24 elapsed.**
+The whole point of writing it now is that **each version below is bound to an outcome before
+the outcome is known**, so the choice is made by the measurement rather than by whoever
+writes first. **Do not adopt any version until 923343 lands. Do not edit the bindings after
+seeing the number.** If a fifth outcome occurs that is not listed, say so and write a fifth
+version rather than bending one of these to fit.
+
+### 7.1 What every version must specify, whichever wins
+
+This part is not outcome-dependent and is the durable half. Criterion 3 as originally
+written named **one** of these. As amended by `d11-accessor` it names **two**. A criterion
+that grades a force ratio needs **five**:
+
+| # | specifier | status today |
+|---|---|---|
+| a | **which quantity** | named by `d11-accessor`, `fz_over_analytic_measured` |
+| b | **over what window** | named by `d11-accessor` |
+| c | **at what submergence** | **STILL UNNAMED**, section 5.3 |
+| d | **by which route** | **STILL UNNAMED**, and until `ea1d385` nobody knew there was a choice |
+| e | **against what reference, at what resolution** | band anchored to a box-SDF agreement at **no stated resolution**, section 5.2 |
+
+**Any rewrite that does not fill c, d and e reproduces the defect in a new place.** That
+holds under every outcome below.
+
+### 7.2 The discriminator, and what it can and cannot resolve
+
+`control_volume_force()` reads `Fz = p_face*A - W_fluid_above` from a tank-wide control
+volume, using only `cauchy()` and `vol()`. It never touches the body, the SDF or the band.
+**It is the first numerator in this scene that is not `sdf_wrench`.**
+
+Its own error budget, from `ea1d385`: on the synthetic tank it returns **68.2628 N against
+an analytic 69.2180 N, which recomputes as -1.3800 percent**, and is identical to four
+decimals across fit bands of 4h, 6h, 8h and 12h. The gap it must discriminate is **46.17
+points**, so it has about **33.5x margin over its own bias**. That is comfortable, and it is
+the reason this test can settle the question at all.
+
+### 7.3 The four outcomes and the version bound to each
+
+Let `E_cv` be the control-volume excess over the analytic buoyancy at the measured surface,
+on the same run and window `sdf_wrench` gives **+46.17 percent** at g64.
+
+---
+
+**OUTCOME A. `E_cv` near zero (say within a few percent). The routes DISAGREE.**
+**Then `sdf_wrench` is biased and criterion 3 was grading the instrument.**
+
+> **Criterion 3-A.** The steady vertical reaction **as read by `control_volume_force()`**,
+> over the window named in criterion 3, **at a stated submergence**, against the analytic
+> buoyancy at the measured surface. `sdf_wrench` is reported alongside as a **diagnostic of
+> the collider path**, not as the graded quantity, and its bias is characterised and stated
+> at each resolution rather than treated as an error to be passed or failed.
+>
+> **The bands must be re-derived and cannot be inherited.** The existing 10 and 25 percent
+> figures were anchored to this project's box-SDF agreement of 7.3 to 7.7 percent, which is
+> an agreement of the **collider path** with a closed form. Under outcome A that path is the
+> one shown to be biased, so its historical agreement is not a defensible anchor for a
+> criterion that no longer uses it. The CV route's own -1.38 percent synthetic bias is the
+> natural starting point for a new band, and it is a **project choice**, not a literature
+> tolerance, and must say so.
+
+*Consequence beyond criterion 3:* every number this project has quoted from `sdf_wrench`,
+including Job B's verdict and d21's PPC and dx sweeps, is a reading through a biased
+instrument and needs restating with the bias named. **That is a large correction and it
+should be welcomed rather than resisted.**
+
+---
+
+**OUTCOME B. `E_cv` near +46 percent. The routes AGREE.**
+**Then the fluid really is pushing that hard and the denominators were never the issue.**
+
+> **Criterion 3-B.** Two parts, because a single-resolution band is the wrong instrument
+> once the quantity is known to be discretisation-dominated.
+>
+> **B1, the instrument check:** `control_volume_force()` and `sdf_wrench` must agree to
+> within a stated tolerance at the graded submergence. This is a genuine agreement test
+> between independent routes and it is the part that could not exist before `ea1d385`.
+>
+> **B2, the physics check, graded on the TREND and not on one value:** the excess over
+> analytic must be reported as a function of `dx`, with the extrapolated `dx -> 0` value and
+> its uncertainty, and graded there. Section 5.2 already measures the excess as linear in
+> `dx` extrapolating to **-4.2 percent** at `dx -> 0`, at 1.86 sigma.
+>
+> **A pass at one resolution grades nothing under this outcome**, because the quantity is
+> mostly discretisation, and that is exactly what the present criterion does.
+
+*Consequence:* the open question stops being "which accessor" and becomes "why does a
+weakly-compressible MPM fluid exert 46 percent more than Archimedes on a held sphere at a
+hydrostatic steady state, and does that vanish under refinement". That is a better question
+and it has a literature.
+
+---
+
+**OUTCOME C. `E_cv` is a third value, agreeing with neither.**
+**Then criterion 3 cannot be rewritten yet, and nothing should be graded.**
+
+> **No criterion 3-C is drafted, deliberately.** Three mutually inconsistent readings of one
+> force means at least two are wrong and we do not know which. The action is to debug the CV
+> estimator before it is trusted as a reference. It has **already had one bias caught by its
+> own synthetic check**, an extensive face-pressure estimate that returned 143.95 N against
+> an analytic 69.218, so it is a young instrument and a third value is a live possibility
+> rather than a formality.
+>
+> **Writing a criterion under outcome C would be picking a version by preference, which is
+> what this whole section exists to prevent.**
+
+---
+
+**OUTCOME D. `E_cv` has an uncertainty too wide to separate 0 from +46 percent.**
+**Then the run did not answer the question, and that is a result, not a failure.**
+
+> **Report UNRESOLVED. Do not adopt A or B.** This is the "could not evaluate" case, and this
+> project has logged it eight times in one round as a check that returned a value
+> indistinguishable from a measurement. **A wide error bar must not be read as agreement
+> with whichever hypothesis it happens to overlap.** The synthetic margin of 33.5x makes D
+> unlikely, and unlikely is not the same as excluded, and the on-run scatter is the thing to
+> read rather than the synthetic figure.
+
+### 7.4 What survives all four outcomes
+
+Stated here so it is not re-litigated when the number lands:
+
+1. **The ladder-stop is not reopened.** Under A the graded quantity was an instrument
+   artifact; under B the discrepancy is real; under C and D nothing is settled. **In none of
+   the four does Job C become safe to grade on the present criteria.**
+2. **Job C's value goes up**, for the reason in section 6.5: the free-decay period probes
+   the same numerator and discriminates a multiplicative bias from an additive one, which no
+   static reading can. Under A that probe localises the bias; under B it tests whether the
+   excess acts on the dynamics; under C and D it is one of the few things still worth
+   measuring.
+3. **The five specifiers of section 7.1 are required regardless.**
+4. **Criterion 4 keeps its warning label** from section 6.3 under every outcome, because the
+   cancellation that makes it blind is structural and not contingent on which route is right.
+
+### 7.5 Pre-committed, so the record shows it was not chosen afterwards
+
+I have written the bindings above **before** the number exists, and I will not edit them once
+it does. When 923343 lands, the correct action is to **name the outcome, adopt the bound
+version verbatim, and record any way in which the real result fails to match one of the four
+descriptions**. If it does not match, that is a fifth outcome and gets its own version, and
+the failure of my four to anticipate it should be recorded rather than smoothed over.
+
+---
+
 ## 4. Review status
 
 **UNREVIEWED by a second party.** The `physics-skeptic` subagent is dead fleet-wide,
