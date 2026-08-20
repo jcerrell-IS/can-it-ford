@@ -3010,6 +3010,74 @@ carrying higher numbers.** The number records identity, not chronology. In parti
 
 ---
 
+<!-- PORTED 2026-08-20 from claude/add-ci-checks, verbatim except the R9D- id
+     prefixes, which were added on the source side first so both lineages carry
+     the identical text. The two copies had diverged to 2232 and 3148 lines with a
+     shared merge-base at 0efe4f3; this makes the r8 copy a superset, so the merge
+     is a take-mine rather than a conflict. -->
+
+## COORDINATOR CORRECTIONS, 2026-08-19, from the R9 cross-session readout section 5.4
+
+Three rows in this register asserted things this register or a sibling had already
+refuted. Recorded here rather than edited in place, so the retraction is visible.
+
+**IDS RELABELLED 2026-08-20, AND THE COLLISION WAS DANGEROUS.** This section originally
+wrote its three rows as `A2`, `B1` and `B7`. Those are ids from
+`docs/R9_DISCREPANCY_REGISTER_2026-08-19.md`, and **all three collide with unrelated
+canonical items in THIS file**, roughly 2,100 lines above:
+
+| id | canonical item, this file | R9 discrepancy row, this section |
+|---|---|---|
+| A2 | **Gravity is -9.81 and was never unknown** | the corpus-index claim, retracted |
+| B1 | two depth-resolution numbers, both correct for different engines | the corpus-skill item, closed |
+| B7 | no pressure field exists anywhere in warpmpm | the 9.80665 item, re-scoped |
+
+The A2 collision is the one that could do real damage: **"A2 is RETRACTED" sitting in the
+same document as "A2. Gravity is -9.81 and was never unknown"** means a reader who quotes
+"register A2 is retracted" reopens the gravity claim, which is precisely the claim item 15
+spent two separate corrections killing. Every row below is therefore prefixed `R9D-` for
+the register it actually comes from. Do not restore the bare ids.
+
+**R9D-A2 is RETRACTED.** It read "None of these six papers is in the 332-paper corpus index.
+`--query "Al-Qadami"` returns zero." Both halves are false. `--query` matched title and
+abstract only and NEVER authors, so an author query could not succeed; d14-corpusbib fixed
+it in `8bad9b4` and the same query now returns 5. Four of the six ARE in the corpus,
+including `10.1111/jfr3.12828`. The coordinator withdrew this VERBALLY on a board row at
+17:44 and never updated this file, which is exactly the failure this register exists to
+prevent: the corrections authority served a claim its own author had withdrawn.
+
+**R9D-B1 is CLOSED.** It was listed "OPEN, UNOWNED". It is closed on `r9-corpus-bib`
+(`8bad9b4`) and on `add-ci-checks` itself (`faf53d1`), where the skill now reads
+"DO NOT SAY 256 ARE CITED NOWHERE". The register listed as open an item its own branch
+had fixed.
+
+**R9D-B7 is RE-SCOPED, not open-unowned.** Fixed on `r9-settle` (`0861b52`, which reads 9.81
+with a dated correction block). Still stale on the landing target, where
+`classify_failure_modes.py:30` reads 9.80665. The row was right about the target and wrong
+that nobody owns it.
+
+## THE FALSIFIER RULE, 2026-08-19, from readout section 5.9
+
+Eight instrument failures were found in one round, every one with the same signature:
+**a code path that returns a value indistinguishable from a measurement when it could not
+measure.** `stationarity.py` returning 0.0 where 0.0 is also the pass value; a
+`grep -c ... || echo 0` producing "0\n0" so the integer comparison errored and fell to
+else; `all([])` returning True over zero data; a two-arm control where both arms failed
+because the branch did not exist; `--query` unable to match an author so zero was
+unreachable rather than absent; a preflight that checks CLAUDE.md and silently ignores the
+authority skill; `gh run view --json jobs` reporting `conclusion: success` on a step that
+exited 1; and mesh acceptance checks passing watertight, edge-manifold and correct-bbox on
+a mesh with one blob per particle. Six of the eight were caught by their own authors, all
+after publication.
+
+**RULE: any commit that adds a check must name, in the commit message, the input that
+makes that check FAIL.** If no such input can be named, the check cannot fail and is not a
+check. `analysis/r9_session_reader.py --self-test` demonstrates the cheap form: assert that
+each guard fires, and assert a known limitation explicitly so a later "fix" cannot silently
+remove the caveat.
+
+---
+
 ## ADDENDUM 2026-08-20, FROM THE 13A LITERATURE AUDIT
 
 Written by the session that executed section 13A of `docs/R9_SESSION_HANDOFF_2026-08-20.md`:
