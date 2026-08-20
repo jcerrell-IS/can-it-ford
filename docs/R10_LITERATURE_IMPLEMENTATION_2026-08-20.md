@@ -415,3 +415,98 @@ Stated plainly so the next reader does not have to infer it.
 5. **The recent work listed in `R10_WEB_ACQUISITION` section 3.9 is unread**, including seven
    2024-onward locking and boundary papers with DOIs and a fording paper by the same group as
    the Chrono work that appears in no deep search and no bibliography.
+
+---
+
+## 8. ADDENDUM 03:3x: THE FIVE UNROUTED CENTRAL CLAIMS, AND THE CLOSEST ANALOGUE YET FOUND
+
+Of the 115 deep-research claims that never reached a panel, **44 are marked `central` and
+carry a number, and 5 of those reach no document at all**. All five sources were recovered
+from their agent transcripts. Two change what should happen next.
+
+### 8.1 `Was26` is the closest published analogue to Job B, and it is UNRETRIEVED
+
+**Wasenmüller et al 2026, "Real-Time Two-Way Fluid-Rigid Body Interaction via SDF Coupling
+with GPU-Accelerated SPH and Volumetric Rendering", `10.3390/math14111845`, Mathematics.**
+
+Identity confirmed via the Undermind connector. The title alone matches this project's
+architecture on four axes at once: **SDF coupling, GPU-accelerated particle method, two-way
+rigid-body interaction, and a static buoyancy sphere benchmark.** No other candidate in the
+corpus matches on all four.
+
+The extracted claim, **UNVERIFIED because the PDF could not be retrieved**:
+
+> measured equilibrium submergence ratio **0.613** against the Archimedean **0.700**, a
+> **12.46 percent** relative error; the body floats HIGH, so the coupling delivers about
+> **14 percent more upward force per unit submerged volume** than analytic.
+
+And its attribution, also unverified:
+
+> the deviation "is consistent with the collision-count-based buoyancy approximation
+> (Equation 17), which depends on the local particle distribution rather than exact pressure
+> integration"
+
+**If that holds, it is a published instance of this project's exact symptom with the accessor
+class named as the cause**: force accumulated from per-particle collision counts and impulses
+rather than integrated as pressure over the wetted surface, which is the same class as a
+grid-level velocity-projection impulse. Direction matches, body matches, regime matches,
+coupling representation matches. Magnitude does not: 14 percent against this project's 35.
+
+**DO NOT CITE IT YET.** Three of the five scope questions cannot be answered without the
+text, and the title contains "Real-Time" and "Volumetric Rendering", which raises the
+possibility that the buoyancy benchmark is a passing validation in a graphics paper rather
+than a validation study. That is scope question 5 and it is exactly what killed Ami15.
+
+**Retrieval status: MDPI returns HTTP 403 to WebFetch, and the Undermind connector reports
+the PDF unavailable.** It is gold open access in a fully open journal.
+
+### 8.2 `Liu22f` read in full, and the scope test kills it
+
+**Liu et al, "High-accuracy three-dimensional surface detection in SPH for free-surface
+flows", `10.1016/j.cpc.2023.108789`.** Read at source through the connector.
+
+**Every number in the extraction reproduces exactly from Table 1 on page 22.** In a 3-D
+dam-break, against 10440 / 13380 / 19380 reference free-surface particles at 0.600 / 1.450 /
+1.800 s, the three established detectors misidentify: Haque 3120, 4510, 5400; Marrone 1650,
+3780, 4260; Wang 1650, 3690, 4530. As fractions that is **15.8 to 33.7 percent of true
+free-surface particles misidentified**, and the paper's own metric is `M = (TP - EP)/TP`.
+
+**And the paper reports NO pressure or force consequence.** Read directly: the consequences
+it names are free-surface diffusion and particle aggregation through particle shifting, both
+particle-count effects. It uses surface detection for pressure-contour *visualisation* and
+never quantifies a pressure or force error from the misidentification.
+
+**Scope question 4 fails: the number is a particle count, not a force.** So this is a
+PRECEDENT that free-surface detectors are unreliable at the scale of tens of percent, and it
+is NOT a mechanism for a force error. It bears on the estimator question, which d21 refuted
+at two resolutions, and it does not resurrect it.
+
+That is the third candidate this test has killed on quantity rather than on direction, and it
+was caught by reading the source rather than the extraction.
+
+### 8.3 The other three, recorded with sources
+
+- **`Vre20b`**, Vreman, `10.1016/j.jcp.2020.109783`, JCP 423:109783. A near-boundary defect
+  destroys local pressure and velocity-gradient convergence while **the integrated force
+  still converges**: max-norm pressure error GROWS with refinement at 45.27, 54.88, 60.04
+  percent for `d_p/h` = 16, 32, 64. **A converging force is not evidence of a converging
+  field.** PDF unretrieved; numbers unverified.
+- **`10.1016/J.COMPFLUID.2013.05.023`**: second-order kernel consistency is RETAINED for the
+  non-uniform particle distributions the SPH equations themselves produce, and consistency
+  loss is localised to boundaries. **This argues against interior particles-per-cell
+  explanations and points at the boundary**, corroborating the PPC sweep's flat result from
+  an independent direction.
+- The dam-break detector figures above.
+
+### 8.4 TWO MDPI GOLD-OA PAPERS A BROWSER CAN FETCH AND THIS TOOLING CANNOT
+
+Both return HTTP 403 to every client available here, and both are the highest-value
+unretrieved items in their respective questions:
+
+| DOI | why it matters |
+|---|---|
+| `10.3390/math14111845` | SDF-coupled SPH rigid-sphere static buoyancy, over-prediction with the accessor class named |
+| `10.3390/jmse9040416` | semi-fixed ghost-particle boundary, one of the five wall and floor treatment papers the acquisition slot identified as most on-target |
+
+Opening each in a browser and saving the PDF into `~/can-it-ford-refs/2026-08-20/` would
+close both. That is the single highest-value manual step available.
