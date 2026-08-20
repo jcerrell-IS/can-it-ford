@@ -2395,18 +2395,41 @@ than the effect it gates.
 | **vehicle depth fixed** | 2 pct | 0.0942 m | 0.300 m | 45,129 | 2539.6 N | **-18.6 pct** |
 | vehicle depth fixed | 4 pct | 0.1884 m | 0.300 m | 58,733 | 3307.4 N | **+6.0 pct** |
 
-### What is claimed
+### THE FINDING: the depth-matched difference REVERSES SIGN with camber
+
+This is the result, not a caveat on the result. Once the operating point is
+matched, so that the vehicle stands in exactly the same 0.30 m of water in every
+arm, the crown's effect **changes direction between 2 and 4 percent camber**:
+
+| camber, vehicle depth fixed at 0.300 m | per-seed means (N) | difference vs flat | standard error | in se |
+|---|---|---|---|---|
+| flat reference | 3117.2, 3119.7, 3122.3 | | | |
+| **2 pct** | 2535.2, 2539.3, 2544.3 | **-580.1 N, -18.60 pct** | 3.0 N | **194** |
+| **4 pct** | 3302.6, 3303.5, 3316.2 | **+187.7 N, +6.02 pct** | 4.6 N | **41** |
+
+**It is not noise and it is not close.** The two differences sit 194 and 41
+standard errors on OPPOSITE sides of zero, and the three per-seed means of each
+arm do not overlap the flat arm's range at all: every 2 percent seed is below
+every flat seed, and every 4 percent seed is above every one. Per-arm seed spread
+is 0.08 to 0.23 percent against differences of 18.6 and 6.0 percent.
+
+**A single monotone mechanism cannot do that.** Whatever the crown does to the
+flow, it is not one effect that scales with camber, and no single number is "the
+effect of crowning a road".
+
+### What else is claimed
 
 1. **At a fixed flood level, a standard 2 percent camber reduces the horizontal
-   hydrodynamic load on the vehicle by 36.5 percent**, and a 4 percent camber by
-   49.9 percent, in this model. Paired, three seeds, only the cross slope varying.
-2. **The effect is not only the shallower water.** With the vehicle standing in
-   exactly the same 0.30 m as on the flat road, 18.6 of those 36.5 points survive
-   at 2 percent camber.
-3. **It is not a single monotone mechanism.** The depth-matched difference
-   reverses sign by 4 percent camber, and the matched arms carry more total water
-   than their reference, so the two framings bracket the effect rather than
-   isolating it. See T36.
+   hydrodynamic load by 36.5 percent**, and a 4 percent camber by 49.9 percent.
+   Paired, three seeds, only the cross slope varying. This is the operational
+   question, because a flood has a level and a road either has a camber or not.
+2. **The crown is NOT only "the car stands in less water".** With the vehicle in
+   exactly the same 0.30 m as on the flat road, **18.6 of the 36.5 points
+   survive** at 2 percent camber. Roughly half the benefit is not depth.
+3. **The two framings bracket the effect and neither isolates it**, because
+   matching the vehicle depth necessarily deepens the flood at the road edges and
+   raises the total water. See T36, where this is the general form rather than a
+   fact about camber.
 
 ### What is NOT claimed
 
