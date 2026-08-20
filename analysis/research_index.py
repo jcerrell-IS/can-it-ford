@@ -563,24 +563,54 @@ def main() -> int:
         hollow = [s for s in searches
                   if PLACEHOLDER in (s.get("summary") or "")
                   or not (s.get("goal") or "").strip()]
+        # THE THIRD FAILURE CLASS, AND IT IS THE ONE THE TOOL EXISTED FOR.
+        # Added 2026-08-21. Both classes above are METADATA predicates: they ask
+        # whether a record exists and whether it is greppable. Neither asks
+        # whether a single PAPER from that search entered the index. Measured
+        # live 2026-08-20 and again on 2026-08-21: 21 of 21 searches reach the
+        # index as metadata and 8 of 21 reach it as papers, the other 13
+        # representing 780 papers present as an INTEGER only, and this check
+        # printed "reaching the corpus by NO route: 0" and "OK", exit 0, over
+        # exactly that state. A metadata stub IS a route, so reach-by-route was
+        # green and the question nobody asked was reach-by-paper. That is the
+        # THIRD iteration of one failure on this tool: each fix passed a
+        # predicate that was not the question. So: say two numbers, never one.
+        with_papers = set()
+        for _p in papers:
+            for _r in (_p.get("reports") or []):
+                with_papers.add(_r)
+        paperless = [s for s in searches if s.get("slug") not in with_papers]
+        n_repr = sum(int(s.get("n_relevant_papers") or 0) for s in paperless)
+
         missing = idx.get("missing_reports", [])
         print(f"deep searches known      : {len(searches)}")
         print(f"  reachable via REPORTS  : "
               f"{sum(1 for s in searches if s.get('reached_index_before_2026_08_20'))}")
         print(f"  reachable via {os.path.relpath(SEARCH_DIR, REPO)}: "
               f"{sum(1 for s in searches if not s.get('reached_index_before_2026_08_20'))}")
+        print(f"  reaching the corpus AS METADATA: {len(searches) - len(orphan)}"
+              f" of {len(searches)}   <- --searches --query can match these")
+        print(f"  reaching the corpus AS PAPERS  : "
+              f"{len(searches) - len(paperless)} of {len(searches)}"
+              f"   <- --query, --doi and --method can match these")
         print(f"  reaching the corpus by NO route: {len(orphan)}")
         print(f"  present but NOT GREPPABLE (hollow): {len(hollow)}"
               f"   <- --searches --query cannot match these")
+        print(f"  metadata only, ZERO papers ingested: {len(paperless)}"
+              f", representing {n_repr} papers as an integer only")
         for s in orphan:
             print(f"    ORPHAN  {s['slug']}  {s['name']}")
         for s in hollow:
             print(f"    HOLLOW  {s['slug']}  {s['name']}")
+        for s in paperless:
+            print(f"    PAPERLESS  {s['slug']}  "
+                  f"n_relevant_papers={s.get('n_relevant_papers')}  {s['name']}")
         for m in missing:
             print(f"    MISSING REPORT  {m['slug']}  {m['path']}")
         if not searches:
             print("    ORPHAN  no deep-search records on disk at all")
-        bad = len(orphan) + len(hollow) + len(missing) + (0 if searches else 1)
+        bad = (len(orphan) + len(hollow) + len(paperless) + len(missing)
+               + (0 if searches else 1))
         print(("FAIL" if bad else "OK") + f"  ({bad} problem(s))")
         return 1 if bad else 0
 
