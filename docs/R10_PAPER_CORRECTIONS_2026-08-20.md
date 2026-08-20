@@ -173,6 +173,86 @@ giving C_D = 1.38 +/- 0.18 for a different experiment; do not merge the two.
 
 ---
 
+## 4b. A defect nobody dispatched: the paper's fallback lands on its least converged quantity
+
+The tex closes its sweep paragraph with: "until it is placed on an independent empirical
+footing **we report displacement magnitudes only**."
+
+The refusal is well reasoned and is left intact: the L2 drift threshold has no empirical
+footing, so declining to publish an agreement rate built on it is correct. **The problem is
+the fallback.** Displacement magnitude is the one quantity in that block the project's own
+data shows is not converged, and the paper reported it without saying so.
+
+`read-directly`, recomputed live from `data/all_runs_inventory.csv` this session:
+
+| mass | g48 | g64 | g96 | g48 to g64 | g64 to g96 |
+|---|---:|---:|---:|---:|---:|
+| 1100 kg | 0.350717 | 0.658537 | 0.268638 | **+87.8%** | **-59.2%** |
+| 1609 kg | 0.256830 | 0.314076 | 0.155959 | **+22.3%** | **-50.3%** |
+| 2337 kg | 0.187542 | 0.135559 | 0.089439 | **-27.7%** | **-34.0%** |
+
+The first two rows reproduce CLAUDE.md ground-truth item 5 to the decimal, which is a check on
+that item as much as on this one. **The third row is new here and it is the sharper fact: at
+2337 kg the sequence is monotone and falls on both legs, so the sign of the resolution effect
+is not even consistent across the three masses.** Item 5 records only the two non-monotone
+rows, which understates the problem.
+
+### The same number, two routes, and the gap depends on which one you divide by
+
+`read-directly`, parsed live out of `renders/yaris_render_s1/_incoming/g64_m1100/rollout.npz`
+this session. There is no numpy on this Mac, so `t.npy` was read by parsing the npy header and
+unpacking the raw float32 block with `struct`; the header is `{'descr': '<f4',
+'fortran_order': False, 'shape': (90, 3)}`.
+
+| route | final displacement |
+|---|---:|
+| `summary.json` `final_disp_mag_m` | 0.658537 m |
+| `rollout.npz`, recomputed as final $\|t - t_0\|$ | 0.637019 m |
+| gap | 0.021518 m |
+
+That gap is **3.268 percent of the summary figure and 3.378 percent of the rollout figure**.
+CLAUDE.md item 5 quotes "a 3.4 percent gap", which is the rollout-denominator form. Both are
+correct and they answer different questions, so the figure must never be quoted bare.
+
+**This is an independent instance of tonight's recurring defect shape, reached from a
+completely different quantity.** d12 and d21 found one force numerator divided by two
+denominators. This is one displacement measured by two routes whose disagreement is itself
+denominator-dependent. Separate origins entirely: theirs is a sphere validation scene, this is
+the canonical vehicle run's own stored particle rollout.
+
+### What is stable, and it is worth saying
+
+`read-directly`, from the same rollout: `g64_m1100` first exceeds the 0.05 m drift detector at
+**frame 3 of 90**, and every one of the nine runs in the block has a final magnitude above
+0.05 m (the smallest is 0.089439 m). The drift verdict is therefore stable across the whole
+block even though the magnitude behind it is not. CLAUDE.md's standing instruction, "cite the
+verdict, never the displacement magnitude", is the right rule and the paper had inverted it.
+
+`gates_both_scenarios.py` already computes both routes side by side and stores their
+difference as `L2_measure_delta_m`, so the pipeline has known about this. That file is
+**untracked and has no commit history** (`git ls-files --error-unmatch` errors, `git log`
+returns nothing), exactly as CLAUDE.md warns, so it is evidence of intent rather than a
+citable provenance.
+
+### A held-fixed control on section 2's verdict flip
+
+While checking this, `gates_both_scenarios.py` was found to compute `dxv_nominal` from the
+**nominal** 0.30 m depth, not the realized 0.2944 m. That raises the obvious question of
+whether section 2's verdict flip is an artifact of choosing realized over nominal depth. It is
+not. `inferred`, computed both ways against the live limits:
+
+| depth used | D x V | small passenger | large passenger | large 4WD |
+|---|---:|---|---|---|
+| nominal 0.30 m | 0.450000 | NO-FORD | FORD | FORD |
+| realized 0.2944 m | 0.441644 | NO-FORD | FORD | FORD |
+
+The flip is driven by the class label and survives either depth convention. Note the nominal
+case sits exactly on the large-passenger limit of 0.45 and passes only because the comparison
+in `L1_verdict` is a strict `>`; the realized case clears it by 1.9 percent. Same verdict,
+different reasons, so quote the realized one.
+
+---
+
 ## 5. The bibliography collision. The dispatched framing does not match the live files.
 
 `read-directly`, all three bib files, 2026-08-20.
@@ -212,7 +292,7 @@ so they can go in without resolving any of this.
 
 ## 6. What was changed, and where it is
 
-Five edits, all in `conference_101719_1.tex`, delivered as
+Six edits, all in `conference_101719_1.tex`, delivered as
 `paper/r10_corrections_2026-08-20.patch`. Verified: each search string matched **exactly once**
 before replacement; the patch applies cleanly to the Overleaf clone under `git apply --check`;
 `$` counts are even and braces balanced on all three touched lines; no em-dash introduced; no
@@ -225,6 +305,7 @@ new `\cite` key introduced.
 | C | 147 | 0.78 reattributed from AR&R to Smith, Modra and Felder, with both band endpoints named as Smith's |
 | D | 152 | figure caption now cites Smith for the 0.78 upper endpoint of the shaded band |
 | E | 205 | the "one inside each of AR&R's three kerb-weight bounds" parenthetical now says that is a bound on kerb weight only, not class membership |
+| F | 205 | the "displacement magnitudes only" fallback now carries the non-convergence figures, the two-route gap with both denominators, and the fact that the drift verdict is stable where the magnitude is not |
 
 **NOT PUSHED.** The Overleaf remote shares no ancestor with `origin`, so a push overwrites the
 project rather than merging into it. The patch is staged for review and waits on an explicit go
