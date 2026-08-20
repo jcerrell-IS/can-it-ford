@@ -225,6 +225,250 @@ brackets, because the high ones will compact and lose working state first.
 
 ---
 
+# 3A. THE COMPLETE COMMIT RECORD, EVERY SESSION, IN ORDER
+
+Section 3 gives one paragraph per session. This is the full record: every commit each slot
+landed tonight, oldest first, so the SEQUENCE of self-correction is visible. That sequence is
+the actual finding. Read a session's list top to bottom and you can watch it build a claim,
+test it, and in most cases overturn it.
+
+Commits on `claude/r9-overleaf` before 02:0x are inherited from its base branch and are the
+coordinator's; that slot launched at 01:18.
+
+
+## d11-accessor, `claude/r9-accessor` — 17 commits
+
+- `8f978c1` Job B FAILS at every window, and I retracted my own answer to the floor question
+- `05fb6db` The floor question is OPEN and my retraction did not close it, said plainly
+- `e4e05a8` Downstream enumeration completed: 13 sites not 6, and my "same content" claim was wrong
+- `0e8ef48` LADDER STOPPED. Decision recorded, three items left open, and no window avoids the FAIL
+- `61197f9` The 0.3 percent is a MOTION tolerance, so reason 3 of the ladder decision is withdrawn
+- `da438d7` PRE-REGISTRATION: hydrostatic column, bands fixed before the run exists
+- `7ab303a` The column PASSED and the PASS is worthless, because my own criterion had no drift gate
+- `1f98170` Gates added, and my NOT-GRADEABLE retraction was itself an over-correction
+- `cff4ec6` The floor leak is a floor-plane defect: 96.40 pct fixed with no body in the domain
+- `c692b21` Well-balancedness diagnostics, and I could NOT do this from the files I had
+- `f673c45` The column never goes quiet, which WEAKENS my own exoneration of the solver
+- `347f4ad` My 285 Pa "sits between" was wrong, and a locking test that needs no engine change
+- `9d82ed2` Grading rule amended BEFORE any result was read: three candidates, and the 8-to-27 leg
+- `03cd132` KE/PE RISES with particles per cell at 9.89 sigma: quadrature and sampling both excluded
+- `3a6c9b3` Audit upheld the direction and broke my provenance: the reduction is now a committed script
+- `2d472ba` B2 is one instrument with two normalisations, and I am NOT respecifying it yet
+- `c621539` The floor writes VELOCITY not pressure: neither SPH fix has an analogue, and that is the finding
+
+## d12-kramerdata, `claude/r9-kramer-extract` — 7 commits
+
+- `94b56b8` The 0.3 percent is the paper's own abstract, not corroboration, and the threshold I added is the one that turned out to be load bearing
+- `46929a1` The dependency map, because an over-broad correction is still an error: the laminar finding never routed through the transcription
+- `09336b8` I did not submit Job C, and BLOCKER-B1 is resolved: the artifact that unblocks it is the archive I spent the round extracting
+- `d9dfb0e` B3 closed at its source, and writing the failing input proved my own gate did not catch it
+- `f0bdb0f` Criterion 3 never graded a force, it graded a normalisation, and the period is the probe that separates the cases
+- `8c2acbb` Four outcomes, four criteria, bound before the number exists so the measurement picks and not the author
+- `0024ac1` Outcome B, adopted verbatim, and the measurement broke two of my own clauses on the way in
+
+## d13-renders, `claude/r9-renders` — 17 commits
+
+- `256d013` Half the car was one clamp away from rendering as sky, and there was no ground at all
+- `d55ac14` RECOVERED from a crashed session: the Blender Cycles path, untested
+- `3d01611` The water was one blob per particle because the library's docstring is wrong
+- `c0fa82b` Both surround failures looked like lighting and both were meshing
+- `4026760` My own docstring claimed a default the code did not have
+- `52dcf9a` The road and the flood were one mirror because nothing in frame was ever dry
+- `0051379` The hulls melt because of their own meshes, and the larger-domain run needs 3 lines
+- `6a0b52f` I ran every guard against the input that should break it, and one order matters
+- `cd52357` A still asserts the SLIDE verdict; 45 frames show it
+- `21bfca3` Dark paint exposes the mesh, so varying it across a comparison is a confound
+- `03df8f4` The 9 cm step is real and is not the seam; the seam is a 40 cm wavy edge
+- `cdcc4a0` Swapping the body moves the waterline 1.78x, and 27x over the shallowest 5 percent
+- `bd278a2` B6 closes: the HDRI is ambientCG CC0, and the same commit that shipped it gitignored the meshes
+- `ca5d906` The corpus does hold the prior art; the query predicate cannot see authors
+- `24c707d` The smoothest Rogue on disk is missing 47.6 percent of the car
+- `48d7063` The caption clipped the very number it was asked to carry
+- `733c149` A 22 m domain deletes the surround, the taper and the patch rectangle together
+
+## d14-corpusbib, `claude/r9-corpus-bib` — 9 commits
+
+- `026f931` The skill said the physics test does not exist while recommending someone build it
+- `7647e6d` An absence found by a search that cannot match is not an absence, including mine
+- `6ecf4e5` The builder cannot see 12 of the project's 20 deep searches, and never could
+- `5680a20` The adapter reproduces the markdown route exactly, and 332 records are 319 works
+- `849a07f` My own headline was an absence found by a search that could not match
+- `6ff3f14` The index holds no full text, and wiring the ingest path found a duplication bug first
+- `d659169` Both reader findings were false positives, and the second one inverted the truth
+- `77994af` The union merge is now a take-mine, because I made d16's measurement false
+- `de18180` The amplifier was the relay, and a half-fixed tool is worse than a missing one
+
+## d15-settle, `claude/r9-settle` — 12 commits
+
+- `e50191b` The asymmetric rule costs 16 verdicts one way and every error bar the other
+- `836ea52` 16 SLIDE / 1 STUCK was computed under the correct rule, and a third class obeys neither
+- `404543b` 5 of 24 is channel-invariant member-for-member, and it is the only bare-quotable number
+- `304b6bb` I reported a tautology as a measurement, and the corrected claim is stronger
+- `ee6a0bc` Pre-registration for the long-record test, committed before the job is submitted
+- `da0e8ce` Velocity equilibrates and displacement cannot, and 400 frames costs 21 seconds
+- `46f73ed` B4: the population was 21, not 25, and no conclusion moves. Item 5 gets a mechanism.
+- `0734dcb` d21's test refutes my own Q2 magnitude: direction survives 8 of 8, size does not
+- `aa6684a` Section 19 was false: 35 comparable long records already existed, and the split replicates on them
+- `27b83c2` The third class becomes a rule: classify the quantity before choosing a window
+- `bed9d35` The paper's safest-looking quantity is its least defensible, and item 5 understates why
+- `1ea9f49` Item 5 is missing its third mass row, in liftable form
+
+## d16-landing, `claude/r9-landing` — 8 commits
+
+- `8c07765` The add/add conflict is real: content ancestry and merge behaviour are independent
+- `61104f7` The CI has been green for two days with a check exiting 1 inside it, and there are five conflicting files not one
+- `ca45222` Two public writes landed before their decision, and the one I called a revert was not one
+- `293ee21` The union merge must be directed: add-ci-checks is wrong on all four contested facts
+- `8c03f32` The behind count has been 5 at every measurement while the ahead count moved 64 to 82
+- `179e9e5` The sequence: phase 1 first, and the register conflict is the only one still growing
+- `be69592` Execution card: one merge, seven files, zero decisions, and read nothing above it
+- `6719728` The card holds after the push, and the masked-failure prediction was tested in advance and held
+
+## d17-moving, `claude/r9-moving-vehicle` — 21 commits
+
+- `98d4d9d` RECOVERED from a crashed session: speed-surface work as it stood
+- `159bf7d` The split-dependence is general, grows with speed, and its worst case moves
+- `498f1ad` All four arms completed: g96 now has a floor, and the grid result held
+- `c94f3f8` Fixed-seed determinism holds only near rest, and the bc guard was self-bypassing
+- `519362a` g128 cuts the load 43 percent and halves S, so one of my own claims is withdrawn
+- `edc4447` I proposed a confound for my own g128 result and a held-fixed control refuted it
+- `9990644` The g128 collapse reproduces on a second seed, 0.18 percent apart
+- `050ff22` The headline pair belongs to the late window and is 2.24x, and it does not invert
+- `51c158b` C-1 RESOLVED: the pair inverts because the two numbers are different windows
+- `b65dc0d` A moving car for the render, plus C-16 fixed and C-19's name corrected in place
+- `456578c` A crowned road against a flat plane, with the equivalence gate as phase 0
+- `4d4b57d` Mark every number UNREVIEWED, and correct the record: the bc guard is NOT fixed
+- `1f880ac` The video: frames verified from the arrays, and the picture was wrong not the physics
+- `23bc800` The videos are delivered, and two of the three encode failures looked like success
+- `4120e99` The crowned road IS the paired comparison, and it cuts the load 36.5 percent
+- `9ad7a98` Correct "actually drove" at the root, and write the crowned road up as novelty
+- `136fff9` The crown decomposition ran, and the depth-matched difference FLIPS SIGN
+- `f939d05` C-1 finished: placement confound CLOSED by measurement, and the rule it needed
+- `38e6802` The general form of the moved-operating-point failure, with camber as its example
+- `a0c4c96` The sign reversal is the finding, and it is 194 and 41 standard errors from zero
+- `c1dad7f` Actually put the significance in T36: a0c4c96's message claimed it and it did not
+
+## d18-platform, `claude/r9-platform` — 16 commits
+
+- `6d761e7` The Space claimed Genesis, a superseded density and no verdict, and all three were wrong
+- `c7000ea` Zenodo mints a DOI for a RESTRICTED record, so citability does not require publishing
+- `a08b6eb` I cast a doubt I had not tested, and testing it took one command and refuted it
+- `3016b16` A PUBLIC EMPTY DATASET ALREADY SITS ON THE HUB UNDER THIS PROJECT'S NAME
+- `f988882` Eleven live worktrees never see the CI warning, and my own test for it answered from an error
+- `866238a` The published surface is the transient one, and the settled one inverts its headline pair
+- `e0eabac` PUBLISHED. Dataset, Space and W&B are live, and two checks that could never fire now can
+- `bef6da0` I overwrote a published physics fix on a PUBLIC page, and d16-landing caught it
+- `abac36f` Read before you write to a public target, and the CI is instance six
+- `5692f1e` The board's append pattern splices rows above 1024 bytes, and 64 percent of ours are
+- `ce730c3` A splice detector that names the input making it fail, and names what it cannot see
+- `83e99f5` "Six public empty shells" is refuted: usedStorage counts LFS only, and the populated repo is the model
+- `e11db07` The sweep-v1 pair is a split, not a double creation, and the landing hazard is closed
+- `f07b174` The whole r9 wave is invisible to W&B except one run I pushed by hand
+- `e44b22e` Fill can-it-ford-results: 107 files, ten sections, every file read from a commit
+- `3f66ba1` Offline-then-sync is right either way; the viewer was dark; and I published a third licence
+
+## d19-priorcode, `claude/r9-priorcode` — 16 commits
+
+- `a863ee7` P-2's zero-penetration floor is 7.9 to 10.0 percent against a 10 percent gate, measured on all 17 runs
+- `f31a71f` An independent SPH code misses buoyancy by 48 percent and refining made it worse
+- `0a83b75` The vehicle-fording case is one build target away, and the review failed twice
+- `4d7c2c1` A fourth code refutes my own headline: the dt is what the formulation implies
+- `2f3a4a9` Three families of force extraction, and why nobody could see the P-2 write-up
+- `bd2ef56` The dt confound was mine to raise and mine to kill: the divergence is real
+- `1419994` IBAMR settles the taxonomy by implementing both behaviours in one codebase
+- `d4369c3` Chrono ships the body-following domain the render needs and forbids it for water
+- `a720fea` The ladder converges, so my own "does not converge" is refuted by four points
+- `ccca082` A quantity can fail to converge because of what it IS, and the vehicle target built
+- `bdb86cb` One bib key points at two different papers, and the prior art is 14 works not four
+- `9910cb8` Lyu 2024 is in neither container, and two of my three predicates were wrong
+- `705a960` The shipped paper cites ONE of fourteen, and the key collision is not in it
+- `0bcacfa` RTF 92.4 for a vehicle on SPH terrain, and I searched for a DOI I had just written
+- `89bd57f` A count that grows while you measure it is measuring your own activity
+- `dc1a949` Neither candidate bib is authoritative, and the novelty claim is papers-only
+
+## d20-reader, `claude/r9-reader` — 4 commits
+
+- `faf53d1` The research index never contained the project's own deep searches, and the skill said so wrongly
+- `7a0d08a` Register C1 was wrong about git: content ancestry and merge behaviour are independent
+- `a6e9f56` Nobody had read the whole round, and the index of it covers 38.7 percent
+- `9c19364` The reviewer had a zero percent success rate, and the only lane violation was the coordinator's
+
+## d21-jobb, `claude/r9-jobb-route` — 14 commits
+
+- `0ed6bcb` The estimator hypothesis is not a long shot: it fits BETTER than the band
+- `77c274c` E1 is now ONE hypothesis, not three, and my own test bit before the GPU did
+- `21dbbee` A ceiling on E1 was already in the payloads, and the 2h job was the wrong shape
+- `d363a1d` E1 IS REFUTED. The FAIL is a solver defect, not an instrument artifact
+- `054594d` The g96 arm could have rescued E1 and it did the opposite: the sign reverses
+- `7391ef9` 918450 is a ONE-CHARACTER ENGINE FORK, and the leak explains a third
+- `bb46996` The 2x2 refuted half my own pre-registration, and that half is the finding
+- `d826c8a` FLAT in PPC over 8x: the plateau signature holds, and two relayed claims do not
+- `3f4c1ec` Locking refuted on its own PPC signature, and I withdraw my own convergence claim
+- `9e4d72a` Second correction to the same claim: the direction survives, the magnitude does not
+- `aa20be2` Amicarelli read in full: half the relayed claim holds and it is the wrong half
+- `ea1d385` A THIRD accessor that never touches the body, and the scope test as a reusable file
+- `f7f0c89` A THIRD accessor confirms the force to under 2 percent: the accessor is exonerated
+- `87ae518` Both attacks on f7f0c89 land. "The accessor is exonerated" is WITHDRAWN
+
+## d22-gapscan, `claude/r9-gapscan` — 22 commits
+
+- `faf53d1` The research index never contained the project's own deep searches, and the skill said so wrongly
+- `7a0d08a` Register C1 was wrong about git: content ancestry and merge behaviour are independent
+- `c621931` The corpus counts were wrong, the reviewer has been dead all round, and the preflight could not see a stale skill
+- `e81bc9c` The banner told every session a false thing, and the register served a claim its author had withdrawn
+- `95167b0` The round's only coordination artifact was in no commit, and its append pattern corrupts above 1024 bytes
+- `88cba09` Two HPC bugs the project had solved and filed where no session loads them, and a refuted novelty claim
+- `505aef7` Every session ran the whole round in bypass and none ever entered plan, because one line said so
+- `854d164` The constitution now says where a finding goes, and @import stayed out because I could not test it
+- `8a5b56b` The fixes worked, but not by improving propagation, which was already working
+- `63de3bb` An empty answer and an unreachable host looked identical, so the watcher buried two running jobs
+- `436db70` Name the eleven sessions from their own commits, and do not rename the windows they answer to
+- `dd44e2f` Six papers read from full text, and one of them predicts Job B's number, sign and refinement behaviour
+- `754af7f` The solver has no locking mitigation at all, and its fluid update is the exact line F-bar replaces
+- `27f0996` The paper cited for the wall artefact measures the one stress component a buoyancy error is not made of
+- `c469252` Two live searches returned zero because they had stopped evaluating, and the control is what caught it
+- `e5b5b18` Every fetch attempt with its HTTP code, so a refusal cannot later read as an absence
+- `47ab55a` My own scraper fetched the wrong paper once, and the filename would have hidden it
+- `b512871` A second wrong file was sitting in the set, and the fix is that nothing gets saved until its own text is read
+- `7d386f0` The 49 works I called DOI-less were mostly my query failing, and 17 of them now have a verified id
+- `57dd75a` Thirty-eight of thirty-eight now verified against their own text, and the verifier that said otherwise was the one that was wrong
+- `52e7d7f` I checked my own quotations against the pages and one of them was wrong
+- `5213f6f` The five papers the accessor result makes most on-target are the five I could not get
+
+## d23-overleaf, `claude/r9-overleaf` — 27 commits
+
+- `faf53d1` The research index never contained the project's own deep searches, and the skill said so wrongly
+- `7a0d08a` Register C1 was wrong about git: content ancestry and merge behaviour are independent
+- `c621931` The corpus counts were wrong, the reviewer has been dead all round, and the preflight could not see a stale skill
+- `e81bc9c` The banner told every session a false thing, and the register served a claim its author had withdrawn
+- `95167b0` The round's only coordination artifact was in no commit, and its append pattern corrupts above 1024 bytes
+- `88cba09` Two HPC bugs the project had solved and filed where no session loads them, and a refuted novelty claim
+- `505aef7` Every session ran the whole round in bypass and none ever entered plan, because one line said so
+- `854d164` The constitution now says where a finding goes, and @import stayed out because I could not test it
+- `8a5b56b` The fixes worked, but not by improving propagation, which was already working
+- `63de3bb` An empty answer and an unreachable host looked identical, so the watcher buried two running jobs
+- `436db70` Name the eleven sessions from their own commits, and do not rename the windows they answer to
+- `dd44e2f` Six papers read from full text, and one of them predicts Job B's number, sign and refinement behaviour
+- `754af7f` The solver has no locking mitigation at all, and its fluid update is the exact line F-bar replaces
+- `ac0f0d8` I relayed a subagent's reasoning as the paper's finding, one hour after writing up that exact failure
+- `7500647` The router sent every citation check to an OAuth-dead connector, and Undermind was not in it at all
+- `2c2e9e1` Relaying delivered four of six and carried two claims wider than their source
+- `e9ff33f` Both headline results are carried by a markdown file and no data, and one number matches no field on disk
+- `93fa50c` Both gates read the right field and still blocked real work, and one had never matched the form its own comment named
+- `38cdbeb` The skill-drift check compared length, which is the identity test this project's own skill forbids
+- `1e89a68` Every session ran at max effort because one line said so, and reading the plan by position hid it
+- `e585b7a` Every dispatching session has 76 connectors and every dispatched session has 17
+- `833e8aa` The fleet could see that work happened and not that a reply was owed, and the idle detector was reading pre-crash files
+- `03d2bd6` The R10 findings are 784 KB outside git, and a published artifact's zero-limits conclusion is falsified
+- `617f34b` The guard against blind interruption became the likeliest cause of a missed dispatch
+- `82640de` The class the paper called its only genuine match is the one that fails the axis it said it never measured
+- `d10f356` The paper refused the unfounded verdict and fell back on the one quantity its own data shows is unconverged
+- `cb6617a` The figure the paper calls pinned to primary sources is the one figure nothing in the repo can redraw
+
+**Total: 190 commits across thirteen slots between 16:00 and 02:20.**
+
+---
+
 # 4. THE LITERATURE, READ FROM FULL TEXT
 
 ## 4.1 What was read, and what could not be
@@ -667,6 +911,111 @@ Before asserting novelty, before citing a mechanism, before spending GPU on a qu
    acquiring.**
 6. **Verify any scraped PDF against its own text.** The prior is 15 percent wrong.
 7. **State which view you searched.** An absence from a partial view is not an absence.
+
+---
+
+# 7B. THE WORKFLOW AND AGENT OUTPUTS, IN FULL
+
+Every background workflow and agent run tonight, what it returned, and where the raw result
+lives. Kept because three of them were killed mid-run and their partial output is still the
+best evidence available on their question.
+
+## 7B.1 `deep-research`, run `wf_d942bc1a-e29` — THE LARGEST SINGLE OUTPUT OF THE NIGHT
+
+Launched, killed and resumed **five times** across two process crashes, a monthly spend limit
+and a weekly limit. Final state: **103 agents, 86 completed, 17 errored, 4,079,261 subagent
+tokens, 490 tool uses, 780 seconds of wall clock on the last pass.**
+
+**The synthesis step never ran** — it died on the weekly limit — so the output is unmerged
+verified claims rather than a report. That is not a failure of the research; the claims are
+adversarially voted and usable.
+
+**THREE CONFIRMED** (3-voter refutation panel), all in section 5.2, all since DEMOTED to
+PRECEDENT by d11's source read: the spurious wall pressure gradient that cancels gravity
+(2-1); the vertical-wall dummy-particle pressures breaking hydrostatic equilibrium, **3-0
+unanimous**, whose observable is exactly the bodyless column; and SPH over-predicting steady
+drag on a fixed body by +9.2 and +6.3 percent with boundary treatment alone moving it 2.6
+percent at unchanged resolution.
+
+**FOUR REFUTED by the panel, DO NOT CITE:** the DBC depletion-gap mechanism (1-2), the +h
+gauge offset (0-3), the ghost-node density extrapolation fix (0-3), and a solid-boundary error
+floor claim. All from `link.springer.com/article/10.1007/s40571-021-00403-3`.
+
+**An earlier pass of the same run** returned a claim that bears directly on the accessor
+question and whose verifiers all died, so it is UNVERIFIED and must be read at source before
+use: in LBM, a momentum-exchange force reader's error **rose from 1.75 percent at 128 points
+per chord to 9.21 percent at 3072**, a 24x refinement accompanied by a 5x INCREASE in accessor
+error, while a control-volume reader on identical grids stayed between 1.25 and 2.06 percent.
+Source `arxiv.org/pdf/2210.10377`. **That is this project's exact symptom in a different
+method, with the accessor named as the cause**, and it is what prompted building the third
+accessor.
+
+**Raw results:** `~/.claude/projects/-Users-josie-can-it-ford/1d537aee-.../subagents/workflows/wf_d942bc1a-e29/journal.jsonl`,
+266 lines, 190 started, 76 results, 196 agent transcript files.
+
+## 7B.2 `r10-full-context-audit`, run `wf_5266ee59-fb9` — 25 AGENTS, COMPLETED
+
+Two passes: the first died with `synth:report`, `synth:critic` and `rx:vista` all hitting the
+monthly spend limit; the resume completed all 25. **678,161 subagent tokens on the resume, 80
+tool uses. 46 core papers identified on disk, 267 findings collected.**
+
+Produced `docs/R10_FULL_CONTEXT_AUDIT_2026-08-19.md` (1024 lines),
+`docs/r10/corpus_revision.md` (925) and `docs/r10/connector_revision.md` (339), all three of
+which sat UNTRACKED for an hour and are now committed at `6991626`.
+
+**Its five headline items are section 1 of the report and are summarised in sections 6 and 9
+here.** Its critic's four findings are section 7A.4. **`rx:vista` completed on the resume**, so
+the Vista routing answer in section 8 is its work rather than an assumption.
+
+**One agent's finding that appears nowhere else:** a measured 2010 Yaris inertia tensor and CG
+**do exist** in the CCSA validation report, which contradicts CLAUDE.md item 4(a)'s "no
+measured Yaris tensor exists anywhere", and the project's own hull particle cloud matches it
+closely. **This is UNVERIFIED against the source and it contradicts a standing register item,
+so verify before acting.** If it holds, item 4's reasoning for deliberately never wiring
+inertia loses one of its three legs.
+
+## 7B.3 The adversarial reviews — FOUR LAUNCHES, ZERO COMPLETIONS, AND THE ANSWER CAME ANYWAY
+
+| attempt | fate |
+|---|---|
+| 1, ~18:37 | died on `deepseek-ai/DeepSeek-V4-Flash:deepinfra`, the dead model pin |
+| 2, ~18:38 | same error with an explicit `opus` override, proving the override does not reach it |
+| 3, 01:12 | killed by a parent-process crash mid-run |
+| 4, 01:38 | killed by the **weekly limit**, mid-sentence at "Now the solver internals. This is where the independence claim lives or dies." |
+
+**Every physics claim in this document was therefore unreviewed by any subagent.** The
+resolution is the best thing in the record: **d21-jobb ran both attacks itself and both landed**,
+withdrawing its own headline. Commit `87ae518`. The lesson is not that the review layer is
+optional; it is that when the automated route fails, the author running the attack on themselves
+is a real substitute and it worked here.
+
+## 7B.4 The directory-provenance and Claude Code capability agents — BOTH COMPLETED
+
+**Directory provenance** (208,462 tokens, 37 tool uses): 44 locations, 49.56 GB, up from 28 and
+31.6 GB five days earlier. Canonical remote SHA `c7f0a16` resolved via `git ls-remote` rather
+than any clone's cached ref. **194 commits reachable from no remote and in no bundle.** Four
+world-readable 0644 token files with four byte-identical `.env` copies. **And it inverted a
+standing assumption: worktrees are mostly AHEAD of main, not behind** — of 31, seventeen match
+exactly, thirteen are ahead, one is stale. Output at
+`~/can-it-ford-audit/2026-08-20/R10_DIRECTORY_PROVENANCE_2026-08-20.md`, deliberately outside
+this public repo because it maps credential locations.
+
+**Claude Code capability audit** (136,276 tokens, 12 tool uses): every finding in section 11,
+each with a documentation URL. The two that changed behaviour tonight were the hook-input schema
+and `--effort` not defaulting to `max`.
+
+## 7B.5 The monitors, and what they were for
+
+- **`r9_watch.sh`** — commits and Vista job state, with a filter added after it reported a
+  login-banner line as a running allocation.
+- **`r9_followup_debt.sh`** — NEW tonight, and the one worth keeping. It measures **commits
+  landed on a slot's branch since the last dispatch actually delivered to it**, read from the
+  send log rather than from what the coordinator believes was sent. **First pass: eight of twelve
+  slots carried unanswered output.** Commit events say work happened; they do not say a reply is
+  owed. It also flags a commit that adds a check while naming no failing input.
+
+Both died with each process crash and were restarted each time. **Background tasks do not
+survive the parent process, and nothing warns you.**
 
 ---
 
