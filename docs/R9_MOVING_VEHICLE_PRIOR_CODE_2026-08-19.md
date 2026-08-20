@@ -2077,3 +2077,98 @@ written to `.claude/state/` is copied into per-slot digests within minutes.
 valid**, and the board is where every session publishes its findings. Count against
 `origin/main`, or against tracked files, or exclude `.claude/state/`. The three
 scopes will disagree and each is defensible; a bare number is not.
+
+---
+
+# ADDENDUM 16: THE BIB DECISION RESTATED, AND THE CLASS NOBODY SEARCHED
+
+## 56. DECISION 1: NEITHER OF THE TWO FILES IN THE QUESTION IS AUTHORITATIVE
+
+The question was posed as a choice between `paper/can_it_ford_references_IEEE.bib`
+(42 entries) and `overleaf_sync/can_it_ford_references_IEEE.bib` (21). **That is a
+false dichotomy and choosing either would be wrong.** Settled in section 49 and
+restated here because it keeps being framed as a two-way choice: **[read]**
+
+> **The authoritative bibliography is
+> `overleaf/main:can_it_ford_references_IEEE.bib`, at the REPO ROOT, 15 entries.**
+
+Three reasons, each independently checkable:
+
+1. **It is the only bib on the only ref carrying the tex the paper builds from**,
+   `conference_101719_1.tex`. Note the `_1`: the two local `conference_101719.tex`
+   files are a different document.
+2. **It is the only one consistent with the shipped paper.** 15 entries against 14
+   distinct `\cite` keys, all 14 present, exactly one entry never cited
+   (`xiong2024`, which BibTeX drops). That reproduces CLAUDE.md's independently
+   recorded ladder exactly, which is a separate origin.
+3. **`paper/...bib` is not stable across refs**: 21 entries on `origin/main`, 42 on
+   two unmerged branches. **A file that differs by 21 entries depending on which
+   branch you check out cannot be canonical**, and the 42-entry version is the one
+   the question treats as a candidate.
+
+**Urgency, using the distinction that decides it.** `alqadami2022` appears **zero
+times on `overleaf/main`**, in tex and bib alike. So the collision is **not in the
+deliverable**: it is a merge landmine between two staging files, and whoever
+reconciles them will silently pick one of two different papers under one key.
+**Fix it before any merge of `paper/` into the shipped tree, not before submission.**
+
+## 57. DECISION 2: THE NOVELTY CLAIM IS PAPERS-ONLY AND MUST SAY SO
+
+**I verified all four patents myself rather than relaying them.** Retrieved from
+Google Patents tonight, titles and assignee read from the returned payload: **[read]**
+
+| number | title (verbatim) | assignee |
+|---|---|---|
+| `US20140371976A1` | *Method and system for determining a wading depth of a vehicle* | Jaguar Land Rover Ltd |
+| `US20150066339A1` | *Wade sensing display control system* | Jaguar Land Rover Ltd |
+| `US20140347178A1` | *Wading vehicle water level display* | Jaguar Land Rover Ltd |
+| `US10279681B2` | *Vehicle having wade sensing display and system therefor* | Jaguar Land Rover Ltd |
+
+`US10279681B2` names inventors Jonathan Woodley and Sebastian Paszkowicz and its
+text reads "aiding driver control of the vehicle when the vehicle is wading in a
+body of water ... determining a measured depth of water in which the vehicle is
+wading". **All four are real, all four are Jaguar Land Rover, and all four are about
+wading depth.** The 500 to 900 mm per-model wading capability figure is **[recv]**
+and I did **not** verify it.
+
+**The consequence, and it is a framing correction rather than a threat.** Every
+search this project has run, mine included, has been over **journal and conference
+papers**. Patents and OEM specifications were never searched. So:
+
+> **Any statement that this work is novel is a PAPERS-ONLY novelty claim and must
+> be written as one.**
+
+That matters here more than it would elsewhere, because **AR&R itself recommends an
+analytical model "using manufacturer specifications"**, so the reframing the project
+leans on points directly at a class it never looked in. A reviewer will know Land
+Rover ships a wade-sensing display with per-model depth numbers, whether or not the
+paper mentions it.
+
+**Why the contribution survives intact.** The commercial answer is a **depth
+readout**: how deep is the water, displayed to a driver. This project's output is a
+**stability verdict**: given depth and flow velocity, does the vehicle slide or
+float. **A depth sensor does not answer whether the vehicle will be swept away**,
+and no OEM publishes a `v_max(depth, flow velocity)` surface. The honest framing is
+that the depth half of "can it ford" has a shipping commercial answer with per-model
+numbers, and the stability half does not.
+
+## 58. THE SURVIVING NARROW CLAIM, AND THE DEAD ONE
+
+**Dead, and never to be restated: the SPH half.** Section 51 already establishes
+Lyu 2024 as an entirely particle-based 3D SPH vehicle-wading model, and Wasfy 2015
+as multibody plus SPH vehicle water fording. **Any claim of novelty for
+particle-based simulation of a vehicle in floodwater is refuted by the prior art in
+my own table.**
+
+**Surviving, narrow, and worth holding:** no **MPM** simulation of a full road
+vehicle in floodwater was found, **[recv]** in two named searched views, with the
+adjacent MPM-vehicle-water precedent being **tyre hydroplaning** (Zhou 2025, Zhou
+2026), which I have not verified. **[recv]** That claim is narrow on three axes at
+once, MPM specifically, a full road vehicle rather than a tyre, and floodwater, and
+**every one of the three is doing work**. Drop any one and it becomes false.
+
+**The scope sentence any such claim must carry**, given everything in this document:
+searched views were **papers only**, the corpus index is **not a superset of the
+bibliography**, `--query` **cannot match authors**, and **patents and OEM
+specifications were not searched at all**. A novelty claim without that sentence is
+not supported by the work that was actually done.
