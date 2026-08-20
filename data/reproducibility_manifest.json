@@ -36,6 +36,7 @@
  },
  "absent_and_why": {
   "wall_time_per_simulated_second": "UNJOINABLE, not merely remote. Slurm accounting holds 212 records for the era but no summary.json carries a job id, host or timestamp, so there is no key to join on. Recoverable only for FUTURE runs, by emitting SLURM_JOB_ID into summary.json.",
+  "wall_time_wandb_trap": "W&B is NOT a recovery route and its Runtime column is a trap: all 17 canonical runs show _runtime=0, host=Mac, gpu=None, because they were backfilled from the laptop on 2026-08-17. Two independent systems now agree wall time is unrecoverable for these runs.",
   "multi_gpu_scaling": "single-GPU runs throughout; no scaling study was ever performed"
  },
  "missing_summary": [],

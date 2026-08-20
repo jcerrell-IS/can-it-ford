@@ -245,6 +245,26 @@ def main() -> int:
                 "the era but no summary.json carries a job id, host or timestamp, so "
                 "there is no key to join on. Recoverable only for FUTURE runs, by "
                 "emitting SLURM_JOB_ID into summary.json.",
+            "wall_time_wandb_trap":
+                # CORROBORATED FROM A SEPARATE SYSTEM, and it carries a trap. Weights and
+                # Biases records runtime and GPU automatically, so it looks like the
+                # obvious recovery route. It is not one, and the way it fails is worse
+                # than being empty. Measured live 2026-08-20 against project can-it-ford
+                # (106 runs) by read-only GraphQL: all 17 canonical runs are present,
+                # every one reports host 'Josephines-MacBook-Air.local', gpu None, os
+                # macOS-arm64, and _runtime EXACTLY 0. They were created 3 to 4 seconds
+                # apart on 2026-08-17T21:30-21:31 with a heartbeat one second later, i.e.
+                # they are a BACKFILL FROM THE MAC, not the GPU runs.
+                # SO THE W&B DASHBOARD SHOWS A RUNTIME COLUMN READING 0 SECONDS FOR
+                # SEVENTEEN GPU SIMULATIONS. That is a plausible-looking number that means
+                # nothing, and it is the same shape as every instrument failure this
+                # project has recorded: a value indistinguishable from a measurement when
+                # nothing was measured. Never read timing for the canonical runs off the
+                # W&B UI.
+                "W&B is NOT a recovery route and its Runtime column is a trap: all 17 "
+                "canonical runs show _runtime=0, host=Mac, gpu=None, because they were "
+                "backfilled from the laptop on 2026-08-17. Two independent systems now "
+                "agree wall time is unrecoverable for these runs.",
             "multi_gpu_scaling":
                 "single-GPU runs throughout; no scaling study was ever performed",
         },
