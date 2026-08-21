@@ -2361,3 +2361,78 @@ or restrict the count to occupied hull voxels. Do not restate the raw percentage
 **FALSIFIER:** D21 dies if the frame-0 bbox fraction on any gated run is measured below 0.05 or
 at/above 0.10, or if `sim_standing.py:463-465` is found to use anything other than
 `veh.min(0)`/`veh.max(0)`.
+
+---
+
+## ADDENDUM 2026-08-21, the never-cited catalogue triaged against the coupling deficit
+
+**G17. THE NINE MULTI-REPORT UNCITED PAPERS, TRIAGED AGAINST THE FREE-RIGID FORCE DEFICIT. T1 for the catalogue arithmetic and the DOI resolutions, T2 for each paper's content.**
+
+Source catalogue: `00_CATALOGUED_BUT_NEVER_CITED_2026-08-14.tsv` under
+`~/Desktop/CAN_IT_FORD_RESEARCH_CORPUS_2026-08-13/`, human-curated, read directly this
+session. **205 data rows, of which 138 carry `cited_anywhere_in_repo = NO`.** The "138-row
+table" is that subset, not the file. Of those 138, **exactly 9 appear in more than one
+upstream report**, the `in_reports` field being a `+`-joined list of report names rather
+than a count. Those 9 are the highest-signal gaps and are the set triaged here. All nine
+DOIs were resolved live with `curl` against `api.crossref.org`, then `api.datacite.org`,
+and every returned title was compared against the title the catalogue claims. **Nine of
+nine match. No fabricated or mismatched citation is present in this set.**
+
+The defect they are judged against is the one J1b and J1d establish: the free-rigid
+force-coupled path carries a residual force deficit of roughly 25 to 30 percent at partial
+submersion which is **grid-converged** between g64 and g96 (0.10 and 1.51 points), so
+refinement will not remove it, while the deficit expressed as pressure over the 2.1662 m2
+cross-section is 2747, 5444, 3613 and 3967 Pa, **not a resolution-independent constant**,
+and none of those is the roughly 6.2 kPa the direct profile of job 3361504 reports. That
+last discrepancy is open, and a paper only bears on this defect if it can speak to a
+force error that survives refinement.
+
+| # | DOI | bears on the deficit | one-sentence reason |
+|---|---|---|---|
+| a | `10.1016/j.jcp.2016.10.064` | **YES, strongest** | States outright that the weakly compressible MPM it replaces is deficient for free-surface flow, and fixes it with pressure projection plus a level-set free-surface pressure boundary condition, which is precisely where a systematic load error on a partially submerged body would originate and precisely why it would survive refinement. |
+| b | `10.1016/j.cma.2022.114809` | **YES** | Couples iMPM fluid to an FEM solid through a *sharp* immersed interface and separately eliminates "numerical cavities", non-physical voids from disordered particle distribution, and both a smeared wetted interface and a void adjacent to the hull would remove integrated force without being a resolution artifact. |
+| c | `10.1504/pcfd.2019.097597` | **YES, as a benchmark** | Benchmarks MPM on exactly the class in question, free-surface flow interacting with an immersed structure, which is what a 25 to 30 percent deficit most needs and currently lacks: an independent reference configuration. Assessed from verified title, venue and authors only, Crossref returning no abstract. |
+| d | `10.1016/bs.aams.2019.11.001` | **NO** | A broad 25-year review that supplies orientation but no specific mechanism and no validation datum, and it is additionally the single parent of 343 of the 807 reference anchors in the DOI contamination sweep, so it is a citation-graph hub rather than evidence. |
+| e | `10.4271/2014-01-0936` | **YES, for the application, not the mechanism** | Vehicle water-wading CAE validated against physical testing of a simplified rectangular block, which is directly usable as an external reference for under-body wading loads, though it speaks to the application rather than to MPM force recovery. |
+| f | `10.1061/(asce)em.1943-7889.0000981` | **NO, wrong lever** | Its contribution is dynamic adaptive mesh refinement, and refinement is the one lever J1d has already shown does not move this deficit; only its "improved MPM" free-surface component touches the question at all. Assessed from verified title and venue only, no abstract available. |
+| g | `10.1016/j.proeng.2017.01.041` | **NO** | Validates MPM hydrodynamics for dam-break against shallow-water models and experiment with **no structure coupling at all**, so it can bound fluid-only fidelity but cannot speak to force on an immersed rigid body. |
+| h | `10.1007/s00466-019-01783-3` | **YES, strongest** | Names the mechanism directly: stress oscillations arising from poor force and stiffness integration, stress-recovery inaccuracy and cell crossing, all inherent to shape-function gradients and material-point integration, and since body force is recovered by integrating material-point stress, a systematic recovery bias transfers straight into a force deficit that refinement does not cure. |
+| i | `10.1115/1.4044632` | **YES, as measured data** | Supplies 30 repetitive water-entry runs measuring bottom pressures **and** forces on rigid versus elastic plating with quantified standard deviations, which is the kind of error-barred external force benchmark the open 6.2 kPa against 2.7 to 5.4 kPa discrepancy cannot presently be adjudicated against; the caveat is that it is impact and slamming with air trapping, a transient regime, not quasi-static partial submersion. |
+
+**The two candidates worth acting on are (a) and (h), and they are different mechanisms.**
+(a) says the deficit lives in the free-surface pressure boundary condition of a weakly
+compressible formulation. (h) says it lives in material-point stress recovery and force
+integration. Both predict a grid-converged deficit, which is what is observed, so
+grid-convergence alone does not discriminate between them. They are separable: (h)
+predicts the error scales with the stress-recovery scheme and should move under a
+different integration or gradient treatment at fixed grid, whereas (a) predicts it moves
+with the free-surface pressure treatment and with artificial sound speed, which G7 already
+records as able to flip a rigid-body outcome. **Neither is established here. Both are
+hypotheses with a named primary source and a distinguishing test.**
+
+**Recorded against over-reading: none of these nine papers measures this project's
+configuration.** Six bear on the deficit, three do not. Bearing on it is not evidence for
+any particular value of it, and nothing above licenses quoting a number from these papers
+as the explanation of the 25 to 30 percent.
+
+**G17a. TWO DEFECTS IN THE CATALOGUE ITSELF, found while verifying it. T1.**
+
+- **`10.4271/2014-01-0936` is no longer uncited, and the catalogue row is stale rather
+  than wrong.** It is live in `paper/can_it_ford_references_IEEE.bib` as
+  `khapane2014wading`, whose own `note` field records "Was cited nowhere in this
+  repository before 2026-08-15", one day after the catalogue was built on 2026-08-14.
+  **But the key appears in no `.tex` file in `paper/`**, and BibTeX emits only cited keys,
+  so it is present in the bibliography file and absent from the compiled manuscript. State
+  it as "in the .bib, not yet cited in the body", never as "cited".
+- **The catalogue's DOI for the PCFD benchmarking paper is a pre-publication form.**
+  `10.1504/pcfd.2019.10018820` returns 301 at Crossref and 404 at DataCite; it redirects
+  to the article of record, **`10.1504/pcfd.2019.097597`**, which resolves with matching
+  title and authors. Cite the final form. The 10018820 token is an Inderscience
+  forthcoming-article id, not a dead DOI, so do not read its 404 at DataCite as evidence
+  the paper does not exist.
+
+**FALSIFIER:** G17 dies if the catalogue is re-parsed and yields other than 205 data rows,
+138 uncited, or other than 9 uncited rows whose `in_reports` field contains a `+`; or if
+any of the nine DOIs is re-resolved and returns a title differing from the one the
+catalogue claims. G17a dies if `khapane2014wading` is found `\cite`d in any `paper/*.tex`,
+or if `10.1504/pcfd.2019.10018820` resolves directly at Crossref with a 200.
