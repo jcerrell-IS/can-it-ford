@@ -154,7 +154,11 @@ def check_inertia_wired():
     vehicle_params.py:
       - VEHICLE_PARAMS["compact_sedan"]["inertia_kg_m2"] reproduces exactly from
         box_inertia(1100, 4.30, 1.70, 1.47). It is a solid box, not a measurement.
-        No measured Yaris tensor exists (SAE 1999-01-1336 ends Nov 1998).
+        A measured 2010 Yaris tensor DOES exist, on slide 7 of DOI 10.13021/G8JS5D
+        (1078 kg; roll 388, pitch 1498, yaw 1647 kg m^2; CG Z 558 mm). It is simply
+        not this file's number, and the box is 19 to 26 percent off it. The SAE
+        1999-01-1336 database does end Nov 1998 and holds no Yaris, which is a
+        different and much narrower statement. Corrected 2026-08-21.
       - warpmpm already derives a better tensor from the hull particle cloud
         (mpm_solver_warp.py:859-871): Ixx 1501.5, Iyy 395.0, Izz 1685.4 against
         the box's axis-corrected 1893.0 / 463.0 / 1959.8, i.e. the box overstates

@@ -20,7 +20,11 @@ matches authors and journal too, and `--query Al-Qadami` returns 5 where it retu
 0. When you pass on a negative result, pass on the command that produced it. When you
 receive one, ask what was searched before you act.
 
-**THE INDEX COVERED 8 OF 21 DEEP SEARCHES AND NOW COVERS 21.** Fixed 2026-08-20.
+**THE INDEX COVERS 21 OF 21 AS METADATA AND 8 OF 21 AS PAPERS. SAY BOTH NUMBERS.**
+This line read "NOW COVERS 21" until 2026-08-21. Measured live that day: 21 search
+JSONs, ZERO with a `papers` array, 0 papers ingested, the 780 they represent present
+as an integer only, index unchanged at 332. `--query`, `--doi` and `--method` match
+none of the other 13 searches' papers. Metadata ingest fixed 2026-08-20.
 `REPORTS` is a hardcoded list of markdown files under `~/Downloads`, so a search
 entered only if somebody exported it by hand. The builder is pure standard library
 and cannot call an MCP connector, so the ingest is two-phase: an agent turn pulls the
@@ -28,7 +32,7 @@ searches to `data/deep_searches/`, now tracked, and the builder reads them.
 
     python3 analysis/research_index.py --searches              # all 21, with summaries
     python3 analysis/research_index.py --searches --query X    # grep goals and summaries
-    python3 analysis/research_index.py --source-audit          # exits 1 if one is orphaned
+    python3 analysis/research_index.py --source-audit          # exits 1 on orphan, hollow OR paperless
 
 **Read the GOAL TEXT, not only the summary.** A commissioned search's goal often
 states this project's own configuration and constraints, which is the fastest way to

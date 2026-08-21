@@ -1,3 +1,9 @@
+## Compact Instructions
+When summarizing this conversation: preserve the full VERIFIED/CONTRADICTED/REPLACED
+ledger in exact form, preserve the list of every file touched with old-string and
+new-string, preserve the TodoWrite task count vs. completed count. Do not summarize
+these away even under aggressive compaction.
+
 ## Multi-Pane Standing Rules
 
 These apply to every pane in every session automatically, do not
@@ -642,9 +648,16 @@ resolution, thresholds, citations, repo state. It is T1, read from live
 source.
 
 Demoted to historical, cite only with a date and never as current:
-  docs/VERIFIED_FACTS_LEDGER_july24.md and its _GRIDAWARE sibling
+  docs/VERIFIED_FACTS_LEDGER_july24.md. ITS "_GRIDAWARE SIBLING" DOES NOT EXIST,
+  checked 2026-08-21 by a find over the whole tree: eleven _GRIDAWARE files exist
+  (README_GRIDAWARE.md, docs/GATES_GRIDAWARE.md, four analysis scripts and others)
+  but NO VERIFIED_FACTS_LEDGER_july24_GRIDAWARE.md. Register H7 describes that
+  sibling in the present tense and is the second carrier of the same dangling
+  reference.
   ~/can-it-ford-audit/2026-08-04/CONFIRMED_FACTS_LEDGER.md
-  docs/CANITFORD_RESEARCH_INTEGRATION_v2_2026-08-05.md
+  docs/CANITFORD_RESEARCH_INTEGRATION_v2_2026-08-05.md, WHICH DOES NOT EXIST ON DISK,
+  checked 2026-08-21. scripts/semi_empirical_baseline.py:56 cites it too. Do not
+  chase it; treat any claim sourced to it as unsourced until the file is produced.
 Where any of them conflicts with the register, the register wins.
 
 
@@ -740,13 +753,22 @@ whether it reaches a reader-facing document. Built 2026-08-15 by
 `~/Downloads`, because a prior session lost a pass when Downloads returned EPERM
 and a recursive search silently reported zero hits.
 
-**THE INDEX COVERED 8 OF 21 DEEP SEARCHES FOR FIVE WEEKS, AND NOW COVERS 21.**
-Fixed 2026-08-20. `REPORTS` is a hardcoded list of markdown files under
+**THE INDEX COVERS 21 OF 21 SEARCHES AS METADATA AND 8 OF 21 AS PAPERS. SAY BOTH
+NUMBERS, NEVER ONE.** This clause read "NOW COVERS 21" until 2026-08-21, which was
+true of metadata and false of papers, and the difference is the whole point.
+Measured live 2026-08-21: 21 search JSONs in `data/deep_searches/`, **ZERO carrying a
+`papers` array**, **zero** paper records ingested from them, the **780** papers they
+represent present as an INTEGER only, and the index still at **332**. So `--query`,
+`--doi` and `--method` cannot match a single paper from the other 13 searches.
+Fixed 2026-08-20 for metadata. `REPORTS` is a hardcoded list of markdown files under
 `~/Downloads`, so a search entered only if somebody exported it by hand. The
 builder is pure standard library and CANNOT call an MCP connector, so the fix is
 two-phase: an agent turn pulls the searches to `data/deep_searches/`, now
 tracked, and the builder reads them. `--searches` lists and greps them and
-`--source-audit` exits 1 when a completed search reaches the corpus by no route.
+`--source-audit` exits 1 when a completed search reaches the corpus by no route AND,
+since 2026-08-21, when a search reaches it as metadata but contributes no papers. It
+reported OK over the paperless state for a day, because a metadata stub IS a route and
+reach-by-route was the wrong predicate. It now exits 1 with 13 problems.
 Four of the thirteen that were invisible answered live project questions,
 including the one whose summary states that NO STUDY QUANTIFIES A CROWNED OR
 CAMBERED ROAD AGAINST A FLAT PLANE.
