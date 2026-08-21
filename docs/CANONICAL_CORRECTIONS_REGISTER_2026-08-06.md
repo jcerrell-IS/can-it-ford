@@ -2436,3 +2436,72 @@ as the explanation of the 25 to 30 percent.
 any of the nine DOIs is re-resolved and returns a title differing from the one the
 catalogue claims. G17a dies if `khapane2014wading` is found `\cite`d in any `paper/*.tex`,
 or if `10.1504/pcfd.2019.10018820` resolves directly at Crossref with a 200.
+
+---
+
+**D22. THE "CROSSSLOPE" RUN SET APPLIES NO CROSS-SLOPE. IT IS A LONGITUDINAL GRADE STUDY, AND IT SAYS NOTHING ABOUT CAMBER. T1, measured from the artifacts.**
+
+Source: `CANITFORD_D10_CROSSSLOPE_2026-08-14/` under `~/Documents/`, eight run JSONs plus
+`SHA256SUMS.txt`. **All eight checksums verify OK** against the manifest, checked before any
+content was read, so the files are intact and are what the manifest says they are. Each
+carries a 28-field `meta` block and a 1200-frame `series`, 40.0 s at dt 1/330 s, `n_grid` 64,
+realized depth 0.2944 m, 48,367 water and 8,905 vehicle particles, `sound_speed_ms`
+12.84523257866513, and a `vehicle_loader` path under a TACC scratch filesystem
+(`/scratch/.../canitford_track1b/`) ending in `renders/yaris_render_s1/vehicle_live.py`.
+**This is real solver output from the Track 1b path, not a scaffold or a mock.**
+
+**The finding, and it is a naming defect with teeth.** The slope is applied by tilting the
+gravity vector, and **`g_vec[1]`, the lateral component, is exactly `0.0` in all eight
+runs.** The entire tilt sits in `g_vec[0]`, at exactly `9.81 * S / sqrt(1 + S^2)`: 0.196161
+at S = 0.02 and 0.587543 at S = 0.06, with `g_magnitude` held at 9.81 throughout. The x axis
+is the streamwise and travel axis: it carries `velocity_ms`, `x_vehicle_spawn`, both
+`x_water_centroid` fields, and in the zero-velocity runs it is the axis the vehicle slides
+along. **A cross-slope is a lateral tilt. No lateral tilt was ever applied.** The directory
+name, and the `predicted_surface_slope` framing that goes with it, describe an experiment
+that was not run.
+
+**What the data does establish, cleanly: a longitudinal grade response.** In still water,
+with no flow at all, streamwise displacement over 40 s is:
+
+| S | still-water `disp_x` | flowing `disp_x` at 1.5 m/s |
+|---|---|---|
+| 0.00 | -0.01281 m (and -0.00420 m on the repeat) | 0.27263 m (and 0.27362 m) |
+| 0.02 | 0.07070 m | 0.38154 m |
+| 0.06 | 0.20908 m | 0.89295 m |
+
+Monotonic in both columns, and large against the replicate floor. **The noise floor is
+measured, not assumed**, from the two S = 0 pairs run at identical configuration and
+identical `seed` 0: `disp_x` differs by 0.000989 m in the flowing pair and 0.008606 m in the
+still pair. The still-water S = 0.02 case sits 0.084 m above its own S = 0 baseline, about
+ten times that floor, and S = 0.06 sits 0.222 m above it, about twenty-six times. **The
+grade signal is real.** Note in passing that identical seeds do not reproduce bit-identically,
+so the run path is not deterministic at this level.
+
+**What it does NOT establish, stated so this entry cannot be over-read.** The lateral channel
+`disp_y` has no forcing term in any of these runs, so nothing in it may be read as a camber
+response. Its behaviour confirms that directly: in the flowing runs it reads 0.0097, 0.0069,
+0.0261 and 0.0580 m as S rises, which looks like a trend, while in the still runs it moves
+the **opposite** way, -0.0471, -0.0467, -0.0344, -0.0182 m, shrinking toward zero as S rises.
+A quantity that has no driving term and changes sign of trend between two blocks is
+secondary motion, not physics of interest. **Camber remains unmodelled and unmeasured.**
+
+**A confound that bounds the strongest case.** `leaked_particle_events` scales with slope,
+2,803,895 at S = 0 rising to 5,810,005 at S = 0.06 in the flowing set, and 2,158,122 to
+3,881,040 in the still set, against only 48,367 water particles. **Leakage roughly doubles
+across the slope range**, so the S = 0.06 case is simultaneously the largest signal and the
+least numerically trustworthy of the set. Quote S = 0.02 in preference to S = 0.06.
+
+**Consequence for G9, and this is the useful half.** G9 records that ground slope matters and
+is unmodelled, citing Xia et al. 2014 at a 1:50 slope. **1:50 is 0.02, which is exactly the
+S002 case here**, at a realized depth of 0.2944 m against Xia's 0.25 m, and Xia's is a
+longitudinal flume bed slope, so the axis matches what was actually simulated. G9's
+"unmodelled" clause is therefore **too strong for longitudinal grade and exactly right for
+camber**. Split it that way rather than deleting it.
+
+**Do not cite this run set as a camber, cross-slope, or superelevation result under any
+wording.** If it is cited at all, cite it as a longitudinal grade sweep at S = 0, 0.02, 0.06,
+and say that lateral tilt was zero.
+
+**FALSIFIER:** D22 dies if any run in that directory is found with a non-zero `g_vec[1]`, or
+if the x axis is shown not to be the streamwise axis, or if `shasum -a 256 -c SHA256SUMS.txt`
+in that directory reports any file as FAILED.
