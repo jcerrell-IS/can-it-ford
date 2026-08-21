@@ -330,7 +330,7 @@ This also means `check_claims.py --all`, which enumerates via `git ls-files`, ca
 
 **H6. The same script on two machines can differ on a physics input.** Mac `can_it_ford_L2_mpm.py:147` passes no `rho` to `gs.materials.MPM.Liquid()`; Vista `:148` passes `rho=1000.0`. Before citing any parameter read on one machine, confirm which machine ran the result.
 
-**H7. `VERIFIED_FACTS_LEDGER_july24.md` and its `_GRIDAWARE` sibling are byte-identical except one sentence at line 307 of each.** V24 says "the 17 gated runs"; GA says "the 17 runs in render_s2." The whole fork is that sentence.
+**H7. WITHDRAWN AS A PRESENT-TENSE CLAIM 2026-08-21: the `_GRIDAWARE` LEDGER SIBLING IS NOT ON DISK.** A find over the whole tree returns eleven `_GRIDAWARE` files and no `VERIFIED_FACTS_LEDGER_july24_GRIDAWARE.md`. Kept as history: the two were byte-identical except one sentence at line 307 of each. V24 says "the 17 gated runs"; GA says "the 17 runs in render_s2." The whole fork is that sentence.
 
 **H8. A nested duplicate `can-it-ford/can-it-ford/` tree exists** on Vista and inside the Mac repo root, with differing `scenario_sweep.csv`, `vehicle_params.py` and `ford_sweep_driver.py`. Verify pwd and git root before trusting any read.
 
@@ -2264,7 +2264,7 @@ in total across the three AR&R class caps, which reproduces the count asserted a
 `deliverables/paper/overleaf/sections/results.tex:7`.
 
 **The canonical path is ALREADY correct and this entry exists so nobody "simplifies" it away.**
-`vehicle_params.py:239` and `renders/yaris_render_s1/gates.py:29` both read
+`vehicle_params.py:248` and `renders/yaris_render_s1/gates.py:29` both read
 `if round(depth_m * velocity_ms, 6) > lim["haz_m2s"]`. Removing that `round` silently flips
 four cells of the published phase space on floating-point representation alone. Any new code
 comparing a D x V product against a cap must round to six decimals first.

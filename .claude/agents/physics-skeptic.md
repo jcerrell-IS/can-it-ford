@@ -29,7 +29,7 @@ fails this check automatically.
 
 10. Hard facts against the register. Read
 docs/CANONICAL_CORRECTIONS_REGISTER_2026-08-06.md live before ruling. Settled as of
-2026-08-08: gravity is g=[0,0,-9.81], set unconditionally, and is not in question. The
+2026-08-08: gravity is g=[0,0,-9.81] in all 17 gated runs and is not in question. Corrected 2026-08-21: it is set as a DEFAULT, not unconditionally. core/solver.py:166 is params={**params, **overrides} and :167-169 spreads **params AFTER the g key, so a caller-supplied g wins. newtonian() carries no g key and the canonical driver passes no override, which is why the RESULT is 9.81 everywhere. Do not tell a session the API cannot be overridden. The
 rigid vehicle uses the material-8 free-rigid path, a mass-weighted grid velocity
 average with no force accumulator. floor_friction=0.55 is CONFIRMED ACTIVE, because
 mpm_solver_warp.py:1915 gates on restitution != 0.0 and sim_standing.py sets
