@@ -3479,3 +3479,54 @@ of that shape, and it should not be called a defect until somebody does.
   commissioned to test it returns that the literature neither confirms x86-only status today
   nor documents an ARM-host CUDA build failure, and Chrono::FSI-SPH builds on Vista aarch64
   in 94 seconds. Do not switch, and do not restate the premise as fact.
+
+---
+
+**D23. THE D10 "BCBAND"/"BCVAL" SETS ARE REAL, CHECKSUM-VERIFIED BC-NUMERICS TESTS, NOT A CAMBER OR VEHICLE-DYNAMICS STUDY. THE "DRAIN" VALIDATION RUN DID NOT DRAIN. T1, measured from the artifacts.**
+
+Source: `CANITFORD_D10_BCBAND_2026-08-14/` and `CANITFORD_D10_BCVAL_2026-08-14/` under
+`~/Documents/`, 9 + 3 run JSONs plus their own `SHA256SUMS.txt` manifests. **All 12
+checksums verify OK**, checked before any content was read. Both sets carry
+`sound_speed_ms=12.84523257866513` and `dx=0.1472147236519959`, matching the canonical
+pipeline signature already established at D22 to 15 significant figures, internally
+consistent with the same solver config. Neither file exposes the `vehicle_loader`/scratch-path
+field D22 had, so that specific provenance chain is not independently reconfirmed here.
+
+BCBAND has no vehicle in its meta schema at all: it is a pure open-channel inlet study. It
+sweeps an inlet "relaxation band" length (`relax_len_m` = `reach_m` [8.244 m] x
+`relax_frac`, at 0.25/0.50/0.80) against an `inlet_mode="none"` no-BC control (2 seeds), all
+at fixed `velocity_ms=1.5`, `n_water=49284`, 3000 frames.
+
+**Finding 1, volume accounting is not monotonic in band length.** Under `inlet_mode="depth"`,
+`volume_loss_pct` is 1.14-1.29% at `relax_frac`=0.25, worsens to 2.50% at 0.50, then falls to
+0.09-0.10% at 0.80. "Longer relaxation band -> less mass loss" is not a safe generalisation
+from this set at these three points.
+
+**Finding 2, `inlet_mode="discharge"` conserves total mass exactly (0.0% loss, matching the
+no-BC control) but overshoots local depth the most.** The one discharge run's gauge depth
+rises 0.266 -> 0.366 m (+0.10 m) over the run, roughly 2 to 10x the depth rise of every
+`depth`-mode run (+0.0095 to +0.0462 m), and far more than the control's near-flat ±0.004 m
+drift. Conserving system-wide volume and matching a target local depth are different
+guarantees, and this inlet only delivers the first one.
+
+**Finding 3 (BCVAL), the "drain" validation run overfilled instead of draining.**
+`A_control` (SINK-ONLY, v=0, 48,367 water particles) passes gate `c1` cleanly. `A_drain`,
+the same SINK-ONLY/v=0 setup but intended to test drain-down, starts with **72,381 water
+particles, about 50% more than its own control**, ends **overfilled by 0.12 m**, and its
+own `c1` field records itself as **`"(overfilled: C1 n/a)"`**: the gate did not pass, it
+could not evaluate. `B_hold` (active depth-forcing, v=1.5) passes `c1` cleanly, with 5,603
+particles retired and 3,871 reissued.
+
+**Do not cite `A_drain` as a passing drain-BC validation.** As shipped it is a mislabelled
+overfill case, not evidence the sink/drain path works.
+
+**Not a camber, vehicle-dynamics, or force result.** BCBAND has no vehicle in its schema.
+BCVAL's vehicle field (`n_vehicle=8905`, matching the canonical hull) is present but static
+across all three runs. Nothing here bears on force, verdict, or displacement; this is
+exclusively an inlet/outlet numerics finding, found by a directory sweep, not named in any
+prior dispatch.
+
+**FALSIFIER:** D23 dies if `shasum -a 256 -c SHA256SUMS.txt` reports any file as FAILED in
+either directory, if `A_drain.c1` is found to read `"PASS"` rather than the overfilled
+marker, or if `volume_loss_pct` is found to vary monotonically with `relax_frac` once a
+fourth band-length point is added.
