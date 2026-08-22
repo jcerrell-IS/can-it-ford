@@ -1,0 +1,239 @@
+{
+  "disableClaudeAiConnectors": true,
+  "fileCheckpointingEnabled": true,
+  "statusLine": {
+    "type": "command",
+    "command": "$CLAUDE_PROJECT_DIR/.claude/statusline.sh",
+    "refreshInterval": 60,
+    "padding": 0
+  },
+  "permissions": {
+    "allow": [
+      "Bash(scripts/tacc.sh:*)",
+      "Bash(scripts/tacc_submit.sh:*)",
+      "Bash(scripts/tacc_idle_check.sh:*)",
+      "Bash(scripts/check_claims.py:*)",
+      "Bash(python3 scripts/check_claims.py:*)",
+      "Bash(/Users/josie/can-it-ford/scripts/tacc.sh:*)",
+      "Bash(/Users/josie/can-it-ford/scripts/tacc_submit.sh:*)",
+      "Bash(/Users/josie/can-it-ford/scripts/tacc_idle_check.sh:*)",
+      "Bash(python3 /Users/josie/can-it-ford/scripts/check_claims.py:*)",
+      "Bash(scripts/pane_check.sh*)",
+      "Bash(tmux ls*)",
+      "Bash(tmux capture-pane*)",
+      "Bash(tmux wait-for*)",
+      "Bash(tmux display-message*)",
+      "Bash(echo*)",
+      "Bash(/usr/bin/grep*)",
+      "Bash(grep*)",
+      "Bash(git status*)",
+      "Bash(git log*)",
+      "Bash(git diff*)",
+      "Bash(git fetch*)"
+    ],
+    "ask": [
+      "Bash(sbatch:*)",
+      "Bash(git reset --hard:*)",
+      "Bash(git rebase:*)",
+      "Bash(git cherry-pick:*)",
+      "Bash(git worktree remove:*)",
+      "Bash(git worktree prune:*)"
+    ],
+    "deny": [
+      "Bash(git add -A:*)",
+      "Bash(git add --all:*)",
+      "Bash(git add .:*)",
+      "Bash(git commit -a:*)",
+      "Bash(git commit --all:*)",
+      "Bash(idev:*)",
+      "Read(PROVISIONAL_STATUS.md)",
+      "Read(vehicle_geometry_research/yaris_sedan_watertight_DEPRECATED_lowres_do_not_use.ply)",
+      "Read(reference_data/vehicle_data_master_reference_2026-07-21.json.OLD-4906B)",
+      "Read(data/track1_sweep_v3/**)",
+      "Read(data/track1_sweep_v2/**)",
+      "Read(docs/session_notes/2026-07-16_l1_l2_dxv_crossref.md)",
+      "Read(files/CLAUDE_md_*_july13.md)",
+      "Read(reference_docs/briefing_vault/00_MASTER_CORRECTIONS_INDEX.md)",
+      "Read(reference_data/MPM_Flood-Vehicle_Reference_Data__Sedan__SUV__Pickup__NEON_TABLE_SUPERSEDED.md)",
+      "Read(designsafe-staging/**)",
+      "Read(//Users/josie/can-it-ford/can-it-ford/**)",
+      "Read(**/*_DEPRECATED*)",
+      "Read(**/*_SUPERSEDED*)"
+    ]
+  },
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "mkdir -p ~/.pane_signals && echo \"$(date -u +%s)\" > ~/.pane_signals/$(tmux display-message -p '#S_#I_#P' 2>/dev/null || echo unknown)_done 2>/dev/null || true"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/gate_destructive.sh"
+          }
+        ],
+        "matcher": "Bash"
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/gate_concurrent_write.sh"
+          }
+        ],
+        "matcher": "Bash"
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/gate_concurrent_write.sh"
+          }
+        ],
+        "matcher": "Edit|Write"
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/gate_protected_files.sh"
+          }
+        ],
+        "matcher": "Edit|Write"
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/gate_protected_files.sh"
+          }
+        ],
+        "matcher": "Read"
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 $CLAUDE_PROJECT_DIR/.claude/hooks/pretooluse_git_commit_gate.py"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 $CLAUDE_PROJECT_DIR/.claude/hooks/banned_phrase_guard.py"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash|Read|Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 $CLAUDE_PROJECT_DIR/.claude/hooks/stale_csv_guard.py"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash|Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 $CLAUDE_PROJECT_DIR/.claude/hooks/audit_integrity_guard.py"
+          }
+        ]
+      },
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 $CLAUDE_PROJECT_DIR/.claude/checks/count_claims_check.py"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 $CLAUDE_PROJECT_DIR/.claude/tooling/commit_autoapprove.py"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/check_claims_posttool.sh",
+            "statusMessage": "Checking for previously refuted claims"
+          }
+        ],
+        "matcher": "Edit|Write"
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/live_state.sh",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/session_end_idle_check.sh"
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/orient_live.sh"
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 $CLAUDE_PROJECT_DIR/.claude/hooks/session_start_protocol.py"
+          }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/precompact_snapshot.sh",
+            "statusMessage": "Freezing repo state before compaction"
+          }
+        ]
+      }
+    ]
+  }
+}

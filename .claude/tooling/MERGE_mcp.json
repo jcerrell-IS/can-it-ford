@@ -1,0 +1,13 @@
+{
+  "_comment": "MERGE these two entries into the mcpServers object of /Users/josie/can-it-ford/.mcp.json. Do NOT replace that file: it already carries an uncommitted edit from another session.",
+  "mcpServers": {
+    "canford-corpus": {
+      "command": "/usr/bin/python3",
+      "args": ["${CLAUDE_PROJECT_DIR}/.claude/tooling/corpus_mcp.py"]
+    },
+    "canford-tacc": {
+      "command": "/usr/bin/python3",
+      "args": ["${CLAUDE_PROJECT_DIR}/.claude/tooling/tacc_mcp.py"]
+    }
+  }
+}

@@ -1,0 +1,25 @@
+# Copy to .github/workflows/canford-checks.yml
+# WHY: the existing checks run only as local hooks, so they protect one machine.
+# Vista's checkout currently carries four MODIFIED tracked files including
+# CLAUDE.md and failure_modes.py, and nothing checks them. 2c1e05ae Tier 1
+# asked for exactly this and it was never built.
+name: canford-checks
+on:
+  push:
+  pull_request:
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: params_check
+        run: python .claude/checks/params_check.py
+      - name: register_integrity
+        run: python .claude/checks/register_integrity.py
+        continue-on-error: true   # resolves research-artifact ids that are not in CI
+      - name: count_claims
+        run: python .claude/checks/count_claims_check.py
+        continue-on-error: true   # accepts 22/23/24 by scope, see CLAUDE.md item 13
