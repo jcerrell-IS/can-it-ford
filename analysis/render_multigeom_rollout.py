@@ -204,9 +204,74 @@ def base_colours(V, F):
     return base, int(tires.sum())
 
 
-def shade(base, n):
-    sh = np.clip(n @ LIGHT, 0.0, 1.0) * 0.6 + 0.4   # dough_surface_render.py:79
-    return np.clip(sh[:, None] * base, 0.0, 1.0)
+# Painted-car clearcoat. F0 = 0.05 is the normal-incidence reflectance of an
+# automotive clearcoat (n ~ 1.5): ((1.5-1)/(1.5+1))**2 = 0.04, rounded up slightly
+# because the coat sits over a metallic basecoat. Compare F0_WATER = 0.0204 in
+# render_multigeom_shaded.py:85, which is the same Schlick construction for air->water.
+F0_CLEARCOAT = 0.05
+ROUGH_CLEARCOAT = 0.25     # a polished but not mirror finish
+
+
+def shade(base, n, view_dir=None, sky=None, sun=None):
+    """Vehicle shading.
+
+    WHY THIS IS NOT ONE LINE ANY MORE. This function used to be
+
+        sh = np.clip(n @ LIGHT, 0.0, 1.0) * 0.6 + 0.4
+
+    that is Lambert plus a constant ambient, one light, no specular, no Fresnel, no
+    clearcoat and no shadow. In the SAME repository the WATER is given Schlick Fresnel
+    (render_multigeom_shaded.py:252), an HDRI mirror reflection (:257), Snell plus
+    Beer-Lambert (:259) and a GGX lobe (:288). The asymmetry was inside one file: the
+    hull was routed through this one-liner at render_multigeom_shaded.py:432 while the
+    water in the same frame got all four. A car that reads as matte cardboard next to
+    physically shaded water is the single largest visual defect in the pipeline.
+
+    Every block below is lifted from the water path rather than invented, so the two
+    surfaces are lit by the same environment and the same sun.
+
+    DEGRADES CLEANLY. With sky/sun/view_dir omitted it reproduces the old Lambert plus
+    constant ambient exactly, so existing call sites that have no HDRI cache keep
+    working and no figure silently changes.
+    """
+    lam = np.clip(n @ LIGHT, 0.0, 1.0)
+    if sky is None or view_dir is None:
+        return np.clip((lam * 0.6 + 0.4)[:, None] * base, 0.0, 1.0)
+
+    from render_multigeom_shaded import sample_env      # same env lookup as the water
+
+    v = np.asarray(view_dir, dtype=np.float32)
+    v = v / (np.linalg.norm(v) + 1e-12)
+
+    # ---- ambient: the real sky, not a constant 0.4 -------------------------
+    amb = sample_env(sky, n).astype(np.float32)
+
+    # ---- diffuse: Lambert against the sun, plus sky ambient ----------------
+    diff = (lam[:, None] * 0.62 + 0.38 * amb) * base
+
+    # ---- clearcoat Fresnel: Schlick, same form as F0_WATER at :252 ---------
+    ndotv = np.clip(np.abs(n @ v), 0.0, 1.0)
+    F = F0_CLEARCOAT + (1.0 - F0_CLEARCOAT) * (1.0 - ndotv) ** 5
+
+    # ---- mirror term: the sky reflected in the coat ------------------------
+    refl_d = n * 2.0 * (n @ v)[:, None] - v[None, :]
+    refl_d /= np.linalg.norm(refl_d, axis=-1, keepdims=True) + 1e-12
+    refl = sample_env(sky, refl_d).astype(np.float32)
+
+    # ---- GGX lobe against the HDRI sun, same construction as :288 ----------
+    if sun is not None:
+        l = np.asarray(sun, dtype=np.float32)
+        h = l[None, :] + v[None, :]
+        h /= np.linalg.norm(h, axis=-1, keepdims=True) + 1e-12
+        ndoth = np.clip(n @ h[0], 0.0, 1.0)
+        a2 = np.clip(ROUGH_CLEARCOAT ** 2, 1e-5, 1.0) ** 2
+        D = a2 / (np.pi * ((ndoth * ndoth) * (a2 - 1.0) + 1.0) ** 2)
+        spec = (F * D * 0.045)[:, None] * np.array([1.0, 0.99, 0.96], dtype=np.float32)
+    else:
+        spec = 0.0
+
+    rgb = diff * (1.0 - F[:, None]) + refl * F[:, None] + spec
+    return np.clip(rgb, 0.0, 1.0)
 
 
 def caption_lines(z, zmin, floor, caveat: str, sub_note: str) -> list[str]:
