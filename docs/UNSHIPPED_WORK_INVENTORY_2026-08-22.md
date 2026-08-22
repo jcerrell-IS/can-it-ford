@@ -1162,3 +1162,133 @@ surfaced this before the push instead of after.
 For the record, that commit's content was covered by the same scan: the final push diff was
 path-clean and returned zero matches for live credential material, and section 21's scan
 ran over the whole diff rather than over my commits alone.
+
+---
+---
+
+# FOURTH PASS, 2026-08-22 ~01:50 BST: four items the revised dispatch added
+
+Acting only on what the revised prompt asks that the pass above did not cover.
+
+## 28. THE TWO-WAY DIVERGENCE IS GONE, AND MY OWN MERGE CLOSED IT
+
+The dispatch says `origin/main` is 5 commits ahead of `origin/claude/add-ci-checks`, that
+this is a two-way divergence, and to **flag the main-side commits rather than silently
+ignore them**. Measured live after `git fetch`, that is no longer the state, and I caused
+the change, so it is flagged here rather than left for someone to discover.
+
+```
+main ahead of add-ci-checks:  0        (dispatch says 5)
+add-ci-checks ahead of main:  417      (dispatch says ~147)
+```
+
+`origin/main` has NOT moved. It is still `c7f0a16`, the same SHA as at session start. What
+changed is that `c7f0a16` is now an ancestor of `add-ci-checks`.
+
+**The cause, traced rather than guessed:** `c7f0a16` was NOT an ancestor of the pre-session
+tip `fd4f8b7`, and it IS an ancestor of `claude/r8-licence`. Of the 17 branches merged in
+the pass above, `r8-licence` is the only one containing it. Merging `r8-licence` therefore
+absorbed all five main-side commits.
+
+**This was not arbitrary.** `scripts/r8/r8_plan.tsv` declares d10-licence's base as
+literally `origin/main`, the only row in the plan that does. So the branch was built on
+main by design, and merging it did what the plan implies.
+
+The five commits now absorbed, named as the dispatch asks:
+
+| sha | date | subject |
+|---|---|---|
+| `c7f0a16` | 2026-08-17 | Skip the AI review when unconfigured instead of failing the PR (#14) |
+| `1c71a5a` | 2026-08-17 | Give Vercel something to deploy, and only that (#13) |
+| `aee70ab` | 2026-08-17 | hf upload --exclude takes one pattern per flag (#12) |
+| `f6348c7` | 2026-08-17 | Space L1 used the Large 4WD threshold for a Yaris and dropped two of three conditions (#11) |
+| `647aaa0` | 2026-08-17 | Sync only hf_space/ to the Space, not the whole 407MB repo (#10) |
+
+**The consequence is favourable and it should still be a human's call.** The divergence is
+now ONE-WAY: main is a strict ancestor of add-ci-checks, 417 behind and 0 ahead, verified
+by `merge-base --is-ancestor`. **`add-ci-checks` to `main` is now a clean fast-forward**
+rather than the divergent merge it would have been this morning. I did not do that merge,
+and I am not proposing it here; the dispatch is explicit that whether add-ci-checks goes to
+main is a human decision. The point is only that the decision is now simpler than the
+dispatch assumed, and that it got simpler because of a merge I made, not on its own.
+
+## 29. CI HAS NEVER RUN ON MAIN
+
+The revised dispatch narrows the question correctly: not whether `canford-checks.yml` has
+ever run, but whether it has ever run **on main**.
+
+**It never has.** Every run of the workflow, by branch: [MEASURED, `gh run list --limit 100`]
+
+```
+  21  claude/add-ci-checks
+   1  claude/r5-research
+   1  claude/r5-physics
+   1  claude/r5-safekeeping
+   1  claude/r5-exposure
+   0  main
+```
+
+`gh run list --workflow=canford-checks.yml --branch main` returns empty.
+
+**My merges did not land it on main, because I merged nothing to main.** The workflow file
+is still absent from `origin/main` and present on `claude/add-ci-checks`. So the
+first-run-on-main event the dispatch wants flagged **has not happened and is still
+pending.** Whoever fast-forwards main will trigger it, and that run is the one to watch:
+the workflow has 21 green runs on a branch and zero runs on main, so it is known to pass
+there and unknown to pass on main.
+
+## 30. WRITE SCOPE: taken as a declared one-time exception, because the plan-file route is blocked
+
+The dispatch offers two routes and asks me to say plainly which I took.
+
+`scripts/r8/r8_plan.tsv` still works exactly as the earlier pass described. [MEASURED]
+Columns are `slot wave branch base worktree needs_gpu writes_only permmode effort`. No row
+owns `docs/` broadly; every row names specific documents. There is no coordinator row: a
+case-insensitive grep for "coordinator" returns nothing. `d1-safe`'s `writes_only` is
+`CLAUDE.md,.claude/settings.json,.claude/hooks/orient_live.sh,.claude/checks/params_check.py,.claude/skills/connector-router/SKILL.md,scripts/check_claims.py`,
+which does not include `docs/`.
+
+**I took the exception route, and the reason the other route is unavailable is concrete
+rather than a preference.** `scripts/r8/r8_plan.tsv` is currently DIRTY with another
+session's uncommitted work: a diff shows one appended line, the `d23-overleaf` row. The
+file is not staged. **Committing a coordinator row would necessarily commit their
+`d23-overleaf` row too**, because a commit of that path takes the whole file. That is the
+cross-session commit breach this project's standing rules exist to prevent, and it is the
+same hazard that section 27 above records happening at the push level an hour ago.
+
+So: **this write is a deliberate one-time exception, authorised by Josie handing this task
+to this session directly.** It is not a silent override. Concretely, this session wrote
+outside any declared slot scope in exactly one place, `docs/UNSHIPPED_WORK_INVENTORY_2026-08-22.md`,
+and made no other write outside the merges themselves.
+
+**The unresolved half stays unresolved:** the plan still has no row that owns this task,
+so the next "inventory, merge and push everything" dispatch will hit the identical
+question. Adding a coordinator row owning `docs/` broadly is the fix, and it should be done
+by whoever also owns the pending `d23-overleaf` edit, in one commit, rather than by a
+session that would have to sweep their work in to do it.
+
+## 31. FRESH LIVE-SESSION CHECK, and the hazard is still live
+
+The revised dispatch adds this as step 1 and says not to assume the earlier worktree
+deletion cannot recur. Re-checked fresh rather than reused. [MEASURED]
+
+**15 live `claude --model` CLI processes**, 12 distinct session ids.
+
+For the five branches still unmerged:
+
+| branch worktree | directory | tmux panes still pointing at it |
+|---|---|---|
+| `r8-persistence` | **GONE** | 0 |
+| `r8-bc-merge` | **GONE** | 0 |
+| `r9-corpus-bib` | **GONE** | **2** |
+| `r9-settle` | **GONE** | **2** |
+| `r9-platform` | **GONE** | **2** |
+
+**All five directories are gone, and six panes are pointing into directories that do not
+exist.** This is not a stale reading of the earlier 00:51 event; it was re-measured now.
+
+It strengthens the section 20 conclusion rather than changing it. Those five branches
+should not be merged by a session that cannot see their worktrees, and the three with live
+panes should not be touched at all until it is known whether those panes are working
+sessions or orphans pointing at nothing. The refs are safe either way; nothing is at risk
+of loss, only of collision.
