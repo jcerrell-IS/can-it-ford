@@ -35,6 +35,10 @@ if HERE not in sys.path:
 LARGE_ROOTS = {
     "/", "/Users", "/System", "/Library", "/Applications",
     "/private", "/Volumes", "/opt", "/usr",
+    # TACC roots. They do not exist on this Mac, where realpath leaves them
+    # unchanged and they simply never match, so listing them is free here and
+    # live when a session runs on Vista or LS6.
+    "/work", "/scratch", "/corral",
 }
 HOME = os.path.expanduser("~")
 LARGE_ROOTS.add(HOME)
