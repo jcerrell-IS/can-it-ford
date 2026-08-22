@@ -386,8 +386,22 @@ def main():
     lim2 = float(max(2.2 * v2.extent[1], 3.5 * v2.extent[0], 6.0 * a.depth))
     print("DETERMINISM load1 n=%d lim=%.9f" % (v1.n_particles, lim1), flush=True)
     print("DETERMINISM load2 n=%d lim=%.9f" % (v2.n_particles, lim2), flush=True)
-    det_ok = (v1.n_particles == v2.n_particles) and (lim1 == lim2)
-    print("DETERMINISM identical=%s" % det_ok, flush=True)
+    # RENAMED 2026-08-18. Old names: the variable was det_ok and the summary key was
+    # determinism_identical. This compares two loads of the SAME hull on a particle COUNT and a
+    # grid LIMIT, and on nothing else. It is a hull-load reproducibility check, not a trajectory
+    # check, and it cannot detect solver non-determinism: a different random surface sample of
+    # the same watertight hull preserves both quantities while placing every particle
+    # differently. Repeats at fixed configuration produce bit-different trajectories while this
+    # stays True, so the old name asserted something the value never measured. Do not rename it
+    # back, and do not read it as evidence that a run is reproducible; compare metrics.csv
+    # between repeats for that.
+    # The "DETERMINISM " stdout prefix is DELIBERATELY unchanged: scripts/run_three_class_*.sh
+    # capture solver logs with an anchored /usr/bin/grep -E '^(...|DETERMINISM|...)', and those
+    # scripts are outside this change's scope. Renaming the prefix would silently drop these
+    # lines from every captured log.
+    hull_load_ok = (v1.n_particles == v2.n_particles) and (lim1 == lim2)
+    print("DETERMINISM hull_load_identical=%s (hull load only, NOT trajectory)"
+          % hull_load_ok, flush=True)
 
     n_odd, n_cols = count_odd_columns(v1.mesh, h_probe)
     print("PARITY_ODD_COLUMNS dropped=%d of %d columns (%.4f percent)"
@@ -536,7 +550,9 @@ def main():
         "hull_m3_published": (float(ventry["hull_m3"]) if ventry else None),
         "preflight_fill_ratio": float(preflight_fill_ratio),
         "parity_odd_columns_dropped": n_odd, "parity_total_columns": n_cols,
-        "determinism_identical": bool(det_ok),
+        # FORWARD-ONLY WRITE: new key only. Every summary.json written before
+        # 2026-08-18 keeps "determinism_identical"; readers accept both.
+        "hull_load_identical": bool(hull_load_ok),
         "final_disp_m": [float(q) for q in d],
         "final_disp_mag_m": float(np.linalg.norm(d)),
         "final_yaw_deg": float(scene.history.yaw[-1]),

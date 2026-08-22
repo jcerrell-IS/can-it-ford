@@ -103,8 +103,15 @@ def check_summary(run: Path, res: dict) -> None:
     else:
         res["ok"].append("C3 oob = 0")
 
-    if s.get("determinism_identical") is False:
-        res["warn"].append("determinism_identical is False")
+    # BACKWARD-COMPATIBLE READ. Renamed 2026-08-18; summaries written before then carry
+    # the old key and are not being rewritten.
+    # NOTE what this warning does and does not mean. The flag compares two loads of the
+    # same hull on particle count and grid limit only, so False means the HULL LOAD was
+    # not reproducible. True does NOT mean the run is reproducible: repeats at fixed
+    # configuration give bit-different trajectories while this reads True.
+    hull_load = s.get("hull_load_identical", s.get("determinism_identical"))
+    if hull_load is False:
+        res["warn"].append("hull_load_identical is False (hull load, not trajectory)")
 
 
 def check_rollout(run: Path, res: dict) -> None:
