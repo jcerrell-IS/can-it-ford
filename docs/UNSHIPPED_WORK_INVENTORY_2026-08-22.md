@@ -918,3 +918,209 @@ already an ancestor of the pushed remote.
 
 **Still unreviewed.** The adversarial path remains dead and was not retried or faked. The
 00:51 removal is still unexplained. No rebase was attempted on any branch.
+
+---
+---
+
+# PART 2 AND PART 3 EXECUTION RECORD, 2026-08-22 ~01:40 BST
+
+Third dispatch. **This is the pass that actually merged and pushed.** The two earlier
+passes ran from cwd `/` and correctly refused to write; this one ran from
+`/Users/josie/can-it-ford` on `claude/add-ci-checks`, so the positional blocker in
+section 9(1) was gone and the human instruction in section 9(5) was given explicitly.
+
+## 17. Step Zero, passing this time
+
+```
+hostname   Josephines-MacBook-Air.local
+pwd        /Users/josie/can-it-ford        <- exact, not a worktree, not a BACKUP copy
+branch     claude/add-ci-checks
+```
+
+## 18. The rebase question, answered: merged, not rebased
+
+The prompt asked to rebase each branch onto a current `add-ci-checks` if it was not
+already based there. **I did not rebase anything, deliberately.**
+
+`tmux list-panes -a` returns **26 live panes** (`canford8:d11`..`d23` and
+`phone:d11`..`d23`), each sitting on one of these branches. [MEASURED] Rebasing rewrites
+commits; a merge does not. Rewriting 21 branches out from under 26 live sessions is
+exactly the topology the standing rule "never let two panes touch the same file, branch,
+or process without explicit sequencing" exists to prevent, and the board records two prior
+breaches of that shape. **Every source branch is byte-identical after this pass.** The
+merges are all `--no-ff`, so each one is a recoverable, individually revertable commit.
+
+Conflicts were tested BEFORE any merge, with `git merge-tree --write-tree`, which writes
+nothing to the working tree. That is how the four conflicting branches below were
+identified without ever entering a conflicted state.
+
+## 19. What merged: 17 branches
+
+All landed on `claude/add-ci-checks`. 165 files, 137744 insertions, 146 deletions.
+
+| # | branch | what shipped |
+|---|---|---|
+| 1 | `claude/meta-prompt-reconcile-dispatch-14a3c8` | **pushcheck**, merged FIRST on purpose |
+| 2 | `claude/r8-force` | R5 physics suite, 19 docs, `analysis/r8_noforcing_control.py` |
+| 3 | `claude/r8-priorart` | `R8_PRIOR_ART`, R6 measurement scripts |
+| 4 | `claude/r8-tooling` | `.claude/tooling/` brought under version control |
+| 5 | `claude/r8-naming` | `R8_DETERMINISM_RENAME` |
+| 6 | `claude/r8-kramer` | `R8_KRAMER_INTERCODE` |
+| 7 | `claude/r8-licence` | `R8_LICENCE_RECONCILE`, `wandb_log_gated_runs.py` |
+| 8 | `claude/r9-accessor` | `R9_ACCESSOR_DEFECT`, `hydrostatic_column.py`, 5 job records |
+| 9 | `claude/r9-kramer-extract` | `R9_KRAMER_FULL_EXTRACT`, `R9_JOBC_PREREGISTRATION` |
+| 10 | `claude/r9-renders` | Cycles pipeline, 4 docs |
+| 11 | `claude/r9-landing` | `R9_LANDING_PLAN` |
+| 12 | `claude/r9-moving-vehicle` | `moving_vehicle_channel.py`, speed surface |
+| 13 | `claude/r9-priorcode` | `R9_MOVING_VEHICLE_PRIOR_CODE`, Chrono tow drag |
+| 14 | `claude/r9-reader` | lineage only, content was already shipped |
+| 15 | `claude/r9-jobb-route` | `R9_JOBB_ROUTE_DECISION`, `CANDIDATE_PAPER_SCOPE_TEST` |
+| 16 | `claude/r9-gapscan` | `R10_WEB_ACQUISITION` plus the 39-file `docs/r10/` tree |
+| 17 | `claude/r9-overleaf` | `R10_PAPER_CORRECTIONS` |
+
+**`pushcheck` went first by design.** A guard written to vet what reaches this PUBLIC
+remote was itself unpushed, so it landed before the bulk push rather than after it.
+
+### 19.1 Two merges needed an untracked file cleared, and neither lost anything
+
+`r8-tooling` and `r9-jobb-route` both failed initially with "untracked working tree files
+would be overwritten". **Every colliding file was compared to the branch version before
+anything was removed, and the whole tree was copied to the scratchpad first.**
+
+- `docs/CANDIDATE_PAPER_SCOPE_TEST.md`: **byte-identical** to the branch copy. The merge
+  restored the same bytes as a tracked file.
+- `.claude/tooling/`: 15 local files, **14 byte-identical**, and every local file also
+  exists on the branch (which carries 3 more). All 15 verified present again after the
+  merge.
+- The one real difference, `.claude/tooling/corpus_mcp.py`, local 260 lines against the
+  branch's 380: the branch version won, and **that is a correction rather than a loss.**
+  The branch file's own header records that `corpus_cited_status` returned "cited" for any
+  bare DOI appearing in any file until 2026-08-18, "which made the novelty guard a check
+  that could not fail". The 15 local-only lines are that superseded grep-based
+  implementation. Local copy preserved at
+  `scratchpad/corpus_mcp.py.LOCAL-BACKUP`.
+
+## 20. What did NOT merge: 4 branches conflict, left for a human
+
+**Not resolved silently, as instructed.** Each is a content conflict requiring a judgement
+about which implementation is correct, which is a research decision, not a merge decision.
+
+| branch | conflicting paths |
+|---|---|
+| `claude/r8-persistence` | `simulation/openchannel_bc.py` (add/add) |
+| `claude/r8-bc-merge` | `simulation/openchannel_bc.py` (add/add) |
+| `claude/r9-corpus-bib` | `analysis/research_index.py`, `.claude/skills/research-corpus/SKILL.md`, `data/deep_searches/vehicle-mesh-assets.json` |
+| `claude/r9-settle` | `analysis/classify_failure_modes.py` |
+| `claude/r9-platform` | `hf_space/README.md`, `hf_space/app.py` |
+
+That is five rows for "4 branches" because **`r9-platform` conflicts only in the presence
+of the other merges.** Its dry run against the pre-merge HEAD was CLEAN and it conflicted
+when attempted after 12 other branches had landed. **Merge conflicts here are
+order-dependent, so a clean dry run is not a promise.** Recorded because the next person
+will otherwise re-derive it the hard way.
+
+The two `openchannel_bc.py` add/add conflicts are the substantive one: two branches
+independently created the same file, and reconciling them is the declared purpose of
+`d4-bcmerge` (`docs/R8_OPENCHANNEL_BC_RECONCILE.md`). That document should be read before
+either is merged.
+
+`claude/r8-register` is **CONTAINED**, re-derived at merge time as the prompt required
+rather than trusted from its name: tip `476bdfd` is already an ancestor of the pushed
+remote, and `grep -n -i 'r8-register'` returns no match in either CLAUDE.md, so the
+instruction it refers to no longer exists. Nothing to merge.
+
+## 21. The public-remote safety scan, run before pushing
+
+The repo is PUBLIC and a push is permanent, so `pushcheck`'s own rule set was applied by
+hand, twice: once per branch across all 22 candidates, and once over the final push diff.
+
+- **Path scan across 22 branches: one hit.** `data/r7_inflow_918506/profiles.npz` on
+  `claude/r8-persistence`, 571.4 KB. That branch did not merge anyway (conflict). For the
+  record it is a solver-output profile, not third-party mesh geometry and not credential
+  material, and **12 `.npz` files are already tracked on the pushed base**, so it matches
+  existing practice rather than opening a new category.
+- **Path scan over the final push diff: ALL CLEAR.** No `.ply/.obj/.stl/.npz/.npy/.env/
+  .key/.pem/.pth`, no `secret|token|credential|id_rsa`.
+- **Content scan for live credential material** (`ghp_`, `github_pat_`, `sk-`, `AKIA`,
+  `hf_`, PEM private-key headers) across every added line of all 22 branches AND over the
+  final push diff: **zero matches.**
+- **`docs/CREDENTIAL_EXPOSURE_2026-08-13.md` was deliberately NOT staged** and remains
+  untracked, per the standing rule that credential write-ups stay off a public remote.
+- Largest blob landing: `data/r9_speed_surface.tsv`, 614.4 KB.
+
+## 22. Local CI before pushing
+
+All six `canford-checks.yml` steps were run locally against the merged tree first. **All
+exit 0**, including the two that are `continue-on-error` in CI:
+`params_check`, `register_integrity`, `count_claims_check`, `analysis/stationarity.py`,
+`analysis/research_index.py --stats`, `tests/test_physics_gates.py`.
+
+This mattered more than usual: the merge added 165 files, and `count_claims_check` enforces
+the scope-sensitive DRIFT_THRESHOLD total that CLAUDE.md item 13 says must land on 22, 23
+or 24. It still does.
+
+## 23. The push
+
+```
+PUSH_OK=1 git push origin claude/add-ci-checks
+fd4f8b7..fe638d5  claude/add-ci-checks -> claude/add-ci-checks
+```
+
+The pre-push hook was **read verbatim before use** rather than assumed:
+`.git/hooks/pre-push` tests `[ "$PUSH_OK" != "1" ]`, so the documented syntax is current.
+
+**Fast-forward, not a force.** `merge-base --is-ancestor` confirmed the remote tip was an
+ancestor of HEAD before pushing, so no history was rewritten.
+
+**Landing verified by live network read, not by exit code:**
+`git ls-remote origin refs/heads/claude/add-ci-checks` returns
+`fe638d517448135feac31e31913a50d7cb345a03`, equal to local HEAD.
+
+## 24. The CI question, answered: NOT a first run
+
+The prompt asked to flag it if this were the workflow's first ever execution, since "a
+workflow that has never executed is not known to pass."
+
+**It is not.** `gh run list --workflow=canford-checks.yml` returns **22 runs**, of which 21
+completed before this session and the visible history is all `success`. [MEASURED] The
+push above triggered run `32541068089`.
+
+The distinction from the session-start banner still holds and is worth restating, because
+the two halves get collapsed: **`canford-checks.yml` is ABSENT from `origin/main` and
+PRESENT on `claude/add-ci-checks`.** [MEASURED, `git cat-file -e` against both refs] It
+runs, and it passes, on the branch. It has never run on `main` because it is not there.
+"Absent from main" and "never executed" are different claims and only the first is true.
+
+## 25. A concurrent session wrote into the shared index DURING this pass
+
+At 01:40:09, in the status check taken immediately before pushing, a file appeared
+**staged** that I did not stage: `docs/CORPUS_MERGE_FINAL_2026-08-22.md`, 41730 bytes,
+mtime 01:39. Its own header says it was built against `claude/add-ci-checks` at `d1490df`,
+which is **one of the merge commits this session created** (`Merge claude/r9-overleaf`), so
+another session was reading my in-progress merges while I made them.
+
+**It did not ride along.** Staging does not affect a push, and it is confirmed absent from
+the `fd4f8b7..fe638d5` diff. **I did not commit it and I did not unstage it.** It is left
+exactly as its owning session left it.
+
+This is the live form of the shared-index hazard the standing rules describe, and it is why
+every commit in this pass used the path-limited `git commit -- <path>` form and why the
+status check was retaken immediately before the push rather than reused from earlier.
+
+## 26. What still needs a human
+
+1. **The four conflicting branches** in section 20. `openchannel_bc.py` first.
+2. **`claude/r9-platform`**, whose conflict is order-dependent and appeared only after
+   other merges landed.
+3. **The 00:51 worktree removal is still unexplained**, and 26 live panes are still
+   pointing into directories that no longer exist. Unchanged from section 10.
+4. **`docs/CORPUS_MERGE_FINAL_2026-08-22.md`** is staged but uncommitted by another
+   session. It needs its owner, not me.
+5. **`add-ci-checks` to `main`.** The branch is now further ahead of `main` than before
+   this pass, and `canford-checks.yml` still does not exist on `main`. The gap between
+   this branch and the published state is the largest single thing outstanding.
+6. **The three backup clones** stay prohibited. Section 15 stands unchanged.
+
+**Still unreviewed.** The adversarial subagent path was not retried and the review was not
+faked. No physics claim was generated, evaluated or altered in this pass; it was inventory,
+merge and push only.
