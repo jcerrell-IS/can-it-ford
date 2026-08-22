@@ -11,8 +11,30 @@ all of which MDPI answers with 403. That is FLAG-2's own lesson (a licence statu
 a fetch status) with one more entry: **a host-level bot filter is not an access barrier,
 and the difference is whether a real browser was ever tried.**
 
-Nothing here is transcribed. Every number this module reports is recomputed from the
-files each time it runs, because a figure that cannot be re-derived is not a figure.
+Nothing in the TIME-SERIES REDUCTION is transcribed: every number this module reports
+from a series is recomputed from the files each time it runs, because a figure that
+cannot be re-derived is not a figure.
+
+THE ONE EXCEPTION, stated here because a file that asserts a provenance property it
+does not have is an instrument-honesty defect, and this module spent a round finding
+that defect in other people's code. the `CODE_META` literal below IS A TRANSCRIPTION. It was
+read once by hand from `Numerical results/Description of numerical models.xlsx`
+(sheet `Sheet1`, columns C to H, rows 5 to 17) and typed in as a literal. No code in
+this module opens that workbook. It supplies FAMILY and the group split, so it is load
+bearing for the inter-code envelope, not decoration.
+
+IT IS VERIFIED, NOT MERELY DECLARED. `analysis/kramer_extract_numerical.py --audit`
+diffs all 44 fields against the sheet and reports 43 of 44 matching exactly, the one
+difference being this transcription silently CORRECTING the archive's own typo at cell
+D11 ("Univeristy"). `--gate-transcription` turns that audit into a gate that EXITS 1
+on any substantive drift, and it reports UNVERIFIABLE rather than passing when the
+archive is absent, which is the case on Vista.
+
+The claim this paragraph replaced read "Nothing here is transcribed." That was TRUE of
+the 213-line version of this file and became FALSE in 79dab7d, which added `CODE_META`
+without updating it. Verified 2026-08-20: the pre-79dab7d version on branches
+claude/r9-accessor and claude/r9-jobb-route carries the sentence and no `CODE_META`,
+so the defect is confined to the r8-kramer lineage and is fixed here at its source.
 
 THE DATA
 --------
@@ -132,6 +154,12 @@ CODES = ("FNPF1", "LPF0", "LPF1", "LPF2", "LPF3", "LPF4",
 #   3. LPF0 THROUGH LPF4 ARE ALL BY ONE AUTHOR, the paper's own first author, via ditto
 #      marks in the Author column. Five of the eleven series come from one person, and
 #      they are the two ends of the whole inter-code envelope.
+# TRANSCRIBED, NOT DERIVED. Source: Numerical results/Description of numerical
+# models.xlsx, sheet 'Sheet1', columns C to H, rows 5 to 17, held outside this repo
+# at can-it-ford-refs/2026-08-16/energies-14-00269-s001/. Nothing in this module
+# opens it. Verify with: analysis/kramer_extract_numerical.py --gate-transcription
+# (exits 1 on drift, and reports UNVERIFIABLE rather than passing without the
+# archive). See the module docstring for why this is stated rather than assumed.
 CODE_META = {
     "FNPF1": dict(alias="NLPF1", group="Chalmers", institution="Chalmers University of Technology",
                   author="Carl-Erik Janson", software="SHIPFLOW-Motions 6",

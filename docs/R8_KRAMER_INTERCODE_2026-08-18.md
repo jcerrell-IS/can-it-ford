@@ -5,7 +5,13 @@
 is a reduction of published time series plus, where stated, a reading of the pinned
 `warpmpm` wrapper's own source. No Genesis, no GPU, no node hours.
 
-**Every number in this document regenerates.** Nothing is transcribed.
+**Every number in this document regenerates.** No time-series number is transcribed.
+The one exception is the model metadata in `CODE_META` (institution, author, software,
+turbulence family), which was read once from `Description of numerical models.xlsx`
+and transcribed. It is audited against the sheet by
+`analysis/kramer_extract_numerical.py --audit`, which reports 43 of 44 fields matching
+exactly; `--gate-transcription` exits 1 on drift. Corrected 2026-08-20: this line
+previously read "Nothing is transcribed", which was false of the metadata.
 
 ```
 V=<a python with numpy; provision with: uv venv /tmp/v && uv pip install --python /tmp/v/bin/python numpy>
