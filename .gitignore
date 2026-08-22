@@ -147,3 +147,12 @@ render_s2/
 # The one-place reproducibility record the GPU-portability deep search says no study
 # publishes. Small, verified on every run, and the artifact a paper would cite.
 !data/reproducibility_manifest.json
+
+# R7 task 7, the recycling in/outflow port to the vehicle scene, Slurm job 918506.
+# The 34 rollout.npz files are 170 to 650 MB each and stay on Vista at
+# $WORK/r7_inflow_918506. These two are the reduced evidence every table in
+# docs/R7_INFLOW_OUTFLOW_VEHICLE_2026-08-18.md is computed from, 0.7 MB together, so they
+# are un-ignored rather than force-added. Do not cite these line numbers; re-derive with
+# `/usr/bin/grep -n r7_inflow .gitignore`.
+!data/r7_inflow_918506/
+!data/r7_inflow_918506/**
