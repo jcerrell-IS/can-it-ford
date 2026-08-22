@@ -6,6 +6,13 @@ in the submitted paper, 103 of 138 reach neither reader prose nor any bibliograp
 138 have no full text on local disk, and 136 of 138 have still not been read in full.
 All 138 were audited with Scholar Sidekick: 0 fabricated titles, 0 retractions, 1 erratum.**
 
+**Second-eyes pass added 2026-08-22 as section 6.** A separate session re-derived this
+file's load-bearing claims instead of restating them. Eight reproduce exactly, including
+the 138-row set membership, the push, both priority-DOI titles and the erratum. One is
+corrected: the `hydrostatic` term count in section 2.2 was 1 and is 3, with the finding
+it supported unaffected. One caveat is added: the shipped bibliography carries no DOI
+field on any entry, so a DOI join against the 138 is vacuous and must not be used.
+
 Built 2026-08-22 against `claude/add-ci-checks`. Measurements were taken at `d1490df` and
 re-verified at `fe638d5`; the one row that moved between them is recorded in section 1.4.
 
@@ -214,7 +221,10 @@ What it establishes, all read from the paper's own text:
   oscillations", and critically "the WCGIMP ... has little contribution to eliminate the
   high-frequency pressure oscillation and non-physical spray over time".
 - **It contains no buoyancy test and no rigid body.** Live term counts over the extracted
-  text: "buoyan" 0, "still water" 0, "hydrostatic" 1, "rigid" 2 `[read]`. Both "rigid"
+  text: "buoyan" 0, "still water" 0, "hydrostatic" 3, "rigid" 2 `[read]`. **The
+  `hydrostatic` figure read 1 until 2026-08-22 and was corrected to 3 by an independent
+  re-derivation from the PDF on disk; see section 6.3, which also shows why the finding is
+  unaffected.** Both "rigid"
   hits describe the background grid being "rigidly attached to the particles". Its
   numerical examples are dam break, oscillation of a cubic liquid drop, and droplet impact
   into a deep pool.
@@ -467,6 +477,95 @@ Re-derive the paper's cite keys, which is the only test of what actually prints:
 
     git -C ~/can-it-ford show overleaf/main:conference_101719_1.tex \
       | /usr/bin/grep -o '\\cite{[^}]*}' | sed 's/\\cite{//;s/}//' | tr ',' '\n' | sort -u
+
+---
+
+## 6. Second-eyes verification pass, 2026-08-22, and one erratum in this file
+
+Run by a separate session against the committed file, measured at `88672a0` and re-checked
+at `ef2395e`. The purpose was to test this document's own load-bearing claims rather than
+repeat them, on the principle stated at the top of this file that one source cited twice is
+not two sources. Every row below is `[read]`, run this session.
+
+### 6.1 What reproduced exactly
+
+| claim in this file | how I re-derived it, independently | verdict |
+|---|---|---|
+| 205 TSV rows, 138 with `cited_anywhere_in_repo=NO`, all distinct | `csv.DictReader` over the source TSV, `Counter` on the column: 205 rows, NO=138, YES=67, 138 distinct, 0 duplicates | reproduces |
+| all 138 printed by name, none dropped | parsed the appendix: 138 numbered rows, 138 distinct DOIs, set difference against the TSV computed both directions | reproduces, **0 missing, 0 extra** |
+| committed and pushed | local `HEAD` and `refs/heads/claude/add-ci-checks` on `origin` were both `88672a09c24efeac74e3d0ad3374d0594444f350`, and `ls-tree` finds the file in that commit | reproduces |
+| `10.1007/s00466-019-01783-3` title is genuine | Scholar Sidekick `verifyCitation`: `matched`, confidence high | reproduces |
+| `10.1016/j.jcp.2016.10.064` title is genuine | Scholar Sidekick `verifyCitation`: `matched`, confidence high | reproduces |
+| Aco19 cites Steffen 2008 twice | read the Crossref deposit: keys `1783_CR26` and `1783_CR27` are two distinct Steffen 2008 papers | reproduces |
+| Aco19's three named causes of oscillation | the Crossref abstract names poor force and stiffness integration, stress recovery inaccuracies, and cell crossing, verbatim | reproduces |
+| the erratum | `checkRetraction` on `10.1016/j.joes.2018.05.002`: not retracted, one erratum at `10.1016/j.joes.2020.11.003`, dated 2021-03-01 | reproduces |
+| 14 cite keys, 15 bib entries, `xiong2024` never cited | parsed `overleaf/main:conference_101719_1.tex` and its bib live | reproduces |
+| Zha17c term counts | `pdftotext` over the PDF on disk, then `/usr/bin/grep -o -i` | **3 of 4 reproduce, see 6.3** |
+
+### 6.2 One claim strengthened, by a second and genuinely independent predicate
+
+Section 1.1 establishes that none of the 138 is cited in the paper using **cite keys**. I
+tested the same claim using **title similarity**, a different predicate over the same two
+sets: each of the 14 cited works was fuzzy-matched against all 138 resolved titles.
+
+The highest similarity any pair reaches is **0.52**, and nothing crosses 0.60. Zero pairs
+approach a match. Cite-key identity and title similarity have separate origins, so this is
+corroboration rather than the same source counted twice.
+
+**A caveat section 1.3 does not cover, and the reason this test had to be run on titles.**
+All 14 entries in the shipped bibliography carry **no `doi` field whatsoever** `[read]`. A
+DOI join between the 138 and the paper is therefore **vacuous**: it returns zero by
+construction, and would still return zero if the paper cited every one of the 138. Section
+1.3's caveat is that a DOI string can be absent from the repo tree while the work is known,
+which is a different failure. Anyone re-testing "does the paper cite this work" must match
+on title or on key, and must never match on DOI until the bib gains DOI fields.
+
+### 6.3 ERRATUM: the `hydrostatic` count in section 2.2 was 1 and is 3
+
+Section 2.2 reported live term counts over the extracted text of Zha17c as
+`"buoyan" 0, "still water" 0, "hydrostatic" 1, "rigid" 2`.
+
+Re-derived from `~/can-it-ford-refs/2026-08-19-r10/Zha17c_10.1016_j.jcp.2016.10.064.pdf`
+with `pdftotext`, then `/usr/bin/grep -o -i` `[read]`:
+
+    "buoyan"       0    agrees
+    "still water"  0    agrees
+    "hydrostatic"  3    DISAGREES, this file said 1
+    "rigid"        2    agrees
+
+This is not a counting-semantics artifact. `grep -c`, which counts lines, and `grep -o`,
+which counts occurrences, both return 3, because the three hits sit on three separate
+lines. The likeliest mechanism is that the two passes extracted the PDF with different
+tools, so the original figure is not reproducible from the copy on disk.
+
+**The conclusion of section 2.2 is unaffected, stated explicitly so this erratum is not
+read as larger than it is.** The count was offered as evidence for "it contains no buoyancy
+test and no rigid body". All three `hydrostatic` hits were read in context:
+
+1. The constitutive decomposition of stress into deviatoric plus hydrostatic pressure,
+   `sigma_ij = -p delta_ij + s_ij`, which is generic MPM formulation text.
+2. The initial pressure distribution in the dam-break case, at the very beginning of the run.
+3. Hydrostatic pressure being dominant in low-viscosity flow, in the comparison against
+   Lobovsky's experimental data.
+
+None of the three is a buoyancy test and none involves a rigid body. Both `rigid` hits were
+also read and both are the background-grid sentence section 2.2 already describes. **The
+number is corrected and the finding stands.**
+
+Recorded here rather than silently patched, per this document's own rule in the appendix
+preamble: quietly editing a number so a claim reads clean is the exact defect this file
+exists to detect.
+
+### 6.4 What this pass did NOT do, so its scope is not overstated
+
+It did not re-read either priority paper end to end, and so does not independently confirm
+the interpretive claims in sections 2.1, 2.2 and 2.3 beyond the specific items listed in
+6.1. It did not re-run the 138-row Crossref, DataCite and Unpaywall sweep, so the `id` and
+`OA` columns of the appendix are `[relayed]`, not re-derived. It did not re-check the
+`INDEX` versus `PROSE` bucket assignment of any individual row; the appendix test was set
+membership only, which proves no DOI was dropped and proves nothing about which bucket each
+landed in. It did not run the physics-skeptic path, so section 4 item 8 stands unchanged:
+**no claim in this file has been adversarially reviewed.**
 
 ---
 
