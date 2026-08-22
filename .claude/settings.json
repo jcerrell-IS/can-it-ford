@@ -31,7 +31,31 @@
       "Bash(git diff*)",
       "Bash(git fetch*)",
       "Bash(srun --overlap:*)",
-      "Bash(scancel:*)"
+      "Bash(scancel:*)",
+      "Bash(scripts/wb:*)",
+      "Bash(/Users/josie/can-it-ford/scripts/wb:*)",
+      "Bash(scripts/wandb_env.sh:*)",
+      "Bash(/Users/josie/can-it-ford/scripts/wandb_env.sh:*)",
+      "mcp__wandb__query_wandb_tool",
+      "mcp__wandb__query_wandb_entity_projects",
+      "mcp__wandb__get_run_history_tool",
+      "mcp__wandb__list_artifact_versions_tool",
+      "mcp__wandb__get_artifact_details_tool",
+      "mcp__wandb__compare_artifact_versions_tool",
+      "mcp__wandb__list_registries_tool",
+      "mcp__wandb__list_registry_collections_tool",
+      "mcp__wandb__list_wandb_automations_tool",
+      "mcp__wandb__list_wandb_integrations_tool",
+      "mcp__wandb__search_wandb_docs_tool",
+      "mcp__wandb__query_weave_traces_tool",
+      "mcp__wandb__count_weave_traces_tool",
+      "mcp__wandb__infer_trace_schema_tool",
+      "mcp__wandb__compare_runs_tool",
+      "mcp__wandb__diagnose_run_tool",
+      "mcp__wandb__list_entities_tool",
+      "mcp__wandb__probe_project_tool",
+      "mcp__wandb__resolve_trace_roots_tool",
+      "mcp__wandb__summarize_evaluation_tool"
     ],
     "ask": [
       "Bash(sbatch:*)",
@@ -39,7 +63,10 @@
       "Bash(git rebase:*)",
       "Bash(git cherry-pick:*)",
       "Bash(git worktree remove:*)",
-      "Bash(git worktree prune:*)"
+      "Bash(git worktree prune:*)",
+      "mcp__wandb__create_wandb_report_tool",
+      "mcp__wandb__log_analysis_to_wandb",
+      "Bash(scripts/wb --py analysis/wb.py snapshot:*)"
     ],
     "deny": [
       "Bash(git add -A:*)",
@@ -170,6 +197,15 @@
             "command": "P=\"$CLAUDE_PROJECT_DIR/.claude/tooling/commit_autoapprove.py\"; if [ -f \"$P\" ]; then python3 \"$P\" || exit 0; fi; exit 0"
           }
         ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "P=\"$CLAUDE_PROJECT_DIR/.claude/hooks/gate_find_maxdepth.py\"; if [ -f \"$P\" ]; then python3 \"$P\"; fi"
+          }
+        ],
+        "matcher": "Bash"
       }
     ],
     "PostToolUse": [
@@ -219,6 +255,14 @@
           {
             "type": "command",
             "command": "P=\"$CLAUDE_PROJECT_DIR/.claude/hooks/session_start_protocol.py\"; if [ -f \"$P\" ]; then python3 \"$P\"; fi"
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "P=\"$CLAUDE_PROJECT_DIR/.claude/hooks/session_start_origin_check.sh\"; if [ -f \"$P\" ]; then bash \"$P\"; fi"
           }
         ]
       }
