@@ -3,7 +3,8 @@
 **NOT FINISHED. The accounting is complete and the remainder is named: all 138 DOIs now
 have a disposition and a title verified against a registry record, but 0 of 138 are cited
 in the submitted paper, 103 of 138 reach neither reader prose nor any bibliography, 134 of
-138 have no full text on local disk, and 136 of 138 have still not been read in full.**
+138 have no full text on local disk, and 136 of 138 have still not been read in full.
+All 138 were audited with Scholar Sidekick: 0 fabricated titles, 0 retractions, 1 erratum.**
 
 Built 2026-08-22 against `claude/add-ci-checks`. Measurements were taken at `d1490df` and
 re-verified at `fe638d5`; the one row that moved between them is recorded in section 1.4.
@@ -294,36 +295,112 @@ the same section's own rule I mark these claims unreviewed rather than assume ei
 
 ---
 
-## 3. Title verification: no fabrications found
+## 3. Title verification: no fabrications, no retractions, one erratum
 
-Every one of the 138 DOIs was resolved against its registry record and its catalogued title
-compared to the resolved title `[read]`. Crossref first, DataCite for the failures.
+Two passes were run, and the second is the one the dispatch actually asked for.
 
-| outcome | count |
-|---|---|
-| resolved and title matches at similarity >= 0.90 | **133** |
-| resolved, similarity below 0.90, inspected individually, all benign | **3** |
-| DOI not registered in Crossref or DataCite | **2** |
-| **fabricated titles found** | **0** |
+**Pass A, raw registry plus a similarity ratio.** Crossref first, DataCite for the
+failures, comparing catalogued title to resolved title with a `difflib` ratio `[read]`.
+136 of 138 resolved. This is a proxy for the real check and it cannot see retractions.
 
-The 3 low-similarity rows are a defect in the **TSV builder**, not fabrications: each
-catalogued title carries a trailing markdown link fragment, `(\[link\](https://doi.org/...`,
-glued on during catalog parsing. Stripped of it, all three match their resolved records
-exactly: Dancey 2002, Lavelle 1987 and Papanicolaou 2002, all Journal of Hydraulic
-Engineering `[read]`.
+**Pass B, Scholar Sidekick `auditBibliography`, 6 batches of at most 25, all 138 `[read]`.**
+This is the named instrument. It runs the Topaz fabrication check, a real-DOI-plus-invented-
+title cross-check that `resolveIdentifier` cannot catch, plus a retraction lookup.
 
-The 2 unregistered DOIs are `10.3970/cmes.2004.005.477` and `10.3970/cmes.2005.008.135`,
-both Tech Science Press CMES. The prefix does not resolve in either registry. **The works
-are real**: the first is Bardenhagen and Kober 2004, the foundational GIMP paper, and it
-appears as a full reference in Aco19's own Crossref deposit, "Bardenhagen SG, Kober EM
-(2004) The generalized interpolation material point method. Comp Model Eng Sci
-5(6):477-495" `[read]`. A third party's deposited reference list is an independent origin
-from the catalog row.
+| verdict | count | meaning |
+|---|---|---|
+| `matched` | **134** | claim agrees with the resolved record |
+| `mismatch` | **0** | the fabrication pattern. **None found.** |
+| `ambiguous` | **3** | see below, all three benign |
+| `not_found` | **0** | |
+| errored | **1** | tool-side, see below |
+| **retracted** | **0** | |
+| expression of concern | **0** | |
+| **has corrections** | **1** | see below |
 
-**This matters beyond these two rows.** CLAUDE.md's L-5 rests on Steffen, Kirby and
-Berzins 2008 at `10.3970/CMES.2008.031.107`, the same unregistered prefix. Any future
-citation audit that treats "DOI does not resolve" as "citation is bad" will flag L-5.
-It is not bad; the publisher's DOIs are not deposited.
+### 3.1 The one actionable result: an erratum nobody had found
+
+`10.1016/j.joes.2018.05.002`, "Water entry and exit of axisymmetric bodies by CFD
+approach", carries a publisher-recorded **Erratum at `10.1016/j.joes.2020.11.003`, dated
+2021-03-01** `[read]`. Not retracted, no expression of concern.
+
+This is the payoff of running the named instrument rather than a similarity ratio, which
+is blind to it. **No prior pass in this project has ever checked retraction or correction
+status on any of these papers.** The paper is on water entry and exit of a body, which is
+the J.1 problem class, so if it is ever cited the erratum must be cited with it.
+
+### 3.2 The 3 `ambiguous` verdicts are a search artifact, not citation errors
+
+All three are ASCE Journal of Hydraulic Engineering DOIs carrying parentheses. In every
+one the **top candidate returned by the tool's own title search is the DOI I supplied,
+with an identical title**, at confidence `high` `[read]`. The verdict is `ambiguous` only
+because the title search also returned unrelated low-relevance candidates, for instance
+"Do magnetars really exist?" against "Do Critical Stresses for Incipient Motion and
+Erosion Really Exist?". Identifier and title agree in all three. Read as 137 clean.
+
+The 1 errored entry is the Springer chapter `10.1007/978-3-319-22997-3_11`, which resolved
+normally in pass A `[read]`, so the error is the tool's, not the DOI's.
+
+### 3.3 Pass A's three low-similarity rows, explained
+
+The same 3 ASCE rows. Their catalogued titles carry a trailing markdown fragment,
+`(\[link\](https://doi.org/...`, glued on by the TSV builder. Stripped of it they match
+their resolved records exactly: Dancey 2002, Lavelle 1987 and Papanicolaou 2002 `[read]`.
+A builder defect, not a fabrication, and pass B confirms it independently.
+
+### 3.4 Two DOIs are unregistered, and that has a consequence beyond these rows
+
+`10.3970/cmes.2004.005.477` and `10.3970/cmes.2005.008.135`, both Tech Science Press CMES.
+The prefix resolves in neither registry. **The works are real**: the first is Bardenhagen
+and Kober 2004, the foundational GIMP paper, and it appears as a full reference in Aco19's
+own Crossref deposit, "Bardenhagen SG, Kober EM (2004) The generalized interpolation
+material point method. Comp Model Eng Sci 5(6):477-495" `[read]`. A third party's deposited
+reference list is an independent origin from the catalogue row.
+
+CLAUDE.md's L-5 rests on Steffen, Kirby and Berzins 2008 at `10.3970/CMES.2008.031.107`,
+the same undeposited prefix. **Any future citation audit that treats "DOI does not resolve"
+as "citation is bad" will flag L-5 wrongly.** It is not bad; the publisher does not deposit.
+
+---
+
+## 3.5 Register G25, checked against its own falsifier
+
+G25 sits in the corrections register and triages these same nine multi-report papers. It
+states its own falsifier: it "dies if the catalogue is re-parsed and yields other than 205
+data rows, 138 uncited, or other than 9 uncited rows whose `in_reports` field contains a
+`+`". Re-parsed live: **205, 138, 9** `[read]`. **The falsifier does not fire.**
+
+G25a records two catalogue defects. Both are confirmed here and one is extended.
+
+- **`khapane2014wading` is in the bib and not cited.** G25a says state it as "in the .bib,
+  not yet cited in the body", never as "cited". Confirmed independently: the key appears in
+  no `\cite` in either `paper/conference_101719.tex` or `overleaf/main` `[read]`. Two
+  separate origins agree.
+- **`10.1504/pcfd.2019.10018820` is a pre-publication Inderscience id**, redirecting to the
+  article of record `10.1504/PCFD.2019.097597`. Confirmed: direct Crossref returns HTTP 301
+  and `doi.org` lands on `PCFD.2019.097597` `[read]`.
+- **EXTENDING G25a: there is a second one, which G25a does not name.**
+  `10.1504/pcfd.2016.10001222` behaves identically, HTTP 301 at Crossref, resolving to
+  **`10.1504/PCFD.2018.089497`** `[read]`. Note the year moves too, catalogue 2016 against
+  article of record 2018, a larger discrepancy than the first. **The appendix below prints
+  the catalogue's pre-publication form for both rows.** Cite the article of record.
+
+## 3.6 Three premises in the dispatch, checked rather than assumed
+
+- **"11 of 14 works the paper cites are absent from the 332."** CONFIRMED, 11 absent and 3
+  present `[read]`, but **only by title matching**. A DOI diff is impossible: all 14 cited
+  entries in the shipped bib carry **no `doi` field at all** `[read]`. The 3 present are
+  exactly the flood-vehicle-stability works, `smithmodrafelder2019`, `xia2014` and
+  `azhar2023`. The 11 absent split cleanly into the reconstruction and engine stack (3DGS,
+  PhysGaussian, NeRF-MPM, Genesis, PVWM, FRED) and the primary-source documents (AR&R,
+  NHTSA inertia, CCSA Yaris validation, NWS TADD, shah2018). **The corpus covers this
+  project's flood-stability literature and none of the method stack it actually runs on.**
+- **"The index does not contain roughly 13 of the ~21 deep searches."** `data/deep_searches/`
+  now holds **22** search JSONs and **0 of the 22 carries a `papers` array** `[read]`, so no
+  paper record can enter the index from any of them. The index's own `deep_searches` list
+  holds 21 `[read]`.
+- **"Nothing past Aug 13 reached the remote."** FALSE as of now. `origin/claude/add-ci-checks`
+  exists and its tip carries work from 2026-08-22, including this file `[read]`.
 
 ---
 
@@ -360,6 +437,18 @@ It is not bad; the publisher's DOIs are not deposited.
 8. **Unreviewed.** No claim in this file was checked by the physics-skeptic path.
 9. **The surname figure of 46 is an upper bound**, not a count. Resolving it properly needs
    per-row inspection, which was not done.
+10. **The erratum is unactioned.** `10.1016/j.joes.2018.05.002` has an erratum at
+    `10.1016/j.joes.2020.11.003`. Nothing cites the paper yet, so nothing is wrong today,
+    but the pairing must travel with it if it is ever cited.
+11. **Retraction status is now known for these 138 and for nothing else.** The paper's own
+    15-entry bibliography has never been run through a retraction check. That is a one-call
+    job and it is the obvious next use of this instrument.
+12. **Two appendix rows carry pre-publication DOIs**, per section 3.5. They resolve, and they
+    are not the form to print in a bibliography.
+13. **The catalogue itself is now 8 days stale.** It was built 2026-08-14 against a tree that
+    has since absorbed roughly 20 branch merges. Re-running its builder is the honest way to
+    keep this accounting alive, and the builder lives in a prior session's scratchpad, so it
+    may no longer exist.
 
 ---
 
