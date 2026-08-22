@@ -405,3 +405,156 @@ subagent calls and 0 successes across the whole round, so every physics number a
 *Written 2026-08-22 by a session that read all thirteen branches' commit bodies in full and
 verified every merge, remote and file-state claim live. Not adversarially reviewed: the
 subagent path was not exercised for this document either.*
+
+---
+
+## PART 5. SECOND-PASS VERIFICATION, 2026-08-22 02:20:15 to 02:25:35
+
+A second session re-derived this document's load-bearing claims from git rather than from
+the document. Everything below is **[read]** unless tagged otherwise. Nothing in Parts 1
+to 4 was rewritten; corrections are stated here so both readings stay visible.
+
+### 5.1 The count held still this time, and that is itself the measurement
+
+Part 2 was written while a concurrent session was landing merges, so its figures move.
+This pass re-measured the same quantities over 43 minutes and **none of them moved**.
+
+| quantity | value | measured |
+|---|---|---|
+| `r9-*` branches that exist | **13** | 02:20:25 |
+| merged into `claude/add-ci-checks` | **10** | 02:20:38 |
+| NOT merged | **3**: `r9-corpus-bib` (+11), `r9-platform` (+16), `r9-settle` (+14) | 02:20:38 |
+| merged into `origin/main` | **0 of 13**, tested branch by branch with `merge-base --is-ancestor` | 02:21:29 |
+| `origin/main` tip | `c7f0a16`, 2026-08-17 23:58:30 | 02:21:29 |
+| `claude/add-ci-checks` vs `origin/main` | **419 ahead, 0 behind** | 02:21:29 |
+| newest commit anywhere in the repo | `88672a0`, 01:52:12 | 02:21:31 |
+
+The ahead count read 413 at 01:39 and 419 now. **That six-commit move is not new R9
+landing.** All six are commits the prior session made after 01:41, listed by
+`git log --all --since="2026-08-22 01:41"`. Rule B5 still applies: the behind count was
+0 at both readings.
+
+### 5.2 Independently confirmed
+
+Each of these was re-derived from git, not read out of Part 1.
+
+- **J3.** Poster blob `168879947da7d271e0c17da28f8719c46ee57a68` is still on `origin/main`.
+  **Tighter than Part 4 states:** Part 4 says the poster "has not been touched by any commit
+  since 2026-08-15". The last commit touching that path on either ref is `b78bc1e`,
+  **2026-08-02 16:30:43**, and the blob is byte-identical on `origin/main` and
+  `claude/add-ci-checks`. The claim is true and the real date is three weeks earlier.
+- **J5.** `assets/LICENSE.md` is ABSENT on `origin/main`, `claude/add-ci-checks`,
+  `claude/r9-renders`, `claude/r9-platform` and in the working tree. `assets/` holds exactly
+  six tracked files: four `Asphalt015*`, `DaySkyHDRI002A_1K_HDR.exr`, and
+  `hdri/kloofendal_43d_clear_puresky_2k.hdr` under Poly Haven naming.
+- **K1.** `refs/remotes/overleaf/main` is `3053956`, 2026-08-20 01:48:02. `git diff 6466dfa
+  3053956` is `conference_101719_1.tex` only, **4 insertions and 4 deletions**.
+- **K3.** `CITATION.cff` reads `ODC-By-1.0` on `origin/main`, `CC-BY-4.0` on
+  `claude/add-ci-checks`, `ODC-By-1.0` on `claude/r9-platform`.
+- **Board rows.** All thirteen per-slot counts in Part 2 reproduce digit for digit off
+  `.claude/state/r8_board.md`, parsed on field 3: d21 40, d13 38, d16 32, d15 31, d12 30,
+  d20 25, d14 25, d22 24, d17 23, d18 22, d19 20, d11 18, d23 9.
+
+### 5.3 Two corrections
+
+**C1. `r9-corpus-bib` has THREE conflicted paths, not two.** Part 2 names
+`.claude/skills/research-corpus/SKILL.md` and `analysis/research_index.py`. Live
+`git merge-tree --write-tree` at 02:22:45 also reports
+**`CONFLICT (add/add)` on `data/deep_searches/vehicle-mesh-assets.json`**. The add/add is a
+different kind of problem from the other two: both sides created that file independently, so
+resolving it means choosing between two separately generated search exports, not reconciling
+two edits to one file. `r9-platform` (2 paths) and `r9-settle` (1 path) reproduce exactly as
+Part 2 states.
+
+**C2. The K3 caveat is real but narrower, and the fix is one function.** Part 1.2 says running
+`analysis/hf_dataset_publish.py` from `claude/r9-platform` "would republish the retired value",
+which reads as script-wide. Live, that file carries **three card renderers holding two licence
+values**:
+
+| renderer | line | value |
+|---|---|---|
+| `render_card()` (def :280) | 288, and prose at 416 | **`odc-by` / ODC-By-1.0**, the retired value |
+| `render_speed_surface_card()` (def :621) | 645 | `cc-by-4.0` |
+| `archive_card()` (def :1200) | 1206 | `cc-by-4.0` |
+
+So one of three cards would republish the retired value and two are already correct. Stated
+because it changes the size of the remedy, not the fact of it.
+
+### 5.4 The 187 / 140 figure cannot be re-derived, and is not refuted
+
+Part 2's method line reports 187 distinct commits over 140 distinct files. That scope is
+**unreachable now**: it was measured against the pre-merge integration branch, and with ten
+branches merged `HEAD..<branch>` returns 0 for each of them. Measured three other ways at
+02:23:34 to 02:23:51, each with its predicate stated, because none of these is "the" number:
+
+- **177** commits, counting those reachable from each branch and from **no other r9 branch**.
+  Per branch: moving-vehicle 23, accessor 18, priorcode 17, renders 17, platform 16,
+  jobb-route 14, overleaf 14, settle 14, kramer-extract 12, corpus-bib 11, landing 10,
+  gapscan 9, reader 2.
+- **326** distinct commits over **254** distinct files from the octopus merge-base of all
+  thirteen, `777567a` of 2026-08-15 19:31:50. That base predates R9, so this sweeps in shared
+  R8 ancestry and overstates the wave.
+- **327 / 254** against `origin/main`, for the same reason.
+
+Report any of them with its scope attached. This is CLAUDE.md item 13's rule applying to this
+document.
+
+### 5.5 What is still stranded, exactly
+
+The three unmerged branches hold **41 commits over 28 distinct files** that exist on no other
+ref. Nobody reading `claude/add-ci-checks` or `origin/main` can see any of it.
+
+| branch | commits | files | what is only here |
+|---|---|---|---|
+| `r9-corpus-bib` | 11 | 6 | `docs/R9_CORPUS_BIB_GAP_2026-08-18.md`, `data/r9_bib_corpus_census.tsv`, two `data/deep_searches/*.json`, the author-matching fix to `analysis/research_index.py`, the rewritten `research-corpus` SKILL |
+| `r9-platform` | 16 | 14 | `docs/R9_PLATFORM_ROI_2026-08-19.md`, `analysis/hf_dataset_publish.py`, `analysis/wandb_speed_surface.py`, `.claude/checks/board_splice_check.py`, seven new `hf_space/` files |
+| `r9-settle` | 14 | 8 | `docs/R9_SETTLE_FRAMES_2026-08-18.md`, `analysis/r9_vista_inventory.py`, `analysis/r9_vista_stationarity_pass.py`, two sbatch scripts, edits to `classify_failure_modes.py`, `settle_audit.py`, `stationarity.py` |
+
+Note that `r9-corpus-bib`'s own commit `de18180` argues these two must land **together**:
+landing its SKILL without its code "produces a document promising a safety net the tool does
+not have". That is a landing-order constraint, not a preference.
+
+### 5.6 J11, an eleventh open decision Part 1 does not carry
+
+**J11. Whether to mint a citable DOI, now that its only stated blocker is cleared.**
+`claude/r9-platform`, `docs/R9_PLATFORM_ROI_2026-08-19.md` section 3, read live from the
+branch. The slot calls it *"the cheapest high-value item"*, about an hour, and its section 8
+table lists it under **who decides: Josie**. Its stated precondition was one sentence from you
+on which licence covers the data. **That was answered**: K3 above records CC-BY-4.0 applied in
+`96393ca` on 2026-08-20. So the blocker is gone and the decision was never taken.
+
+Three things a decision needs, all read live:
+
+1. **Nothing has been minted.** No `.zenodo.json` and no DOI or identifier field in
+   `CITATION.cff` on `HEAD`, checked 02:25:16. Every `zenodo` string in the tracked tree
+   belongs to someone else's DOI in the research corpus or in prose.
+2. **Citability does not require openness.** Section 3 verified against the Zenodo API that a
+   restricted record carries a native DOI (`10.5281/zenodo.14014709`). So the unrotated
+   credential (J2) and the asset licence (J4, J5) block **publishing** and do not block a
+   citable identifier.
+3. **The same document corrects its own recommendation.** Section 43 records that Hugging Face
+   mints DOIs through **DataCite** for datasets and models but **not Spaces**, so the DOI could
+   come from the already-published `can-it-ford-speed-surface` dataset instead of Zenodo. The
+   slot never reconciled section 3 with section 43. **Both routes are open and this document
+   does not pick one.**
+
+Section 8's other rows are either overtaken by events (the HF dataset and Space were created
+in `e0eabac`) or fold into J2 (a GitHub Release, which the same document's section 17 rules
+out for now on its own authority, "a Release is a public publication and the credential
+exposure is unrotated").
+
+Re-checked at 02:21:56: `r9-corpus-bib` and `r9-settle` commit bodies contain **zero**
+Josie-directed language, and no response to J1 through J11 exists in any commit, board row or
+file on any ref. No commit has been made anywhere in the repository since 01:52:12.
+
+### 5.7 The Part 4 verdict survives this pass
+
+Unchanged and re-measured: zero R9 commits on `origin/main`; the poster blob still public and
+still carrying the two statements d8-naming wrote replacement text for; exactly one R9 output
+shipped, the four-paragraph Overleaf correction. **J11 makes the verdict slightly worse, not
+better:** the round produced a citable identifier route whose only blocker was cleared two days
+ago, and it is sitting on one of the three branches nobody merged.
+
+*Second pass written 2026-08-22 02:26. Every claim above re-derived from git in this session.
+**Not adversarially reviewed:** the subagent path was not exercised, so this pass inherits Part
+4's UNREVIEWED status rather than lifting it.*
