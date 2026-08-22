@@ -670,6 +670,76 @@ class SphereTank:
             "group_velocity_m_s": cg,
             **{f"ref_{k}": v for k, v in self.ref.items()},
             **self.sdf_info,
+            # WHICH NUMBER IS GRADED, carried IN THE DATA. Added 2026-08-19 by slot
+            # d11-accessor. The run emits two force accessors whose denominators differ by
+            # about a factor of two once the tank drains, and until now nothing in the
+            # emitted JSON said which one criterion 3 grades: the answer lived in a source
+            # comment, which is how two downstream tools ended up asserting the opposite of
+            # the manifest. A designation that travels with the data cannot drift away from
+            # it. This block is descriptive, not authoritative: the manifest is the
+            # authority and this records what it currently says, so a mismatch between the
+            # two is itself detectable.
+            "criterion3_spec": {
+                "graded_field": "fz_over_analytic_measured",
+                "companion_field": "fz_over_analytic_nominal",
+                "nominal_denominator_N": (RHO_W_BENCHMARK * G_ENGINE
+                                          * (2.0 / 3.0 * math.pi * self.radius ** 3)),
+                "nominal_denominator_is": "submerged HEMISPHERE, not a full sphere",
+                "primary_window": "last 50 percent of frames",
+                "bands": "within 0.10 PASS, 0.10-0.25 REPORTABLE PARTIAL, beyond 0.25 FAIL",
+                "window_robustness_required": True,
+                "stationarity_gate_applies_to": "the graded ratio, not fz_N",
+                "authority": "docs/R5_PHYSICS_BATCH_MANIFEST.md criterion 3, amended 2026-08-19",
+                "working": "docs/R9_ACCESSOR_DEFECT_2026-08-18.md",
+                # CORRECTED 2026-08-19, same slot, after an EXACT root-find replaced the
+                # linearised estimate this string used to carry. The old text said "about
+                # 1 dx at g64 spans the whole discrepancy". That came from dividing the
+                # error by the secant sensitivity, which is a tangent-line estimate of a
+                # strongly convex function and understates the required offset by 34.4
+                # percent. Exact: closing 918240's +50.06 percent needs 27.490 mm, which is
+                # 1.466 dx and 2.932 particle layers, NOT 18.022 mm and 0.961 dx. The
+                # correction cuts AGAINST the easy explanation: a surface estimator would
+                # have to be wrong by nearly three particle layers, not one cell, to
+                # account for the discrepancy on its own.
+                "caveat": ("the graded denominator uses a free-surface estimate that excludes "
+                           "every particle within 2R of the sphere axis, where the pressure "
+                           "generating fz acts. Local secant sensitivity is 0.0278 "
+                           "ratio-points per mm at g64, measured from the h/2 pair "
+                           "918043/918240, but the response is convex and must not be "
+                           "extrapolated linearly: closing the whole observed discrepancy "
+                           "needs 1.33 to 1.78 dx of surface offset (2.66 to 3.56 particle "
+                           "layers) across the four runs graded to date, exact root-find "
+                           "not linearisation. A PASS here is not a coupling validation."),
+                # THE SURFACE-CONVENTION LEVER, and a claim I RETRACTED the same day I
+                # wrote it. An earlier version of this block asserted "the band is narrower
+                # than the instrument, so a PASS is not a physics result". THAT IS FALSE and
+                # it was false because I evaluated the lever at the operating point the runs
+                # are at now rather than at the operating point a PASS would be at.
+                #
+                # d(ratio)/ds = -ratio * A_w / V_cap, so the lever shrinks toward a PASS on
+                # BOTH factors at once. Measured at 918240: at the observed point (ratio
+                # 1.5006, draft 0.099674 m) the tangent is 0.025827 per mm; at a ratio-1.0
+                # point (draft 0.127164 m) it is 0.012630 per mm, a 2.045x fall, because
+                # V_cap grows 1.500x while the ratio factor falls to 1.0.
+                #
+                # So, h/2 = 4.6875 mm of surface convention moves the graded ratio by:
+                #   at the observed FAIL points   8.0 to 15.1 ratio points (four runs)
+                #   at a PASS operating point     4.6 to 6.3 ratio points
+                # against a PASS half-width of 10.0. A PASS would therefore carry about half
+                # a band of convention uncertainty: a real caveat, NOT a disqualifying one,
+                # and the P-2 pathology of a gate sitting at its own achievable floor does
+                # NOT apply to this criterion. The large lever at today's operating points is
+                # a symptom of how far these runs sit from equilibrium (shallow draft, high
+                # ratio), not a property of the criterion.
+                #
+                # THE LEVER IS ALSO DIRECTION DEPENDENT because the response is convex: at
+                # 918240, -h/2 moves it +13.020 points and +h/2 moves it -11.338. Quote the
+                # range, never a single number.
+                "half_layer_lever_ratio_points_at_observed_point": [8.0, 15.1],
+                "half_layer_lever_ratio_points_at_pass_point": [4.6, 6.3],
+                "pass_band_half_width_ratio_points": 10.0,
+                "pass_is_inside_instrument_resolution": False,
+            },
         }
 
     # --- free surface -----------------------------------------------------------------
@@ -709,6 +779,19 @@ class SphereTank:
         # a fitted band of 0.984/1.068 dx look like the engine's default of 1.0 dx; with
         # it removed the fit moves to 0.812/0.896 dx. Sensitivity is steep: 1 mm of
         # surface error is 2.28% of the reported ratio, and h/2 is 4.69 mm at g64.
+        #
+        # THAT 2.28 IS UNRECONCILED WITH THE MEASURED VALUE, flagged 2026-08-19 rather than
+        # overwritten, because I could not reproduce it and do not know its operating point.
+        # The h/2 pair 918043/918240 gives a MEASURED secant of 2.7775 percent per mm at
+        # g64 over the last 100 frames (13.019 ratio points across 4.6875 mm), and the
+        # analytic tangent ratio*A_w/V_cap at 918240's own operating point is 2.5809. The
+        # spec block in config() carries 2.78. So this file states 2.28 in one place and
+        # 2.78 in another, a 22 percent fork in the constant that sizes the whole
+        # surface-estimator caveat. 2.28 is not reproducible at the design waterline
+        # (1.00 percent per mm) or at ratio 1.0 at the measured draft (1.72), so it is
+        # probably a different quantity rather than a wrong one. Whoever owns the g64/g96
+        # excess argument should re-derive it and say which operating point it belongs to;
+        # do not quote it as the criterion 3 sensitivity, which is 2.7775 and measured.
         #
         # Runs before this commit are biased LOW on the surface and therefore HIGH on
         # fz_over_analytic_measured. Do not pool them with later runs.
@@ -802,10 +885,38 @@ class SphereTank:
             "heave_m": self.z - self.surface_z,
             "net_N": fz - self.mass * G_ENGINE,
             # The moving target, measured rather than assumed. fz_over_analytic_measured
-            # is the number job B should actually be graded on: it divides the measured
-            # reaction by the closed form AT THE SURFACE THAT EXISTS, so a falling free
-            # surface no longer masquerades as a coupling error. surface_drop_m is the
-            # diagnostic that exposed this, 3.09 cm over 200 frames in job 917909.
+            # divides the measured reaction by the closed form AT THE SURFACE THAT EXISTS,
+            # so a falling free surface no longer masquerades as a coupling error.
+            # surface_drop_m is the diagnostic that exposed this, 3.09 cm over 200 frames
+            # in job 917909.
+            #
+            # THIS COMMENT NO LONGER DESIGNATES ANYTHING. Rewritten 2026-08-19 by slot
+            # d11-accessor. It used to read "is the number job B should actually be graded
+            # on", and that sentence was the ONLY place in the repository where the choice
+            # between the two accessors below was recorded. The manifest said something
+            # different: criterion 3 named 69.2180 N, the OTHER denominator. A source
+            # comment cannot overrule a pre-registration, but in practice it did, because
+            # it was the nearest thing to hand: the designation propagated into
+            # r7-collect's r7_jobb_bcfix_ab.py and r6_repeat_stats.py, which now print
+            # "THE DESIGNATED ACCESSOR" for one quantity while the manifest names the
+            # other. Two of those citations point at :669-670, where this comment used to
+            # live, and land inside measure_surface's docstring today.
+            #
+            # THE AUTHORITY IS docs/R5_PHYSICS_BATCH_MANIFEST.md CRITERION 3, and nothing
+            # here. As amended 2026-08-19 it grades fz_over_analytic_measured over the last
+            # 50 percent of frames, with a window-robustness gate, a stationarity gate on
+            # the ratio, and 69.2180 N retained as a mandatory companion. If you need to
+            # know which number is graded, read the manifest, not this file. Full working:
+            # docs/R9_ACCESSOR_DEFECT_2026-08-18.md.
+            #
+            # BOTH ACCESSORS BELOW ARE MEANINGFUL AND NEITHER IS DEPRECATED. They differ by
+            # roughly a factor of two whenever the tank has drained (32.33 N against
+            # 69.2180 N in job 918240) and their relative errors therefore carry OPPOSITE
+            # SIGNS. That is arithmetic, not a contradiction: one force lying between two
+            # denominators must read above one and below the other. Their disagreement is
+            # the measurement that separates a coupling error from a draining tank, which
+            # is why both are emitted. The KEY NAMES ARE A DATA CONTRACT read by scripts on
+            # other branches; do not rename them without fixing those readers first.
             "surface_z_measured_m": surf,
             "surface_drop_m": self.surface_z - surf,
             "submerged_depth_m": sub,

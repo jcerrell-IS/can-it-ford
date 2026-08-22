@@ -47,6 +47,17 @@ import blocking  # noqa: E402
 TARGET_N = 69.2180
 BAND_PASS = 0.10
 BAND_PARTIAL = 0.25
+
+
+def _band_of(rel_error: float) -> str:
+    """Manifest bands, one definition, used by both criteria.
+
+    Written 2026-08-19: the two criteria previously banded with two separate inline
+    expressions that happened to agree. One definition removes the fork.
+    """
+    a = abs(rel_error)
+    return ("PASS" if a <= BAND_PASS else
+            "REPORTABLE PARTIAL" if a <= BAND_PARTIAL else "FAIL")
 # Used only when find_stationary_window cannot decide. Stated rather than tuned: half the
 # run is the coarsest defensible transient exclusion, and the stationarity test still has
 # to pass on what remains.
@@ -151,26 +162,117 @@ def grade(path: Path, drop_frac: float | None = None) -> dict:
     # It is reported ALONGSIDE the nominal grade, never instead of it. If the two disagree,
     # that disagreement IS the finding: it separates "the coupling is wrong" from "the tank
     # drained", which is exactly what job 917909 could not distinguish.
+    # PROMOTED TO THE GRADED CRITERION, 2026-08-19, slot d11-accessor. It was already
+    # computed here and already banded; what changed is that the MANIFEST now names it.
+    # Until the 2026-08-19 amendment, criterion 3 named 69.2180 N while a comment in
+    # sphere_heave.py named this ratio, and the comment is what every downstream tool
+    # followed. Two quantities were live under one criterion and nothing authoritative
+    # adjudicated. See docs/R9_ACCESSOR_DEFECT_2026-08-18.md.
+    #
+    # TWO GATES ARE ADDED HERE AND THEY ARE THE POINT, not decoration.
+    #
+    # (1) WINDOW ROBUSTNESS. Criterion 3 named no window until the amendment, and the
+    #     nominal quantity's verdict DEPENDS on window choice: on jobs 917909, 918043 and
+    #     918240 it reads FAIL / FAIL / REPORTABLE PARTIAL / PASS across last-20, last-50,
+    #     last-100 and full-series, a 19.4-point spread from a single run. A criterion
+    #     whose answer moves with an unstated window is not fixed in advance in any
+    #     meaningful sense. So the band must agree at all four windows or the run is
+    #     refused ON THAT GROUND, which is reported rather than resolved by picking one.
+    #
+    # (2) STATIONARITY ON THE GRADED RATIO, NOT ON fz_N. Manifest criterion 5 says a
+    #     NOT-STATIONARY verdict on the raw series is "expected, not disqualifying", yet
+    #     this tool refused all four job B runs for exactly that. Applying the gate to the
+    #     quantity actually being graded resolves the contradiction: measured on
+    #     918043/918240/918450, fz_N is non-stationary at 8.52/8.52/3.95 sigma while this
+    #     ratio is stationary at 0.15/0.64/1.08 sigma.
+    #
+    # WHAT A PASS HERE DOES NOT MEAN. The denominator is a free-surface estimate that
+    # excludes every particle within 2R of the sphere axis, which is where the pressure
+    # generating fz acts. Sensitivity is 0.0278 ratio-points per mm, so about 1 dx at g64
+    # spans the entire discrepancy observed to date. A PASS is not a coupling validation
+    # until that estimator is validated in the near field. Stationarity of a ratio built
+    # from two co-trending non-stationary series also shows only that numerator and
+    # denominator fall together, not that the measurement has settled.
     ratio_key = "fz_over_analytic_measured"
     have_measured = ratio_key in rows[0]
     measured = None
     if have_measured:
-        rr = np.array([r[ratio_key] for r in rows], dtype=float)[start:]
+        rr_all = np.array([r[ratio_key] for r in rows], dtype=float)
+        rr = rr_all[start:]
         rr = rr[np.isfinite(rr)]
         if len(rr) >= 16:
             r_mean = float(np.mean(rr))
             r_se = blocking.blocked_se(rr)
             r_rel = abs(r_mean - 1.0)
+            r_band = _band_of(r_rel)
+            r_st = blocking.stationarity(rr, n_sigma=STATIONARITY_N_SIGMA)
+
+            # The robustness sweep. Fixed windows, not searched, so this cannot be tuned.
+            wins = {"last 20": n_total - 20, "last 50": n_total - 50,
+                    "last 100": n_total - 100, "full series": 0}
+            sweep, bands_seen = {}, set()
+            for wname, ws in wins.items():
+                if ws < 0:
+                    continue
+                seg = rr_all[ws:][np.isfinite(rr_all[ws:])]
+                if len(seg) < 16:
+                    continue
+                m = float(np.mean(seg))
+                sweep[wname] = {"mean_ratio": m, "rel_error_pct_signed": (m - 1.0) * 100.0,
+                                "band": _band_of(abs(m - 1.0))}
+                bands_seen.add(sweep[wname]["band"])
+            window_robust = len(bands_seen) == 1
+
+            refusal = None
+            if not window_robust:
+                refusal = ("window-robustness gate: the band is not the same at all of "
+                           f"{sorted(wins)} ({sorted(bands_seen)}). Criterion 3 requires "
+                           "the verdict to be independent of window choice; it is not, so "
+                           "this is reported rather than settled by choosing a window.")
+            elif not r_st.get("stationary", False):
+                refusal = ("stationarity gate on the graded ratio: "
+                           f"halves={r_st.get('halves_stationary')}, "
+                           f"trend={r_st.get('trend_stationary')}, slope="
+                           f"{r_st.get('slope_per_frame'):+.6f}/frame at "
+                           f"{r_st.get('slope_n_sigma'):.2f} sigma. A mean over a trend is "
+                           "not a steady value.")
+
             measured = {
                 "mean_ratio": r_mean,
                 "rel_error": r_rel,
                 "rel_error_pct_signed": (r_mean - 1.0) * 100.0,
                 "se_blocked": r_se["se_blocked"],
                 "se_is_lower_bound": r_se["se_is_lower_bound"],
-                "band": ("PASS" if r_rel <= BAND_PASS else
-                         "REPORTABLE PARTIAL" if r_rel <= BAND_PARTIAL else "FAIL"),
+                "band": r_band if refusal is None else "NOT GRADEABLE",
+                "band_before_gates": r_band,
+                "refusal_reason": refusal,
+                "window_sweep": sweep,
+                "window_robust": window_robust,
+                "stationary": r_st.get("stationary"),
+                "slope_n_sigma": r_st.get("slope_n_sigma"),
                 "mean_surface_drop_m": float(np.mean(
                     [r.get("surface_drop_m", float("nan")) for r in rows][start:])),
+                # CORRECTED 2026-08-19, slot d11-accessor, TWICE, and the second correction
+                # withdrew the first. (1) The "~1 dx" was a linearised estimate of a convex
+                # response and understated the offset by 34.4 percent; the exact root-find is
+                # 1.33 to 1.78 dx across the four runs graded to date. (2) I then asserted
+                # that half a particle layer of surface convention exceeds the PASS band, so
+                # a PASS could not be a physics result. THAT WAS WRONG. I had evaluated the
+                # lever where the runs sit now (ratio ~1.5, shallow draft) rather than where
+                # a PASS would sit. d(ratio)/ds = -ratio*A_w/V_cap falls 2.045x between the
+                # two, so the lever is 8.0 to 15.1 points at today's operating points but
+                # only 4.6 to 6.3 at a ratio-1.0 point, against a 10.0 point band. A PASS
+                # carries about half a band of convention uncertainty: a real caveat, not a
+                # disqualifying one. The FAIL is unaffected either way.
+                "caveat": ("denominator uses a free-surface estimate blind within 2R of the "
+                           "sphere axis; closing the discrepancy needs 1.33 to 1.78 dx of "
+                           "surface offset (exact, not linearised). Half a particle layer of "
+                           "surface convention is worth 8.0 to 15.1 ratio points at the "
+                           "operating points observed so far and 4.6 to 6.3 at a ratio-1.0 "
+                           "point, against a 10.0 point PASS band, so a PASS carries roughly "
+                           "half a band of convention uncertainty and is not by itself a "
+                           "coupling validation. A FAIL needs 1.72 to 2.66 particle layers to "
+                           "overturn and is robust to it."),
             }
 
     st = blocking.stationarity(steady, n_sigma=STATIONARITY_N_SIGMA)
@@ -179,49 +281,73 @@ def grade(path: Path, drop_frac: float | None = None) -> dict:
     err = mean - TARGET_N
     rel = abs(err) / TARGET_N
 
-    # Second refusal gate. Even with a window in hand, a series the stationarity test
-    # rejects has no steady value, and a band computed from it would be an average of a
-    # trend rather than a measurement.
-    if not st.get("stationary", False):
-        return {
-            "file": str(path),
-            "n_frames_total": n_total,
-            "stationary_start_frame": start,
-            "n_frames_used": int(len(steady)),
-            "band": "NOT GRADEABLE",
-            "refusal_reason": (
-                "blocking.stationarity rejects this series "
-                f"(halves_stationary={st.get('halves_stationary')}, "
-                f"trend_stationary={st.get('trend_stationary')}, "
-                f"slope={st.get('slope_per_frame'):+.5f} N/frame at "
-                f"{st.get('slope_n_sigma'):.2f} sigma). A mean over a trend is not a "
-                "steady value."),
-            # THE PROMISE AT THE TOP OF THIS FUNCTION WAS BROKEN HERE. The measured-surface
-            # criterion is documented as "reported ALONGSIDE the nominal grade, never
-            # instead of it", and this refusal path omitted the key entirely. Both real
-            # runs refuse, so the tool had NEVER emitted that criterion for real data, and
-            # the +60.8% in the job B document was computed by hand OUTSIDE the tool built
-            # to stop hand-computed grading. Same defect class as the one this file's own
-            # header documents. It is emitted on the refusal path too now.
-            "measured_surface_criterion": measured,
-            "measured_surface_available": have_measured,
-            "stationarity_window": {k: v for k, v in st.items()
-                                   if not isinstance(v, (list, tuple))},
-            "stationarity_full_series": {k: v for k, v in st_full.items()
-                             if not isinstance(v, (list, tuple))},
-            "window_detection": win_info,
-            "mean_over_window_N": mean,
-            "late_window_mean_N": float(np.mean(fz[int(0.9 * n_total):])),
-            "provenance": PROVENANCE,
-            "config": {k: cfg.get(k) for k in ("n_grid", "lim_m", "frames", "mode")},
-        }
+    # --- THE NOMINAL COMPANION -------------------------------------------------------
+    # RESTRUCTURED 2026-08-19, slot d11-accessor. This block used to BE criterion 3 and to
+    # own the top-level `band`; the manifest amendment makes it the mandatory companion.
+    # It is never suppressed, because where it disagrees with the graded criterion THAT
+    # DISAGREEMENT IS THE FINDING: it separates a coupling error from a draining tank.
+    #
+    # Its own non-stationarity is recorded here rather than used to refuse the whole run.
+    # Manifest criterion 5 says a NOT-STATIONARY verdict on this series is "expected, not
+    # disqualifying"; refusing the run on it contradicted criterion 5 directly and is why
+    # all four job B runs previously returned a top-level NOT GRADEABLE with the graded
+    # number buried one level down.
+    #
+    # The drift ratio is what criterion 5 actually asks for and it is the reason this
+    # quantity cannot carry a verdict: on job 918450 the series moves 261 percent of the
+    # error being claimed against it, so its window-robust "PASS" is a decaying series
+    # caught inside the band, crossing the band edge about 8 frames after the run ended.
+    nom_sweep, nom_bands = {}, set()
+    for wname, ws in (("last 20", n_total - 20), ("last 50", n_total - 50),
+                      ("last 100", n_total - 100), ("full series", 0)):
+        if ws < 0:
+            continue
+        seg = fz[ws:]
+        if len(seg) < 16:
+            continue
+        m = float(np.mean(seg))
+        nom_sweep[wname] = {"mean_fz_N": m,
+                            "rel_error_pct_signed": (m / TARGET_N - 1.0) * 100.0,
+                            "band": _band_of(m / TARGET_N - 1.0)}
+        nom_bands.add(nom_sweep[wname]["band"])
 
-    if rel <= BAND_PASS:
-        band = "PASS"
-    elif rel <= BAND_PARTIAL:
-        band = "REPORTABLE PARTIAL"
+    drift_N = abs(st.get("slope_per_frame", 0.0)) * max(len(steady) - 1, 0)
+    nominal_companion = {
+        "graded": False,
+        "target_N": TARGET_N,
+        "target_is": "buoyancy on the submerged HEMISPHERE at the design waterline, "
+                     "which equals the sphere's own weight m*g by construction of the "
+                     "benchmark. NOT a fully submerged sphere, which would be 138.4360 N.",
+        "mean_fz_N": mean,
+        "abs_error_N": err,
+        "rel_error": rel,
+        "rel_error_pct_signed": (err / TARGET_N) * 100.0,
+        "direction": "over" if err > 0 else "under",
+        "band": _band_of(err / TARGET_N),
+        "window_sweep": nom_sweep,
+        "window_robust": len(nom_bands) == 1,
+        "stationary": st.get("stationary", False),
+        "slope_n_sigma": st.get("slope_n_sigma"),
+        "drift_over_window_N": drift_N,
+        "drift_as_pct_of_claimed_error": (100.0 * drift_N / abs(err)) if err else float("inf"),
+        "note": ("reported under manifest criterion 5, which calls non-stationarity here "
+                 "expected rather than disqualifying. A band from this quantity is an "
+                 "average over a trend; read it with drift_as_pct_of_claimed_error."),
+    }
+
+    # --- THE TOP-LEVEL BAND IS CRITERION 3 -------------------------------------------
+    # It comes from the graded quantity and from nowhere else. Previously it came from the
+    # nominal path while the graded number sat inside measured_surface_criterion, so a
+    # machine reading `band` got a verdict on a quantity the manifest does not grade.
+    if measured is not None:
+        band = measured["band"]
+        refusal = measured.get("refusal_reason")
     else:
-        band = "FAIL"
+        band = "NOT GRADEABLE"
+        refusal = ("fz_over_analytic_measured is absent from this run, so criterion 3's "
+                   "graded quantity does not exist in it. Runs predating the measured-"
+                   "surface instrumentation (e.g. job 917909) cannot be graded on "
+                   "criterion 3 as amended 2026-08-19; only the companion is available.")
 
     return {
         "file": str(path),
@@ -229,6 +355,11 @@ def grade(path: Path, drop_frac: float | None = None) -> dict:
         "stationary_start_frame": start,
         "n_frames_used": int(len(steady)),
         "window_detection": win_info,
+        "band": band,
+        "refusal_reason": refusal,
+        "graded_quantity": "fz_over_analytic_measured",
+        "criterion3": measured,
+        "nominal_companion": nominal_companion,
         "mean_fz_N": mean,
         "target_N": TARGET_N,
         "abs_error_N": err,
@@ -236,11 +367,17 @@ def grade(path: Path, drop_frac: float | None = None) -> dict:
         # carries the direction. Reporting a negative newton error beside a positive
         # percentage, as an earlier version did, reads as a sign inconsistency and is
         # exactly the kind of thing a reader is right to distrust.
+        # THESE TOP-LEVEL NOMINAL KEYS ARE RETAINED FOR EXISTING READERS and duplicate
+        # nominal_companion. They are NOT the graded criterion. Do not band from them.
         "rel_error": rel,
         "rel_error_pct": rel * 100.0,
         "rel_error_pct_signed": (err / TARGET_N) * 100.0,
         "direction": "over" if err > 0 else "under",
-        "band": band,
+        "stationarity_window": {k: v for k, v in st.items()
+                                if not isinstance(v, (list, tuple))},
+        "stationarity_full_series": {k: v for k, v in st_full.items()
+                                     if not isinstance(v, (list, tuple))},
+        "late_window_mean_N": float(np.mean(fz[int(0.9 * n_total):])),
         "measured_surface_criterion": measured,
         "measured_surface_available": have_measured,
         "se_blocked_N": se["se_blocked"],
@@ -278,53 +415,60 @@ def main():
           f"REPORTABLE PARTIAL, >{BAND_PARTIAL*100:.0f}% FAIL\n")
     print(f"  frames total          {g['n_frames_total']}")
 
-    # A refusal carries no mean, no SE and no band. Printing the full report would crash
-    # on the missing keys, which is how the first version of main() behaved.
-    if g["band"] == "NOT GRADEABLE":
-        print(f"  window start          {g.get('stationary_start_frame', 'n/a')}")
-        print(f"  late-window mean      {g.get('late_window_mean_N', float('nan')):.4f} N")
-        print(f"  target                {TARGET_N:.4f} N")
-        print(f"\n  BAND: NOT GRADEABLE")
-        print(f"  reason: {g['refusal_reason']}")
-        m = g.get("measured_surface_criterion")
-        if m:
-            print(f"    measured-surface ratio {m['mean_ratio']:.4f} "
-                  f"({m['rel_error_pct_signed']:+.2f}% from 1.0)  BAND: {m['band']}")
-        return
-
-    print(f"  stationary window     from frame {g['stationary_start_frame']} "
+    print(f"  window start          frame {g['stationary_start_frame']} "
           f"({g['n_frames_used']} frames used)")
-    print(f"  mean steady reaction  {g['mean_fz_N']:.4f} N")
-    print(f"  target                {g['target_N']:.4f} N  (rho_w=998.2, g=9.81)")
-    print(f"  error                 {g['abs_error_N']:+.4f} N  = "
-          f"{g['rel_error_pct_signed']:+.3f}%  ({g['direction']}-predicts the closed form)")
-    print(f"  blocked SE            {g['se_blocked_N']:.4f} N"
-          f"{'  (LOWER BOUND, ladder did not converge)' if g['se_is_lower_bound'] else ''}")
-    print(f"  naive SE              {g['se_naive_N']:.4f} N, "
-          f"inflation {g['inflation_vs_naive']:.2f}x, tau_int {g['tau_int_frames']:.1f} frames")
-    print(f"  plateau               block size {g['plateau_block_size']}, "
-          f"{g['plateau_n_blocks']} blocks")
-    print(f"  distance from target  {g['n_sigma_from_target']:.1f} blocked SE")
-    print(f"\n  BAND: {g['band']}")
-    if g["se_is_lower_bound"]:
-        print("  WARNING: the blocked SE is a lower bound, so this band is optimistic.")
 
-    m = g.get("measured_surface_criterion")
+    # --- CRITERION 3, the graded quantity --------------------------------------------
+    m = g.get("criterion3")
+    print(f"\n  CRITERION 3, GRADED: {g['graded_quantity']}")
+    print( "    fz / (closed form at the surface that EXISTS, not the design waterline)")
     if m:
-        print(f"\n  MEASURED-SURFACE CRITERION (fz / closed form at the surface that exists)")
         print(f"    mean ratio          {m['mean_ratio']:.4f}  "
               f"({m['rel_error_pct_signed']:+.3f}% from 1.0)")
         print(f"    blocked SE          {m['se_blocked']:.4f}"
               f"{'  (LOWER BOUND)' if m['se_is_lower_bound'] else ''}")
         print(f"    mean surface drop   {m['mean_surface_drop_m']*100:.3f} cm")
-        print(f"    BAND: {m['band']}")
-        if m["band"] != g["band"]:
-            print(f"    NOTE: this DISAGREES with the nominal band ({g['band']}). The "
-                  f"disagreement is the finding:\n          it separates a coupling error "
-                  f"from a falling free surface, which job 917909 could not.")
-    elif not g.get("measured_surface_available"):
-        print("\n  measured-surface criterion: NOT AVAILABLE in this run "
-              "(predates the instrumentation)")
+        print(f"    stationary          {m['stationary']} "
+              f"(slope {m['slope_n_sigma']:.2f} sigma)")
+        print(f"    window robustness   {'ROBUST' if m['window_robust'] else 'NOT ROBUST'}")
+        for wname, w in m["window_sweep"].items():
+            print(f"      {wname:<12} {w['mean_ratio']:.4f}  "
+                  f"{w['rel_error_pct_signed']:+8.3f}%   {w['band']}")
+    else:
+        print("    NOT AVAILABLE in this run (predates the measured-surface instrumentation)")
+    print(f"\n  BAND: {g['band']}")
+    if g.get("refusal_reason"):
+        print(f"  reason: {g['refusal_reason']}")
+    if m:
+        print(f"  CAVEAT: {m['caveat']}")
+
+    # --- the mandatory companion, never suppressed -----------------------------------
+    c = g["nominal_companion"]
+    print(f"\n  COMPANION, NOT GRADED: nominal ratio against {c['target_N']:.4f} N")
+    print(f"    {c['target_is']}")
+    print(f"    mean steady reaction  {c['mean_fz_N']:.4f} N")
+    print(f"    error                 {c['abs_error_N']:+.4f} N = "
+          f"{c['rel_error_pct_signed']:+.3f}%  ({c['direction']}-predicts)  BAND: {c['band']}")
+    print(f"    stationary            {c['stationary']} "
+          f"(slope {c['slope_n_sigma']:.2f} sigma)")
+    print(f"    drift over window     {c['drift_over_window_N']:.4f} N = "
+          f"{c['drift_as_pct_of_claimed_error']:.1f}% OF THE ERROR BEING CLAIMED")
+    print(f"    window robustness     "
+          f"{'ROBUST' if c['window_robust'] else 'NOT ROBUST, verdict depends on window'}")
+    for wname, w in c["window_sweep"].items():
+        print(f"      {wname:<12} {w['mean_fz_N']:9.4f} N  "
+              f"{w['rel_error_pct_signed']:+8.3f}%   {w['band']}")
+    print(f"    blocked SE            {g['se_blocked_N']:.4f} N"
+          f"{'  (LOWER BOUND, ladder did not converge)' if g['se_is_lower_bound'] else ''}, "
+          f"naive {g['se_naive_N']:.4f} N, inflation {g['inflation_vs_naive']:.2f}x, "
+          f"tau_int {g['tau_int_frames']:.1f}")
+
+    if m and m["band"] != c["band"]:
+        print(f"\n  THE TWO DISAGREE: criterion 3 says {m['band']}, the companion says "
+              f"{c['band']}.\n  THAT DISAGREEMENT IS THE FINDING. One force lies between two "
+              f"denominators, so the\n  signs are opposite by arithmetic, not by "
+              f"contradiction. It separates a coupling\n  error from a draining tank. Read "
+              f"the companion with its drift ratio attached.")
 
 
 if __name__ == "__main__":
