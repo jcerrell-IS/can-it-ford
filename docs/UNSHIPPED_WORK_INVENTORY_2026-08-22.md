@@ -1292,3 +1292,175 @@ should not be merged by a session that cannot see their worktrees, and the three
 panes should not be touched at all until it is known whether those panes are working
 sessions or orphans pointing at nothing. The refs are safe either way; nothing is at risk
 of loss, only of collision.
+
+---
+---
+
+# FIFTH PASS, 2026-08-22 ~02:20 BST: the branch count was wrong by 3x, and one branch shipped
+
+Method note, per the claim-discipline rule: every number below is READ LIVE in this pass by
+the command shown. Nothing is carried from the four passes above, and where this pass
+contradicts them, the contradiction is stated rather than edited away.
+
+## 32. Step Zero, third time, passing
+
+`hostname` = `Josephines-MacBook-Air.local`. `pwd` = `/Users/josie/can-it-ford` exactly.
+`git rev-parse --git-dir` = `.git`, so this is the main checkout and not a worktree, which
+a worktree would answer with a path under `.claude/worktrees/`. Branch
+`claude/add-ci-checks`. HEAD `88672a0`.
+
+## 33. TWO PREMISES OF THE DISPATCHING PROMPT ARE NOW STALE, both closed by the fourth pass
+
+The prompt that opened this pass states two things that were true when written and are
+false now. Recorded because the prompt will be run again.
+
+1. **"origin/main is 5 commits ahead of origin/claude/add-ci-checks ... this is a two-way
+   divergence."** Measured live, `git rev-list --left-right --count
+   origin/main...origin/claude/add-ci-checks` returns `0   419`. The main side is **zero**
+   ahead. The divergence is closed, and section 28 records that this session's own merge
+   closed it.
+2. **"PART 3: PUSH."** Nothing was pending. `git ls-remote origin
+   refs/heads/claude/add-ci-checks` returned `88672a0`, identical to the local tip, so the
+   branch was already fully pushed on arrival.
+
+Local `main` is 1 commit BEHIND `origin/main` (`main...origin/main` = `0  1`). That is a
+stale local ref, not unshipped work, and needs no merge.
+
+## 34. THE HEADLINE NUMBER IN SECTION 2 IS WRONG BY A FACTOR OF THREE
+
+Section 2 reads "21 branches have never been pushed". Measured live this pass by testing
+every local branch tip for ancestry in `origin/claude/add-ci-checks`:
+
+      109  local branches total
+       44  contained in the pushed remote  (shipped)
+       65  NOT contained                   (never reached GitHub)
+
+**65, not 21.** Section 2's figure was scoped to the r8/r9 plan slots and is correct only
+for those. As a headline about the repository it understates the backlog by 44 branches.
+The tail is older work: `paper/*` (4), `overleaf*` (3), `claude/fork-*` (10), `claude/r5-*`
+(3), `claude/r7-*` (4), plus rescue and audit branches.
+
+**`claude/credential-exposure-2026-08-13-DO-NOT-PUSH` (`c4ef6a5`) is in the 65 and MUST
+STAY THERE.** The repo is public. It is unshipped by design, not by oversight. Do not let a
+future "land the backlog" pass sweep it in.
+
+## 35. FIVE WORKTREES WITH UNSHIPPED COMMITS THAT SECTIONS 4 AND 20 DO NOT COVER
+
+`git worktree list` returns **12** worktrees live, not the 13 the prompt names. Four of the
+five carrying unshipped commits are SIBLING DIRECTORIES of the repo, outside
+`.claude/worktrees/`, which is why a sweep scoped to that directory missed them. Confirmed
+by grep: the strings `realism-exploration`, `warpmpm-continue` and `visual-physical-realism`
+each appear 1 to 2 times in this document and never as merge candidates.
+
+| worktree | branch | commits | dates | disposition |
+|---|---|---|---|---|
+| `~/can-it-ford-realism` | `realism-exploration` | 8 | 2026-08-13 | HUMAN: real physics |
+| `~/can-it-ford-warpmpm-continue` | `warpmpm-continue` | 6 | 08-12/13 | SUPERSEDED, would regress |
+| `~/can-it-ford-moving-vehicle` | `claude/moving-vehicle-exploratory-2026-08-11` | 2 | 08-14 | HUMAN: self-declared placeholders |
+| `.claude/worktrees/retire-coupling-module-f20ad4` | `claude/zotero-source-integrations-8c7744` | 2 | 2026-08-18 | **MERGED THIS PASS** |
+| `~/can-it-ford-visual-trial` | `claude/visual-physical-realism-trial-2026-08-11` | 1 | 08-11 | HUMAN: self-declared NON-CANONICAL |
+
+Only one of the five is in the prompt's 2026-08-18 to 2026-08-21 window. The other four are
+08-11 to 08-14 and have sat unmerged for eight to eleven days.
+
+**A second misleading directory name, same pattern as section 14.** The worktree directory
+`retire-coupling-module-f20ad4` is detached at `8eada8e`, which is the tip of
+`claude/zotero-source-integrations-8c7744`, a different subject entirely. The branch
+actually named `claude/retire-coupling-module-f20ad4` is `b46a6ce`, a 2026-08-13 commit
+about `force_coupling.py`. **Directory name is not evidence of content here. Re-derive from
+the detached HEAD.**
+
+## 36. `warpmpm-continue` IS SUPERSEDED, AND MERGING IT WOULD REGRESS A PROVENANCE COMMENT
+
+Worth stating precisely because the branch subject line, "Unify post-processing gravity on
+9.81", reads like the unshipped half of a known-good fix and it is not.
+
+`e495b56` is already an ancestor of the pushed remote, confirmed by `merge-base
+--is-ancestor`. Comparing the two commits blob by blob:
+
+      data/failure_modes_by_run.json            6ea4329 == e495b56 == tip   IDENTICAL
+      data/failure_modes_by_run_classified.csv  6ea4329 == e495b56 == tip   IDENTICAL
+      simulation/failure_modes.py               6ea4329 DIFFERS from tip
+
+Both regenerated data artifacts are byte-identical to what already shipped. The only delta
+is the `G = 9.81` comment, and the direction is the opposite of what the subject implies:
+the SHIPPED tip carries the three-line note recording the 0.0342 percent fork and the `:170`
+and `:174` call sites, and the UNSHIPPED commit carries a one-line summary. **Merging this
+branch would replace the richer provenance comment with the terser one.** The numbers in the
+shipped comment are exactly what CLAUDE.md item 15 and register A6 depend on.
+
+This does not clear the branch's other four commits (friction rung, provenance backfill),
+which were not evaluated here and remain unshipped.
+
+## 37. WHAT MERGED, AND THE FULL PUSH RANGE
+
+Merged `8eada8e` **by SHA, not by branch name**, per the standing rule that a name-based
+merge once took another session's unpushed commit. Merge commit `ef2395e`, parents
+`88672a0` and `8eada8e`.
+
+Vetted against all three of the prompt's tests before merging:
+- **Real**: a working 161-line script.
+- **Finished**: a second commit hardens the first, closing two silent-exit paths.
+- **Non-duplicate**: the path does not exist anywhere in the tracked tree.
+
+**Public-remote credential scan, run before the merge**, on the exact blob that would land:
+zero matches for api key, token, secret, password, Bearer, `ghp_`, `github_pat_`, `hf_`,
+`sk-`, `AKIA`, `xox`-prefixed strings, and zero high-entropy literals of 28+ characters. It
+authenticates against nothing: it reads the LOCAL Better BibTeX endpoint on port 23119.
+
+**The untracked-file obstacle from section 19.1 recurred and was handled the same way.** An
+untracked `scripts/refresh_bib_from_zotero.sh` blocked the merge from creating the tracked
+path. It was verified byte-identical to the incoming blob FIRST (both
+`05971969a4e2a6ec20a8dd3cda59f2bab1b8377e`, compared with `git hash-object --path=` so the
+`text=auto` gitattributes rule could not fake a mismatch), then MOVED to the scratchpad
+rather than deleted, then confirmed identical again after the merge restored it. Nothing
+was lost and the step is reversible.
+
+**Push range checked as a range, applying section 27's rule rather than restating it:**
+
+      ef2395e  Ship refresh_bib_from_zotero.sh ...   (mine)
+      8eada8e  Broaden the cite-key match ...        (being merged)
+      09f7243  Add refresh_bib_from_zotero.sh ...    (being merged)
+
+      1 file changed, 161 insertions(+)
+
+Three commits, one file, no third-party commit present. The index was confirmed EMPTY
+immediately before the merge, so no concurrent session's staged work was in scope this time.
+
+## 38. THE DELETED-WORKTREE HAZARD IS STILL LIVE AND IS NOW MEASURED PER PANE
+
+Section 26 item 3 says 26 panes point into directories that no longer exist. Re-measured
+this pass, and the resolution is finer than "26 panes": `tmux list-panes -a` shows 13 panes
+in session `canford8` and 13 in `phone`, both pointing at the same 13 `r9-*` paths. Testing
+each path with `test -d`:
+
+      MISSING (11): r9-accessor, r9-kramer-extract, r9-renders, r9-corpus-bib, r9-settle,
+                    r9-landing, r9-platform, r9-priorcode, r9-reader, r9-jobb-route,
+                    r9-gapscan
+      EXISTS   (2): r9-moving-vehicle, r9-overleaf
+
+So **22 of 26 panes point at nothing**, not all 26. Both surviving worktrees are clean with
+zero unshipped commits, so nothing is at risk in them. The removal itself is still
+unexplained, unchanged from section 10.
+
+## 39. WHAT THIS PASS DELIBERATELY DID NOT DO
+
+- **Did not merge the other four worktrees.** Two self-declare as unfinished in their own
+  commit subjects ("placeholders and all", "NON-CANONICAL"), one is superseded per section
+  36, and `realism-exploration` carries eight commits of force-coupled SDF physics whose
+  acceptance is a research decision, not a merge decision. The adversarial review path was
+  not run, so those claims are **UNREVIEWED** and the review was not faked.
+- **Did not touch the three forbidden backup clones.** Section 15 stands. Nothing was
+  merged, pulled, cherry-picked or added as a remote from any of them.
+- **Did not commit the dirty working tree.** Seven modified tracked files and roughly 75
+  untracked paths remain uncommitted, including `docs/CREDENTIAL_EXPOSURE_2026-08-13.md`,
+  which is untracked deliberately because the remote is public.
+- **Generated no physics claim.** This pass was inventory, one merge, and one push.
+
+## 40. WRITE SCOPE
+
+Unchanged from section 30 and restated so it is not lost: no row in `scripts/r8/r8_plan.tsv`
+owns "inventory, merge and push everything", and `docs/` is outside the write scope of the
+only slot narrow enough to fit. This write is taken as a **deliberate one-time exception
+authorized by Josie handing the prompt over directly**, not as a silent override of the
+declared scope.
