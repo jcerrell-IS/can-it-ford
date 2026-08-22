@@ -2,6 +2,32 @@
 
 Source documents this project's parameters and thresholds actually trace back to. `CITATION.cff` at the repo root is for citing this repository itself, not a bibliography, this file is the bibliography.
 
+## Rights status of the files in this directory
+
+**Added 2026-08-18.** This file is a bibliography: it records what each source establishes. It
+previously recorded nothing about whether the project may redistribute the files sitting next to
+it, and this directory publishes third-party publisher PDFs and 20 image reproductions to a
+**public** repository. Licences below were resolved per DOI through Unpaywall on 2026-08-18.
+Full working and the per-asset inventory: `THIRD_PARTY_NOTICES.md` and
+`docs/R8_LICENCE_RECONCILE_2026-08-18.md`.
+
+The repository's root `LICENSE` (BSD 3-Clause) does **not** apply to any of these files. It now
+carries an explicit scope carve-out saying so.
+
+| File or folder | Licence as found | Status |
+|---|---|---|
+| `Water Resources Research - 2021 - Wang and Marsooli ....pdf` | **CC BY-NC-ND** (DOI 10.1029/2020WR028616) | NonCommercial, NoDerivatives. Redistribution of the unmodified PDF with attribution is permitted; commercial use and derivatives are not. |
+| `J Flood Risk Management - 2025 - Dasallas ....pdf` | **CC BY** (DOI 10.1111/jfr3.70154) | Clean. Attribution required and given here. |
+| `Smith-Modra-Felder/` (16 images) | **closed access, all rights reserved** (DOI 10.1111/jfr3.12527) | **No permission established.** Unpaywall reports no open-access location; Crossref records Wiley's standard terms. Most exposed item in this directory. |
+| `ARR_Project_10_Stage2_Report_Final.pdf`, `ARR table 1 ....png` | **UNRESOLVED** | All 29 pages carry no copyright, licence or reproduction statement; the report prints no DOI; `arr.ga.gov.au` returns 403. Two routes tried, both inconclusive. |
+| `WRL reports technical and Research/` (3 images) | **UNRESOLVED** | Same publisher family and same silence as the AR&R report. |
+| `vehicle(kks32).py`, `splat_sim(kks32).py` | **MIT**, header in-file | Clean. Copyright is "The mpm-engine authors", not this project. |
+| `Elicit - *.bib`, `Elicit - *.csv`, and the `.md` notes | project-authored or tool output | Covered by the root `LICENSE`. |
+
+**UNRESOLVED means no permission has been established, not that permission is presumed.** Silence
+from a publisher is not a grant. If you hold rights in any of the above and object to its
+inclusion, please open an issue on the repository.
+
 ## L0, static depth threshold
 
 NWS Turn Around Don't Drown. https://www.weather.gov/safety/flood-turn-around-dont-drown
@@ -10,11 +36,36 @@ NWS Turn Around Don't Drown. https://www.weather.gov/safety/flood-turn-around-do
 
 Shand, T. D., Cox, R. J., Blacka, M. J., & Smith, G. P. (2011). Australian Rainfall and Runoff Project 10: Appropriate Safety Criteria for Vehicles, Literature Review, Stage 2. AR&R Report No. P10/S2/020. Water Research Laboratory, UNSW. PDF in `citations/ARR_Project_10_Stage2_Report_Final.pdf`.
 
-Threshold used: DV <= 0.60 m2/s for the Large 4WD vehicle class specifically, not a generic all-vehicle number. The report itself calls this table "draft, interim, informal," not an endorsed safety standard.
+**Threshold used: the JOINT rule, not a bare D x V scalar.** All three conditions must
+hold for FORD; failing any one gives NO-FORD:
+
+| AR&R class | Depth cap | Velocity cap | D x V cap |
+|---|---|---|---|
+| Small passenger | 0.30 m | 3.0 m/s | 0.30 m2/s |
+| Large passenger | 0.40 m | 3.0 m/s | 0.45 m2/s |
+| Large 4WD | 0.50 m | 3.0 m/s | 0.60 m2/s |
+
+**The 2010 Toyota Yaris used throughout this project is Small passenger**, so its caps are
+0.30 m, 3.0 m/s and 0.30 m2/s. Primary sources: `vehicle_params.py:207-223`
+(`AR_R_STABILITY_LIMITS`) and `vehicle_params.L1_verdict` at `:228`, mirrored in
+`hf_space/app.py:41-53` and `renders/yaris_render_s1/gates.py:23`.
+
+> **Corrected 2026-08-18.** This entry previously read "Threshold used: DV <= 0.60 m2/s for the
+> Large 4WD vehicle class specifically, not a generic all-vehicle number." That is the superseded
+> hazard-only form, and 0.60 is the **Large 4WD** number applied to a **Small passenger** vehicle,
+> which is twice this vehicle's actual D x V cap and returns FORD for cases the joint rule calls
+> NO-FORD. Commit `f6348c7`, "Space L1 used the Large 4WD threshold for a Yaris and dropped two of
+> three conditions", replaced exactly this error in the deployed demo; this file was not updated at
+> the same time. The qualifier that survives is the useful half: 0.60 was never a generic
+> all-vehicle number.
+
+The report itself calls this table "draft, interim, informal," not an endorsed safety standard.
 
 ## L2, WCSPH physical validation
 
-Smith, G., Modra, B., & Felder, S. (2019). Full-scale testing of vehicle floating and sliding in flowing floodwater. Journal of Flood Risk Management. DOI:10.1111/jfr3.12527. Source in `citations/Smith-Modra-Felder/`.
+Smith, G. P., Modra, B. D., & Felder, S. (2019). Full-scale testing of stability curves for vehicles in flood waters. Journal of Flood Risk Management, 12(S2), e12527. DOI:10.1111/jfr3.12527. Source in `citations/Smith-Modra-Felder/`.
+
+> **Title corrected 2026-08-18.** This entry previously read "Full-scale testing of vehicle floating and sliding in flowing floodwater", which is not the title at that DOI. Verified against the Crossref record: the DOI, authors and year were all correct, so this was a citation error rather than a fabricated reference, but it is the same surface pattern (a real DOI paired with a title that is not the resolved title) and it would fail a bibliography audit. **The bibliographies were then checked and are correct, so no further fix is needed:** `paper/can_it_ford_references_IEEE.bib` and `overleaf_sync/can_it_ford_references_IEEE.bib` both carry the Crossref title on `origin/main` and on `claude/add-ci-checks`. A `git grep` for the wrong title across both branches returns this file as the only citation-style occurrence; the two other hits are ordinary prose about floating and sliding as failure modes, not titles. The error was confined to this file.
 
 ## L2, DRIFT_THRESHOLD = 0.05m reframing
 
