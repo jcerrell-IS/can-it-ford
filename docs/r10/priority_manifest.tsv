@@ -1,0 +1,60 @@
+cite_key	doi	route	http	bytes	is_pdf	url	why
+Zha19e	10.1016/j.compfluid.2018.10.007	unpaywall	200	25213	NO	http://resolver.tudelft.nl/uuid:d257b512-074b-48dc-8e62-a5093f4ed54f	in/outflow BC, open question g, named in CLAUDE.md
+Zha19e	10.1016/j.compfluid.2018.10.007	unpaywall+scrape	200	2943960	YES	https://www.repository.cam.ac.uk/bitstreams/01d314dc-d32a-4abf-8954-72c2a74bcb78/download	in/outflow BC, open question g, named in CLAUDE.md
+Bau23	10.1002/nme.7217	unpaywall+scrape	200	12433458	YES	https://dspace.mit.edu/bitstreams/0da5904b-b475-48f0-8f1c-aa5002423559/download	MPM spatial integration errors, open question a
+Zha17c	10.1016/j.jcp.2016.10.064	unpaywall	500	0	NO	http://hdl.handle.net/10722/242215	incompressible MPM free surface, open question a
+Zha17c	10.1016/j.jcp.2016.10.064	doi.org	200	2673	NO	https://doi.org/10.1016/j.jcp.2016.10.064	incompressible MPM free surface, open question a
+Cha24c	10.1016/j.jcp.2024.113457	unpaywall	200	2741	NO	https://doi.org/10.1016/j.jcp.2024.113457	mixed MPM stabilization and validation, open question a
+Cha24c	10.1016/j.jcp.2024.113457	doi.org	200	2741	NO	https://doi.org/10.1016/j.jcp.2024.113457	mixed MPM stabilization and validation, open question a
+Yan17	10.1016/j.proeng.2017.01.047	unpaywall	403	0	NO	https://www.sciencedirect.com/science/article/pii/S1877705817300474/pdf	MPM smoothing with embedded solids, open question a
+Yan17	10.1016/j.proeng.2017.01.047	doi.org	200	2717	NO	https://doi.org/10.1016/j.proeng.2017.01.047	MPM smoothing with embedded solids, open question a
+Gar19	10.1109/oceanse.2019.8867480	unpaywall	200	12612	NO	https://hal.science/hal-03498931	pressure on submerged bodies in SPH, open question a
+Gar19	10.1109/oceanse.2019.8867480	doi.org	202	2055	NO	https://doi.org/10.1109/oceanse.2019.8867480	pressure on submerged bodies in SPH, open question a
+Jou20	10.1016/j.apm.2019.09.030	unpaywall	200	12612	NO	https://hal.science/hal-03225016v1/file/S0307904X19305608.pdf	gradient corrected SPH, fully resolved particle-fluid, question a/c
+Jou20	10.1016/j.apm.2019.09.030	unpaywall	500	0	NO	http://hdl.handle.net/20.500.12210/125554	gradient corrected SPH, fully resolved particle-fluid, question a/c
+Jou20	10.1016/j.apm.2019.09.030	unpaywall	500	0	NO	http://hdl.handle.net/20.500.12210/94949	gradient corrected SPH, fully resolved particle-fluid, question a/c
+Jou20	10.1016/j.apm.2019.09.030	unpaywall	403	0	NO	https://www.sciencedirect.com/science/article/am/pii/S0307904X19305608?via%3Dihub	gradient corrected SPH, fully resolved particle-fluid, question a/c
+Jou20	10.1016/j.apm.2019.09.030	doi.org	200	2693	NO	https://doi.org/10.1016/j.apm.2019.09.030	gradient corrected SPH, fully resolved particle-fluid, question a/c
+Mon09	10.1016/j.cpc.2009.05.008	unpaywall	200	169090	NO	https://figshare.com/articles/journal_contribution/SPH_particle_boundary_forces_for_arbitrary_boundaries/22986665	SPH particle boundary forces, open question c
+Mon09	10.1016/j.cpc.2009.05.008	doi.org	200	2668	NO	https://doi.org/10.1016/j.cpc.2009.05.008	SPH particle boundary forces, open question c
+Fou19	10.1016/j.compfluid.2019.06.009	unpaywall	200	64426	NO	https://research.manchester.ac.uk/en/publications/4d49fa6b-e1b1-4cc1-a670-ed0ab47aab2a	LUST boundary condition, open question a
+Fou19	10.1016/j.compfluid.2019.06.009	unpaywall	200	64426	NO	https://www.research.manchester.ac.uk/portal/en/publications/local-uniform-stencil-lust-boundary-condition-for-arbitrary-3d-boundaries-in-parallel-smoothed-particle-hydrodynamics-sph-models(4d49fa6b-e1b1-4cc1-a670-ed0ab47aab2a).html	LUST boundary condition, open question a
+Fou19	10.1016/j.compfluid.2019.06.009	unpaywall+scrape	200	5251925	YES	https://www.investigo.biblioteca.uvigo.es/xmlui/bitstream/11093/4200/1/Fourtakas_Georgios_2019_Loc_uni_ste.pdf	LUST boundary condition, open question a
+Ski13	10.1016/j.cma.2013.05.017	unpaywall	403	0	NO	https://www.sciencedirect.com/science/article/pii/S0045782513001448/pdf	ISPH temporal noise, body-water slam, open question a/b
+Ski13	10.1016/j.cma.2013.05.017	doi.org	200	2804	NO	https://doi.org/10.1016/j.cma.2013.05.017	ISPH temporal noise, body-water slam, open question a/b
+Tao21b	10.3390/jmse9040416	unpaywall	403	0	NO	https://doaj.org/article/71c1cfa9d2664569a87a347deff3da04	semi-fixed ghost particle boundary, open question a
+Tao21b	10.3390/jmse9040416	unpaywall	403	0	NO	https://dx.doi.org/10.3390/jmse9040416	semi-fixed ghost particle boundary, open question a
+Tao21b	10.3390/jmse9040416	unpaywall	403	0	NO	https://www.mdpi.com/2077-1312/9/4/416/pdf?version=1618314227	semi-fixed ghost particle boundary, open question a
+Tao21b	10.3390/jmse9040416	doi.org	403	0	NO	https://doi.org/10.3390/jmse9040416	semi-fixed ghost particle boundary, open question a
+Zhe17	10.1016/j.ijnaoe.2017.08.001	unpaywall	200	3058	NO	http://hdl.handle.net/2433/231179	solid boundary treatment for wave-float, open question a
+Zhe17	10.1016/j.ijnaoe.2017.08.001	unpaywall	403	0	NO	https://doaj.org/article/11d7497d7b754bf6920e08cb70b2aa99	solid boundary treatment for wave-float, open question a
+Zhe17	10.1016/j.ijnaoe.2017.08.001	unpaywall	403	0	NO	https://www.sciencedirect.com/science/article/pii/S2092678217300821/pdf	solid boundary treatment for wave-float, open question a
+Zhe17	10.1016/j.ijnaoe.2017.08.001	doi.org	200	2703	NO	https://doi.org/10.1016/j.ijnaoe.2017.08.001	solid boundary treatment for wave-float, open question a
+Zhe17	10.1016/j.ijnaoe.2017.08.001	core	200	4001639	YES	https://core.ac.uk/download/161123388.pdf	solid boundary treatment for wave-float, open question a
+Li23f	10.3390/jmse11010215	unpaywall	403	0	NO	https://doaj.org/article/e50dbc4844ba43f89c375f319898c8cb	split-pressure MPS with virtual particle, open question a
+Li23f	10.3390/jmse11010215	unpaywall	403	0	NO	https://dx.doi.org/10.3390/jmse11010215	split-pressure MPS with virtual particle, open question a
+Li23f	10.3390/jmse11010215	unpaywall	403	0	NO	https://www.mdpi.com/2077-1312/11/1/215/pdf?version=1673610348	split-pressure MPS with virtual particle, open question a
+Li23f	10.3390/jmse11010215	doi.org	403	0	NO	https://doi.org/10.3390/jmse11010215	split-pressure MPS with virtual particle, open question a
+Vau20	10.1016/bs.aams.2019.11.001	unpaywall	200	169624	NO	https://figshare.com/articles/journal_contribution/Material_point_method_after_25_years_Theory_implementation_and_applications/20687032	MPM after 25 years, review
+Vau20	10.1016/bs.aams.2019.11.001	doi.org	200	2693	NO	https://doi.org/10.1016/bs.aams.2019.11.001	MPM after 25 years, review
+Xio24	10.1029/2023wr036739	unpaywall	403	0	NO	https://doaj.org/article/2c5b33671be44c48bca4d8a4d2c40579	the one bibliography entry that is never cited
+Xio24	10.1029/2023wr036739	unpaywall+scrape	200	7328829	YES	https://figshare.com/articles/journal_contribution/Simulation_of_the_full_process_dynamics_of_floating_vehicles_driven_by_flash_floods/27961596/1/files/50994903.pdf	the one bibliography entry that is never cited
+Azh26	10.1111/jfr3.70181	unpaywall	403	0	NO	https://doi.org/10.1111/jfr3.70181	vehicle stability under unsteady flow, 2026, open question e
+Azh26	10.1111/jfr3.70181	doi.org	403	0	NO	https://doi.org/10.1111/jfr3.70181	vehicle stability under unsteady flow, 2026, open question e
+Sha20	10.1111/jfr3.12657	unpaywall+scrape	200	5717570	YES	https://upcommons.upc.edu/bitstreams/f5d95759-7e1b-40eb-bc5f-ee3460519277/download	non-stationary vehicle Froude, open question d
+Alq22	10.1111/jfr3.12828	unpaywall	403	0	NO	https://doaj.org/article/d36599ed2ff74ea2baa9dc9811140d1a	moving vehicle in floodwater, open question d
+Alq22	10.1111/jfr3.12828	unpaywall	403	0	NO	https://onlinelibrary.wiley.com/doi/pdfdirect/10.1111/jfr3.12828	moving vehicle in floodwater, open question d
+Alq22	10.1111/jfr3.12828	doi.org	403	0	NO	https://doi.org/10.1111/jfr3.12828	moving vehicle in floodwater, open question d
+Hu23	10.1016/j.jhydrol.2023.129525	unpaywall	200	2733	NO	https://doi.org/10.1016/j.jhydrol.2023.129525	stability thresholds at flow orientations, open question e
+Hu23	10.1016/j.jhydrol.2023.129525	doi.org	200	2733	NO	https://doi.org/10.1016/j.jhydrol.2023.129525	stability thresholds at flow orientations, open question e
+Mar17	10.1080/1573062x.2017.1301501	unpaywall+scrape	200	1430317	YES	https://upcommons.upc.edu/bitstreams/bc0218b5-4234-4ccd-a7de-496033598f20/download	stability threshold methodology, open question e
+Kra16	10.1016/j.ijdrr.2016.04.003	unpaywall	200	397714	NO	http://hdl.handle.net/1959.4/unsworks_55729	trafficability of inundated roads, cited by the paper
+Kra16	10.1016/j.ijdrr.2016.04.003	doi.org	200	2691	NO	https://doi.org/10.1016/j.ijdrr.2016.04.003	trafficability of inundated roads, cited by the paper
+Kra16	10.1016/j.ijdrr.2016.04.003	core	200	3729935	YES	https://core.ac.uk/download/156880508.pdf	trafficability of inundated roads, cited by the paper
+Qiu22	10.1145/3570160	unpaywall	0	0	NO	https://www.osti.gov/servlets/purl/1923959	gigascale MPM, resolution
+Qiu22	10.1145/3570160	unpaywall	403	0	NO	https://dl.acm.org/doi/pdf/10.1145/3570160	gigascale MPM, resolution
+Qiu22	10.1145/3570160	doi.org	403	0	NO	https://doi.org/10.1145/3570160	gigascale MPM, resolution
+Wan20d	10.1145/3386569.3392442	unpaywall	0	0	NO	https://www.osti.gov/biblio/1820872	multi-GPU MPM, resolution
+Wan20d	10.1145/3386569.3392442	doi.org	403	0	NO	https://doi.org/10.1145/3386569.3392442	multi-GPU MPM, resolution
+Dav24	10.20944/preprints202409.0095.v1	unpaywall	403	0	NO	http://dx.doi.org/10.20944/preprints202409.0095.v1	axisymmetric CFD heave of a spherical buoy, open question a
+Dav24	10.20944/preprints202409.0095.v1	doi.org	403	0	NO	https://doi.org/10.20944/preprints202409.0095.v1	axisymmetric CFD heave of a spherical buoy, open question a

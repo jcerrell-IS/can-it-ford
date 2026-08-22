@@ -1,0 +1,50 @@
+cite_key	doi	route	score	oa_pdf	title
+Sch19e		none	0.00		A Consistent Boundary Method for the Material Point Method - Using Ima
+Neg22b	10.2514/3.48560	crossref-loose	0.71		Identifying second order accurate boundary conditions for WCSPH
+Neg21d		none	0.00		Numerical Investigation of Accuracy, Convergence, and Conservation of 
+Sci19		none	0.00		Ocean Energy Systems Wave Energy Modelling Task: Modelling, Verificati
+Ste08	10.3970/cmes.2008.031.107	openalex	1.00		Examination and Analysis of Implementation Choices within the Material
+Miy23	10.48550/arxiv.2302.14245	openalex	1.00		Strongly coupled simulation of incompressible fluid and rigid bodies w
+Rem19		none	0.00		Implementation of non-trivial boundary conditions in MPM for geotechni
+Tho06		none	0.00		Water Stilling for Towing Tank Experiments of High Performance Craft
+Bur12	10.9766/kimst.2023.26.2.159	crossref-loose	0.83		Analysis of the process of water entry of an amphibious vehicle
+Smi17	10.26190/unsworks/27433	openalex	1.00		Experimental testing of flood hazard curves for a partially submerged 
+Rus07		none	0.00		A Comprehensive Set of Code Validation Data for Planing Boat Forces in
+Paz16	10.1007/978-3-319-56397-8_31	crossref-loose	0.75		Investigation of the Vehicle Mobility in Fording
+Paz14		none	0.00		A comparative study of four fluid-solid coupling methods for applicati
+Lop18b	10.29252/jafm.11.06.28608	openalex	1.00		Smoothed Particle Hydrodynamics Method for Three-Dimensional Open Chan
+Mar13		none	0.00		Extended Validation of the Finite Element Model for the 2010 Toyota Ya
+Mar13b		none	0.00		Extended Validation of the Finite Element Model for the 2007 Chevrolet
+Kha15		none	0.00		Development and Validation of Finite Element Models of Mid-Size Sedan 
+Mar14b	10.4271/2015-22-0014	crossref-loose	0.75		Development and Validation of a Finite Element Model for a Mid-Sized P
+Sed16	10.4271/2016-01-1534	crossref-loose	0.75		Development and Validation of a Finite Element Model for the 2012 Toyo
+Moh10		none	0.00		Modeling, Testing, and Validation of the 2007 Chevy Silverado Finite E
+Opi12		none	0.00		Extended Validation of the Finite Element Model for the 2010 Toyota Ya
+Var93		none	0.00		Development of a Passenger Vehicle Finite Element Model. Final Report
+Opi07		none	0.00		NCAC Vehicle Model Development Update
+Elr26	10.48550/arxiv.2605.07098	openalex	1.00		CarCrashNet: A Large-Scale Dataset and Hierarchical Neural Solver for 
+Ray07		none	0.00		Quantitative Evaluation of the Fidelity of Public-Domain Vehicle Model
+Mcc03	10.4271/950360	semanticscholar	0.75		NHTSA's vehicle parameter database and NHTSA's crash test database
+Ash24	10.48550/arxiv.2408.11969	openalex	1.00		DrivAerML: High-Fidelity Computational Fluid Dynamics Dataset for Road
+Mar19b	10.1080/23863781.2019.1685921	crossref-loose	0.71		Estabilidad de vehiculos frente a inundaciones: estudio numerico-exper
+Ma06		none	0.00		Structured mesh refinement in generalized interpolation material point
+Ma05		none	0.00		Multiscale Simulations Using Generalized Interpolation Material Point 
+Shi10	10.5281/zenodo.1074837	openalex	1.00		Dynamic Meshing for Material Point Method Computations
+Jur74		none	0.00		Mathematical Model of Wheeled Vehicles Exiting from the Riverine Envir
+Ros15		none	0.00		The Performance of Photo Based Vehicle Models using HVE DyMesh Algorit
+Mor25	10.48550/arxiv.2506.04120	openalex	1.00		Splatting Physical Scenes: End-to-End Real-to-Sim from Imperfect Robot
+Sim01b		none	0.00		Sampling Strategies for Computer Experiments: Design and Analysis
+Roy11		none	0.00		A comprehensive framework for verification, validation, and uncertaint
+Eca20	10.1115/vvs2020-8826	crossref-loose	1.00		On the Interpretation and Scope of the V&V 20 Standard for Verificatio
+Son26b	10.48550/arxiv.2605.09360	openalex	1.00		Your Simulation Runs but Solves the Wrong Physics: PDE-Grounded Intent
+Ho26	10.48550/arxiv.2606.09774	openalex	1.00		Auto-Configuring Scientific Simulators with Lightweight Coding-Agent A
+Zha26k	10.48550/arxiv.2603.15976	openalex	1.00		An Agentic Evaluation Framework for AI-Generated Scientific Code in PE
+Kum26	10.48550/arxiv.2605.08941	openalex	1.00		MDGYM: Benchmarking AI Agents on Molecular Simulations
+Lie26	10.48550/arxiv.2603.00214	openalex	1.00		Agentic Scientific Simulation: Execution-Grounded Model Construction a
+Fan26b	10.48550/arxiv.2602.11666	openalex	1.00		PhyNiKCE: A Neurosymbolic Agentic Framework for Autonomous Computation
+Dus25	10.48550/arxiv.2512.21373	openalex	1.00		AInsteinBench: Benchmarking Coding Agents on Scientific Repositories
+Han26		none	0.00		PDEAgent-Bench: A Multi-Metric, Multi-Library Benchmark for PDE Solver
+Van25	10.48550/arxiv.2512.22387	openalex	1.00		AI-Generated Code Is Not Reproducible (Yet): An Empirical Study of Dep
+Bra11		none	0.00		Establishing credibility of particle methods through verification test
+Zha23i	10.1007/s42241-024-0042-6	openalex	1.00		A method for automated regression test in scientific computing librari
+Kam06	10.2514/6.2007-4203	crossref-loose	0.71		Verification of Computational Constitutive Models using the Method of 

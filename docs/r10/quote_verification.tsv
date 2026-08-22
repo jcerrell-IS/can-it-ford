@@ -1,0 +1,31 @@
+cite_key	verdict	quote
+Sch19e	NOT_FOUND	distort the stress multiple grid lengths into the object
+Sch19e	NOT_FOUND	are quite wide and reach multiple grid widths into the material
+Sch19e	NOT_FOUND	two grid widths deep, which equals the penetration of the used transfer function
+Sch19e	NOT_FOUND	the stress distribution is now correctly modelled inside the object
+Sch19e	NOT_FOUND	complex boundaries are not supported, but only boxes
+Sch19e	NOT_FOUND	has not converged after 1000 time steps
+Sch19e	NOT_FOUND	with the main change still occurring in the boundary region of large artefacts
+Sch19e	NOT_FOUND	the thickness and width changes the total force acting on the object
+Sch19e	NOT_FOUND	Care must be taken when setting up the system to get the desired forces
+Bau23	FOUND	volumetric or kinematic locking of nearly incompressible materials
+Bau23	FOUND	these approaches compound the latter issue producing an unfortunate type of error
+Bau23	FOUND	aggregation of material point tracers and loss of accurate integration of the governing equations
+Bau23	FOUND	the particle ringing instability
+Bau23	FOUND	there is a theoretical minimum value that
+Bau23	FOUND	as the basis function order increases, all of the MPM methods begin converging
+Bau23	FOUND	no single approach for mitigating the errors predicted in
+Zha19e	FOUND	only approximated steady conditions and limited the time able to be simulated
+Zha19e	FOUND	One of the BCs must control the kinematics
+Zha19e	FOUND	If neither BCs controls the kinematics, the problem is not well-posed
+Zha19e	FOUND	leads to smoother stress fields
+Zha19e	FOUND	strain and pressure smoothing procedures are used to mitigate the stress oscillations
+Fou19	FOUND	on the order of 10% of the total pressure
+Fou19	FOUND	the velocity magnitude is reduced by an order of magnitude
+Fou19	FOUND	Kinetic energy evolution time for the 3-D still water with pyramid
+Fou19	FOUND	only the hydrostatic part of the pressure is needed
+Fou19	FOUND	without the need of special treatments for corners and curvature
+Xio24	FOUND	with results consistent with post
+Xio24	FOUND	Increasing number of floating vehicles alters flood hydrodynamics
+Alq23	FOUND	the vehicle experienced the floating instability mode once the flow depth reached 0.38 m
+Alq23	FOUND	the drag force decreased with the increment of the Froude number and flow velocity

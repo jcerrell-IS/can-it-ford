@@ -1,0 +1,27 @@
+cite_key	doi	verdict	evidence	resolved_title
+Neg22b	10.2514/3.48560	REJECT	jaccard 0.56, year 1984 vs 2022	Second-Order Accurate Boundary Conditions for Compressible Flows
+Ste08	10.3970/cmes.2008.031.107	NEEDS_HUMAN	crossref metadata lookup failed	
+Miy23	10.48550/arxiv.2302.14245	ACCEPT	arxiv id, title matched at source	
+Bur12	10.9766/kimst.2023.26.2.159	REJECT	jaccard 0.42, year 2023 vs 2012	Numerical Analysis on Dynamic Behavior Characteristics of an Amphibiou
+Smi17	10.26190/unsworks/27433	NEEDS_HUMAN	crossref metadata lookup failed	
+Paz16	10.1007/978-3-319-56397-8_31	REJECT	jaccard 0.30, year 2017 vs 2016	Sand to Mud to Fording: Modeling and Simulation for Off-Road Ground Ve
+Lop18b	10.29252/jafm.11.06.28608	ACCEPT	jaccard 1.00, year 2018 vs 2018	Smoothed Particle Hydrodynamics Method for Three-Dimensional Open Chan
+Mar14b	10.4271/2015-22-0014	REJECT	jaccard 0.40, year 2015 vs 2014	Development and Validation of an Older Occupant Finite Element Model o
+Sed16	10.4271/2016-01-1534	NEEDS_HUMAN	ambiguous: jaccard 0.55, year 2016 vs 2016	Validation of a Toyota Camry Finite Element Model for Multiple Impact 
+Elr26	10.48550/arxiv.2605.07098	ACCEPT	arxiv id, title matched at source	
+Mcc03	10.4271/950360	REJECT	jaccard 0.57, year 1995 vs 2003	Applications of NHTSA's Vehicle Parameter Database
+Ash24	10.48550/arxiv.2408.11969	ACCEPT	arxiv id, title matched at source	
+Mar19b	10.1080/23863781.2019.1685921	ACCEPT	jaccard 1.00, year 2019 vs 2019	Estabilidad de vehículos frente a inundaciones: estudio numérico-exper
+Shi10	10.5281/zenodo.1074837	NEEDS_HUMAN	crossref metadata lookup failed	
+Mor25	10.48550/arxiv.2506.04120	ACCEPT	arxiv id, title matched at source	
+Eca20	10.1115/vvs2020-8826	ACCEPT	jaccard 0.70, year 2020 vs 2020	On the Interpretation and Scope of the V&amp;V 20 Standard for Verific
+Son26b	10.48550/arxiv.2605.09360	ACCEPT	arxiv id, title matched at source	
+Ho26	10.48550/arxiv.2606.09774	ACCEPT	arxiv id, title matched at source	
+Zha26k	10.48550/arxiv.2603.15976	ACCEPT	arxiv id, title matched at source	
+Kum26	10.48550/arxiv.2605.08941	ACCEPT	arxiv id, title matched at source	
+Lie26	10.48550/arxiv.2603.00214	ACCEPT	arxiv id, title matched at source	
+Fan26b	10.48550/arxiv.2602.11666	ACCEPT	arxiv id, title matched at source	
+Dus25	10.48550/arxiv.2512.21373	ACCEPT	arxiv id, title matched at source	
+Van25	10.48550/arxiv.2512.22387	ACCEPT	arxiv id, title matched at source	
+Zha23i	10.1007/s42241-024-0042-6	ACCEPT	jaccard 1.00, year 2024 vs 2023	Automated regression test method for scientific computing libraries: I
+Kam06	10.2514/6.2007-4203	REJECT	jaccard 0.45, year 2007 vs 2006	Verification of RANS Turbulence Models in Loci-CHEM using the Method o

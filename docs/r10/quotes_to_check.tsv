@@ -1,0 +1,31 @@
+# every direct quotation this slot put in quotation marks, with the paper it is attributed to
+Sch19e	distort the stress multiple grid lengths into the object
+Sch19e	are quite wide and reach multiple grid widths into the material
+Sch19e	two grid widths deep, which equals the penetration of the used transfer function
+Sch19e	the stress distribution is now correctly modelled inside the object
+Sch19e	complex boundaries are not supported, but only boxes
+Sch19e	has not converged after 1000 time steps
+Sch19e	with the main change still occurring in the boundary region of large artefacts
+Sch19e	the thickness and width changes the total force acting on the object
+Sch19e	Care must be taken when setting up the system to get the desired forces
+Bau23	volumetric or kinematic locking of nearly incompressible materials
+Bau23	these approaches compound the latter issue producing an unfortunate type of error
+Bau23	aggregation of material point tracers and loss of accurate integration of the governing equations
+Bau23	the particle ringing instability
+Bau23	there is a theoretical minimum value that
+Bau23	as the basis function order increases, all of the MPM methods begin converging
+Bau23	no single approach for mitigating the errors predicted in
+Zha19e	only approximated steady conditions and limited the time able to be simulated
+Zha19e	One of the BCs must control the kinematics
+Zha19e	If neither BCs controls the kinematics, the problem is not well-posed
+Zha19e	leads to smoother stress fields
+Zha19e	strain and pressure smoothing procedures are used to mitigate the stress oscillations
+Fou19	on the order of 10% of the total pressure
+Fou19	the velocity magnitude is reduced by an order of magnitude
+Fou19	Kinetic energy evolution time for the 3-D still water with pyramid
+Fou19	only the hydrostatic part of the pressure is needed
+Fou19	without the need of special treatments for corners and curvature
+Xio24	with results consistent with post
+Xio24	Increasing number of floating vehicles alters flood hydrodynamics
+Alq23	the vehicle experienced the floating instability mode once the flow depth reached 0.38 m
+Alq23	the drag force decreased with the increment of the Froude number and flow velocity
