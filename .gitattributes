@@ -8,3 +8,10 @@ figures/*.html linguist-generated=true
 *.npz binary
 *.key -text
 *.k -text
+
+# hf_space/ mirrors a live Hugging Face Space byte for byte, pushed by
+# .github/workflows/sync-to-hub.yml. Its two CSVs are CRLF on the Hub, and the
+# "*.csv text eol=lf" rule above silently rewrote them to LF on commit, so the
+# tracked bytes stopped matching the live Space (4262 vs 4280, 207997 vs
+# 208366, exactly the stripped carriage returns). Store these verbatim.
+hf_space/data/*.csv -text
