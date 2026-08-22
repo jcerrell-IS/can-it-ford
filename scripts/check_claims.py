@@ -144,7 +144,15 @@ RULES: list[Rule] = [
          "NOT Genesis. Genesis is only the Track 2 box-proxy path, and no Genesis "
          "scene has ever loaded the Yaris hull.",
          "CLAUDE.md August 4 audit item 1",
-         context=r"17\s*(?:gated\s*)?runs?|gated\s*runs?|sim_standing|yaris_render_s1"),
+         context=r"17\s*(?:gated\s*)?runs?|gated\s*runs?|sim_standing|yaris_render_s1",
+         # C5's context words are the same words the CORRECTION uses, so every line
+         # that STATES the fix ("the 17 gated runs are warpmpm, NOT Genesis") fired as
+         # an ERROR. Measured 2026-08-22: 5 of 5 hits were correction or legitimate
+         # Track-2 references, 0 were the mislabel this rule exists to catch. A line
+         # committing the actual error names Genesis as the engine WITHOUT naming
+         # warpmpm, without a negation, and without scoping itself to Track 2.
+         exclude=r"\bwarpmpm\b|\bnever\b|\bnot\s+genesis\b|\bmislabel|"
+                 r"\bcorrected\b|track\s*2|box[-\s]proxy"),
 
     Rule("C6", WARN,
          r"9\.80665",
@@ -196,7 +204,23 @@ RULES: list[Rule] = [
          "not a distance. Do not cite the tolerance as sourced, and do not quote a "
          "bare total. .claude/checks/count_claims_check.py enforces this live.",
          "CLAUDE.md item 13 (re-derived 2026-08-12, three methods); register D7 and D7a; gates.py:195-196",
-         context=r"peer[- ]review|\bcited\b|literature|standard|established|sourced"),
+         context=r"peer[- ]review|\bcited\b|literature|standard|established|sourced",
+         # Same structural defect as C5 and worse in volume. C8's context list is
+         # "peer-review|cited|literature|standard|established|sourced", which is the
+         # exact vocabulary the CORRECTION is written in: "has NO peer-reviewed
+         # source", "not a cited physical threshold", "no direct literature-backed
+         # threshold was found". Measured 2026-08-22: 40 ERROR hits, and reading them
+         # one by one, the overwhelming majority were lines asserting the correction,
+         # quoting it verbatim from CLAUDE.md or D7, or naming the rule itself in an
+         # audit table. The violation this rule exists to catch reads "DRIFT_THRESHOLD
+         # is the established peer-reviewed standard", which carries no negation, no
+         # retraction verb, and no "internal detector" framing.
+         exclude=r"\bno\s+(?:peer[-\s]review\w*|direct|published|known|source)|"
+                 r"\bnot\s+(?:a\s+)?(?:\w+[-\s])?(?:cited|sourced|published|peer[-\s]review\w*)|"
+                 r"\bun-?cited\b|\bunsourced\b|\bnever\b|"
+                 r"false(?:ly)?\s+(?:attribut|cite)|\bcorrected\b|\brefuted\b|"
+                 r"\bwithdrawn\b|do\s+not\s+(?:cite|present|give)|must\s+not\b|"
+                 r"onset[-\s]of[-\s]motion|internal\s+(?:detector|to)|has\s+NO\s+"),
 
     Rule("C9", WARN,
          r"xia\s*(?:et\s*al\.?)?[,\s]*\(?20(?:10|11|13|14)",
