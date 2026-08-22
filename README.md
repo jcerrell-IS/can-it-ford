@@ -4,6 +4,7 @@
 
 [![License: BSD-3-Clause](https://img.shields.io/badge/License-BSD--3--Clause-green.svg)](LICENSE)
 [![W&B](https://img.shields.io/badge/W%26B-experiment_tracking-yellow)](https://wandb.ai/jcerrell29-claremont-mckenna-college/can-it-ford)
+[![HuggingFace](https://img.shields.io/badge/HuggingFace-live_demo-blue)](https://huggingface.co/spaces/josiecerrell/can-it-ford)
 
 *Josie Cerrell, NSF SCIPE REU 2026, GeoElements Lab, UT Austin (PI: Krishna Kumar)*
 
@@ -162,7 +163,7 @@ See [`CITATION.cff`](CITATION.cff) for citing this repository.
 
 ## License
 
-Code is released under the **[BSD 3-Clause License](LICENSE)**, the license [recommended by DesignSafe-CI for research software](https://designsafe-ci.org/user-guide/curating/policies/) published in the Data Depot Repository. The associated dataset is released under ODC-By-1.0 (see `CITATION.cff` and the pending DesignSafe DOI, PRJ-6388). A dataset DOI is not yet minted; PRJ-6388 is staged and awaiting co-PI sign-off before publication.
+Code is released under the **[BSD 3-Clause License](LICENSE)**, the license [recommended by DesignSafe-CI for research software](https://designsafe-ci.org/user-guide/curating/policies/) published in the Data Depot Repository. The associated dataset is released under CC-BY-4.0 (see `CITATION.cff` and the pending DesignSafe DOI, PRJ-6388). A dataset DOI is not yet minted; PRJ-6388 is staged and awaiting co-PI sign-off before publication.
 
 Note: PhysGaussian has no detected license in its GitHub metadata. Any PhysGaussian-derived bridge code must have its licensing resolved before being committed here or submitted to DesignSafe.
 
@@ -171,7 +172,7 @@ Note: PhysGaussian has no detected license in its GitHub metadata. Any PhysGauss
 ## External assets
 
 - **W&B:** [jcerrell29-claremont-mckenna-college/can-it-ford](https://wandb.ai/jcerrell29-claremont-mckenna-college/can-it-ford)
-- **Gradio demo:** not yet deployed.
+- **Gradio demo:** [josiecerrell/can-it-ford on HuggingFace Spaces](https://huggingface.co/spaces/josiecerrell/can-it-ford), live (verdict-flip explorer over the 17 gated runs, the `v_car` x `v_water` load surface, and repeat spread)
 - **Hailuo comparison:** `figures/hailuo/`, a visual-model-vs-physical-model comparison for the poster (Hailuo predicts FORD at d=0.30 m / v=1.5 m/s, pilot L2 predicts NO-FORD)
 - **Dataset DOI:** DesignSafe PRJ-6388, staged, not yet published.
 
