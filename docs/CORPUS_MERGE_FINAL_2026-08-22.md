@@ -1,5 +1,10 @@
 # Corpus merge, final accounting of the 138 catalogued-but-never-cited DOIs
 
+**THE `claude/r9-corpus-bib` CONFLICT WAS DIAGNOSED AND DELIBERATELY NOT RESOLVED: it is
+substantive, not mechanical, so it is reported for a human in section 7 and no merge was
+made. It did NOT block this accounting, because the branch's content was read directly
+without merging and contains no reference to the 138 or to register G25.**
+
 **NOT FINISHED. The accounting is complete and the remainder is named: all 138 DOIs now
 have a disposition and a title verified against a registry record, but 0 of 138 are cited
 in the submitted paper, 103 of 138 reach neither reader prose nor any bibliography, 134 of
@@ -566,6 +571,154 @@ the interpretive claims in sections 2.1, 2.2 and 2.3 beyond the specific items l
 membership only, which proves no DOI was dropped and proves nothing about which bucket each
 landed in. It did not run the physics-skeptic path, so section 4 item 8 stands unchanged:
 **no claim in this file has been adversarially reviewed.**
+
+---
+
+## 7. The `claude/r9-corpus-bib` conflict, diagnosed 2026-08-22, and NOT resolved
+
+Every claim in this section is `[read]` from a live command against the main checkout at
+`/Users/josie/can-it-ford`, branch `claude/add-ci-checks`, HEAD `3262118`, unless tagged
+otherwise. This is the dependency no prior dispatch named, and nobody had stated what the
+conflict actually was.
+
+### 7.1 What conflicts, exactly
+
+Merge base `af62473`. The deprecated three-argument `git merge-tree` reports **zero**
+conflict markers here and is misleading; the authoritative form is
+`git merge-tree --write-tree`, which exits 1 and names three files `[read]`:
+
+| file | conflict | hunks |
+|---|---|---|
+| `.claude/skills/research-corpus/SKILL.md` | content | 4 |
+| `analysis/research_index.py` | content | 4 |
+| `data/deep_searches/vehicle-mesh-assets.json` | **add/add** | 1 |
+
+The add/add is a genuine content difference, compared by md5 rather than by size per the
+standing rule: `3e192cb7e9706a555bfc66cf7365c256` (3,020 bytes) on `add-ci-checks` against
+`1d1567868e887cd1225de0b281402cc3` (12,085 bytes) on the branch `[read]`.
+
+**Three of the branch's six files are clean adds and carry no conflict at all**:
+`docs/R9_CORPUS_BIB_GAP_2026-08-18.md` (1,711 lines), `data/r9_bib_corpus_census.tsv`, and
+`data/deep_searches/buoyancy-overestimation.json`, the last confirmed absent from
+`add-ci-checks` by `git cat-file -e` returning `does not exist` `[read]`. So the branch's
+content is readable in full without merging, which is the route taken here.
+
+### 7.2 Verdict: SUBSTANTIVE. Reported, not resolved.
+
+The dispatch's test is whether this is mechanical (two sessions touching one file in
+non-overlapping ways) or substantive (claims that disagree). It is substantive, for three
+measured reasons, and the third is the one that decides it.
+
+**(a) `--source-audit` is declared on both sides with different semantics.** Ours reports
+`deep searches known: 21`, `reaching the corpus AS PAPERS: 8 of 21`, and exits `FAIL (13
+problem(s))` `[read]`, which is exactly what CLAUDE.md documents as current behaviour. The
+branch's own tip commit says its `--source-audit` "still exits 1 naming 11 unreachable
+searches" `[read]`. Same flag name, two predicates, two counts. A naive union raises
+`argparse.ArgumentError` on the duplicate; choosing changes what the tool reports and makes
+one of the two documents describing it false.
+
+**(b) Neither side is a superset today.** `--searches` exists only on ours and is absent
+from the branch entirely `[read]`. `--bib-audit`, `--coverage`, `--identifier-audit`,
+`--ingest-check`, `--against-slug` and `--out` exist only on the branch `[read]`. A
+take-mine on `research_index.py` drops the metadata ingest that makes 21 of 21 searches
+reachable and the 2026-08-21 predicate change, both of which CLAUDE.md publishes as
+current. A take-theirs drops the branch's whole bibliography census.
+
+**(c) The branch's own landing plan is now false, and it is the plan a lander would
+follow.** Part 5 section 33 states `analysis/research_index.py` on `add-ci-checks` is
+"untouched, blob `b775b31` identical to base", concluding "the file that fixes `--query`
+lands without a conflict at all", and its procedure at section 34 says "EXPECT A CONFLICT
+IN SKILL.md AND ONLY THERE" `[read]`. Live, all three parts are false: the blob is
+`7d8c46e`, **three** commits touched that file after the base (`de891a9`, `3400e2b`,
+`924c180`), and **three** files conflict rather than one `[read]`.
+
+That is not an error by the branch. It was true when written on 2026-08-20 and
+`add-ci-checks` invalidated it afterwards. The branch dissolved the union deliberately,
+recording "the cheapest move was to make the measurement false"; `add-ci-checks` then
+re-created it. **A merge plan is a measurement and it goes stale like any other.**
+
+### 7.3 The three claims the branch says a naive merge would reintroduce, checked one by one
+
+The branch warns "DO NOT take `add-ci-checks`' SKILL.md content", naming three refuted
+claims. Checked individually rather than accepted as a block, because the warning is the
+load-bearing reason not to take our side:
+
+1. **"256 are cited nowhere": FALSE POSITIVE, the two sides agree.** `add-ci-checks` does
+   not assert it. Its SKILL.md reads **"DO NOT SAY '256 ARE CITED NOWHERE'. That clause was
+   WITHDRAWN 2026-08-18"** `[read]`. A string match found the numeral and not the polarity
+   of the sentence around it. This is the same defect the branch documents elsewhere as an
+   inflated count travelling further than an empty one.
+2. **"nineteen completed deep searches" against 21: CONFIRMED, and our own instrument is
+   the witness.** Our SKILL.md says the workspace holds "19 completed deep searches"
+   `[read]`, while our own `--source-audit` prints "deep searches known: 21" `[read]`, and
+   `data/deep_searches/` holds 22 files of which one is `MANIFEST.json`, leaving 21
+   searches `[read]`. `add-ci-checks` is internally inconsistent and the branch is right.
+3. **`df52bee` against `50b70c0`: CONFIRMED.**
+   `git log --all --diff-filter=A -- tests/test_physics_gates.py` returns **`50b70c0`**
+   `[read]`. `df52bee` is a real commit but did not add that file, so our SKILL.md line
+   attributing it is wrong.
+
+So two of the three warnings hold and one does not. **That distinction matters for the
+resolution**: it means our side carries two known defects rather than three, and one of the
+branch's stated reasons for a wholesale take-mine does not survive checking.
+
+### 7.4 Effect on the 138: none, and this is measured rather than assumed
+
+`docs/R9_CORPUS_BIB_GAP_2026-08-18.md` contains **zero** occurrences of "138" and **zero**
+of "G25" `[read]`. Its subject is the 15-entry shipped bibliography against the corpus,
+which is a different set from register G25's 138 catalogued-but-uncited DOIs. Both priority
+DOIs appear in it, at lines 1170 and 1647, but as list mentions inside other arguments and
+not as reads `[read]`.
+
+**Therefore the conflict did not block the accounting.** Sections 1 through 6 and the
+appendix stand exactly as they were, and the branch's content was read in full without
+merging. What the conflict blocks is the landing of the corpus tooling, not this document.
+
+### 7.5 What needs Josie, stated so it is not mistaken for done
+
+The branch's section 37 already says "what needs a human, and what I will not decide", and
+this session agrees with it and adds one item. Nothing below was executed. No merge, no
+branch, no push of any of it.
+
+1. **Which `--source-audit` survives**, ours (paperless predicate, 13 problems) or the
+   branch's (unreachable predicate, 11). They cannot both keep the flag name.
+2. **Whether to land onto `add-ci-checks` at all**, or hold both for `origin/main`, which
+   carries none of this tooling. Relayed from the branch's section 37, not re-derived.
+3. **Whether to rebuild the index during the landing.** The branch measured a rebuild as
+   moving 332 to 319 and cited-anywhere 76 to 66, and recommends landing the tooling
+   without rebuilding so the code fix and the number change stay separately revertable.
+   Relayed, not re-derived.
+4. **New here:** the branch's landing procedure must be re-measured before it is run. It
+   was written against a tree that has since moved, and following it as written would meet
+   a conflict in two files it says will not conflict.
+
+One hazard the branch measured and this session did not re-test, relayed so it is not lost:
+`.git/hooks/pre-commit` refuses more than 8 staged files and there is no `pre-merge-commit`
+hook, so a **conflicted** merge is expected to be refused by the hook while a clean one of
+any size passes. Do not read that refusal as a merge failure.
+
+---
+
+### 7.6 Independent spot-check of the title verification, and what it does not prove
+
+This session did not re-audit all 138. It re-ran `verifyCitation` on a **4-row sample**
+against the resolved registry record, not merely checking that the link resolves: the two
+priority DOIs plus appendix rows 1 and 47. All four returned `verdict: matched`,
+`confidence: high`, resolved via Crossref, with an empty `mismatches` array `[read]`:
+
+| row | DOI | resolved title | verdict |
+|---|---|---|---|
+| 1 | `10.4271/2014-01-0936` | Wading Simulation - Challenges and Solutions | matched |
+| 47 | `10.1063/1.449733` | Statistical errors in molecular dynamics averages | matched |
+| 2.1 | `10.1007/s00466-019-01783-3` | An investigation of stress inaccuracies and proposed solution in the material point method | matched |
+| 2.2 | `10.1016/j.jcp.2016.10.064` | Incompressible material point method for free surface flow | matched |
+
+**Two honest limits on that.** All four responses carried `_cache: "hit"`, so they are the
+same registry lookups the earlier full audit made rather than a fresh independent
+resolution; this corroborates that the audit happened but it is **not a second origin**.
+And 4 of 138 is a sample, so section 3's claim of 0 fabrications across all 138 is
+**reproduced on a sample, not re-derived in full**. Anyone needing the stronger statement
+should re-run the full pass rather than cite this subsection for it.
 
 ---
 
