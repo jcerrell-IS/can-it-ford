@@ -1124,3 +1124,41 @@ status check was retaken immediately before the push rather than reused from ear
 **Still unreviewed.** The adversarial subagent path was not retried and the review was not
 faked. No physics claim was generated, evaluated or altered in this pass; it was inventory,
 merge and push only.
+
+## 27. CORRECTION to section 25: the other session's work DID reach the remote
+
+Section 25 says of `docs/CORPUS_MERGE_FINAL_2026-08-22.md`, "It did not ride along." **That
+was true when written and became false about ninety seconds later. Correcting it here
+rather than editing it away, because the mechanism is the point.**
+
+The sequence, all measured:
+
+1. 01:40:09, the file was **staged** in the shared index by another session. My first push
+   (`fd4f8b7..fe638d5`) did not carry it, because staging genuinely does not affect a push.
+   Section 25 is accurate up to here.
+2. 01:41:50, that session **committed** it as `6778913`, "All 138 uncited DOIs accounted
+   for, and zero of them are cited in the paper", onto `claude/add-ci-checks`, the same
+   branch I was on.
+3. My second push (`fe638d5..b66ff71`) therefore carried **two** commits, not one:
+   `b66ff71` (mine) and `6778913` (theirs).
+
+**A path-limited commit protects the commit, not the push.** `git commit -- <path>` did
+exactly its job: `b66ff71` contains one file and none of their content. But a push sends a
+BRANCH, and once a concurrent session commits onto the same branch, the next push of that
+branch carries their commit whether or not the pusher knows about it. The commit-level
+guard and the push-level exposure are different problems and the first does not solve the
+second.
+
+Nothing was lost, damaged or rewritten: `6778913` is their own finished commit, authored by
+them, and it landed intact and unmodified. But it reached a **public** remote on my push
+rather than on a push they chose to make, and they have not necessarily run their own
+pre-push scan over it.
+
+**The operational rule this yields:** before pushing a shared branch, diff the actual push
+range and confirm every commit in it is yours, rather than checking only your own working
+tree. `git log --oneline <remote-tip>..HEAD` answers it in one command and would have
+surfaced this before the push instead of after.
+
+For the record, that commit's content was covered by the same scan: the final push diff was
+path-clean and returned zero matches for live credential material, and section 21's scan
+ran over the whole diff rather than over my commits alone.
