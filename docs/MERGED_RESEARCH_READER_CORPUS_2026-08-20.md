@@ -1,5 +1,7 @@
 # The Merged Research Reader Corpus
 
+> **SUPERSEDED 2026-08-23 by `docs/MERGED_RESEARCH_READER_CORPUS_FINAL.md`.** This file is the pass-1 record and is kept verbatim. It was already superseded by the 2026-08-21 pass 2, which names six specific pass-1 errors in its own section 1. Read FINAL first; read this only for the pass-1 history. Nothing here has been deleted or edited.
+
 **Built 2026-08-20 by a concurrent second-eyes session.** This is the reader. The machine
 bundle is `~/can-it-ford-workflow-archive/MERGED_READER_CORPUS.json`; the chronological
 working log is `docs/SECOND_EYES_AUDIT_2026-08-20_1200.md`. This file is the one to read.

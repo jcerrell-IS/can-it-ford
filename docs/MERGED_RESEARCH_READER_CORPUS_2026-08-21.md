@@ -1,5 +1,7 @@
 # The Merged Research Reader Corpus, second pass
 
+> **SUPERSEDED 2026-08-23 by `docs/MERGED_RESEARCH_READER_CORPUS_FINAL.md`.** This file is the pass-2 record and is kept verbatim. FINAL carries what pass 2 could not have had: six Undermind deep searches that existed upstream and reached no file in this repo, the resolution of the coupling-defect DOI question in favour of `10.1016/j.cma.2022.114809`, and a primary-source read of `10.1016/j.jcp.2017.06.047`. Note also that `docs/CORPUS_MERGE_FINAL_2026-08-22.md` is a SEPARATE line and remains authoritative on the 138 catalogued-but-never-cited DOIs. Nothing here has been deleted or edited.
+
 **Supersedes `docs/MERGED_RESEARCH_READER_CORPUS_2026-08-20.md`.** That file remains on
 disk as the pass-1 record. Where the two disagree, this one wins, and every disagreement
 is named in section 1 rather than left for a reader to discover.

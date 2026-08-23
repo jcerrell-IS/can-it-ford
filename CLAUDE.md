@@ -660,6 +660,25 @@ Demoted to historical, cite only with a date and never as current:
   chase it; treat any claim sourced to it as unsourced until the file is produced.
 Where any of them conflicts with the register, the register wins.
 
+**RESEARCH-CORPUS READER RANKING, set 2026-08-23. THERE ARE TWO LINES, NOT ONE, AND
+CONFLATING THEM IS WHY THE PRIOR STATE LOOKED CONTRADICTORY.**
+- `docs/MERGED_RESEARCH_READER_CORPUS_FINAL.md` is the terminal READER. No date suffix,
+  deliberately. It supersedes `..._2026-08-20.md` (pass 1) and `..._2026-08-21.md` (pass 2),
+  both of which now carry a SUPERSEDED banner and are kept verbatim. Cite the two dated files
+  only with their date and never as current.
+- `docs/CORPUS_MERGE_FINAL_2026-08-22.md` is a SEPARATE line and is NOT superseded. It remains
+  authoritative on the 138 catalogued-but-never-cited DOIs and on register G25. FINAL does not
+  restate it.
+- Neither reader outranks the register. Where a reader conflicts with the register, the
+  register wins.
+- **The coupling-defect gap DOI is `10.1016/j.cma.2022.114809`** (Li, Lian and Zhang 2022,
+  IFEMP), joint top-ranked with `10.1016/j.jcp.2016.10.064` and STILL UNREAD, closed access.
+  `10.1007/s00466-019-01783-3` is strictly below both on report count and is NOT the pair.
+  **The count is instrument-dependent, the ranking is not**: the 2026-08-14 catalogue TSV says
+  4 reports, the built index says 5. Quote the ranking, never a bare count. And note that N
+  report appearances are N deep searches by ONE retrieval system, so they are a relevance
+  signal and NOT N independent sources.
+
 
 ## AUGUST 8 2026 LITERATURE ADDENDUM
 

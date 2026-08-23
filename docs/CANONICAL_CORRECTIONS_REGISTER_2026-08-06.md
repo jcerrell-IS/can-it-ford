@@ -3271,6 +3271,78 @@ any of the nine DOIs is re-resolved and returns a title differing from the one t
 catalogue claims. G25a dies if `khapane2014wading` is found `\cite`d in any `paper/*.tex`,
 or if `10.1504/pcfd.2019.10018820` resolves directly at Crossref with a 200.
 
+**G25b. THE REPORT-COUNT PREDICATE, AND WHICH OF THE NINE IS THE TOP-RANKED UNREAD GAP.
+T1 for the counts, re-parsed live 2026-08-23. Extends G25 without contradicting it.**
+
+G25 ranks the nine by READING what each paper claims. There is a second, purely
+mechanical predicate, the number of upstream reports a DOI appears in, and it is worth
+recording because the two agree on the ordering and a dispatch was circulating two
+incompatible answers.
+
+| DOI | catalogue TSV `in_reports` | built index `n_reports` |
+|---|---:|---:|
+| `10.1016/j.jcp.2016.10.064` | **4** | **5** |
+| `10.1016/j.cma.2022.114809` | **4** | **5** |
+| `10.1007/s00466-019-01783-3` | 2 | 3 |
+
+**Exactly two of the 138 reach the maximum and they share an identical report set.**
+`10.1007/s00466-019-01783-3` is strictly below both and is NOT the co-equal of
+`10.1016/j.jcp.2016.10.064` on this predicate. G25's content triage independently rates
+`10.1016/j.cma.2022.114809` item (b) YES, so **two separate predicates agree on the
+ranking**, and `docs/CORPUS_MERGE_FINAL_2026-08-22.md` section 4 item 6 had already named
+it "the joint top-ranked gap". Those are genuinely separate origins.
+
+**THE COUNT IS INSTRUMENT-DEPENDENT AND THE RANKING IS NOT.** TSV 4, index 5; the extra
+report in the index is `mpm-verification`. This is the same scope-sensitivity trap
+CLAUDE.md item 13 records for DRIFT_THRESHOLD. Never quote a bare count. Quote the
+ranking, which is invariant across both instruments.
+
+**AND N REPORTS IS NOT N INDEPENDENT SOURCES.** The reports are Undermind deep searches
+over the same literature by one retrieval system against differently-worded goals. Under
+this register's own rule that one source cited twice is not two sources, a high report
+count is a RELEVANCE SIGNAL, not corroboration. Do not write "four independent reports".
+
+**G25 NAMED (a) AND (h) AS THE TWO WORTH ACTING ON, AND THE 2026-08-22 SESSION READ EXACTLY
+THOSE.** That was correct under G25's content predicate. Under the report-count predicate
+it left the joint-top-ranked paper unread. Both readings are defensible. State the
+predicate.
+
+**`10.1016/j.cma.2022.114809` REMAINS UNREAD AND IS UNOBTAINABLE HERE.** Undermind returns
+no PDF and `read_pdfs` fails; scite returns `isOa: false`, `oaStatus: closed`,
+`contentDenied: true`, purchase-only at USD 41.95. It needs institutional access, not a
+better script.
+
+**FALSIFIER:** G25b dies if the catalogue TSV is re-parsed and any DOI other than
+`10.1016/j.jcp.2016.10.064` and `10.1016/j.cma.2022.114809` is found with a 4-element
+`in_reports` field, or if `10.1007/s00466-019-01783-3` is found with more than 2 there, or
+if either instrument's ordering of the three reverses.
+
+---
+
+**G25c. THE SHIPPED BIBLIOGRAPHY HAS NOW BEEN RETRACTION-CHECKED. T1, run 2026-08-23.
+This closes `docs/CORPUS_MERGE_FINAL_2026-08-22.md` section 4 item 11.**
+
+Item 11 recorded that the paper's own bibliography had never been run through a retraction
+check and called it "a one-call job". It has now been run, against the 15 entries of
+`overleaf/main:can_it_ford_references_IEEE.bib`.
+
+**Result: 9 of 9 DOI-bearing entries `matched` at high confidence. 0 mismatch, 0
+ambiguous, 0 not_found, 0 errored, 0 retracted, 0 corrections, 0 expressions of concern.**
+No fabricated title is present in the shipped bibliography.
+
+**SCOPE, and it must travel with the result: the audit covers 9 of 15, not 15 of 15.** Six
+entries carry no DOI in any field and could not be audited by identifier:
+`thorpe2026pvwm`, `hsiao2025nerfmpm`, `shand2011arr`, `nws_tadd`, `genesis2024`,
+`fred2026`. Do not report this as "the bibliography is clean"; report it as "the nine
+DOI-bearing entries are clean and six carry no identifier to check".
+
+Note also that most DOIs in that bib sit in a `note` field as free text rather than a
+`doi` field, so a DOI join against the bibliography returns zero by construction. Only
+`xiong2024` carries a real `doi =` field.
+
+**FALSIFIER:** G25c dies if the same nine identifiers are re-audited and any returns
+`mismatch`, `not_found`, or a retraction, correction or expression-of-concern notice.
+
 ---
 
 **D22. THE "CROSSSLOPE" RUN SET APPLIES NO CROSS-SLOPE. IT IS A LONGITUDINAL GRADE STUDY, AND IT SAYS NOTHING ABOUT CAMBER. T1, measured from the artifacts.**
