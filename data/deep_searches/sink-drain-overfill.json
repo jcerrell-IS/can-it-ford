@@ -1,0 +1,13 @@
+{
+ "slug": "sink-drain-overfill",
+ "name": "Sink or drain boundary condition test overfills instead of draining",
+ "workspace": "17299f2a-8dc8-438b-8c84-5abf19395e2c",
+ "created": "2026-08-21 22:51",
+ "status": "completed",
+ "n_relevant_papers": 72,
+ "reached_index_before_2026_08_20": false,
+ "goal": "A drain/sink outlet boundary condition test does the opposite of its intent: domain fluid volume INCREASES by roughly 0.12 m of extra depth instead of draining, so the automated gate cannot score it and records not-applicable. Five candidate mechanisms assessed: open boundaries that inadvertently inject mass; supposed outlets still enforcing a reflecting/no-flux condition so fluid piles up; misaligned particle-deletion geometry; volume-conservation error in weakly-compressible or incompressible free-surface solvers independent of any inlet/outlet; and inlet/outlet interaction where the inlet adds correctly and the outlet fails to remove a matching amount.",
+ "goal_truncated": true,
+ "summary": "No canonical 'drain overfill' bug exists in the literature. The strongest match is the combination of open-boundary particle bookkeeping errors and INDEPENDENT volume-conservation defects [Las09, Neg19, Zha19e, Jan21b, Lyu22]. Particle outlets must create/delete points while supplying compatible velocity, pressure, density and kernel support; inconsistent prescriptions, ghost/buffer treatment or wrong flux bookkeeping cause reflection, backflow or failure to transmit mass [Las09, Taf18, Jol16]. MPM shares the vulnerability [Zha19e]. Backflow-sensitive Eulerian outlets need stabilization [Don15, Ni18b]. Clearest direct precedent for ACCUMULATION unrelated to an inlet: conventional SPH particle shifting can unphysically increase fluid volume [Jan21b], and accumulated potential-energy error plus inconsistent mass/volume definitions produce long-time volume drift [Lyu22, Suc23, Ant20]. No retrieved paper diagnoses a misaligned deletion plane as primary cause, and none reports the specific 0.12 m failure. PRESCRIBED DIAGNOSTIC: a per-step budget separating inlet creation, outlet deletion/crossing flux, compressibility/EOS volume change, and free-surface or particle-shifting volume change.",
+ "backfilled": "2026-08-23, from the live connector. Present upstream in the Undermind workspace and absent from data/deep_searches/ until this pass; the 2026-08-20 MANIFEST pull predates it. n_relevant_papers is the count the connector reported; no papers array is carried, so this record is metadata only and contributes no paper to the corpus index."
+}

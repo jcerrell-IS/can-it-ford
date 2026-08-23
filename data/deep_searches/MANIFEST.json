@@ -1,7 +1,7 @@
 {
  "workspace": "17299f2a-8dc8-438b-8c84-5abf19395e2c",
- "pulled": "2026-08-20",
- "n_searches": 21,
+ "pulled": "2026-08-23",
+ "n_searches": 27,
  "n_not_previously_ingested": 13,
  "searches": [
   {
@@ -108,6 +108,41 @@
    "slug": "reliable-ai",
    "name": "Reliable AI Scientific Software",
    "ingested_before": true
+  },
+  {
+   "slug": "grid-converged-force-deficit",
+   "name": "Grid-converged force deficit in partially submerged free-rigid MPM coupling",
+   "ingested_before": false
+  },
+  {
+   "slug": "sink-drain-overfill",
+   "name": "Sink or drain boundary condition test overfills instead of draining",
+   "ingested_before": false
+  },
+  {
+   "slug": "free-body-load-transfer",
+   "name": "Free Body Fluid Load Transfer Mechanisms",
+   "ingested_before": false
+  },
+  {
+   "slug": "free-body-load-transfer-expanded",
+   "name": "Free Body Load Transfer Mechanisms Expanded",
+   "ingested_before": false
+  },
+  {
+   "slug": "load-transfer-portability",
+   "name": "Load Transfer Portability and Contrast",
+   "ingested_before": false
+  },
+  {
+   "slug": "verdict-invariant-grid-convergence",
+   "name": "Verdict invariant magnitude non monotone grid convergence MPM rigid body",
+   "ingested_before": false
   }
+ ],
+ "pull_history": [
+  "2026-08-20: 21 searches",
+  "2026-08-23: +5 present upstream since 2026-08-21/22 and never mirrored",
+  "2026-08-23: +1 launched this session (verdict-invariant-grid-convergence)"
  ]
 }
