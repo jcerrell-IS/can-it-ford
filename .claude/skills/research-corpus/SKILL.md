@@ -1,68 +1,307 @@
 ---
 name: research-corpus
-description: Query the project's own 332-paper external research index before making any method claim, novelty claim, citation, or "nobody has done this" statement, and before proposing a numerical method or a validation target. Trigger on "has anyone done X", "is this novel", "what do we know about", "which paper says", "what should we cite", "how should we validate", "what method should I use", any DOI about to enter paper/ or docs/, any claim that a technique is untried, and before writing Methods or Limitations text. Also trigger before proposing a settle length, a convergence claim, or a verdict threshold.
+description: Query the project's own external research index (332 records, 319 distinct works) before making any method claim, novelty claim, citation, or "nobody has done this" statement, and before proposing a numerical method or a validation target. The index is blind to most of the project's deep searches (28 on disk as of 2026-08-24, only 8 ingested as papers) and holds NO FULL TEXT, so a zero from it is not an absence. Trigger on "has anyone done X", "is this novel", "what do we know about", "which paper says", "what should we cite", "how should we validate", "what method should I use", any DOI about to enter paper/ or docs/, any claim that a technique is untried, and before writing Methods or Limitations text. Also trigger before proposing a settle length, a convergence claim, or a verdict threshold.
 ---
 
 # The project's own research is indexed. Query it before asserting.
 
-This project holds **332 RECORDS, WHICH ARE 319 DISTINCT WORKS** (eleven Semantic
-Scholar ids appear under twenty-four record keys with byte-identical titles), drawn
-from Undermind deep searches, Claude artifacts, Perplexity reports and Elicit
-extracts. Say "332 records / 319 works", never "332 distinct papers".
+> **THIS INDEX HOLDS NO FULL TEXT. NO SESSION HAS EVER READ A PAPER FROM IT,
+> AND NONE COULD HAVE.** Verified against the schema 2026-08-19: a record has
+> exactly 15 fields, `title`, `authors`, `journal`, `year`, `doi`, `link`,
+> `abstract`, `methods`, `reports`, `report_index`, `n_reports`,
+> `cit_per_year`, `has_abstract`, `cited_in_repo`, `cited_reader_facing`.
+> There is no full-text, body or PDF field. **222 of 332 records have an
+> abstract; 110 have nothing but bibliographic metadata.** The single largest
+> text blob anywhere in the file is **3,477 characters**, and the median
+> abstract is 1,305. So "the corpus says X" means an abstract says X, or a
+> deep search's summary says X. **Reading a paper means
+> `mcp__undermind__read_pdfs` against the workspace, and nothing else does.**
+>
+> **An absence found by a search that cannot match is not an absence.**
+> Every false zero in this file is one instance of it: a query that never
+> searched authors, a membership test against the wrong container, a DOI join
+> against records that carry no DOI. Before you write "the corpus has nothing on
+> X", say which predicate you used and whether it COULD have returned a hit.
+> This applies to your own numbers, not only to numbers you are checking.
+>
+> **A MISS IS NOT AN ABSENCE. A ZERO FROM THIS TOOL MEANS "THE PREDICATE I RAN
+> DID NOT MATCH", AND NOTHING ELSE.** It does not mean the corpus lacks the
+> work, and it never means the project has not researched the question. Before
+> a zero becomes a sentence anyone else reads, say which field you searched and
+> whether it could have contained the answer.
+>
+> Here is what that costs when it is skipped, and it is the failure that cost
+> this fleet a night. `--query "Al-Qadami"` returns **0**. One session ran it,
+> read the zero as coverage, and **relayed "none of the six closest prior-art
+> DOIs is in the corpus" to three sessions. Two of them acted on it.** The
+> conclusion then escalated to "the index cannot answer questions about its own
+> prior art". **Measured live 2026-08-20, all six are PRESENT, 6 of 6:**
+>
+> ```
+> 10.1111/jfr3.12828              Al-Qadami 2022, numerical moving vehicle
+> 10.1007/s11069-021-04949-6      Al-Qadami 2021, full-scale experimental
+> 10.3390/su151713262             Al-Qadami 2023, 3D CFD
+> 10.1111/jfr3.12527              Smith, Modra and Felder 2019
+> 10.1115/DETC2015-47142          Wasfy 2015
+> 10.4271/2003-01-0966            Allen 2003
+> ```
+>
+> Five records carry Al-Qadami in `authors`. The zero was **structurally
+> guaranteed**, not measured: at the time, on `claude/add-ci-checks` and every
+> other ref, `--query` matched `title` and `abstract` only and never `authors`.
+> That is FIXED on `claude/add-ci-checks` as of 2026-08-24 and the same query
+> now returns 5, but the episode stands as the worked example. **The index
+> CAN answer by DOI and CANNOT answer by author, and the conclusion drawn from
+> the zero was the exact opposite of the truth.**
+>
+> **THE AMPLIFIER IS THE RELAY, NOT THE QUERY.** One unchecked zero became three
+> briefed sessions and two changed pieces of work, and none of the three could
+> have caught it, because a relayed conclusion arrives without the predicate
+> that produced it. So the rule has a second half: **when you pass on someone
+> else's negative result, pass on the command that produced it**, and when you
+> receive one, ask what was searched before you act. A zero is a measurement of
+> a tool; only a stated predicate makes it a measurement of the world.
+>
+> Check a DOI before reporting
+> that the corpus lacks a paper.
 
-**A MISS IS NOT AN ABSENCE UNTIL YOU KNOW WHAT THE PREDICATE SEARCHED.** This is the
-first thing to know about this tool, because getting it wrong has already cost the
-project a night. On 2026-08-19 a session ran `--query` with an AUTHOR NAME, got zero,
-read the zero as coverage, and relayed "none of the six closest prior-art DOIs is in
-the corpus" to three sessions, two of which acted on it. **All six were present.**
-`--query` matched title and abstract and never authors. Fixed 2026-08-20; it now
-matches authors and journal too, and `--query Al-Qadami` returns 5 where it returned
-0. When you pass on a negative result, pass on the command that produced it. When you
-receive one, ask what was searched before you act.
+> **DO NOT QUOTE A COUNT FROM THIS FILE. RUN THE CHECK.** Every number here is a
+> snapshot and this file has been wrong three times in two days by standing
+> still while the world moved: the deep-search total went 19, 20, 21 within
+> about thirty hours, and two write-ups that were correct when committed were
+> stale within five. A constant cannot notice the twenty-second search; a check
+> can. `--ingest-audit` re-derives the list, prints the connector call that
+> proves it, and **exits 1** when a completed search reaches the corpus by no
+> route. Wire that into preflight and quote its output, not this paragraph.
 
-**THE INDEX COVERS 21 OF 21 AS METADATA AND 8 OF 21 AS PAPERS. SAY BOTH NUMBERS.**
-This line read "NOW COVERS 21" until 2026-08-21. Measured live that day: 21 search
-JSONs, ZERO with a `papers` array, 0 papers ingested, the 780 they represent present
-as an integer only, index unchanged at 332. `--query`, `--doi` and `--method` match
-none of the other 13 searches' papers. Metadata ingest fixed 2026-08-20.
-`REPORTS` is a hardcoded list of markdown files under `~/Downloads`, so a search
-entered only if somebody exported it by hand. The builder is pure standard library
-and cannot call an MCP connector, so the ingest is two-phase: an agent turn pulls the
-searches to `data/deep_searches/`, now tracked, and the builder reads them.
+This project's index holds **332 records** across eight Undermind deep-research
+reports, 37 Claude artifacts, five Perplexity reports and two Elicit extracts.
+The failure mode this skill exists to stop is **asserting something the corpus
+already answers**, in either direction: claiming novelty that prior art
+contradicts, or proposing a method the reports already evaluated.
 
-    python3 analysis/research_index.py --searches              # all 21, with summaries
-    python3 analysis/research_index.py --searches --query X    # grep goals and summaries
-    python3 analysis/research_index.py --source-audit          # exits 1 on orphan, hollow OR paperless
+**332 RECORDS IS NOT 332 DISTINCT PAPERS.** Measured 2026-08-19 by
+`--identifier-audit`: 11 Semantic Scholar ids appear under 24 different record
+keys, with byte-identical titles in all 11 groups, so the index holds **319
+distinct works**. The duplicates are DOI-less papers that the merge could not
+dedup, keyed positionally as `slug#rank`, so the same paper appearing in three
+reports became three records. Say "332 records / 319 distinct works". The 76,
+43, 4 and 3 rungs below are DOI-keyed and unaffected.
 
-**Read the GOAL TEXT, not only the summary.** A commissioned search's goal often
-states this project's own configuration and constraints, which is the fastest way to
-tell whether it already answers the question you are about to spend GPU on. The
-buoyancy search's goal contains the sphere setup, the leak numbers and the tank
-control verbatim.
+## READ THIS FIRST: the index holds 8 of the project's 28 deep searches
 
-**REACH IS INFLATED BY EXACTLY 9, and the honest ladder is three numbers not one.**
-`docs/Dynamic_Vehicle_Traction_in_Floodwater.md` is a raw connector dump sitting in a
-reader-facing directory and carrying 34 DOI strings; nine papers had that dump as
-their only reader-facing route. Measured both ways 2026-08-20, the delta is 9. So:
-**34 reaching written project prose, 43 counting the raw dump, 3 actually printing in
-the paper.** The builder now excludes the dump, so the absolute figure moves as new
-prose lands and the delta of 9 is the stable fact.
+Measured 2026-08-19 against the live Undermind workspace
+`17299f2a-8dc8-438b-8c84-5abf19395e2c`. **A negative result from this index is
+NOT a negative result for the project's research.** THIRTEEN completed deep
+searches are not in it: six predate the index build of 2026-08-15 and were never
+ingested, seven postdate it.
 
-**DO NOT SAY "256 ARE CITED NOWHERE".** That clause was WITHDRAWN 2026-08-18: it took
-the complement of *reach* (332 - 76 = 256) and reported it as *cited*, which are
-different predicates measured different ways. The correct ladder is
-**332 in the corpus / 76 with a DOI anywhere in the tracked tree / 43 reaching a
-reader-facing directory / 4 in the shipped bibliography / 3 actually `\cite`d and
-printing.** State the scope in the same sentence as any of these numbers. The failure mode this skill exists to stop is **asserting
-something the corpus already answers**, in either direction: claiming novelty
-that prior art contradicts, or proposing a method the reports already evaluated.
+**THE COUNT MOVES FASTER THAN ANY DOCUMENT DESCRIBING IT, AND IT MOVED AGAIN
+DURING THIS LANDING.** It was 19 on 2026-08-18, 20 at 18:00 on 2026-08-19, **21
+by 23:20 the same day**, 27 when re-measured on 2026-08-24, and **28** once the
+corpus-bib landing contributed `buoyancy-overestimation.json` that same day.
+Scope for the 28: files in the tracked directory `data/deep_searches/`, which
+holds 29 files of which one is `MANIFEST.json`. 27 of the 28 carry
+`status: completed`; the 28th uses the `canford.deep_search/1` export schema,
+which has no `status` field, so a status-based count returns 27 and a
+file-based count returns 28. QUOTE THE SCOPE OR RE-MEASURE. Any
+number in this file is a snapshot; `--ingest-audit` prints the connector call
+that re-derives it and now EXITS 1 when a completed search reaches the corpus by
+no route, so wire it into preflight rather than reading a figure here.
+`--coverage` prints the ladder, `--ingest-audit` the live split.
+
+**Why `--build` will not fix it:** `REPORTS` in `analysis/research_index.py` is a
+hardcoded list of eight local file paths. The builder has no directory scan, no
+glob and no API call, so it cannot discover or reach a deep search. Adding one is
+two manual steps that nothing automates or checks. **The gap therefore grows
+silently every time anyone runs a search.**
+
+**What this has already cost:** the `Simulation Ready Vehicle Mesh Assets` search
+of 21 July answers the vehicle-mesh provenance question in full, covering the
+CCSA/NCAC LS-DYNA models, the MASH designations (the 2010 Yaris is the MASH
+**1100 kg** vehicle, this project's exact vehicle and mass), and the explicit
+negative finding that no citable public OBJ/PLY/glTF/USD conversion of the Yaris,
+Silverado or Rogue models exists. None of it is indexed, and `--query` returns
+**0** for `Silverado`, `Camry` and `Toyota Yaris`. A session re-derived part of it
+by hand on 2026-08-19.
+
+**So before concluding the project has not researched something, check the
+workspace, not just this index.** Workspace id
+`17299f2a-8dc8-438b-8c84-5abf19395e2c`:
+
+```
+mcp__undermind__inspect_deep_searches(workspace_id=..., names=[])
+mcp__undermind__inspect_deep_searches(workspace_id=..., names=['/NAME'])
+mcp__undermind__get_paper_info(workspace_id=..., cite_keys=[...], show_doi=True)
+```
+
+`inspect_deep_searches` pages at 50 papers and its listing carries **no DOIs**;
+`get_paper_info` is the only route to one and batches 50 cite keys per call.
+
+### The catalogue, and what each one settles
+
+The table below was built when the workspace held twenty-one: ingested as
+markdown (8), exported and awaiting a `--build` (2), reaching the corpus by no
+route at all (11). It is now SHORT OF THE LIVE SET, which is 28. Run
+`--ingest-audit` and `--source-audit` for the live split; this table is what
+each catalogued search is FOR, not a current inventory.
+
+| deep search | settles | state |
+|---|---|---|
+| Moving Rigid Body Free Surface Validation | validation cases for a moving body, incl. the Kramer sphere | ingested |
+| Settling and Force Reporting in Free Surface Flow | settle length and force statistics | ingested |
+| Quantitative MPM Wall Penetration | the mechanism behind the seven P-2 failures | ingested |
+| Multi-resolution MPM for Large-domain Flooding | refinement windows, and the moving-frame gap | ingested |
+| Validated MPM Vehicle Water Coupling | coupling validation | ingested |
+| MPM Simulation Verification Provenance | verification practice and provenance | ingested |
+| Reliable AI Scientific Software | AI-written scientific code | ingested |
+| Trustworthy AI Assisted Scientific Simulation | AI-assisted simulation credibility | ingested |
+| MPM SPH buoyancy force overestimation and hydrostatic validation benchmarks | **the buoyancy error and how buoyancy is actually validated** | exported |
+| Simulation Ready Vehicle Mesh Assets | **the CCSA/NCAC vehicle models, above** | exported |
+| free surface elevation estimator error in particle method buoyancy validation | **whether the buoyancy excess is in the FORCE or in the DENOMINATOR**, 88 papers, run 2026-08-19 17:44 | invisible |
+| moving vehicle floodwater simulation open source implementations | moving-body open-source couplings, 105 papers | invisible |
+| how computational researchers audit and defend simulation credibility | verification practice | invisible |
+| GPU particle solver portability scaling and surrogate fidelity | engine and GH200 portability | invisible |
+| which realism effects change a flood vehicle stability verdict | which realism upgrades move a verdict | invisible |
+| moving vehicle floodwater GPU particle simulation | the moving-vehicle prior art | invisible |
+| Dynamic Vehicle Traction in Floodwater | traction under partial flotation; **holds `shah2018`** | invisible |
+| Small Data Physics Surrogates at 36 Conditions | surrogates at this project's design size | invisible |
+| Physics Simulation Validation Protocol | validation protocol, 81 papers | invisible |
+| Quantitative Flood Traversability Connections | threshold provenance, 82 papers | invisible |
+| Optical Vehicle Collision Geometry | photogrammetric vehicle geometry | invisible |
+
+**Exporting one takes three calls and is documented in
+`docs/R9_CORPUS_BIB_GAP_2026-08-18.md` section 23.** Write the result to
+`data/deep_searches/<slug>.json` and validate with `--ingest-check`. **An export
+is not an ingestion**: `build()` does not read that directory yet, so an
+exported search is on disk and still unreachable by `--query`.
+
+**TWO SEARCHES ARE EASY TO MISFILE, so check `--ingest-audit` before saying a
+search is invisible.** `Moving Rigid Body Free Surface Validation` **is
+ingested** (slug `moving-rigid-body`, 44 papers), and its Kramer 2021 heave-decay
+benchmark is in the index right now as `10.3390/en14020269`, `cited_in_repo`
+true. It has been cited as an example of the invisible layer; it is not one.
+`Simulation Ready Vehicle Mesh Assets` **is** invisible, and it is the one that
+cost a session a full turn.
+
+### The vehicle mesh answer, so nobody re-derives it a fourth time
+
+From `Simulation Ready Vehicle Mesh Assets`, 21 July, 36 papers, un-ingested.
+The NHTSA-grade assets are the CCSA/NCAC reverse-engineered LS-DYNA vehicles:
+
+    2010 Toyota Yaris         passenger sedan     MASH 1100 kg vehicle
+    2012 Toyota Camry         MIDSIZE sedan       part-by-part teardown, mass and
+                                                  inertia checked against production
+    2007 Chevrolet Silverado  light pickup        MASH 2270 kg vehicle
+
+All three carry NHTSA NCAP full-scale validation; Yaris and Silverado include
+working suspension and steering. **The Nissan Rogue is NOT among them**; the
+documented midsize is the Camry. This repo's `MASS = {"rogue": 1571.3}` has no
+MASH anchor, while `silverado: 2270.0` and the Yaris 1100 kg ARE the MASH
+designations exactly.
+
+**HARD NEGATIVE from that search:** no citable, publicly redistributable OBJ /
+PLY / glTF / USD conversion of the Yaris, Silverado or Rogue models is verified
+to exist anywhere, including GitHub, Kaggle and Hugging Face. This repo's `.ply`
+hulls are its own conversions, there is no external artifact to check them
+against, and `vehicle_mesh_pipeline.py` (untracked, in
+`~/Downloads/vehicle_meshes/`, with `_v5` and `_v6` revisions) is the only
+provenance any hull has.
+
+**Measured hull fidelity. Re-verified live 2026-08-20 by reading `element
+vertex` from each PLY header, not carried from another session's write-up; all
+five match.**
+
+    yaris_coarse_v1l_watertight.ply                  327,212   in use
+    rogue_g96_pd6_coarse_watertight.ply               31,357   in use
+    silverado_g32_pd8_dq0.02_coarse_watertight.ply     2,108   in use
+    rogue_coarse_watertight.ply                       66,987   UNUSED
+    silverado_coarse_watertight.ply                   48,706   UNUSED
+
+The last two sit unused in `~/Downloads/vehicle_meshes/` (41 PLY files there).
+**State the within-vehicle ratio, not the cross-vehicle one.** The Silverado
+hull in use is **23.1x coarser than the Silverado hull already on disk**, and
+the Rogue's is 2.14x coarser than its own better copy. The "155x coarser" figure
+that has circulated is Yaris-against-Silverado, which compares two different
+vehicles and therefore cannot support a claim about either one's resolution. A
+fixed `n_grid` across vehicles already changes `dx` and the realised water depth
+because `grid_lim` follows the loaded hull's extent, so a cross-vehicle mesh
+comparison confounds two things at once.
+
+**Ingesting that search's 36 papers would NOT have prevented the loss**, which
+is worth knowing before anyone proposes it as the fix. Measured 2026-08-19: 22
+of the 36 carry a DOI and **6 of those 22 are already in the index** (Smith
+2019, Al-Qadami 2021/2022/2023, Wasfy 2015, Allen 2003), which is every
+flood-vehicle work in the set. The answer above is not in any paper record: it
+is the search's **synthesis**, and the other 14 papers are DOI-less NCAC and
+MASH reports. A paper index has nowhere to put either.
+
+## The ladder. Five numbers, five different predicates, never one number.
+
+Scope, stated here because it decides every figure below: index built 2026-08-15,
+tracked tree only, **`.claude/worktrees/` excluded**, bibliography read at
+`overleaf/main:can_it_ford_references_IEEE.bib` and paper source at
+`overleaf/main:conference_101719_1.tex`.
+
+| n | predicate | how it is measured |
+|---|---|---|
+| **332** | records in the corpus, **319 distinct works** | keys in the index; 11 papers are keyed twice or three times, see the note at the top |
+| **76** | DOI-shaped string **anywhere in the tracked tree** | `cited_in_repo` |
+| **43** | DOI-shaped string in a **reader-facing directory** | `cited_reader_facing`, meaning `paper/` `docs/` `deliverables/` `citations/` |
+| **4** | hold an entry in the **shipped bibliography** | census against the 15 entries on `overleaf/main` |
+| **3** | are `\cite`d, so they **print in the reference list** | census against the 14 distinct cite keys |
+
+**"REACH" IS NOT "CITED", AND THIS FILE USED TO SAY IT WAS.** Corrected
+2026-08-19.
+
+> WITHDRAWN QUOTE, DO NOT CITE THE NEXT LINE AS THIS FILE'S CLAIM. It is
+> reproduced only so the retraction is findable by anyone who met the old
+> wording elsewhere:
+>
+> ~~"43 of the 332 reach a reader-facing document, and 256 are cited nowhere at
+> all"~~
+
+A cross-session reader grepped this file for that string on 2026-08-20, hit the
+two occurrences inside this retraction, and filed the skill as still asserting
+it. **It does not, and has not since 2026-08-19.** The lesson is not that the
+reader was careless: a retraction that quotes its own retracted text in bold is
+indistinguishable from an assertion in a grep hit or a three-line excerpt.
+Hence the marker above. **If you are checking whether a document still makes a
+claim, read the surrounding sentence, not the matching line.**
+
+Why the clause was withdrawn: it
+took the complement of *reach* and reported it as *cited*, which is a different
+predicate measured a different way. The arithmetic is **332 - 76 = 256**, so the
+number is the complement of the **76** rung, DOI-string-appears-anywhere, and it
+was published under the word "cited", which is the **3** rung. Two rungs apart.
+`CLAUDE.md` withdrew the identical clause on 2026-08-18; this file was not
+updated with it and kept asserting the retracted number for a day.
+
+Why the two cannot be collapsed: **reach** asks whether a DOI string appears in a
+directory. **Cited** asks whether a bibliography entry exists and a `\cite`
+command references it. A paper can be named in twelve `docs/` files and still
+print nowhere. That is not an edge case, it is the normal case here: **40 papers
+reach a reader-facing directory without reaching the reader.** 43 and 3 are both
+correct and answer different questions. The field names `cited_in_repo` and
+`cited_reader_facing` are what mislead. The data is internally consistent, so do
+not go looking for a data bug.
+
+**Never quote a rung without its scope, and never quote the complement of one
+rung as if it were another.** An earlier index build that failed to exclude
+`.claude/worktrees/` reported 269 of 332 as cited, because another session's
+`r5_citation_xref.tsv` carries 489 DOIs.
+
+**60 of the 332 carry no DOI at all**, so they are excluded from the 76 and the 43
+by construction. The denominator for any DOI-join statement is **272, not 332**.
 
 ## The tool
 
 `analysis/research_index.py`, pure standard library, reads the committed index at
-`data/research_corpus_index.json`. It never touches `~/Downloads`, which has
-returned EPERM in past sessions and made a recursive search silently report zero
-hits.
+`data/research_corpus_index.json`. **The QUERY commands never touch
+`~/Downloads`**, which has returned EPERM in past sessions and made a recursive
+search silently report zero hits. `--bib-audit` and `--ingest-audit` DO read the
+eight source reports, seven of which live there, and `--bib-audit` exits 2
+naming all eight rather than degrading if any is unreadable.
 
 ```bash
 python3 analysis/research_index.py --stats                    # method coverage
@@ -70,40 +309,184 @@ python3 analysis/research_index.py --method added-mass -v     # by method tag
 python3 analysis/research_index.py --query "wall penetration" # free text
 python3 analysis/research_index.py --doi 10.1002/nme.7217     # one paper
 python3 analysis/research_index.py --gaps --method validation-dataset
+python3 analysis/research_index.py --bib-audit                 # corpus vs the bib
+python3 analysis/research_index.py --coverage                  # what is NOT indexed
+python3 analysis/research_index.py --ingest-audit              # what --build can REACH
+python3 analysis/research_index.py --identifier-audit          # what can be JOINED
+python3 analysis/research_index.py --searches                  # list searches, grep with --query
+python3 analysis/research_index.py --source-audit              # CI GATE, exits 1 on a gap
 ```
 
-Status flags in output: `IN-PAPER` reaches a reader-facing doc, `repo-only` is
-cited somewhere in the tree but nowhere a reviewer looks, `UNCITED` appears
-nowhere. Rebuild with `--build` only when a new report is added.
+**TWO AUDIT FLAGS, AND THEY ARE NOT THE SAME CHECK. Read this before quoting
+either.** Both branches independently shipped a flag called `--source-audit`
+with different meanings, and the 2026-08-24 landing kept both rather than
+picking a winner:
+
+| flag | what it does | exit code |
+|---|---|---|
+| `--source-audit` | CI GATE. Goes red when a completed deep search reaches the corpus by no route, when a search reaches it as metadata but contributes no papers, or when a hardcoded `REPORTS` path is unreadable. | **1 on any problem**, 0 when clean |
+| `--ingest-audit` | REACHABILITY AUDIT. What `--build` can actually reach from the export directory, versus what the workspace holds. Reports the blindness rather than a clean eight-of-eight. | **1 while any completed search reaches the corpus by no route**, 0 when clean |
+
+BOTH EXIT 1, so an exit code does not tell you which ran. They differ in WHAT
+they measure, not in how loudly they fail: `--source-audit` reads the built
+index and asks which searches contributed papers to it, `--ingest-audit` reads
+the export directory and asks what a rebuild could reach at all. Measured
+2026-08-24 on `claude/add-ci-checks`, `--source-audit` reported 19 problems and
+`--ingest-audit` reported 11, over the same tree. The numbers are not
+comparable and neither is a bug.
+
+`--ingest-audit` is the flag this document called `--source-audit` before the
+landing. It was renamed because the CI gate already owned that name in
+`CLAUDE.md` and in the corrections register, and a gate with external citers is
+the one that should keep its name. The new name follows this tool's own
+`--<noun>-audit` convention and pairs with `--ingest-check`, which validates a
+single export where `--ingest-audit` audits the whole ingest layer.
+
+`--ingest-audit` is the one to run before saying a search is or is not indexed.
+It reports three rungs (the eight hardcoded markdown paths and whether each is
+readable, exported searches found by glob, and the 20 workspace searches with
+the 12 invisible ones named), and it ends by printing the connector call that
+re-derives the workspace list, because its own snapshot is hardcoded and cannot
+notice a 21st search.
+
+`--identifier-audit` splits the flat "no DOI" figure into no-DOI-but-identifiable
+and genuinely unidentifiable, and reports the duplicate groups behind the
+332-versus-319 gap.
+
+**A deep-search adapter exists but has no data yet.** `--ingest-check FILE.json`
+validates one exported search against five gates, and
+`--ingest-check FILE.json --against-slug SLUG` is the reproduce-before-trust
+control: it compares an export against what the markdown route already produced.
+Run on a full 44-paper export of `moving-rigid-body` on 2026-08-19 it returned
+SET-IDENTICAL (35 matched on DOI, 9 DOI-less records paired one-to-one by title,
+0 unpaired either way), so the API route is a measured substitute for the
+markdown route rather than an assumed one. The export directory
+`data/deep_searches/` does not exist yet, so `--ingest-audit` correctly reports
+rung 2 as zero. See `docs/R9_CORPUS_BIB_GAP_2026-08-18.md` Part 2 for the schema
+and the roughly 50 connector calls it would take to fill it.
+
+`--bib-audit` censuses the shipped bibliography against the corpus AND against
+the eight source reports, and every row states the ROUTE it matched or failed to
+match by, plus the best rejected candidate and its score. Name the ref with
+`--bib-ref`: the entry count is **21** on `origin/main`, **42** on
+`claude/add-ci-checks` and **15** on `overleaf/main`, so a bare bibliography
+count is wrong on two of the three. It ends with an INDEX SELF-CHECK. It refuses
+to run at all unless all eight source reports load, because a partial read would
+silently report works from the unread reports as never ingested.
+
+Status flags in output, and read these as REACH, not as citation: `IN-PAPER` means
+its DOI string appears in a reader-facing directory, `repo-only` means the string
+appears somewhere in the tree but nowhere a reviewer looks, and `UNCITED` means
+the string appears **in no tracked file**. None of the three tells you whether the
+paper is in the bibliography or is `\cite`d. For that, run `--bib-audit`. In
+particular `UNCITED` is automatic for the 60 records with no DOI, because the
+match is gated on having a DOI at all, so for those it is a statement about the
+record and not about the repo. Rebuild with `--build` only when a new report is
+added.
 
 25 method tags exist. Run `--stats` rather than guessing tag names.
 
+### Five traps that return a FALSE ZERO. A zero from any of them looks exactly like absence.
+
+**1. `--query` searched only titles and abstracts until 2026-08-19, never authors.**
+So every author-name query returned zero regardless of the corpus contents.
+Measured that day: `--query "Al-Qadami"` returned **0 match** while **5** records
+carry Al-Qadami in `authors`, including `10.1111/jfr3.12828`, the moving
+full-scale vehicle paper this project's own prior-art section cites. A
+coordinating session used that zero as evidence the corpus was silent on the
+project's closest prior art. It was not: 4 of the 6 flood-vehicle DOIs in that
+check were present. **LANDED ON `claude/add-ci-checks` 2026-08-24**, and the
+add-ci-checks predicate now also searches `journal`, which the corpus-bib side
+did not. The "UNMERGED" warning this paragraph carried until that date is
+withdrawn. Name the ref before you trust a query, because the ref is what
+decides the answer:
+
+| ref | `--query` searches | `--query "Al-Qadami"` |
+|---|---|---|
+| `origin/main` | the tool does not exist there at all | n/a |
+| `origin/main` | the tool does not exist there at all | n/a |
+| `claude/add-ci-checks` BEFORE 2026-08-24 | title + abstract | **0**, structurally |
+| `claude/add-ci-checks` AFTER the corpus-bib landing | title + abstract + authors + journal | 5 |
+| `claude/r9-corpus-bib` | title + abstract + authors | 5 |
+
+**So the zero is REAL on the checkout most sessions are using, and it will keep
+being real until this branch merges.** That is why a third session hit it on
+2026-08-20. On this branch a zero result now prints its own warning naming the
+DOI route; on the others nothing warns you. Search the `authors` field directly,
+or check a DOI, before concluding absence.
+
+**2. `--query` is a LITERAL SUBSTRING match, and for a third of the corpus it is
+title-only.** It does not stem and does not survive a paraphrase. **110 of the
+332 records have no abstract**, so for those a topic query can only match words
+appearing in the title. `--query` now prints that ratio to stderr on every run,
+so a zero arrives with its own caveat attached. A search for "vehicle fording
+feasibility" returns 0 and that is nearly meaningless.
+
+**3. An author's name is not their work.** Even with the fix, a surname hit is a
+surname, not an identity, and a miss on one work by an author whose other work is
+present is the interesting case rather than a null result. The corpus holds six
+papers from the Shah/Mustaffa flood-vehicle group and **not** `shah2018`
+(`10.1051/matecconf/201820307003`), which the paper cites.
+
+**`shah2018` IS NOT A SOURCING GAP, and an earlier version of this project's
+write-up said it was.** Measured 2026-08-19: it is `[Sha18c]` in the workspace
+and appears in **three** deep searches, the oldest dated **2026-07-21, which is
+25 days BEFORE the index was built**. It is absent from the corpus only because
+the builder cannot reach that search. Nobody needs to go and find this paper.
+**Name variant on the same record:** the workspace gives first author "Syed
+**Hamid** Hussain Shah"; Crossref gives "Syed **Muzzamil** Hussain Shah" and is
+authoritative (verified live, verdict `matched`, zero field mismatches). An
+author-route search keyed on the workspace spelling misses it.
+
+Beware short surnames
+in the other direction too: a substring search for "Xia" returns **23** records,
+nearly all of them hits inside given names such as "Lingxiao" and "Xiao-Guang".
+
+**THE FALSE POSITIVE IS THE SAME DEFECT WEARING THE OTHER FACE, AND IT IS EASIER
+TO MISS BECAUSE A NON-ZERO LOOKS LIKE SUCCESS.** Measured 2026-08-20:
+`--query "bed"` returns **32**, of which only **11** contain `bed` as a word.
+The other 21 are `embedded` and `bedding`. Nobody double-checks a result that
+came back full, so an inflated count travels further than an empty one. **For
+any token under about five characters, re-check with a word-boundary regex over
+the JSON before you quote the number**, and prefer `--method` to `--query`
+wherever a tag exists: it is curated rather than matched.
+
+**4. Testing deep-search membership against the `documents` list.** `documents`
+holds Claude artifacts, Perplexity reports, Elicit extracts and bibliographies,
+and **never holds a deep search**: those live in `source_reports`. A session
+checked eight deep-search names against `documents` on 2026-08-19, got nothing,
+and reported "eight of eight absent". Three of the eight were ingested. Use
+`--coverage`, which reads the right container.
+
+**5. Joining on `doi` when 60 of the 332 records carry none.** Measured
+2026-08-19 by `--identifier-audit`: 272 records are keyed by DOI, **57 have no
+DOI but do carry a stable Semantic Scholar id, already sitting in the `link`
+field**, and only **3** are genuinely unidentifiable (those 3 are one parse
+defect, below). "No DOI" is not "unidentifiable", and any check that joins on
+`doi` alone silently drops a sixth of the corpus.
+
+This is not theoretical and it hides exactly the papers the project worries
+about. `CLAUDE.md` names four prior vehicle fording works the paper cites none
+of, and identifies one of them only by the Semantic Scholar prefix `61da26b6`.
+**That paper is in this index**, as `moving-rigid-body#39`, Pazouki et al 2016,
+"Investigation of the Vehicle Mobility in Fording". Three separate mechanisms
+each guarantee the index cannot tell you so: `--doi` cannot match it (no DOI),
+`--query "Pazouki"` cannot match it (author-only), and `cited_in_repo` cannot
+mark it (gated on `bool(doi)` at `research_index.py:396-397`). So "uncited"
+means two different things in that column: not cited, and not checkable.
+
+**Before writing "the corpus has nothing on X", run at least two of: `--query`
+against the term, a direct DOI check, an author check, `--identifier-audit` if
+the work may lack a DOI, and `--coverage` to see whether the relevant deep
+search is even indexed. State which you ran.**
+A single search that could not match the field you care about is not evidence of
+absence.
+
 ## Facts already established. Do not re-derive, do not contradict without evidence.
 
-**"FOUR PRIOR VEHICLE FORDING OR WADING SIMULATIONS EXIST" UNDERSTATES IT AND MUST
-NOT BE QUOTED.** Corrected 2026-08-20. The deep-search layer puts it at eight or
-nine; a pass that resolved every DOI against Crossref puts it at **at least fourteen
-works**, and **the shipped paper cites ONE**. The table below is the four this skill
-originally listed, kept because they are checked, not because the list is complete.
-Two further constraints on any novelty claim:
-
-- **The surviving narrow claim is method-specific**: no MPM simulation of a full road
-  vehicle in floodwater was found, in two named searched views, with the adjacent
-  precedent being tyre hydroplaning. **The SPH half of the old novelty claim is dead.**
-- **The claim is papers-only.** Nobody has searched patents, standards, OEM wading
-  specifications, theses, incident data, dashcam evidence or benchmark code suites.
-  One query found four Land Rover wading patents and a published 500 to 900 mm
-  per-model wading capability. Say "no paper we found", not "nobody has done this".
-
-Two structural gaps to state alongside any of this. **A body-following refinement
-window for MPM appears unreported**, and body-fixed formulations are established for
-Eulerian immersed-boundary and level-set solvers but not developed for MPM. And **no
-study quantifies a crowned or cambered road against a flat plane.** Both come from
-deep searches the index could not see until 2026-08-20; query them with
-`--searches --query moving` and `--searches --query crowned`.
-
-Any novelty claim about simulating a vehicle in floodwater has to be positioned
-against these first:
+**Four prior vehicle fording or wading simulations exist and none of them prints
+in the reference list.** Any novelty claim about simulating a vehicle in
+floodwater has to be positioned against these first:
 
 | Work | Identifier |
 |---|---|
@@ -112,10 +495,33 @@ against these first:
 | Pazouki, Jayakumar & Negrut, fluid-MBS, point-cloud solid discretisation | Semantic Scholar `61da26b6` |
 | Khapane & Ganeshwade 2014, "Wading Simulation, Challenges and Solutions" | `10.4271/2014-01-0936` |
 
+**"Cites none of them" was sharpened 2026-08-19, and A BIB ENTRY IS NOT A
+CITATION.** On `claude/add-ci-checks` all four now HAVE entries in
+`paper/can_it_ford_references_IEEE.bib` (keys `he2026vehiclewater`,
+`wasfy2015fording`, `pazouki2016fording`, `khapane2014wading`, added by slot
+`d5-priorart`), so a DOI search over `paper/` now returns hits and a naive
+re-check would call this claim stale. It is not: **zero of the four appear in any
+`\cite` command in `paper/conference_101719.tex`**, so BibTeX drops all four and
+none reaches the reader. Same reach-versus-cited distinction as the ladder at the
+top of this file. On `origin/main` they have no entries either.
+
 Al-Qadami et al 2022 (`10.1111/jfr3.12828`) additionally claim "for the very
 first time" a full-scale passenger vehicle **moving** perpendicular to
 floodwaters, reporting critical depth 0.38 m and minimum depth x velocity
-0.39 m^2/s.
+0.39 m^2/s. **That paper IS in the corpus**, along with four others by the same
+group, which is worth knowing because a `--query` on the author name returned
+zero until the fix above.
+
+**The corpus is NOT a superset of the bibliography, and that is a sourcing gap
+rather than a dropped merge.** Measured 2026-08-19, scope `overleaf/main`: of the
+14 works the paper `\cite`s, 3 are in the corpus and 11 are not, and the 11 are
+absent from the **raw text** of all eight source reports, which is upstream of
+the index build. But they are not 11 of the same thing: 3 preprints, 1 GitHub
+repo, 1 web page, 1 crash-test FE model, 2 techreports, and 3 peer-reviewed of
+which two are computer graphics. A literature search does not return software
+repositories or government pages, so that is a category boundary. **Exactly one
+in-scope absence: `shah2018`.** Do not quote "11 of 14" as a corpus quality
+figure. Full working in `docs/R9_CORPUS_BIB_GAP_2026-08-18.md`.
 
 **A fixed settle length is not defensible, and ours is contradicted by our own
 data.** `sim_standing.py:154` uses `settle_frames=8`. `analysis/settle_audit.py`
@@ -123,6 +529,21 @@ run over 25 local runs: **all 25 need more than 8 frames discarded**, median 48
 of 91, and N_eff is only 2.9 to 11.0, so any uncertainty computed from N=91 is
 overstated roughly three to five times. Use `analysis/stationarity.py` to state a
 settle length, never a constant.
+
+**THE "25 RUNS" DENOMINATOR NEEDS ITS SCOPE.** Added 2026-08-19 from slot
+`d15-settle`'s committed `docs/R9_SETTLE_FRAMES_2026-08-18.md`, not re-derived
+here. That 25 is records under `renders/` **with duplicates kept**; 3 of them are
+byte-identical duplicates of their `_incoming/` originals (md5-confirmed), so
+**the audited population was 22 distinct records presented as 25**. It also
+includes `renders/mpm-engine-out/flood_vehicle`, which is the bundled model-scale
+truck, not the Yaris and not full scale. The true population is **51 on disk, 48
+distinct**, and on that corrected scope, on the `dx` channel the SLIDE gate
+actually reads, the finding gets STRONGER: **48 of 48 need more than 8 frames
+discarded**, min 29, median 54, max 80.
+
+Also do not put the `settle_frames=8` citation and the discard statistic in
+adjacent sentences without saying they are DIFFERENT QUANTITIES. They are, and
+the adjacency invites the invalid inference "so `settle_frames` should be 48".
 
 **Grid refinement is not expected to converge a transient quantity.** Syamlal,
 Celik & Benyahia 2017 (`10.1002/AIC.15868`). The non-monotone `final_disp_mag_m`
@@ -136,6 +557,28 @@ probabilistic and record-length dependent (Dancey et al 2002). Measured with
 p >= 0.01 to 0.50**, and `g96_m2337` has a one-frame margin. Report a probability
 and the cut, not a bare label.
 
+**NEVER QUOTE THAT 17 AS A BARE INTEGER: IT CARRIES A CHANNEL.** Added 2026-08-19.
+`analysis/probabilistic_verdict.py` gates `p_move` on the MAGNITUDE channel
+(`dmag`, `vmag`) while `simulation/failure_modes.py` gates SLIDE on the SURGE
+axis (`SURGE_AXIS = 0`, so `|dx|` and `|vx|`). Since `dmag >= |dx|` and
+`vmag >= |vx|` elementwise, **every published `p_move` is an UPPER BOUND** on the
+classifier's own gate. On the corrected surge channel slot `d2-persist` measured
+**15 of 24** flipping, and full-record SLIDE going from **21 of 24 to 19 of 24**,
+each reproduced exactly on the committed channel first as a held-fixed control.
+
+**17 and 21 remain the correct figures for the code as committed**, because
+d2-persist's diff is DELIBERATELY UNAPPLIED pending a human decision. Both sets
+are right and answer different questions. Quote the channel with the number, every
+time.
+
+Unresolved as of 2026-08-19, flagged rather than silently picked: `d2-persist`
+records the mapping as "17 of 24 flip -> 15 of 24", while `d15-settle`'s committed
+`docs/R9_SETTLE_FRAMES_2026-08-18.md` records "the 21 of 24 and 5 of 24 figures
+are on the COMMITTED magnitude channel; on the corrected surge channel
+d2-persist measured 19 of 24 and 15 of 24". Those disagree about WHICH figure
+becomes 15. Neither has been re-derived here. Do not repeat either mapping as
+settled until the two slots reconcile it.
+
 **Removing the startup transient is wrong for a SLIDE verdict.** Incipient motion
 is an event, not a steady state; the settling report says impact and water-entry
 loading have no steady force and want peak or event statistics. Transient removal
@@ -144,8 +587,15 @@ condition after it, which is a robustness diagnostic and not the verdict.
 
 ## Method families the corpus evaluated and this repo has never tried
 
-Verified zero occurrences in `analysis/` and `simulation/`: **CPDI**, **GIMP**,
-**moving-reference-frame MPM**. The multi-resolution report found no MPM study
+**No implementation** in `analysis/` or `simulation/`: **CPDI**, **GIMP**,
+**moving-reference-frame MPM**. Re-measured 2026-08-19 and the wording is now
+narrower than "verified zero occurrences", which had become literally false: a
+case-insensitive search returns 2 hits for CPDI and 1 for GIMP, and **all three
+are inside `analysis/research_index.py` itself**, in this index's own method-tag
+regex table and a usage example. The tool that measures the absence is what
+falsifies the string form of the claim. `moving.reference.frame` is still a true
+zero. The substantive claim stands: no CPDI, GIMP or moving-reference-frame
+scheme is implemented here. The multi-resolution report found no MPM study
 anywhere that follows a rigid vehicle with a refinement window through a large
 flood domain, and no moving-reference-frame MPM result at all, so this is both an
 opening and untried.
@@ -172,17 +622,50 @@ quadrature. Standard MPM, GIMP, CPDI and B-spline MPM are not interchangeable.
 
 ## Validation targets that exist and are unused
 
-`--method validation-dataset` returns 76 papers, 65 of them uncited. The repo has
-a physics regression test **as of 2026-08-18**: `tests/test_physics_gates.py`,
-added by `50b70c0` ("Add the three physics gates: analytical, conservation,
-metamorphic") and later extended by `df52bee` ("Run the solver's own analytic suite on a
-GH200, and wire it in"), carrying 12 test functions and covering Poiseuille, Couette and
-closed-form analytics. Attribution re-measured live 2026-08-24 with
-`git log --diff-filter=A -- tests/test_physics_gates.py`: `50b70c0` ADDED the file and
-`df52bee` MODIFIED it, so the earlier "added by df52bee" was wrong on both SHA and verb.
-`tests/` also holds `test_count_claims_check.py` and `test_csv_schema.py`.
-**The earlier claim that no physics regression test exists is STALE. Do not build a
-second one without reading that file first.**
+`--method validation-dataset` returns 76 papers, 65 of them carrying no DOI-shaped
+string anywhere in the tracked tree, `.claude/worktrees/` excluded (22 of the 76
+have no DOI at all, so they cannot match by construction).
+
+**THE "NO PHYSICS REGRESSION TEST" CLAIM IS STALE AND IS WITHDRAWN.** Corrected
+2026-08-19. This paragraph read "The repo has **no physics regression test**;
+`tests/` holds only `test_count_claims_check.py` and `test_csv_schema.py`." That
+was true when written and stopped being true on 2026-08-18, so the file was
+simultaneously recommending Poiseuille and Couette as "the natural content for a
+locked CI regression test" and asserting no such test existed. **A session
+reading it today could build a second one.**
+
+Live, and the answer is REF-DEPENDENT, so name the ref:
+
+| ref | `tests/` contents |
+|---|---|
+| `origin/main` | `test_count_claims_check.py`, `test_csv_schema.py`. The old claim is still TRUE here. |
+| `claude/add-ci-checks` and every r8/r9 branch | the above **plus `tests/test_physics_gates.py`** |
+
+`tests/test_physics_gates.py` was **added by `50b70c0`** ("Add the three physics
+gates: analytical, conservation, metamorphic") and extended by `df52bee` (+30/-7,
+which also added `scripts/run_analytic_benchmarks_vista.sh`). It carries **12 test
+functions** covering exactly the recommendation two paragraphs above: Poiseuille
+against its governing equation, no-slip and peak, mean-is-two-thirds-of-peak,
+Couette linearity and superposition with Poiseuille, plus conservation
+(particle-count, finite-and-bounded metrics, unit anchors) and metamorphic gates
+(verdict invariance under grid refinement, heavier-vehicle ordering).
+
+It RUNS, pure standard library, no pytest needed: `python3 tests/test_physics_gates.py`.
+Measured 2026-08-19: **0 failures**, and the skip count depends on where you run it.
+
+- **Main checkout: 1 skip.** Only the solver-vs-analytical comparison, which waits
+  on solver output at `tests/data/poiseuille_profile.csv`. That is the genuine
+  outstanding item and it needs a Vista run.
+- **A worktree: 5 skips.** The extra four are `renders/` data being physically
+  absent from a worktree, not a gap in the suite. **Do not read a worktree skip
+  count as an open gap**, which is the same worktree-absence trap that has
+  produced false counts in this repo before.
+
+`.github/workflows/canford-checks.yml:31` runs it as `python3 tests/test_physics_gates.py`.
+**But that workflow is NOT on `origin/main` either**, so as of 2026-08-19 the gate
+exists, passes, and executes nowhere automatically until that branch lands. The
+honest statement is "built and green, not yet running in CI on the default
+branch", never "no physics regression test".
 
 - **Analytical, no download needed:** Poiseuille and Couette flow are the standard
   MPM fluid verification cases with exact closed-form solutions
@@ -213,8 +696,13 @@ second one without reading that file first.**
 
 ## Known limits of the index itself
 
-- **60 of 332 papers carry no DOI** and cannot be diffed against the bibliography.
-  Absence from an uncited list is not proof of absence.
+- **60 of 332 records carry no DOI** and cannot be diffed against the
+  bibliography BY THE DOI ROUTE. Absence from an uncited list is not proof of
+  absence. Do not read this as 60 unidentifiable papers: **57 of the 60 carry a
+  Semantic Scholar id in the `link` field** and only 3 are unidentifiable (the
+  parse defect below). The identifier is present; nothing joins on it. That is
+  the same shape as the finding that DOIs were sitting in the `note` field of
+  the bibliography while the census joined on `doi`.
 - **222 of 332 have an abstract.** Each report details only its top 50, so 110
   papers are title-and-metadata only. Do not describe a metadata-only paper as
   read.
@@ -223,99 +711,30 @@ second one without reading that file first.**
 - The index excludes `.claude/worktrees/` when computing cited status, per the
   standing H0 rule. An earlier version did not and reported 269 of 332 as cited
   because another session's cross-reference file holds 489 DOIs.
-
----
-
-# THE INDEX IS NOT THE WHOLE CORPUS. THE DEEP-SEARCH LAYER IS MISSING FROM IT.
-
-Added 2026-08-19 after a session manually re-derived a vehicle-mesh finding that a
-completed deep search had answered in full on 21 July.
-
-`data/research_corpus_index.json` was built from **44 documents that are Claude
-artifacts and Perplexity reports.** The deep-search layer holds **27 completed deep
-searches**, and eight checked by name are **all absent from those 44**. So querying the
-index and finding nothing is NOT evidence the project has not researched something.
-
-THE 27 IS SCOPED AND WAS RE-MEASURED LIVE 2026-08-24, superseding both the original 19 and
-an intermediate 21, each of which was correct when written and went stale. Three
-instruments agree: `ls data/deep_searches/*.json` returns 28 files, of which one is
-`MANIFEST.json`, leaving 27 searches; `research_index.py --searches` prints 27 slugs; and
-`MANIFEST.json` itself records `n_searches: 27` from a workspace pull dated 2026-08-23.
-Scope is the tracked mirror at `data/deep_searches/`, not a live Undermind query, and all
-28 files are tracked by git. This number has now moved twice, so re-measure it rather than
-quoting this line.
-
-**Workspace id `17299f2a-8dc8-438b-8c84-5abf19395e2c`.** Query it directly:
-
-```
-mcp__undermind__inspect_deep_searches(workspace_id=..., names=[])        # list all 27
-mcp__undermind__inspect_deep_searches(workspace_id=..., names=['/NAME']) # goal + summary + ranked papers
-```
-
-The nineteen, with what each actually settles:
-
-| deep search | settles |
-|---|---|
-| Simulation Ready Vehicle Mesh Assets | the CCSA/NCAC vehicle models, below |
-| Moving Rigid Body Free Surface Validation | validation cases for a moving body |
-| Quantitative MPM Wall Penetration | the mechanism behind the seven P-2 failures |
-| Multi-resolution MPM for Large-domain Flooding | refinement windows, and the moving-frame gap |
-| moving vehicle floodwater GPU particle simulation | the moving-vehicle prior art |
-| which realism effects change a flood vehicle stability verdict | which realism upgrades move a verdict |
-| MPM SPH buoyancy force overestimation and hydrostatic validation benchmarks | the buoyancy error |
-| Settling and Force Reporting in Free Surface Flow | settle length and force statistics |
-| GPU particle solver portability scaling and surrogate fidelity | engine and GH200 portability |
-| Dynamic Vehicle Traction in Floodwater | traction under partial flotation |
-| Validated MPM Vehicle Water Coupling | coupling validation |
-| Incipient / stability searches (Jul 15) | threshold provenance |
-| how computational researchers audit and defend simulation credibility | verification practice |
-| plus 6 more, see the live listing |
-
-## THE VEHICLE MESH ANSWER, so nobody re-derives it again
-
-From "Simulation Ready Vehicle Mesh Assets", 21 July, 36 papers. The NHTSA-grade assets
-are the **CCSA/NCAC reverse-engineered LS-DYNA finite-element vehicles**:
-
-    2010 Toyota Yaris         passenger sedan           MASH 1100 kg vehicle
-    2012 Toyota Camry         MIDSIZE sedan             teardown part-by-part; parts
-                                                        catalogued, scanned, thickness
-                                                        measured, material classified;
-                                                        mass and inertia checked against
-                                                        the production vehicle
-    2007 Chevrolet Silverado  quad-cab light pickup     MASH 2270 kg vehicle
-
-All three carry NHTSA NCAP full-scale validation. Yaris and Silverado include working
-suspension and steering.
-
-**THE NISSAN ROGUE IS NOT ONE OF THEM.** The documented midsize is the Camry. This
-repo's `MASS = {"rogue": 1571.3}` has no MASH anchor and no teardown provenance, while
-`silverado: 2270.0` and the Yaris 1100 kg ARE the MASH designations exactly.
-
-**HARD NEGATIVE, stated as a finding by that search:** no citable, publicly
-redistributable OBJ / PLY / glTF / USD conversion of the Yaris, Silverado or Rogue
-models is verified to exist anywhere, including GitHub, Kaggle and Hugging Face.
-So this repo's `.ply` hulls are its OWN conversions, there is no external artifact to
-check them against, and `vehicle_mesh_pipeline.py` (in `~/Downloads/vehicle_meshes/`,
-UNTRACKED, with `_v5` and `_v6` revisions) is the only provenance any hull has.
-
-Measured hull fidelity, from PLY headers 2026-08-19:
-
-    yaris_coarse_v1l_watertight.ply                 327,212 vertices
-    rogue_g96_pd6_coarse_watertight.ply              31,357 vertices
-    silverado_g32_pd8_dq0.02_coarse_watertight.ply    2,108 vertices   <-- 155x coarser
-
-Better hulls exist unused in `~/Downloads/vehicle_meshes/` (52 files):
-`rogue_coarse_watertight.ply` 66,987 and `silverado_coarse_watertight.ply` 48,706.
-
-# `--query` CANNOT FIND WHAT YOU PROBABLY WANT
-
-`analysis/research_index.py:518-521` is a **literal substring match over `title` and
-`abstract` only.** It does NOT search `authors`, `methods`, `journal` or `doi`.
-
-- An author query can never match. `--query "Al-Qadami"` returns 0 while **five records
-  carry Al-Qadami as an author**. A zero here is structurally guaranteed, not measured.
-- 110 of 332 records have no abstract, so for a third of the corpus it is title-only.
-- Any paraphrase fails: "moving reference frame" misses "moving frame of reference".
-
-Use `--doi` for a known paper, read the JSON fields directly for anything else, and
-never report an absence measured with `--query` alone.
+- **Three records are in the index with an EMPTY DOI and raw markdown left in
+  their title**, so they can never be marked cited however often the repo cites
+  them: `settling-force#11`, `#29`, `#30`. Cause: `parse_report` pulls the DOI
+  with a `[link](url)` regex, that report escapes its brackets, and an ASCE DOI
+  legitimately contains parentheses, so the non-greedy match truncates. **One of
+  them is Dancey et al 2002** (`10.1061/(ASCE)0733-9429(2002)128:12(1069)`), which
+  this file cites above for the verdict-threshold claim. So 3 of the 60 no-DOI
+  records are a parse bug, not a source without a DOI. `--bib-audit` prints an
+  INDEX SELF-CHECK that detects this class. **The data has NOT been repaired**,
+  because that needs a `--build` which would move the 332, the 60 and the 76/43
+  rungs; whoever owns the index build owns the fix.
+- **11 papers are in the index more than once**, under 24 keys, with identical
+  titles. They are DOI-less, so the DOI-based merge could not see them and the
+  positional `slug#rank` key made one paper look like several. 332 records,
+  **319 distinct works**. `--identifier-audit` lists the groups.
+- **The builder cannot discover a source.** `REPORTS` is a hardcoded list of
+  eight local paths with no glob, scan or API call, so `--build` cannot reach a
+  deep search that is not already in that literal, and cannot reach the
+  workspace at all. It is pure standard library and runs outside any MCP
+  session, which is why the fix is an interchange file rather than a client.
+  `--ingest-audit` reports the blindness; `--ingest-check` validates an export.
+  `data/deep_searches/` NOW EXISTS and is tracked: 29 files as of 2026-08-24,
+  28 searches plus `MANIFEST.json`. The clause saying it does not exist was
+  true when written and is withdrawn.
+- **The index cannot report its own coverage of the bibliography.** Use
+  `--bib-audit` for that, and see the five false-zero traps above before making
+  any absence claim.
