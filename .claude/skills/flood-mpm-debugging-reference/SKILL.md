@@ -1,11 +1,36 @@
 ---
 name: flood-mpm-debugging-reference
-description: Use this skill for ANY task that writes, edits, or debugs code touching Genesis MPM/SPH, kks32/mpm-engine, PhysGaussian, vehicle mass/inertia/friction parameters, water compressibility, collider type, failure-mode classification, DRIFT_THRESHOLD, or gsplat-to-simulation geometry in the Can It Ford project. Also trigger before writing Methods or Limitations text, before rendering any output, and before committing any code adapted from PhysGaussian. Trigger on mentions of grid_density, coup_friction, rho, MPM.Liquid, SPH.Liquid, load_vehicle, FloodScene, splashsurf, SDF/CDF colliders, slide/topple/float, or any error message containing "particles pass through", "GLIBCXX", "arm64", "aarch64", or a CUDA/torch install failure on Vista or LS6. Also trigger before stating any vehicle mass, inertia, or rho value as fact, before writing a new MPM/SPH scene, and before assuming a Genesis or kks32/mpm-engine API behaves a certain way without checking.
+description: Use this skill for ANY task that writes, edits, or debugs code touching Genesis MPM/SPH, kks32/mpm-engine, PhysGaussian, vehicle mass/inertia/friction parameters, water compressibility, collider type, failure-mode classification, DRIFT_THRESHOLD, or gsplat-to-simulation geometry in the Can It Ford project. Also trigger before writing Methods or Limitations text, before rendering any output, and before committing any code adapted from PhysGaussian. Trigger on mentions of grid_density, coup_friction, rho, MPM.Liquid, SPH.Liquid, load_vehicle, FloodScene, splashsurf, SDF/CDF colliders, slide/topple/float, or any error message containing "particles pass through", "GLIBCXX", "arm64", "aarch64", or a CUDA/torch install failure on Vista or LS6. Also trigger before stating any vehicle mass, inertia, or rho value as fact, before writing a new MPM/SPH scene, and before assuming a Genesis or kks32/mpm-engine API behaves a certain way without checking. Also trigger on any question about the free-rigid two-way coupling mechanism, a force or impulse accumulator, velocity equilibration, rigid_g2p_accumulate, rigid_body_integrate, rigid_particle_update, _apply_rigid_restitution, or whether the engine computes a fluid force on the vehicle.
 ---
 
 # Flood-MPM Debugging Reference
 
 This skill exists because this project has repeatedly lost hours rediscovering things already found once. Read the relevant section below before writing code in the matching area. If a section references a file in `reference_data/` or `docs/`, open that file for the full sourced detail, this skill is the index and the hard rules, not the complete research.
+
+## The free-rigid coupling mechanism: settled, do not re-derive
+
+The 17 gated runs give the vehicle its velocity by mass-weighted averaging of the
+grid velocity under it. **There is no fluid force or impulse accumulator on that
+path.** This has now been read independently three times and agrees each time.
+
+**The one-command test, if you ever need to re-check it on a different SHA:** open
+`rigid_body_integrate` and look for `dt` in the velocity update. An impulse-based or
+force-based scheme must carry `dt` there, because an impulse is a force integrated
+over time. If `dt` appears only in the position and orientation updates, the scheme
+is velocity equilibration regardless of what the kernel is named or how a summary
+tool describes it.
+
+**A summary tool calling this "APIC-style momentum-conserving transfer" is not a
+contradiction and must not be read as one.** A momentum reduction over particles and
+a force accumulation over time are different things that share the word
+"momentum". The particle-side scatter genuinely is APIC-consistent; the body
+integrate is not an integration at all.
+
+Full evidence, line numbers, reachability chain, and the coupling-mechanism
+literature index: `docs/COUPLING_MECHANISM_LITERATURE_INDEX_2026-08-23.md`. Part 1
+of that file is read-directly and citable. **Part 2 is Undermind-tier and
+unverified**; nothing in it enters the register, the paper, or a caption until it
+passes `provenance-audit`.
 
 ## Before touching ANY specific number
 
