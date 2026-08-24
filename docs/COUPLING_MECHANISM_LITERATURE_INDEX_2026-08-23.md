@@ -127,6 +127,30 @@ device-to-host readback (`:893-901`) and a write-back (`:982-987`). A per-subste
 fluid coupling on that path would need a device-side rewrite. Read it as a
 correctness reference, not as a performance-ready hook.
 
+**Sharpening that caveat, measured live 2026-08-24, because it is easy to misread as
+"so the limb is dormant in the published runs."** It is not dormant: the 17 canonical
+runs are ON this path. `add_plane` forwards its `restitution` argument straight to
+`add_surface_collider` (`core/solver.py:220-221`), and a plane joins
+`self.rigid_surface_colliders` exactly when `restitution != 0.0`
+(`kernels/mpm_solver_warp.py:1915-1925`). The canonical driver registers its floor
+(`renders/yaris_render_s1/sim_standing.py:210-211`) and its four walls (`:214`) with
+`restitution=0.05`, so all five are in the list, the guard at
+`kernels/mpm_solver_warp.py:890` passes, and `_apply_rigid_restitution` runs every
+substep at `:1362`, inside the same `if self.n_rigid_bodies > 0:` block that section
+1.3 already traces the 17 runs into. So genuine impulses, the normal pair at
+`:963-964` carrying the lever arm `r_cross_n`, and the Coulomb friction impulse
+capped at `mu * J_n` and applied at `:975-977` (the `:977-978` cited above is one
+line off, `:978` is blank), are already being applied to the same rigid body Part 2.4
+diagnoses as force-blind, in the same runs that produced the published verdicts. That
+is not a contradiction, because what differs is the INPUT, not the body and not the
+code path: every `J` on this limb originates in plane penetration geometry, and
+nothing anywhere converts a fluid interaction into a `J`. It is the wiring reading at
+its sharpest. The force machinery is not merely present somewhere else in the engine,
+it is present and running in these very runs, wired to the floor and the walls and
+not to the water. Part 2.4's verdict is unchanged by this, and so is the caveat's
+operative point: the limb runs on the host in NumPy with a readback and a write-back,
+so it stays a correctness reference for the apply half, not a performance-ready hook.
+
 ### 1.6 What does NOT change
 
 - **No verdict moves.** Nothing here touches the 16 SLIDE / 1 STUCK count.
