@@ -174,8 +174,12 @@ quadrature. Standard MPM, GIMP, CPDI and B-spline MPM are not interchangeable.
 
 `--method validation-dataset` returns 76 papers, 65 of them uncited. The repo has
 a physics regression test **as of 2026-08-18**: `tests/test_physics_gates.py`,
-added by `df52bee` ("Run the solver's own analytic suite on a GH200, and wire it in"),
-carrying 12 test functions and covering Poiseuille, Couette and closed-form analytics.
+added by `50b70c0` ("Add the three physics gates: analytical, conservation,
+metamorphic") and later extended by `df52bee` ("Run the solver's own analytic suite on a
+GH200, and wire it in"), carrying 12 test functions and covering Poiseuille, Couette and
+closed-form analytics. Attribution re-measured live 2026-08-24 with
+`git log --diff-filter=A -- tests/test_physics_gates.py`: `50b70c0` ADDED the file and
+`df52bee` MODIFIED it, so the earlier "added by df52bee" was wrong on both SHA and verb.
 `tests/` also holds `test_count_claims_check.py` and `test_csv_schema.py`.
 **The earlier claim that no physics regression test exists is STALE. Do not build a
 second one without reading that file first.**
@@ -228,14 +232,23 @@ Added 2026-08-19 after a session manually re-derived a vehicle-mesh finding that
 completed deep search had answered in full on 21 July.
 
 `data/research_corpus_index.json` was built from **44 documents that are Claude
-artifacts and Perplexity reports.** The Undermind workspace holds **19 completed deep
+artifacts and Perplexity reports.** The deep-search layer holds **27 completed deep
 searches**, and eight checked by name are **all absent from those 44**. So querying the
 index and finding nothing is NOT evidence the project has not researched something.
+
+THE 27 IS SCOPED AND WAS RE-MEASURED LIVE 2026-08-24, superseding both the original 19 and
+an intermediate 21, each of which was correct when written and went stale. Three
+instruments agree: `ls data/deep_searches/*.json` returns 28 files, of which one is
+`MANIFEST.json`, leaving 27 searches; `research_index.py --searches` prints 27 slugs; and
+`MANIFEST.json` itself records `n_searches: 27` from a workspace pull dated 2026-08-23.
+Scope is the tracked mirror at `data/deep_searches/`, not a live Undermind query, and all
+28 files are tracked by git. This number has now moved twice, so re-measure it rather than
+quoting this line.
 
 **Workspace id `17299f2a-8dc8-438b-8c84-5abf19395e2c`.** Query it directly:
 
 ```
-mcp__undermind__inspect_deep_searches(workspace_id=..., names=[])        # list all 19
+mcp__undermind__inspect_deep_searches(workspace_id=..., names=[])        # list all 27
 mcp__undermind__inspect_deep_searches(workspace_id=..., names=['/NAME']) # goal + summary + ranked papers
 ```
 
