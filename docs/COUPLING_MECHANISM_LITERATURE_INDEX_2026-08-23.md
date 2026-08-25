@@ -109,7 +109,7 @@ impulses to this same body, immediately after `rigid_body_integrate` and before
     v_cm_np[b]  = v_cm_np[b].astype(np.float64) + (J_n / M) * n
     omega_np[b] = omega_np[b].astype(np.float64) + I_world_inv @ (J_n * r_cross_n)
 
-with a Coulomb friction impulse `J_t` following at `:977-978`. That is a correct
+with a Coulomb friction impulse `J_t` following at `:975-977`. That is a correct
 impulse-to-body-state application, including the lever arm, for the exact body the
 17 runs use.
 
