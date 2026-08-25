@@ -482,6 +482,71 @@ class Solver:
                          f"  {tot / timed * 100:5.1f}%")
         return "\n".join(lines)
 
+    # material ids this repo has confirmed by direct source read; anything else
+    # prints as a bare integer rather than being guessed at. mpm_utils.py:1090 is
+    # "elif mat == 7 or mat == 8: # stationary / rigid, no deformation" and :1366
+    # is commented "Rigid body kernels (material == 8)".
+    _MATERIAL_NAMES = {7: "stationary", 8: "rigid"}
+
+    def _edge_violation_report(self, g, axes, lo, hi, lim, dx) -> str:
+        """Per-axis, per-particle detail for the P2G edge guard.
+
+        The 2026-08-07 diagnostic spec, implemented 2026-08-25. The message this
+        replaces reported ONE global min and max across every guarded column and
+        labelled both "x" unconditionally. Two things were wrong with that. Under
+        `periodic_x` the guarded columns are y and z, so the label named an axis
+        that is not being checked at all. And a single global pair cannot say which
+        axis moved, so a y excursion and a z excursion produced identical text.
+        Neither said which particle, so a rigid-body particle escaping and a water
+        particle escaping were indistinguishable, which is the distinction the C2
+        crash actually turns on.
+
+        This is a DIAGNOSTIC, so it must not be able to raise on its own. Anything
+        optional is wrapped: if the material array cannot be read, the report says
+        so and still carries the axis and position, rather than replacing the real
+        error with a second one.
+        """
+        ranges = ", ".join(
+            f"{name} in [{g[:, j].min():.4f}, {g[:, j].max():.4f}]"
+            for j, name in enumerate(axes))
+
+        # the worst offender across every guarded axis and both sides
+        worst = None   # (depth, axis_name, side, row)
+        for j, name in enumerate(axes):
+            col = g[:, j]
+            for depth, side, row in ((lo - col.min(), "below", int(col.argmin())),
+                                     (col.max() - hi, "above", int(col.argmax()))):
+                if depth > 0 and (worst is None or depth > worst[0]):
+                    worst = (float(depth), name, side, row)
+
+        if worst is None:
+            # unreachable from the caller's own test, kept so the helper is total
+            return (f"particles within 2 cells of the grid edge ({ranges} m, "
+                    f"domain [0, {lim}] m, dx={dx:.4f}): the P2G stencil would "
+                    f"write out of bounds.")
+
+        depth, axis, side, row = worst
+        # g slices COLUMNS, never rows, so a row index into g is the particle index
+        try:
+            pos = ", ".join(f"{c:.4f}" for c in self.x()[row])
+        except Exception as exc:                      # pragma: no cover - diagnostic
+            pos = f"unavailable ({type(exc).__name__})"
+        try:
+            mat = int(self._sim.mpm_state.particle_material.numpy()[row])
+            mat_s = f"{mat} ({self._MATERIAL_NAMES.get(mat, 'unnamed in this build')})"
+        except Exception as exc:                      # pragma: no cover - diagnostic
+            mat_s = f"unavailable ({type(exc).__name__})"
+
+        guarded = "y and z (periodic_x, so x wraps and is not guarded)" if \
+            self.periodic_x else "x, y and z"
+        return (
+            f"particles within 2 cells of the grid edge. Guarded axes: {guarded}. "
+            f"Per-axis extent: {ranges} m, domain [0, {lim}] m, dx={dx:.4f}, "
+            f"allowed [{lo:.4f}, {hi:.4f}] m. Worst offender: particle {row} on "
+            f"axis {axis}, {depth:.4f} m {side} the limit, material {mat_s}, "
+            f"position ({pos}) m. The P2G stencil would write out of bounds. "
+            f"Enlarge grid_lim or add a bounding box / wall collider.")
+
     def _update_grid_box(self, dt: float, substeps: int) -> None:
         """Check the grid edge and update the particle launch box once per control tick.
 
@@ -504,12 +569,14 @@ class Solver:
         # with periodic x the whole x-range is legitimate: guard y/z only and give
         # the launch box the full x extent (transfers wrap the x index themselves)
         g = x[:, 1:] if self.periodic_x else x
-        if g.min() < 1.5 * dx or g.max() > lim - 2.5 * dx:
+        axes = ("y", "z") if self.periodic_x else ("x", "y", "z")
+        # NOT named lo/hi: this function rebinds both four lines below as the
+        # padded launch-box corners, and a reader who sees `lo` twice with two
+        # meanings in one function is one edit away from using the wrong one.
+        edge_lo, edge_hi = 1.5 * dx, lim - 2.5 * dx
+        if g.min() < edge_lo or g.max() > edge_hi:
             raise RuntimeError(
-                f"particles within 2 cells of the grid edge (x in "
-                f"[{g.min():.4f}, {g.max():.4f}] m, domain [0, {lim}] m, dx={dx:.4f}): "
-                f"the P2G stencil would write out of bounds. Enlarge grid_lim or add a "
-                f"bounding box / wall collider.")
+                self._edge_violation_report(g, axes, edge_lo, edge_hi, lim, dx))
         pad = 3.0 * dx + 1.5 * float(np.abs(v).max()) * dt * substeps
         lo = x.min(0) - pad
         hi = x.max(0) + pad
