@@ -139,17 +139,17 @@ runs are ON this path. `add_plane` forwards its `restitution` argument straight 
 substep at `:1362`, inside the same `if self.n_rigid_bodies > 0:` block that section
 1.3 already traces the 17 runs into. So genuine impulses, the normal pair at
 `:963-964` carrying the lever arm `r_cross_n`, and the Coulomb friction impulse
-capped at `mu * J_n` and applied at `:975-977` (the `:977-978` cited above is one
-line off, `:978` is blank), are already being applied to the same rigid body Part 2.4
-diagnoses as force-blind, in the same runs that produced the published verdicts. That
-is not a contradiction, because what differs is the INPUT, not the body and not the
-code path: every `J` on this limb originates in plane penetration geometry, and
-nothing anywhere converts a fluid interaction into a `J`. It is the wiring reading at
-its sharpest. The force machinery is not merely present somewhere else in the engine,
-it is present and running in these very runs, wired to the floor and the walls and
-not to the water. Part 2.4's verdict is unchanged by this, and so is the caveat's
-operative point: the limb runs on the host in NumPy with a readback and a write-back,
-so it stays a correctness reference for the apply half, not a performance-ready hook.
+capped at `mu * J_n` and applied at `:975-977`, are already being applied to the same
+rigid body Part 2.4 diagnoses as force-blind, in the same runs that produced the
+published verdicts. That is not a contradiction, because what differs is the INPUT,
+not the body and not the code path: every `J` on this limb originates in plane
+penetration geometry, and nothing anywhere converts a fluid interaction into a `J`.
+It is the wiring reading at its sharpest. The force machinery is not merely present
+somewhere else in the engine, it is present and running in these very runs, wired to
+the floor and the walls and not to the water. Part 2.4's verdict is unchanged by
+this, and so is the caveat's operative point: the limb runs on the host in NumPy with
+a readback and a write-back, so it stays a correctness reference for the apply half,
+not a performance-ready hook.
 
 ### 1.6 What does NOT change
 
