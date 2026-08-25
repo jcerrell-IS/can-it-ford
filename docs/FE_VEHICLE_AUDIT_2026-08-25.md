@@ -272,3 +272,37 @@ Two measurement methods were also discarded after failing convergence checks:
 rasterising a particle cloud (867 occupied cells at both 0.02 and 0.01 m) and
 rasterising surface-mesh vertices (area fell 4.54 -> 4.11 -> 2.82 m^2 as the cell
 shrank). Point-sampling a surface cannot measure its area.
+
+---
+
+## 8. All 17 canonical configs, on the canonical driver (added 2026-08-25, job 939470)
+
+Everything in sections 1 to 7 ran on `sim_enhanced.py`. This section runs
+`sim_standing_fedens.py`, which is `sim_standing.py` with four lines replaced.
+
+**The control arm reproduces the gated record.** 16 of 17 passthrough values within
+1e-3 (max 1.84e-3), displacement within 0.5 percent on 13 of 17, and the P-2 FAIL
+set is **identical, run for run**, to the seven CLAUDE.md item 7 names. Item 7's
+velocity-sweep figures reproduce to the printed digit: 0.079910 at 0.5 m/s and
+0.158786 at 3.0 m/s against its stated 7.99 and 15.88 percent.
+
+**The profiled arm is not the win the surrogate implied, and this correction only
+became visible by running all 17.**
+
+| | count | runs |
+|---|---|---|
+| P-2 failing, gated and control | 7 | g48_m1100, g64_m1100, sweepD d0p35, sweepD d0p45, sweepV v2p0, v2p5, v3p0 |
+| fixed by the profile | 2 | g48_m1100, g64_m1100 |
+| still failing | 5 | the other five |
+| **made worse** | 4 | sweepD d0p35, sweepD d0p45, sweepV v2p5, v3p0 |
+
+The two it fixes are the two marginal failures, 0.1003 and 0.1067 against a 0.10
+limit. The ones it worsens are the severe ones: sweepV_v3p0 goes 0.158786 to
+0.173548. **The FE mass distribution does not fix gate P-2. It relocates where P-2
+fails**, helping at the margin and hurting where the failure is already large.
+
+Displacement rises in every one of the 17 profiled runs.
+
+**Withdrawn from section 3 as a general claim:** "P-2 flips from fail to pass."
+True at g48_m1100 and g64_m1100, which is what the surrogate sampled, and false as
+a statement about the gate.
