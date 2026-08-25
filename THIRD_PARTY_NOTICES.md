@@ -67,8 +67,24 @@ NHTSA-hosted (NHTSA copies carry a "public information and may be distributed or
 statement) or CCSA-hosted (licence-silent). This has not been settled and cannot be settled from
 the files on disk. Do not assume the favourable branch.
 
-**Obligation status: the acknowledgement is currently UNMET.** Drafted text ready to paste is in
+**Obligation status, per surface, measured live 2026-08-26.** The acknowledgement was unmet
+everywhere. It is now met in this repository and outstanding on the two published surfaces:
+
+| surface | before | now |
+|---|---|---|
+| `README.md` | 0 mentions of CCSA, GMU or FHWA in Acknowledgments | **MET**, see the Acknowledgments section |
+| `THIRD_PARTY_NOTICES.md` | this file | **MET** |
+| Submitted paper (`overleaf/main:conference_101719_1.tex`) | `FHWA` appears **0 times**; the Acknowledgment section names NSF, TACC and the mentors only. CCSA is named in the body and cited as `ccsa2016yaris`, which is a citation, not the acknowledgement the upstream terms ask for | **OUTSTANDING**, text drafted, awaiting a decision to push to Overleaf |
+| Poster `Cerrell_TACC_42x56.pdf` | 0 hits for CCSA, George Mason or FHWA across the full extracted text | **OUTSTANDING**, and the poster is already printed and submitted, so this cannot be fixed retroactively |
+
+The Yaris-only variant of the drafted text applies: `Silverado` appears exactly once in the
+submitted paper, in future work, and no Silverado-derived result is reported. Drafted text is in
 `docs/R8_LICENCE_RECONCILE_2026-08-18.md` section 2.
+
+**Meeting the acknowledgement does not resolve the redistribution question.** The upstream terms
+ask for acknowledgement in papers and publications. They grant nothing about redistributing the
+model files themselves, and acknowledgement is not a licence. See
+`docs/CCSA_LICENCE_DECISION_2026-08-26.md` for the options and what each one costs.
 
 ### 1a. Derived geometry from the above
 
