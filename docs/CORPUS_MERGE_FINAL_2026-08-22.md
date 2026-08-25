@@ -1,5 +1,18 @@
 # Corpus merge, final accounting of the 138 catalogued-but-never-cited DOIs
 
+**RESOLVED 2026-08-24, SO THE PARAGRAPH BELOW IS HISTORICAL, NOT CURRENT.**
+`claude/r9-corpus-bib` `de18180` was merged into `claude/add-ci-checks` by merge commit
+`a83a38b` (parents `72cfbdb` and `de18180`, 2026-08-24 17:56:42 +0100), and it is present on
+`origin/claude/add-ci-checks`. Measured live 2026-08-25: `git merge-tree --write-tree`
+between the two branches exits 0 naming no conflicting file, and the merge base IS
+`de18180`. The flag collision was settled by RENAME rather than by choosing a winner: the
+branch's reachability report became `--ingest-audit`, and `--source-audit` stayed with the
+CI gate that CLAUDE.md and the register already cite, so neither side was dropped and no
+external citation broke. `python3 analysis/research_index.py --help` exits 0 with all nine
+flags coexisting. **Note the merge landed under a commit message about poster and paper
+submission status, which is why no document recorded it and why three files went on
+asserting the opposite for a day.** Read the paragraph below as the state on 2026-08-22.
+
 **THE `claude/r9-corpus-bib` CONFLICT WAS DIAGNOSED AND DELIBERATELY NOT RESOLVED: it is
 substantive, not mechanical, so it is reported for a human in section 7 and no merge was
 made. It did NOT block this accounting, because the branch's content was read directly

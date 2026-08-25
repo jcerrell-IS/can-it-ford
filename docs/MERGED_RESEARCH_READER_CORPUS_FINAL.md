@@ -54,9 +54,11 @@ The three branches the dispatch named are all **pushed**: `[READ]`
 
 - `claude/r9-gapscan` `5213f6f` pushed, **merged into HEAD**
 - `claude/r9-reader` `9c19364` pushed, **merged into HEAD**
-- `claude/r9-corpus-bib` `de18180` pushed, **NOT merged**, deliberately, per
-  `CORPUS_MERGE_FINAL_2026-08-22.md` section 7, which diagnoses the conflict as substantive
-  and reports it for a human instead of merging it. That is a decision, not an oversight.
+- `claude/r9-corpus-bib` `de18180` pushed, and **MERGED 2026-08-24** by `a83a38b`, now on
+  `origin/claude/add-ci-checks`. CORRECTED 2026-08-25; this line read "**NOT merged**,
+  deliberately" and that was true when written on 2026-08-23. The conflict
+  `CORPUS_MERGE_FINAL_2026-08-22.md` section 7 diagnosed as substantive was resolved by
+  renaming the colliding flag, not by choosing a winner.
 
 **24 of 114 local branches have no `origin/` counterpart** `[READ]`, so unpushed branches are
 a real and separate problem, listed in section 6. **They are simply not the cause here.**
@@ -262,8 +264,11 @@ Nothing below is closed. Each is carried rather than dropped.
 4. **The report-count instrument disagreement**, section 3, is unresolved: TSV 4, index 5. Both
    are defensible; the ordering is invariant.
 5. **The six new deep searches are metadata only.** 27 as metadata, 8 as papers.
-6. **`claude/r9-corpus-bib` is still unmerged**, deliberately, with a substantive conflict
-   documented in `CORPUS_MERGE_FINAL_2026-08-22.md` section 7. It needs a human.
+6. **`claude/r9-corpus-bib` is MERGED as of 2026-08-24**, by `a83a38b`, and pushed.
+   CORRECTED 2026-08-25; this item read "still unmerged ... It needs a human", which was
+   true on 2026-08-23. The human decision it was waiting on was taken: the colliding
+   `--source-audit` was resolved by RENAME, the branch's reachability report becoming
+   `--ingest-audit` while the CI gate kept the cited name.
 7. **Poster and paper submission status is OPEN**, per
    `docs/CLAUDE_MD_OPEN_ITEMS_STATUS_2026-08-22.md` item 7, "nothing confirms either
    submission" `[READ]`. **No `.tex` file was touched this session** on that basis.
