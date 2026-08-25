@@ -1421,11 +1421,45 @@ def discover_search_exports(d: str) -> list[str]:
     The current builder cannot do this. Adding a search must not require
     editing a Python literal, because a step that is only enforced by someone
     remembering it is a step that stops happening.
+
+    MANIFEST.json IS NOT AN EXPORT AND MUST BE SKIPPED HERE. `parse_search_export`
+    raises on a gate failure by design, so feeding it the manifest aborted `--build`
+    outright with "schema is None, expected 'canford.deep_search/1'". Measured live
+    2026-08-25: every `--build` since the manifest was written on 2026-08-23 died on
+    this line, which is why `data/research_corpus_index.json` still carried the
+    2026-08-20 build, why `source_searches` was absent from it, and why
+    `--source-audit` reported `vehicle-mesh-assets` PAPERLESS while that file held a
+    36-paper array on disk. The sibling `load_deep_searches` already skipped the
+    manifest; only this glob did not, so the two disagreed about what a `.json` in
+    this directory means.
+
+    TWO FILE SHAPES LIVE HERE AND ONLY ONE IS AN EXPORT. A real export declares
+    `"schema": "canford.deep_search/1"` and carries a `papers` array; a METADATA
+    STUB, written by the 2026-08-20 metadata fix, carries `name`,
+    `n_relevant_papers` and `status` and no `schema` key at all. Measured live
+    2026-08-25: 2 exports against 26 stubs. Globbing every `.json` fed the stubs to
+    `parse_search_export`, which raises on a gate failure by design, so the build
+    aborted on the first stub even after the manifest was skipped. The gate is worth
+    keeping, so the discriminator is the `schema` KEY, not the papers array: a file
+    that claims to be an export and is malformed still raises, while a stub that
+    never claimed to be one is left to `load_deep_searches` to read as metadata.
     """
     if not os.path.isdir(d):
         return []
-    return sorted(os.path.join(d, f) for f in os.listdir(d)
-                  if f.endswith(".json"))
+    out = []
+    for f in sorted(os.listdir(d)):
+        if not f.endswith(".json") or f == "MANIFEST.json":
+            continue
+        try:
+            with open(os.path.join(d, f), encoding="utf-8") as fh:
+                claims_export = bool(json.load(fh).get("schema"))
+        except (OSError, ValueError):
+            # Unreadable or unparseable: hand it to the gate rather than
+            # skipping it, so a corrupt export is reported and not swallowed.
+            claims_export = True
+        if claims_export:
+            out.append(os.path.join(d, f))
+    return out
 
 
 def report_ingest_audit(export_dir: str) -> int:
