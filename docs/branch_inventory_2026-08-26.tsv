@@ -1,0 +1,93 @@
+branch	last_commit	ahead	behind	contained_in_n_others	contained_in
+origin/worktree-reconcile-vehicle-master-ref	2026-07-23	0	207	84	origin/audit/g-mergetest-2026-08-04;origin/claude/add-ci-checks;origin/claude/bibliography-formatting-fix-4c3864
+origin/claude/reverent-heisenberg-fe731c	2026-07-30	3	163	0	
+origin/paper/close-for-submission	2026-07-30	11	396	0	
+origin/paper/final-graft	2026-07-30	14	396	8	origin/analysis/failure-modes;origin/claude/overleaf-gci-citations-2026-08-08;origin/final/pass
+origin/paper/submission-close	2026-07-30	11	396	0	
+origin/reconcile/overleaf-base	2026-07-30	6	396	1	origin/paper/submission-close
+origin/analysis/failure-modes	2026-07-31	17	396	0	
+origin/claude/bibliography-formatting-fix-4c3864	2026-07-31	1	142	1	origin/audit/g-mergetest-2026-08-04
+origin/claude/festive-goodall-e08861	2026-07-31	2	142	0	
+origin/claude/fig2-sign-callout-fix-e926c6	2026-07-31	1	142	1	origin/audit/g-mergetest-2026-08-04
+origin/claude/figure-verification-citations-f36b1c	2026-07-31	1	142	1	origin/audit/g-mergetest-2026-08-04
+origin/claude/verify-execute-code-changes-d89fd8	2026-07-31	1	141	0	
+origin/final/pass	2026-07-31	20	396	5	origin/claude/overleaf-gci-citations-2026-08-08;origin/overleaf/figpush-2026-07-31;origin/rescue/ovl-1f801bf
+origin/overleaf-edits	2026-07-31	17	396	6	origin/claude/overleaf-gci-citations-2026-08-08;origin/final/pass;origin/overleaf/figpush-2026-07-31
+origin/overleaf/figpush-2026-07-31	2026-07-31	27	396	4	origin/claude/overleaf-gci-citations-2026-08-08;origin/rescue/ovl-1f801bf;overleaf/HEAD -> overleaf/main
+origin/paper/mark-superseded	2026-07-31	1	165	0	
+origin/rescue/ovl-1f801bf	2026-07-31	28	396	3	origin/claude/overleaf-gci-citations-2026-08-08;overleaf/HEAD -> overleaf/main;overleaf/main
+origin/audit/g-mergetest-2026-08-04	2026-08-04	6	137	0	
+origin/claude/can-it-ford-runs-analysis-4e93c6	2026-08-04	1	142	0	
+origin/claude/figure-validation-sources-826ba6	2026-08-04	2	142	0	
+origin/push-ready-2026-08-04	2026-08-04	4	142	0	
+origin/worktree-c1-triage	2026-08-07	3	94	0	
+origin/claude/bingham-material-sweep-2026-08-07	2026-08-08	1	90	0	
+origin/claude/overleaf-gci-citations-2026-08-08	2026-08-08	30	396	0	
+origin/claude/visual-physical-realism-trial-2026-08-11	2026-08-11	1	55	0	
+origin/claude/warpmpm-gravity-provenance-435363	2026-08-12	3	31	2	origin/claude/friction-resolution-reconcile-84465d;origin/warpmpm-continue
+origin/claude/friction-resolution-reconcile-84465d	2026-08-13	6	5	0	
+origin/claude/orphan-rescue-token-rotate-d72f90	2026-08-13	4	5	0	
+origin/claude/provenance-writer-reconcile-489192	2026-08-13	2	5	0	
+origin/claude/render-realism-vehicle-water-ad1490	2026-08-13	4	5	1	origin/claude/fork-render-3class
+origin/claude/retire-coupling-module-f20ad4	2026-08-13	2	5	0	
+origin/claude/semi-empirical-citations-fcc6f3	2026-08-13	1	5	0	
+origin/realism-exploration	2026-08-13	8	38	0	
+origin/track1/sdf-6dof-driver	2026-08-13	2	6	0	
+origin/track2/coupled-realism-explore	2026-08-13	4	13	0	
+origin/vista-realism-track-2026-08-13	2026-08-13	12	179	1	vista/main
+origin/warpmpm-continue	2026-08-13	5	31	1	origin/claude/friction-resolution-reconcile-84465d
+origin/claude/fork-chrono-eval	2026-08-14	2	5	0	
+origin/claude/fork-moving-driver	2026-08-14	3	5	0	
+origin/claude/fork-protocol	2026-08-14	5	5	0	
+origin/claude/fork-register-reconcile	2026-08-14	3	5	0	
+origin/claude/fork-render-3class	2026-08-14	6	5	0	
+origin/claude/fork-s3-rescue-2026-08-14	2026-08-14	9	5	0	
+origin/claude/fork-scene	2026-08-14	3	5	0	
+origin/claude/fork-three-class	2026-08-14	4	5	0	
+origin/claude/fork-validation	2026-08-14	8	5	0	
+origin/claude/fork-vista-triage	2026-08-14	2	5	0	
+origin/claude/meta-prompt-reconcile-dispatch-14a3c8	2026-08-14	8	5	2	origin/claude/add-ci-checks;origin/keep/concurrent-session-safety-570b39
+origin/claude/moving-vehicle-exploratory-2026-08-11	2026-08-14	2	55	0	
+origin/claude/rtfd-test-phase-1-4-569130	2026-08-14	13	5	0	
+origin/keep/concurrent-session-safety-570b39	2026-08-14	8	5	2	origin/claude/add-ci-checks;origin/claude/meta-prompt-reconcile-dispatch-14a3c8
+origin/claude/fix-hf-sync-exclude	2026-08-17	1	3	0	
+origin/claude/hf-space-l1-joint-rule	2026-08-17	2	5	0	
+origin/claude/review-workflow-auth	2026-08-17	1	1	0	
+origin/claude/scholar-sidekick-auth-e92679	2026-08-17	1	5	0	
+origin/claude/vercel-landing-page	2026-08-17	1	2	0	
+origin/claude/can-it-ford-round-5-87a6d6	2026-08-18	18	5	8	origin/claude/add-ci-checks;origin/claude/r7-collect;origin/claude/r7-inflow
+origin/claude/r5-exposure	2026-08-18	43	5	0	
+origin/claude/r5-physics	2026-08-18	73	5	6	origin/claude/add-ci-checks;origin/claude/r8-force;origin/claude/r8-kramer
+origin/claude/r5-research	2026-08-18	83	5	0	
+origin/claude/r5-safekeeping	2026-08-18	43	5	0	
+origin/claude/r7-collect	2026-08-18	22	5	0	
+origin/claude/r7-ladder	2026-08-18	30	5	0	
+origin/claude/r7-pinned-span	2026-08-18	20	5	0	
+origin/claude/r8-bc-merge	2026-08-18	2	5	0	
+origin/claude/r8-force	2026-08-18	81	5	1	origin/claude/add-ci-checks
+origin/claude/r8-kramer	2026-08-18	76	5	2	origin/claude/add-ci-checks;origin/claude/r9-kramer-extract
+origin/claude/r8-licence	2026-08-18	2	0	1	origin/claude/add-ci-checks
+origin/claude/r8-naming	2026-08-18	63	5	1	origin/claude/add-ci-checks
+origin/claude/r8-persistence	2026-08-18	27	5	0	
+origin/claude/r8-priorart	2026-08-18	21	5	1	origin/claude/add-ci-checks
+origin/claude/r8-tooling	2026-08-18	63	5	1	origin/claude/add-ci-checks
+origin/claude/zotero-source-integrations-8c7744	2026-08-18	2	5	2	origin/claude/add-ci-checks;origin/keep/retire-coupling-module-f20ad4
+origin/keep/retire-coupling-module-f20ad4	2026-08-18	2	5	2	origin/claude/add-ci-checks;origin/claude/zotero-source-integrations-8c7744
+origin/keep/slide-resolution-dependence-reconcile-a5bf74	2026-08-18	18	5	8	origin/claude/add-ci-checks;origin/claude/can-it-ford-round-5-87a6d6;origin/claude/r7-collect
+origin/claude/r9-reader	2026-08-19	69	5	1	origin/claude/add-ci-checks
+origin/claude/r9-accessor	2026-08-20	91	5	1	origin/claude/add-ci-checks
+origin/claude/r9-corpus-bib	2026-08-20	75	5	1	origin/claude/add-ci-checks
+origin/claude/r9-gapscan	2026-08-20	87	5	1	origin/claude/add-ci-checks
+origin/claude/r9-jobb-route	2026-08-20	87	5	1	origin/claude/add-ci-checks
+origin/claude/r9-kramer-extract	2026-08-20	85	5	1	origin/claude/add-ci-checks
+origin/claude/r9-landing	2026-08-20	74	5	1	origin/claude/add-ci-checks
+origin/claude/r9-moving-vehicle	2026-08-20	87	5	1	origin/claude/add-ci-checks
+origin/claude/r9-overleaf	2026-08-20	92	5	1	origin/claude/add-ci-checks
+origin/claude/r9-platform	2026-08-20	80	5	0	
+origin/claude/r9-priorcode	2026-08-20	81	5	1	origin/claude/add-ci-checks
+origin/claude/r9-renders	2026-08-20	81	5	1	origin/claude/add-ci-checks
+origin/claude/r9-settle	2026-08-20	78	5	0	
+origin/claude/r8-register	2026-08-21	64	5	1	origin/claude/add-ci-checks
+origin/claude/add-ci-checks	2026-08-25	471	0	0	
+origin/claude/r7-inflow	2026-08-25	25	5	0	
+origin/fix/public-repo-accuracy	2026-08-25	1	0	0	

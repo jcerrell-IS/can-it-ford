@@ -1,0 +1,36 @@
+# Pinned from the working environment on 2026-08-26, not hand-written.
+# Source env: miniforge `can-it-ford`, Python 3.12.13 on macOS arm64.
+# Regenerate the pins with:
+#   python -c "import importlib.metadata as m; [print(f'{d}=={m.version(d)}') for d in ['numpy','pandas',...]]"
+#
+# This covers ANALYSIS AND FIGURES ONLY, which is everything that runs on a laptop.
+# It does NOT install the MPM solver. See the note at the bottom.
+
+numpy==2.4.6
+matplotlib==3.11.0
+pandas==3.0.5
+scipy==1.18.0
+trimesh==4.12.2
+plotly==6.9.0
+scikit-learn==1.9.0
+Pillow==11.3.0
+PyYAML==6.0.3
+wandb==0.28.0
+
+# Test runner
+pytest==9.1.1
+
+# NOT INSTALLABLE FROM HERE, and deliberately not listed as a dependency:
+#
+#   warp / warpmpm  the MPM solver behind the 17 gated runs. It is `kks32/mpm-engine`
+#                   and it needs a CUDA GPU. The gated runs were produced on NVIDIA
+#                   GH200 (TACC Vista) and A100 (TACC Lonestar6). You cannot reproduce
+#                   a run on a laptop, and nothing in this file pretends otherwise.
+#   bpy             Blender's Python module, used only by the render scripts under
+#                   renders/. Blender ships its own interpreter; do not pip install it.
+#   open3d          used by the mesh pipeline only. Heavy, and not needed for analysis.
+#   gradio          used only by hf_space/. See hf_space/requirements.txt.
+#
+# Every number in the paper and on the poster is reproducible from the committed CSVs
+# using only the pins above. The solver is needed to regenerate the CSVs, not to check
+# them.
