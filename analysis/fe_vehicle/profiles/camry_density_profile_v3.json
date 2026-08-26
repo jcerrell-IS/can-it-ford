@@ -1,0 +1,203 @@
+{
+ "dz_m": 0.1,
+ "min_frac": 0.005,
+ "mass_structural_kg": 1141.7312027513087,
+ "mass_setfile_added_kg": 333.70800338000004,
+ "n_bins_merged_away": 0,
+ "n_bands_populated": 14,
+ "n_particles": 32937,
+ "total_mass_kg": 1100.0,
+ "uniform_density_kg_m3": 219.95655295349826,
+ "particle_volume_m3": 0.00015183494634964613,
+ "orphan_mass_kg": 0.0,
+ "fe_mass_kg": 1475.4392061313088,
+ "fe_cg_z_feframe_m": 0.558750827381083,
+ "cg_target_solverframe_m": 0.5565028816692867,
+ "cg_uniform_m": 0.630802289163629,
+ "cg_profiled_m": 0.5542510943016878,
+ "inertia_target": [
+  1933.1400952116744,
+  429.9893292276399,
+  2143.134883905077
+ ],
+ "inertia_uniform": [
+  1901.7236753361767,
+  470.2775776514598,
+  2137.7421787064013
+ ],
+ "inertia_profiled": [
+  1879.5734156031263,
+  459.18547388822697,
+  2116.8892222951768
+ ],
+ "bands": [
+  {
+   "band": 0,
+   "merged_from_bins": 1,
+   "z_lo_vehframe_m": 0.026674354448914528,
+   "z_hi_vehframe_m": 0.12575052585452795,
+   "z_frac_lo": 0.0,
+   "z_frac_hi": 0.07142857142857142,
+   "n_particles": 339,
+   "mass_kg": 8.198068404906703,
+   "density_kg_m3": 159.2722441127213,
+   "density_ratio_vs_uniform": 0.7241077475259106
+  },
+  {
+   "band": 1,
+   "merged_from_bins": 1,
+   "z_lo_vehframe_m": 0.12575052585452795,
+   "z_hi_vehframe_m": 0.22482669726014137,
+   "z_frac_lo": 0.07142857142857142,
+   "z_frac_hi": 0.14285714285714285,
+   "n_particles": 1834,
+   "mass_kg": 103.05447951613598,
+   "density_kg_m3": 370.0801594412877,
+   "density_ratio_vs_uniform": 1.6825148170035542
+  },
+  {
+   "band": 2,
+   "merged_from_bins": 1,
+   "z_lo_vehframe_m": 0.22482669726014137,
+   "z_hi_vehframe_m": 0.3239028686657548,
+   "z_frac_lo": 0.14285714285714285,
+   "z_frac_hi": 0.21428571428571427,
+   "n_particles": 4357,
+   "mass_kg": 190.7675540324842,
+   "density_kg_m3": 288.36676876810714,
+   "density_ratio_vs_uniform": 1.3110169481018903
+  },
+  {
+   "band": 3,
+   "merged_from_bins": 1,
+   "z_lo_vehframe_m": 0.3239028686657548,
+   "z_hi_vehframe_m": 0.4229790400713682,
+   "z_frac_lo": 0.21428571428571427,
+   "z_frac_hi": 0.2857142857142857,
+   "n_particles": 4074,
+   "mass_kg": 175.0152569150672,
+   "density_kg_m3": 282.93270054442917,
+   "density_ratio_vs_uniform": 1.2863117590510926
+  },
+  {
+   "band": 4,
+   "merged_from_bins": 1,
+   "z_lo_vehframe_m": 0.4229790400713682,
+   "z_hi_vehframe_m": 0.5220552114769816,
+   "z_frac_lo": 0.2857142857142857,
+   "z_frac_hi": 0.35714285714285715,
+   "n_particles": 4375,
+   "mass_kg": 140.8841435298595,
+   "density_kg_m3": 212.08615489300516,
+   "density_ratio_vs_uniform": 0.9642183969751653
+  },
+  {
+   "band": 5,
+   "merged_from_bins": 1,
+   "z_lo_vehframe_m": 0.5220552114769816,
+   "z_hi_vehframe_m": 0.6211313828825951,
+   "z_frac_lo": 0.35714285714285715,
+   "z_frac_hi": 0.42857142857142855,
+   "n_particles": 3487,
+   "mass_kg": 94.19199771017398,
+   "density_kg_m3": 177.90588734548757,
+   "density_ratio_vs_uniform": 0.8088228559532811
+  },
+  {
+   "band": 6,
+   "merged_from_bins": 1,
+   "z_lo_vehframe_m": 0.6211313828825951,
+   "z_hi_vehframe_m": 0.7202075542882085,
+   "z_frac_lo": 0.42857142857142855,
+   "z_frac_hi": 0.5,
+   "n_particles": 1552,
+   "mass_kg": 91.61267991017527,
+   "density_kg_m3": 388.76945012372397,
+   "density_ratio_vs_uniform": 1.7674829183466745
+  },
+  {
+   "band": 7,
+   "merged_from_bins": 1,
+   "z_lo_vehframe_m": 0.7202075542882085,
+   "z_hi_vehframe_m": 0.8192837256938219,
+   "z_frac_lo": 0.5,
+   "z_frac_hi": 0.5714285714285714,
+   "n_particles": 2960,
+   "mass_kg": 80.67343069856057,
+   "density_kg_m3": 179.50108360034915,
+   "density_ratio_vs_uniform": 0.8160751802575215
+  },
+  {
+   "band": 8,
+   "merged_from_bins": 1,
+   "z_lo_vehframe_m": 0.8192837256938219,
+   "z_hi_vehframe_m": 0.9183598970994353,
+   "z_frac_lo": 0.5714285714285714,
+   "z_frac_hi": 0.6428571428571429,
+   "n_particles": 2804,
+   "mass_kg": 64.53097609514775,
+   "density_kg_m3": 151.57182670970695,
+   "density_ratio_vs_uniform": 0.6890989364692911
+  },
+  {
+   "band": 9,
+   "merged_from_bins": 1,
+   "z_lo_vehframe_m": 0.9183598970994353,
+   "z_hi_vehframe_m": 1.0174360685050488,
+   "z_frac_lo": 0.6428571428571429,
+   "z_frac_hi": 0.7142857142857143,
+   "n_particles": 2515,
+   "mass_kg": 42.7841112424421,
+   "density_kg_m3": 112.03991871227285,
+   "density_ratio_vs_uniform": 0.5093729521027709
+  },
+  {
+   "band": 10,
+   "merged_from_bins": 1,
+   "z_lo_vehframe_m": 1.0174360685050488,
+   "z_hi_vehframe_m": 1.1165122399106622,
+   "z_frac_lo": 0.7142857142857143,
+   "z_frac_hi": 0.7857142857142857,
+   "n_particles": 1723,
+   "mass_kg": 28.07146795987345,
+   "density_kg_m3": 107.30207151407731,
+   "density_ratio_vs_uniform": 0.4878330291744588
+  },
+  {
+   "band": 11,
+   "merged_from_bins": 1,
+   "z_lo_vehframe_m": 1.1165122399106622,
+   "z_hi_vehframe_m": 1.2155884113162756,
+   "z_frac_lo": 0.7857142857142857,
+   "z_frac_hi": 0.8571428571428571,
+   "n_particles": 967,
+   "mass_kg": 19.055528672983726,
+   "density_kg_m3": 129.78448790451046,
+   "density_ratio_vs_uniform": 0.5900460166419712
+  },
+  {
+   "band": 12,
+   "merged_from_bins": 1,
+   "z_lo_vehframe_m": 1.2155884113162756,
+   "z_hi_vehframe_m": 1.314664582721889,
+   "z_frac_lo": 0.8571428571428571,
+   "z_frac_hi": 0.9285714285714286,
+   "n_particles": 923,
+   "mass_kg": 18.850431392229325,
+   "density_kg_m3": 134.5079185180965,
+   "density_ratio_vs_uniform": 0.6115203966964023
+  },
+  {
+   "band": 13,
+   "merged_from_bins": 1,
+   "z_lo_vehframe_m": 1.314664582721889,
+   "z_hi_vehframe_m": 1.4137407541275024,
+   "z_frac_lo": 0.9285714285714286,
+   "z_frac_hi": 1.0,
+   "n_particles": 1027,
+   "mass_kg": 42.30987391996031,
+   "density_kg_m3": 271.3310823461736,
+   "density_ratio_vs_uniform": 1.2335667144389948
+  }
+ ]
+}

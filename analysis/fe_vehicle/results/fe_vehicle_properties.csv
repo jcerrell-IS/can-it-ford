@@ -1,0 +1,5 @@
+vehicle,model_name,ccsa_version,arr_class,mass_structural_kg,mass_setfile_added_kg,mass_total_kg,external_reference_kg,external_reference_source,mass_delta_pct,cg_target_solverframe_m,cg_uniform_m,cg_profiled_m,cg_err_uniform_mm,cg_err_profiled_mm,hull_floodfill_m3,n_bands,n_particles,dxm_n_grid,dx_at_dxm_m,grid_lim_m,realized_rho_kg_m3
+yaris,2010 Toyota Yaris,coarse v1l,small passenger,867.81,228.5,1096.31,1101.0,"CCSA FE model, slide 7 DOI 10.13021/G8JS5D",-0.43,0.5997,0.6887,0.5917,89.1,-8.0,3.553211,15,33886,96,0.098165,9.423869,310.29
+camry,2012 Toyota Camry,detailed v5a,large passenger,1141.73,333.71,1475.44,1475.0,published curb mass,0.03,0.5565,0.6308,0.5543,74.3,-2.3,4.939772,14,32937,108,0.098794,10.669742,219.96
+rogue,2020 Nissan Rogue,detailed v3,large passenger,1364.36,202.0,1566.36,1600.0,published curb mass,-2.1,0.6762,0.7685,0.6746,92.3,-1.7,5.628594,18,40294,105,0.098527,10.345355,197.25
+silverado,2007 Chevrolet Silverado,coarse v3a,large 4WD,1887.62,263.57,2151.19,2200.0,published curb mass,-2.22,0.8093,0.8783,0.8138,69.0,4.6,4.875501,19,18505,131,0.098335,12.881919,222.46
