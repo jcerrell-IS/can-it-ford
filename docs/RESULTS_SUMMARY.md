@@ -6,10 +6,15 @@ the limitation matters as much as the number.
 
 ---
 
-## 1. The binary verdict is grid-invariant. The displacement behind it is not.
+## 1. CORRECTED. The verdict is grid-invariant only inside the published ladder, and it breaks outside it.
 
-**The number.** Across n_grid 48, 64 and 96 at fixed depth and velocity, `final_disp_mag_m`
-moves non-monotonically, and the direction depends on mass:
+**This section said "the binary verdict is grid-invariant" on 2026-08-26 and that was an
+overclaim.** It was true of the nine published runs and false of the ladder that has since been
+run. Corrected the same day against `docs/HANDOFF_ROUND_7_2026-08-18.md` and commit `ef92709`.
+
+**What is still true.** Across n_grid 48, 64 and 96 at fixed depth and velocity,
+`final_disp_mag_m` moves non-monotonically and the direction depends on mass, and **all nine of
+those runs return NO-FORD**. [CONFIRMED 2026-08-26]
 
 | mass | g48 | g64 | g96 | 48 to 64 | 64 to 96 |
 |---|---|---|---|---|---|
@@ -17,29 +22,44 @@ moves non-monotonically, and the direction depends on mass:
 | 1609 kg | 0.256830 | 0.314076 | 0.155959 | +22.3% | -50.3% |
 | 2337 kg | 0.187542 | 0.135559 | 0.089439 | -27.7% | -34.0% |
 
-**All nine runs return NO-FORD regardless.** [CONFIRMED 2026-08-26]
+**What breaks it, and it is the most important result in the project.** Job 918350 extended the
+ladder for the heaviest vehicle, five repeats per rung, all bit-distinct:
 
-```bash
-make facts   # and see the table above, re-derived from data/all_runs_inventory.csv
-```
+| grid | water layers | verdict (N=5) | margin |
+|---|---|---|---|
+| g48 | 3 | SLIDE 5/5 | 8 |
+| g64 | 4 | SLIDE 5/5 | 6 |
+| g96 | 6 | SLIDE 5/5 | 0 to 1 |
+| g128 | 8 | SLIDE 5/5 | 0 |
+| **g160** | **10** | **STUCK 5/5** | **-3** |
 
-**Why it is defensible.** The verdict survives a 2x change in grid resolution, so the conclusion
-does not rest on a resolution choice. Steffen, Kirby and Berzins 2008 is the citable mechanism for
-MPM losing convergence under refinement at fixed particles-per-cell, and Syamlal, Celik and
-Benyahia 2017 establish that grid refinement does not converge an instantaneous quantity anyway.
-Non-monotone displacement is documented expected behaviour for an instantaneous value, not
-necessarily a solver defect.
+`dx` 0.05889 m, `n_water` 906,806. **g160 is the first grid reaching about 10 particle layers
+across the flow depth, which is the only depth-based convention the literature offers** (Reis et
+al. 2021, `10.1016/j.engstruct.2021.113280`). The flip lands exactly there, and **the prediction
+was written into the job's own sbatch header before the run.**
 
-**The limitation, and say it before you are asked.** **Cite the verdict, never the displacement
-magnitude.** The g64 run alone carries two disagreeing displacement measures: `summary.json` says
-0.658537 and `rollout.npz` says 0.637019, a 3.4 percent gap. If grid convergence were the claim,
-this study would not support it: that would need a time-averaged observable over a demonstrated
-stationary window with a GCI, and `params_check.py` reports live that the apparent order cannot
-even be computed here because the refinement ratio is not constant.
+`g192` is a second STUCK (`5c32ff9`), so the flip is not a single rung.
 
-**Third row is new.** The 2337 kg row is monotone decreasing. The non-monotonicity is
-mass-dependent, and the write-ups that quote only 1100 and 1609 kg omit the case that does not
-show it.
+**So the published 16 SLIDE / 1 STUCK headline does not survive refinement to the resolution the
+literature asks for**, at least for m2337, which was already the most fragile case.
+
+**A second thing the flip fixes.** The `sustain_frames` fragility vanishes at g160: with 0 joint
+frames it is STUCK at every threshold tested. Under-resolved gives a fragile SLIDE that a
+one-integer threshold change can flip; resolved gives a robust STUCK.
+
+**The confound, and how far it has been closed.** The ladder is a sequence of different tanks:
+`span = lim*(1 - 8/n)` gives 7.8515 m at g48 against 8.9506 m at g160, so the tank is **largest
+exactly where the flip happens**, and tank growth and resolution are co-directional. The
+pinned-span control (`27f9b58`) bounds the tank effect by exact permutation over all C(10,5)=252
+splits: at +32.94 percent tank the drift difference is **+3.5 percent, p=0.0079**, and at
++21.7 percent tank it is indistinguishable from zero, with the same-tank null control behaving
+correctly at p=0.9206. **+3.5 percent against a 5.14x resolution effect**, so the confound is
+real, bounded and small.
+
+**The bound does not fully discharge the caveat, and do not pretend it does.** The control bounds
+the tank effect on **drift**, and that commit says plainly that drift does not order the verdict.
+Until a pinned-span run reproduces the verdict flip itself, write **"the verdict flips under a
+refinement that also enlarges the tank"**, never "the verdict flips under refinement".
 
 ---
 
@@ -120,6 +140,72 @@ verdict.** Incipient motion is an event, not a steady state. Removing the transi
 from 21 of 24 runs to 5 of 24 and would silently contradict the published 16 SLIDE / 1 STUCK. So
 the correct settle length for a *mean* is the wrong one for an *event*, and the published verdicts
 use the full record deliberately.
+
+---
+
+## 5. The settled vertical force is about 1.8x analytic buoyancy, it is grid-converged, and it is not a misread
+
+**The number.** In the moving-vehicle speed surface, `fz_settle_over_analytic` by grid
+[CONFIRMED 2026-08-26, `data/r9_speed_surface.tsv`, 1251 rows]:
+
+| n_grid | rows | min | max | mean |
+|---|---|---|---|---|
+| 64 | 1039 | 0.1476 | 22.5218 | 2.0994 |
+| 96 | 131 | 1.6771 | 1.6899 | **1.6823** |
+| 128 | 63 | 1.7581 | 1.7729 | **1.7662** |
+| 160 | 18 | 1.7898 | 1.7990 | **1.7944** |
+
+```bash
+python3 -c "
+import csv,collections
+rows=list(csv.DictReader(open('data/r9_speed_surface.tsv'),delimiter='\t'))
+by=collections.defaultdict(list)
+for r in rows:
+    try: by[r['n_grid']].append(float(r['fz_settle_over_analytic']))
+    except ValueError: pass
+for g in sorted(by,key=int):
+    v=by[g]; print(g,len(v),min(v),max(v),sum(v)/len(v))"
+```
+
+**Read this carefully, because the obvious reading is wrong.** At g64 the ratio is scattered over
+two orders of magnitude, which is the under-resolved regime. From g96 up the spread collapses to
+under one percent within a rung, so the quantity **is grid-converged**. It converges to about
+1.8, not to 1.0.
+
+**It is not an instrument error.** Commit `3f8fa42` closes that family: a third accessor,
+`control_volume_force`, reads `cauchy()` and `vol()` only and shares no code, no grid nodes and no
+knowledge of the collider with `sdf_wrench`. Three well-conditioned boxes agree with `sdf_wrench`
+to **0.9 to 1.9 percent** against a verdict pre-registered before the run. The accessor is
+exonerated, and **the fluid really is pushing that hard**.
+
+**It is not volumetric locking either.** That hypothesis had a named falsifier and the falsifier
+fired: a particles-per-cell sweep over a 19x span returned a log-log slope flat at 0.41 sigma,
+where locking would demand `PPC^-2`. Refuted on its own signature (`3f4c1ec`). **Anyone
+reintroducing the locking explanation must carry that refutation with it.**
+
+**Where the excess actually lives.** The disturbance is confined to the floor; the bulk pressure
+field is hydrostatic. Read from the pinned solver rather than from the literature (`c621539`):
+`add_plane` registers a **grid** collider, and the boundary kernel projects out the normal
+velocity component and writes it back to a grid node. **It writes velocity onto a grid node. It
+never writes pressure, and there is no boundary particle of any kind.** A whole-tree search for
+dummy particles, ghost particles, mirror particles, pressure extrapolation or any free-surface
+test returns nothing.
+
+**So what is the honest claim?** Three things, and they must travel together:
+
+1. The force is measured correctly. Three independent accessors agree.
+2. The comparison denominator is a **static Archimedes value**. Comparing a dynamic,
+   floor-bounded, flowing case against it is not a validation, and a ratio of 1.8 is not by
+   itself an error.
+3. The excess sits in a floor boundary treatment that writes velocity and not pressure, and
+   **whether that treatment is physically correct is open.** It is not resolved by refinement,
+   because the ratio is already converged.
+
+**The contrast that matters.** The SDF-collider coupling path validates against analytic
+buoyancy to **7.3 to 7.7 percent** (`c1sdf_sdf_g64` at -7.67, `c1sdf_sdf_g96` at +7.28). The
+free-rigid material-8 path, which is what **all 17 gated runs use**, is the one showing the 1.8x
+ratio. Those are two different coupling architectures in the same solver, and the validated one
+is not the one the published results run on.
 
 ---
 

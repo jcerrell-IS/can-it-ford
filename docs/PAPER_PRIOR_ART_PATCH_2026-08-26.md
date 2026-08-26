@@ -22,14 +22,14 @@ will notice the omission before they notice anything else.
 | `wasfy2015fording` | 10.1115/DETC2015-47142 | Crossref, **matched**, high confidence | title, venue, authors only |
 | `khapane2014wading` | 10.4271/2014-01-0936 | Crossref, **matched**, high confidence | title, venue, authors only |
 | `alqadami2022moving` | 10.1111/jfr3.12828 | Crossref, **matched**, high confidence | **full-text excerpts read** |
-| `alqadami2023cfd` | 10.3390/su151713262 | Crossref, **matched**, high confidence | title, venue, authors only |
-| `xiong2024` | 10.1029/2023WR036739 | Crossref, **matched**, high confidence | **abstract read in full** |
+| `alqadami2023cfd` | 10.3390/su151713262 | Crossref, **matched**, high confidence | **full text read**, local copy |
+| `xiong2024` | 10.1029/2023WR036739 | Crossref, **matched**, high confidence | abstract read; **full text also available locally** |
 
 All six: zero retractions, zero corrections, zero expressions of concern. The five new entries
 were audited together by Scholar Sidekick and returned `matched: 5, mismatch: 0, ambiguous: 0,
 not_found: 0, retracted: 0`.
 
-**Three of the six are cited below on title and venue alone.** The prose is written so that it
+**Three of the six are cited below on title and venue alone** (`he2026vehiclewater`, `wasfy2015fording`, `khapane2014wading`). The prose is written so that it
 does not assert anything about their internal results. Read them before adding any sentence that
 does.
 
@@ -46,6 +46,25 @@ framing and it differs on both axes: CFD rather than MPM, and moving rather than
 a 3D discrete element method model, with a multi-sphere representation of vehicle shape,
 reproducing the Boscastle 2004 flash flood where "over 100 vehicles were moved and carried
 downstream."
+
+## Al-Qadami 2023, now read in full, and it calibrates this project's resolution
+
+Read 2026-08-26 from `~/can-it-ford-refs/_fulltext/Alq23_10.3390_su151713262.txt`, 181,816
+characters. Read directly rather than relayed:
+
+- Froude number range **0.09 to 2.46**, subcritical through supercritical.
+- Floating depth **0.38 m**, buoyancy force **9.2 kN**.
+- Sliding instability once the depth-velocity function exceeded **0.36 m2/s**.
+- **"the drag force decreased with the increment of the Froude number and flow velocity"**, which
+  runs against the intuition behind this project's velocity sweep and should be acknowledged
+  rather than quietly contradicted.
+- **Mesh cell sizes 0.05 m and 0.025 m.**
+
+**That last line is the useful one and it is not in any prior write-up.** This project's finest
+run is `dx = 0.05889 m` (g160). So the closest published CFD comparison works at a cell size
+comparable to this project's **coarsest acceptable** rung and refines to less than half of it.
+That is a concrete, checkable statement about where this work sits, and it is more informative
+than any claim about novelty.
 
 ## A trap inside Al-Qadami, do not fall into it
 

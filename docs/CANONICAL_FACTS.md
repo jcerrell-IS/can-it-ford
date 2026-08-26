@@ -187,6 +187,94 @@ simulation." Use those words.
 | "the 17 Genesis runs" | the 17 are warpmpm | "the 17 gated warpmpm runs" |
 | "1.35 M water particles" | that total includes vehicle particles | "1,151,002 water particles, 1,349,907 including the vehicle" |
 
+## 8b. Resolution, and the two claims that break on it
+
+**`n_grid` IS NOT A RESOLUTION.** `grid_lim` follows the domain extent, so two runs both labelled
+`g160` differ by 2.3x in `dx`. Live example, both real:
+
+| run | domain | `n_grid` | `dx` | water layers |
+|---|---|---|---|---|
+| `g160_m2337`, job 918350 | tank | 160 | **0.05889 m** | **10** |
+| `canitford_g160_no_surround.png` | 22 m | 160 | **0.13750 m** | **4** |
+
+The second is coarser than it sounds and sits in the same class as the published `g64`
+(`dx 0.1472`). **Always quote `dx` and the layer count, never `n_grid` alone.**
+
+**The verdict ladder, 5 repeats per rung, heaviest vehicle** [CONFIRMED, `ef92709` +
+`docs/HANDOFF_ROUND_7_2026-08-18.md`]:
+
+```
+g48   3 layers  SLIDE 5/5  margin  8
+g64   4 layers  SLIDE 5/5  margin  6
+g96   6 layers  SLIDE 5/5  margin  0 to 1
+g128  8 layers  SLIDE 5/5  margin  0
+g160 10 layers  STUCK 5/5  margin -3     <- the literature convention lands here
+g192            STUCK                     (5c32ff9, second STUCK)
+```
+
+**So "the verdict is grid-invariant" is FALSE outside the published ladder.** It holds for
+g48/g64/g96 and breaks at g160. Say which ladder you mean. The confound is bounded but not
+discharged: the tank grows with the grid, and the pinned-span control bounds the tank effect at
++3.5 percent (p=0.0079) against a 5.14x resolution effect, on **drift**, which does not order the
+verdict. Write "flips under a refinement that also enlarges the tank".
+
+## 8c. Force, and why 1.8x is not automatically an error
+
+`fz_settle_over_analytic` is **grid-converged at about 1.8**, not at 1.0 [CONFIRMED,
+`data/r9_speed_surface.tsv`]: g96 1.6823, g128 1.7662, g160 1.7944, under one percent spread
+within each rung. g64 is scattered 0.15 to 22.5 and is the under-resolved regime.
+
+Three things must travel together, or the number gets misused in either direction:
+
+1. **Not a misread.** A third accessor sharing no code, grid nodes or collider knowledge agrees
+   with the primary to 0.9 to 1.9 percent (`3f8fa42`). The fluid really is pushing that hard.
+2. **Not volumetric locking.** Refuted on its own PPC signature, flat at 0.41 sigma over a 19x
+   span where locking demands `PPC^-2` (`3f4c1ec`). **Carry this refutation with the hypothesis.**
+3. **The denominator is static Archimedes.** Comparing a dynamic, floor-bounded case against it
+   is not a validation. The excess is confined to the floor; the bulk field is hydrostatic, and
+   the floor writes a grid-node **velocity**, never a pressure, with no boundary particle of any
+   kind (`c621539`).
+
+**The contrast to state:** the SDF-collider path validates to **7.3 to 7.7 percent**; the
+free-rigid material-8 path, used by all 17 gated runs, is the one at 1.8x. The validated
+architecture is not the one in production.
+
+## 8d. The research corpus
+
+```
+index built 2026-08-25   papers 382   abstracts 211   cited 164
+```
+[CONFIRMED live 2026-08-26, `python3 analysis/research_index.py --stats`]
+
+**332 IS RETIRED.** CLAUDE.md and the `research-corpus` skill still say 332 / 319 works. The
+index moved to 382 on 2026-08-25. **The duplicate census has not been re-run, so no works-figure
+exists for the current index.** Do not carry 319 forward and do not derive one by subtraction.
+
+Deep searches: **28 known, 28 reach as metadata, 11 reach as papers**, 17 metadata-only
+representing 1244 papers as an integer. Say both numbers, never one.
+
+**`xie2023physgaussian` performs no physics validation.** [CONFIRMED by full-text read
+2026-08-26] Its quantitative evaluation is section 4.2 "Lattice Deformation Benchmarks", it
+reports **PSNR**, and the paper itself says "due to the absence of ground truth". If it is cited
+near a physics-fidelity claim, move it. Citing it for the *capability* of driving MPM from a
+splat is fine.
+
+## 8e. Two figures in circulation that did not reproduce here
+
+Recorded so they are not carried forward as measurements.
+
+**Vista unpushed commits.** Circulated as 12, then 28. My own earlier measurement in this session
+said 14. Live 2026-08-26: `main` is **1 ahead** of its `origin/main`, and `rev-list --all
+--not --remotes` returns **7 objects, two of which are stash entries**. None of the substantive
+findings attributed to those commits (the g160 flip, the four-tanks result, the g48 clearance
+result) is among them: **all of those are committed and reachable in this repository.** Re-run
+before quoting any figure, including 7.
+
+**Extracted full text on disk.** Circulated as 62 files / 8,926,048 chars in `_fulltext` and
+154 files / 5,281,914 chars in `_fulltext_desktop`. Live: **70 files / 8,163,560 chars** and
+**37 files / 2,263,734 chars**. The desktop figure is off by 4x in files. The load-bearing part
+survives: `shah2018`, `xiong2024` and `fred2026` do have full text on disk. The counts do not.
+
 ## 9. Where this file is not the authority
 
 `docs/CANONICAL_CORRECTIONS_REGISTER_2026-08-06.md` outranks this file on anything it covers.
