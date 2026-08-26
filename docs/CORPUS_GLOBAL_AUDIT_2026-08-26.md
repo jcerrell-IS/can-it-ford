@@ -1001,3 +1001,49 @@ four of the five inputs. **The corpus reader was never the deliverable. The join
 - **Nothing here has been adversarially reviewed.** The `physics-skeptic` path was not
   invoked, so every claim above is UNREVIEWED. The counts are re-derivable from the
   commands quoted inline; the judgements in 5.3 are not, and are marked as judgements.
+
+---
+
+## Addendum, the push, appended after the audit commit
+
+`69d2a53` was committed path-limited (1 file, 1003 insertions), leaving the three
+already-staged corpus documents staged and uncommitted, confirmed by
+`git diff --cached --name-status`. [READ]
+
+Push range checked before pushing, per the standing rule that a path-limited commit
+protects the commit and not the push:
+
+```
+$ git rev-list --count origin/claude/add-ci-checks..HEAD
+1
+$ git diff --name-status origin/claude/add-ci-checks..HEAD
+A  docs/CORPUS_GLOBAL_AUDIT_2026-08-26.md
+```
+[READ] Exactly one commit, one file, nobody else's work in the range.
+
+**THE FIRST PUSH FAILED AND DID NOT LAND.** [READ]
+
+```
+error: RPC failed; curl 56 Connection died, tried 5 times before giving up
+send-pack: unexpected disconnect while reading sideband packet
+fatal: the remote end hung up unexpectedly
+Everything up-to-date
+```
+
+**Note the trailing `Everything up-to-date` on a FAILED push.** Read alone, that line
+says the push succeeded. It did not. `git ls-remote` immediately afterwards returned
+`436a5f0` for `refs/heads/claude/add-ci-checks` while local HEAD was `69d2a53`, so the
+remote was unchanged. This is a concrete instance of the standing rule that a command's
+own output is not evidence the remote updated, and it is a worse case than the usual one,
+because the misleading line is a success message rather than a silent exit 0.
+
+Retried once. Second attempt:
+
+```
+To https://github.com/jcerrell-IS/can-it-ford.git
+   436a5f0..69d2a53  claude/add-ci-checks -> claude/add-ci-checks
+```
+
+**Confirmed landed by `ls-remote`, not by exit code:** remote
+`refs/heads/claude/add-ci-checks` is now `69d2a5352a7824c1cd0d8b2df93f03a27d46c5dc`,
+equal to local HEAD. [READ] No force push at any point.
