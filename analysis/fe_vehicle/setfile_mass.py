@@ -17,7 +17,7 @@ import re
 
 def element_mass_part(path):
     """Return {pid: added_mass_kg}. Units are tonne in the deck."""
-    out, kw = {}, None
+    out, kw, unresolved = {}, None, []
     for line in open(path, errors="replace"):
         if not line or line[0] == "$":
             continue
@@ -25,12 +25,39 @@ def element_mass_part(path):
             kw = line.strip().upper()
             continue
         if kw == "*ELEMENT_MASS_PART":
+            # FIXED 2026-08-26. This read `if len(f) == 2` and therefore silently
+            # skipped EVERY Rogue row. The Yaris deck writes two fields per row
+            # (pid, addmass); the Rogue and Camry decks write four (pid, addmass,
+            # finmass, lcid). A two-field test is a Yaris-shaped test, so the Rogue
+            # returned 0.00 kg of added mass and READ AS A REAL ABSENCE. It is not:
+            # set-rogue-v2.key carries a *ELEMENT_MASS_PART block.
             f = line.split()
-            if len(f) == 2:
+            if len(f) < 2:
+                continue
+            pid_tok, mass_tok = f[0], f[1]
+            # The Rogue writes `2001008&m1_1` for its two dummies and its payload:
+            # an LS-DYNA *PARAMETER reference glued to the pid, which shifts the
+            # field. No *PARAMETER card defining m1_1/m2_1/m3_1 exists anywhere in
+            # the model directory, so these masses CANNOT be resolved from what
+            # ships. Record them as unresolved rather than dropping them, so the
+            # total is known to be a LOWER BOUND instead of looking complete.
+            if "&" in pid_tok:
                 try:
-                    out[int(f[0])] = float(f[1]) * 1000.0
+                    unresolved.append((int(pid_tok.split("&")[0]),
+                                       pid_tok.split("&")[1]))
                 except ValueError:
                     pass
+                continue
+            try:
+                out[int(pid_tok)] = float(mass_tok) * 1000.0
+            except ValueError:
+                pass
+    if unresolved:
+        import sys
+        print("SETFILE unresolved *PARAMETER addmass on %d part(s): %s"
+              % (len(unresolved),
+                 ", ".join("%d(&%s)" % u for u in unresolved)),
+              file=sys.stderr)
     return out
 
 

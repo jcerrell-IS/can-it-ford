@@ -39,7 +39,18 @@ def parse():
     p.add_argument("--half", type=float, default=5.0)
     p.add_argument("--voxel", type=float, default=0.032)
     p.add_argument("--radius", type=float, default=0.115)
-    p.add_argument("--engine", default="EEVEE")
+    # DEFAULT CHANGED TO CYCLES 2026-08-26, measured not assumed. On Blender
+    # 5.2.0 LTS the EEVEE path of this script renders this scene almost black:
+    # the vehicle reads as a silhouette and the water surface loses its
+    # refraction entirely, at every camera angle tried. It is NOT a bad engine
+    # id -- `BLENDER_EEVEE` is the only entry in RenderSettings.engine's enum on
+    # 5.2 and it assigns cleanly -- so EEVEE is selected correctly and simply
+    # does not light this scene, most likely because a transmissive isosurface
+    # with no light probe falls back to near-black. Cycles renders the identical
+    # scene correctly at 11.6 s/frame at 1600 px / 64 samples on this Mac, which
+    # is only about 2.5x the EEVEE cost, so there is no reason to prefer EEVEE.
+    # Pass --engine EEVEE to get the old behaviour.
+    p.add_argument("--engine", default="CYCLES")
     p.add_argument("--samples", type=int, default=48)
     p.add_argument("--res", type=int, default=1280)
     p.add_argument("--paint", default="0.10,0.13,0.16")
