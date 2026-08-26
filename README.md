@@ -4,6 +4,8 @@
 
 [![License: BSD-3-Clause](https://img.shields.io/badge/License-BSD--3--Clause-green.svg)](LICENSE)
 [![W&B](https://img.shields.io/badge/W%26B-experiment_tracking-yellow)](https://wandb.ai/jcerrell29-claremont-mckenna-college/can-it-ford)
+[![HuggingFace](https://img.shields.io/badge/HuggingFace-live_demo-blue)](https://huggingface.co/spaces/josiecerrell/can-it-ford)
+[![Project site](https://img.shields.io/badge/project_site-can--it--ford.vercel.app-black)](https://can-it-ford.vercel.app)
 
 *Josie Cerrell, NSF SCIPE REU 2026, GeoElements Lab, UT Austin (PI: Krishna Kumar)*
 
@@ -58,13 +60,13 @@ The splat-to-particle bridge is intended to reuse [PhysGaussian (Xie et al. 2023
 
 | Class | Anchors | Mass | Bounding box (L x W x H, m) | Inertia source |
 |---|---|---|---|---|
-| `compact_sedan` | Toyota Yaris (2010, NCAC/CCSA FE model) | 1100 kg | 4.30 x 1.70 x 1.47 | uniform-box fallback (no NHTSA-measured Yaris); mass/bbox from [crash-validated FE model](https://doi.org/10.13021/G8JS5D) |
+| `compact_sedan` | Toyota Yaris (2010, NCAC/CCSA FE model) | 1100 kg | 4.30 x 1.70 x 1.47 | uniform-box fallback, **not** a measured tensor; mass/bbox from [crash-validated FE model](https://doi.org/10.13021/G8JS5D) |
 | `midsize_suv` | Toyota Highlander, Ford Explorer | 1990 kg | 4.96 x 1.93 x 1.75 | measured, NHTSA SAE 1999-01-1336 |
 | `light_pickup` | Ford F-150, Toyota Tacoma/Tundra | 2300 kg | 5.89 x 2.03 x 1.96 | measured, NHTSA SAE 1999-01-1336 |
 
 The `compact_sedan` bounding box above is the vehicle's published nominal specification, not the watertight hull's own measured extent. The mesh actually spans 4.2826 x 1.7464 x 1.5180 m (11.3533 m3 against the nominal 10.7457 m3). The paper carries both figures and uses the nominal box only as a reference prism; anything computing displaced volume should use the measured hull volume, 3.5427 m3.
 
-Curb weights and bounding boxes come from manufacturer spec sheets; center-of-gravity heights and full measured principal moment-of-inertia tensors (Ixx roll, Iyy pitch, Izz yaw) come from the NHTSA Light Vehicle Inertial Parameter Database. These are measured on instrumented rigs, not box estimates. Call `get_vehicle(vehicle_class)` for a simulation-ready dict. Not yet wired into the L2 scripts ([#7](../../issues/7)).
+Curb weights and bounding boxes come from manufacturer spec sheets. For `midsize_suv` and `light_pickup`, center-of-gravity heights and full principal moment-of-inertia tensors (Ixx roll, Iyy pitch, Izz yaw) come from the NHTSA Light Vehicle Inertial Parameter Database and are measured on instrumented rigs. `compact_sedan` is the exception, as the table above states: its CG height and tensor are estimates, because the NHTSA database ends Nov 1998 and holds no Yaris. A measured 2010 Yaris tensor does exist, on slide 7 of [DOI 10.13021/G8JS5D](https://doi.org/10.13021/G8JS5D) (1078 kg; roll 388, pitch 1498, yaw 1647 kg m^2; CG Z 558 mm), and is deliberately not wired in: see note 3 in `vehicle_params.py`. Call `get_vehicle(vehicle_class)` for a simulation-ready dict. Not yet wired into the L2 scripts ([#7](../../issues/7)).
 
 ---
 
@@ -162,7 +164,7 @@ See [`CITATION.cff`](CITATION.cff) for citing this repository.
 
 ## License
 
-Code is released under the **[BSD 3-Clause License](LICENSE)**, the license [recommended by DesignSafe-CI for research software](https://designsafe-ci.org/user-guide/curating/policies/) published in the Data Depot Repository. The associated dataset is released under ODC-By-1.0 (see `CITATION.cff` and the pending DesignSafe DOI, PRJ-6388). A dataset DOI is not yet minted; PRJ-6388 is staged and awaiting co-PI sign-off before publication.
+Code is released under the **[BSD 3-Clause License](LICENSE)**, the license [recommended by DesignSafe-CI for research software](https://designsafe-ci.org/user-guide/curating/policies/) published in the Data Depot Repository. The associated dataset is released under CC-BY-4.0 (see `CITATION.cff` and the pending DesignSafe DOI, PRJ-6388). A dataset DOI is not yet minted; PRJ-6388 is staged and awaiting co-PI sign-off before publication.
 
 Note: PhysGaussian has no detected license in its GitHub metadata. Any PhysGaussian-derived bridge code must have its licensing resolved before being committed here or submitted to DesignSafe.
 
@@ -170,8 +172,9 @@ Note: PhysGaussian has no detected license in its GitHub metadata. Any PhysGauss
 
 ## External assets
 
+- **Project site:** [can-it-ford.vercel.app](https://can-it-ford.vercel.app), a plain-language explainer of the L0/L1/L2 ladder with the safety disclaimer, deployed from `web/` on Vercel. It is also set as this repository's homepage.
 - **W&B:** [jcerrell29-claremont-mckenna-college/can-it-ford](https://wandb.ai/jcerrell29-claremont-mckenna-college/can-it-ford)
-- **Gradio demo:** not yet deployed.
+- **Gradio demo:** [josiecerrell/can-it-ford on HuggingFace Spaces](https://huggingface.co/spaces/josiecerrell/can-it-ford), live (verdict-flip explorer over the 17 gated runs, the `v_car` x `v_water` load surface, and repeat spread)
 - **Hailuo comparison:** `figures/hailuo/`, a visual-model-vs-physical-model comparison for the poster (Hailuo predicts FORD at d=0.30 m / v=1.5 m/s, pilot L2 predicts NO-FORD)
 - **Dataset DOI:** DesignSafe PRJ-6388, staged, not yet published.
 
