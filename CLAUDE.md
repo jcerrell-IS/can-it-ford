@@ -69,11 +69,17 @@ restate them in chat prompts.
   RE-MEASURED 2026-08-20 AND THE 2 IS NOW STALE IN THE OTHER DIRECTION.
   This clause read "`./.claude/worktrees/` holds 2 directories, not 27, so
   the multiplies-every-hit-~20x figure is stale". Live today,
-  `git worktree list` returns **33 worktrees, 28 of them under
+  `git worktree list` returned **33 worktrees, 28 of them under
   `.claude/worktrees/`**. So the exclusion is load-bearing again and the
   ~20x inflation is real again. The lesson is the clause itself: this
   number has now been wrong in both directions within eight days, so
   RE-MEASURE IT rather than quoting any figure here, including 28.
+  RE-MEASURED 2026-08-25 AND 33/28 IS NOW STALE TOO, WHICH IS THE THIRD
+  DIRECTION CHANGE. Live: **11 worktrees, 6 of them under
+  `.claude/worktrees/`**. The exclusion still matters but the ~20x figure
+  does not describe it any more. Do not quote 33, 28, 11 or 6; run the
+  command. The clause has now been wrong three times in twelve days,
+  which is the point it is making about itself.
   And `./can-it-ford/` no longer exists, so excluding it is now a no-op,
   see the section below.
 - Any parameter assigned to a variable (rho, coup_friction, box
@@ -458,9 +464,11 @@ not by file read from the Mac, see the item for its evidence path.
     into a distance and change SLIDE verdicts, which are the 16 of 17
     published outcomes. Deduplicate by NAME and UNIT, never by value.
 
-14. EXT_REF at gates.py:12 differs from bbox_m at vehicle_params.py:131
+14. EXT_REF at gates.py:12 differs from bbox_m at vehicle_params.py:140
     by 3.3 percent in height and 2.7 percent in width, both larger than
-    gate G-1's own 2 percent tolerance. LINE NUMBER CORRECTED 2026-08-18
+    gate G-1's own 2 percent tolerance. LINE NUMBER RE-CORRECTED 2026-08-21:
+    the literal moved :131 -> :140. Percentages re-derived live and unchanged
+    (1.518 vs 1.47 = 3.27 percent; 1.746 vs 1.70 = 2.71 percent).
     from :89, which is docstring prose and does not contain the value.
     Both percentages were re-derived live the same day and both still
     hold, so the citation was wrong, not the finding.
@@ -602,14 +610,14 @@ Load it before any filter-repo pass or force-push of rewritten history.
 ## File provenance, do not cite anything not on this list without checking it live
 
 CANONICAL:
-- CLAUDE.md (this file, project root) — Multi-Pane Standing Rules
-- vehicle_params.py — mass_kg: 1100.0
-- vehicle_geometry_research/yaris_coarse_v1l_watertight.ply — canonical Yaris mesh
+- CLAUDE.md (this file, project root): Multi-Pane Standing Rules
+- vehicle_params.py, mass_kg: 1100.0
+- vehicle_geometry_research/yaris_coarse_v1l_watertight.ply: canonical Yaris mesh
 
 DEPRECATED, do not read or cite. The deprecated files are also blocked
 mechanically by the Read deny rules in .claude/settings.json, so this list
 covers only what those rules do NOT block:
-- data/track1_sweep_v2/ — superseded box-proxy sweep (1390 kg box, 4.7352 m3
+- data/track1_sweep_v2/: superseded box-proxy sweep (1390 kg box, 4.7352 m3
   solid volume vs the real hull's 3.542739 m3). Not archived, because
   analysis/gp_surrogate.py and analysis/build_poster_phase_space.py still read
   it and .gitignore explicitly un-ignores it with a `!data/track1_sweep_v2/` pair.
@@ -660,24 +668,33 @@ Demoted to historical, cite only with a date and never as current:
   chase it; treat any claim sourced to it as unsourced until the file is produced.
 Where any of them conflicts with the register, the register wins.
 
-**RESEARCH-CORPUS READER RANKING, set 2026-08-23. THERE ARE TWO LINES, NOT ONE, AND
-CONFLATING THEM IS WHY THE PRIOR STATE LOOKED CONTRADICTORY.**
-- `docs/MERGED_RESEARCH_READER_CORPUS_FINAL.md` is the terminal READER. No date suffix,
-  deliberately. It supersedes `..._2026-08-20.md` (pass 1) and `..._2026-08-21.md` (pass 2),
-  both of which now carry a SUPERSEDED banner and are kept verbatim. Cite the two dated files
-  only with their date and never as current.
-- `docs/CORPUS_MERGE_FINAL_2026-08-22.md` is a SEPARATE line and is NOT superseded. It remains
-  authoritative on the 138 catalogued-but-never-cited DOIs and on register G25. FINAL does not
-  restate it.
-- Neither reader outranks the register. Where a reader conflicts with the register, the
-  register wins.
-- **The coupling-defect gap DOI is `10.1016/j.cma.2022.114809`** (Li, Lian and Zhang 2022,
-  IFEMP), joint top-ranked with `10.1016/j.jcp.2016.10.064` and STILL UNREAD, closed access.
-  `10.1007/s00466-019-01783-3` is strictly below both on report count and is NOT the pair.
-  **The count is instrument-dependent, the ranking is not**: the 2026-08-14 catalogue TSV says
-  4 reports, the built index says 5. Quote the ranking, never a bare count. And note that N
-  report appearances are N deep searches by ONE retrieval system, so they are a relevance
-  signal and NOT N independent sources.
+**RESEARCH-CORPUS READER RANKING, reset 2026-08-25. THERE IS NOW ONE LINE, NOT TWO.**
+`docs/MERGED_RESEARCH_READER_CORPUS_FINAL.md` is the single master. It absorbs the two
+dated readers, `CORPUS_MERGE_FINAL_2026-08-22.md` and its 138-DOI accounting, both
+`CORPUS_FINAL_MERGE_REPORT_*` session reports, `CORPUS_BIB_MERGE_RESOLUTION_2026-08-25.md`,
+`CORPUS_INGEST_BUILD_BLOCKER_2026-08-25.md`, `CORPUS_LINEAGE_STATUS_2026-08-23.md` and
+`R9_CORPUS_READ_2026-08-19.md`. All nine remain on disk with SUPERSEDED banners; cite them
+only with their date and never as current. The master does not outrank the register: where
+it conflicts with the register, the register wins.
+**THE PRIOR FORM OF THIS BLOCK SAID `CORPUS_MERGE_FINAL_2026-08-22.md` "is a SEPARATE line
+and is NOT superseded" AND THAT "FINAL does not restate it". BOTH HALVES ARE NOW FALSE**,
+withdrawn 2026-08-26: the master's section 4 is headed "The 138-DOI accounting, absorbed and
+preserved as authority" and carries it forward, including the number that matters, 0 of 138
+cited in the submitted paper. The master itself recorded this block as out of date in its
+section 6.8 and drafted this replacement in its section 8, but left CLAUDE.md untouched
+because another session held the file; three consecutive sessions then deferred the edit.
+**The coupling-defect gap DOI is `10.1016/j.cma.2022.114809`**, joint top-ranked with
+`10.1016/j.jcp.2016.10.064` at **7 reports each, re-measured live 2026-08-26** via
+`analysis/research_index.py --doi`, and STILL UNREAD, closed access.
+`10.1007/s00466-019-01783-3` is at 4, strictly below both, and is NOT the pair. The count is
+instrument-dependent and time-dependent, the ranking is not. For the IFEMP paper
+`10.1016/j.cma.2022.114809` specifically, this block previously recorded 4 reports from the
+2026-08-14 catalogue TSV and 5 from the built index, and the live index now says 7. That is a
+third instrument reading and not a correction of the other two. Quote the ranking, never a
+bare count. N report appearances are N deep searches by ONE retrieval system, so they are a
+relevance signal and NOT N independent sources.
+**The corpus map is `docs/CORPUS_INVENTORY_2026-08-25.md`**, which inventories all 14 corpus
+documents with their tracked state and records what is still open.
 
 
 ## AUGUST 8 2026 LITERATURE ADDENDUM
@@ -765,20 +782,29 @@ something needs a citation, QUERY THE INDEX.** Load the `research-corpus` skill
     python3 analysis/research_index.py --method added-mass -v
     python3 analysis/research_index.py --gaps --method validation-dataset
 
-`data/research_corpus_index.json` holds **332 RECORDS, which are 319 DISTINCT WORKS**, merged
-from eight Undermind reports, tagged across 25 method axes, each marked for
-whether it reaches a reader-facing document. Built 2026-08-15 by
-`analysis/research_index.py`. It reads only the committed index, never
+`data/research_corpus_index.json` holds **382 RECORDS as of 2026-08-25**, tagged across 25
+method axes, each marked for whether it reaches a reader-facing document, and built by
+`analysis/research_index.py`.
+CORRECTED 2026-08-25, and the position is the point. This line read "holds **332 RECORDS,
+which are 319 DISTINCT WORKS**, merged from eight Undermind reports ... Built 2026-08-15"
+until today, and both halves were stale: the count moved to 382 when the ingest blocker
+below was fixed, and the sources are no longer eight reports. Its own correction was already
+sitting fourteen lines further down, so the file said 332 and 382 at once and the STALE one
+was the first number a reader met. The records-are-not-works LESSON survives untouched and
+is restated below; only the counts moved. Run `python3 analysis/research_index.py --stats`
+rather than quoting any pair here, including 382. It reads only the committed index, never
 `~/Downloads`, because a prior session lost a pass when Downloads returned EPERM
 and a recursive search silently reported zero hits.
 
-**THE INDEX COVERS 21 OF 21 SEARCHES AS METADATA AND 8 OF 21 AS PAPERS. SAY BOTH
+**THE INDEX COVERS EVERY SEARCH AS METADATA AND ONLY SOME AS PAPERS. SAY BOTH
 NUMBERS, NEVER ONE.** This clause read "NOW COVERS 21" until 2026-08-21, which was
 true of metadata and false of papers, and the difference is the whole point.
-Measured live 2026-08-21: 21 search JSONs in `data/deep_searches/`, **ZERO carrying a
-`papers` array**, **zero** paper records ingested from them, the **780** papers they
-represent present as an INTEGER only, and the index still at **332**. So `--query`,
-`--doi` and `--method` cannot match a single paper from the other 13 searches.
+THE 21 / 8 / 780 / 332 FIGURES ARE STALE AS OF 2026-08-25, all four of them.
+Measured live 2026-08-25 after the build blocker below was fixed: **28 searches,
+28 reaching as metadata, 11 reaching as papers**, 17 metadata-only representing
+**1244 papers as an integer only**, and the index at **382**. Three searches now
+carry a `papers` array, not zero. Re-run `--source-audit` rather than quoting any
+of these; the working is in `docs/CORPUS_INGEST_BUILD_BLOCKER_2026-08-25.md`.
 Fixed 2026-08-20 for metadata. `REPORTS` is a hardcoded list of markdown files under
 `~/Downloads`, so a search entered only if somebody exported it by hand. The
 builder is pure standard library and CANNOT call an MCP connector, so the fix is
@@ -787,7 +813,8 @@ tracked, and the builder reads them. `--searches` lists and greps them and
 `--source-audit` exits 1 when a completed search reaches the corpus by no route AND,
 since 2026-08-21, when a search reaches it as metadata but contributes no papers. It
 reported OK over the paperless state for a day, because a metadata stub IS a route and
-reach-by-route was the wrong predicate. It now exits 1 with 13 problems.
+reach-by-route was the wrong predicate. It exited 1 with 13 problems when that was
+written and exits 1 with **17** as of 2026-08-25.
 Four of the thirteen that were invisible answered live project questions,
 including the one whose summary states that NO STUDY QUANTIFIES A CROWNED OR
 CAMBERED ROAD AGAINST A FLAT PLANE.
@@ -853,6 +880,12 @@ old forms:
 - **332 records are 319 DISTINCT WORKS.** Eleven Semantic Scholar ids appear under
   twenty-four record keys with byte-identical titles. Say "332 records / 319 works", never
   "332 distinct papers".
+  THE PAIR IS RETIRED AS A COUNT, 2026-08-25, AND KEPT AS A RULE. It was measured against
+  the 332-record index; the index is now 382 and **the duplicate census has not been re-run**,
+  so 319 does not describe it and no replacement works-figure exists yet. Do not carry 319
+  forward and do not derive a new one by subtraction. The RULE the pair exists to teach,
+  records are not works and a record count is not a paper count, is unaffected and still
+  binds. Re-run the duplicate census before quoting any works-figure at all.
 - **"60 carry no DOI and are undiffable" is WITHDRAWN in that form.** 57 of them carry a
   Semantic Scholar id already sitting in the `link` field; only **3** are unidentifiable.
 - **"Four prior vehicle fording or wading simulations exist" UNDERSTATES it.** The
