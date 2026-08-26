@@ -1047,3 +1047,298 @@ To https://github.com/jcerrell-IS/can-it-ford.git
 **Confirmed landed by `ls-remote`, not by exit code:** remote
 `refs/heads/claude/add-ci-checks` is now `69d2a5352a7824c1cd0d8b2df93f03a27d46c5dc`,
 equal to local HEAD. [READ] No force push at any point.
+
+---
+
+# Second pass, 2026-08-26 12:00 BST
+
+Phase 0 not re-run. This pass opens with Phase 0.5, chasing the two findings the first
+pass left hanging, then the revised Phase 1, then a re-verification of Phases 1 to 4
+rather than a re-run of them, then the revised Phase 5.
+
+Live state at open: HEAD `16eab8e`, 0 unpushed, **3 other sessions active in this repo in
+the last 3 minutes**, up from 1 at Phase 0.
+
+---
+
+## Phase 0.5, chasing both findings
+
+### 0.5.1 The contention check, done properly this time
+
+`lsof` rather than a process list, which is what Phase 0 should have used. [READ]
+
+```
+$ lsof /Users/josie/can-it-ford/CLAUDE.md
+(no output)
+$ lsof /Users/josie/can-it-ford/docs/MERGED_RESEARCH_READER_CORPUS_FINAL.md
+(no output)
+```
+
+**No process holds either file.** mtime on CLAUDE.md is `Aug 26 08:53:20`, unchanged across
+two checks three hours apart. So the file is dirty but abandoned, not held. **Three
+sessions being "active in the repo" is not the same as a session holding this file**, and
+Phase 0's process-list check could not tell those apart. `lsof` can.
+
+### 0.5.2 The ranking section: a finished, coherent edit, and it does name FINAL.md
+
+Read in full, CLAUDE.md lines 671 to 697. [READ]
+
+**Plainly: yes, it names `docs/MERGED_RESEARCH_READER_CORPUS_FINAL.md` as the single
+master, and it is a finished edit, not a fragment.** It:
+
+- opens `**RESEARCH-CORPUS READER RANKING, reset 2026-08-25. THERE IS NOW ONE LINE, NOT
+  TWO.**`;
+- states `docs/MERGED_RESEARCH_READER_CORPUS_FINAL.md` **is the single master**;
+- enumerates the nine absorbed documents by name;
+- states the precedence explicitly, and it is a LIMIT not a promotion: *"The master does
+  not outrank the register: where it conflicts with the register, the register wins"*;
+- carries its own dated withdrawal of the prior form (0.5.3);
+- carries the coupling-defect ranking with an instrument caveat;
+- names `docs/CORPUS_INVENTORY_2026-08-25.md` as the corpus map;
+- **closes cleanly** at a blank line before `## AUGUST 8 2026 LITERATURE ADDENDUM`.
+
+**Internal coherence, checked rather than eyeballed.** The absorbed list is: 2 dated
+readers, `CORPUS_MERGE_FINAL_2026-08-22`, 2 `CORPUS_FINAL_MERGE_REPORT_*`,
+`CORPUS_BIB_MERGE_RESOLUTION`, `CORPUS_INGEST_BUILD_BLOCKER`, `CORPUS_LINEAGE_STATUS`,
+`R9_CORPUS_READ`. That sums to **9**, matching its own "All nine". [READ]
+
+**Its one externally checkable claim, verified, with an imprecision.** The block says *"All
+nine remain on disk with SUPERSEDED banners"*. Checked, all nine, `head -8` each: [READ]
+
+| banner word | count | files |
+|---|---|---|
+| `SUPERSEDED` | **2** | `MERGED_RESEARCH_READER_CORPUS_2026-08-20.md`, `..._2026-08-21.md` |
+| `ABSORBED` | **7** | the other seven |
+
+**All nine exist and all nine carry a banner, so the operative content is true.** The
+wording is imprecise: only 2 of 9 say SUPERSEDED. **Do not grep for `SUPERSEDED` expecting
+nine hits.** Not a reason to withhold the commit; it is a finished edit containing one
+loose word.
+
+### 0.5.3 CORRECTION TO THIS AUDIT'S OWN PHASE 2
+
+The banner check above **refutes a number I published in section 2.1 of this file.**
+
+Phase 2 stated *"Every one of the six carries an added ABSORBED block quote"* and built a
+table of six. **Live, seven files carry the ABSORBED banner.** The one I missed is
+`docs/CORPUS_LINEAGE_STATUS_2026-08-23.md`.
+
+**Why I missed it, which is the part worth keeping.** I measured the banner population
+from `git diff`, the UNSTAGED diff. `CORPUS_LINEAGE_STATUS_2026-08-23.md` is staged (`A `),
+so its banner is in the index and does not appear in an unstaged diff at all. **I read
+absence-from-a-diff as absence-from-the-file.** That is the project's own standing rule
+about partial views, and I broke it while writing an audit that quotes the rule.
+
+The Phase 2 conclusion (the mtime cluster is real content, not a git artifact) is
+unaffected. The count six is withdrawn and replaced by seven. Any future banner census
+must read the files, not a diff.
+
+### 0.5.4 The 138-DOI withdrawal: what it withdraws, and what it closes
+
+CLAUDE.md lines 679 to 685, read in full. [READ]
+
+**What it withdraws:** the prior form of the ranking block, which said
+`CORPUS_MERGE_FINAL_2026-08-22.md` *"is a SEPARATE line and is NOT superseded"* and that
+*"FINAL does not restate it"*. **Both halves are declared FALSE.**
+
+**What replaces it:** the master's section 4 is headed *"The 138-DOI accounting, absorbed
+and preserved as authority"* and carries it forward, **including the number that matters,
+0 of 138 cited in the submitted paper.**
+
+**Yes, this closes something this thread treated as open, and it closes it against me.**
+The first pass's Phase 5.4 listed *"the master's 911-line uncommitted rewrite ... needs
+review and one commit"* as open item 2, and Phase 0 framed the CLAUDE.md block as merely
+"already written and unlanded". The withdrawal says more than that: it records **why**
+three sessions in a row failed to land it, in its own words, *"left CLAUDE.md untouched
+because another session held the file; three consecutive sessions then deferred the
+edit."* **This audit was the third.** The document diagnosed the exact failure the first
+pass then repeated, and the first pass did not read it closely enough to notice.
+
+It also independently corroborates the first pass's reading that the two corpus lines are
+now one, from a different origin: the withdrawal argues it from the master's section 4
+heading; Phase 2 argued it from banner content and line-overlap measurement.
+
+### 0.5.5 The commit
+
+Gate satisfied on all three tests: `lsof` clean, mtime stale by three hours, section
+complete and coherent. **Committed as `b366b8d`**, 1 file, 68 insertions, 35 deletions.
+[READ]
+
+**Path-limited, deliberately departing from the literal command given.** The instruction
+was `git add CLAUDE.md` then a bare `git commit -m`. A bare commit would have swept the
+**three corpus documents another session left staged**
+(`CORPUS_LINEAGE_STATUS_2026-08-23`, `CORPUS_FOLLOWUP_REPORT_2026-08-25`,
+`CORPUS_INVENTORY_2026-08-25`) into this commit under this message. `git commit CLAUDE.md
+-m ...` was used instead. Verified after: all three are **still staged and uncommitted**.
+[READ]
+
+**The subject line names two hunks; the diff has seven.** Recorded in the commit body so
+the message is not narrower than the change:
+
+1. worktree count re-measured a third time, 33/28 to 11/6
+2. `vehicle_params.py` bbox_m line number `:131` to `:140`, percentages unchanged
+3. em-dash removal in the CANONICAL and DEPRECATED provenance lists
+4. register pointers and two dangling-reference notes
+5. **corpus index 332 RECORDS to 382 RECORDS**, stale pair 332/319 retired
+6. **`--source-audit` exits 1 with 13 problems to 17**
+7. **the 319 distinct-works figure retired as a count, kept as a rule**
+
+Hunks 4 to 7 are corpus. Hunks 1 to 3 ride along because they are in the same file.
+
+### 0.5.6 The five files, classified
+
+| file | lines | verdict |
+|---|---|---|
+| `RESUME_EXTRACTION_2026-08-25.md` | 847 | **NOT corpus.** A resume and LinkedIn extraction document: it mines project facts for career use, with its own CONFIRMED / ESTIMATED / DOC / UNVERIFIABLE tagging and the `/usr/bin/grep` caution. Career-facing, not literature. Not read past line 30, per instruction. |
+| `README_GRIDAWARE.md` | 183 | **NOT corpus.** A gridaware variant of the public README: title, badges, authorship line. Public-surface, not literature. |
+| `KICKOFF_PROMPT.md` | 29 | **NOT corpus.** A reusable session kickoff prompt template from 2026-07-13. Process, not literature. |
+| `ARCHIVE_INDEX.md` | 133 | **NOT corpus.** Index of the 2026-07-22 relocate pass, and it flags the `archive/` versus `_archive/` naming split as a human decision. File provenance, not literature. |
+| `REBUILD_REFERENCE.md` | 165 | **Corpus-adjacent, different era, not in the chain.** Calls itself *"source-cited research ... cross-validated across three independent research passes"*, so it IS literature work, from July, predating the whole corpus line. Nothing in the reader chain cites it. Adds a sixth candidate layer to the section 5.3 count if anyone wants to be strict. Not folded in. |
+
+---
+
+## Phase 1, revised: the freshness find with a real reference point
+
+```
+$ find /Users/josie/can-it-ford -maxdepth 1 -name "*.md" -newer /Users/josie/can-it-ford/README.md
+/Users/josie/can-it-ford/CLAUDE.md                   Aug 26 08:53:20
+/Users/josie/can-it-ford/RESUME_EXTRACTION_2026-08-25.md   Aug 25 23:19:29
+```
+[READ]
+
+**Exactly two files, and both are already covered by Phase 0.5. The revised find surfaces
+nothing new.**
+
+**The reference-point fix is confirmed as the real defect.** Against `/tmp` the predicate
+returned **all 19** top-level markdown files, which is no filter at all. Against
+`README.md` it returns **2**. `/tmp` on this Mac is older than every file it was meant to
+filter, so `-newer /tmp` is a tautology, not a freshness test. Nothing was checked twice.
+
+The rest of Phase 1 (branches, `git log --all`, the corpus find, `citations/`, `.bib`
+files, `.remember/`) stands as written in the first pass above, re-verified below rather
+than re-run.
+
+---
+
+## Phases 1 to 4, re-verified rather than re-run
+
+Re-running four phases verbatim into the one file whose purpose is to stop near-duplicate
+reports would be the exact failure this audit documents. Instead every load-bearing
+measurement was re-taken. **This matters more than usual: three sessions have been active
+since the first pass.**
+
+**Result: zero drift. Every figure re-verifies identically.** [READ]
+
+| measurement | first pass | now | |
+|---|---|---|---|
+| `fix/ccsa-acknowledgement` ahead of HEAD | 7 | **7** (`51effcd`) | same |
+| `claude/r5-research` ahead | 82 | **82** (`123df92`) | same |
+| `claude/r9-settle` ahead | 14 | **14** (`1ea9f49`) | same |
+| `claude/r9-platform` ahead | 16 | **16** (`3f66ba1`) | same |
+| `claude/r9-reader` ahead | 0 | **0** | same |
+| `claude/r9-corpus-bib` ahead | 0 | **0** | same |
+| `docs/r10/` files on disk | 42 | **42** | same |
+| `docs/r10/` tracked | 42 | **42** | same |
+| `citations/` tracked | 38 | **38** | same |
+| `data/deep_searches/` files | 29 | **29** | same |
+| `.mcp.json` servers | 6 | **6** | same |
+| local branches | 95 | **95** | same |
+
+**Files in `docs/` touched since 11:25: exactly two, and both are mine**
+(`CORPUS_GLOBAL_AUDIT_2026-08-26.md` and `MERGED_RESEARCH_READER_CORPUS_FINAL.md`). [READ]
+No other session wrote into `docs/` during this audit.
+
+**The master is unchanged at 911 insertions, 269 deletions** against HEAD, so the section
+10 fold-in is intact and the other session's rewrite has neither advanced nor been
+committed. [READ]
+
+**One correction carried out of the re-verification**, in 0.5.3: Phase 2's banner count of
+six is withdrawn and replaced by seven. Nothing else in Phases 1 to 4 moved.
+
+---
+
+## Phase 5, revised
+
+### 5R.1 The ranking sub-step: committed in Phase 0.5, confirmed here
+
+Per the revised instruction, this phase does not attempt the ranking edit a second way.
+It confirms and moves on. [READ]
+
+```
+$ git branch --contains b366b8d
+* claude/add-ci-checks
+
+$ git show HEAD:CLAUDE.md | /usr/bin/grep -c "THERE IS NOW ONE LINE, NOT TWO"
+1
+$ git show HEAD:CLAUDE.md | /usr/bin/grep -c "withdrawn 2026-08-26"
+1
+
+$ git status --short CLAUDE.md
+(no output, clean)
+```
+
+**Confirmed on four separate tests**: the commit is on the branch; the ranking text is in
+HEAD rather than only in the working tree; the 2026-08-26 withdrawal is in HEAD; and
+CLAUDE.md is now **clean**.
+
+**The three-session deferral is over.** The block that names
+`docs/MERGED_RESEARCH_READER_CORPUS_FINAL.md` the single master is committed history, not
+uncommitted working-tree text. That was open item 1 of the first pass's 5.4 and it is
+closed.
+
+**The register was still not touched.** It was clean throughout and this pass had no
+measured correction that belonged in it, so leaving it alone cost nothing.
+
+### 5R.2 What Phase 5 still does NOT do
+
+**`docs/MERGED_RESEARCH_READER_CORPUS_FINAL.md` remains uncommitted, and the reasoning is
+unchanged and re-verified.** Still 911 insertions and 269 deletions against HEAD, of which
+about 706 insertions and all 269 deletions are the other session's unreviewed wholesale
+rewrite. [READ] Committing CLAUDE.md does not license committing this: CLAUDE.md's diff
+was 68 lines that I read in full, hunk by hunk, and whose one checkable claim I verified.
+The master's is 1180 changed lines I did not author and have not reviewed.
+
+The three staged corpus documents likewise stay staged and uncommitted, for the same
+reason.
+
+### 5R.3 Second-pass close out
+
+**Closed this pass:**
+
+1. **CLAUDE.md committed** (`b366b8d`), after a real contention test rather than a
+   process-list guess. Open item 1 of the first pass, closed.
+2. **The ranking section read in full and judged**: finished, coherent, names FINAL.md
+   the master, and its banner claim verifies with one loose word (`SUPERSEDED` describes
+   2 of the 9, not 9).
+3. **The 138-DOI withdrawal read in full**, and it closes something against this audit:
+   it had already diagnosed the three-session deferral that the first pass then became
+   the third instance of.
+4. **One of my own published numbers refuted**: the ABSORBED banner count is 7, not 6,
+   because I measured a population from an unstaged diff and read absence-from-a-diff as
+   absence-from-the-file.
+5. **The five files classified**: four not corpus, `REBUILD_REFERENCE.md` corpus-adjacent
+   but from July and cited by nothing in the chain.
+6. **The `-newer /tmp` predicate identified as a tautology** on this machine, and the
+   corrected form returns 2 files instead of 19.
+7. **Phases 1 to 4 re-verified with zero drift** across 12 measurements, despite three
+   concurrent sessions.
+
+**Still open, unchanged from the first pass except where noted:**
+
+1. **The master's 911-line rewrite**, including this audit's section 10, needs review and
+   one commit. Now the single largest uncommitted thing in the repo.
+2. **The four decisions in master section 10.9**: the `fix/ccsa-acknowledgement` merge and
+   the `CANONICAL_FACTS.md` authority question; `claude/r5-research`'s 44 documents; the
+   two stranded write-ups; and the `10.1111/jfr3.12048` count change.
+3. **The join table** (section 5.3), which remains the thing that would actually fix this
+   rather than another consolidation document. `REBUILD_REFERENCE.md` adds a sixth
+   candidate layer to that count.
+4. **CLAUDE.md's `SEPARATE AND OPEN` corpus-versus-bibliography item is still stale**, and
+   this is now a NARROWER open item than before. The file is clean and committed, so the
+   next session can make that one edit without inheriting anyone's dirty tree. The
+   replacement text is in section 2.4: an ingestion gap, one paper wide, `shah2018`, per
+   `docs/R9_CORPUS_BIB_GAP_2026-08-18.md`.
+
+**Unreviewed, stated for the third time because it has not changed.** Nothing in this file
+has been adversarially checked. The counts are re-derivable from the commands quoted
+inline. The judgements in 5.3 and 0.5.2 are judgements and are marked as such.
