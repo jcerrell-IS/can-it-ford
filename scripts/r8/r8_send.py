@@ -39,6 +39,36 @@ LOG = os.path.join(STATE, "r8_send_log.md")
 TMUX_SESSION = "canford8"
 
 
+def pane_cmd(name):
+    """Foreground command of one pane right now, or None if the pane is gone.
+
+    Deliberately a fresh tmux call rather than a cached value from the earlier
+    `list-panes` sweep: the whole point of the re-check below is that the pane
+    may have changed since that sweep.
+    """
+    out = subprocess.run(
+        ["tmux", "display-message", "-p", "-t", name, "#{pane_current_command}"],
+        capture_output=True, text=True)
+    if out.returncode != 0:
+        return None
+    return out.stdout.strip()
+
+
+def is_claude_pane(cmd):
+    """True when a pane's foreground command is plausibly a Claude Code session.
+
+    `node` and a bare semver are both REAL observed values here, not slack in the
+    predicate: Claude Code is a node application, and some launch paths report the
+    versioned binary name instead. A bare shell reports `zsh`, which is the case
+    this exists to catch.
+    """
+    if not cmd:
+        return False
+    return (("claude" in cmd)
+            or cmd == "node"
+            or bool(re.match(r"^[0-9]+\.[0-9]+\.[0-9]+$", cmd)))
+
+
 def load_plan():
     rows = {}
     with open(PLAN) as f:
@@ -115,7 +145,7 @@ def main():
     # was pasted into a SHELL and executed line by line ("zsh: command not found:
     # --seed"). Prompt text contains backticks and redirects, so this is arbitrary
     # code execution, not just noise. Checking the pane's foreground command closes it.
-    if not (("claude" in cmd) or cmd == "node" or re.match(r"^[0-9]+\.[0-9]+\.[0-9]+$", cmd)):
+    if not is_claude_pane(cmd):
         sys.exit(f"REFUSED: pane {name} is running '{cmd}', which is not a Claude "
                  "session. Sending would paste the prompt into a shell and execute it. "
                  "Relaunch the slot first.")
@@ -180,6 +210,26 @@ def main():
         subprocess.run(["tmux", "send-keys", "-t", name, "C-u"], check=False)
         time.sleep(0.1)
     time.sleep(0.2)
+
+    # RE-CHECK THE PANE IMMEDIATELY BEFORE THE PASTE. The preflight above ran
+    # before the idle check, the watcher subprocess and ~0.5 s of C-u keystrokes,
+    # so between it and this line the session can exit, crash, or be Ctrl-D'd and
+    # leave a shell holding the pane. That window is exactly the state the
+    # preflight exists to refuse, so checking once is checking the wrong moment.
+    # Re-reading costs one tmux call; getting it wrong pastes 4 KB of markdown
+    # containing backticks and redirects into a shell, which is arbitrary code
+    # execution. Added 2026-08-26.
+    cmd_now = pane_cmd(name)
+    if cmd_now is None:
+        os.unlink(tmpf)
+        sys.exit(f"REFUSED: pane {name} disappeared between preflight and paste. "
+                 "Nothing was sent.")
+    if not is_claude_pane(cmd_now):
+        os.unlink(tmpf)
+        sys.exit(f"REFUSED: pane {name} was running '{cmd}' at preflight but is "
+                 f"running '{cmd_now}' now. The session died in between. Nothing "
+                 "was sent. Relaunch the slot first.")
+
     subprocess.run(["tmux", "load-buffer", "-b", "r8send", tmpf], check=True)
     subprocess.run(["tmux", "paste-buffer", "-d", "-b", "r8send", "-t", name], check=True)
     time.sleep(1.2)
@@ -187,6 +237,27 @@ def main():
     # input and the turn never starts; Enter submits it. This cost four attempts.
     subprocess.run(["tmux", "send-keys", "-t", name, "Enter"], check=True)
     os.unlink(tmpf)
+
+    # VERIFY WHERE IT LANDED. Both checks above are predictions; this is the only
+    # measurement. If the text reached a shell anyway, the pane says so in its own
+    # words within a second or two, and the operator needs to know NOW rather than
+    # discovering it in a transcript later. This never blocks and never retries:
+    # the send has already happened, so its job is to report, loudly. Added
+    # 2026-08-26.
+    time.sleep(1.5)
+    after = subprocess.run(["tmux", "capture-pane", "-p", "-t", name],
+                           capture_output=True, text=True).stdout
+    shell_marks = ["command not found", "zsh: ", "bash: ", "No such file or directory",
+                   "parse error near", "unmatched \'"]
+    hits = [m for m in shell_marks if m in after]
+    if hits:
+        print(f"\n*** ALERT: pane {name} shows shell errors after the send: "
+              f"{hits}. The prompt may have been EXECUTED, not submitted. "
+              f"Inspect the pane now: tmux attach -t {TMUX_SESSION} \\; select-window "
+              f"-t {a.slot}", file=sys.stderr)
+        with open(LOG, "a") as f:
+            f.write(f"\n\n> ALERT {time.strftime('%Y-%m-%d %H:%M:%S')}: shell-error "
+                    f"markers {hits} in pane {name} after this send.\n")
 
     hashes[h] = a.slot
     per = sent.setdefault("per_slot", {})

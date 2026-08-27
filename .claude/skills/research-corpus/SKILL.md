@@ -1,21 +1,83 @@
 ---
 name: research-corpus
-description: Query the project's own external research index (332 records, 319 distinct works) before making any method claim, novelty claim, citation, or "nobody has done this" statement, and before proposing a numerical method or a validation target. The index is blind to most of the project's deep searches (28 on disk as of 2026-08-24, only 8 ingested as papers) and holds NO FULL TEXT, so a zero from it is not an absence. Trigger on "has anyone done X", "is this novel", "what do we know about", "which paper says", "what should we cite", "how should we validate", "what method should I use", any DOI about to enter paper/ or docs/, any claim that a technique is untried, and before writing Methods or Limitations text. Also trigger before proposing a settle length, a convergence claim, or a verdict threshold.
+description: Query the project's own external research index (382 records, re-measured live 2026-08-26) before making any method claim, novelty claim, citation, or "nobody has done this" statement, and before proposing a numerical method or a validation target. The index reaches 28 deep searches as metadata but only 11 as papers, and 171 of 382 records carry no abstract, so a zero from it is not an absence. Trigger on "has anyone done X", "is this novel", "what do we know about", "which paper says", "what should we cite", "how should we validate", "what method should I use", any DOI about to enter paper/ or docs/, any claim that a technique is untried, and before writing Methods or Limitations text. Also trigger before proposing a settle length, a convergence claim, or a verdict threshold.
 ---
 
 # The project's own research is indexed. Query it before asserting.
 
-> **THIS INDEX HOLDS NO FULL TEXT. NO SESSION HAS EVER READ A PAPER FROM IT,
-> AND NONE COULD HAVE.** Verified against the schema 2026-08-19: a record has
-> exactly 15 fields, `title`, `authors`, `journal`, `year`, `doi`, `link`,
-> `abstract`, `methods`, `reports`, `report_index`, `n_reports`,
-> `cit_per_year`, `has_abstract`, `cited_in_repo`, `cited_reader_facing`.
-> There is no full-text, body or PDF field. **222 of 332 records have an
-> abstract; 110 have nothing but bibliographic metadata.** The single largest
-> text blob anywhere in the file is **3,477 characters**, and the median
-> abstract is 1,305. So "the corpus says X" means an abstract says X, or a
-> deep search's summary says X. **Reading a paper means
-> `mcp__undermind__read_pdfs` against the workspace, and nothing else does.**
+## EVERY COUNT BELOW THIS BANNER WAS MEASURED AGAINST A 332-RECORD INDEX. THE INDEX IS NOW 382. RE-MEASURED LIVE 2026-08-26.
+
+Do not quote a bare figure from the body of this file. The `--build` fix on
+2026-08-25 moved the index from 332 records to 382, and every derived count
+moved with it. Measured live today against `data/research_corpus_index.json`,
+by direct read, not recalled:
+
+```
+records                    382
+distinct works             382     <- see the duplicate note below, this CHANGED
+with an abstract           211     (171 carry bibliographic metadata only)
+with fulltext_path          19     (all 19 resolve to a file that exists)
+cited_in_repo              164
+cited_reader_facing        131
+carry a DOI                315
+no DOI                      67     (63 of those carry a Semantic Scholar id,
+                                    4 are unidentifiable by either)
+deep searches on disk       28
+  reaching as metadata      28
+  reaching as papers        11     <- 17 are metadata-only, representing
+                                      1244 papers as an integer only
+```
+
+**THE "332 RECORDS / 319 DISTINCT WORKS" PAIR IS NOW REFUTED, NOT JUST STALE.**
+CLAUDE.md retired it as a count on 2026-08-25 and kept it as a rule, pending a
+re-run of the duplicate census. That census was re-run live on 2026-08-26 and
+**the duplicates are gone: 382 records are 382 distinct works.** Four
+independent predicates were applied to the same file and all four returned zero
+duplicate groups: byte-identical title, normalised title, Semantic Scholar id
+extracted from `link`, and DOI. The 2026-08-25 rebuild evidently deduplicated.
+
+**THE RULE THE PAIR EXISTED TO TEACH STILL BINDS AND IS NOT AFFECTED BY THIS.**
+A record count is not a paper count. It happens to equal one today; it did not
+on 2026-08-19 and it may not after the next build. Re-run the census rather
+than trusting this banner, exactly as this banner had to re-run it rather than
+trusting what came before. `--identifier-audit` lists the groups.
+
+**Regenerate all of the above rather than citing it:**
+
+```
+python3 analysis/research_index.py --stats
+python3 analysis/research_index.py --source-audit    # exits 1, confirmed live
+```
+
+`--source-audit` exits **1** with **17** problems as of 2026-08-26, all of them
+the paperless-search class. That is a working alarm, not a broken tool. Do not
+silence it.
+
+> **THE HEADLINE "THIS INDEX HOLDS NO FULL TEXT" IS REFUTED, 2026-08-26. THE
+> LESSON UNDER IT SURVIVES INTACT AND IS RESTATED BELOW.** This block read
+> "THIS INDEX HOLDS NO FULL TEXT. NO SESSION HAS EVER READ A PAPER FROM IT, AND
+> NONE COULD HAVE" and cited a 15-field schema verified 2026-08-19. Re-measured
+> live against `data/research_corpus_index.json`: a record now carries **18
+> fields**, the three additions being `fulltext_path`, `fulltext_chars` and
+> `has_fulltext`, and **19 of 382 records have a populated `fulltext_path`**.
+> All 19 resolve to a file that exists, under
+> `/Users/josie/can-it-ford-refs/_fulltext/`, which is OUTSIDE this repo, so the
+> text is reachable from this Mac and is not published with the public tree.
+> Those 19 hold 26,484 to 329,933 characters, median 94,891.
+>
+> **SO THE RULE IS NOW A SPLIT, NOT A BLANKET.** For those 19, a real read is
+> possible. For the other 363, "the corpus says X" still means an abstract says
+> X, or a deep search's summary says X, and nothing more. **211 of 382 records
+> have an abstract; 171 carry nothing but bibliographic metadata.** Excluding
+> full text, the largest blob in the file is **3,477 characters** and the median
+> abstract is **1,304**. Check `fulltext_path` before claiming either way. For
+> anything outside the 19, reading a paper still means
+> `mcp__undermind__read_pdfs` against the workspace, and nothing else does.
+>
+> **A METADATA QUERY IS NOT A READ.** That half was always the point and it
+> never depended on the full-text count being zero. An abstract that mentions a
+> method is not evidence of what the method achieved, and a `--query` hit is not
+> a source you have read.
 >
 > **An absence found by a search that cannot match is not an absence.**
 > Every false zero in this file is one instance of it: a query that never
@@ -74,19 +136,35 @@ description: Query the project's own external research index (332 records, 319 d
 > proves it, and **exits 1** when a completed search reaches the corpus by no
 > route. Wire that into preflight and quote its output, not this paragraph.
 
-This project's index holds **332 records** across eight Undermind deep-research
-reports, 37 Claude artifacts, five Perplexity reports and two Elicit extracts.
+This project's index holds **382 records**, re-measured live 2026-08-26. The
+source description that used to sit here, "eight Undermind deep-research
+reports, 37 Claude artifacts, five Perplexity reports and two Elicit extracts",
+described the 332-record build and NO LONGER DESCRIBES THE SOURCES. The builder
+now also reads `data/deep_searches/`, which is tracked, and reaches 28 searches
+as metadata and 11 as papers. Run `--source-audit` for the current source list
+rather than trusting this sentence.
 The failure mode this skill exists to stop is **asserting something the corpus
 already answers**, in either direction: claiming novelty that prior art
 contradicts, or proposing a method the reports already evaluated.
 
-**332 RECORDS IS NOT 332 DISTINCT PAPERS.** Measured 2026-08-19 by
-`--identifier-audit`: 11 Semantic Scholar ids appear under 24 different record
-keys, with byte-identical titles in all 11 groups, so the index holds **319
-distinct works**. The duplicates are DOI-less papers that the merge could not
-dedup, keyed positionally as `slug#rank`, so the same paper appearing in three
-reports became three records. Say "332 records / 319 distinct works". The 76,
-43, 4 and 3 rungs below are DOI-keyed and unaffected.
+**A RECORD COUNT IS NOT A PAPER COUNT. THE 2026-08-19 INSTANCE OF THIS IS NOW
+FIXED IN THE DATA; THE RULE IS NOT RETIRED.** As measured 2026-08-19 by
+`--identifier-audit`, 11 Semantic Scholar ids appeared under 24 different record
+keys with byte-identical titles, so the 332-record index held **319 distinct
+works**. The duplicates were DOI-less papers the merge could not dedup, keyed
+positionally as `slug#rank`, so one paper appearing in three reports became
+three records.
+
+**THAT IS NO LONGER TRUE OF THE CURRENT INDEX.** Re-measured live 2026-08-26
+across four independent predicates (byte-identical title, normalised title,
+Semantic Scholar id, DOI), the 382-record index returns **zero duplicate groups
+on all four**, so 382 records are 382 distinct works. The 2026-08-25 rebuild
+deduplicated them.
+
+**Do not carry either pair forward as a standing fact.** This number has now
+been right, then wrong, then right again across seven days. Run
+`--identifier-audit` before quoting any works-figure. The DOI-keyed rungs below
+were unaffected by the original defect in either direction.
 
 ## READ THIS FIRST: the index holds 8 of the project's 28 deep searches
 
@@ -243,13 +321,22 @@ tracked tree only, **`.claude/worktrees/` excluded**, bibliography read at
 `overleaf/main:can_it_ford_references_IEEE.bib` and paper source at
 `overleaf/main:conference_101719_1.tex`.
 
-| n | predicate | how it is measured |
-|---|---|---|
-| **332** | records in the corpus, **319 distinct works** | keys in the index; 11 papers are keyed twice or three times, see the note at the top |
-| **76** | DOI-shaped string **anywhere in the tracked tree** | `cited_in_repo` |
-| **43** | DOI-shaped string in a **reader-facing directory** | `cited_reader_facing`, meaning `paper/` `docs/` `deliverables/` `citations/` |
-| **4** | hold an entry in the **shipped bibliography** | census against the 15 entries on `overleaf/main` |
-| **3** | are `\cite`d, so they **print in the reference list** | census against the 14 distinct cite keys |
+THE LADDER AS MEASURED 2026-08-19 AGAINST THE 332-RECORD INDEX. The SHAPE is
+what matters and it is unchanged. The top two rungs have MOVED, remeasured live
+2026-08-26 and shown in the right-hand column:
+
+| n (2026-08-19) | predicate | how it is measured | live 2026-08-26 |
+|---|---|---|---|
+| **332** | records in the corpus, **319 distinct works** | keys in the index | **382** records, **382** works, dedup fixed |
+| **76** | DOI-shaped string **anywhere in the tracked tree** | `cited_in_repo` | **164** |
+| **43** | DOI-shaped string in a **reader-facing directory** | `cited_reader_facing`, meaning `paper/` `docs/` `deliverables/` `citations/` | **131** |
+| **4** | hold an entry in the **shipped bibliography** | census against the 15 entries on `overleaf/main` | not re-run, still 4 |
+| **3** | are `\cite`d, so they **print in the reference list** | census against the 14 distinct cite keys | not re-run, still 3 |
+
+**THE BOTTOM TWO RUNGS WERE NOT RE-MEASURED TODAY** and rest on the 2026-08-19
+census against `overleaf/main`. Treat 4 and 3 as of that date, not as current.
+The gap between 131 reaching a reader-facing directory and 3 printing in the
+reference list is the finding, and it got wider, not narrower.
 
 **"REACH" IS NOT "CITED", AND THIS FILE USED TO SAY IT WAS.** Corrected
 2026-08-19.
@@ -291,8 +378,12 @@ rung as if it were another.** An earlier index build that failed to exclude
 `.claude/worktrees/` reported 269 of 332 as cited, because another session's
 `r5_citation_xref.tsv` carries 489 DOIs.
 
-**60 of the 332 carry no DOI at all**, so they are excluded from the 76 and the 43
-by construction. The denominator for any DOI-join statement is **272, not 332**.
+**Records with no DOI are excluded from the reach rungs by construction.** As of
+2026-08-19 that was 60 of 332, denominator 272. Re-measured live 2026-08-26:
+**67 of 382 carry no DOI**, so the denominator for any DOI-join statement is
+now **315, not 382**. The ratio barely moved (18.1 percent then, 17.5 percent
+now); the absolute numbers did. Use the live pair, and state the denominator
+whenever you state a DOI-join result.
 
 ## The tool
 
@@ -374,10 +465,16 @@ count is wrong on two of the three. It ends with an INDEX SELF-CHECK. It refuses
 to run at all unless all eight source reports load, because a partial read would
 silently report works from the unread reports as never ingested.
 
-Status flags in output, and read these as REACH, not as citation: `IN-PAPER` means
-its DOI string appears in a reader-facing directory, `repo-only` means the string
-appears somewhere in the tree but nowhere a reviewer looks, and `UNCITED` means
-the string appears **in no tracked file**. None of the three tells you whether the
+Status flags in output, and read these as REACH, not as citation: `READER-DIR`
+means its DOI string appears in a reader-facing directory, `repo-only` means the
+string appears somewhere in the tree but nowhere a reviewer looks, and `UNCITED`
+means the string appears **in no tracked file**. `READER-DIR` was called
+`IN-PAPER` until 2026-08-26; the rename is the whole point, because the old name
+asserted the citation claim this paragraph then had to walk back, and it was
+quoted as evidence at least twice before anyone noticed. Measured the day it was
+renamed: 131 of 382 records satisfy the predicate, the live paper on `overleaf/main`
+`\cite`s 14 works in total, and `--bib-audit` finds just 3 of the 382 actually
+cited (5 if both UNCERTAIN rows resolve to present). None of the three tells you whether the
 paper is in the bibliography or is `\cite`d. For that, run `--bib-audit`. In
 particular `UNCITED` is automatic for the 60 records with no DOI, because the
 match is gated on having a DOI at all, so for those it is a statement about the
@@ -415,9 +512,11 @@ being real until this branch merges.** That is why a third session hit it on
 DOI route; on the others nothing warns you. Search the `authors` field directly,
 or check a DOI, before concluding absence.
 
-**2. `--query` is a LITERAL SUBSTRING match, and for a third of the corpus it is
-title-only.** It does not stem and does not survive a paraphrase. **110 of the
-332 records have no abstract**, so for those a topic query can only match words
+**2. `--query` is a LITERAL SUBSTRING match, and for nearly half the corpus it is
+title-only.** It does not stem and does not survive a paraphrase. **171 of the
+382 records have no abstract**, re-measured live 2026-08-26 (it was 110 of 332
+on 2026-08-19, so this got WORSE in both absolute and relative terms, 33.1
+percent then, 44.8 percent now). For those a topic query can only match words
 appearing in the title. `--query` now prints that ratio to stderr on every run,
 so a zero arrives with its own caveat attached. A search for "vehicle fording
 feasibility" returns 0 and that is nearly meaningless.
@@ -458,11 +557,11 @@ checked eight deep-search names against `documents` on 2026-08-19, got nothing,
 and reported "eight of eight absent". Three of the eight were ingested. Use
 `--coverage`, which reads the right container.
 
-**5. Joining on `doi` when 60 of the 332 records carry none.** Measured
-2026-08-19 by `--identifier-audit`: 272 records are keyed by DOI, **57 have no
-DOI but do carry a stable Semantic Scholar id, already sitting in the `link`
-field**, and only **3** are genuinely unidentifiable (those 3 are one parse
-defect, below). "No DOI" is not "unidentifiable", and any check that joins on
+**5. Joining on `doi` when a sixth of the records carry none.** Measured
+2026-08-19 by `--identifier-audit`: 272 keyed by DOI, 57 with a Semantic Scholar
+id instead, 3 unidentifiable. Re-measured live 2026-08-26: **315 records are
+keyed by DOI, 63 have no DOI but do carry a stable Semantic Scholar id already
+sitting in the `link` field, and only 4 are genuinely unidentifiable**. "No DOI" is not "unidentifiable", and any check that joins on
 `doi` alone silently drops a sixth of the corpus.
 
 This is not theoretical and it hides exactly the papers the project worries
@@ -696,16 +795,18 @@ branch", never "no physics regression test".
 
 ## Known limits of the index itself
 
-- **60 of 332 records carry no DOI** and cannot be diffed against the
-  bibliography BY THE DOI ROUTE. Absence from an uncited list is not proof of
-  absence. Do not read this as 60 unidentifiable papers: **57 of the 60 carry a
-  Semantic Scholar id in the `link` field** and only 3 are unidentifiable (the
-  parse defect below). The identifier is present; nothing joins on it. That is
+- **67 of 382 records carry no DOI** (live 2026-08-26; was 60 of 332 on
+  2026-08-19) and cannot be diffed against the bibliography BY THE DOI ROUTE.
+  Absence from an uncited list is not proof of absence. Do not read this as 67
+  unidentifiable papers: **63 of the 67 carry a Semantic Scholar id in the
+  `link` field** and only 4 are unidentifiable (the parse defect below). The identifier is present; nothing joins on it. That is
   the same shape as the finding that DOIs were sitting in the `note` field of
   the bibliography while the census joined on `doi`.
-- **222 of 332 have an abstract.** Each report details only its top 50, so 110
-  papers are title-and-metadata only. Do not describe a metadata-only paper as
-  read.
+- **211 of 382 have an abstract** (live 2026-08-26; was 222 of 332). Each report
+  details only its top 50, so **171** papers are title-and-metadata only. Note
+  the direction: the corpus grew by 50 records and the abstract count FELL by
+  11, so the metadata-only share rose from 33.1 to 44.8 percent. Do not describe
+  a metadata-only paper as read.
 - Method tags come from regex over title and abstract, so a metadata-only paper is
   under-tagged. Widen with `--query` before concluding the corpus is silent.
 - The index excludes `.claude/worktrees/` when computing cited status, per the
@@ -722,10 +823,15 @@ branch", never "no physics regression test".
   INDEX SELF-CHECK that detects this class. **The data has NOT been repaired**,
   because that needs a `--build` which would move the 332, the 60 and the 76/43
   rungs; whoever owns the index build owns the fix.
-- **11 papers are in the index more than once**, under 24 keys, with identical
-  titles. They are DOI-less, so the DOI-based merge could not see them and the
-  positional `slug#rank` key made one paper look like several. 332 records,
-  **319 distinct works**. `--identifier-audit` lists the groups.
+- **RESOLVED IN THE DATA 2026-08-26, KEPT HERE AS THE FAILURE SHAPE.** On
+  2026-08-19, 11 papers were in the index more than once under 24 keys with
+  identical titles: DOI-less, so the DOI-based merge could not see them, and the
+  positional `slug#rank` key made one paper look like several. That gave 332
+  records / 319 distinct works. Re-measured live 2026-08-26 across four
+  predicates (byte-identical title, normalised title, Semantic Scholar id, DOI),
+  **the current 382-record index returns zero duplicate groups on all four**.
+  The defect is fixed; the shape recurs whenever a merge keys positionally, so
+  run `--identifier-audit` after any `--build` rather than assuming.
 - **The builder cannot discover a source.** `REPORTS` is a hardcoded list of
   eight local paths with no glob, scan or API call, so `--build` cannot reach a
   deep search that is not already in that literal, and cannot reach the
