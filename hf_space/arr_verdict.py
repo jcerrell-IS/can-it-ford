@@ -83,6 +83,19 @@ def _row(passed, text):
 
 
 def evaluate(depth_m, velocity_ms, class_label):
+    """Evaluate flood-crossing verdicts for a STATIONARY vehicle at a given depth and velocity.
+
+    Args:
+        depth_m (float): Flood depth in metres.
+        velocity_ms (float): Depth-averaged flow velocity in metres per second.
+        class_label (str): AR&R vehicle class label, one of the keys of CLASS_BY_LABEL.
+
+    Returns:
+        str: A markdown report carrying the L0 depth-threshold verdict and the L1 AR&R
+        joint-rule verdict. The AR&R figures are the source report's own draft interim
+        criteria for stationary vehicles, not an endorsed safety standard. This is
+        research demo output and not a safety determination.
+    """
     vehicle_class = CLASS_BY_LABEL[class_label]
     lim = AR_R[vehicle_class]
     hazard = round(depth_m * velocity_ms, 6)

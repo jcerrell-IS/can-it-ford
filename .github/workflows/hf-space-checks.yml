@@ -1,0 +1,80 @@
+name: hf-space-checks
+
+on:
+  push:
+    paths:
+      - 'hf_space/**'
+      - '.github/workflows/hf-space-checks.yml'
+  pull_request:
+    paths:
+      - 'hf_space/**'
+  workflow_dispatch:
+
+jobs:
+  space:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: register_integrity
+        run: python3 .claude/checks/register_integrity.py
+
+      - name: params_check
+        run: python3 .claude/checks/params_check.py
+
+      - name: Install the Space's own pinned requirements
+        run: pip install -r hf_space/requirements.txt
+
+      - name: The Space imports and builds
+        working-directory: hf_space
+        run: |
+          python3 - <<'PY'
+          import sys
+          sys.path.insert(0, ".")
+          import app
+          demo = app.build()
+          tabs = [c.label for c in demo.blocks.values() if type(c).__name__ == "Tab"]
+          print("tabs:", tabs)
+          assert len(tabs) >= 9, f"expected at least 9 tabs, got {len(tabs)}"
+          for required in ("Precedent", "My contribution", "Validated hull",
+                           "Reconstruction", "Limitations"):
+              assert required in tabs, f"missing tab: {required}"
+          eps = list(demo.get_api_info().get("named_endpoints", {}).keys())
+          print("public api endpoints:", eps)
+          assert eps == ["/arr_verdict"], f"unexpected public endpoints: {eps}"
+          PY
+
+      - name: The load-surface count on the page matches the manifest
+        run: |
+          python3 - <<'PY'
+          import json, csv, re, pathlib
+          root = pathlib.Path("hf_space")
+          man = json.loads((root / "data" / "load_surface_manifest.json").read_text())
+          rows = sum(1 for _ in csv.reader((root / "data" / "load_surface.csv").open())) - 1
+          readme = (root / "README.md").read_text()
+          m = re.search(r"live, (\d+) records", readme)
+          assert m, "no 'live, N records' line found in the Space README"
+          stated = int(m.group(1))
+          print(f"manifest={man['records']}  csv_rows={rows}  readme={stated}")
+          assert man["records"] == rows == stated, "records count disagrees across manifest, csv and README"
+          PY
+
+      - name: No licence clause on the public Space
+        run: |
+          python3 - <<'PY'
+          import pathlib, re, sys
+          bad = re.compile(r"licen[cs]e (question|is unresolved|unresolved)|used with permission|unresolved licen[cs]e", re.I)
+          hits = []
+          for p in pathlib.Path("hf_space").rglob("*"):
+              if p.suffix in (".py", ".md") and p.is_file():
+                  for i, line in enumerate(p.read_text(errors="replace").splitlines(), 1):
+                      if bad.search(line):
+                          hits.append(f"{p}:{i}: {line.strip()}")
+          if hits:
+              print("\n".join(hits)); sys.exit(1)
+          print("clean")
+          PY

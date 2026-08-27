@@ -7,23 +7,31 @@ sdk: gradio
 sdk_version: 6.24.0
 app_file: app.py
 pinned: false
+header: mini
 license: bsd-3-clause
-short_description: Vehicle flood-stability verdicts, where they flip, and why
+short_description: Can a car cross a flooded road? MPM verdicts and the spread
+thumbnail: https://huggingface.co/spaces/josiecerrell/can-it-ford/resolve/main/assets/thumbnail.png
 tags:
   - flood
   - vehicle-stability
   - material-point-method
   - computational-fluid-dynamics
   - civil-engineering
+  - gaussian-splatting
 ---
 
 # Can It Ford?
 
 **Vehicle stability in floodwater: the spread, and where the verdict flips.**
 
-Given a flooded roadway, this project asks whether it is safe for a specific vehicle to
-attempt a crossing. It answers through stationary-vehicle stability, which is a
-**necessary** condition, not a sufficient one.
+> This is not a safety tool. The stability criteria used here are the source report's
+> own draft interim figures for stationary vehicles, not an endorsed safety standard.
+> Nothing on this site should be used to decide whether to drive into floodwater.
+> Turn around, don't drown.
+
+## What this project evaluates, stated exactly
+
+> This work evaluates whether a specific vehicle would remain stable if subjected to floodwater of a given depth and velocity, which is the condition a vehicle enters the moment a crossing attempt fails. The published stability criteria used for validation (Shand et al. 2011; Smith, Modra and Felder 2019) were derived exclusively from stationary vehicles restrained in flow, and no depth-velocity curve in that literature was derived for a vehicle driving under its own power. The verdict reported here is therefore a necessary condition for safe crossing rather than a sufficient one.
 
 The published literature reports thresholds and single points. This Space shows two
 things that a threshold hides:
@@ -32,13 +40,19 @@ things that a threshold hides:
 2. **where a verdict flips** as a deciding threshold is moved, so a reader can see which
    results depend on a choice rather than on a measurement.
 
-## The three panels
+## The tabs
 
-| panel | what it shows | data state |
+| tab | what it shows | data state |
 |---|---|---|
+| AR&R verdict calculator | the stationary-vehicle joint rule over depth, velocity and the D x V product | live, arithmetic |
 | Where the verdict flips | peak surge drift for each gated run against a movable distance threshold | live, 17 runs |
 | Load surface, `v_car` x `v_water` | vehicle speed and flow speed as **separate** axes, where the field usually collapses them into one relative speed | live, 368 records, 20 cells at five seeds |
 | Repeat spread | two independent draws of the same configuration | live, 3 configurations |
+| Validated hull (warpmpm) | the canonical Yaris hull all 17 gated runs actually loaded | live, interactive 3D |
+| Reconstruction (Gaussian splat) | the drainA scene, the input end of the pipeline | live, 350k-Gaussian preview |
+| Precedent & Novelty | what is prior work, what is not mine, and what is | live |
+| My contribution | three items, each with the caveat that makes it survive a check | live |
+| Limitations | stated as strongly as the results | live |
 
 ### The load surface panel shows three spreads, because they are not the same size
 
@@ -61,15 +75,44 @@ The gated runs use **warpmpm**, a material point method solver, via
 `renders/yaris_render_s1/sim_standing.py`.
 
 **They are not Genesis.** Genesis was an earlier box-proxy path that never loaded the
-vehicle hull. An earlier version of this page described the physics level as "Genesis
-MPM"; that was wrong and is corrected here.
+vehicle hull. An earlier version of this page labelled the physics level with the
+Genesis engine name; that was wrong and is corrected here.
 
-## Corrections to the previous version of this page
+## Geometry on this page
 
-Three claims on the earlier version of this Space were checked against canonical sources
-on 2026-08-19 and did not survive. They are recorded rather than quietly removed.
+**Vehicle mesh:** NCAC/CCSA 2010 Toyota Yaris coarse FE deck, DOI
+[10.13021/G8JS5D](https://doi.org/10.13021/G8JS5D). The PLY served here is a derived
+surface reconstruction rather than the FE deck itself, and its sha256 is
+`b379fa4472c6806515d2145fb721de0f2ab9e0b8b042c01b93f4be34e9949a95`.
 
-1. **"Genesis MPM"** as the physics engine. The gated runs are warpmpm. Corrected above.
+**Reconstruction:** drainA scene, trained with `gsplat` to 30,000 iterations, merged
+from three rank shards (399,491 + 374,677 + 373,526) to **1,147,694 Gaussians**.
+Validation at step 29,999: PSNR 22.74, SSIM 0.825, LPIPS 0.311.
+
+The viewer loads a **decimated preview, not the full reconstruction.** The merged
+artifact is 258.3 MB, which no browser should be asked to fetch and parse. The preview
+keeps **350,000 Gaussians**, chosen by opacity times footprint after discarding the
+233,999 whose opacity falls below 0.1, and carries spherical-harmonic degree 0 only.
+Its bounding box is identical to the full artifact's on all six bounds, so it is a
+thinned scene rather than a cropped one. It is built by
+`analysis/build_splat_preview.py`; the full file remains the artifact of record.
+
+## Attribution
+
+The **physically viable world model** and **query-conditioned world model** framing
+that situates this project belongs to Thorpe et al.,
+[arXiv:2605.30542](https://arxiv.org/abs/2605.30542), co-authored by Hassan Iqbal and
+Cheng-Hsi Hsiao at GeoElements. The closest prior full pipeline is Low, Hsiao, Li,
+Thorpe, Topcu and Kumar, [arXiv:2607.00673](https://arxiv.org/abs/2607.00673). The
+contribution claimed here is the applied pipeline and the external validation step,
+not the framework. See the Precedent & Novelty tab.
+
+## Corrections to previous versions of this page
+
+Recorded rather than quietly removed.
+
+1. The physics engine was labelled with the **Genesis** engine name. The gated runs
+   are warpmpm. Corrected above.
 2. **"a corrected density of rho = 115.7, giving the roughly 1390 kg target mass used
    across the project."** Neither figure is canonical. The canonical vehicle mass is
    **1100 kg**, and the canonical hull effective density is **310.494 kg/m^3**. The 115.7
@@ -78,13 +121,8 @@ on 2026-08-19 and did not survive. They are recorded rather than quietly removed
 3. **"L2 is being rebuilt and has not produced a published verdict."** Stale. Seventeen
    gated runs exist with classified outcomes. What remains true, and is stated in the app,
    is that none of the gates is a physics validation.
-
-## What is deliberately not here
-
-**No rendered imagery, textures, HDRIs or meshes.** Asset provenance for this project's
-render inputs is an open, unresolved licence question. Derived numbers are shown; image
-assets are not, until that is settled. The dataset build script enforces this in code
-rather than by convention.
+4. **"live, 348 records"** on the load-surface panel. The manifest's own `records` key is
+   **368**, and `load_surface.csv` carries 368 data rows. Corrected in the table above.
 
 ## Limitations, stated as strongly as the results
 
@@ -99,12 +137,24 @@ rather than by convention.
   so they cannot fail for a reason external to the code.
 - **`sustain_frames = 3` has no published source.** No vehicle-stability criterion
   reviewed for this project uses a persistence count at all, yet it gates every verdict.
-- **The load-surface vehicle is prescribed, not free.** When that panel is populated, the
-  body is held on a path and the reaction load is measured. It cannot be swept away.
+- **The load-surface vehicle is prescribed, not free.** The body is held on a path and
+  the reaction load is measured. It cannot be swept away.
   **No FORD or NO-FORD verdict is derivable from it.**
 - **The scenario is a stationary vehicle in flow**, which matches the validated stability
   criterion. The word "ford" implies motion; it is the title that mismatches, not the
   setup.
+- **1609 kg and 2337 kg are AR&R class figures, not vehicle measurements.** The full
+  statement, including why the Silverado is not the Dodge Ram 1500 and why 2270P is not
+  2270.0 kg, is on the Limitations tab.
+- **Rogue:** companion geometry, not validated. Runs exist through 2026-08-14 and a
+  2026-08-26 roll result was withdrawn. Unlike the Yaris and the Silverado, the Rogue has
+  no NCAC or CCSA finite-element provenance.
+
+## Programmatic access
+
+The AR&R calculator is exposed as a single MCP tool endpoint, `/arr_verdict`. Every other
+event on this page is `api_visibility="private"`. **The endpoint has no built-in rate
+limiting** and this Space is public.
 
 ## Running locally
 
@@ -127,4 +177,4 @@ python3 hf_space/surface.py
 
 ## About
 
-Josie Cerrell, NSF REU, GeoElements Lab, UT Austin. PI Krishna Kumar.
+**Josie Cerrell**, NSF SCIPE REU 2026, GeoElements Lab, UT Austin. PI Krishna Kumar.

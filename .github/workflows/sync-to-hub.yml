@@ -30,6 +30,7 @@ jobs:
           # and mp4s that this job never reads.
           sparse-checkout: hf_space
           sparse-checkout-cone-mode: false
+          lfs: true
 
       - uses: actions/setup-python@v5
         with:
