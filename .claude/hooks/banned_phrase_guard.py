@@ -10,7 +10,11 @@ try:
         capture_output=True, text=True).stdout
 except Exception:
     sys.exit(0)
-scanned = cmd + "\n" + diff
+added = "\n".join(
+    ln[1:] for ln in diff.splitlines()
+    if ln.startswith("+") and not ln.startswith("+++")
+)
+scanned = cmd + "\n" + added
 banned = [
     (r"Genesis\s+MPM", "the 17 runs use warpmpm, not Genesis MPM"),
     (r"gravity\s+is\s+unknown", "gravity is settled: g=[0,0,-9.81]"),
