@@ -1,5 +1,5 @@
 {
-  "disableClaudeAiConnectors": true,
+  "disableClaudeAiConnectors": false,
   "fileCheckpointingEnabled": true,
   "statusLine": {
     "type": "command",

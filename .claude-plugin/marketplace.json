@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-marketplace.json",
+  "name": "canford-local",
+  "description": "Can It Ford project assets: provenance skills, adversarial agents, and the two project MCP servers.",
+  "owner": {
+    "name": "Josephine Cerrell"
+  },
+  "plugins": [
+    {
+      "name": "can-it-ford",
+      "source": "./.claude/plugin/canford",
+      "description": "MPM flood-vehicle provenance tooling: 15 skills, 2 adversarial agents, corpus + TACC MCP servers.",
+      "category": "research",
+      "keywords": [
+        "mpm",
+        "provenance",
+        "tacc",
+        "warpmpm",
+        "flood"
+      ],
+      "license": "MIT"
+    }
+  ]
+}

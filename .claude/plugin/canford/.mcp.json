@@ -1,0 +1,16 @@
+{
+  "mcpServers": {
+    "corpus": {
+      "type": "stdio",
+      "command": "/usr/bin/python3",
+      "args": ["${CLAUDE_PLUGIN_ROOT}/tooling/corpus_mcp.py"],
+      "env": { "CANFORD_REPO": "${CLAUDE_PROJECT_DIR}" }
+    },
+    "tacc": {
+      "type": "stdio",
+      "command": "/usr/bin/python3",
+      "args": ["${CLAUDE_PLUGIN_ROOT}/tooling/tacc_mcp.py"],
+      "env": { "CANFORD_REPO": "${CLAUDE_PROJECT_DIR}" }
+    }
+  }
+}

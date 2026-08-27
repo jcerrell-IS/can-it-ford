@@ -1,0 +1,10 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "can-it-ford",
+  "displayName": "Can It Ford",
+  "description": "Provenance-first tooling for the Can It Ford MPM flood-vehicle project.",
+  "version": "0.1.0",
+  "author": { "name": "Josephine Cerrell" },
+  "license": "MIT",
+  "keywords": ["mpm", "provenance", "tacc", "warpmpm", "flood", "research"]
+}
