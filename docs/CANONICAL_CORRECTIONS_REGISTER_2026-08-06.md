@@ -3608,12 +3608,17 @@ fourth band-length point is added.
 
 **The collision, both live.** `[READ]`
 
-1. **`C2_veh_zmin_rise`**, a per-run output column in the 17-run gate scenario, the rise of
-   the vehicle's minimum z. It is written by `renders/yaris_render_s1/sim_standing.py` and
-   read by the gate and inventory scripts.
-2. **`C2`, the J.1 coupling-validation variant**, the equilibrium-draft test against
-   Archimedes. Defined in `docs/COUPLING_VALIDATION_J1_2026-08-07.md`, where its recorded
-   status is NO RESULT AT ANY RESOLUTION, 0 of 4 invocations.
+- **`C2_veh_zmin_rise`**, a per-run output column in the 17-run gate scenario, the rise of
+  the vehicle's minimum z. It is written by `renders/yaris_render_s1/sim_standing.py` and
+  read by the gate and inventory scripts.
+- **`C2`, the J.1 coupling-validation variant**, the equilibrium-draft test against
+  Archimedes. Defined in `docs/COUPLING_VALIDATION_J1_2026-08-07.md`, where its recorded
+  status is NO RESULT AT ANY RESOLUTION, 0 of 4 invocations.
+
+  (Listed as bullets, not as a numbered list. This addendum sits below the SECTION J
+  heading, so `register_integrity.py` reads a leading `1.` / `2.` here as item ids J1 and
+  J2 and reports a duplicate-item BLOCK against the real J1 and J2. Caught in CI run
+  33142856361 and fixed the same session.)
 
 They share nothing but the token. One is a measured column, the other is a named experiment
 that produced no number.
