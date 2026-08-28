@@ -190,3 +190,135 @@ worktrees are holding unlanded work.**
    this session. `scripts/tacc.sh` cannot reach them without an interactive login, so the
    remote half of the global scope is **not done** and needs Josie at a terminal. The item
    worth doing first there is the **14 unpushed `realism_track` commits on Vista `$WORK`**.
+
+---
+
+# PASS 2, 2026-08-21 01:51 to 02:20 BST
+
+Appended, not overwriting. The section above is the 01:43 pass by a different session and is
+left byte-for-byte intact. This pass ran the reprioritised dispatch: Desktop and Documents
+human-curated material first, the JSON bundle fan-out second.
+
+**A merge this session did not start opened and then CLOSED mid-pass, at 02:11:44, committed by a concurrent session as `0000608`. Read section 2. It resolved cleanly and this pass's register entries were renumbered G17/G17a to G25/G25a by that session, content intact. D22 kept its number.**
+
+## 0. Step-0 gates, all run live before any work
+
+| gate | result |
+|---|---|
+| cwd is `/Users/josie/can-it-ford` | PASS, confirmed by `git rev-parse --show-toplevel` |
+| Vista SSH | **FAIL**, `Permission denied (keyboard-interactive)`, rc 255. Not retried. |
+| LS6 SSH | **PASS**, returned `login2.ls6.tacc.utexas.edu` |
+| WebFetch | **PASS, the corpus section 0 premise is now stale.** Returned real extracted body text, not a bare status. `~/.zshrc:769-770` are pinned to `claude-opus-4-8`, no DeepSeek route. |
+| W&B pre-query | PASS, 4 dataset artifacts + 2 run tables + run history confirmed live. Nothing created, nothing duplicated. |
+
+TodoWrite is **not available** in this session and was not faked. The task list is this document.
+
+## 1. IMPLEMENTED
+
+- **User item 1, the never-cited catalogue.** Commit **`6e957e3`**. Read all 138 uncited rows of
+  `00_CATALOGUED_BUT_NEVER_CITED_2026-08-14.tsv` (205 data rows total, the "138-row table" is
+  the uncited subset). Exactly 9 are uncited AND multi-report. All 9 DOIs resolved live by
+  `curl` at Crossref then DataCite; **9 of 9 titles match**, so no fabricated citation is in
+  that set. One sentence written per paper on whether it bears on the free-rigid coupling
+  deficit: **six yes, three no.** Routed into register **G17**, not a new file.
+- **Two defects found in the catalogue itself.** Register **G17a**, same commit.
+  `10.4271/2014-01-0936` is no longer uncited (live in the `.bib` as `khapane2014wading`,
+  added one day after the catalogue was built) but its key is in no `.tex`, so it is in the
+  bibliography and absent from the compiled paper. The catalogued PCFD DOI
+  `10.1504/pcfd.2019.10018820` is a forthcoming-article form redirecting to the article of
+  record `10.1504/pcfd.2019.097597`.
+- **User item 2, the D10 cross-slope set.** Commit **`82b8d30`**, register **D22**. All 8
+  checksums verified OK before any content was read. It is real Track 1b solver output. **It
+  applies no cross-slope:** `g_vec[1]` is exactly 0.0 in all 8 runs and the whole tilt sits in
+  `g_vec[0]` at exactly `9.81*S/sqrt(1+S^2)`, along the streamwise axis. It is a longitudinal
+  grade study. Camber remains unmodelled. The longitudinal result itself is clean and
+  monotonic against a measured replicate noise floor. Amends G9.
+- **Step 2, in-place replacement of stale live wording.** Verified live first, then replaced,
+  then re-grepped to zero. **Uncommitted, see section 2 for why.**
+  - `CLAUDE.md:461`, `bbox_m at vehicle_params.py:131` to `:140`. The literal moved; the
+    3.3 and 2.7 percent figures were re-derived live and are unchanged.
+  - Citation misattribution for `10.1029/2023WR036739`, corrected in 3 live files, 7
+    occurrences. Crossref gives **Yan Xiong** first and Gang Wang fourth; the skill file
+    `03_citations_and_physgaussian_bridge.md` had the author list reordered with Wang first.
+    The repo `.bib` was already correct.
+  - Re-grep confirms **0 remaining hits in live-authority files** for both wordings.
+- **Step 3, skill copies checked at both levels.** `mpm-technical-deep-reference` exists at
+  repo level only; `~/.claude/skills/` has no copy and no file there mentions that DOI.
+- **Step 1 fan-out.** 9 subagents, one per source layer, all 9 returned verdict tables.
+  Coverage: all blocks triaged in 6 layers, top ~166 to ~250 by descending score in the 3
+  largest. This is the first prose reading of any of it.
+
+## 2. HELD FOR JOSIE
+
+- **RESOLVED WHILE THIS PASS WAS WRITING, BY A CONCURRENT SESSION, NOT BY ME. Updated 02:14.**
+  The merge below closed as `0000608` at 02:11:44, parents `82b8d30` and `476bdfd`. The merged
+  register is **206 items, 0 blocking defects**: all five `dup-item` collisions were
+  hand-reconciled, mine by renumbering **G17/G17a to G25/G25a** with content intact, and D22
+  kept its number. **Nothing below was done by me and the hold was never mine to lift.** It is
+  retained as the record of the state this pass actually found and reported.
+- **THE MERGE AS THIS PASS FOUND IT, AND IT IS THE ONE THE CORPUS ALREADY HELD.** `.git/MERGE_HEAD` was written
+  at 02:06 and `MERGE_MSG` reads `Merge branch 'claude/r8-register' into claude/add-ci-checks`.
+  **This session did not start it** and has not resolved, aborted, or committed it. Both of
+  this session's commits are clean single-parent commits made before it existed
+  (`6e957e3` 02:02:10, `82b8d30` 02:06:00). The corpus holds this merge as a branch decision.
+  - **My committed register is clean: 137 items, 0 blocking defects.**
+  - **The mid-merge working file has 5 blocking `dup-item` defects: G17, G17a, J1, J2, J3.**
+  - **2 of those 5 are mine and I caused them.** `claude/r8-register` already defines a G17 and
+    a G17a on a different subject (P-2 commensurability). I picked G17 because it was free on
+    the integration branch, which is exactly the failure the corpus warned about when it said
+    editing the register on the integration branch would widen the pending conflict.
+    **D22 does not collide.** J1/J2/J3 are pre-existing to the merge and not mine.
+  - Renumbering my G17/G17a to a pair free in both lineages is the fix the register's own
+    convention prescribes. I did not apply it, because any commit while `MERGE_HEAD` existed
+    would have silently concluded a held merge. **The concurrent session applied exactly that
+    fix at 02:11:44, choosing G25/G25a.**
+- **Step-2 edits still uncommitted.** `CLAUDE.md`, 2 skill files and
+  `reference_docs/can-it-ford-rebuild-research.md` are on disk and verified but NOT committed.
+  `reference_docs/...` was absorbed by the merge commit; the other three remain working-tree
+  modifications awaiting your word, since a concurrent session is active in this repo and
+  committing under it risks racing that session.
+- **Push.** Not attempted. `PUSH_OK=1` not set and not assumed.
+- **Vista and LS6.** The 14 Vista-only `realism_track` commits were NOT inventoried. Vista is
+  unreachable non-interactively. LS6 is reachable but does not hold those commits.
+- **Two dated historical records left deliberately stale**, carrying `vehicle_params.py:131`:
+  `docs/ULTRA_REVIEW_2026-08-11.md`, `docs/R10_FULL_CONTEXT_AUDIT_2026-08-19.md`, plus 2 r8
+  dispatch prompts. Editing a dated audit would falsify what was true on its date.
+- **19 worktrees untouched**, 29 and 38 occurrences of the two old wordings respectively.
+- **Newly found, unintegrated, needs your call:** `CANITFORD_D10_BCVAL_2026-08-14/` and
+  `CANITFORD_D10_BCBAND_2026-08-14/` under `~/Documents/`, siblings of the CROSSSLOPE batch,
+  absent from the repo; and `00_THRESHOLD_PROVENANCE_2026-08-18.md`, which post-dates the
+  register and corrects a constant's attribution.
+
+## 3. CONTRADICTED
+
+- **"The register's A6 is stale and still says 9.80665 is at two sites."** Reported by **five**
+  independent layer agents. **Refuted by reading the primary source.** A6 already carries an
+  explicit correction directly beneath that table: the table is marked
+  "THE 2026-08-07 STATE AND IS NOW HISTORICAL", corrected 2026-08-18, naming exactly one
+  surviving assignment. All five agents read the table and stopped above the correction.
+  **Five agents agreeing here is one source read five times, not five sources.** No edit made.
+- **"Register D6f cites `np.gradient` at `failure_modes.py:127`, live is `:129`."** Refuted:
+  D6f at register line 244 already reads `:129`, matching live.
+- **The corpus's own section 0**, that WebFetch/WebSearch are broken. No longer true.
+- **The user's "9 JSON files"** in the D10 directory. There are **8** JSON files plus
+  `SHA256SUMS.txt`, 9 files total. Checksums cover all 8.
+- **The catalogue's `cited_anywhere_in_repo = NO` for `10.4271/2014-01-0936`.** Stale, not
+  wrong: it was routed into the `.bib` on 2026-08-15, one day after the catalogue was built.
+
+## 4. COULD NOT VERIFY
+
+- **Gap: the 768 base64 PDF images.** Still undecoded. Not attempted this pass.
+- **Gap: the 73 reference PDFs.** Still zero extracted text. Not attempted this pass.
+- **Gap: 7,075 unread blocks.** Materially reduced but NOT closed. The 3 largest layers were
+  covered top-down by score, not exhaustively; the tail of
+  `session_transcripts_87_worktrees` (3,412 distinct) is the largest pool still unread.
+- **Gap: Vista and LS6 unswept.** Unchanged, and now measured again: MFA blocks Vista.
+- **Gap: `~/Desktop` and `~/Documents` unswept.** Materially reduced by a name-based sweep,
+  NOT closed. The sweep matched directory names only, so any Can It Ford file under a
+  non-matching name is invisible to it.
+- **Gap: the provenance warning, 3,289 of 3,291 findings single-origin.** Unchanged as a
+  property of the bundle. This pass added two genuinely two-origin results: the 9-site
+  `floor_friction` walk (a layer agent reproduced it independently from disk) and the D10
+  slope finding (metadata and time series agree).
+- **The contamination check** was already closed by the corpus and needed no work; recorded
+  here so all seven Section-5 gaps appear exactly once.

@@ -1,3 +1,19 @@
+> **ABSORBED 2026-08-25 into `docs/MERGED_RESEARCH_READER_CORPUS_FINAL.md`, the single
+> corpus master.** This file is kept verbatim below and nothing in it was deleted or
+> rewritten. Cite it only with its date, never as current: several of its counts (the
+> 332-record index, the 27-metadata / 8-papers split, the open-item list) were measured
+> before the 2026-08-25 ingest fix and are stale. The master carries the live figures and
+> the current status of every open item.
+>
+> **NEAR-IDENTICAL NAME, DIFFERENT DOCUMENT.** `CORPUS_FINAL_MERGE_REPORT_2026-08-25.md`
+> is a SEPARATE session report, not a revision of this one: the two share 9 unique non-blank
+> lines out of 278 and 167, and 6 of those 9 are this banner (measured 2026-08-26). THIS file
+> is the corpus-lineage, bounded-sweep and proposed-bibliography session. THAT one is the
+> landing-plan, flag-collision and terminal-merge session. Read both, or read neither and
+> read the master instead.
+
+---
+
 # Corpus final merge, session report
 
 **2026-08-23, on `claude/add-ci-checks`, base `badd5a2`.** One section per dispatch phase, each

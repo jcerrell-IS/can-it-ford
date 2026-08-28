@@ -1,3 +1,12 @@
+> **ABSORBED 2026-08-25 into `docs/MERGED_RESEARCH_READER_CORPUS_FINAL.md`, the single
+> corpus master.** This file is kept verbatim below and nothing in it was deleted or
+> rewritten. Cite it only with its date, never as current: several of its counts (the
+> 332-record index, the 27-metadata / 8-papers split, the open-item list) were measured
+> before the 2026-08-25 ingest fix and are stale. The master carries the live figures and
+> the current status of every open item.
+
+---
+
 # What the corpus actually says, read from full text, 2026-08-19
 
 Six papers read in FULL TEXT tonight via the Undermind connector's `read_pdfs`, not via
