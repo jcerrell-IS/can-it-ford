@@ -1,0 +1,72 @@
+#!/bin/sh
+# can-it-ford W&B command wrapper.
+#
+#   scripts/wb <any wandb subcommand>      e.g.  scripts/wb login --verify
+#   scripts/wb --doctor                    end-to-end health check
+#   scripts/wb --py <script.py> [args...]  run a python script with W&B env set
+#
+# Exists because `wandb` is NOT on PATH: it lives in ~/.venvs/canitford-mpm/bin.
+# Every W&B call in this repo should go through here so that auth, entity and
+# project resolve identically from a shell, a hook, a worktree or an agent.
+
+set -e
+HERE=$(dirname "$0")
+. "$HERE/wandb_env.sh"
+
+case "$1" in
+  --doctor)
+    fail=0
+    printf 'wandb binary   : %s' "$WANDB_BIN"
+    [ -x "$WANDB_BIN" ] && echo "  OK" || { echo "  MISSING"; fail=1; }
+
+    printf 'wandb version  : '
+    "$WANDB_BIN" --version 2>&1 | sed 's/^wandb, version //' || fail=1
+
+    printf 'api key        : %s chars, ends ...%s\n' "${#WANDB_API_KEY}" "$(printf '%s' "$WANDB_API_KEY" | tail -c 4)"
+
+    printf 'authenticates  : '
+    who=$(/usr/bin/curl -s --max-time 20 -u "api:$WANDB_API_KEY" \
+            -H 'Content-Type: application/json' \
+            -d '{"query":"{viewer{username}}"}' \
+            https://api.wandb.ai/graphql 2>/dev/null \
+          | sed -E 's/.*"username":"([^"]*)".*/\1/')
+    case "$who" in
+      ''|*'{'*|*error*) echo "NO  (key rejected or offline). Fix: $WANDB_BIN login --relogin"; fail=1 ;;
+      *) echo "YES as $who" ;;
+    esac
+
+    printf 'entity/project : %s/%s\n' "$WANDB_ENTITY" "$WANDB_PROJECT"
+
+    printf 'run count      : '
+    n=$(/usr/bin/curl -s --max-time 20 -u "api:$WANDB_API_KEY" \
+          -H 'Content-Type: application/json' \
+          -d "{\"query\":\"{project(name:\\\"$WANDB_PROJECT\\\",entityName:\\\"$WANDB_ENTITY\\\"){runCount}}\"}" \
+          https://api.wandb.ai/graphql 2>/dev/null \
+        | sed -E 's/.*"runCount":([0-9]+).*/\1/')
+    case "$n" in
+      ''|*'{'*) echo "unreadable"; fail=1 ;;
+      *) echo "$n" ;;
+    esac
+
+    printf 'uvx (for MCP)  : '
+    if command -v uvx >/dev/null 2>&1; then echo "$(command -v uvx)  OK"; else echo "MISSING, MCP server cannot start"; fail=1; fi
+
+    printf 'helper import  : '
+    if "$WANDB_PY" -c "import sys;sys.path.insert(0,'$HERE/../analysis');import wb" 2>/dev/null; then echo "analysis/wb.py OK"; else echo "analysis/wb.py NOT IMPORTABLE"; fail=1; fi
+
+    echo
+    [ "$fail" -eq 0 ] && echo "doctor: all checks passed" || echo "doctor: $fail check(s) FAILED"
+    exit "$fail"
+    ;;
+  --py)
+    shift
+    exec "$WANDB_PY" "$@"
+    ;;
+  '')
+    echo "usage: scripts/wb <wandb subcommand> | --doctor | --py <script.py>" >&2
+    exit 2
+    ;;
+  *)
+    exec "$WANDB_BIN" "$@"
+    ;;
+esac
