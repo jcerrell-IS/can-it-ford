@@ -53,6 +53,16 @@ INDEX = os.path.join(REPO, "data", "research_corpus_index.json")
 DL = os.path.expanduser("~/Downloads")
 REU = os.path.expanduser("~/Claude/Projects/SCIPE UT Austin baby/REU_Knowledge")
 
+# Extracted full text lives OUTSIDE the repo on purpose: this repository is
+# PUBLIC, and committing the text of copyrighted papers into it would be a
+# licensing problem regardless of research intent. The index stores a PATH and
+# a character count, never the text. See
+# docs/MERGED_RESEARCH_READER_CORPUS_FINAL.md section 6.12(f).
+FULLTEXT_DIRS = [
+    os.path.expanduser("~/can-it-ford-refs/_fulltext"),
+    os.path.expanduser("~/can-it-ford-refs/_fulltext_desktop"),
+]
+
 REPORTS = [
     ("wall-penetration", f"{DL}/Quantitative_MPM_Wall_Penetration.md"),
     ("trustworthy-ai", f"{REU}/Trustworthy_AI_Assisted_Scientific_Simulation.md"),
@@ -490,6 +500,92 @@ def _merge_into(merged: dict, recs: dict) -> None:
             merged[key] = dict(r)
 
 
+def _doi_from_filename(fn: str) -> str:
+    """`Bau23_10.1002_nme.7217.txt` -> `10.1002/nme.7217`.
+
+    The extraction encoded the DOI slash as an underscore, so restore only the
+    FIRST underscore after the registrant prefix. Replacing all of them would
+    corrupt any DOI whose suffix legitimately contains one.
+    """
+    m = re.search(r"(10\.\d{4,9})_(.+?)(?:\.txt)?$", fn)
+    if not m:
+        return ""
+    return norm_doi_field(f"{m.group(1)}/{m.group(2)}")
+
+
+_DOI_IN_TEXT = re.compile(r"\b10\.\d{4,9}/[^\s\"<>)\],;]+")
+
+
+def load_fulltext_map() -> dict:
+    """Map DOI and title-token-set to an extracted full-text file.
+
+    Three routes, tried in order of trustworthiness: the DOI encoded in the
+    filename, the first DOI appearing in the text body, then a title match
+    made by the caller. A file that matches nothing simply never enters the
+    index, which is what keeps unrelated documents out without a blocklist.
+    """
+    by_doi, by_tokens = {}, []
+    for d in FULLTEXT_DIRS:
+        if not os.path.isdir(d):
+            continue
+        for fn in sorted(os.listdir(d)):
+            if not fn.endswith(".txt"):
+                continue
+            path = os.path.join(d, fn)
+            try:
+                chars = os.path.getsize(path)
+                head = open(path, encoding="utf-8", errors="ignore").read(20000)
+            except OSError:
+                continue
+            rec = {"fulltext_path": path, "fulltext_chars": chars}
+            doi = _doi_from_filename(fn)
+            if not doi:
+                m = _DOI_IN_TEXT.search(head)
+                if m:
+                    doi = norm_doi_field(m.group(0).rstrip(".,;"))
+            if doi and doi not in by_doi:
+                by_doi[doi] = rec
+            by_tokens.append((_toks(fn.replace("_", " ")), rec))
+    return {"by_doi": by_doi, "by_tokens": by_tokens}
+
+
+def report_fulltext() -> int:
+    """Which corpus records now have extracted full text, and by what route.
+
+    Prints the ladder rather than a single number, because "has an abstract"
+    and "has full text" are different predicates and collapsing them is the
+    same error the reach-versus-cited ladder records elsewhere in this file.
+    """
+    r = load()
+    ps = list(r["papers"].values())
+    n = len(ps)
+    ft = [p for p in ps if p.get("has_fulltext")]
+    ab = [p for p in ps if p.get("has_abstract")]
+    both = [p for p in ft if p.get("has_abstract")]
+    print(f"FULL-TEXT COVERAGE   index built {r['built']}")
+    for d in r.get("fulltext_dirs", []):
+        here = os.path.isdir(d)
+        cnt = len([f for f in os.listdir(d) if f.endswith('.txt')]) if here else 0
+        print(f"  source dir  {d}  {'%d files' % cnt if here else 'MISSING'}")
+    print()
+    print(f"  {n:>4}  papers in the corpus")
+    print(f"  {len(ab):>4}  have an abstract")
+    print(f"  {len(ft):>4}  have EXTRACTED FULL TEXT on local disk")
+    print(f"  {len(both):>4}  have both")
+    print(f"  {sum(p.get('fulltext_chars', 0) for p in ft):>4}  characters of full text linked")
+    print()
+    print("  Full text is NOT in this repo and must not be committed: the repo")
+    print("  is public and the papers are copyrighted. The index stores paths.")
+    if ft:
+        print("\n  linked records:")
+        for p in sorted(ft, key=lambda x: -x.get("fulltext_chars", 0))[:20]:
+            t = (p.get("title") or "")[:58]
+            print(f"    {p.get('fulltext_chars', 0):>8}  {p.get('doi') or '(no doi)':<34}  {t}")
+        if len(ft) > 20:
+            print(f"    ... and {len(ft) - 20} more")
+    return 0
+
+
 def build(export_dir: str = "", built: str = "") -> dict:
     merged: dict[str, dict] = {}
     per_report = {}
@@ -528,11 +624,26 @@ def build(export_dir: str = "", built: str = "") -> dict:
 
     docs = index_documents()
     cited, reader = repo_cited_dois()
+    ftmap = load_fulltext_map()
     for r in merged.values():
         r["methods"] = tags_for(f"{r['title']} {r['abstract']}")
         r["n_reports"] = len(r["reports"])
         r["cited_in_repo"] = bool(r["doi"]) and r["doi"] in cited
         r["cited_reader_facing"] = bool(r["doi"]) and r["doi"] in reader
+        ft = ftmap["by_doi"].get(r["doi"]) if r["doi"] else None
+        if ft is None and r.get("title"):
+            want = _toks(r["title"])
+            if len(want) >= 4:
+                best, score = None, 0.0
+                for toks, cand in ftmap["by_tokens"]:
+                    j = _jaccard(want, toks)
+                    if j > score:
+                        best, score = cand, j
+                if score >= 0.55:
+                    ft = best
+        r["fulltext_path"] = ft["fulltext_path"] if ft else ""
+        r["fulltext_chars"] = ft["fulltext_chars"] if ft else 0
+        r["has_fulltext"] = bool(ft)
 
     searches = load_deep_searches()
     return {
@@ -559,6 +670,8 @@ def build(export_dir: str = "", built: str = "") -> dict:
         "n_cited_reader_facing": sum(1 for r in merged.values()
                                      if r["cited_reader_facing"]),
         "n_no_doi_undiffable": sum(1 for r in merged.values() if not r["doi"]),
+        "n_with_fulltext": sum(1 for r in merged.values() if r["has_fulltext"]),
+        "fulltext_dirs": FULLTEXT_DIRS,
         "method_tags": sorted(METHOD_TAGS),
         "papers": merged,
         "documents": docs,
@@ -580,12 +693,44 @@ def load() -> dict:
 
 
 def show(r: dict, verbose: bool = False) -> None:
+    # READER-DIR IS A REACH PREDICATE, NOT A CITATION ONE. It means the DOI
+    # string occurs somewhere under paper/, docs/, deliverables/ or citations/,
+    # per repo_cited_dois() above. It does NOT mean the work is \cite'd, and it
+    # does not mean the work prints in the reference list.
+    #
+    # This label read "IN-PAPER" until 2026-08-26, which overstated by more than
+    # 40x and hard-coded the reach-versus-cited conflation the rest of this file
+    # is careful about. Measured that day against the live paper on
+    # overleaf/main (tip 4605799, whose 14 references reproduce exactly in the
+    # 2026-08-23 build): 131 of 382 records satisfy cited_reader_facing, while
+    # --bib-audit finds 3 corpus records actually cited, 5 if both
+    # UNCERTAIN_RELATED_WORK rows resolve to present. Reproduce the old failure
+    # with
+    #   --query "volumetric locking"
+    # which flagged 10.1002/nme.7347 while that DOI appears nowhere in paper/.
+    # The bad label had already been quoted as evidence in project prose, see
+    # .claude/state/r8_send_log.md:848 and
+    # .claude/state/r8_digests/d14-corpusbib-002.md:55, so do not reintroduce
+    # it as a "shorter" label.
+    #
+    # THE REAL IN-PAPER PREDICATE ALREADY EXISTS. Run --bib-audit, which reads
+    # BIB_REF_DEFAULT and TEX_REF_DEFAULT off overleaf/main and states the route
+    # by which every entry matched or failed. Do not build a second one here.
+    # In particular do not "fix" it into a DOI join: only 1 of the 15 shipped
+    # entries uses a `doi =` key, but 8 more carry the DOI inside
+    # `note = {doi: ...}`, so joining on the `doi` field alone sees one
+    # identifier and reads 14 cited works as identifier-less. The DOI route does
+    # work once note fields are parsed, and that is how --bib-audit matches four
+    # entries doi-exact. Note also that paper/can_it_ford_references_IEEE.bib is
+    # a DIFFERENT and larger file, 42 entries and 32 doi fields, most never
+    # cited, which is itself a route by which a DOI reaches a reader-facing
+    # directory without ever reaching a reference list.
     if r.get("cited_reader_facing"):
-        flag = "IN-PAPER"
+        flag = "READER-DIR"
     elif r["cited_in_repo"]:
-        flag = "repo-only"
+        flag = "repo-only "
     else:
-        flag = "UNCITED  "
+        flag = "UNCITED   "
     rep = "+".join(r["reports"])
     print(f"  [{flag}] {r['title'][:88]}")
     print(f"           {r['year']}  {r['doi'] or r['link'][:60] or '(no id)'}")
@@ -1729,6 +1874,9 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--build", action="store_true")
     ap.add_argument("--stats", action="store_true")
+    ap.add_argument("--fulltext", action="store_true",
+                    help="which corpus records have extracted full text on "
+                         "local disk, and how many characters")
     ap.add_argument("--method")
     ap.add_argument("--query")
     ap.add_argument("--doi")
@@ -1798,6 +1946,9 @@ def main() -> int:
                          "records the markdown route already produced for "
                          "SLUG. The reproduce-before-trust gate.")
     a = ap.parse_args()
+
+    if a.fulltext:
+        return report_fulltext()
 
     if a.coverage:
         return report_coverage()
