@@ -1,3 +1,8 @@
+---
+name: claude-code-prompt-install
+description: One-time installation prompt for the flood-mpm-debugging-reference skill via git. Run it on the single machine whose can-it-ford working copy has the least uncommitted drift, commit once, push, then git pull on the other two machines. Do not run it separately on all three, that recreates the per-machine sync problem CLAUDE.md and .gitignore already caused once.
+---
+
 # Claude Code prompt: install the flood-mpm-debugging-reference skill, once, via git
 
 Run this on whichever machine has your current `can-it-ford` working copy with the least uncommitted drift, Vista is the most likely candidate since Kumar reads that repo directly. This should NOT be run separately on all three machines, that recreates the exact per-machine sync problem this project already got burned by once with CLAUDE.md and `.gitignore`. One commit, one push, then a plain `git pull` on the other two machines.
