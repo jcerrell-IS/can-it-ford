@@ -5,6 +5,7 @@
 [![License: BSD-3-Clause](https://img.shields.io/badge/License-BSD--3--Clause-green.svg)](LICENSE)
 [![W&B](https://img.shields.io/badge/W%26B-experiment_tracking-yellow)](https://wandb.ai/jcerrell29-claremont-mckenna-college/can-it-ford)
 [![HuggingFace](https://img.shields.io/badge/HuggingFace-live_demo-blue)](https://huggingface.co/spaces/josiecerrell/can-it-ford)
+[![Project site](https://img.shields.io/badge/project_site-can--it--ford.vercel.app-black)](https://can-it-ford.vercel.app)
 
 *Josie Cerrell, NSF SCIPE REU 2026, GeoElements Lab, UT Austin (PI: Krishna Kumar)*
 
@@ -171,6 +172,7 @@ Note: PhysGaussian has no detected license in its GitHub metadata. Any PhysGauss
 
 ## External assets
 
+- **Project site:** [can-it-ford.vercel.app](https://can-it-ford.vercel.app), a plain-language explainer of the L0/L1/L2 ladder with the safety disclaimer, deployed from `web/` on Vercel. It is also set as this repository's homepage.
 - **W&B:** [jcerrell29-claremont-mckenna-college/can-it-ford](https://wandb.ai/jcerrell29-claremont-mckenna-college/can-it-ford)
 - **Gradio demo:** [josiecerrell/can-it-ford on HuggingFace Spaces](https://huggingface.co/spaces/josiecerrell/can-it-ford), live (verdict-flip explorer over the 17 gated runs, the `v_car` x `v_water` load surface, and repeat spread)
 - **Hailuo comparison:** `figures/hailuo/`, a visual-model-vs-physical-model comparison for the poster (Hailuo predicts FORD at d=0.30 m / v=1.5 m/s, pilot L2 predicts NO-FORD)

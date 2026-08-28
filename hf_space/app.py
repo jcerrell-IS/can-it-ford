@@ -594,7 +594,7 @@ def build() -> gr.Blocks:
             if SPLAT_PLY.exists():
                 gr.Model3D(
                     value=str(SPLAT_PLY),
-                    label="drainA, 30k iterations, 1,147,694 Gaussians",
+                    label="drainA preview, 350,000 of 1,147,694 Gaussians (30k iterations)",
                 )
                 gr.Markdown(SPLAT_NOTE)
             else:

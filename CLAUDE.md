@@ -66,20 +66,11 @@ restate them in chat prompts.
   hidden" is true only of the top-level copy, and register D4a records
   `_incoming/` as the canonical per-run tree, so check which copy you
   are reading.
-  RE-MEASURED 2026-08-20 AND THE 2 IS NOW STALE IN THE OTHER DIRECTION.
-  This clause read "`./.claude/worktrees/` holds 2 directories, not 27, so
-  the multiplies-every-hit-~20x figure is stale". Live today,
-  `git worktree list` returned **33 worktrees, 28 of them under
-  `.claude/worktrees/`**. So the exclusion is load-bearing again and the
-  ~20x inflation is real again. The lesson is the clause itself: this
-  number has now been wrong in both directions within eight days, so
-  RE-MEASURE IT rather than quoting any figure here, including 28.
-  RE-MEASURED 2026-08-25 AND 33/28 IS NOW STALE TOO, WHICH IS THE THIRD
-  DIRECTION CHANGE. Live: **11 worktrees, 6 of them under
-  `.claude/worktrees/`**. The exclusion still matters but the ~20x figure
-  does not describe it any more. Do not quote 33, 28, 11 or 6; run the
-  command. The clause has now been wrong three times in twelve days,
-  which is the point it is making about itself.
+  THIS COUNT HAS NOW BEEN WRONG IN THREE DIRECTIONS IN TWELVE DAYS, so DO
+  NOT QUOTE ANY FIGURE FOR IT, including one you just read here. Run
+  `git worktree list`. Excluding `./.claude/worktrees/` is load-bearing
+  whatever the count says. The three superseded measurements were moved to
+  `docs/CLAUDE_MD_MOVED_SECTIONS_2026-08-27.md` on 2026-08-27.
   And `./can-it-ford/` no longer exists, so excluding it is now a no-op,
   see the section below.
 - Any parameter assigned to a variable (rho, coup_friction, box
@@ -437,26 +428,10 @@ Two things follow, and the second is the one that matters:
 
 ---
 
-### The outage as recorded on 2026-08-19, kept verbatim
-
-Recorded here because it existed in five sessions' transcripts and **zero committed files**,
-and a transcript is not a deliverable. Nine independent origins confirm it.
-
-The `physics-skeptic` subagent, and any Agent call, dies with:
-
-    deepseek-ai/DeepSeek-V4-Flash:deepinfra
-
-**An explicit `model` override does NOT reach it.** Measured twice at 18:37 and 18:38: the
-`physics-skeptic` agent at default and a `general-purpose` agent with an explicit `opus`
-override produced the IDENTICAL error. The agent *launches* and then dies, which is why it
-reads as a transient failure and gets retried instead of recorded.
-
-**Consequence for every claim made on 2026-08-18 and 2026-08-19:** the operating protocol
-asks for the physics-skeptic before finalising any percentage, force, verdict count or
-distance. It was unavailable. Sessions d11, d12, d14, d15, d18 and d19 all correctly marked
-their claims UNREVIEWED rather than faking the review. **Those claims remain unreviewed.**
-Do not treat any of them as adversarially checked, and do not re-attempt the subagent
-expecting a different result until the model id is fixed.
+The verbatim 2026-08-19 record of that outage, nine origins and the exact error string, was
+MOVED to `docs/CLAUDE_MD_MOVED_SECTIONS_2026-08-27.md` on 2026-08-27, per the "WHERE A NEW
+FINDING GOES" rule above and the two prior moves. **It was not deleted.** The two numbered
+rules above are the whole of what still binds; read the moved file for the working.
 
 
 ## ENVIRONMENT TRUTH THE PROJECT ALREADY PAID FOR AND FILED WHERE NOTHING READS IT
