@@ -94,6 +94,10 @@
           {
             "type": "command",
             "command": "mkdir -p ~/.pane_signals && echo \"$(date -u +%s)\" > ~/.pane_signals/$(tmux display-message -p '#S_#I_#P' 2>/dev/null || echo unknown)_done 2>/dev/null || true"
+          },
+          {
+            "type": "command",
+            "command": "P=\"$CLAUDE_PROJECT_DIR/.claude/hooks/stop_signal_and_check.sh\"; if [ -x \"$P\" ]; then \"$P\"; fi"
           }
         ]
       }
