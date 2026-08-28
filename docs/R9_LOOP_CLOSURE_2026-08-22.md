@@ -1,5 +1,31 @@
 # R9 LOOP CLOSURE, 2026-08-22
 
+> **SUPERSEDED IN PART, 2026-08-25. Nothing below is rewritten or deleted; five claims are
+> corrected here so both readings stay visible. Full working, every claim re-derived from git
+> and from live APIs, is in `docs/R9_LOOP_CLOSURE_STATUS_2026-08-25.md`.**
+>
+> 1. **"no `r9-*` branch exists on the remote at all" is FALSE.** Live `git ls-remote --heads
+>    origin 'refs/heads/claude/r9-*'` returns **all thirteen**, each tip matching its local
+>    tip. The remote-tracking refs were written 2026-08-22 14:25 to 14:26, about twelve hours
+>    after this document was finished at 02:26. A push happened.
+> 2. **`claude/add-ci-checks` is itself on the public remote**, matching local. So Part 4's
+>    "produced almost nothing anyone outside this repository can currently read" is now wrong.
+>    The surviving narrower claim is true and unchanged: **zero R9 commits are on
+>    `origin/main`**, which is still `c7f0a16` of 2026-08-17.
+> 3. **Two branches are unmerged, not three.** `claude/r9-corpus-bib` (`de18180`) merged into
+>    `claude/add-ci-checks` at `a83a38b`, 2026-08-24 17:56:42, inside a commit titled for
+>    unrelated work. Still unmerged: `claude/r9-settle` and `claude/r9-platform`.
+> 4. **J7 is CLOSED.** The `sweep-v1` model repo README returns HTTP 200, not the 404 reported
+>    here, and carries a `superseded` tag. The repo was fixed 21 Aug, one day BEFORE this
+>    document listed it as open. J7 was tagged **[relay]** and the relay was already stale.
+> 5. **J8 is MOOT.** The index was rebuilt on 2026-08-25 and committed at `e1921cf`. It did
+>    NOT move to the 319 predicted here but to **382 papers**, because the same commit fixed
+>    the ingest aborting on `MANIFEST.json` and changed what a rebuild produces.
+>
+> **J1 through J6 and J9 through J11 remain open and are unaffected by this banner.** J3, the
+> poster, was independently re-derived from the committed blob on 2026-08-25 and every word of
+> it still holds.
+
 Closing the loop on the R9 sprint: thirteen parallel Claude Code sessions that ran on
 2026-08-19 and 2026-08-20, whose outputs nobody had confirmed were read, merged or acted on.
 
