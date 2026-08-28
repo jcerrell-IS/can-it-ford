@@ -146,9 +146,13 @@ Recorded rather than quietly removed.
 - **1609 kg and 2337 kg are AR&R class figures, not vehicle measurements.** The full
   statement, including why the Silverado is not the Dodge Ram 1500 and why 2270P is not
   2270.0 kg, is on the Limitations tab.
-- **Rogue:** companion geometry, not validated. Runs exist through 2026-08-14 and a
-  2026-08-26 roll result was withdrawn. Unlike the Yaris and the Silverado, the Rogue has
-  no NCAC or CCSA finite-element provenance.
+- **Rogue: companion geometry, stale-flagged, plotted nowhere on this page.** An earlier
+  version of this page said the Rogue "has no NCAC or CCSA finite-element provenance."
+  That was wrong and is withdrawn: register E6a records a CCSA model, VIN
+  5N1AT2MT6LC742896, v3 August 2024, 3,240,729 elements. What it lacks is a deck-header
+  mass, so its 1571.3 kg is web-sourced rather than deck-derived. Its runs are
+  non-canonical, and a 2026-08-25 roll result was withdrawn as a hull artifact on
+  2026-08-26 (roll 0.1 sigma once the hull is isolated at fixed `n_grid` 96).
 
 ## Programmatic access
 

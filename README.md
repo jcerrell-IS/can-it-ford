@@ -3,7 +3,6 @@
 **Autonomous vehicle flood traversability via reconstruct-to-decide world models**
 
 [![License: BSD-3-Clause](https://img.shields.io/badge/License-BSD--3--Clause-green.svg)](LICENSE)
-[![W&B](https://img.shields.io/badge/W%26B-experiment_tracking-yellow)](https://wandb.ai/jcerrell29-claremont-mckenna-college/can-it-ford)
 [![HuggingFace](https://img.shields.io/badge/HuggingFace-live_demo-blue)](https://huggingface.co/spaces/josiecerrell/can-it-ford)
 [![Project site](https://img.shields.io/badge/project_site-can--it--ford.vercel.app-black)](https://can-it-ford.vercel.app)
 

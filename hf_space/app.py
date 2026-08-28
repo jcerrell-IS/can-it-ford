@@ -314,9 +314,23 @@ All 17 gated runs share **one hull** regardless of the mass label: `hull_m3` is
 single-valued at 3.542739 m3 across all 17 rows. The class names denote only which
 AR&R limit set was applied.
 
-**Rogue:** companion geometry, not validated. Runs exist through 2026-08-14 and a
-2026-08-26 roll result was withdrawn. Unlike the Yaris and the Silverado, the Rogue
-has no NCAC or CCSA finite-element provenance.
+**Rogue: companion geometry, stale-flagged, and plotted nowhere on this page.**
+
+An earlier version of this page said the Rogue "has no NCAC or CCSA finite-element
+provenance." **That was wrong and is withdrawn.** Corrections register entry E6a records
+a CCSA finite-element model for it: VIN 5N1AT2MT6LC742896, 5-door SUV, v3 August 2024,
+3,240,729 elements.
+
+What the Rogue actually lacks is a **deck-header mass**. Register E6b, read from live
+code, records that unlike the Yaris and Silverado decks the Rogue LS-DYNA header carries
+no mass at all, so its 1571.3 kg figure is web-sourced rather than deck-derived. The
+CCSA-hosted copy is also licence-silent, where NHTSA-hosted copies carry a redistribution
+statement.
+
+Its runs are **non-canonical** and write nothing into the 17-run store. A 2026-08-25
+Rogue roll result was **withdrawn as a hull artifact** on 2026-08-26: isolated at fixed
+`n_grid` 96 with the hull as the only change, the roll is 0.1 sigma, which is nothing.
+See `docs/FE_VEHICLE_SIM_2026-08-26.md` section 7.
 """
 
 
@@ -433,17 +447,30 @@ That is a narrow claim and it is meant to be. The pipeline is not the novel part
 
 ### Method precedent this work builds on
 
-Every DOI below was resolved and title-checked against two independent registries
-before being published here. None carries a retraction, correction, or expression of
-concern.
+Every DOI below was resolved and title-checked against two independent registries,
+**scite** and **Crossref** (via Scholar Sidekick), re-verified **2026-08-27**. All five
+returned `matched` at high confidence, and all five returned no retraction, no
+correction and no expression of concern.
 
 | work | DOI | why it is here |
 |---|---|---|
 | Gao, Pradhana, Han et al. 2018, *Animating fluid sediment mixture in particle-laden flows* | [10.1145/3197517.3201309](https://doi.org/10.1145/3197517.3201309) | two-way fluid-solid momentum exchange resolved on MPM background grids |
 | Chen, Li, Zhou et al. 2024, *Solid-Fluid Interaction on Particle Flow Maps* | [10.1145/3687959](https://doi.org/10.1145/3687959) | accumulates coupling force along a trajectory, the alternative to this project's accumulator-free path |
-| Nakamura, Matsumura and Mizutani 2021, *Particle-to-surface frictional contact algorithm for MPM using weighted least squares* | [10.1016/j.compgeo.2021.104069](https://doi.org/10.1016/j.compgeo.2021.104069) | frictional particle-to-surface contact, the mechanism behind the floor and wall constraints here |
-| Martinez-Gomariz, Gomez, Russo and Djordjevic 2017, *A new experiments-based methodology to define the stability threshold for any vehicle exposed to flooding* | [10.1080/1573062X.2017.1301501](https://doi.org/10.1080/1573062X.2017.1301501) | twelve car models at three scales, the most comprehensive stationary-vehicle flume campaign |
+| Nakamura, Matsumura and Mizutani 2021, *Particle-to-surface frictional contact algorithm for material point method using weighted least squares* | [10.1016/j.compgeo.2021.104069](https://doi.org/10.1016/j.compgeo.2021.104069) | the particle-to-surface **alternative** to the grid-node friction this project actually uses, not a description of it. See the correction below. |
+| Martinez-Gomariz, Gomez, Russo and Djordjevic 2017, *A new experiments-based methodology to define the stability threshold for any vehicle exposed to flooding* | [10.1080/1573062X.2017.1301501](https://doi.org/10.1080/1573062X.2017.1301501) | twelve car models at three scales (1:14, 1:18, 1:24), which the authors describe as the most comprehensive such campaign to 2017 |
 | Shah, Mustaffa, Martinez-Gomariz and Yusof 2020, *Hydrodynamic effect on non-stationary vehicles at varying Froude numbers under subcritical flows on flat roadways* | [10.1111/jfr3.12657](https://doi.org/10.1111/jfr3.12657) | one of the few **non-stationary** vehicle studies, and therefore the closest thing in the literature to the gap this project's title names |
+
+**A correction, kept visible rather than quietly fixed.** An earlier version of this
+table described Nakamura et al. as "the mechanism behind the floor and wall constraints
+here." **It is not.** Read live from the solver on 2026-08-27:
+`renders/yaris_render_s1/sim_standing.py:210` adds the floor as a `slip` plane at
+friction 0.55 and `:214` adds four `slip` walls at friction 0.0, both routed through
+`add_surface_collider` in `mpm_solver_warp.py`. That kernel acts on **background grid
+nodes**: it projects out the normal velocity component, then scales the tangential
+magnitude by `max(0, |v_t| - mu*|v_n|)`. It is a grid-node Coulomb projection, it
+contains no weighted least squares, and it is not a particle-to-surface algorithm.
+Nakamura et al. is cited here as the published alternative, which is the same role the
+Chen row plays for the coupling force.
 
 ### Prior vehicle-fording work exists, and this is a floor rather than a total
 
@@ -603,6 +630,8 @@ def build() -> gr.Blocks:
         with gr.Tab("Verdict flips"):
             gr.Markdown(
                 "### Where the verdict flips\n\n"
+                "**Validation status: canonical Yaris.** Every bar is one of the 17 gated "
+                "warpmpm runs, all on the single canonical Yaris hull.\n\n"
                 "Drag the distance threshold. Bars turning **red** disagree with the "
                 "published label on the distance test."
             )
@@ -624,6 +653,10 @@ def build() -> gr.Blocks:
         with gr.Tab("Load surface"):
             gr.Markdown(
                 "### Load surface, `v_car` x `v_water`\n\n"
+                "**Validation status: canonical Yaris.** Every cell plotted on this tab is "
+                "the canonical Yaris hull. The shipped `load_surface.csv` also carries 10 "
+                "**companion Silverado** rows (families `fidC` and `fidF`, a fidelity "
+                "check) which are plotted nowhere on this page.\n\n"
                 "Most published work collapses vehicle speed and flow speed into a "
                 "single relative speed. This matrix keeps them as separate axes, and "
                 "every cell is a mean over five seeds rather than a single point."
@@ -643,6 +676,11 @@ def build() -> gr.Blocks:
             gr.Markdown(value=surface_notes())
 
         with gr.Tab("Repeat spread"):
+            gr.Markdown(
+                "**Validation status: canonical Yaris.** All three configurations are the "
+                "canonical Yaris hull. The `m1100` / `m1609` / `m2337` labels are AR&R "
+                "mass classes applied to that one hull, not three different vehicles."
+            )
             gr.Plot(value=_repeat_figure())
             gr.Markdown(REPEAT_NOTE)
 

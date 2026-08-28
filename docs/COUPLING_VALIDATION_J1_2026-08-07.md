@@ -1,5 +1,13 @@
 # Register J.1: coupling-force validation, method and results
 
+> **NAMING, added 2026-08-27.** Every bare `C2` in this document means the **equilibrium-draft
+> validation variant**, whose forward name is **`J1-C2-draft`**. It is NOT
+> `C2_veh_zmin_rise`, the per-run vehicle-minimum-z column in the 17-run gate scenario, which
+> is a different thing that shares the token. The body of this document is dated and is left
+> as written; use `J1-C2-draft` in new text. See the 2026-08-27 addendum in
+> `docs/CANONICAL_CORRECTIONS_REGISTER_2026-08-06.md`.
+
+
 Date: 2026-08-07. Owner: the coupling-validation session.
 Status, corrected 2026-08-07 12:0x by reading the Vista outputs rather than the
 submission: **C0 control PASSES. C1 RAN AND FAILED at both resolutions, with the

@@ -3602,3 +3602,42 @@ prior dispatch.
 either directory, if `A_drain.c1` is found to read `"PASS"` rather than the overfilled
 marker, or if `volume_loss_pct` is found to vary monotonically with `relax_frac` once a
 fourth band-length point is added.
+
+
+## ADDENDUM 2026-08-27: "C2" NAMES TWO DIFFERENT THINGS. DISAMBIGUATED, NOT RENAMED.
+
+**The collision, both live.** `[READ]`
+
+1. **`C2_veh_zmin_rise`**, a per-run output column in the 17-run gate scenario, the rise of
+   the vehicle's minimum z. It is written by `renders/yaris_render_s1/sim_standing.py` and
+   read by the gate and inventory scripts.
+2. **`C2`, the J.1 coupling-validation variant**, the equilibrium-draft test against
+   Archimedes. Defined in `docs/COUPLING_VALIDATION_J1_2026-08-07.md`, where its recorded
+   status is NO RESULT AT ANY RESOLUTION, 0 of 4 invocations.
+
+They share nothing but the token. One is a measured column, the other is a named experiment
+that produced no number.
+
+**NEITHER IS BEING MECHANICALLY RENAMED, and the reason is measured rather than stylistic.**
+`[READ]` A rename of `C2_veh_zmin_rise` was scoped first and rejected: `/usr/bin/grep -rl`
+finds it in over 180 files, among them committed per-run `summary.json` files, eight
+`data/three_class_*_2026-08-14.csv` stores, `data/all_runs_inventory.csv`, and binary
+`wandb/run-*/*.wandb` files. It is a **data column in published artifacts**, so renaming it
+would invalidate every stored result rather than clarify anything.
+
+The J.1 `C2` is the smaller side: **40 occurrences across 4 documents**
+(`COUPLING_VALIDATION_J1_2026-08-07.md` 15, `CONTEXT_CENSUS_2026-08-07.md` 13,
+`ULTRA_REVIEW_2026-08-11.md` 9, `CORPUS_MERGE_FINAL_2026-08-22.md` 3), plus the Vista-only
+`scripts/c2only.sbatch` and its `c2_*.json` naming. But all four are **dated historical
+documents**, and this project's own rule is that a dated document is cited with its date and
+not rewritten. A find-and-replace inside them would edit the record.
+
+**THE RULE, and it binds going forward.** The J.1 variant's forward name is **`J1-C2-draft`**.
+Write that, not a bare `C2`, in any new text. A bare `C2` in a document dated 2026-08-07 to
+2026-08-22 means the J.1 variant and is left as written. A bare `C2` anywhere near a run
+table, a gate, an inventory or a summary means the column `C2_veh_zmin_rise`. **When the
+sense is not fixed by that context, write the full token.**
+
+**FALSIFIER:** this entry dies if `C2_veh_zmin_rise` is found in fewer than 100 files, or if
+any of the four named documents is found to use `C2` for the gate column rather than the
+equilibrium-draft variant.
