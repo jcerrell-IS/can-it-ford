@@ -1,0 +1,13 @@
+diff --git a/README.md b/README.md
+index 7501b97..d18862e 100644
+--- a/README.md
++++ b/README.md
+@@ -163,7 +163,7 @@ See [`CITATION.cff`](CITATION.cff) for citing this repository.
+ 
+ ## License
+ 
+-Code is released under the **[BSD 3-Clause License](LICENSE)**, the license [recommended by DesignSafe-CI for research software](https://designsafe-ci.org/user-guide/curating/policies/) published in the Data Depot Repository. The associated dataset is released under ODC-By-1.0 (see `CITATION.cff` and the pending DesignSafe DOI, PRJ-6388). A dataset DOI is not yet minted; PRJ-6388 is staged and awaiting co-PI sign-off before publication.
++Code is released under the **[BSD 3-Clause License](LICENSE)**, the license [recommended by DesignSafe-CI for research software](https://designsafe-ci.org/user-guide/curating/policies/) published in the Data Depot Repository. The associated dataset is released under CC-BY-4.0 (see `CITATION.cff` and the pending DesignSafe DOI, PRJ-6388). A dataset DOI is not yet minted; PRJ-6388 is staged and awaiting co-PI sign-off before publication.
+ 
+ Note: PhysGaussian has no detected license in its GitHub metadata. Any PhysGaussian-derived bridge code must have its licensing resolved before being committed here or submitted to DesignSafe.
+ 
