@@ -1,0 +1,229 @@
+# canitford-base: host-parity kit for can-it-ford sandboxes.
+#
+# SCHEMA: kit-spec v2. Every field below was confirmed accepted by
+# `sbx kit validate` on sbx v0.39.0 (def8cb0), 2026-08-23. Two notes,
+# both learned by running the validator rather than by reading docs:
+#
+#   1. The v1 section names (network.allowedDomains, commands.install,
+#      agentContext) still parse, but v1 emits
+#      WARN: deprecated field "network.allowedDomains".
+#      v2 renames them to permissions.network.allow, setup.install and
+#      agentInstructions.content. agentInstructions is an OBJECT with a
+#      content: key, not a plain string.
+#   2. There is NO mcpServers: key in a kit spec, in either version.
+#      Checked live: the string "mcpServers:" does not occur in the
+#      binary. MCP servers are wired by commands that call the agent's
+#      own CLI, which is what the embedded kit reference prescribes
+#      under "Registering the MCP gateway". setup.install does that.
+#
+# Re-run `sbx kit validate .` after any edit. It is the only authority
+# on which keys this build accepts, and the docs.docker.com/ai/sandboxes/
+# kits/ page cited in the original brief returns HTTP 404.
+
+schemaVersion: "2"
+kind: mixin
+name: canitford-base
+version: "0.1.0"
+displayName: Can It Ford (host parity)
+description: "Global CLAUDE.md, hf and wandb MCP servers, and gh wiring for can-it-ford sandboxes"
+
+# ---------------------------------------------------------------------------
+# Environment
+# ---------------------------------------------------------------------------
+# Non-secret values only. Read live from scripts/wandb_env.sh on 2026-08-23,
+# so they match what the host actually uses.
+#
+# HF_TOKEN and WANDB_API_KEY are deliberately ABSENT. They are set by
+# `sbx secret set-custom --env`, which puts a PLACEHOLDER in the container and
+# swaps in the real value at the proxy on the way out. Declaring them here too
+# would collide with that, and would put a real key inside the sandbox, which
+# is the thing this kit exists to avoid.
+environment:
+  variables:
+    CANITFORD_SANDBOX: "1"
+    WANDB_ENTITY: "jcerrell29-claremont-mckenna-college"
+    WANDB_PROJECT: "can-it-ford"
+    WANDB_SILENT: "true"
+
+# ---------------------------------------------------------------------------
+# Network
+# ---------------------------------------------------------------------------
+# Deliberately minimal. Every entry is required by something this kit actually
+# does. Nothing is here speculatively.
+#
+# The six Anthropic domains (api.anthropic.com, claude.com, platform.claude.com,
+# downloads.claude.ai, bridge.claudeusercontent.com, mcp-proxy.anthropic.com)
+# are NOT repeated here. They come from the base claude agent kit. Confirmed
+# live 2026-08-23 with `sbx policy inspect` against the canitford-test sandbox.
+#
+# NOT allowed, on purpose, each with the consequence it buys:
+#   codeload.github.com, objects.githubusercontent.com
+#       -> `git clone` over https and `gh release download` fail.
+#          Plain `gh api` and `gh auth status` do not need them.
+#   pypi.org, files.pythonhosted.org
+#       -> no pip or uvx install inside the sandbox. See the wandb note in
+#          setup.install for why that is load-bearing here, not a gap.
+#   cdn-lfs.huggingface.co, "*.hf.co"
+#       -> `hf download` of real weights fails. The MCP server and the
+#          whoami check do not touch them.
+#   vista.tacc.utexas.edu, ls6.tacc.utexas.edu
+#       -> see sandbox/README.md. This is an open decision, not an oversight.
+permissions:
+  network:
+    allow:
+      - "github.com"
+      - "api.github.com"
+      - "raw.githubusercontent.com"
+      - "huggingface.co"
+      - "mcp.withwandb.com"
+      - "api.wandb.ai"
+      - "wandb.ai"
+
+# ---------------------------------------------------------------------------
+# Setup
+# ---------------------------------------------------------------------------
+setup:
+  install:
+    # -----------------------------------------------------------------------
+    # 1. Record what the base image already provides.
+    # -----------------------------------------------------------------------
+    # docker/sandbox-templates:claude-code was not pulled locally when this kit
+    # was written, so its contents are UNVERIFIED. Rather than guess, this step
+    # writes the truth to a file the verify script reads. It never fails.
+    - command: |
+        set -u
+        out=/home/agent/.canitford-toolprobe
+        : > "$out"
+        for b in gh git curl jq python3 pip uv uvx node npm hf claude; do
+          printf '%s=%s\n' "$b" "$(command -v "$b" 2>/dev/null || echo MISSING)" >> "$out"
+        done
+        chown agent:agent "$out" 2>/dev/null || true
+        exit 0
+      user: "root"
+      description: Record which CLIs the base image ships, for the verify script
+
+    # -----------------------------------------------------------------------
+    # 2. GitHub: plain gh, no MCP server, no nested Docker.
+    # -----------------------------------------------------------------------
+    # This kit installs NO GitHub MCP server. That is the point. On the host
+    # there are two overlapping GitHub MCP paths (MCP_DOCKER and repo-tools);
+    # the sandbox gets exactly one GitHub-capable path, the gh CLI.
+    # verify_sandbox.sh asserts that no github MCP server exists here.
+    #
+    # gh gets its token from the sbx proxy, not from a file in the sandbox.
+    # Provision on the HOST with:
+    #     sbx secret set github --command 'gh auth token'
+    # That form is the binary's own documented example. It re-reads the macOS
+    # keyring on demand, so no token is written to disk or baked into this kit.
+    #
+    # If gh is missing from the base image this step says so and continues,
+    # because installing it needs cli.github.com or deb.debian.org and neither
+    # is in the allowlist above.
+    - command: |
+        set -u
+        if command -v gh >/dev/null 2>&1; then
+          echo "canitford-kit: gh present at $(command -v gh)"
+        else
+          echo "canitford-kit: gh MISSING from the base image." >&2
+          echo "canitford-kit: to install it, add cli.github.com and deb.debian.org" >&2
+          echo "canitford-kit: to permissions.network.allow, then uncomment the apt" >&2
+          echo "canitford-kit: line below. Left out to keep egress minimal." >&2
+          # apt-get update -qq && apt-get install -y -qq gh
+        fi
+        exit 0
+      user: "root"
+      description: Report or install the GitHub CLI (no GitHub MCP server, by design)
+
+    # -----------------------------------------------------------------------
+    # 3. MCP servers, registered at user scope via the agent's own CLI.
+    # -----------------------------------------------------------------------
+    # Both are remote HTTP endpoints. Neither runs a process on the host.
+    #
+    # WHY NOT `sbx mcp add --command ...` FOR WANDB:
+    # the binary's own help for that flag says the command "runs as a
+    # subprocess on the HOST, outside the sandbox" with "your host user's full
+    # permissions". Replicating scripts/wandb_mcp_launch.sh that way would put
+    # an uvx-fetched server on the host with full privileges, which is exactly
+    # the exposure this kit exists to reduce.
+    #
+    # WHY THE HOSTED ENDPOINT AND NOT uvx INSIDE THE SANDBOX:
+    # probed live 2026-08-23, https://mcp.withwandb.com/mcp answers
+    # "Please provide your W&B API key as a Bearer token". A Bearer header is a
+    # plain string, so the sbx custom-secret placeholder can be rewritten in it.
+    # The uvx path cannot use a placeholder at all: the wandb client
+    # authenticates with HTTP Basic, auth = ("api", self.api_key) at
+    # wandb/sdk/internal/internal_api.py:290 and :343, which is base64 encoded
+    # on the wire, so a literal placeholder never matches and the proxy cannot
+    # swap it. sandbox/README.md carries the uvx fallback if you need it.
+    - command: |
+        set -u
+        if ! command -v claude >/dev/null 2>&1; then
+          echo "canitford-kit: claude CLI not found, skipping MCP registration" >&2
+          exit 0
+        fi
+        # Idempotent: re-adding an existing name errors, so drop first.
+        claude mcp remove --scope user hf    >/dev/null 2>&1 || true
+        claude mcp remove --scope user wandb >/dev/null 2>&1 || true
+
+        if [ -n "${HF_TOKEN:-}" ]; then
+          claude mcp add --scope user --transport http hf \
+            https://huggingface.co/mcp \
+            --header "Authorization: Bearer ${HF_TOKEN}" \
+            || echo "canitford-kit: hf MCP registration failed" >&2
+        else
+          echo "canitford-kit: HF_TOKEN unset, skipping hf MCP." >&2
+          echo "canitford-kit: fix on the host with sandbox/provision.sh" >&2
+        fi
+
+        if [ -n "${WANDB_API_KEY:-}" ]; then
+          claude mcp add --scope user --transport http wandb \
+            https://mcp.withwandb.com/mcp \
+            --header "Authorization: Bearer ${WANDB_API_KEY}" \
+            || echo "canitford-kit: wandb MCP registration failed" >&2
+        else
+          echo "canitford-kit: WANDB_API_KEY unset, skipping wandb MCP." >&2
+          echo "canitford-kit: fix on the host with sandbox/provision.sh" >&2
+        fi
+        exit 0
+      user: "agent"
+      description: Register the hf and wandb HTTP MCP servers at user scope
+
+# ---------------------------------------------------------------------------
+# Agent instructions
+# ---------------------------------------------------------------------------
+# kind: mixin writes this to <dir-of-CLAUDE.md>/kits-agent-context/canitford-base.md
+# and adds a pointer under a "## Kits" heading, so it is read on demand rather
+# than permanently occupying context.
+agentInstructions:
+  content: |
+    This sandbox was provisioned by the canitford-base kit.
+
+    What is here, and where it came from:
+
+    - The project CLAUDE.md (1024 lines), the 118-file memory directory
+      under .claude/memory/ and the 15 repo-scoped skills under
+      .claude/skills/ are all present because the workspace is
+      bind-mounted from the host repository. They were not copied by
+      this kit and they are not snapshots: edits inside the sandbox
+      write straight through to the host working tree. Treat them as
+      live, and honour the repo rule that two sessions never touch one
+      file at once.
+    - The 106-line global working rules file is at ~/.claude/CLAUDE.md.
+      That one IS a snapshot, shipped by this kit, because on the host
+      it lives outside the workspace. It can go stale. Check it against
+      the host copy before relying on it.
+    - The 35 user-level and plugin skills are mounted read-write at
+      ~/.claude/skills by sbx itself, not by this kit.
+
+    Credentials: there are no real API keys in this sandbox. HF_TOKEN
+    and WANDB_API_KEY hold placeholder values that the sbx proxy swaps
+    for the real secret on outbound requests to their own hosts. Do not
+    copy them anywhere, do not echo them into a file, and do not expect
+    them to work against any other host.
+
+    GitHub: use the gh CLI. There is deliberately no GitHub MCP server
+    here. If you find one, something re-added it and it should go.
+
+    Network egress is restricted to seven domains. A failed fetch is
+    more likely to be the allowlist than a dead endpoint. The full list
+    and the reasoning behind each exclusion are in spec.yaml.
