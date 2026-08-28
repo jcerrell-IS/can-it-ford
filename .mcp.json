@@ -30,6 +30,10 @@
       "type": "stdio",
       "command": "/Users/josie/can-it-ford/scripts/wandb_mcp_launch.sh",
       "args": []
+    },
+    "can-it-ford-live": {
+      "type": "http",
+      "url": "https://josiecerrell-can-it-ford.hf.space/gradio_api/mcp/"
     }
   }
 }
