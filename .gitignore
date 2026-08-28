@@ -79,6 +79,7 @@ files/CLAUDE_md_*.md
 can-it-ford/
 .claude/settings.json.bak*
 .claude/hooks/*.bak
+*.bak-20*
 _inbox/
 _ARCHIVE_*
 # PreCompact snapshots, per-session churn, every pane appends here
