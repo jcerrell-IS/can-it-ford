@@ -184,3 +184,16 @@ Note: PhysGaussian has no detected license in its GitHub metadata. Any PhysGauss
 
 PI: Krishna Kumar (GeoElements Lab, UT Austin). Daily mentors: Hassan Iqbal, Cheng-Hsi Hsiao, Sarah Etter. Near-peer: Cristian Moran. Genesis container: Luke Smith. Funded by NSF SCIPE REU 2026 (Chishiki AI scholarship, GeoElements).
 
+### Vehicle finite element model
+
+The 2010 Toyota Yaris finite element model used in this work was developed by researchers at the
+Center for Collision Safety and Analysis (CCSA) at George Mason University, under sponsorship of
+the Federal Highway Administration (FHWA). We acknowledge CCSA at GMU and the FHWA, as requested
+by the model distributors. Neither CCSA nor FHWA assumes any responsibility for the validity,
+accuracy, or applicability of the results presented here.
+
+Validation record: DOI [10.13021/G8JS5D](https://doi.org/10.13021/G8JS5D). That DOI is
+attribution, not evidence of a licence: it was minted on a validation presentation rather than a
+data deposit, and its `rightsList` is empty. The redistribution question is unresolved and is
+recorded in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+
