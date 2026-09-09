@@ -9,18 +9,26 @@ Josie Cerrell, Claremont McKenna College.
 
 | Surface | URL |
 |---|---|
-| Findings site (overview) | https://jcerrell-is.github.io/can-it-ford/ |
-| Verdict Explorer — drive the four-rung ladder | https://jcerrell-is.github.io/can-it-ford/verdict-explorer.html |
-| Silent Failure Catalogue — the methods record | https://jcerrell-is.github.io/can-it-ford/failure-catalogue.html |
-| Same site, mirrored on Hugging Face | https://huggingface.co/spaces/josiecerrell/can-it-ford-findings |
-| Scenario sweep dataset (browsable viewer) | https://huggingface.co/datasets/josiecerrell/can-it-ford-scenario-sweep |
-| Gradio demo | https://huggingface.co/spaces/josiecerrell/can-it-ford |
-| Experiment tracking | https://wandb.ai/jcerrell29-claremont-mckenna-college/can-it-ford |
+| Findings site, overview | **not live**, see the note below. Source committed at `docs/index.html` |
+| Verdict Explorer, drive the four-rung ladder | **not live**, source at `docs/verdict-explorer.html` |
+| Silent Failure Catalogue, the methods record | **not live**, source at `docs/failure-catalogue.html` |
+| Same site, mirrored on Hugging Face (live) | https://huggingface.co/spaces/josiecerrell/can-it-ford-findings |
+| Scenario sweep dataset, browsable viewer (live) | https://huggingface.co/datasets/josiecerrell/can-it-ford-scenario-sweep |
+| Gradio demo (live) | https://huggingface.co/spaces/josiecerrell/can-it-ford |
+| Experiment tracking | `jcerrell29-claremont-mckenna-college/can-it-ford` on W&B, **private**, so named rather than linked |
 
-Pages are served from `docs/` on `main`. They are compiled bundles — regenerate them from source
-rather than hand-editing. Each fetches `docs/_ds/josie-design-system-…/_ds_bundle.js` at runtime;
-everything else is inlined. `docs/.nojekyll` is what stops GitHub Pages hiding that underscore
-directory.
+**GitHub Pages is not enabled on this repository, so the three site URLs above do not resolve.**
+Checked 2026-09-09: `api.github.com/repos/jcerrell-IS/can-it-ford/pages` returns 404, and all three
+pages return 404 to an anonymous request. The page sources themselves are committed and correct at
+`docs/index.html`, `docs/verdict-explorer.html` and `docs/failure-catalogue.html`; only the hosting
+was never switched on. To publish them, set Settings, Pages, Source to "Deploy from a branch",
+branch `main`, folder `/docs`. Until then the Hugging Face mirror is the live copy.
+
+The pages are compiled bundles, so regenerate them from source rather than hand-editing. Each
+fetches `docs/_ds/josie-design-system-.../_ds_bundle.js` at runtime; everything else is inlined.
+`docs/.nojekyll` is what stops GitHub Pages hiding that underscore directory once Pages is on.
+
+The W&B project is private, so it is named rather than linked. Verified anonymously 2026-09-09: the public GraphQL query returns `{"data":{"project":null}}` for this project, while the identical query against three known-public projects returns `access: "USER_READ"`, so the null is a privacy result and not a broken probe. The project URL still returns HTTP 200 to a link checker because W&B serves a single-page-app shell, so a status code is not evidence a visitor can see anything.
 
 ## The result, in three lines
 

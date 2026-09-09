@@ -1,11 +1,34 @@
 # Can It Ford?
 
-**Autonomous vehicle flood traversability via reconstruct-to-decide world models**
+**Can a specific vehicle cross a specific flooded road? Three models answer, from a
+one-line depth rule to a coupled GPU water simulation, and the interesting result is
+where they disagree.**
+
+<p align="center">
+  <img src="figures/_BIG/g8_hero.png"
+       alt="Coupled MPM simulation of a Toyota Yaris hull in standing water, water coloured by speed, grid 64, 1100 kg"
+       width="820">
+</p>
+<p align="center"><em>Coupled water plus rigid-vehicle simulation, run <code>g64_m1100</code>:
+1100 kg Yaris hull, 0.2944 m realized depth, 1.5 m/s surge, grid 64. This run is one of
+the seven of seventeen that exceed the 10 percent particle-passthrough gate, at 10.67
+percent. It is flagged, not excluded, and the same applies to the figure.</em></p>
+
+### See it running
+
+| | |
+|---|---|
+| **Live demo** | [Verdict explorer on Hugging Face Spaces](https://huggingface.co/spaces/josiecerrell/can-it-ford) |
+| **Findings walkthrough** | [can-it-ford-findings on Hugging Face Spaces](https://huggingface.co/spaces/josiecerrell/can-it-ford-findings) |
+| **Plain-language explainer** | [can-it-ford.vercel.app](https://can-it-ford.vercel.app) |
+| **Data** | [Scenario sweep](https://huggingface.co/datasets/josiecerrell/can-it-ford-scenario-sweep) and [load surface](https://huggingface.co/datasets/josiecerrell/can-it-ford-speed-surface) |
+
+What is established, what is open, and the numbers this project has retired: [`FINDINGS.md`](FINDINGS.md).
 
 [![License: BSD-3-Clause](https://img.shields.io/badge/License-BSD--3--Clause-green.svg)](LICENSE)
-[![W&B](https://img.shields.io/badge/W%26B-experiment_tracking-yellow)](https://wandb.ai/jcerrell29-claremont-mckenna-college/can-it-ford)
 [![HuggingFace](https://img.shields.io/badge/HuggingFace-live_demo-blue)](https://huggingface.co/spaces/josiecerrell/can-it-ford)
 [![Project site](https://img.shields.io/badge/project_site-can--it--ford.vercel.app-black)](https://can-it-ford.vercel.app)
+[![CSV Schema Check](https://github.com/jcerrell-IS/can-it-ford/actions/workflows/csv-check.yml/badge.svg)](https://github.com/jcerrell-IS/can-it-ford/actions/workflows/csv-check.yml)
 
 *Josie Cerrell, NSF SCIPE REU 2026, GeoElements Lab, UT Austin (PI: Krishna Kumar)*
 
@@ -65,6 +88,8 @@ The splat-to-particle bridge is intended to reuse [PhysGaussian (Xie et al. 2023
 | `light_pickup` | Ford F-150, Toyota Tacoma/Tundra | 2300 kg | 5.89 x 2.03 x 1.96 | measured, NHTSA SAE 1999-01-1336 |
 
 The `compact_sedan` bounding box above is the vehicle's published nominal specification, not the watertight hull's own measured extent. The mesh actually spans 4.2826 x 1.7464 x 1.5180 m (11.3533 m3 against the nominal 10.7457 m3). The paper carries both figures and uses the nominal box only as a reference prism; anything computing displaced volume should use the measured hull volume, 3.5427 m3.
+
+**That mismatch is diagnosed, not resolved, and no number above should be read as reconciled.** The mesh extent in `gates.py` (`EXT_REF = [1.746, 4.283, 1.518]`) and the specification box in `vehicle_params.py` (`bbox_m = (4.30, 1.70, 1.47)`) differ by more than 2 percent in both height and width whichever of the two is taken as the denominator (height 3.16 or 3.27 percent, width 2.63 or 2.71 percent; length agrees to 0.40 percent). That is outside the 2 percent tolerance of the consistency gate written to catch it. The gate, `check_bbox_agreement()` in `.claude/checks/params_check.py`, is deliberately not called from `main()`: the two values measure different objects, a watertight PLY hull against a manufacturer specification, so the tolerance is mis-specified rather than either value being wrong. Which object the gate is supposed to compare has not been decided, so the check is disabled rather than passing.
 
 Curb weights and bounding boxes come from manufacturer spec sheets. For `midsize_suv` and `light_pickup`, center-of-gravity heights and full principal moment-of-inertia tensors (Ixx roll, Iyy pitch, Izz yaw) come from the NHTSA Light Vehicle Inertial Parameter Database and are measured on instrumented rigs. `compact_sedan` is the exception, as the table above states: its CG height and tensor are estimates, because the NHTSA database ends Nov 1998 and holds no Yaris. A measured 2010 Yaris tensor does exist, on slide 7 of [DOI 10.13021/G8JS5D](https://doi.org/10.13021/G8JS5D) (1078 kg; roll 388, pitch 1498, yaw 1647 kg m^2; CG Z 558 mm), and is deliberately not wired in: see note 3 in `vehicle_params.py`. Call `get_vehicle(vehicle_class)` for a simulation-ready dict. Not yet wired into the L2 scripts ([#7](../../issues/7)).
 
@@ -173,7 +198,7 @@ Note: PhysGaussian has no detected license in its GitHub metadata. Any PhysGauss
 ## External assets
 
 - **Project site:** [can-it-ford.vercel.app](https://can-it-ford.vercel.app), a plain-language explainer of the L0/L1/L2 ladder with the safety disclaimer, deployed from `web/` on Vercel. It is also set as this repository's homepage.
-- **W&B:** [jcerrell29-claremont-mckenna-college/can-it-ford](https://wandb.ai/jcerrell29-claremont-mckenna-college/can-it-ford)
+- **W&B:** `jcerrell29-claremont-mckenna-college/can-it-ford`, **private**, so it is named rather than linked. Verified anonymously 2026-09-09: the public GraphQL query returns `{"data":{"project":null}}` for this project, while the identical query against three known-public projects returns `access: "USER_READ"`, so the null is a privacy result and not a broken probe. The project URL still returns HTTP 200 to a link checker because W&B serves a single-page-app shell, so a status code is not evidence a visitor can see anything. Re-link it here and in `FINDINGS.md` if the project is made public.
 - **Gradio demo:** [josiecerrell/can-it-ford on HuggingFace Spaces](https://huggingface.co/spaces/josiecerrell/can-it-ford), live (verdict-flip explorer over the 17 gated runs, the `v_car` x `v_water` load surface, and repeat spread)
 - **Hailuo comparison:** `figures/hailuo/`, a visual-model-vs-physical-model comparison for the poster (Hailuo predicts FORD at d=0.30 m / v=1.5 m/s, pilot L2 predicts NO-FORD)
 - **Dataset DOI:** DesignSafe PRJ-6388, staged, not yet published.
