@@ -1,0 +1,69 @@
+wandb/
+.DS_Store
+__pycache__/
+*.pyc
+gradio_app/
+ssh_config_tacc_block.txt
+logs/
+figures/hailuo/*.mp4
+.env
+data/*
+reference_docs/
+# renders/ holds BOTH generated output and source. Under renders/yaris_render_s1/
+# alone there are 24 top-level .py source files against 881 non-.py files at any
+# depth. (Corrected 2026-08-12: an earlier version of this comment, and the message
+# of commit 00b735c, said "501 generated artifacts". That 501 was a -maxdepth 2
+# count restricted to four extensions, not a total, and it is wrong as stated. The
+# commit message cannot be corrected without rewriting history, so it stands wrong;
+# this comment is the correction.) A blanket
+# "renders/" ignored the source too, which meant sim_standing.py, vehicle_live.py
+# and gates*.py had NO commit history at all, even though the corrections
+# register cites them by file:line as the primary source for the
+# canonical facts (A1, A2, A5, F5) and even though solidify_watertight /
+# is_gaussian_ply, named as Contribution #1, is implemented there. An authorship
+# claim over an untracked working file cannot be dated or evidenced.
+# Git cannot re-include a file whose PARENT DIRECTORY is excluded, so the blanket
+# "renders/" is replaced by a walk-down: ignore the contents at each level, then
+# re-include the next directory, then finally re-include only *.py.
+# Corrected 2026-08-12. Generated output stays ignored.
+renders/*
+!renders/yaris_render_s1/
+renders/yaris_render_s1/*
+!renders/yaris_render_s1/*.py
+!data/track1_sweep_v1/
+!data/track1_sweep_v1/**
+!data/track1_sweep_v2/
+!data/track1_sweep_v2/**
+# data/* above silently hides the canonical 17-run results stores. They were only ever
+# tracked by force-add (841d666), so a new sibling file lands invisible unless un-ignored
+# here. Register D6a. Keep this list in step with analysis/classify_failure_modes.py.
+!data/all_runs_inventory.csv
+!data/failure_modes_by_run.json
+!data/failure_modes_by_run_classified.csv
+vehicle_geometry_research/**/*.key
+vehicle_geometry_research/**/*-detailed-*/**/*.key
+
+vehicle_meshes/
+*.key
+_PENDING_NOT_COMMITTED/
+can-it-ford/
+_ARCHIVE_*
+.olauth
+deliverables/
+*.rtfd/
+out/
+overleaf_sync/
+figures/_BIG/
+figures/_BIG_PREVIEW/
+
+# Overleaf-canonical working copy. paper/ is not edited in this repo
+# (the paper builds from conference_101719_1.tex on the overleaf remote, not from
+# here), so this local snapshot must never enter history and diverge from it.
+paper/canonical_2026-08-02/
+
+# Pre-fix backup of the bridge module, kept locally for reference only.
+# Confirmed 2026-08-07 that nothing imports it: /usr/bin/grep -rn "_pre_fix_backup"
+# over *.py/*.md/*.sh/*.json/*.tex returns only a .remember note, no code.
+bridge/_pre_fix_backup_2026-08-05/
+node_modules/
+render_s2/

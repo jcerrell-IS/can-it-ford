@@ -1,0 +1,32 @@
+{
+  "rung": "b",
+  "path": "force (sdf_wrench -> Newton-Euler)",
+  "n_grid": 64,
+  "rho_box": 600.0,
+  "depth_cells": 18.0,
+  "submersion_frac_requested": 0.8,
+  "submersion_frac_realized": 0.518659641004714,
+  "h_sub_m": 0.7635433571995236,
+  "L_m": 1.4721472365199588,
+  "mass_kg": 1914.277939765707,
+  "dt": 0.0030303030303030303,
+  "settle_steps": 900,
+  "coupled_steps": 120,
+  "F_buoy_analytic_N": 16233.239892511745,
+  "Fz_measured_mean_N": 13411.847660541534,
+  "Fz_measured_median_N": 13172.214031219482,
+  "ratio_median_over_analytic": 0.8114346931628672,
+  "a_ideal_ms2": -1.3299148695729262,
+  "a_measured_first3_ms2": -2.1898277277839644,
+  "accel_windows": {
+    "a_first_2": -2.18697836538218,
+    "a_first_3": -2.1898277277839644,
+    "a_first_5": -2.7170783017872258,
+    "a_first_10": -3.3670463484718645,
+    "a_first_20": -3.4391418950625154
+  },
+  "net_dz_m": -0.12358372860157818,
+  "added_mass_ratio": 0.8644327350078567,
+  "clamped_steps": 0,
+  "nonzero_wrench": true
+}

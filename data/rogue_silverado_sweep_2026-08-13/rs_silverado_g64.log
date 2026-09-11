@@ -1,0 +1,36 @@
+Warp DeprecationWarning: The namespace `warp.torch` will soon be removed from the public API. It can still be accessed from `warp._src.torch` but might be changed or removed without notice.
+PREFLIGHT vehicle=silverado class=large_4wd hull=/work/11603/jcerrell0629/vista/can-it-ford/vehicle_geometry_research/silverado_g96_pd8_coarse_watertight.ply
+PREFLIGHT watertight=True hull_m3=7.962083 solid_volume=7.943659 fill_ratio=0.9977
+PREFLIGHT mass=2270.0 kg source=explicit --mass  realized_rho=285.76 kg/m3
+PREFLIGHT mass_alt=2270.0 kg source=Silverado deck header line 28 mass  realized_rho_alt=285.76 kg/m3
+PREFLIGHT published_hull_m3=7.962083 deviation=0.0000%
+DETERMINISM load1 n=7465 lim=13.067932987
+DETERMINISM load2 n=7465 lim=13.067932987
+DETERMINISM identical=True
+PARITY_ODD_COLUMNS dropped=0 of 1197 columns (0.0000 percent)
+Warp DeprecationWarning: Support for Python 3.9 is deprecated and will be removed in Warp 1.13. Please upgrade to Python 3.10 or newer.
+warpmpm: device auto -> cuda:0
+Particles initialized from torch data.
+Total particles:  44311
+SCENARIO=STANDING_WATER_SUSTAINED_INFLOW
+grid 64^3 lim=13.07m  water 36846 + vehicle 7465 particles (2270.0 kg)  dt=4.17e-03 (8 substeps/frame)
+INSTRUMENT dx=0.204186 h=0.102093 floor=0.612559 lim=13.067933
+INSTRUMENT water_layers=3
+INSTRUMENT solid_volume=7.94366 m3 hull=7.96208 fill_ratio=0.9977 realized_rho=285.76
+INSTRUMENT hull_source=/work/11603/jcerrell0629/vista/can-it-ford/vehicle_geometry_research/silverado_g96_pd8_coarse_watertight.ply hull_m3=7.962083 watertight=True yaris_ref_delta_pct=+124.744
+INSTRUMENT carved 117 of 36963 water particles from vehicle cells (0.32 percent)
+SUBSTEP_TERMS eta=1.000e-03 acoustic=224.6762 viscous=0.000144 advective=14.6925 -> rate=224.6762 substeps=8
+ACOUSTIC c=12.8452 m/s  vehicle_x=7.8408  downstream_wall=12.2512  round_trip=0.6867 s
+FLOOR_FRICTION=0.550  WATER_ETA=1.000e-03
+frame   0  |d|=   1.19cm  yaw= -0.45  roll= -0.24  ld_bow=0.2567 ld_foot=0.2347 oob=0 inflow=4991
+frame  10  |d|=  20.00cm  yaw= -1.16  roll= +0.02  ld_bow=0.3271 ld_foot=0.2767 oob=0 inflow=3333
+frame  20  |d|=  28.03cm  yaw= -1.56  roll= -0.00  ld_bow=0.3768 ld_foot=0.3408 oob=0 inflow=1878
+frame  30  |d|=  30.42cm  yaw= -1.69  roll= +0.01  ld_bow=0.4070 ld_foot=0.3581 oob=0 inflow=636
+frame  40  |d|=  31.94cm  yaw= -1.76  roll= +0.00  ld_bow=0.4184 ld_foot=0.3512 oob=0 inflow=129
+frame  50  |d|=  33.34cm  yaw= -1.74  roll= +0.01  ld_bow=0.4105 ld_foot=0.3521 oob=0 inflow=20
+frame  60  |d|=  34.42cm  yaw= -1.73  roll= +0.01  ld_bow=0.3965 ld_foot=0.3501 oob=0 inflow=29
+frame  70  |d|=  34.83cm  yaw= -1.59  roll= +0.00  ld_bow=0.3736 ld_foot=0.3398 oob=0 inflow=28
+frame  80  |d|=  34.81cm  yaw= -1.54  roll= +0.01  ld_bow=0.3385 ld_foot=0.3245 oob=0 inflow=39
+frame  89  |d|=  34.62cm  yaw= -1.48  roll= -0.00  ld_bow=0.2950 ld_foot=0.3244 oob=0 inflow=49
+SUMMARY {"scenario": "standing_water_sustained_inflow", "label": "rs_silverado_g64", "mass_kg": 2270.0, "depth_m": 0.3, "velocity_ms": 1.5, "n_grid": 64, "frames": 90, "grid_lim": 13.067932987213135, "dx": 0.20418645292520524, "h": 0.10209322646260262, "water_layers": 3, "n_water": 36846, "n_vehicle": 7465, "n_carved": 117, "water_eta": 0.001, "floor_friction": 0.55, "bulk_modulus": 150000.0, "substeps": 8, "sound_speed_ms": 12.84523257866513, "term_acoustic": 224.6761721008707, "term_viscous": 0.00014391212993076968, "term_advective": 14.69245367173756, "solid_volume_m3": 7.943659119387191, "hull_m3": 7.962083114517729, "fill_ratio": 0.9976860333074212, "hull_source": "/work/11603/jcerrell0629/vista/can-it-ford/vehicle_geometry_research/silverado_g96_pd8_coarse_watertight.ply", "hull_watertight": true, "hull_yaris_ref_m3": 3.542739, "hull_ref_delta_pct": 124.74371141982881, "realized_rho": 285.7625139603319, "vehicle_key": "silverado", "vehicle_class": "large_4wd", "mass_source": "explicit --mass", "mass_alt_kg": 2270.0, "mass_alt_source": "Silverado deck header line 28 mass", "realized_rho_mass_alt": 285.7625139603319, "hull_m3_published": 7.962083, "preflight_fill_ratio": 0.9976860333074212, "parity_odd_columns_dropped": 0, "parity_total_columns": 1197, "determinism_identical": true, "final_disp_m": [0.3459935188293457, 0.012874126434326172, -0.001295328140258789], "final_disp_mag_m": 0.34623539447784424, "final_yaw_deg": -1.475966527042732, "final_roll_deg": -0.002712763416516122, "final_pitch_deg": 0.004720463630562151, "C3_oob_particle_frames": 0, "local_depth_bow_peak": 0.4186667993664741, "local_depth_bow_peak_frame": 42, "local_depth_bow_final": 0.2950052216649055, "local_depth_footprint_peak": 0.358733494579792, "local_depth_footprint_final": 0.324392993748188, "C2_veh_zmin_start": 0.6125644445419312, "C2_veh_zmin_final": 0.6125593781471252, "C2_veh_zmin_rise": -5.066394805908203e-06, "passthrough_max_frac": 0.0836183032079466, "leaked_particle_frames": 72206, "grid_lim_line_verbatim": "grid 64^3 lim=13.07m  water 36846 + vehicle 7465 particles (2270.0 kg)  dt=4.17e-03 (8 substeps/frame)"}
+DONE rs_silverado_g64

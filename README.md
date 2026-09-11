@@ -1,0 +1,293 @@
+# Can It Ford?
+
+**Can a specific vehicle cross a specific flooded road? Three models answer, from a one-line depth
+rule to a coupled GPU water simulation, and the interesting result is where they disagree.**
+
+<p align="center">
+  <img src="figures/_BIG/g8_hero.png"
+       alt="Coupled MPM simulation of a Toyota Yaris hull in standing water, water coloured by speed, grid 64, 1100 kg"
+       width="820">
+</p>
+<p align="center"><em>Coupled water plus rigid-vehicle simulation, run <code>g64_m1100</code>:
+1100 kg Yaris hull, 0.2944 m realized depth, 1.5 m/s surge, grid 64. This run is one of the seven
+of seventeen that exceed the 10 percent particle-passthrough gate, at 10.67 percent. It is flagged,
+not excluded, and the same applies to the figure.</em></p>
+
+> [!WARNING]
+> This is a research project, not a safety tool. Its thresholds come from draft and interim
+> criteria for stationary vehicles. Never drive into floodwater.
+
+[![License: BSD-3-Clause](https://img.shields.io/badge/License-BSD--3--Clause-green.svg)](LICENSE)
+[![HuggingFace](https://img.shields.io/badge/HuggingFace-live_demo-blue)](https://huggingface.co/spaces/josiecerrell/can-it-ford)
+[![Project site](https://img.shields.io/badge/project_site-can--it--ford.vercel.app-black)](https://can-it-ford.vercel.app)
+[![CSV Schema Check](https://github.com/jcerrell-IS/can-it-ford/actions/workflows/csv-check.yml/badge.svg)](https://github.com/jcerrell-IS/can-it-ford/actions/workflows/csv-check.yml)
+
+*Josie Cerrell, NSF SCIPE REU 2026, GeoElements Lab, UT Austin (PI: Krishna Kumar)*
+
+## See it running
+
+| | |
+|---|---|
+| **Findings walkthrough** (start here) | [can-it-ford-findings on Hugging Face Spaces](https://huggingface.co/spaces/josiecerrell/can-it-ford-findings) |
+| **Live demo** | [Verdict explorer on Hugging Face Spaces](https://huggingface.co/spaces/josiecerrell/can-it-ford) |
+| **Plain-language explainer** | [can-it-ford.vercel.app](https://can-it-ford.vercel.app) |
+| **Data** | [Scenario sweep](https://huggingface.co/datasets/josiecerrell/can-it-ford-scenario-sweep) and [load surface](https://huggingface.co/datasets/josiecerrell/can-it-ford-speed-surface) on Hugging Face |
+| **Paper and poster** | [`public_release/`](public_release/) |
+
+## Key results
+
+- **Every coupled run carries a complete provenance record.** For all 17 runs, the code commit,
+  solver version, mesh hash, particle counts, grid settings, substeps and material settings are
+  recorded: 10 of 10 fields present on every run, zero unresolved commits, zero mesh mismatches. See
+  [`data/reproducibility_manifest.json`](data/reproducibility_manifest.json), built by
+  [`analysis/reproducibility_manifest.py`](analysis/reproducibility_manifest.py).
+- **The depth x velocity shortcut is only half of the published rule.** The AR&R criterion needs
+  a depth cap and a depth x velocity cap to hold together. Applying both, for the car's own class,
+  moved 23 of 70 flood scenarios from FORD to NO-FORD, and none the other way
+  ([`data/scenario_sweep.csv`](data/scenario_sweep.csv)).
+- **3D scene reconstruction.** A Gaussian splat of a real drainage crossing: 1,147,694 Gaussians,
+  trained with gsplat for 30,000 iterations, PSNR 22.74. A decimated preview is in the live demo's
+  Reconstruction tab. The bridge from splat to simulation is designed, not yet built.
+
+What is established, what is open, and the numbers this project has retired:
+[`FINDINGS.md`](FINDINGS.md).
+
+---
+
+## What this does
+
+Given a flooded road scene and a flood condition, this pipeline answers one question: **can a
+specific vehicle ford this crossing?**
+
+Three methods run side by side, from cheapest to most expensive, to find the simplest model that
+still gets the answer right.
+
+| Level | Model | Source |
+|---|---|---|
+| **L0** | Static depth threshold (d >= 0.15 m gives NO-FORD) | [NWS Turn Around Don't Drown](https://www.weather.gov/safety/flood-turn-around-dont-drown) |
+| **L1** | AR&R two-part criterion: a class depth cap AND a D x V cap, both required together. The paper's canonical class is Small Car (depth <= 0.30 m and D x V <= 0.30 m2/s). The bare D x V <= 0.60 m2/s figure often quoted is the Large 4WD hazard cap alone, with no depth restriction. Draft/interim criterion from the source report, not an endorsed safety standard. | Shand et al. 2011, AR&R Project 10 Stage 2 (Engineers Australia) |
+| **L2** | Coupled particle simulation: weakly compressible water plus a rigid vehicle body, verdict from lateral drift | This project |
+
+The intended front end reconstructs the scene from video using 3D Gaussian splatting. That front
+end is designed and not yet built: every reported result starts from a watertight vehicle mesh and
+a parameterized flood condition, not from a splat.
+
+The abstraction ladder is a running instance of the Section 3 orchestrator in
+[Physically Viable World Models (Thorpe et al. 2026, arXiv:2605.30542)](https://arxiv.org/abs/2605.30542).
+The forward direction here (known scene plus known flood gives a verdict) is the sibling of the
+inverse direction in [Hsiao and Kumar 2025 (arXiv:2507.09005)](https://arxiv.org/abs/2507.09005),
+which recovers material properties from images.
+
+## Pipeline
+
+<img src="figures/can_it_ford_pipeline_diagram.svg" alt="Can It Ford pipeline diagram" width="820">
+
+```
+video  ->  gsplat (LS6 A100)  ->  splat/mesh to MPM particles  ->  MPM water + rigid vehicle coupling (Vista GH200)  ->  FORD / NO-FORD
+[      designed, not yet built             ]  [            built and producing results            ]
+```
+
+The splat-to-particle bridge is intended to reuse
+[PhysGaussian (Xie et al. 2023, arXiv:2311.12198)](https://arxiv.org/abs/2311.12198) extraction
+logic on top of [3D Gaussian Splatting (Kerbl et al. 2023, arXiv:2308.04079)](https://arxiv.org/abs/2308.04079).
+`bridge/` holds an independent implementation of that published algorithm.
+
+---
+
+## Reproduce
+
+### L0 and L1 (any machine, no GPU)
+
+```bash
+python3 simulation/can_it_ford_L0.py <depth_m>
+python3 simulation/can_it_ford_L1.py <depth_m> <velocity_ms> [vehicle_class]
+```
+
+Vehicle class options: `sedan`, `large_passenger`, `large_4wd` (default).
+
+### L2, the coupled simulation (GPU)
+
+All 17 coupled runs came from
+[`renders/yaris_render_s1/sim_standing.py`](renders/yaris_render_s1/sim_standing.py) with the
+`warpmpm` solver (NVIDIA Warp), run on TACC's Vista (NVIDIA GH200).
+
+1. Install `warpmpm` from [jcerrell-IS/mpm-engine](https://github.com/jcerrell-IS/mpm-engine), a
+   fork of [kks32/mpm-engine](https://github.com/kks32/mpm-engine) that adds the watertight-mesh
+   particle seeding these runs use.
+2. Get the vehicle hull, as described in
+   [`vehicle_geometry_research/README.md`](vehicle_geometry_research/README.md). It is not
+   redistributed here.
+3. Run one case. For example, the run in the figure above:
+
+```bash
+python renders/yaris_render_s1/sim_standing.py \
+    --vehicle vehicle_geometry_research/yaris_coarse_v1l_watertight.ply \
+    --mass 1100 --grid 64 --depth 0.30 --velocity 1.5 \
+    --label g64_m1100 --out runs/g64_m1100
+```
+
+The run writes `metrics.csv`, `rollout.npz` and `summary.json` into `--out`. Each row of
+[`data/all_runs_inventory.csv`](data/all_runs_inventory.csv) gives one run's mass, grid, requested
+depth and velocity.
+
+Two older scripts are kept for the record and do not reproduce the reported results:
+`simulation/can_it_ford_L2.py` is the superseded Genesis path, and
+`simulation/can_it_ford_L2_mpm.py` still hardcodes a superseded vehicle box (4.66 x 1.79 x 1.44 m,
+3.39x the real hull volume).
+
+### Figures and renders
+
+```bash
+python3 analysis/make_phase_space_v2.py
+python3 render_frames.py --input particles.npz --output water_box.mp4 \
+    --box-center 1.0 0.0 0.35 --box-size 1.0 1.6 1.5 --fps 24
+```
+
+`render_frames.py` renders MPM particle output to MP4 without a display. Run it with no `--input`
+for a synthetic demo that checks the renderer works. Particle files are not included in this
+repository.
+
+### Consistency checks
+
+No gate in this project is a physics validation. Each gate is a self-consistency or
+numerical-containment check. `analysis/viability_audit.py` reads final-state `.npz` particle files
+and reports total water momentum per run. It does **not** verify mass conservation: the former
+mass-integrity check was withdrawn on July 15, 2026 as tautological (it compared a value to itself
+and could not fail). Per-step invariant checking is not yet implemented.
+
+---
+
+## Data
+
+| File | Description |
+|---|---|
+| `data/all_runs_inventory.csv` | **Primary source for the coupled sweep.** 17 runs on the watertight Yaris hull. 7 of the 17 exceed a 10 percent particle-passthrough gate and are flagged, not excluded. |
+| `data/reproducibility_manifest.json` | Provenance record for the 17 runs: code commit, solver version, mesh hash, grid and material settings per run, plus what is absent and why. |
+| `data/scenario_sweep.csv` | L0/L1 grid (depths 0.1 to 1.0 m x velocities 0.0 to 3.0 m/s), 70 scenarios, with the full and product-only L1 encodings side by side. FORD counts out of 70 for the three classes: 14, 19, 26. |
+| `data/mu_sweep_results.csv` | Friction sensitivity at (d=0.30 m, v=1.5 m/s) |
+| `data/l2_results_from_wandb.csv` | L2 pilot runs pulled from the W&B API: 9 unique conditions, L1 and L2 agree at 5 of 9 |
+| `data/phase_space_results.csv` | L2 SPH pilot output (pre-fix). **Not usable for an agreement rate:** it carries a single verdict column with no corresponding L1 value, and 15 of its 31 rows share a condition with another row under a different verdict |
+| `data/track1_sweep_v2/` | **Superseded and excluded from the paper.** 36-run sweep on a rescaled box proxy (1390 kg, 4.7352 m3 against the real hull's 3.5427 m3). Kept as a record; do not cite its numbers |
+
+## Limitations
+
+- **Not a safety tool.** L1 uses draft and interim criteria that describe a stationary vehicle.
+- **Flagged runs.** 7 of the 17 coupled runs exceed the 10 percent particle-passthrough gate. They
+  are flagged, not excluded.
+- **One hull.** The mass sweep (1,100, 1,609 and 2,337 kg) varies mass on a single Yaris hull, so
+  it is a sensitivity study, not a comparison of vehicle classes.
+- **No reconstruction front end yet.** Every reported result starts from a mesh, not a splat.
+
+The full list, with the numbers this project has retired, is in [`FINDINGS.md`](FINDINGS.md).
+
+<details>
+<summary><b>Vehicle parameters</b></summary>
+
+`vehicle_params.py` holds three primary-sourced passenger-vehicle classes:
+
+| Class | Anchors | Mass | Bounding box (L x W x H, m) | Inertia source |
+|---|---|---|---|---|
+| `compact_sedan` | Toyota Yaris (2010, NCAC/CCSA FE model) | 1100 kg | 4.30 x 1.70 x 1.47 | uniform-box fallback, **not** a measured tensor; mass/bbox from the [CCSA FE model documentation](https://doi.org/10.13021/G8JS5D) |
+| `midsize_suv` | Toyota Highlander, Ford Explorer | 1990 kg | 4.96 x 1.93 x 1.75 | measured, NHTSA SAE 1999-01-1336 |
+| `light_pickup` | Ford F-150, Toyota Tacoma/Tundra | 2300 kg | 5.89 x 2.03 x 1.96 | measured, NHTSA SAE 1999-01-1336 |
+
+The `compact_sedan` bounding box is the vehicle's published nominal specification, not the
+watertight hull's measured extent. The mesh spans 4.2826 x 1.7464 x 1.5180 m (11.3533 m3 against
+the nominal 10.7457 m3). Anything computing displaced volume should use the measured hull volume,
+3.5427 m3.
+
+That mismatch is diagnosed, not resolved. The mesh extent in `gates.py`
+(`EXT_REF = [1.746, 4.283, 1.518]`) and the specification box in `vehicle_params.py`
+(`bbox_m = (4.30, 1.70, 1.47)`) differ by more than 2 percent in height and width (height 3.16 or
+3.27 percent, width 2.63 or 2.71 percent; length agrees to 0.40 percent). The consistency gate
+written to catch this, `check_bbox_agreement()`, is switched off: the two values measure different
+objects, so the tolerance is mis-specified rather than either value being wrong.
+
+For `midsize_suv` and `light_pickup`, center-of-gravity heights and full inertia tensors come from
+the NHTSA Light Vehicle Inertial Parameter Database, measured on instrumented rigs.
+`compact_sedan` is the exception: the NHTSA database ends in November 1998 and holds no Yaris, so
+its CG height and tensor are estimates. A measured 2010 Yaris tensor exists on slide 7 of
+[DOI 10.13021/G8JS5D](https://doi.org/10.13021/G8JS5D) (1078 kg; roll 388, pitch 1498, yaw
+1647 kg m^2; CG Z 558 mm) and is deliberately not wired in: see note 3 in `vehicle_params.py`.
+Call `get_vehicle(vehicle_class)` for a simulation-ready dict.
+
+</details>
+
+<details>
+<summary><b>Status notes, 2026-07-29</b></summary>
+
+**The L2 solver migration to MPM works.** On 2026-07-25, the `warpmpm` solver from
+kks32/mpm-engine ran to completion on Vista using the real watertight Yaris hull,
+`yaris_coarse_v1l_watertight.ply`, not a box proxy, at three masses: 1100, 1609 and 2337 kg. Only
+the mass varies. The single 4.2826 m hull fails AR&R's length criterion for both upper classes at
+every mass, so this is a controlled mass-sensitivity study on one geometry, not a comparison of
+three vehicles.
+
+**One derived result from that pass was retracted, not hidden.** The first class-verdict table
+asserted a verdict per class. A follow-up pass, version 3 of the mass-sensitivity table, found the
+1100 kg case failed a particle-passthrough gate at 10.67 percent against a 10 percent limit, and
+withdrew that table. The v3 rerun, under standing water plus sustained inflow rather than the
+original dry-start setup, found SLIDE as the only failure mode that activated across all three
+masses, and found L0 and L2 agreeing with each other while L1, the AR&R depth-velocity hazard
+scalar, was the rung that diverged.
+
+</details>
+
+---
+
+## Repo structure
+
+```
+simulation/              L0, L1 and L2 scripts
+renders/yaris_render_s1/ The driver that produced the 17 coupled runs
+analysis/                Figures, provenance manifest, consistency checks
+vehicle_params.py        Cited vehicle classes (mass, bbox, CG, inertia)
+data/                    Experiment CSVs and the provenance manifest
+figures/                 Output figures, pipeline diagram, short run videos
+bridge/                  Splat-to-particle bridge (independent reimplementation)
+third_party/             Vendored warpmpm solver core (MIT)
+hf_space/                Early version of the Hugging Face demo (the live Space holds the current app)
+web/                     Source of the project site
+public_release/          The paper and poster PDFs
+citations/               Annotated bibliography and grounding notes
+scripts/                 Utilities: data sync, manifests, Vista pull
+paper/                   Paper figure sources and bibliography
+docs/                    Design notes
+```
+
+## Citations
+
+Every threshold and parameter traces to a source. The annotated bibliography, with verification
+status and caveats, is in [`citations/README.md`](citations/README.md). Load-bearing sources:
+
+- **L1 hazard threshold:** Shand, Cox, Blacka & Smith (2011), AR&R Project 10 Stage 2, Engineers
+  Australia report P10/S2/020.
+- **L2 comparison data:** Smith, Modra & Felder (2019), full-scale tests of vehicle stability in
+  flood waters, [DOI:10.1111/jfr3.12527](https://doi.org/10.1111/jfr3.12527).
+- **Drift threshold reframing:** Xia et al. (2014) [DOI:10.1007/s11069-013-0889-2](https://doi.org/10.1007/s11069-013-0889-2); Shah et al. (2018) [DOI:10.1051/matecconf/201820307003](https://doi.org/10.1051/matecconf/201820307003).
+- **Box-proxy vehicle comparison:** Xiong et al. (2024), Water Resources Research, [DOI:10.1029/2023WR036739](https://doi.org/10.1029/2023WR036739).
+- **Vehicle inertia:** NHTSA / Heydinger et al., SAE 1999-01-1336, [DOI:10.4271/1999-01-1336](https://doi.org/10.4271/1999-01-1336).
+- **Framework and technique:** [PVWM (arXiv:2605.30542)](https://arxiv.org/abs/2605.30542), [Hsiao and Kumar (arXiv:2507.09005)](https://arxiv.org/abs/2507.09005), [PhysGaussian (arXiv:2311.12198)](https://arxiv.org/abs/2311.12198), [3DGS (arXiv:2308.04079)](https://arxiv.org/abs/2308.04079).
+
+See [`CITATION.cff`](CITATION.cff) for citing this repository.
+
+## License
+
+Code is released under the **[BSD 3-Clause License](LICENSE)**, the license
+[recommended by DesignSafe-CI for research software](https://designsafe-ci.org/user-guide/curating/policies/).
+The associated dataset is released under CC-BY-4.0 (see `CITATION.cff`). A dataset DOI is staged
+at DesignSafe (PRJ-6388) and not yet published.
+
+Third-party material keeps its own terms, and some material this project used is not
+redistributed here. See [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md).
+
+## Acknowledgments
+
+PI: Krishna Kumar (GeoElements Lab, UT Austin). Daily mentors: Hassan Iqbal, Cheng-Hsi Hsiao, Sarah
+Etter. Near-peer: Cristian Moran. Genesis container: Luke Smith. Funded by NSF SCIPE REU 2026
+(Chishiki AI scholarship, GeoElements).
+
+The vehicle geometry is derived from the 2010 Toyota Yaris finite element model developed by the
+Center for Collision Safety and Analysis (CCSA) at George Mason University, with sponsorship from
+the Federal Highway Administration (FHWA). This project acknowledges CCSA at GMU and FHWA for the
+model.

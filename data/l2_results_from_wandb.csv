@@ -1,0 +1,10 @@
+level,compute,depth_m,velocity_ms,l1_threshold,_runtime,_step,_timestamp,_wandb,divergence,dv_product,l1_haz_score,l1_verdict,l2_verdict,name
+L2_Genesis_SPH,Vista_GH200,0.3,1.5,0.6,0,0,1782864038.558016,{'runtime': 0},True,0.45,0.75,FORD,NO-FORD,L2_d0.3_v1.5
+L2_Genesis_SPH,Vista_GH200,0.15,0.0,0.6,0,0,1782867567.8815749,{'runtime': 0},False,0.0,0.0,FORD,FORD,L2_d0.15_v0.0
+L2_Genesis_SPH,Vista_GH200,0.3,0.0,0.6,0,0,1782867574.758393,{'runtime': 0},False,0.0,0.0,FORD,FORD,L2_d0.3_v0.0
+L2_Genesis_SPH,Vista_GH200,0.6,0.0,0.6,0,0,1782867579.606846,{'runtime': 0},False,0.0,0.0,FORD,FORD,L2_d0.6_v0.0
+L2_Genesis_SPH,Vista_GH200,0.15,1.5,0.6,0,0,1782867582.52117,{'runtime': 0},True,0.225,0.225,FORD,NO-FORD,L2_d0.15_v1.5
+L2_Genesis_SPH,Vista_GH200,0.3,1.0,0.6,0,0,1782867585.680531,{'runtime': 0},True,0.3,0.3,FORD,NO-FORD,L2_d0.3_v1.0
+L2_Genesis_SPH,Vista_GH200,0.45,1.5,0.6,0,0,1782867589.337176,{'runtime': 0},False,0.675,0.675,NO-FORD,NO-FORD,L2_d0.45_v1.5
+L2_Genesis_SPH,Vista_GH200,0.6,1.5,0.6,0,0,1782867592.482278,{'runtime': 0},False,0.9,0.9,NO-FORD,NO-FORD,L2_d0.6_v1.5
+L2_Genesis_SPH,Vista_GH200,0.3,2.0,0.6,0,0,1782867595.6334898,{'runtime': 0},True,0.6,0.6,FORD,NO-FORD,L2_d0.3_v2.0

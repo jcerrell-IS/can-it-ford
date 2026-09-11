@@ -1,0 +1,5 @@
+{
+  "small_passenger": "FailureMode.SLIDE",
+  "large_passenger": "FailureMode.SLIDE",
+  "large_4wd": "FailureMode.SLIDE"
+}

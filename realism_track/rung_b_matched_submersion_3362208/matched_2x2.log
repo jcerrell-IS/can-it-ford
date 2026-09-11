@@ -1,0 +1,85 @@
+
+-----------------------------------------------------------------
+           Welcome to the Lonestar6 Supercomputer                
+-----------------------------------------------------------------
+
+No reservation for this job
+--> Verifying valid submit host (login1)...OK
+--> Verifying valid jobname...OK
+--> Verifying valid ssh keys...OK
+--> Verifying access to desired queue (gpu-a100-dev)...OK
+--> Checking available allocation (BCS20003)...OK
+--> Verifying that quota for filesystem /home1/11603/jcerrell0629 is at 47.80% allocated...OK
+--> Verifying that quota for filesystem /work/11603/jcerrell0629/ls6 is at  5.41% allocated...OK
+
+############ g64 dc=18.78 mode=coupled ############
+Thu Aug 13 05:28:08 CDT 2026
+COUPLER added_mass_ratio=1.4287
+COUPLING WARNING added_mass_ratio=1.43 exceeds 0.5; a partitioned explicit scheme is at its stability limit here. Reduce dt or set relax<1 and treat the transient as unconverged until a dt study says otherwise.
+============================================================================
+MODE coupled  n_grid 64  relax 1.0
+  Fz steady tail mean =    +18725.61 N  std 258.87  ptp 1116.68
+  Fz median (all)     =    +17953.89 N  min +12654.94 max +19104.84
+  F_analytic (full)   =    +31298.44 N
+  ERROR steady vs full submersion = -40.17 %
+  ERROR first3 vs full submersion = -53.58 %
+  lateral/Fz = 0.0012   net dz = -0.059038 m
+============================================================================
+wrote /scratch/11603/jcerrell0629/rungb_matched_2x2/m_g64_dc18.78_coupled.json
+exit=0
+
+############ g64 dc=18.78 mode=fixed ############
+Thu Aug 13 05:28:51 CDT 2026
+GEOM surface=2.880140 box_top=3.091509 margin_dx=-1.4358 frac_submerged=0.8564 fully_submerged=False
+REFERENCE F_full=31298.44 N  F_partial=26804.66 N  mass=1914.28 kg
+============================================================================
+MODE fixed  n_grid 64  relax 1.0
+  Fz steady tail mean =    +14699.31 N  std 936.73  ptp 2970.21
+  Fz median (all)     =    +12682.23 N  min +11317.96 max +15674.88
+  F_analytic (full)   =    +31298.44 N
+  ERROR steady vs full submersion = -53.04 %
+  ERROR first3 vs full submersion = -59.86 %
+  lateral/Fz = 0.0568   net dz = +0.000000 m
+============================================================================
+wrote /scratch/11603/jcerrell0629/rungb_matched_2x2/m_g64_dc18.78_fixed.json
+exit=0
+
+############ g96 dc=17.22 mode=coupled ############
+Thu Aug 13 05:29:33 CDT 2026
+COUPLER added_mass_ratio=1.2999
+COUPLING WARNING added_mass_ratio=1.30 exceeds 0.5; a partitioned explicit scheme is at its stability limit here. Reduce dt or set relax<1 and treat the transient as unconverged until a dt study says otherwise.
+============================================================================
+MODE coupled  n_grid 96  relax 1.0
+  Fz steady tail mean =    +18318.08 N  std 102.95  ptp 272.78
+  Fz median (all)     =    +18219.92 N  min +16977.85 max +18478.65
+  F_analytic (full)   =    +31298.44 N
+  ERROR steady vs full submersion = -41.47 %
+  ERROR first3 vs full submersion = -45.19 %
+  lateral/Fz = 0.0384   net dz = -0.012539 m
+============================================================================
+wrote /scratch/11603/jcerrell0629/rungb_matched_2x2/m_g96_dc17.22_coupled.json
+exit=0
+
+############ g96 dc=17.22 mode=fixed ############
+Thu Aug 13 05:33:47 CDT 2026
+GEOM surface=2.761296 box_top=3.091509 margin_dx=-3.3646 frac_submerged=0.7757 fully_submerged=False
+REFERENCE F_full=31298.44 N  F_partial=24277.97 N  mass=1914.28 kg
+============================================================================
+MODE fixed  n_grid 96  relax 1.0
+  Fz steady tail mean =    +17024.17 N  std 51.65  ptp 153.41
+  Fz median (all)     =    +16921.35 N  min +16889.31 max +17076.04
+  F_analytic (full)   =    +31298.44 N
+  ERROR steady vs full submersion = -45.61 %
+  ERROR first3 vs full submersion = -46.04 %
+  lateral/Fz = 0.0769   net dz = +0.000000 m
+============================================================================
+wrote /scratch/11603/jcerrell0629/rungb_matched_2x2/m_g96_dc17.22_fixed.json
+exit=0
+=== results ===
+total 50
+drwx------  2 jcerrell0629 G-819066     3 Aug 13 05:38 .
+drwx------ 24 jcerrell0629 G-819066    45 Aug 13 05:28 ..
+-rw-------  1 jcerrell0629 G-819066 12415 Aug 13 05:28 m_g64_dc18.78_coupled.json
+-rw-------  1 jcerrell0629 G-819066 12207 Aug 13 05:29 m_g64_dc18.78_fixed.json
+-rw-------  1 jcerrell0629 G-819066 12244 Aug 13 05:33 m_g96_dc17.22_coupled.json
+-rw-------  1 jcerrell0629 G-819066 12066 Aug 13 05:38 m_g96_dc17.22_fixed.json

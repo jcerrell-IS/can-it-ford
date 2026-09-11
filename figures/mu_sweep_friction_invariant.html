@@ -1,0 +1,122 @@
+<div style="padding: 1rem 0;">
+  <h2 class="sr-only">Friction sensitivity sweep: peak lateral displacement vs. road friction coefficient at d=0.30m, v=1.5m/s. All four conditions return NO-FORD.</h2>
+
+  <div style="display: flex; gap: 12px; margin-bottom: 1.5rem; flex-wrap: wrap;">
+    <div style="background: var(--surface-1); border-radius: var(--radius); padding: 1rem 1.25rem; flex: 1; min-width: 120px;">
+      <div style="font-size: 13px; color: var(--text-secondary); margin-bottom: 4px;">depth</div>
+      <div style="font-size: 22px; font-weight: 500;">0.30 m</div>
+    </div>
+    <div style="background: var(--surface-1); border-radius: var(--radius); padding: 1rem 1.25rem; flex: 1; min-width: 120px;">
+      <div style="font-size: 13px; color: var(--text-secondary); margin-bottom: 4px;">velocity</div>
+      <div style="font-size: 22px; font-weight: 500;">1.5 m/s</div>
+    </div>
+    <div style="background: var(--bg-danger); border-radius: var(--radius); padding: 1rem 1.25rem; flex: 1; min-width: 120px;">
+      <div style="font-size: 13px; color: var(--text-danger); margin-bottom: 4px;">verdict (all mu)</div>
+      <div style="font-size: 22px; font-weight: 500; color: var(--text-danger);">NO-FORD</div>
+    </div>
+    <div style="background: var(--surface-1); border-radius: var(--radius); padding: 1rem 1.25rem; flex: 1; min-width: 120px;">
+      <div style="font-size: 13px; color: var(--text-secondary); margin-bottom: 4px;">mu* flip point</div>
+      <div style="font-size: 22px; font-weight: 500;">none</div>
+    </div>
+  </div>
+
+  <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 1rem; font-size: 12px; color: var(--text-secondary); flex-wrap: wrap;">
+    <span style="display:flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;border-radius:2px;background:#2a78d6;"></span>peak lateral drift (m)</span>
+    <span style="display:flex;align-items:center;gap:4px;"><span style="width:18px;height:2px;background:#e34948;display:inline-block;"></span>NO-FORD threshold (0.05 m)</span>
+  </div>
+
+  <div style="position: relative; width: 100%; height: 280px;">
+    <canvas id="muChart" role="img" aria-label="Bar chart showing peak lateral displacement for friction coefficients 0.0, 0.3, 0.5, and 0.7. All bars are far above the 0.05m NO-FORD threshold, at approximately 0.33 to 0.40m.">Friction 0.0: 0.328m NO-FORD. Friction 0.3: 0.399m NO-FORD. Friction 0.5: 0.396m NO-FORD. Friction 0.7: 0.395m NO-FORD. All exceed the 0.05m threshold.</canvas>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+  <script>
+    const muLabels = ['mu = 0.0\n(frictionless)', 'mu = 0.3\n(wet asphalt)', 'mu = 0.5\n(damp concrete)', 'mu = 0.7\n(dry concrete)'];
+    const driftData = [0.3283, 0.3990, 0.3957, 0.3953];
+    const threshold = 0.05;
+
+    const thresholdPlugin = {
+      id: 'thresholdLine',
+      afterDraw(chart) {
+        const ctx = chart.ctx;
+        const yScale = chart.scales.y;
+        const xScale = chart.scales.x;
+        const y = yScale.getPixelForValue(threshold);
+        ctx.save();
+        ctx.beginPath();
+        ctx.setLineDash([6, 4]);
+        ctx.strokeStyle = '#e34948';
+        ctx.lineWidth = 1.5;
+        ctx.moveTo(xScale.left, y);
+        ctx.lineTo(xScale.right, y);
+        ctx.stroke();
+        ctx.restore();
+        ctx.save();
+        ctx.font = '11px sans-serif';
+        ctx.fillStyle = '#e34948';
+        ctx.textAlign = 'right';
+        ctx.fillText('NO-FORD threshold', xScale.right - 4, y - 5);
+        ctx.restore();
+      }
+    };
+
+    new Chart(document.getElementById('muChart'), {
+      type: 'bar',
+      plugins: [thresholdPlugin],
+      data: {
+        labels: ['mu = 0.0', 'mu = 0.3', 'mu = 0.5', 'mu = 0.7'],
+        datasets: [{
+          label: 'peak lateral drift (m)',
+          data: driftData,
+          backgroundColor: '#2a78d6',
+          borderRadius: 4,
+          barThickness: 40,
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              title: (items) => {
+                const surfaces = ['frictionless', 'wet asphalt', 'damp concrete', 'dry concrete'];
+                return items[0].label + ' — ' + surfaces[items[0].dataIndex];
+              },
+              label: (item) => ' drift: ' + item.raw.toFixed(4) + ' m   (threshold: 0.05 m)'
+            }
+          }
+        },
+        scales: {
+          x: {
+            grid: { display: false },
+            ticks: { color: '#898781', font: { size: 12 } },
+            border: { color: '#c3c2b7' }
+          },
+          y: {
+            min: 0,
+            max: 0.50,
+            grid: { color: '#e1e0d9', lineWidth: 1 },
+            ticks: {
+              color: '#898781',
+              font: { size: 12 },
+              callback: (v) => v.toFixed(2) + ' m'
+            },
+            border: { color: '#c3c2b7' },
+            title: {
+              display: true,
+              text: 'peak lateral displacement (m)',
+              color: '#52514e',
+              font: { size: 12 }
+            }
+          }
+        }
+      }
+    });
+  </script>
+
+  <div style="margin-top: 1.25rem; padding: 0.875rem 1rem; background: var(--bg-danger); border-radius: var(--radius); border-left: 3px solid var(--border-danger);">
+    <p style="font-size: 13px; color: var(--text-danger); margin: 0; line-height: 1.6;">Verdict is friction-invariant. Peak drift plateaus at 0.33-0.40 m across the full realistic friction range (frictionless to dry concrete). No road surface can prevent vehicle destabilization at this depth-velocity combination. L1 has no mechanism to represent this: D x V = 0.45 m²/s falls below every published threshold.</p>
+  </div>
+</div>

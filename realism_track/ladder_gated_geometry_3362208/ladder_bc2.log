@@ -1,0 +1,39 @@
+
+-----------------------------------------------------------------
+           Welcome to the Lonestar6 Supercomputer                
+-----------------------------------------------------------------
+
+No reservation for this job
+--> Verifying valid submit host (login1)...OK
+--> Verifying valid jobname...OK
+--> Verifying valid ssh keys...OK
+--> Verifying access to desired queue (gpu-a100-dev)...OK
+--> Checking available allocation (BCS20003)...OK
+--> Verifying that quota for filesystem /home1/11603/jcerrell0629 is at 47.80% allocated...OK
+--> Verifying that quota for filesystem /work/11603/jcerrell0629/ls6 is at  5.41% allocated...OK
+
+############ RUNG (b) g64 settle-frames=5000 ############
+Thu Aug 13 05:44:39 CDT 2026
+    "floor_restitution_source": "renders/yaris_render_s1/sim_standing.py:132-133 floor restitution=0.05 friction=0.55; :136 walls restitution=0.05 friction=0.0. Read live 2026-08-07. This ladder walks restitution only; floor friction stays at BoxTank's 0.0.",
+    "inflow_source": "renders/yaris_render_s1/sim_standing.py:190-198 per-frame clamp, :160-162 one-shot additive kick. Both reproduced; read live 2026-08-07.",
+    "depth_source": "data/all_runs_inventory.csv realized_depth_m = 0.2944294473039918 m in all 17 runs == 2*DX_CANON, so --depth-cells 2 matches it exactly. Read live 2026-08-07."
+  }
+}
+wrote /scratch/11603/jcerrell0629/ladder_bc2_3362208/rung_b_g64_s5000.json
+exit=0
+
+############ RUNG (c) g64 settle-frames=5000 ############
+Thu Aug 13 05:45:49 CDT 2026
+    "floor_restitution_source": "renders/yaris_render_s1/sim_standing.py:132-133 floor restitution=0.05 friction=0.55; :136 walls restitution=0.05 friction=0.0. Read live 2026-08-07. This ladder walks restitution only; floor friction stays at BoxTank's 0.0.",
+    "inflow_source": "renders/yaris_render_s1/sim_standing.py:190-198 per-frame clamp, :160-162 one-shot additive kick. Both reproduced; read live 2026-08-07.",
+    "depth_source": "data/all_runs_inventory.csv realized_depth_m = 0.2944294473039918 m in all 17 runs == 2*DX_CANON, so --depth-cells 2 matches it exactly. Read live 2026-08-07."
+  }
+}
+wrote /scratch/11603/jcerrell0629/ladder_bc2_3362208/rung_c_g64_s5000.json
+exit=0
+=== done ===
+total 164
+drwx------  2 jcerrell0629 G-819066     1 Aug 13 05:46 .
+drwx------ 26 jcerrell0629 G-819066    51 Aug 13 05:44 ..
+-rw-------  1 jcerrell0629 G-819066 99832 Aug 13 05:45 rung_b_g64_s5000.json
+-rw-------  1 jcerrell0629 G-819066 66930 Aug 13 05:46 rung_c_g64_s5000.json

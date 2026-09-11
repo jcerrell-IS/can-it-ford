@@ -1,0 +1,5 @@
+depth_m,velocity_ms,coup_friction,max_x_disp_m,verdict
+0.3,1.5,0.0,0.3283,NO-FORD
+0.3,1.5,0.3,0.399,NO-FORD
+0.3,1.5,0.5,0.3957,NO-FORD
+0.3,1.5,0.7,0.3953,NO-FORD
