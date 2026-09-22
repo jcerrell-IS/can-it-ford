@@ -12,9 +12,6 @@ Sources read in full for this note, not secondhand:
 - citations/WRL reports technical and Research/Table 5-2 ... .png
 - citations/WRL reports technical and Research/Figure 5-5 Combined flood hazard curves.png
 
-The report PDF and the three WRL images are not redistributed in this public repository,
-because their licences are unresolved. See `THIRD_PARTY_NOTICES.md` for where to obtain them.
-
 Reviewed July 16, 2026.
 
 ---

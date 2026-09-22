@@ -114,9 +114,9 @@ All 17 coupled runs came from
 1. Install `warpmpm` from [jcerrell-IS/mpm-engine](https://github.com/jcerrell-IS/mpm-engine), a
    fork of [kks32/mpm-engine](https://github.com/kks32/mpm-engine) that adds the watertight-mesh
    particle seeding these runs use.
-2. Get the vehicle hull, as described in
-   [`vehicle_geometry_research/README.md`](vehicle_geometry_research/README.md). It is not
-   redistributed here.
+2. The vehicle hull and the upstream model are in
+   [`vehicle_geometry_research/`](vehicle_geometry_research/), with provenance and the CCSA
+   acknowledgement in that folder's README.
 3. Run one case. For example, the run in the figure above:
 
 ```bash
@@ -249,7 +249,8 @@ third_party/             Vendored warpmpm solver core (MIT)
 hf_space/                Early version of the Hugging Face demo (the live Space holds the current app)
 web/                     Source of the project site
 public_release/          The paper and poster PDFs
-citations/               Annotated bibliography and grounding notes
+citations/               Annotated bibliography, source documents and grounding notes
+vehicle_geometry_research/  Vehicle finite element models and the derived hull
 scripts/                 Utilities: data sync, manifests, Vista pull
 paper/                   Paper figure sources and bibliography
 docs/                    Design notes
@@ -278,8 +279,8 @@ Code is released under the **[BSD 3-Clause License](LICENSE)**, the license
 The associated dataset is released under CC-BY-4.0 (see `CITATION.cff`). A dataset DOI is staged
 at DesignSafe (PRJ-6388) and not yet published.
 
-Third-party material keeps its own terms, and some material this project used is not
-redistributed here. See [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md).
+Third-party material in this repository keeps its own terms, listed per item in
+[`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md).
 
 ## Acknowledgments
 

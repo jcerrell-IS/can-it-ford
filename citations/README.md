@@ -8,13 +8,13 @@ NWS Turn Around Don't Drown. https://www.weather.gov/safety/flood-turn-around-do
 
 ## L1, AR&R depth-velocity hazard scalar
 
-Shand, T. D., Cox, R. J., Blacka, M. J., & Smith, G. P. (2011). Australian Rainfall and Runoff Project 10: Appropriate Safety Criteria for Vehicles, Literature Review, Stage 2. AR&R Report No. P10/S2/020. Water Research Laboratory, UNSW. ISBN 978-0-85825-948-5. Published by Engineers Australia; not redistributed here. PDF in `citations/ARR_Project_10_Stage2_Report_Final.pdf`.
+Shand, T. D., Cox, R. J., Blacka, M. J., & Smith, G. P. (2011). Australian Rainfall and Runoff Project 10: Appropriate Safety Criteria for Vehicles, Literature Review, Stage 2. AR&R Report No. P10/S2/020. Water Research Laboratory, UNSW. ISBN 978-0-85825-948-5. Published by Engineers Australia. PDF in `citations/`. PDF in `citations/ARR_Project_10_Stage2_Report_Final.pdf`.
 
 Threshold used: DV <= 0.60 m2/s for the Large 4WD vehicle class specifically, not a generic all-vehicle number. The report itself calls this table "draft, interim, informal," not an endorsed safety standard.
 
 ## L2, WCSPH physical validation
 
-Smith, G., Modra, B., & Felder, S. (2019). Full-scale testing of stability curves for vehicles in flood waters. Journal of Flood Risk Management. DOI:10.1111/jfr3.12527. Closed access, so it is not redistributed here; see the DOI.
+Smith, G., Modra, B., & Felder, S. (2019). Full-scale testing of stability curves for vehicles in flood waters. Journal of Flood Risk Management. DOI:10.1111/jfr3.12527. Source in `citations/Smith-Modra-Felder/`.
 
 ## L2, DRIFT_THRESHOLD = 0.05m reframing
 
