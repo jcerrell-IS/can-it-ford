@@ -4,7 +4,7 @@
 rule to a coupled GPU water simulation, and the interesting result is where they disagree.**
 
 <p align="center">
-  <img src="figures/_BIG/g8_hero.png"
+  <img src="figures/readme_hero_g64_m1100.png"
        alt="Coupled MPM simulation of a Toyota Yaris hull in standing water, water coloured by speed, grid 64, 1100 kg"
        width="820">
 </p>
@@ -32,22 +32,28 @@ not excluded, and the same applies to the figure.</em></p>
 | **Live demo** | [Verdict explorer on Hugging Face Spaces](https://huggingface.co/spaces/josiecerrell/can-it-ford) |
 | **Plain-language explainer** | [can-it-ford.vercel.app](https://can-it-ford.vercel.app) |
 | **Data** | [Scenario sweep](https://huggingface.co/datasets/josiecerrell/can-it-ford-scenario-sweep) and [load surface](https://huggingface.co/datasets/josiecerrell/can-it-ford-speed-surface) on Hugging Face |
-| **Paper and poster** | [`public_release/`](public_release/) |
+| **Paper and poster** | [`public_release/`](public_release/). The paper is the September 2026 revision; the version submitted on July 31 is kept beside it. The poster is the July 2026 version. One correction to it: it says all 17 runs are bit-reproducible, but the check behind that only confirms that each run's setup is repeatable; repeat runs are not bit-identical. |
 
 ## Key results
 
-- **Every coupled run carries a complete provenance record.** For all 17 runs, the code commit,
-  solver version, mesh hash, particle counts, grid settings, substeps and material settings are
-  recorded: 10 of 10 fields present on every run, zero unresolved commits, zero mesh mismatches. See
-  [`data/reproducibility_manifest.json`](data/reproducibility_manifest.json), built by
-  [`analysis/reproducibility_manifest.py`](analysis/reproducibility_manifest.py).
 - **The depth x velocity shortcut is only half of the published rule.** The AR&R criterion needs
   a depth cap and a depth x velocity cap to hold together. Applying both, for the car's own class,
   moved 23 of 70 flood scenarios from FORD to NO-FORD, and none the other way
   ([`data/scenario_sweep.csv`](data/scenario_sweep.csv)).
 - **3D scene reconstruction.** A Gaussian splat of a real drainage crossing: 1,147,694 Gaussians,
   trained with gsplat for 30,000 iterations, PSNR 22.74. A decimated preview is in the live demo's
-  Reconstruction tab. The bridge from splat to simulation is designed, not yet built.
+  Reconstruction tab. The splat has no metric scale yet, and the bridge from splat to simulation
+  is not built.
+- **Each of the 17 gated runs has a provenance record that says how each field was obtained.**
+  Each run wrote its own physics settings: particle counts, grid size and spacing, substeps, sound
+  speed and floor friction. The solver version and mesh hash were filled in after the runs, assigned
+  from the solver version the repository pins and from the mesh that matches each run's recorded
+  hull volume. The code commit was reconstructed from file dates, so it is an upper bound rather than
+  proof of what ran. The GPU (NVIDIA GH200 on Vista) was logged once per batch, not per run, and wall
+  time was not recorded. The per-run records stay in the private development repository; the
+  manifest carries their fields and labels. See
+  [`data/reproducibility_manifest.json`](data/reproducibility_manifest.json), built by
+  [`analysis/reproducibility_manifest.py`](analysis/reproducibility_manifest.py).
 
 What is established, what is open, and the numbers this project has retired:
 [`FINDINGS.md`](FINDINGS.md).
@@ -68,9 +74,10 @@ still gets the answer right.
 | **L1** | AR&R two-part criterion: a class depth cap AND a D x V cap, both required together. The paper's canonical class is Small Car (depth <= 0.30 m and D x V <= 0.30 m2/s). The bare D x V <= 0.60 m2/s figure often quoted is the Large 4WD hazard cap alone, with no depth restriction. Draft/interim criterion from the source report, not an endorsed safety standard. | Shand et al. 2011, AR&R Project 10 Stage 2 (Engineers Australia) |
 | **L2** | Coupled particle simulation: weakly compressible water plus a rigid vehicle body, verdict from lateral drift | This project |
 
-The intended front end reconstructs the scene from video using 3D Gaussian splatting. That front
-end is designed and not yet built: every reported result starts from a watertight vehicle mesh and
-a parameterized flood condition, not from a splat.
+The intended front end reconstructs the scene from video using 3D Gaussian splatting. One real
+scene has been reconstructed and trained as a splat, but it has no metric scale yet and the
+splat-to-simulation bridge is not built, so every reported result starts from a watertight vehicle
+mesh and a parameterized flood condition, not from a splat.
 
 The abstraction ladder is a running instance of the Section 3 orchestrator in
 [Physically Viable World Models (Thorpe et al. 2026, arXiv:2605.30542)](https://arxiv.org/abs/2605.30542).
@@ -80,17 +87,18 @@ which recovers material properties from images.
 
 ## Pipeline
 
-<img src="figures/can_it_ford_pipeline_diagram.svg" alt="Can It Ford pipeline diagram" width="820">
+<img src="paper/figures_review/pipeline_diagram_v2.svg" alt="Can It Ford pipeline: video, Gaussian splat, PhysGaussian bridge, Warp MPM, FORD or NO-FORD verdict. Dashed stages are not on the path used for any reported result." width="820">
 
 ```
-video  ->  gsplat (LS6 A100)  ->  splat/mesh to MPM particles  ->  MPM water + rigid vehicle coupling (Vista GH200)  ->  FORD / NO-FORD
-[      designed, not yet built             ]  [            built and producing results            ]
+video  ->  gsplat (LS6 A100)  ->  splat to MPM particles  ->  MPM water + rigid vehicle (Vista GH200)  ->  FORD / NO-FORD
+[ ran on one scene, unscaled ]    [ designed, not built ]     [               built and producing results               ]
 ```
 
 The splat-to-particle bridge is intended to reuse
 [PhysGaussian (Xie et al. 2023, arXiv:2311.12198)](https://arxiv.org/abs/2311.12198) extraction
 logic on top of [3D Gaussian Splatting (Kerbl et al. 2023, arXiv:2308.04079)](https://arxiv.org/abs/2308.04079).
-`bridge/` holds an independent implementation of that published algorithm.
+`bridge/` holds a partial scaffold of an independent implementation of that published algorithm,
+targeting Genesis `MPM.Liquid`. It is not runnable end to end.
 
 ---
 
@@ -107,9 +115,12 @@ Vehicle class options: `sedan`, `large_passenger`, `large_4wd` (default).
 
 ### L2, the coupled simulation (GPU)
 
-All 17 coupled runs came from
-[`renders/yaris_render_s1/sim_standing.py`](renders/yaris_render_s1/sim_standing.py) with the
-`warpmpm` solver (NVIDIA Warp), run on TACC's Vista (NVIDIA GH200).
+The 17 coupled runs were launched with the driver snapshot
+[`analysis/render_v1/as_ran_local_copies/sim_standing.py`](analysis/render_v1/as_ran_local_copies/sim_standing.py)
+(sha256 `5215c38b`, the hash the July batch logs recorded) and the `warpmpm` solver (NVIDIA Warp),
+on TACC's Vista (NVIDIA GH200). [`renders/yaris_render_s1/sim_standing.py`](renders/yaris_render_s1/sim_standing.py)
+is a later revision of the same driver (sha256 `4696c3b2`); use the snapshot to reproduce the
+published runs.
 
 1. Install `warpmpm` from [jcerrell-IS/mpm-engine](https://github.com/jcerrell-IS/mpm-engine), a
    fork of [kks32/mpm-engine](https://github.com/kks32/mpm-engine) that adds the watertight-mesh
@@ -120,10 +131,10 @@ All 17 coupled runs came from
 3. Run one case. For example, the run in the figure above:
 
 ```bash
-python renders/yaris_render_s1/sim_standing.py \
+python analysis/render_v1/as_ran_local_copies/sim_standing.py \
     --vehicle vehicle_geometry_research/yaris_coarse_v1l_watertight.ply \
-    --mass 1100 --grid 64 --depth 0.30 --velocity 1.5 \
-    --label g64_m1100 --out runs/g64_m1100
+    --mass 1100 --grid 64 --depth 0.30 --velocity 1.5 --frames 90 \
+    --eta 1.0e-3 --floor-friction 0.55 --label small_passenger --out runs/g64_m1100
 ```
 
 The run writes `metrics.csv`, `rollout.npz` and `summary.json` into `--out`. Each row of
@@ -162,9 +173,10 @@ and could not fail). Per-step invariant checking is not yet implemented.
 | File | Description |
 |---|---|
 | `data/all_runs_inventory.csv` | **Primary source for the coupled sweep.** 17 runs on the watertight Yaris hull. 7 of the 17 exceed a 10 percent particle-passthrough gate and are flagged, not excluded. |
-| `data/reproducibility_manifest.json` | Provenance record for the 17 runs: code commit, solver version, mesh hash, grid and material settings per run, plus what is absent and why. |
+| `data/reproducibility_manifest.json` | Provenance record for the 17 runs: code commit, solver version, mesh hash, grid and material settings per run, how each field was obtained (recorded by the run, or filled in afterwards), plus what is absent and why. |
 | `data/scenario_sweep.csv` | L0/L1 grid (depths 0.1 to 1.0 m x velocities 0.0 to 3.0 m/s), 70 scenarios, with the full and product-only L1 encodings side by side. FORD counts out of 70 for the three classes: 14, 19, 26. |
-| `data/mu_sweep_results.csv` | Friction sensitivity at (d=0.30 m, v=1.5 m/s) |
+| `data/mu_sweep_results.csv` | Vehicle-water coupling-friction sensitivity at (d=0.30 m, v=1.5 m/s), from the Genesis pilot. Not floor (road) friction |
+| `data/three_class_*_2026-08-14.csv` | Non-canonical `warpmpm` floor-friction and three-vehicle study at nominal depth 0.30 m and 1.5 m/s. Peak drift falls as floor friction rises in every group tested. Mostly single runs, and every friction-varied run on the finer grid exceeds the 10 percent passthrough gate |
 | `data/l2_results_from_wandb.csv` | L2 pilot runs pulled from the W&B API: 9 unique conditions, L1 and L2 agree at 5 of 9 |
 | `data/phase_space_results.csv` | L2 SPH pilot output (pre-fix). **Not usable for an agreement rate:** it carries a single verdict column with no corresponding L1 value, and 15 of its 31 rows share a condition with another row under a different verdict |
 | `data/track1_sweep_v2/` | **Superseded and excluded from the paper.** 36-run sweep on a rescaled box proxy (1390 kg, 4.7352 m3 against the real hull's 3.5427 m3). Kept as a record; do not cite its numbers |
@@ -176,7 +188,11 @@ and could not fail). Per-step invariant checking is not yet implemented.
   are flagged, not excluded.
 - **One hull.** The mass sweep (1,100, 1,609 and 2,337 kg) varies mass on a single Yaris hull, so
   it is a sensitivity study, not a comparison of vehicle classes.
-- **No reconstruction front end yet.** Every reported result starts from a mesh, not a splat.
+- **Reconstruction is not connected yet.** One scene is trained as a splat, but it has no metric
+  scale and no bridge to the simulation, so every reported result starts from a mesh, not a splat.
+- **Not bit-reproducible.** Repeat runs of the same case differ: eight same-seed repeats of one
+  non-canonical case span 0.087 to 0.092 m in peak drift, about 6 percent. The determinism flag in
+  each run record only checks that the vehicle loads to the same particle count and domain size.
 
 The full list, with the numbers this project has retired, is in [`FINDINGS.md`](FINDINGS.md).
 
@@ -229,7 +245,9 @@ asserted a verdict per class. A follow-up pass, version 3 of the mass-sensitivit
 withdrew that table. The v3 rerun, under standing water plus sustained inflow rather than the
 original dry-start setup, found SLIDE as the only failure mode that activated across all three
 masses, and found L0 and L2 agreeing with each other while L1, the AR&R depth-velocity hazard
-scalar, was the rung that diverged.
+scalar, was the rung that diverged. The paper does not turn this into an agreement rate: the L2
+drift detector is a numerical threshold with no empirical source, so the paper compares L1 and L2
+by displacement, not by verdict count.
 
 </details>
 

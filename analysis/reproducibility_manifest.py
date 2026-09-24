@@ -1,45 +1,32 @@
 #!/usr/bin/env python3
-"""Emit, in ONE place, the record the literature says nobody publishes. And verify it.
+"""Emit, in one place, a provenance record for the 17 gated runs, and verify it.
 
-THE FINDING THIS IMPLEMENTS, from three separate deep searches, none of which had ever
-been opened before 2026-08-20 because the corpus index could not see them.
+WHY. Literature searches on GPU particle solvers found that studies rarely report, in one
+place, particle and grid counts, GPU model, wall time per simulated second, multi-GPU scaling
+or a runnable vehicle case, and work on simulation provenance recommends recording code,
+inputs, environment, hashes, outputs and analysis lineage. This project cannot validate its
+physics against an external number, so a complete, machine-checkable provenance record is the
+part it can deliver.
 
-  "GPU particle solver portability scaling and surrogate fidelity", 56 papers:
-      "the supplied studies do not report, IN ONE PLACE, particle/grid counts, GPU
-       model, wall time per simulated second, multi-GPU scaling, or a runnable
-       x86/CUDA vehicle case."
+WHAT EACH FIELD MEANS. The physics and grid fields in each run's summary.json (particle
+counts, grid size, spacing, substeps, sound speed, friction) were written by the run.
+`canitford_git_commit`, `solver_git_sha` and `mesh_sha256` were not: a backfill on 2026-08-12
+added them and labelled how each was obtained in `_provenance_backfill`. The commit is
+RECONSTRUCTED from a file date (an upper bound, not evidence of what ran), and the solver SHA
+and mesh hash are RESOLVED from the pinned solver and the recorded hull volume. The manifest
+carries those labels per run as `field_provenance`, so "present" is never read as "recorded".
 
-  "MPM Simulation Verification Provenance", 68 papers:
-      "record code, inputs, environment, hashes, outputs and analysis lineage...
-       pre-commit gates should check mass/inertia/CoG, geometry and bounding boxes,
-       gravity and friction, particle counts, timestep and CFL, conservation
-       residuals, resolution convergence... and manifest completeness"
+WHAT IS ABSENT IS NAMED, NOT OMITTED. No run record carries the GPU model or wall time. The
+GPU is recorded once per batch in the batch logs (NVIDIA GH200 120GB on Vista), and no run
+record carries a job id, host or timestamp, so wall time cannot be joined to a run. This
+script prints both with that reason rather than dropping the rows, because a manifest that
+silently omits what it could not find is the same defect as a check that cannot distinguish
+absence from failure.
 
-  "Reliable AI Scientific Software", 79 papers:
-      "only 68.3% of agent-generated projects ran cleanly, with 13.5x more runtime
-       than declared dependencies"
+IT ALSO VERIFIES. It re-resolves every recorded git SHA against the live object store and
+re-hashes the canonical mesh, so a run whose provenance no longer resolves is reported.
 
-THE ARGUMENT. This project cannot currently validate its physics against an external
-number, and that is its stated weakness. What it CAN do, and what the literature says
-almost nobody does, is publish a complete and machine-checkable provenance record for
-every gated run. `summary.json` already carries `canitford_git_commit`, `solver_git_sha`
-and `mesh_sha256` alongside every numeric parameter. That is five of the six items the
-GPU search names, already on disk, for all 17 runs. **The reproducibility record is a
-contribution, not a chore, and no session has ever claimed it.**
-
-WHAT IS ABSENT IS NAMED, NOT OMITTED. GPU model and wall-time-per-simulated-second are
-NOT on local disk: a search of `data/` and `renders/` for wall, elapsed, GPU, GH200,
-A100, jobid and slurm returns ZERO files. They live in the Slurm accounting database on
-Vista. This script prints them as ABSENT with that reason rather than dropping the rows,
-because a manifest that silently omits what it could not find is the same defect as a
-check that cannot distinguish absence from failure.
-
-IT ALSO VERIFIES, WHICH IS THE POINT. A manifest nobody checks is a claim. This one
-re-resolves every recorded git SHA against the live object store and re-hashes the
-canonical mesh, so a run whose provenance no longer resolves is reported as such.
-
-    /opt/homebrew/bin/blender -b --python analysis/reproducibility_manifest.py   # numpy not needed
-    python3 analysis/reproducibility_manifest.py                                  # stdlib only
+    python3 analysis/reproducibility_manifest.py      # stdlib only
 """
 from __future__ import annotations
 
@@ -57,7 +44,7 @@ MESH = os.path.join(REPO, "vehicle_geometry_research",
 OUT_JSON = os.path.join(REPO, "data", "reproducibility_manifest.json")
 OUT_MD = os.path.join(REPO, "docs", "REPRODUCIBILITY_MANIFEST.md")
 
-# The six items the GPU-portability search names, mapped to where each lives.
+# The six items the provenance literature asks for, mapped to where each lives.
 WANTED = [
     ("particle counts", "summary.json", ("n_water", "n_vehicle", "n_carved")),
     # KEYS MUST MATCH THE RUN DICT, NOT THE RAW summary.json. An earlier version
@@ -77,8 +64,8 @@ WANTED = [
 ]
 
 # MEASURED ON A COMPUTE NODE 2026-08-20, not relayed. srun -p gh -N1 -n1 -t 00:10:00,
-# job 924231, node c608-062. An independent second session measured the identical
-# hardware on c611-021 under job 924230, so this is two origins and not one.
+# job 924231, node c608-062. A second measurement found the identical
+# hardware on c611-021 under job 924230.
 VISTA_GPU = {
     "name": "NVIDIA GH200 120GB",
     "memory_total_mib": 97871,
@@ -118,6 +105,33 @@ def sha256(path):
         for chunk in iter(lambda: fh.read(1 << 20), b""):
             h.update(chunk)
     return h.hexdigest()
+
+
+BACKFILLED_FIELDS = ("canitford_git_commit", "solver_git_sha", "mesh_sha256",
+                     "vehicle_mass", "grid_density", "bulk_modulus")
+
+
+def provenance_label(text):
+    """Map the backfill's free-text field_confidence to one word."""
+    t = (text or "").strip().lower()
+    for word in ("reconstructed", "resolved", "aliased", "recorded"):
+        if t.startswith(word):
+            return word
+    return "unknown"
+
+
+def field_provenance(s):
+    """How each audit field reached summary.json, as labelled by the backfill. A field the
+    backfill did not label is reported as present, not as recorded."""
+    pb = s.get("_provenance_backfill") or {}
+    fc = pb.get("field_confidence") or {}
+    out = {}
+    for k in BACKFILLED_FIELDS:
+        if k in fc:
+            out[k] = provenance_label(fc[k])
+        elif k in s:
+            out[k] = "present, not backfilled"
+    return out, pb.get("mode"), pb.get("date")
 
 
 def sha_resolves(sha):
@@ -164,6 +178,7 @@ def main() -> int:
         if mesh_live and mesh_rec and mesh_rec != mesh_live:
             mesh_mismatch.append((name, mesh_rec, mesh_live))
 
+        fprov, bf_mode, bf_date = field_provenance(s)
         runs.append({
             "run": name,
             "summary_path": os.path.relpath(spath, REPO) if spath else None,
@@ -182,7 +197,10 @@ def main() -> int:
             "solver_git_sha": solver_sha or None,
             "mesh_sha256_recorded": mesh_rec or None,
             "gpu_model": None,
+            "gpu_model_inferred_from_venue": VISTA_GPU["name"],
             "wall_time_per_simulated_second": None,
+            "field_provenance": fprov,
+            "provenance_backfill": {"mode": bf_mode, "date": bf_date},
         })
 
     complete = [k for k in ("n_water", "n_vehicle", "n_grid", "dx", "substeps",
@@ -191,7 +209,7 @@ def main() -> int:
                 if all(r.get(k) is not None for r in runs)] if runs else []
 
     print("REPRODUCIBILITY MANIFEST")
-    print("the record the GPU-portability search (56 papers) says no study reports in one place\n")
+    print("a provenance record for the 17 gated runs, in one place\n")
     print(f"  gated runs with a readable summary : {len(runs)} of {len(rows)}")
     print(f"  fields complete across ALL runs     : {len(complete)} of 10")
     print(f"  canonical mesh sha256 (live)        : {(mesh_live or 'MESH ABSENT')[:16]}")
@@ -199,8 +217,13 @@ def main() -> int:
     print("  what the literature asks for, and whether this project has it:")
     for label, where, keys in WANTED:
         if where == "MEASURED":
-            print(f"    PRESENT  {label:34} {VISTA_GPU['name']}, {VISTA_GPU['compute_capability']}, "
-                  f"driver {VISTA_GPU['driver_version']}  [measured on a node]")
+            print(f"    INFERRED {label:34} {VISTA_GPU['name']}, {VISTA_GPU['compute_capability']}, "
+                  f"driver {VISTA_GPU['driver_version']}  [measured on a Vista node 2026-08-20; "
+                  f"batch logs record it, run records do not]")
+        elif label == "code provenance":
+            have = all(all(r.get(k) is not None for r in runs) for k in keys) if runs else False
+            print(f"    {'FILLED  ' if have else 'PARTIAL '} {label:34} {', '.join(keys)}  "
+                  f"[added 2026-08-12: commit reconstructed, solver and mesh resolved]")
         elif where == "UNJOINABLE":
             print(f"    ABSENT   {label:34} NOT recoverable: no join key exists")
         elif where == "N/A":
@@ -224,9 +247,20 @@ def main() -> int:
         print("  recorded mesh hash matches the live canonical mesh.")
 
     payload = {
-        "generated_for": "the one-place reproducibility record named by the GPU-portability deep search",
+        "generated_for": "a one-place provenance record for the 17 gated runs",
         "n_runs": len(runs),
         "fields_complete_across_all_runs": complete,
+        "fields_complete_means":
+            "present on every run, not recorded by every run. canitford_git_commit is "
+            "RECONSTRUCTED from a file date and solver_git_sha and mesh_sha256 are RESOLVED, "
+            "all three added by a backfill on 2026-08-12; see field_provenance in each run.",
+        "field_provenance_across_runs": {
+            k: sorted({r["field_provenance"].get(k, "absent") for r in runs})
+            for k in BACKFILLED_FIELDS} if runs else {},
+        "gpu_model_note":
+            "not in any run record. The July batch logs record NVIDIA GH200 120GB on the Vista "
+            "nodes that ran the batches, so gpu_model_inferred_from_venue carries that value for "
+            "every run as an inference from the batch logs and the venue, not a per-run record.",
         "canonical_mesh_sha256": mesh_live,
         "hardware_vista": VISTA_GPU,
         "hardware_ls6_for_contrast": LS6_GPU,

@@ -33,22 +33,24 @@ from evaluating an 1100 kg car against its own published class.
 
 ## Scope
 
-**Established.** 20 coupled runs of a watertight 2010 Toyota Yaris hull (derived from CCSA's finite element
-model) across three grid
-resolutions, three masses, five velocities and three depths. Determinism verified on 17 of 20; the
-3 dry-start runs carry no record. Mesh containment 100.00 % of a 2000-particle subsample. D×V
+**Established.** 20 coupled runs of a watertight 2010 Toyota Yaris hull (derived from CCSA's finite
+element model): the 17 gated runs the paper reports, across three grid resolutions, three masses,
+six velocities and four depths, plus 3 early dry-start runs. Vehicle loading is repeatable in the 17
+runs that record it (two loads give the same particle count and domain size), but the simulated
+trajectories are not bit-identical, and the 3 dry-start runs record nothing. Mesh containment 100.00 % of a 2000-particle subsample. D×V
 bit-identical across the mass range, tested with `float.hex()`. Eight geometry and physics gates
 reported: six pass, one fails, one noted.
 
 **Open.** No reconstructed scene has entered a simulation. Gaussian splatting *did* run, to
-1,147,694 Gaussians at PSNR 22.74 / SSIM 0.825 / LPIPS 0.311 (drainA, 30,000 iterations), but the bridge from those kernels to
-solver particles was never built, so **no verdict here starts from video**. Vehicle velocity is
+1,147,694 Gaussians at PSNR 22.74 / SSIM 0.825 / LPIPS 0.311 on held-out views (drainA, 30,000
+iterations), but the splat has no metric scale and the bridge from those kernels to solver
+particles was never built, so **no verdict here starts from video**. Vehicle velocity is
 zero throughout, a stationary-vehicle study, which is what the criteria themselves measure. One
 hull at three masses is a mass sensitivity study, not a class comparison; the hull fails the
-ground-clearance axis for the class it was evaluated as. Realized particle density 302.6–663.6
-kg/m³, above this project's own 100–300 band, reported as a failed gate rather than explained
-away. Grid convergence is non-monotonic, so the **direction** of the mass effect is quotable and
-its **magnitude** is not (spread 1.9× to 4.9×). Particle passthrough 7.3–15.9 %; the zero
+ground-clearance axis for the class it was evaluated as. Realized particle density 302.6 to 663.6
+kg/m³ across the three masses, all below water, so every configuration floats once fully
+submerged; an earlier 100 to 300 kg/m³ plausibility band is retired. Grid convergence is non-monotonic, so the **direction** of the mass effect is quotable and
+its **magnitude** is not (spread 1.9× to 4.9×). Particle passthrough 7.3 to 15.9 %; the zero
 out-of-bounds count is a post-clamp residual, with 6,345 to 207,415 particle-frames clipped back
 inside first.
 
