@@ -56,3 +56,23 @@ def test_splat_to_particles_round_trip(tmp_path):
     np.testing.assert_array_equal(data["mpm_init_pos"], pos)
     np.testing.assert_array_equal(data["mpm_init_vol"], vol)
     np.testing.assert_array_equal(data["mpm_init_cov"], cov)
+
+
+def test_interior_filling_stays_inside_a_closed_shell():
+    from bridge.filling import fill_internal_particles
+
+    # A dense shell of small Gaussians on a sphere of radius 0.5 around (1, 1, 1).
+    rng = np.random.default_rng(1)
+    d = rng.normal(size=(20000, 3))
+    shell = 1.0 + 0.5 * d / np.linalg.norm(d, axis=1, keepdims=True)
+    s2 = 0.01 ** 2
+    cov = np.tile([s2, 0.0, 0.0, s2, 0.0, s2], (len(shell), 1))
+    vol = np.full(len(shell), 1e-6)
+
+    pos2, vol2, cov2 = fill_internal_particles(shell, vol, cov, BridgeConfig(checkpoint_path="", n_grid=32))
+    added = pos2[len(shell):]
+    assert len(added) > 0
+    assert np.all(np.linalg.norm(added - 1.0, axis=1) < 0.5)
+    # The filled voxels should account for most of the enclosed volume.
+    assert vol2[len(shell):].sum() > 0.6 * (4.0 / 3.0) * np.pi * 0.5 ** 3
+    assert cov2.shape == (len(pos2), 6)

@@ -10,7 +10,7 @@ _REPO = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__
 
 LIVE_SRC = Path(__file__).resolve().parent / "vehicle_live.py"
 LIVE_SRC_PROVENANCE = {
-    "origin": os.path.expandvars("$WORK/mpm-engine/src/warpmpm/vehicle.py"),
+    "origin": "$WORK/mpm-engine/src/warpmpm/vehicle.py",  # Vista $WORK
     "repo_head": "fd390d69ecfd1598f56803a215bb8d0eb7231d85",
     "working_tree_state": "M (uncommitted solidify_watertight patch, NOT in repo_head)",
     "md5": "4c3e8b2e3870194f9ec30f5398ca8407",

@@ -37,8 +37,8 @@ not a measured drag.</em></p>
 
 ## Key results
 
-- **The depth x velocity shortcut is only half of the published rule.** The AR&R criterion needs
-  a depth cap and a depth x velocity cap to hold together. Applying both, for the car's own class,
+- **The depth x velocity shortcut is only part of the published rule.** The AR&R criterion needs
+  a class depth cap, a 3.0 m/s velocity cap and a depth x velocity cap to hold together. Applying both, for the car's own class,
   moved 23 of 70 flood scenarios from FORD to NO-FORD, and none the other way
   ([`data/scenario_sweep.csv`](data/scenario_sweep.csv)).
 - **The first 17 coupled runs measured their own start-up, not a current.** In 16 of 17 the car
@@ -155,7 +155,9 @@ published runs.
 1. Install `warpmpm` from [jcerrell-IS/mpm-engine](https://github.com/jcerrell-IS/mpm-engine), a
    fork of [kks32/mpm-engine](https://github.com/kks32/mpm-engine) that adds the watertight-mesh
    particle seeding these runs use: `pip install -r requirements-gpu.txt` (Linux, NVIDIA GPU,
-   Python 3.12).
+   Python 3.12). The runs recorded solver commit `544c93dd` but used the seeding change as an
+   uncommitted local patch, later committed as `b43c3a2`; the pinned fork commit contains both, so
+   it reconstructs the solver that ran rather than recording it.
 2. The vehicle hull and the upstream model are in
    [`vehicle_geometry_research/`](vehicle_geometry_research/), with provenance and the CCSA
    acknowledgement in that folder's README.

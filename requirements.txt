@@ -6,6 +6,7 @@ matplotlib>=3.8
 scipy>=1.11
 trimesh>=4.0
 plotly>=5.18
+kaleido>=0.2
 scikit-learn>=1.4
 imageio>=2.34
 imageio-ffmpeg>=0.4.9

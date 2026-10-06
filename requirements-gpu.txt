@@ -1,6 +1,9 @@
 # GPU simulation (L2), on Linux with an NVIDIA GPU and Python 3.12.
 # warpmpm from this project's fork of kks32/mpm-engine, which adds watertight-mesh particle seeding.
-# The 17 published runs recorded solver commit 544c93dd (vendored under third_party/); the fork
-# commit below is 544c93dd plus three commits of mesh-loading changes.
+# The 17 published runs recorded solver commit 544c93dd (vendored under third_party/), but ran it
+# with the watertight-seeding change applied as an uncommitted local patch, which
+# analysis/render_v1/geom_live.py records. That change was later committed to the fork as b43c3a2.
+# The commit below is 544c93dd plus three commits including it, so it reconstructs the solver that
+# ran; it is not a recorded identity.
 -r requirements.txt
 warpmpm[render,geometry] @ git+https://github.com/jcerrell-IS/mpm-engine@627367ecc0d022b366f825b1c3f60c37f286f1e2

@@ -41,7 +41,7 @@ SSF = get_vehicle("compact_sedan")["ssf"]
 OUT = REPO / "data" / "rogue_silverado_slide_classification_2026-08-13.csv"
 
 LS6 = Path(os.path.expandvars("$SCRATCH/rs_sweep_v2"))
-VISTA = Path(os.path.expandvars("$WORK/class_specific_2026-08-08"))
+VISTA = Path(os.path.expandvars("$STOCKYARD/vista/class_specific_2026-08-08"))
 
 # mass: the values the runs actually used. Silverado 2270.0 is deck-header primary;
 # Rogue 1571.3 is WEB-SOURCED only, the Rogue deck states no mass.

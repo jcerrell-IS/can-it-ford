@@ -93,7 +93,7 @@ import sys
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.join(REPO, "data", "class_specific_runs_2026-08-08.csv")
 
-WORK = os.environ["WORK"]  # set by TACC on Vista
+WORK = os.environ.get("WORK", "$WORK")  # set by TACC on Vista; unused with --summaries-json
 CLASS_ROOT = os.path.join(WORK, "class_specific_2026-08-08")
 HULL_ROOT = os.path.join(WORK, "render_s3_hullsweep")
 

@@ -52,8 +52,12 @@ govern these runs.
 
 There is no checked-in venv. The interpreter used was uv-managed CPython 3.12.
 
+Run it from the directory that holds the run folders (`g64_m1100/rollout.npz` and so on). The
+particle rollouts are not in this repository.
+
 ```bash
-cd /Users/josie/can-it-ford/renders/yaris_render_s1 && uv run --python 3.12 --with numpy --with trimesh --with scikit-image --with scipy --with fast-simplification python render_realistic.py g64_m1100 45
+uv run --python 3.12 --with numpy --with trimesh --with scikit-image --with scipy --with fast-simplification \
+    python <path-to-repo>/analysis/render_v1/render_realistic.py g64_m1100 45
 ```
 
 Success looks like: a PNG written, `watertight True`, and a printed volume within

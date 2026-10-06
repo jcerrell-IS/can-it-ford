@@ -10,7 +10,7 @@ steps published in PhysGaussian (Xie et al. 2024, [arXiv:2311.12198](https://arx
 > is not: `to_genesis_scene` returns a seeding specification for Genesis `MPM.Liquid`, a solver the
 > project later stopped using, and builds no scene. Every reported L2 result uses the `warpmpm`
 > solver and starts from a vehicle mesh, not a splat, so no result depends on this package.
-> `tests/test_bridge_roundtrip.py` checks the implemented half on a synthetic splat.
+> `tests/test_bridge_roundtrip.py` checks the implemented half on a synthetic splat and a closed shell.
 
 **Licensing.** `XPandora/PhysGaussian` publishes no licence, so this code is an independent
 NumPy implementation of the published algorithm, not a copy of the upstream source. See
