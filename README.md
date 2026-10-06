@@ -23,7 +23,32 @@ not a measured drag.</em></p>
 [![Project site](https://img.shields.io/badge/project_site-can--it--ford.vercel.app-black)](https://can-it-ford.vercel.app)
 [![Tests](https://github.com/jcerrell-IS/can-it-ford/actions/workflows/csv-check.yml/badge.svg)](https://github.com/jcerrell-IS/can-it-ford/actions/workflows/csv-check.yml)
 
-*Josie Cerrell, NSF SCIPE REU 2026, GeoElements Lab, UT Austin (PI: Krishna Kumar)*
+*Josie Cerrell, Claremont McKenna College. NSF REU Site SCIPE-AI (Award #2447887), GeoElements
+Lab, Texas Advanced Computing Center, The University of Texas at Austin. Mentor: Krishna Kumar.*
+
+## Summary
+
+Flooded roads are a leading cause of flood deaths, and an autonomous vehicle faces the same
+question a driver does: is this water safe to cross? This project asks that question for one
+specific car and one specific flooded road, and looks for the simplest physical model that answers
+it correctly. It compares three levels on the same 70-scenario grid of water depth and flow
+velocity: a fixed depth cutoff (L0), the Australian Rainfall and Runoff (AR&R) vehicle stability
+criterion (L1), and a coupled material point method simulation of water and a watertight 2010
+Toyota Yaris hull on TACC GPUs (L2).
+
+The two rule-based levels already disagree before any simulation runs. The depth cutoff permits
+7 crossings and the full AR&R criterion 14, and the vehicle's class alone decides the verdict in 12
+scenarios. Applying the criterion in full, rather than as the depth x velocity product it is often
+reduced to, reclassified 23 scenarios as unsafe and none the other way. The first coupled
+simulations turned out to measure their own start-up surge rather than a steady current, so their
+verdicts are withdrawn; a steady-current campaign on TACC Lonestar6 replaces them and has produced
+flow fields but no verdict yet.
+
+**Paper:** [*Can It Ford? Query-Conditioned, Physically Viable World Models for Autonomous-Vehicle
+Flood Traversability from Gaussian Splatting*](public_release/Cerrell_CanItFord_paper.pdf)
+(September 2026 revision; the version submitted on July 31 is
+[kept beside it](public_release/Cerrell_CanItFord_paper_as_submitted_2026-07-31.pdf)).
+**Poster:** [TACC, July 2026](public_release/Cerrell_TACC_42x56.pdf).
 
 ## See it running
 
@@ -33,9 +58,19 @@ not a measured drag.</em></p>
 | **Simulation records** | [TACC run records](https://huggingface.co/datasets/josiecerrell/can-it-ford-steady-force): configuration, status, wall time, GPU and per-frame time series for every steady-current run |
 | **Plain-language explainer** | [can-it-ford.vercel.app](https://can-it-ford.vercel.app) |
 | **Data** | [Scenario sweep](https://huggingface.co/datasets/josiecerrell/can-it-ford-scenario-sweep) and [load surface](https://huggingface.co/datasets/josiecerrell/can-it-ford-speed-surface) on Hugging Face |
-| **Paper and poster** | [`public_release/`](public_release/). The paper is the September 2026 revision; the version submitted on July 31 is kept beside it. The poster is the July 2026 version. One correction to it: it says all 17 runs are bit-reproducible, but the check behind that only confirms that each run's setup is repeatable; repeat runs are not bit-identical. |
+| **Paper and poster** | [`public_release/`](public_release/). One correction to the July poster: it says all 17 runs are bit-reproducible, but the check behind that only confirms that each run's setup is repeatable; repeat runs are not bit-identical. |
 
 ## Key results
+
+<p align="center">
+  <img src="paper/figures_review/l0l1_two_rules_v2.svg"
+       alt="Two 10 by 7 grids of flood scenarios. Under the bare depth-times-velocity rule, 37 of 70 scenarios are permitted; under the full AR&R rule, 14 are."
+       width="820">
+</p>
+<p align="center"><em>The same 70 scenarios under the bare depth x velocity rule (left) and the full
+AR&R rule for a small passenger car (right). Restoring the depth cap and the car's own class cuts
+the permitted crossings from 37 to 14. Both panels read stored verdicts from
+<code>data/scenario_sweep.csv</code>; no simulation is involved.</em></p>
 
 - **The depth x velocity shortcut is only part of the published rule.** The AR&R criterion needs
   a class depth cap, a 3.0 m/s velocity cap and a depth x velocity cap to hold together. Applying both, for the car's own class,
@@ -121,6 +156,22 @@ The splat-to-particle bridge is intended to reuse
 logic on top of [3D Gaussian Splatting (Kerbl et al. 2023, arXiv:2308.04079)](https://arxiv.org/abs/2308.04079).
 `bridge/` holds a partial scaffold of an independent implementation of that published algorithm,
 targeting Genesis `MPM.Liquid`. It is not runnable end to end.
+
+## Paper figures
+
+Each figure in the paper and the code and data in this repository that draw it.
+
+| Figure | Shows | Script | Data |
+|---|---|---|---|
+| 1 | Reconstruct-to-decide pipeline | [`analysis/paper_fig_pipeline_diagram_v2.py`](analysis/paper_fig_pipeline_diagram_v2.py) | none |
+| 2 | L0 versus L1 under the bare and joint rules | [`analysis/paper_fig_l0l1_two_rules_v2.py`](analysis/paper_fig_l0l1_two_rules_v2.py) (same data and counts; the paper's version adds reclassification markers) | [`data/scenario_sweep.csv`](data/scenario_sweep.csv) |
+| 3 | L1 for AR&R's three vehicle classes | [`analysis/plot_l1_three_class.py`](analysis/plot_l1_three_class.py) | [`data/scenario_sweep.csv`](data/scenario_sweep.csv) |
+| 4 | Drag against friction, and critical velocity | analytic; every input is stated in the caption | none |
+| 5 | L1 against the Genesis SPH pilot, 9 conditions | [`analysis/paper_fig_l2_divergence_v2.py`](analysis/paper_fig_l2_divergence_v2.py) | [`data/l2_results_from_wandb.csv`](data/l2_results_from_wandb.csv) |
+| 6 | Coupled displacement against mass at three grids | [`analysis/paper_fig_mass_grid_sweep_v2.py`](analysis/paper_fig_mass_grid_sweep_v2.py) | [`data/all_runs_inventory.csv`](data/all_runs_inventory.csv) |
+| 7 | One frame of run `g64_m1100` | [`analysis/render_v1/render_realistic.py`](analysis/render_v1/render_realistic.py) | the run's particle rollout, not included |
+
+Figures 1, 2, 3, 5 and 6 regenerate from a fresh clone with `pip install -r requirements.txt`.
 
 ---
 
@@ -267,28 +318,6 @@ Call `get_vehicle(vehicle_class)` for a simulation-ready dict.
 
 </details>
 
-<details>
-<summary><b>Status notes, 2026-07-29</b></summary>
-
-**The L2 solver migration to MPM works.** On 2026-07-25, the `warpmpm` solver from
-kks32/mpm-engine ran to completion on Vista using the real watertight Yaris hull,
-`yaris_coarse_v1l_watertight.ply`, not a box proxy, at three masses: 1100, 1609 and 2337 kg. Only
-the mass varies. The single 4.2826 m hull fails AR&R's length criterion for both upper classes at
-every mass, so this is a controlled mass-sensitivity study on one geometry, not a comparison of
-three vehicles.
-
-**One derived result from that pass was retracted, not hidden.** The first class-verdict table
-asserted a verdict per class. A follow-up pass, version 3 of the mass-sensitivity table, found the
-1100 kg case failed a particle-passthrough gate at 10.67 percent against a 10 percent limit, and
-withdrew that table. The v3 rerun started from standing water and set it moving with a one-step
-kick in a closed tank (not a sustained inflow) rather than the original dry-start setup. It found
-SLIDE as the only failure mode that activated across all three masses; since 2026-09-30 those
-outcomes are understood as start-up surges, so no agreement between levels is claimed from them. The paper does not turn this into an agreement rate: the L2
-drift detector is a numerical threshold with no empirical source, so the paper compares L1 and L2
-by displacement, not by verdict count.
-
-</details>
-
 ---
 
 ## Repo structure
@@ -343,9 +372,11 @@ Third-party material in this repository keeps its own terms, listed per item in
 
 ## Acknowledgments
 
-PI: Krishna Kumar (GeoElements Lab, UT Austin). Daily mentors: Hassan Iqbal, Cheng-Hsi Hsiao, Sarah
-Etter. Near-peer: Cristian Moran. Genesis container: Luke Smith. Funded by NSF SCIPE REU 2026
-(Chishiki AI scholarship, GeoElements).
+This work was supported by the National Science Foundation under NSF REU Site: Cyberinfrastructure
+Research for Societal Advancement (SCIPE-AI), Award #2447887, hosted at the Texas Advanced Computing
+Center, The University of Texas at Austin. Mentor: Krishna Kumar (GeoElements Lab). Research
+mentors: Hassan Iqbal, Cheng-Hsi Hsiao, Sarah Etter. Near-peer mentor: Cristian Moran. Genesis
+container: Luke Smith. Program coordination: Rosalia Gomez.
 
 The vehicle geometry is derived from the 2010 Toyota Yaris finite element model developed by the
 Center for Collision Safety and Analysis (CCSA) at George Mason University, with sponsorship from
