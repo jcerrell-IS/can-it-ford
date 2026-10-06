@@ -28,21 +28,20 @@ Lab, Texas Advanced Computing Center, The University of Texas at Austin. Mentor:
 
 ## Summary
 
-Flooded roads are a leading cause of flood deaths, and an autonomous vehicle faces the same
-question a driver does: is this water safe to cross? This project asks that question for one
-specific car and one specific flooded road, and looks for the simplest physical model that answers
-it correctly. It compares three levels on the same 70-scenario grid of water depth and flow
-velocity: a fixed depth cutoff (L0), the Australian Rainfall and Runoff (AR&R) vehicle stability
-criterion (L1), and a coupled material point method simulation of water and a watertight 2010
-Toyota Yaris hull on TACC GPUs (L2).
+In the US, flooded roads kill more people than any other flood hazard, and most of those deaths
+involve someone driving into the water. A self-driving car has the same problem a driver does: it
+has to decide whether the water is safe to drive through. This project asks that for one car, a
+2010 Toyota Yaris, and checks how simple the method can be and still give the right answer. It
+compares three methods on the same 70 combinations of water depth and speed: a water-depth rule
+(L0), the Australian flood guideline for vehicles, AR&R (L1), and a GPU simulation of water
+flowing around the car (L2).
 
-The two rule-based levels already disagree before any simulation runs. The depth cutoff permits
-7 crossings and the full AR&R criterion 14, and the vehicle's class alone decides the verdict in 12
-scenarios. Applying the criterion in full, rather than as the depth x velocity product it is often
-reduced to, reclassified 23 scenarios as unsafe and none the other way. The first coupled
-simulations turned out to measure their own start-up surge rather than a steady current, so their
-verdicts are withdrawn; a steady-current campaign on TACC Lonestar6 replaces them and has produced
-flow fields but no verdict yet.
+The two rules disagree before any simulation is run. The depth rule allows 7 crossings and the
+full AR&R guideline allows 14, and the type of vehicle alone changes the answer in 12 cases. Using
+the full guideline, instead of the depth x speed shortcut it is often reduced to, changes 23 cases
+from safe to unsafe and none the other way. The first simulations turned out to be measuring the
+start of the flow instead of a steady current, so their results were withdrawn. A new set of
+steady-current runs on TACC's Lonestar6 has produced flow patterns but no final answer yet.
 
 **Paper:** [*Can It Ford? Query-Conditioned, Physically Viable World Models for Autonomous-Vehicle
 Flood Traversability from Gaussian Splatting*](public_release/Cerrell_CanItFord_paper.pdf)
@@ -99,21 +98,19 @@ the permitted crossings from 37 to 14. Both panels read stored verdicts from
 What is established, what is open, and the numbers this project has retired:
 [`FINDINGS.md`](FINDINGS.md).
 
-## What I built
+## What I did
 
-- **A three-level model ladder** for one decision, from a depth threshold to a coupled particle
-  simulation. The L0 and L1 rules live in one module, [`vehicle_params.py`](vehicle_params.py),
-  and [`tests/`](tests/) checks every row of the published 70-scenario sweep against it.
-- **Coupled water and rigid-vehicle simulations on TACC supercomputers**, run through Slurm with
-  the `warpmpm` material point method solver (NVIDIA Warp): 17 runs on Vista (NVIDIA GH200) and a
-  46-run steady-current campaign on Lonestar6 (NVIDIA A100), with up to 18.5 million water
-  particles per run.
-- **Solver changes** in [jcerrell-IS/mpm-engine](https://github.com/jcerrell-IS/mpm-engine):
-  watertight-mesh particle seeding and content-based PLY loading for real vehicle hulls.
-- **3D reconstruction** of a real drainage crossing with gsplat, and a splat-to-particle
-  converter in [`bridge/`](bridge/).
-- **A provenance record** that states, for every field of every run, whether it was recorded by
-  the run or filled in afterwards, and a findings file that keeps every retracted number.
+- Wrote the depth rule and the AR&R guideline as code in one place,
+  [`vehicle_params.py`](vehicle_params.py), with [tests](tests/) that check all 70 published cases
+  against it.
+- Ran water-and-car simulations on TACC's supercomputers with the warpmpm solver: 17 runs on Vista
+  and 46 steady-current runs on Lonestar6, with up to 18.5 million water particles per run.
+- Added features for loading car models to the solver, and fixed a bug in it:
+  [jcerrell-IS/mpm-engine](https://github.com/jcerrell-IS/mpm-engine).
+- Made a 3D model of a real flooded drainage crossing from video with gsplat, and started code to
+  turn it into simulation particles ([`bridge/`](bridge/)).
+- Recorded, for every run, which settings were saved by the run itself and which were filled in
+  later, and kept a list of every number this project has taken back ([`FINDINGS.md`](FINDINGS.md)).
 
 ---
 
