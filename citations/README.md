@@ -14,7 +14,7 @@ Threshold used: DV <= 0.60 m2/s for the Large 4WD vehicle class specifically, no
 
 ## L2, WCSPH physical validation
 
-Smith, G., Modra, B., & Felder, S. (2019). Full-scale testing of stability curves for vehicles in flood waters. Journal of Flood Risk Management. DOI:10.1111/jfr3.12527. Source in `citations/Smith-Modra-Felder/`.
+Smith, G., Modra, B., & Felder, S. (2019). Full-scale testing of stability curves for vehicles in flood waters. Journal of Flood Risk Management. DOI:[10.1111/jfr3.12527](https://doi.org/10.1111/jfr3.12527) (closed access; read through the publisher).
 
 ## L2, DRIFT_THRESHOLD = 0.05m reframing
 
