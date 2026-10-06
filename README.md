@@ -21,7 +21,7 @@ not a measured drag.</em></p>
 [![License: BSD-3-Clause](https://img.shields.io/badge/License-BSD--3--Clause-green.svg)](LICENSE)
 [![HuggingFace](https://img.shields.io/badge/HuggingFace-live_demo-blue)](https://huggingface.co/spaces/josiecerrell/can-it-ford)
 [![Project site](https://img.shields.io/badge/project_site-can--it--ford.vercel.app-black)](https://can-it-ford.vercel.app)
-[![CSV Schema Check](https://github.com/jcerrell-IS/can-it-ford/actions/workflows/csv-check.yml/badge.svg)](https://github.com/jcerrell-IS/can-it-ford/actions/workflows/csv-check.yml)
+[![Tests](https://github.com/jcerrell-IS/can-it-ford/actions/workflows/csv-check.yml/badge.svg)](https://github.com/jcerrell-IS/can-it-ford/actions/workflows/csv-check.yml)
 
 *Josie Cerrell, NSF SCIPE REU 2026, GeoElements Lab, UT Austin (PI: Krishna Kumar)*
 
@@ -63,6 +63,22 @@ not a measured drag.</em></p>
 
 What is established, what is open, and the numbers this project has retired:
 [`FINDINGS.md`](FINDINGS.md).
+
+## What I built
+
+- **A three-level model ladder** for one decision, from a depth threshold to a coupled particle
+  simulation. The L0 and L1 rules live in one module, [`vehicle_params.py`](vehicle_params.py),
+  and [`tests/`](tests/) checks every row of the published 70-scenario sweep against it.
+- **Coupled water and rigid-vehicle simulations on TACC supercomputers**, run through Slurm with
+  the `warpmpm` material point method solver (NVIDIA Warp): 17 runs on Vista (NVIDIA GH200) and a
+  46-run steady-current campaign on Lonestar6 (NVIDIA A100), with up to 18.5 million water
+  particles per run.
+- **Solver changes** in [jcerrell-IS/mpm-engine](https://github.com/jcerrell-IS/mpm-engine):
+  watertight-mesh particle seeding and content-based PLY loading for real vehicle hulls.
+- **3D reconstruction** of a real drainage crossing with gsplat, and a splat-to-particle
+  converter in [`bridge/`](bridge/).
+- **A provenance record** that states, for every field of every run, whether it was recorded by
+  the run or filled in afterwards, and a findings file that keeps every retracted number.
 
 ---
 
@@ -110,7 +126,14 @@ targeting Genesis `MPM.Liquid`. It is not runnable end to end.
 
 ## Reproduce
 
-### L0 and L1 (any machine, no GPU)
+### Setup and tests (any machine, no GPU)
+
+```bash
+pip install -r requirements.txt pytest
+pytest -q tests
+```
+
+### L0 and L1
 
 ```bash
 python3 simulation/can_it_ford_L0.py <depth_m>
@@ -131,11 +154,13 @@ published runs.
 
 1. Install `warpmpm` from [jcerrell-IS/mpm-engine](https://github.com/jcerrell-IS/mpm-engine), a
    fork of [kks32/mpm-engine](https://github.com/kks32/mpm-engine) that adds the watertight-mesh
-   particle seeding these runs use.
+   particle seeding these runs use: `pip install -r requirements-gpu.txt` (Linux, NVIDIA GPU,
+   Python 3.12).
 2. The vehicle hull and the upstream model are in
    [`vehicle_geometry_research/`](vehicle_geometry_research/), with provenance and the CCSA
    acknowledgement in that folder's README.
-3. Run one case. For example, the run in the figure above:
+3. Run one case. For example, run `g64_m1100`, one of the 17 (its row is in
+   [`data/all_runs_inventory.csv`](data/all_runs_inventory.csv)):
 
 ```bash
 python analysis/render_v1/as_ran_local_copies/sim_standing.py \
@@ -144,7 +169,9 @@ python analysis/render_v1/as_ran_local_copies/sim_standing.py \
     --eta 1.0e-3 --floor-friction 0.55 --label small_passenger --out runs/g64_m1100
 ```
 
-The run writes `metrics.csv`, `rollout.npz` and `summary.json` into `--out`. Each row of
+The run writes `metrics.csv`, `rollout.npz` and `summary.json` into `--out`. Both driver copies are
+kept byte for byte as they ran, so their sha256 hashes still match the batch logs; that is why
+their default paths point at TACC directories, and why the example passes `--vehicle` explicitly. Each row of
 [`data/all_runs_inventory.csv`](data/all_runs_inventory.csv) gives one run's mass, grid, requested
 depth and velocity.
 
@@ -157,11 +184,13 @@ Two older scripts are kept for the record and do not reproduce the reported resu
 
 ```bash
 python3 analysis/make_phase_space_v2.py
-python3 render_frames.py --input particles.npz --output water_box.mp4 \
+python3 scripts/render_frames.py --input particles.npz --output water_box.mp4 \
     --box-center 1.0 0.0 0.35 --box-size 1.0 1.6 1.5 --fps 24
 ```
 
-`render_frames.py` renders MPM particle output to MP4 without a display. Run it with no `--input`
+`make_phase_space_v2.py` checks the stored L1 verdicts against the rule and redraws the L1
+phase-space figure into `figures/`, with the Genesis pilot overlaid for the record.
+`scripts/render_frames.py` renders MPM particle output to MP4 without a display. Run it with no `--input`
 for a synthetic demo that checks the renderer works. Particle files are not included in this
 repository.
 
@@ -264,8 +293,11 @@ by displacement, not by verdict count.
 
 ```
 simulation/              L0, L1 and L2 scripts
-renders/yaris_render_s1/ The driver that produced the 17 coupled runs
+analysis/render_v1/as_ran_local_copies/  The driver and job script exactly as the 17 coupled runs used them
+renders/yaris_render_s1/ A later revision of that driver
+realism_track/           Coupling-accuracy checks: buoyancy and force on submerged bodies against analytic values, with job records
 analysis/                Figures, provenance manifest, consistency checks
+tests/                   Rule, sweep and bridge tests, run by CI
 vehicle_params.py        Cited vehicle classes (mass, bbox, CG, inertia)
 data/                    Experiment CSVs and the provenance manifest
 figures/                 Output figures, pipeline diagram, short run videos
@@ -278,7 +310,7 @@ citations/               Annotated bibliography, source documents and grounding 
 vehicle_geometry_research/  Vehicle finite element models and the derived hull
 scripts/                 Utilities: data sync, manifests, Vista pull
 paper/                   Paper figure sources and bibliography
-docs/                    Design notes
+docs/                    Design notes, and what the citations to internal notes refer to
 ```
 
 ## Citations
