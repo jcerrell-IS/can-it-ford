@@ -1,7 +1,11 @@
+from pathlib import Path
+
 import pandas as pd
 
+DATA = Path(__file__).resolve().parents[1] / "data"
+
 def test_scenario_sweep_schema():
-    df = pd.read_csv("data/scenario_sweep.csv")
+    df = pd.read_csv(DATA / "scenario_sweep.csv")
     expected_columns = ["depth_m", "velocity_ms", "L0_verdict", "L1_haz",
                         "L1_haz_product_only", "L1_verdict",
                         "L1_verdict_small_passenger", "L1_verdict_large_passenger",
@@ -12,7 +16,7 @@ def test_scenario_sweep_schema():
     assert df["L1_haz"].dtype == float
 
 def test_l2_results_schema():
-    df = pd.read_csv("data/l2_results_from_wandb.csv")
+    df = pd.read_csv(DATA / "l2_results_from_wandb.csv")
     required = ["depth_m", "velocity_ms", "l1_verdict", "l2_verdict", "divergence"]
     for col in required:
         assert col in df.columns

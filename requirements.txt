@@ -1,0 +1,11 @@
+# CPU dependencies: the L0 and L1 tools, analysis scripts, figures and tests.
+# The GPU simulation (L2) needs requirements-gpu.txt as well.
+numpy>=1.26
+pandas>=2.1
+matplotlib>=3.8
+scipy>=1.11
+trimesh>=4.0
+plotly>=5.18
+scikit-learn>=1.4
+imageio>=2.34
+imageio-ffmpeg>=0.4.9
