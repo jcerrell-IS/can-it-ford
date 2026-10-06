@@ -8,7 +8,7 @@ RULES THIS SCRIPT OBEYS:
   * Verdicts are READ from the l1_verdict / l2_verdict columns. This script does
     NOT recompute an L1 verdict from an inline threshold. That inline-recompute
     pattern is the known defect in analysis/make_phase_space_v2.py:9,
-    analysis/plot_phase_space_live.py:7 and
+    archive/product_only_rule_2026-07/analysis/plot_phase_space_live.py:7 and
     designsafe-staging/scripts/make_phase_space.py:9.
   * The iso-hazard threshold drawn is read from the l1_threshold column, not
     typed in as a literal.
@@ -176,7 +176,7 @@ s.append(f'<text x="{ML+PW/2:.1f}" y="{H-16}" font-size="13.5" fill="{INK}" '
 s.append(f'<text x="18" y="{MT+PH/2:.1f}" font-size="13.5" fill="{INK}" text-anchor="middle" '
          f'transform="rotate(-90 18 {MT+PH/2:.1f})">Water depth (m)</text>')
 s.append(f'<text x="{ML}" y="{MT-18}" font-size="14.5" fill="{INK}" font-weight="bold">'
-         f'L1 hazard scalar vs. coupled L2 simulation, {len(pts)} measured conditions</text>')
+         f'L1 hazard scalar vs. coupled L2 simulation, {len(pts)} simulated conditions</text>')
 
 # legend
 lx, ly = ML + PW + 20, MT + 6
