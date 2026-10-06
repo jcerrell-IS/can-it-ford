@@ -1,3 +1,8 @@
+> **Archived text of the July 2026 poster** ([`public_release/Cerrell_TACC_42x56.pdf`](../public_release/Cerrell_TACC_42x56.pdf)),
+> kept as presented. Parts are superseded: the reported coupled results now come from 17 runs on the
+> real Yaris hull with the `warpmpm` solver, L1 applies the full AR&R rule, and the verdicts from those 17 runs are withdrawn.
+> For current results see [`README.md`](../README.md) and [`FINDINGS.md`](../FINDINGS.md).
+
 # Methods
 
 ## How the pipeline works
