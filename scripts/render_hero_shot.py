@@ -7,7 +7,7 @@ import bpy
 import mathutils
 import numpy as np
 
-PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 HDRI_PATH = os.path.join(
     PROJECT_ROOT, "assets", "hdri", "kloofendal_43d_clear_puresky_2k.hdr"
 )

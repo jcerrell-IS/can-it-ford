@@ -40,8 +40,8 @@ for npz_file in sorted(glob.glob("particles_*.npz")):
 
 if results:
     df = pd.DataFrame(results)
-    df.to_csv("viability_audit_results.csv", index=False)
-    print(f"\nSaved {len(df)} rows to viability_audit_results.csv")
+    df.to_csv("data/viability_audit_results.csv", index=False)
+    print(f"\nSaved {len(df)} rows to data/viability_audit_results.csv")
     print("NOTE: mass-conservation reporting withdrawn July 15, 2026 as tautological.")
     print("      See docs/viability_audit_mass_retraction.md")
 else:

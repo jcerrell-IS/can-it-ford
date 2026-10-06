@@ -11,7 +11,7 @@ Accepted inputs:
   3) no input: generates a small synthetic water-flow demo.
 
 Example:
-  python render_frames.py --input rollout_particles.npz --output water_box.mp4 \
+  python scripts/render_frames.py --input rollout_particles.npz --output water_box.mp4 \
       --box-center 1.0 0.0 0.35 --box-size 0.45 0.30 0.30 --fps 24
 """
 from __future__ import annotations

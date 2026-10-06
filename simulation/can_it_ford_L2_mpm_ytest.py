@@ -142,7 +142,7 @@ def main():
     print(f"peak x_disp={max_x_disp:.4f}m  final x_disp={final_xd:.4f}m  final y_disp={final_yd:.4f}m  max_vel={max_vel_mag:.4f}m/s")
     print(f"run_tag={run_tag}")
 
-    csv_path    = "phase_space_results_mpm.csv"
+    csv_path    = "data/phase_space_results_mpm.csv"
     file_exists = os.path.isfile(csv_path)
     with open(csv_path, "a", newline="") as f:
         writer = csv.DictWriter(

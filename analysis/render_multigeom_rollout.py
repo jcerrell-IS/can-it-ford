@@ -10,7 +10,7 @@ WHY THIS EXISTS
   drawn here from veh_particles_scene0, the rigid particle cloud already inside the
   npz, and no mesh is loaded at all.
 
-  The two repo-level scripts do not apply. render_frames.py matches the 0-d scalar
+  The two scripts/ renderers do not apply. render_frames.py matches the 0-d scalar
   key "frames" as if it were a position array and dies in _ensure_TN3; it also has
   no vehicle path, only a static --box-center/--box-size proxy. render_hero_shot.py
   is a Blender bpy still that reads pos/vel and draws a hardcoded cube.

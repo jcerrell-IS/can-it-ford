@@ -1,5 +1,6 @@
 import csv
 import os
+import sys
 import pandas as pd
 import matplotlib
 matplotlib.use('Agg')
@@ -7,9 +8,11 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, REPO)
+from vehicle_params import L1_verdict  # noqa: E402
 SWEEP_CSV = os.path.join(REPO, 'data', 'scenario_sweep.csv')
 L2_CSV = os.path.join(REPO, 'data', 'phase_space_results.csv')
-OUT_PNG = os.path.join(REPO, 'can_it_ford_phase_space_v2_JOINTRULE.png')
+OUT_PNG = os.path.join(REPO, 'figures', 'can_it_ford_phase_space_v2_JOINTRULE.png')
 
 JOINT_DEPTH_CAP = 0.30
 JOINT_VEL_CAP = 3.0
@@ -24,9 +27,7 @@ EXPECT_RECLASS_NOFORD_TO_FORD = 0
 
 
 def joint_rule(d, v):
-    if d <= JOINT_DEPTH_CAP and v <= JOINT_VEL_CAP and round(d * v, 6) <= JOINT_PRODUCT_CAP:
-        return 'FORD'
-    return 'NO-FORD'
+    return L1_verdict(d, v, 'small_passenger')
 
 
 def load_sweep():

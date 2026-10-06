@@ -139,9 +139,9 @@ fig.update_layout(
     margin=dict(l=100, r=40, t=120, b=90),
 )
 
-fig.write_image(os.path.join(REPO, 'phase_space_poster_figure_JOINTRULE.png'),
+fig.write_image(os.path.join(REPO, 'figures', 'phase_space_poster_figure_JOINTRULE.png'),
                 width=2400, height=1800, scale=1)
-fig.write_image(os.path.join(REPO, 'phase_space_poster_figure_JOINTRULE.svg'),
+fig.write_image(os.path.join(REPO, 'figures', 'phase_space_poster_figure_JOINTRULE.svg'),
                 format='svg', width=2400, height=1800, scale=1)
-fig.write_html(os.path.join(REPO, 'phase_space_poster_figure_JOINTRULE.html'))
+fig.write_html(os.path.join(REPO, 'figures', 'phase_space_poster_figure_JOINTRULE.html'))
 print('Saved: phase_space_poster_figure_JOINTRULE.png / .svg / .html')
