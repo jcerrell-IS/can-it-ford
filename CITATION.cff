@@ -23,3 +23,17 @@ keywords:
   - world models
   - autonomous vehicles
 repository-code: "https://github.com/jcerrell-IS/can-it-ford"
+url: "https://huggingface.co/spaces/josiecerrell/can-it-ford"
+preferred-citation:
+  type: report
+  title: "Can It Ford? Query-Conditioned, Physically Viable World Models for Autonomous-Vehicle Flood Traversability from Gaussian Splatting"
+  authors:
+    - given-names: Josie
+      family-names: Cerrell
+      affiliation: Claremont McKenna College
+  institution:
+    name: "Texas Advanced Computing Center, The University of Texas at Austin"
+  year: 2026
+  month: 9
+  notes: "NSF REU Site SCIPE-AI, Award #2447887. September 2026 revision."
+  url: "https://github.com/jcerrell-IS/can-it-ford/blob/main/public_release/Cerrell_CanItFord_paper.pdf"
