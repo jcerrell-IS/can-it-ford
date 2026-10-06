@@ -70,7 +70,7 @@ integral over the wetted hull.
 
 This module **never imports `vehicle_params`**. Its `inertia_kg_m2` and `cg_height_m`
 are an axis-transposed box fallback carrying a documented 379% error on the pitch axis
-(`docs/REALISM_UPGRADE_ASSESSMENT_2026-08-08.md` §1). Wiring it into a solver would
+(internal note `docs/REALISM_UPGRADE_ASSESSMENT_2026-08-08.md` §1, not in this repository). Wiring it into a solver would
 silently corrupt every rotational result.
 
 Inertia is instead either passed explicitly by the caller or computed by

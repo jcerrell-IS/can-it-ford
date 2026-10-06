@@ -7,8 +7,9 @@ Archived snapshot, 2026-07-25, of the RENDER-v1 / AMENDMENT A work.
 Nothing in there is visible to git or to any repo-based backup. These are copies
 so the work survives.
 
-Full narrative, with every measurement and its provenance tag, is in
-[`docs/RENDER_V1_AMENDMENT_A_PROCESS_2026-07-25.md`](../../docs/RENDER_V1_AMENDMENT_A_PROCESS_2026-07-25.md).
+The full narrative, with every measurement and its provenance tag, is in the project's internal
+research log (`docs/RENDER_V1_AMENDMENT_A_PROCESS_2026-07-25.md`, not in this repository; see
+[`docs/README.md`](../../docs/README.md)).
 
 ## This is a snapshot, not the working copy
 

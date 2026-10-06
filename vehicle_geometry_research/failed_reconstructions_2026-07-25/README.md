@@ -3,7 +3,7 @@
 **Do not use either of these for simulation.** They are kept only so the failure
 is documented and nobody re-derives it. The single usable vehicle asset remains
 `vehicle_geometry_research/yaris_coarse_v1l_watertight.ply`, per
-`docs/VERIFIED_FACTS_LEDGER_july24.md` Section F.
+the project's July 24 facts ledger (internal, not in this repository), Section F.
 
 Recovered from a temporary working folder before it was lost.
 
