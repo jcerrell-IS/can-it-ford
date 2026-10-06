@@ -76,7 +76,7 @@ failure-mode result from v2 can go on the poster or in the paper.
 
 ### The data is captured but discarded at write time
 
-Sharpening the above, from `citations/vehicle(kks32).py` (the local copy of the writer):
+Sharpening the above, from `citations/kks32_mpm_engine/vehicle.py` (the local copy of the writer):
 `FloodHistory.append()` already stores per-frame linear velocity and angular velocity,
 `self.v.append(state["v"])` and `self.omega.append(state["omega"])` at lines 207 to 208,
 and `arrays()` exposes both at lines 217 to 218. `to_csv()` at lines 221 to 227 then
