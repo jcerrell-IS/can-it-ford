@@ -342,6 +342,7 @@ vehicle_geometry_research/  Vehicle finite element models and the derived hull
 scripts/                 Utilities: data sync, manifests, Vista pull
 paper/                   Paper figure sources and bibliography
 docs/                    Design notes, and what the citations to internal notes refer to
+archive/                 Superseded work kept for the record, such as the retracted product-only L1 rule
 ```
 
 ## Citations
