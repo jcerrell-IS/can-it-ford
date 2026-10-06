@@ -12,26 +12,30 @@ Josie Cerrell, Claremont McKenna College.
 | Gradio demo (live) | https://huggingface.co/spaces/josiecerrell/can-it-ford |
 | Experiment tracking | `jcerrell29-claremont-mckenna-college/can-it-ford` on W&B, **private**, so named rather than linked |
 
-## The result, in three lines
+## The result
 
 The field decides fordability with a hazard product, depth times velocity, against a published
-threshold. Checked against a coupled material-point simulation of the same scenario, it fails
-three separable ways. (The simulation comparison uses the early closed-tank runs, whose motion is set
-by a start-up surge, per a 2026-09-30 review; items 2 and 3 are illustrations from that surge, not
-steady-current results.)
+threshold. Two of its blind spots follow from the formula alone, and a third appeared in the early
+coupled simulations.
+
+**Established from the criterion itself, no simulation required:**
 
 1. **It cannot see still water.** At zero velocity the product is zero whatever the depth, so a
-   metre of motionless water scores zero hazard and passes any threshold. Arithmetic, no
-   simulation required.
-2. **It cannot see mass.** Bit-identical at 0.441644 m²/s across a 2.1× mass range, because the
-   criterion has no mass term. The simulation separates the same cases.
-3. **It reads the wrong depth.** The criterion needs a value of *D* and never defines which for a
-   transient surge. At the road: 0.45000 m²/s. At the hull, in its own bow wave: 0.189 to 0.153,
-   58 to 66 percent lower, and across the threshold.
+   metre of motionless water scores zero hazard and passes any threshold.
+2. **It cannot see mass.** The criterion has no mass term: across a 2.1x mass range the product is
+   bit-identical at 0.441644 m²/s.
+3. **The often-quoted product is only part of the rule.** Correcting this project's own encoding
+   of the criterion reclassified **23 of 70 scenario cells, all toward NO-FORD, none loosened**: 11
+   from restoring the depth cap with class held fixed, 12 from evaluating an 1100 kg car against
+   its own published class.
 
-Correcting this project's own encoding of the criterion reclassified **23 of 70 scenario cells,
-all toward NO-FORD, none loosened**: 11 from restoring the depth cap with class held fixed, 12
-from evaluating an 1100 kg car against its own published class.
+**Suggested by the early coupled runs, withdrawn as verdicts:** the first 17 runs set the water
+moving in one step inside a closed tank, so their motion is a start-up surge, not a steady current
+(per a 2026-09-30 review). In those runs the simulation separated cases the product cannot (mass),
+and the product depended on where depth is read: 0.45000 m²/s at the road against 0.189 to 0.153
+at the hull, in its own bow wave, 58 to 66 percent lower and across the threshold. These are
+illustrations of the gap, not steady-current results. The steady-current campaign that replaces
+them has no verdict yet.
 
 ## Scope
 
