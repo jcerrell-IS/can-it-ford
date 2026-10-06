@@ -76,7 +76,7 @@ still gets the answer right.
 
 | Level | Model | Source |
 |---|---|---|
-| **L0** | Static depth threshold (d >= 0.15 m gives NO-FORD), a project choice. For comparison, NWS says about 0.15 m (6 in) of fast-moving water can knock over an adult and about 0.30 m (12 in) can carry away most cars | [NWS Turn Around Don't Drown](https://www.weather.gov/safety/flood-turn-around-dont-drown) |
+| **L0** | Static depth threshold (d > 0.15 m gives NO-FORD, matching `scripts/gen_scenario_sweep.py`), a project choice. For comparison, NWS says about 0.15 m (6 in) of fast-moving water can knock over an adult and about 0.30 m (12 in) can carry away most cars | [NWS Turn Around Don't Drown](https://www.weather.gov/safety/flood-turn-around-dont-drown) |
 | **L1** | AR&R three-part criterion: a class depth cap, a 3.0 m/s velocity cap and a D x V cap, all required together. The paper's canonical class is Small Car (depth <= 0.30 m and D x V <= 0.30 m2/s). The bare D x V <= 0.60 m2/s figure often quoted is the Large 4WD hazard cap alone, with no depth restriction. Draft/interim criterion from the source report, not an endorsed safety standard. | Shand et al. 2011, AR&R Project 10 Stage 2 (Engineers Australia) |
 | **L2** | Coupled particle simulation: weakly compressible water plus a rigid vehicle body. The first runs imposed the flow as a one-step surge in a closed tank, so their drift labels describe that surge; a steady-current version runs on TACC Lonestar6 and has no verdict yet | This project |
 
@@ -184,7 +184,7 @@ and could not fail). Per-step invariant checking is not yet implemented.
 | `data/scenario_sweep.csv` | L0/L1 grid (depths 0.1 to 1.0 m x velocities 0.0 to 3.0 m/s), 70 scenarios, with the full and product-only L1 encodings side by side. FORD counts out of 70 for the three classes: 14, 19, 26. |
 | `data/mu_sweep_results.csv` | Vehicle-water coupling-friction sensitivity at (d=0.30 m, v=1.5 m/s), from the Genesis pilot. Not floor (road) friction |
 | `data/three_class_*_2026-08-14.csv` | Non-canonical `warpmpm` floor-friction and three-vehicle study at nominal depth 0.30 m and 1.5 m/s. Peak drift falls as floor friction rises in every group tested. Mostly single runs, and every friction-varied run on the finer grid exceeds the 10 percent passthrough gate |
-| `data/l2_results_from_wandb.csv` | Genesis SPH pilot on a synthetic box vehicle (not the WARPMPM L2), pulled from W&B, which records runtime 0 for these runs. L1 and this pilot agree at 5 of 9 conditions; do not read it as an L2 agreement rate |
+| `data/l2_results_from_wandb.csv` | Genesis SPH pilot on a synthetic box vehicle (not the WARPMPM L2), pulled from W&B, which records runtime 0 for these runs. Its `l1_verdict` column applies the bare 0.6 m2/s product, which agrees with the pilot at 5 of 9 conditions; under the full AR&R rule the count depends on the vehicle class (6 of 9 for a small passenger car, with disagreements in both directions). The pilot's drift-only verdict also reads FORD in 0.6 m of still water. Do not quote any agreement rate from it |
 | `data/phase_space_results.csv` | L2 SPH pilot output (pre-fix). **Not usable for an agreement rate:** it carries a single verdict column with no corresponding L1 value, and 15 of its 31 rows share a condition with another row under a different verdict |
 | `data/track1_sweep_v2/` | **Superseded and excluded from the paper.** 36-run sweep on a rescaled box proxy (1390 kg, 4.7352 m3 against the real hull's 3.5427 m3). Kept as a record; do not cite its numbers |
 

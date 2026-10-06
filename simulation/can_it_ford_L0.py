@@ -3,7 +3,7 @@ import sys
 DEPTH_THRESHOLD_M = 0.15
 
 def ford_L0(depth_m: float) -> str:
-    return "FORD" if depth_m < DEPTH_THRESHOLD_M else "NO-FORD"
+    return "FORD" if depth_m <= DEPTH_THRESHOLD_M else "NO-FORD"
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
@@ -14,4 +14,4 @@ if __name__ == "__main__":
     verdict = ford_L0(depth_m)
 
     print(verdict)
-    print(f"depth={depth_m:.2f}m  threshold={DEPTH_THRESHOLD_M:.2f}m  source=NWS_TADD")
+    print(f"depth={depth_m:.2f}m  threshold={DEPTH_THRESHOLD_M:.2f}m  source=project_choice")
