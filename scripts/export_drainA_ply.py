@@ -33,7 +33,7 @@ WHAT THE PLY CONTAINS
   scale_0..2 + rot_0..3. No nx/ny/nz normals field is emitted.
 
 USAGE (on LS6, login node is fine)
-  source /scratch/10386/lsmith9003/python-envs/gsplat_env/bin/activate
+  source <your gsplat environment>/bin/activate
   python3 export_drainA_ply.py
   python3 export_drainA_ply.py --out /path/to/other.ply
 
@@ -46,13 +46,13 @@ import os
 import struct
 import sys
 
-CKPT_DIR = "/scratch/11603/jcerrell0629/gsplat/examples/results/drainA/ckpts"
+CKPT_DIR = os.path.expandvars("$SCRATCH/gsplat/examples/results/drainA/ckpts")
 RANKS = (0, 1, 2)
 EXPECTED_STEP = 29999
 # Per-rank counts recorded live 2026-08-07 from stats/train_step29999_rank*.json.
 EXPECTED_COUNTS = {0: 399491, 1: 374677, 2: 373526}
-DEFAULT_OUT = (
-    "/scratch/11603/jcerrell0629/gsplat/examples/results/drainA/ply/"
+DEFAULT_OUT = os.path.expandvars(
+    "$SCRATCH/gsplat/examples/results/drainA/ply/"
     "point_cloud_29999_merged_3ranks.ply"
 )
 FIELDS = ("means", "sh0", "shN", "opacities", "scales", "quats")

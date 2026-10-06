@@ -46,4 +46,4 @@ if results:
     print("      See docs/viability_audit_mass_retraction.md")
 else:
     print("No NPZ files found. SCP from Vista first:")
-    print("  scp jcerrell0629@vista.tacc.utexas.edu:/work/11603/jcerrell0629/vista/particles_d*.npz .")
+    print("  scp <tacc-user>@vista.tacc.utexas.edu:$WORK/particles_d*.npz .")

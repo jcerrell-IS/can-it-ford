@@ -1,6 +1,7 @@
 from pathlib import Path
 import sys
 import numpy as np
+import os
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
@@ -8,7 +9,7 @@ if str(REPO_ROOT) not in sys.path:
 from vehicle_params import get_vehicle
 from warpmpm.vehicle import load_vehicle
 
-VEHICLE_PLY = "/work/11603/jcerrell0629/vista/truck_trimmed.ply"
+VEHICLE_PLY = os.path.expandvars("$WORK/truck_trimmed.ply")
 
 
 def fit_to_bbox(vehicle, bbox_m):

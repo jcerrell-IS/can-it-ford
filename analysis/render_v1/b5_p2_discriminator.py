@@ -27,12 +27,14 @@ import time
 
 import numpy as np
 import trimesh
+import os
+_REPO = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-sys.path.insert(0, "/Users/josie/can-it-ford/analysis/render_v1")
+sys.path.insert(0, f"{_REPO}/analysis/render_v1")
 import t1_car as T
 
 RUN = "g64_m1100"
-NPZ = f"/Users/josie/can-it-ford/renders/yaris_render_s1/{RUN}/rollout.npz"
+NPZ = f"{_REPO}/renders/yaris_render_s1/{RUN}/rollout.npz"
 N_PER_FRAME = 260
 
 
@@ -111,7 +113,7 @@ def main(seed=0):
     else:
         print("    VERDICT: column (ii) rises beyond the noise floor. Real penetration")
         print("             exists on top of the AABB artifact. Magnitude above.")
-    np.savez("/Users/josie/can-it-ford/analysis/render_v1/b5_p2_series.npz",
+    np.savez(f"{_REPO}/analysis/render_v1/b5_p2_series.npz",
              aabb_pct=aabb_pct, mesh_pct=mesh_pct, mesh_se=mesh_se)
     return aabb_pct, mesh_pct
 

@@ -28,6 +28,7 @@ reported forces (failure_modes.py:130, :176).
 import csv
 import sys
 from pathlib import Path
+import os
 
 REPO = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO / "simulation"))
@@ -39,8 +40,8 @@ from vehicle_params import get_vehicle  # noqa: E402
 SSF = get_vehicle("compact_sedan")["ssf"]
 OUT = REPO / "data" / "rogue_silverado_slide_classification_2026-08-13.csv"
 
-LS6 = Path("/scratch/11603/jcerrell0629/rs_sweep_v2")
-VISTA = Path("/work/11603/jcerrell0629/vista/class_specific_2026-08-08")
+LS6 = Path(os.path.expandvars("$SCRATCH/rs_sweep_v2"))
+VISTA = Path(os.path.expandvars("$WORK/class_specific_2026-08-08"))
 
 # mass: the values the runs actually used. Silverado 2270.0 is deck-header primary;
 # Rogue 1571.3 is WEB-SOURCED only, the Rogue deck states no mass.

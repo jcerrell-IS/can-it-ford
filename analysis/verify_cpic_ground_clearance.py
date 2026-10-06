@@ -32,7 +32,7 @@ argued from intuition.
 Read-only. No solver, no GPU, no trimesh. numpy only.
 
 Run with the venv interpreter, the system python3 has no numpy:
-    /Users/josie/.venvs/canitford-mpm/bin/python3 analysis/verify_cpic_ground_clearance.py
+    python3 analysis/verify_cpic_ground_clearance.py
 """
 from __future__ import annotations
 

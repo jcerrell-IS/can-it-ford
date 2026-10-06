@@ -12,9 +12,10 @@ import csv
 import json
 import sys
 from pathlib import Path
+import os
 
-LS6_BASE = Path(sys.argv[1] if len(sys.argv) > 1 else "/scratch/11603/jcerrell0629/rs_sweep_v2")
-VISTA_G64 = Path("/work/11603/jcerrell0629/vista/class_specific_2026-08-08")
+LS6_BASE = Path(sys.argv[1] if len(sys.argv) > 1 else os.path.expandvars("$SCRATCH/rs_sweep_v2"))
+VISTA_G64 = Path(os.path.expandvars("$WORK/class_specific_2026-08-08"))
 OUT = Path(sys.argv[2] if len(sys.argv) > 2 else "data/rogue_silverado_grid_sweep_2026-08-13.csv")
 
 # Tripwire: --vehicle not taking effect silently runs the Yaris hull. These are the

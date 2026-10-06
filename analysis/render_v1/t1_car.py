@@ -13,8 +13,10 @@ from __future__ import annotations
 
 import numpy as np
 import trimesh
+import os
+_REPO = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-PLY = "/Users/josie/can-it-ford/vehicle_geometry_research/yaris_coarse_v1l_watertight.ply"
+PLY = f"{_REPO}/vehicle_geometry_research/yaris_coarse_v1l_watertight.ply"
 
 # dough_surface_render.py:25
 LIGHT = np.array([0.35, 0.55, 0.78])

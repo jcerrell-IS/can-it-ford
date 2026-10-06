@@ -22,7 +22,7 @@ PROVENANCE OF THE INPUTS
     $WORK/class_specific_2026-08-08/<label>/summary.json
   Job 896302, arms A_matched_dx and B_fixed_g96, 5 runs:
     $WORK/render_s3_hullsweep/<label>/summary.json
-  $WORK is /work/11603/jcerrell0629/vista on Vista. The summaries are not in the
+  $WORK is the TACC work directory on Vista. The summaries are not in the
   repo, so --summaries-json accepts a pulled bundle for offline regeneration.
 
 DERIVATION OF THE COLUMNS THAT ARE NOT SUMMARY FIELDS
@@ -93,7 +93,7 @@ import sys
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.join(REPO, "data", "class_specific_runs_2026-08-08.csv")
 
-WORK = os.environ.get("WORK", "/work/11603/jcerrell0629/vista")
+WORK = os.environ["WORK"]  # set by TACC on Vista
 CLASS_ROOT = os.path.join(WORK, "class_specific_2026-08-08")
 HULL_ROOT = os.path.join(WORK, "render_s3_hullsweep")
 

@@ -31,12 +31,14 @@ import time
 
 import numpy as np
 import trimesh
+import os
+_REPO = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-sys.path.insert(0, "/Users/josie/can-it-ford/analysis/render_v1")
+sys.path.insert(0, f"{_REPO}/analysis/render_v1")
 import t1_car as T
 
 RUN = "g64_m1100"
-NPZ = f"/Users/josie/can-it-ford/renders/yaris_render_s1/{RUN}/rollout.npz"
+NPZ = f"{_REPO}/renders/yaris_render_s1/{RUN}/rollout.npz"
 
 RZ = np.array([[0.0, -1.0, 0.0], [1.0, 0.0, 0.0], [0.0, 0.0, 1.0]])
 ROT180 = np.array([[-1.0, 0.0, 0.0], [0.0, -1.0, 0.0], [0.0, 0.0, 1.0]])

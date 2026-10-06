@@ -48,7 +48,7 @@ The PDF step shells out to rsvg-convert (librsvg 2.62.3, /opt/homebrew/bin).
 import subprocess
 from pathlib import Path
 
-REPO = Path('/Users/josie/can-it-ford')
+REPO = Path(__file__).resolve().parents[1]
 OUTDIR = REPO / 'paper' / 'figures_review'
 OUTDIR.mkdir(parents=True, exist_ok=True)
 SVG = OUTDIR / 'pipeline_diagram_v2_GRIDAWARE.svg'

@@ -27,7 +27,7 @@ import csv
 import os
 from pathlib import Path
 
-REPO = Path('/Users/josie/can-it-ford')
+REPO = Path(__file__).resolve().parents[1]
 os.chdir(REPO)
 SRC = REPO / 'data' / 'all_runs_inventory.csv'
 OUTDIR = REPO / 'paper' / 'figures_review'

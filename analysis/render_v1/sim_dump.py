@@ -7,8 +7,9 @@ from pathlib import Path
 import numpy as np
 
 from warpmpm.vehicle import FloodScene, load_vehicle
+import os
 
-YARIS = Path("/work/11603/jcerrell0629/vista/can-it-ford/vehicle_geometry_research/yaris_coarse_v1l_watertight.ply")
+YARIS = Path(os.path.expandvars("$WORK/can-it-ford/vehicle_geometry_research/yaris_coarse_v1l_watertight.ply"))
 HULL = 3.542739
 
 

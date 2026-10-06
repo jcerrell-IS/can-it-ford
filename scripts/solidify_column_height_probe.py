@@ -1,7 +1,8 @@
 import numpy as np
 from plyfile import PlyData
+import os
 
-VEHICLE_PLY = "/work/11603/jcerrell0629/vista/truck_trimmed.ply"
+VEHICLE_PLY = os.path.expandvars("$WORK/truck_trimmed.ply")
 CLASSES = {
     "sedan":  {"bbox_m": (4.66, 1.79, 1.44)},
     "suv":    {"bbox_m": (4.96, 1.93, 1.75)},

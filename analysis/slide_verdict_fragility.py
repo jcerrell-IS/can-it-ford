@@ -29,7 +29,7 @@ k_crit ranks fragility and gives an order of magnitude. It is NOT a prediction t
 specific run flips at a specific grid.
 
 PROVENANCE RESTRICTION, and this is the reason the list is 11 and not 17.
-/work/11603/jcerrell0629/vista/render_s2/<run>/metrics.csv exists for all 17 with the
+$WORK/render_s2/<run>/metrics.csv exists for all 17 with the
 full FloodHistory 15-column header. Re-classifying them live reproduces all 17 VERDICTS
 (16 SLIDE / 1 STUCK) but only 11 of the 17 ratio_slide values. The six g48_* and g96_*
 directories were overwritten on 2026-07-26 03:08-03:10 by job 866887 (its provenance
@@ -63,7 +63,7 @@ sys.path.insert(0, str(REPO))
 import failure_modes as FM              # noqa: E402
 from vehicle_params import get_vehicle  # noqa: E402
 
-BASE = Path("/work/11603/jcerrell0629/vista/render_s2")
+BASE = Path(os.path.expandvars("$WORK/render_s2"))
 OUT = REPO / "data" / "slide_verdict_fragility_2026-08-13.csv"
 TH = FM.FailureThresholds()
 SSF = get_vehicle("compact_sedan")["ssf"]

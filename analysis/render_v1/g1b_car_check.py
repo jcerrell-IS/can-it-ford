@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+_REPO = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 os.environ.setdefault("MPLBACKEND", "Agg")
 
@@ -10,8 +11,8 @@ from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 
 from geom_live import YARIS, load_vehicle_local, scene_grid
 
-OUT_MESH = "/Users/josie/can-it-ford/figures/car_check.png"
-OUT_PTS = "/Users/josie/can-it-ford/renders/yaris_render_s1/car_check_points_R1.png"
+OUT_MESH = f"{_REPO}/figures/car_check.png"
+OUT_PTS = f"{_REPO}/renders/yaris_render_s1/car_check_points_R1.png"
 AZIMS = (-24, -70, -118, 160)
 ELEV = 20
 LIGHT = np.array([0.4, -0.7, 0.6])

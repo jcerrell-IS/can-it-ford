@@ -5,10 +5,12 @@ from pathlib import Path
 
 import numpy as np
 import trimesh
+import os
+_REPO = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 LIVE_SRC = Path(__file__).resolve().parent / "vehicle_live.py"
 LIVE_SRC_PROVENANCE = {
-    "origin": "/work/11603/jcerrell0629/vista/mpm-engine/src/warpmpm/vehicle.py",
+    "origin": os.path.expandvars("$WORK/mpm-engine/src/warpmpm/vehicle.py"),
     "repo_head": "fd390d69ecfd1598f56803a215bb8d0eb7231d85",
     "working_tree_state": "M (uncommitted solidify_watertight patch, NOT in repo_head)",
     "md5": "4c3e8b2e3870194f9ec30f5398ca8407",
@@ -16,7 +18,7 @@ LIVE_SRC_PROVENANCE = {
     "mtime": "2026-07-25 18:25:42 -0500",
     "pulled": "2026-07-25",
 }
-YARIS = Path("/Users/josie/can-it-ford/vehicle_geometry_research/yaris_coarse_v1l_watertight.ply")
+YARIS = Path(f"{_REPO}/vehicle_geometry_research/yaris_coarse_v1l_watertight.ply")
 WANT = ("_up_rotation", "euler_zyx", "solidify_columns", "solidify_watertight")
 
 
