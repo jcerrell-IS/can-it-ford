@@ -82,7 +82,7 @@ esac
 case "$CMD" in
     *"rm -rf"*|*"rm -r "*|*"rm -fr"*|*mkfs*|*"chmod -R 777"*|*"> /dev/sd"*|*"dd if="*)
         echo "tacc.sh: REFUSED. '$CMD' contains a destructive verb." >&2
-        echo "tacc.sh: Confirm in chat, then run it yourself over a normal ssh session." >&2
+        echo "tacc.sh: Confirm first, then run it yourself over a normal ssh session." >&2
         exit 3 ;;
 esac
 

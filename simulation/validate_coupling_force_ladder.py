@@ -659,7 +659,7 @@ def _v_star_prediction(submerged_frac, dt, g=None):
 # even under perfect coupling. It should use a_late_window, which run_c1 already
 # computes and stores.
 #
-# The owning file simulation/validate_coupling_force.py is held by another session and
+# The owning file simulation/validate_coupling_force.py was being edited separately and
 # the plan's section 1 rule 3 forbids editing it, so the fix lands here as a pure
 # function over a C3 result. That is not a workaround for its own sake: because the
 # corrected value is a function of fields ALREADY STORED in every C3 JSON, the fix can be

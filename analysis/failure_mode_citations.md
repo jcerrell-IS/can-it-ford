@@ -75,7 +75,7 @@ PROVISIONAL_STATUS.md, kumar_july9_update/STATUS.md, and the live sim files
 set to 0.55, attributed to Azhar, Pauwels & Bui 2023 (DOI 10.1111/jfr3.12885) as "the
 exact matched-scale-model coefficient."
 
-Verified live (July 20, via scite metadata plus Exa/WebSearch):
+Verified on July 20 against scite metadata and a web search:
 
 - The DOI is correct and resolves to the cited paper: Azhar, Pauwels & Bui 2023,
   "Confirmation of vehicle stability criteria through a combination of smoothed particle

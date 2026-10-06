@@ -32,7 +32,7 @@ AR_R_AUTHORS_STATED_LIMITATIONS = (
     "assessment of: friction coefficients for use in flood flows; buoyancy in "
     "modern cars; the effect of vehicle orientation to flow direction including "
     "vehicle movement; and information for additional vehicle categories. This "
-    "wording has NOT been checked against the report itself in-session."
+    "wording has NOT been checked against the report itself."
 )
 
 AR_R_STABILITY_LIMITS = {

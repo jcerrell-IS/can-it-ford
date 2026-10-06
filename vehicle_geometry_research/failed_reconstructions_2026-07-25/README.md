@@ -5,7 +5,7 @@ is documented and nobody re-derives it. The single usable vehicle asset remains
 `vehicle_geometry_research/yaris_coarse_v1l_watertight.ply`, per
 `docs/VERIFIED_FACTS_LEDGER_july24.md` Section F.
 
-Recovered from the session scratchpad (`/private/tmp/...`) before it was lost.
+Recovered from a temporary working folder before it was lost.
 
 ## Measurements, taken live 2026-07-25 with trimesh
 

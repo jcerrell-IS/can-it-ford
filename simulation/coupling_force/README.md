@@ -219,4 +219,4 @@ stub solver:
 | placement | inlet band and cross-section bounds respected, not stacked |
 
 **Not run: the module against a live warpmpm solver.** The `F`/`C` reset path in particular
-is unexercised, since it needs a real `_sim`. That is the first thing to test next session.
+is unexercised, since it needs a real `_sim`. That is the first thing to test next.

@@ -7,7 +7,7 @@ Josie Cerrell, Claremont McKenna College.
 
 | Surface | URL |
 |---|---|
-| Findings site, on Hugging Face (live) | https://huggingface.co/spaces/josiecerrell/can-it-ford-findings |
+| Simulation records, TACC run data (live) | https://huggingface.co/datasets/josiecerrell/can-it-ford-steady-force |
 | Scenario sweep dataset, browsable viewer (live) | https://huggingface.co/datasets/josiecerrell/can-it-ford-scenario-sweep |
 | Gradio demo (live) | https://huggingface.co/spaces/josiecerrell/can-it-ford |
 | Experiment tracking | `jcerrell29-claremont-mckenna-college/can-it-ford` on W&B, **private**, so named rather than linked |
@@ -16,7 +16,9 @@ Josie Cerrell, Claremont McKenna College.
 
 The field decides fordability with a hazard product, depth times velocity, against a published
 threshold. Checked against a coupled material-point simulation of the same scenario, it fails
-three separable ways:
+three separable ways. (The simulation comparison uses the early closed-tank runs, whose motion is set
+by a start-up surge, per a 2026-09-30 review; items 2 and 3 are illustrations from that surge, not
+steady-current results.)
 
 1. **It cannot see still water.** At zero velocity the product is zero whatever the depth, so a
    metre of motionless water scores zero hazard and passes any threshold. Arithmetic, no
@@ -44,8 +46,9 @@ reported: six pass, one fails, one noted.
 **Open.** No reconstructed scene has entered a simulation. Gaussian splatting *did* run, to
 1,147,694 Gaussians at PSNR 22.74 / SSIM 0.825 / LPIPS 0.311 on held-out views (drainA, 30,000
 iterations), but the splat has no metric scale and the bridge from those kernels to solver
-particles was never built, so **no verdict here starts from video**. Vehicle velocity is
-zero throughout, a stationary-vehicle study, which is what the criteria themselves measure. One
+particles was never built, so **no verdict here starts from video**. No run drives the vehicle
+under its own power: the hull starts at rest and is pushed by the water (peak speeds 0.34 to 1.91
+m/s across the 17 runs), while the criteria themselves describe stationary vehicles. One
 hull at three masses is a mass sensitivity study, not a class comparison; the hull fails the
 ground-clearance axis for the class it was evaluated as. Realized particle density 302.6 to 663.6
 kg/m³ across the three masses, all below water, so every configuration floats once fully
@@ -64,7 +67,7 @@ viscosity fixes. The "23" that *is* current is a count of reclassified **scenari
 
 Any FORD/NO-FORD count must name the **rule** that produced it, not just the file. The canonical
 implementation is `vehicle_params.L1_verdict` (depth cap **and** velocity cap **and** product, per
-class); `simulation/can_it_ford_L1.py` is product-only and is **not** the full rule.
+class); `simulation/can_it_ford_L1.py` calls it, with `small_passenger` as the default class.
 
 ## Not a safety standard
 

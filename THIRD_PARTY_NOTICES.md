@@ -228,8 +228,8 @@ documents and separate rights questions, and the report itself is not in this re
 
 **Routes tried, all four inconclusive:** (1) no PDF of WRL TR 2014/07 is in the repository, so no
 full-text scan of its front matter is possible; (2) the images carry no DOI, so the Unpaywall
-route is unavailable; (3) `WebSearch` was unavailable in the session that made this
-determination (upstream model routing error), so no search route was run; (4) direct fetches
+route is unavailable; (3) no web search could be run when this determination was made, so no
+search route was tried; (4) direct fetches
 returned `https://www.unsw.edu.au/research/wrl/our-research/technical-reports` HTTP 404,
 `https://arr.ga.gov.au/arr-guideline` HTTP 403 (reproducing a standing project note that this
 host 403s), and `https://knowledge.aidr.org.au/resources/australian-rainfall-and-runoff/`

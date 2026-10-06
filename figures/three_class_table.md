@@ -1,7 +1,7 @@
 # Three AR&R vehicle classes, three verdicts
 
 Generated 2026-07-25 from `renders/yaris_render_s1/gates_results.json`. Every number below
-traces to a command run in that session: the sims are Vista job 866266 (reused idle GPU,
+traces to a command run at the time: the sims are Vista job 866266 (reused idle GPU,
 node c642-011/c642-001, GH200 120GB, exit 0 on all three), the gates are
 `renders/yaris_render_s1/gates.py`.
 

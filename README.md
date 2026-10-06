@@ -4,14 +4,15 @@
 rule to a coupled GPU water simulation, and the interesting result is where they disagree.**
 
 <p align="center">
-  <img src="figures/readme_hero_g64_m1100.png"
-       alt="Coupled MPM simulation of a Toyota Yaris hull in standing water, water coloured by speed, grid 64, 1100 kg"
+  <img src="figures/readme_hero_stage1e_u100.png"
+       alt="Simulated water particles coloured by speed flowing around a Toyota Yaris hull held broadside in a 0.30 m deep channel"
        width="820">
 </p>
-<p align="center"><em>Coupled water plus rigid-vehicle simulation, run <code>g64_m1100</code>:
-1100 kg Yaris hull, 0.2944 m realized depth, 1.5 m/s surge, grid 64. This run is one of the seven
-of seventeen that exceed the 10 percent particle-passthrough gate, at 10.67 percent. It is flagged,
-not excluded, and the same applies to the figure.</em></p>
+<p align="center"><em>WARPMPM simulation on TACC Lonestar6 (job 3484188): a Toyota Yaris hull held fixed,
+broadside, in a 20 m wide periodic channel of water 0.30 m deep moving at a mean 1.0 m/s, 30 s after the
+flow started. Each dot is a simulated water particle in the upper half of the water, coloured by speed.
+The run did not pass the project's pre-registered steadiness test, so the image shows a flow pattern,
+not a measured drag.</em></p>
 
 > [!WARNING]
 > This is a research project, not a safety tool. Its thresholds come from draft and interim
@@ -28,8 +29,8 @@ not excluded, and the same applies to the figure.</em></p>
 
 | | |
 |---|---|
-| **Findings walkthrough** (start here) | [can-it-ford-findings on Hugging Face Spaces](https://huggingface.co/spaces/josiecerrell/can-it-ford-findings) |
-| **Live demo** | [Verdict explorer on Hugging Face Spaces](https://huggingface.co/spaces/josiecerrell/can-it-ford) |
+| **Live demo and simulation viewer** (start here) | [Can It Ford on Hugging Face Spaces](https://huggingface.co/spaces/josiecerrell/can-it-ford) |
+| **Simulation records** | [TACC run records](https://huggingface.co/datasets/josiecerrell/can-it-ford-steady-force): configuration, status, wall time, GPU and per-frame time series for every steady-current run |
 | **Plain-language explainer** | [can-it-ford.vercel.app](https://can-it-ford.vercel.app) |
 | **Data** | [Scenario sweep](https://huggingface.co/datasets/josiecerrell/can-it-ford-scenario-sweep) and [load surface](https://huggingface.co/datasets/josiecerrell/can-it-ford-speed-surface) on Hugging Face |
 | **Paper and poster** | [`public_release/`](public_release/). The paper is the September 2026 revision; the version submitted on July 31 is kept beside it. The poster is the July 2026 version. One correction to it: it says all 17 runs are bit-reproducible, but the check behind that only confirms that each run's setup is repeatable; repeat runs are not bit-identical. |
@@ -40,6 +41,11 @@ not excluded, and the same applies to the figure.</em></p>
   a depth cap and a depth x velocity cap to hold together. Applying both, for the car's own class,
   moved 23 of 70 flood scenarios from FORD to NO-FORD, and none the other way
   ([`data/scenario_sweep.csv`](data/scenario_sweep.csv)).
+- **The first 17 coupled runs measured their own start-up, not a current.** In 16 of 17 the car
+  passed the 0.05 m decision threshold 0.067 to 0.167 s after all the water was set moving in one step
+  inside a closed tank, and by 2 s the water upstream had stopped or reversed. Their FORD and NO-FORD
+  outcomes are withdrawn as verdicts. A steady-current campaign on TACC Lonestar6 replaces them; it has
+  produced flow fields and diagnostics but no verdict yet.
 - **3D scene reconstruction.** A Gaussian splat of a real drainage crossing: 1,147,694 Gaussians,
   trained with gsplat for 30,000 iterations, PSNR 22.74. A decimated preview is in the live demo's
   Reconstruction tab. The splat has no metric scale yet, and the bridge from splat to simulation
@@ -70,9 +76,9 @@ still gets the answer right.
 
 | Level | Model | Source |
 |---|---|---|
-| **L0** | Static depth threshold (d >= 0.15 m gives NO-FORD) | [NWS Turn Around Don't Drown](https://www.weather.gov/safety/flood-turn-around-dont-drown) |
-| **L1** | AR&R two-part criterion: a class depth cap AND a D x V cap, both required together. The paper's canonical class is Small Car (depth <= 0.30 m and D x V <= 0.30 m2/s). The bare D x V <= 0.60 m2/s figure often quoted is the Large 4WD hazard cap alone, with no depth restriction. Draft/interim criterion from the source report, not an endorsed safety standard. | Shand et al. 2011, AR&R Project 10 Stage 2 (Engineers Australia) |
-| **L2** | Coupled particle simulation: weakly compressible water plus a rigid vehicle body, verdict from lateral drift | This project |
+| **L0** | Static depth threshold (d >= 0.15 m gives NO-FORD), a project choice. For comparison, NWS says about 0.15 m (6 in) of fast-moving water can knock over an adult and about 0.30 m (12 in) can carry away most cars | [NWS Turn Around Don't Drown](https://www.weather.gov/safety/flood-turn-around-dont-drown) |
+| **L1** | AR&R three-part criterion: a class depth cap, a 3.0 m/s velocity cap and a D x V cap, all required together. The paper's canonical class is Small Car (depth <= 0.30 m and D x V <= 0.30 m2/s). The bare D x V <= 0.60 m2/s figure often quoted is the Large 4WD hazard cap alone, with no depth restriction. Draft/interim criterion from the source report, not an endorsed safety standard. | Shand et al. 2011, AR&R Project 10 Stage 2 (Engineers Australia) |
+| **L2** | Coupled particle simulation: weakly compressible water plus a rigid vehicle body. The first runs imposed the flow as a one-step surge in a closed tank, so their drift labels describe that surge; a steady-current version runs on TACC Lonestar6 and has no verdict yet | This project |
 
 The intended front end reconstructs the scene from video using 3D Gaussian splatting. One real
 scene has been reconstructed and trained as a splat, but it has no metric scale yet and the
@@ -91,7 +97,7 @@ which recovers material properties from images.
 
 ```
 video  ->  gsplat (LS6 A100)  ->  splat to MPM particles  ->  MPM water + rigid vehicle (Vista GH200)  ->  FORD / NO-FORD
-[ ran on one scene, unscaled ]    [ designed, not built ]     [               built and producing results               ]
+[ ran on one scene, unscaled ]    [ designed, not built ]     [ built; steady-current runs in progress, no verdict yet ]
 ```
 
 The splat-to-particle bridge is intended to reuse
@@ -111,7 +117,8 @@ python3 simulation/can_it_ford_L0.py <depth_m>
 python3 simulation/can_it_ford_L1.py <depth_m> <velocity_ms> [vehicle_class]
 ```
 
-Vehicle class options: `sedan`, `large_passenger`, `large_4wd` (default).
+Vehicle class options: `small_passenger` (default, the Yaris), `large_passenger`, `large_4wd`. The script
+applies all three AR&R conditions through `vehicle_params.L1_verdict`.
 
 ### L2, the coupled simulation (GPU)
 
@@ -177,7 +184,7 @@ and could not fail). Per-step invariant checking is not yet implemented.
 | `data/scenario_sweep.csv` | L0/L1 grid (depths 0.1 to 1.0 m x velocities 0.0 to 3.0 m/s), 70 scenarios, with the full and product-only L1 encodings side by side. FORD counts out of 70 for the three classes: 14, 19, 26. |
 | `data/mu_sweep_results.csv` | Vehicle-water coupling-friction sensitivity at (d=0.30 m, v=1.5 m/s), from the Genesis pilot. Not floor (road) friction |
 | `data/three_class_*_2026-08-14.csv` | Non-canonical `warpmpm` floor-friction and three-vehicle study at nominal depth 0.30 m and 1.5 m/s. Peak drift falls as floor friction rises in every group tested. Mostly single runs, and every friction-varied run on the finer grid exceeds the 10 percent passthrough gate |
-| `data/l2_results_from_wandb.csv` | L2 pilot runs pulled from the W&B API: 9 unique conditions, L1 and L2 agree at 5 of 9 |
+| `data/l2_results_from_wandb.csv` | Genesis SPH pilot on a synthetic box vehicle (not the WARPMPM L2), pulled from W&B, which records runtime 0 for these runs. L1 and this pilot agree at 5 of 9 conditions; do not read it as an L2 agreement rate |
 | `data/phase_space_results.csv` | L2 SPH pilot output (pre-fix). **Not usable for an agreement rate:** it carries a single verdict column with no corresponding L1 value, and 15 of its 31 rows share a condition with another row under a different verdict |
 | `data/track1_sweep_v2/` | **Superseded and excluded from the paper.** 36-run sweep on a rescaled box proxy (1390 kg, 4.7352 m3 against the real hull's 3.5427 m3). Kept as a record; do not cite its numbers |
 
@@ -242,10 +249,10 @@ three vehicles.
 **One derived result from that pass was retracted, not hidden.** The first class-verdict table
 asserted a verdict per class. A follow-up pass, version 3 of the mass-sensitivity table, found the
 1100 kg case failed a particle-passthrough gate at 10.67 percent against a 10 percent limit, and
-withdrew that table. The v3 rerun, under standing water plus sustained inflow rather than the
-original dry-start setup, found SLIDE as the only failure mode that activated across all three
-masses, and found L0 and L2 agreeing with each other while L1, the AR&R depth-velocity hazard
-scalar, was the rung that diverged. The paper does not turn this into an agreement rate: the L2
+withdrew that table. The v3 rerun started from standing water and set it moving with a one-step
+kick in a closed tank (not a sustained inflow) rather than the original dry-start setup. It found
+SLIDE as the only failure mode that activated across all three masses; since 2026-09-30 those
+outcomes are understood as start-up surges, so no agreement between levels is claimed from them. The paper does not turn this into an agreement rate: the L2
 drift detector is a numerical threshold with no empirical source, so the paper compares L1 and L2
 by displacement, not by verdict count.
 
