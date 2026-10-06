@@ -8,11 +8,11 @@ NWS Turn Around Don't Drown. https://www.weather.gov/safety/flood-turn-around-do
 
 ## L1, AR&R depth-velocity hazard scalar
 
-Shand, T. D., Cox, R. J., Blacka, M. J., & Smith, G. P. (2011). Australian Rainfall and Runoff Project 10: Appropriate Safety Criteria for Vehicles, Literature Review, Stage 2. AR&R Report No. P10/S2/020. Water Research Laboratory, UNSW. ISBN 978-0-85825-948-5. Published by Engineers Australia. PDF in `citations/`. PDF in `citations/ARR_Project_10_Stage2_Report_Final.pdf`.
+Shand, T. D., Cox, R. J., Blacka, M. J., & Smith, G. P. (2011). Australian Rainfall and Runoff Project 10: Appropriate Safety Criteria for Vehicles, Literature Review, Stage 2. AR&R Report No. P10/S2/020. Water Research Laboratory, UNSW. ISBN 978-0-85825-948-5. Published by Engineers Australia. PDF in `citations/ARR_Project_10_Stage2_Report_Final.pdf`.
 
-Threshold used: DV <= 0.60 m2/s for the Large 4WD vehicle class specifically, not a generic all-vehicle number. The report itself calls this table "draft, interim, informal," not an endorsed safety standard.
+Thresholds used: the full three-part criterion for each vehicle class (a class depth cap, a 3.0 m/s velocity cap and a D x V cap, all required together; see `AR_R_STABILITY_LIMITS` in `vehicle_params.py`). The paper's canonical class is Small passenger: depth <= 0.30 m and D x V <= 0.30 m2/s. The often-quoted D x V <= 0.60 m2/s is the Large 4WD cap alone, not a generic all-vehicle number. The report itself calls this table "draft, interim, informal," not an endorsed safety standard.
 
-## L2, WCSPH physical validation
+## L2 comparison data: full-scale vehicle tests
 
 Smith, G., Modra, B., & Felder, S. (2019). Full-scale testing of stability curves for vehicles in flood waters. Journal of Flood Risk Management. DOI:[10.1111/jfr3.12527](https://doi.org/10.1111/jfr3.12527) (closed access; read through the publisher).
 
@@ -25,7 +25,7 @@ No published paper defines a fixed 0.05m displacement threshold. Flood-vehicle s
 
 An earlier candidate fix citing Smith, Modra & Felder 2019 Eq. 6 as the DRIFT_THRESHOLD source was checked on July 7 and does not hold up, that paper does not state a finite displacement criterion either.
 
-## Vehicle box-proxy geometry validation
+## Vehicle box-proxy geometry (superseded path)
 
 Xiong, Y., Liang, Q., Zheng, J., Wang, G., & Tong, X. (2024). Simulation of the Full-Process Dynamics of Floating Vehicles Driven by Flash Floods. Water Resources Research, 60(10), e2023WR036739. DOI:10.1029/2023WR036739. Verified real July 7, exact DOI and author list confirmed. Caution before citing this for the box-proxy simplification specifically: the paper is a full entrainment/transport/deposition coupled model, read the actual method before using it to justify a simplified rigid-block vehicle representation.
 
@@ -37,7 +37,7 @@ Hsiao, C. H., & Kumar, K. (2025). NeRF-to-MPM inversion for granular material pr
 
 ## Bridge and solver technique
 
-Xie, T., Zong, Z., Qiu, Y., Li, X., Feng, Y., Yang, Y., & Jiang, C. (2023). PhysGaussian: Physics-Integrated 3D Gaussians for Generative Dynamics. arXiv:2311.12198. CVPR 2024 Highlight. Splat-to-particle extraction logic reused for the PhysGaussian-to-Genesis bridge, opacity_threshold=0.02 default confirmed against the official `decode_param.py`.
+Xie, T., Zong, Z., Qiu, Y., Li, X., Feng, Y., Yang, Y., & Jiang, C. (2023). PhysGaussian: Physics-Integrated 3D Gaussians for Generative Dynamics. arXiv:2311.12198. CVPR 2024 Highlight. Its splat-to-particle extraction steps are followed by `bridge/`, an independent implementation; opacity_threshold=0.02 default confirmed against the official `decode_param.py`.
 
 Kerbl, B., Kopanas, G., Leimkuhler, T., & Drettakis, G. (2023). 3D Gaussian Splatting for Real-Time Radiance Field Rendering. ACM Transactions on Graphics, 42(4). arXiv:2308.04079.
 

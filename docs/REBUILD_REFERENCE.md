@@ -1,5 +1,10 @@
 # Rebuild Reference (Piece 1-4 living document)
 
+> **Working notes from July 2026** for a planned rebuild on the Genesis solver. The project later
+> moved its coupled simulations to `warpmpm`, so the Genesis-specific findings here are kept as a
+> record, not as current guidance. Current status: [`README.md`](../README.md).
+
+
 Source-cited research for the real-scene, real-MPM rebuild, cross-validated across three independent research passes. Treat as living, re-verify flagged items as the rebuild progresses, not a one-time answer.
 
 ---
@@ -93,7 +98,7 @@ Every `Rigid` material carries `sdf_cell_size`, `sdf_min_res`, `sdf_max_res`, au
 
 ---
 
-## Bridge intercept point (Piece 2, the actual novel contribution)
+## Bridge intercept point (Piece 2)
 
 ```python
 mpm_solver = MPM_Simulator_WARP(10)
