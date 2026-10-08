@@ -74,7 +74,7 @@ def main():
         row = {k: s.get(k, "") for k in FIELDS}
         row["run"] = name
         row["sweep"] = sweep_of(name)
-        row["summary_path"] = p
+        row["summary_path"] = os.path.relpath(p, REPO)
         row["requested_depth_m"] = s.get("depth_m", "")
         wl = s.get("water_layers")
         h = s.get("h")
