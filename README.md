@@ -49,6 +49,21 @@ Flood Traversability from Gaussian Splatting*](public_release/Cerrell_CanItFord_
 [kept beside it](public_release/Cerrell_CanItFord_paper_as_submitted_2026-07-31.pdf)).
 **Poster:** [TACC, July 2026](public_release/Cerrell_TACC_42x56.pdf).
 
+## What I did
+
+- Wrote the depth rule and the AR&R guideline as code in one place,
+  [`vehicle_params.py`](vehicle_params.py), with [tests](tests/) that check all 70 published cases
+  against it.
+- Ran water-and-car simulations on TACC's supercomputers with the warpmpm solver: 17 runs on Vista
+  and 46 steady-current runs on Lonestar6 (41 of them with the car in the water), with up to 18.5
+  million water particles per run.
+- Added features for loading car models to the solver, and fixed a bug in it:
+  [jcerrell-IS/mpm-engine](https://github.com/jcerrell-IS/mpm-engine).
+- Made a 3D model of a real flooded drainage crossing from video with gsplat, and started code to
+  turn it into simulation particles ([`bridge/`](bridge/)).
+- Recorded, for every run, which settings were saved by the run itself and which were filled in
+  later, and kept a list of every number this project has taken back ([`FINDINGS.md`](FINDINGS.md)).
+
 ## See it running
 
 | | |
@@ -96,21 +111,9 @@ the permitted crossings from 37 to 14. Both panels read stored verdicts from
   [`analysis/reproducibility_manifest.py`](analysis/reproducibility_manifest.py).
 
 What is established, what is open, and the numbers this project has retired:
-[`FINDINGS.md`](FINDINGS.md).
-
-## What I did
-
-- Wrote the depth rule and the AR&R guideline as code in one place,
-  [`vehicle_params.py`](vehicle_params.py), with [tests](tests/) that check all 70 published cases
-  against it.
-- Ran water-and-car simulations on TACC's supercomputers with the warpmpm solver: 17 runs on Vista
-  and 46 steady-current runs on Lonestar6, with up to 18.5 million water particles per run.
-- Added features for loading car models to the solver, and fixed a bug in it:
-  [jcerrell-IS/mpm-engine](https://github.com/jcerrell-IS/mpm-engine).
-- Made a 3D model of a real flooded drainage crossing from video with gsplat, and started code to
-  turn it into simulation particles ([`bridge/`](bridge/)).
-- Recorded, for every run, which settings were saved by the run itself and which were filled in
-  later, and kept a list of every number this project has taken back ([`FINDINGS.md`](FINDINGS.md)).
+[`FINDINGS.md`](FINDINGS.md). Where the setup and results line up with published measurements,
+where they fall short, and how this sits next to earlier vehicle-in-floodwater studies:
+[`docs/COMPARISON_WITH_PUBLISHED_WORK.md`](docs/COMPARISON_WITH_PUBLISHED_WORK.md).
 
 ---
 
@@ -144,7 +147,7 @@ which recovers material properties from images.
 <img src="paper/figures_review/pipeline_diagram_v2.svg" alt="Can It Ford pipeline: video, Gaussian splat, PhysGaussian bridge, Warp MPM, FORD or NO-FORD verdict. Dashed stages are not on the path used for any reported result." width="820">
 
 ```
-video  ->  gsplat (LS6 A100)  ->  splat to MPM particles  ->  MPM water + rigid vehicle (Vista GH200)  ->  FORD / NO-FORD
+video  ->  gsplat (LS6 A100)  ->  splat to MPM particles  ->  MPM water + rigid vehicle (Vista GH200, then LS6 A100)  ->  FORD / NO-FORD
 [ ran on one scene, unscaled ]    [ designed, not built ]     [ built; steady-current runs in progress, no verdict yet ]
 ```
 

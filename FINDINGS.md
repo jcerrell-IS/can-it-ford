@@ -45,7 +45,10 @@ six velocities and four depths, plus 3 early dry-start runs. Vehicle loading is 
 runs that record it (two loads give the same particle count and domain size), but the simulated
 trajectories are not bit-identical, and the 3 dry-start runs record nothing. Mesh containment 100.00 % of a 2000-particle subsample. D×V
 bit-identical across the mass range, tested with `float.hex()`. Eight geometry and physics gates
-reported: six pass, one fails, one noted.
+are reported. Particle passthrough (P-2) fails in 7 of the 17 runs, the floor check (P-3) fails in
+all three 48-cell runs, and three gates (G-6, P-4, P-5) print a value with no pass criterion. No
+gate is a physics validation: each one checks that the code is self-consistent or that particles
+stay contained.
 
 **Open.** No reconstructed scene has entered a simulation. Gaussian splatting *did* run, to
 1,147,694 Gaussians at PSNR 22.74 / SSIM 0.825 / LPIPS 0.311 on held-out views (drainA, 30,000
@@ -54,7 +57,8 @@ particles was never built, so **no verdict here starts from video**. No run driv
 under its own power: the hull starts at rest and is pushed by the water (peak speeds 0.34 to 1.91
 m/s across the 17 runs), while the criteria themselves describe stationary vehicles. One
 hull at three masses is a mass sensitivity study, not a class comparison; the hull fails the
-ground-clearance axis for the class it was evaluated as. Realized particle density 302.6 to 663.6
+ground-clearance axis for the class it was evaluated as. Nominal density of the 1100 kg Yaris is
+310.5 kg/m³ (1100 kg over the hull's 3.5427 m³); realized particle density is 302.6 to 663.6
 kg/m³ across the three masses, all below water, so every configuration floats once fully
 submerged; an earlier 100 to 300 kg/m³ plausibility band is retired. Grid convergence is non-monotonic, so the **direction** of the mass effect is quotable and
 its **magnitude** is not (spread 1.9× to 4.9×). Particle passthrough 7.3 to 15.9 %; the zero
