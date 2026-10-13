@@ -53,8 +53,12 @@ decision and not the displacement.
 - **The movement threshold.** I call a run "moved" when the car drifts more than 0.05 m. That
   number is a project choice with no published source.
 - **No benchmark has passed.** A public floating-sphere dataset with about 0.3 percent uncertainty
-  (Kramer et al. 2021, [doi:10.3390/en14020269](https://doi.org/10.3390/en14020269)) exists and has
-  not been run here yet.
+  exists (Kramer et al. 2021, [doi:10.3390/en14020269](https://doi.org/10.3390/en14020269)). In
+  August 2026 I ran a static version at the same geometry, with the sphere held half submerged, its
+  floating depth: the computed upward force was 34 to 64 percent above the sphere's weight (69.2 N)
+  in all 24 checks, and most of the drop in water level happened even with no sphere in the tank,
+  from water leaking through the floor and walls. The moving version of the test, where the sphere
+  is released and bobs, has not been run yet.
 
 ## Earlier work on vehicles in floodwater
 
