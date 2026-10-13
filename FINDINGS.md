@@ -80,7 +80,14 @@ class); `simulation/can_it_ford_L1.py` calls it, with `small_passenger` as the d
 ## Not a safety standard
 
 The AR&R criteria used throughout are that report's own *draft interim* figures for *stationary*
-vehicles, and are explicitly not an endorsed safety standard. Its authors published the list of
-gaps in them (friction coefficients in flood flows, buoyancy in modern cars, vehicle orientation
-to flow), and this work aims at those gaps by name. **Nothing here is safety guidance. If a road
-is flooded, turn around.**
+vehicles, derived from two scale-model studies (1967 and 1973) and a 1993 calculation, and are
+explicitly not an endorsed safety standard. Its authors listed gaps in them (friction coefficients in
+flood flows, buoyancy in modern cars, vehicle orientation to flow). Others have since measured parts of
+each: full-scale traction for three vehicle types and friction on concrete, gravel and sand (Smith,
+Modra and Felder 2019, [doi:10.1111/jfr3.12527](https://doi.org/10.1111/jfr3.12527)), full-scale tests
+of a real passenger car with the handbrake on and off (Nihei et al. 2025,
+[doi:10.1016/j.rineng.2025.107189](https://doi.org/10.1016/j.rineng.2025.107189)), and drag at many flow
+angles for one scale model per vehicle class (Hu et al. 2023,
+[doi:10.1016/j.jhydrol.2023.129525](https://doi.org/10.1016/j.jhydrol.2023.129525)). This project does
+not close those gaps; it compares the criteria with a simulation of one car and reports where the
+simulation itself falls short. **Nothing here is safety guidance. If a road is flooded, turn around.**
