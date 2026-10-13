@@ -24,7 +24,7 @@
   "solid_volume_m3": 7.943659119387191,
   "hull_m3": 7.962083114517729,
   "fill_ratio": 0.9976860333074212,
-  "hull_source": "/work/11603/jcerrell0629/vista/can-it-ford/vehicle_geometry_research/silverado_g96_pd8_coarse_watertight.ply",
+  "hull_source": "/work/11603/<user>/vista/can-it-ford/vehicle_geometry_research/silverado_g96_pd8_coarse_watertight.ply",
   "hull_watertight": true,
   "hull_yaris_ref_m3": 3.542739,
   "hull_ref_delta_pct": 124.74371141982881,

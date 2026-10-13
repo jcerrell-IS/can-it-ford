@@ -24,7 +24,7 @@
   "solid_volume_m3": 4.9601703806221,
   "hull_m3": 4.950340735545736,
   "fill_ratio": 1.0019856502009614,
-  "hull_source": "/work/11603/jcerrell0629/vista/can-it-ford/vehicle_geometry_research/rogue_g96_pd8_coarse_watertight.ply",
+  "hull_source": "/work/11603/<user>/vista/can-it-ford/vehicle_geometry_research/rogue_g96_pd8_coarse_watertight.ply",
   "hull_watertight": true,
   "hull_yaris_ref_m3": 3.542739,
   "hull_ref_delta_pct": 39.732019083136976,
