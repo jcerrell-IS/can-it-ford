@@ -32,9 +32,9 @@ In the US, flooded roads kill more people than any other flood hazard, and most 
 involve someone driving into the water. A self-driving car has the same problem a driver does: it
 has to decide whether the water is safe to drive through. This project asks that for one car, a
 2010 Toyota Yaris, and checks how simple the method can be and still give the right answer. It
-compares three methods on the same 70 combinations of water depth and speed: a water-depth rule
-(L0), the Australian flood guideline for vehicles, AR&R (L1), and a GPU simulation of water
-flowing around the car (L2).
+compares three methods: a water-depth rule (L0), the Australian flood guideline for vehicles, AR&R
+(L1), and a GPU simulation of water flowing around the car (L2). The two rules are applied to 70
+combinations of water depth and speed; the simulation covers only a few of them so far.
 
 The two rules disagree before any simulation is run. The depth rule allows 7 crossings and the
 full AR&R guideline allows 14, and the type of vehicle alone changes the answer in 12 cases. Using
@@ -268,15 +268,16 @@ These run in CI on the copies of the 17 runs' records in [`tests/data/`](tests/d
 ```bash
 python3 analysis/settle_audit.py        # how much of each record is start-up transient
 python3 analysis/stationarity.py        # self-test of the stationarity methods it uses
-python3 analysis/gci_least_squares.py --h 0.075 0.05 0.0375 --phi 2473 1906 1557
+python3 analysis/gci_least_squares.py --h 0.075 0.05 0.0375 --phi 2473.2626 1905.8386 1557.2925
 pytest -q -rs tests                     # -rs prints the reason for every skip
 ```
 
 `settle_audit.py` flags 29 to 80 of each run's 91 frames as start-up transient (median 48), and in 8
 of the 17 runs what remains is still not stationary, which is consistent with those runs being
 withdrawn as verdicts. `gci_least_squares.py` applies Celik et al. (2008), Xing and Stern (2010) and
-Eca and Hoekstra (2014); on the Stage 1e force ladder it reports apparent order 0.41 and no
-convergence claim. `tests/test_physics_gates.py` checks the closed-form channel flows and that each
+Eca and Hoekstra (2014); on the Stage 1e force ladder (the three mean forces in
+[`tests/data/stage1e_matched_window.json`](tests/data/stage1e_matched_window.json)) it reports
+apparent order 0.41, a grid convergence index of 221 percent, and no convergence claim. `tests/test_physics_gates.py` checks the closed-form channel flows and that each
 rollout holds the particle counts its run recorded; its comparison against solver output is a
 reported skip, because no solver channel-flow profile exists yet.
 

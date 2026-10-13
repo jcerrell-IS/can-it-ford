@@ -37,8 +37,9 @@ see [`FINDINGS.md`](../FINDINGS.md)), so this is a sanity check on ordering, not
   from the inventory).
 
 **Refining the grid keeps the decision but not the size of the motion.** Across the three grids
-(48, 64, 96 cells) the move-or-stay answer is the same while the final displacement at a fixed mass
-changes by 2.0 to 2.5 times. Syamlal, Celik and Benyahia 2017
+(48, 64, 96 cells) the recorded move-or-stay label is the same while the final displacement at a
+fixed mass changes by 2.0 to 2.5 times. This holds for these recorded start-up runs; a later local
+run on a 128-cell grid changed one label (0.30 m deep at 3.0 m/s, from sliding to floating). Syamlal, Celik and Benyahia 2017
 ([doi:10.1002/aic.15868](https://doi.org/10.1002/aic.15868)) note that a quantity that is still
 changing in time is not expected to converge under grid refinement, which is why I quote the
 decision and not the displacement.
@@ -59,7 +60,7 @@ decision and not the displacement.
   exists (Kramer et al. 2021, [doi:10.3390/en14020269](https://doi.org/10.3390/en14020269)). In
   August 2026 I ran a static version with the same sphere, held half submerged at its floating
   depth, in a tank 1.2 m square and 0.5 m deep rather than Kramer's 13 x 8.44 m basin. It failed
-  all 24 checks: the computed upward force was 34 to 64 percent above the buoyancy predicted at the
+  all 24 gradings across six runs: the computed upward force was 34 to 64 percent above the buoyancy predicted at the
   measured water level, which had dropped because water leaked out, and it was below the sphere's
   69.2 N weight in every run compared that way. Most of the drop in water level happened even with
   no sphere in the tank, from water leaking through the floor and walls. Stopping 96.3 percent of
@@ -83,7 +84,8 @@ What this project adds is narrower:
 - It uses the material point method, which none of the studies above uses (in the project's
   literature index, not a search of everything published).
 - It checks three answers to the same question (a depth rule, the AR&R guideline, and a simulation)
-  against each other on the same 70 cases.
+  against each other. The two rules are applied to all 70 cases; the simulation covers only a few
+  of them so far.
 - It keeps a public record of what each run saved, what was filled in later, and which results
   were withdrawn and why.
 
