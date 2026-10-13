@@ -2,7 +2,8 @@
 
 This page lists where my simulation setup and results line up with published measurements, where
 they fall short, and how the project sits next to earlier vehicle-in-floodwater work. Every number
-here was checked against the full text of the cited paper and against a file in this repository.
+here was checked against its source: the full text of the cited paper, a file in this repository,
+or, where named, a record outside this repository.
 None of it is a validation: no simulation here has been compared against a matching experiment and
 passed.
 
@@ -12,7 +13,9 @@ passed.
 ([doi:10.13021/G8JS5D](https://doi.org/10.13021/G8JS5D), slide 7) gives a measured inertia of
 388 (roll), 1498 (pitch) and 1647 (yaw) kg m². The solver's particle cloud of the hull gives
 395.0, 1501.5 and 1685.4 kg m², within 0.2 to 2.3 percent. A plain box of the same size would be
-19 to 26 percent off. Source: the notes in [`vehicle_params.py`](../vehicle_params.py).
+19 to 26 percent off. Sources: the measured values are from slide 7 of the CCSA validation
+document above; the hull and box values are from the notes in
+[`vehicle_params.py`](../vehicle_params.py).
 
 **The density is what the inputs say it should be.** 1100 kg over the hull's 3.542739 m³ is
 310.5 kg/m³, and every one of the 17 runs uses the same hull volume
@@ -34,8 +37,8 @@ see [`FINDINGS.md`](../FINDINGS.md)), so this is a sanity check on ordering, not
   from the inventory).
 
 **Refining the grid keeps the decision but not the size of the motion.** Across the three grids
-(48, 64, 96 cells) the move-or-stay answer is the same while the displacement changes by 1.9 to 4.9
-times. Syamlal, Celik and Benyahia 2017
+(48, 64, 96 cells) the move-or-stay answer is the same while the final displacement at a fixed mass
+changes by 2.0 to 2.5 times. Syamlal, Celik and Benyahia 2017
 ([doi:10.1002/aic.15868](https://doi.org/10.1002/aic.15868)) note that a quantity that is still
 changing in time is not expected to converge under grid refinement, which is why I quote the
 decision and not the displacement.
@@ -54,10 +57,13 @@ decision and not the displacement.
   number is a project choice with no published source.
 - **No benchmark has passed.** A public floating-sphere dataset with about 0.3 percent uncertainty
   exists (Kramer et al. 2021, [doi:10.3390/en14020269](https://doi.org/10.3390/en14020269)). In
-  August 2026 I ran a static version at the same geometry, with the sphere held half submerged, its
-  floating depth: the computed upward force was 34 to 64 percent above the sphere's weight (69.2 N)
-  in all 24 checks, and most of the drop in water level happened even with no sphere in the tank,
-  from water leaking through the floor and walls. The moving version of the test, where the sphere
+  August 2026 I ran a static version with the same sphere, held half submerged at its floating
+  depth, and it failed all 24 checks. Each check divided the computed upward force by the buoyancy
+  expected at the water level actually left in the tank, which had dropped because water leaked out;
+  that ratio was 34 to 64 percent too high. Against the sphere's weight (69.2 N), the force was 13
+  to 35 percent too low in the two runs where I compared them. Most of the drop in water level
+  happened even with no sphere in the tank, from water leaking through the floor and walls
+  (records in the private development repository). The moving version of the test, where the sphere
   is released and bobs, has not been run yet.
 
 ## Earlier work on vehicles in floodwater

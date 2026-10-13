@@ -31,9 +31,11 @@ coupled simulations.
 
 **Suggested by the early coupled runs, withdrawn as verdicts:** the first 17 runs set the water
 moving in one step inside a closed tank, so their motion is a start-up surge, not a steady current
-(per a 2026-09-30 review). In those runs the simulation separated cases the product cannot (mass),
-and the product depended on where depth is read: 0.45000 m²/s at the road against 0.189 to 0.153
-at the hull, in its own bow wave, 58 to 66 percent lower and across the threshold. These are
+(per a 2026-09-30 review). In those runs the simulation separated cases the product cannot (mass).
+Three separate dry-start runs, not part of the 17, all at 0.30 m and 1.5 m/s with 1100, 1609 and
+2337 kg, showed that the product depends on where depth is read: 0.45000 m²/s at the road against
+0.189 to 0.153 at the hull, in its own bow wave, 58 to 66 percent lower and across the threshold
+([`analysis/render_v1/gates_results.json`](analysis/render_v1/gates_results.json)). These are
 illustrations of the gap, not steady-current results. The steady-current campaign that replaces
 them has no verdict yet.
 

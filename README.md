@@ -61,9 +61,10 @@ Flood Traversability from Gaussian Splatting*](public_release/Cerrell_CanItFord_
 - Ran water-and-car simulations on TACC's supercomputers with the warpmpm solver: 17 runs on Vista
   and 46 steady-current runs on Lonestar6 (41 of them with the car in the water), with up to 18.5
   million water particles per run.
-- Added features for loading car models to the solver, and fixed a bug in it:
+- In my fork of the lab's solver, added particle seeding from watertight car meshes and fixed a bug,
+  still present upstream, that broke loading of mesh .ply files (not merged upstream):
   [jcerrell-IS/mpm-engine](https://github.com/jcerrell-IS/mpm-engine).
-- Made a 3D model of a real flooded drainage crossing from video with gsplat, and started code to
+- Made a 3D model of a real drainage crossing from video with gsplat, and started code to
   turn it into simulation particles ([`bridge/`](bridge/)).
 - Recorded, for every run, which settings were saved by the run itself and which were filled in
   later, and kept a list of every number this project has taken back ([`FINDINGS.md`](FINDINGS.md)).
@@ -98,8 +99,8 @@ the permitted crossings from 37 to 14. Both panels read stored verdicts from
   ([`data/scenario_sweep.csv`](data/scenario_sweep.csv)).
 - **The first 17 coupled runs measured their own start-up, not a current.** In 16 of 17 the car
   passed the 0.05 m decision threshold 0.067 to 0.167 s after all the water was set moving in one step
-  inside a closed tank, and by 2 s the water upstream had stopped or reversed. Their FORD and NO-FORD
-  outcomes are withdrawn as verdicts. A steady-current campaign on TACC Lonestar6 replaces them; it has
+  inside a closed tank, and by 2 s the water upstream had slowed to 0.21 m/s or less in every run
+  and reversed in 12 of 17. Their FORD and NO-FORD outcomes are withdrawn as verdicts. A steady-current campaign on TACC Lonestar6 replaces them; it has
   produced flow fields and diagnostics but no verdict yet.
 - **3D scene reconstruction.** A Gaussian splat of a real drainage crossing: 1,147,694 Gaussians,
   trained with gsplat for 30,000 iterations, PSNR 22.74. A decimated preview is in the live demo's
@@ -291,7 +292,7 @@ reported skip, because no solver channel-flow profile exists yet.
 | `data/mu_sweep_results.csv` | Vehicle-water coupling-friction sensitivity at (d=0.30 m, v=1.5 m/s), from the Genesis pilot. Not floor (road) friction |
 | `data/three_class_*_2026-08-14.csv` | Non-canonical `warpmpm` floor-friction and three-vehicle study at nominal depth 0.30 m and 1.5 m/s. Peak drift falls as floor friction rises in every group tested. Mostly single runs, and every friction-varied run on the finer grid exceeds the 10 percent passthrough gate |
 | `data/l2_results_from_wandb.csv` | Genesis SPH pilot on a synthetic box vehicle (not the WARPMPM L2), pulled from W&B, which records runtime 0 for these runs. Its `l1_verdict` column applies the bare 0.6 m2/s product, which agrees with the pilot at 5 of 9 conditions; under the full AR&R rule the count depends on the vehicle class (6 of 9 for a small passenger car, with disagreements in both directions). The pilot's drift-only verdict also reads FORD in 0.6 m of still water. Do not quote any agreement rate from it |
-| `data/phase_space_results.csv` | L2 SPH pilot output (pre-fix). **Not usable for an agreement rate:** it carries a single verdict column with no corresponding L1 value, and 15 of its 31 rows share a condition with another row under a different verdict |
+| `data/phase_space_results.csv` | L2 SPH pilot output (pre-fix). **Not usable for an agreement rate:** it carries a single verdict column with no corresponding L1 value, and 3 of its 31 rows, all at 0.30 m and 1.5 m/s, share one condition but disagree on the verdict (one FORD, two NO-FORD) |
 | `data/track1_sweep_v2/` | **Superseded and excluded from the paper.** 36-run sweep on a rescaled box proxy (1390 kg, 4.7352 m3 against the real hull's 3.5427 m3). Kept as a record; do not cite its numbers |
 
 The TACC account name in run logs and records was replaced with `<user>` on 2026-10-13; nothing else in

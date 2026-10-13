@@ -328,7 +328,7 @@ def test_recorded_move_label_is_the_same_on_all_three_grids():
 
     This pins the recorded start-up surge labels (withdrawn as verdicts), so a change to the records
     or to the rule that reads them is caught here rather than discovered in a figure. The size of the
-    motion does change with the grid, by 1.9 to 4.9 times, and is not checked here.
+    motion does change with the grid, by 2.0 to 2.5 times at a fixed mass, and is not checked here.
     """
     ran = 0
     for mass in ("m1100", "m1609", "m2337"):

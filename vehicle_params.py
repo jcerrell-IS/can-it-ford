@@ -61,9 +61,9 @@ IMPORTANT PHYSICS NOTES for lateral-flow / overturning behavior (L2):
      docs/REALISM_UPGRADE_ASSESSMENT_2026-08-08.md section 1 for the full working.
 
      (a) It is not measured. {463.0, 1893.0, 1960.0} reproduces EXACTLY from
-         box_inertia(1100, 4.30, 1.70, 1.47), i.e. a solid rectangular box. No
-         measured Yaris tensor exists anywhere: the NHTSA Light Vehicle Inertial
-         Parameter Database (SAE 1999-01-1336) ends Nov 1998 and has no Yaris.
+         box_inertia(1100, 4.30, 1.70, 1.47), a solid box. NHTSA's database has no
+         Yaris, but slide 7 of the CCSA validation (DOI 10.13021/G8JS5D) gives a
+         measured roll/pitch/yaw of 388/1498/1647 kg m^2 at 1078 kg.
 
      (b) The solver already computes a strictly better one. warpmpm derives the
          tensor from the actual hull particle cloud at
