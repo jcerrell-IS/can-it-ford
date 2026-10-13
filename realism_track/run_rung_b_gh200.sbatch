@@ -9,7 +9,7 @@
 
 set -euo pipefail
 
-REPO=/work/11603/jcerrell0629/vista/can-it-ford
+REPO=$STOCKYARD/vista/can-it-ford
 cd "$REPO"
 
 OUTDIR=realism_track/rung_b_$SLURM_JOB_ID

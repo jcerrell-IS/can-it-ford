@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH -J rungb_settled
-#SBATCH -o /scratch/11603/jcerrell0629/rungb_settled_%j.out
-#SBATCH -e /scratch/11603/jcerrell0629/rungb_settled_%j.err
+#SBATCH -o rungb_settled_%j.out
+#SBATCH -e rungb_settled_%j.err
 #SBATCH -p gpu-a100-dev
 #SBATCH -N 1
 #SBATCH -n 1
@@ -9,8 +9,8 @@
 
 set -uo pipefail
 
-REPO=/work/11603/jcerrell0629/vista/can-it-ford
-VENV=/scratch/11603/jcerrell0629/warpmpm_ls6_env
+REPO=$STOCKYARD/vista/can-it-ford
+VENV=$SCRATCH/warpmpm_ls6_env
 OUTDIR=$REPO/realism_track/rung_b_settled_$SLURM_JOB_ID
 
 echo "=== node ==="

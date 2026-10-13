@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH -J press_probe
-#SBATCH -o /scratch/11603/jcerrell0629/press_probe_%j.out
-#SBATCH -e /scratch/11603/jcerrell0629/press_probe_%j.err
+#SBATCH -o press_probe_%j.out
+#SBATCH -e press_probe_%j.err
 #SBATCH -p gpu-a100-dev
 #SBATCH -N 1
 #SBATCH -n 1
@@ -9,8 +9,8 @@
 
 set -uo pipefail
 
-REPO=/work/11603/jcerrell0629/vista/can-it-ford
-VENV=/scratch/11603/jcerrell0629/warpmpm_ls6_env
+REPO=$STOCKYARD/vista/can-it-ford
+VENV=$SCRATCH/warpmpm_ls6_env
 OUTDIR=$REPO/realism_track/pressure_probe_$SLURM_JOB_ID
 
 hostname
