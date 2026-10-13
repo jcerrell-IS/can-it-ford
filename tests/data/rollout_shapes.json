@@ -1,0 +1,988 @@
+{
+ "g48_m1100": {
+  "arrays": {
+   "R": [
+    90,
+    3,
+    3
+   ],
+   "depth": [],
+   "dx": [],
+   "extent": [
+    3
+   ],
+   "floor": [],
+   "fps": [],
+   "frames": [],
+   "h": [],
+   "lim": [],
+   "local_depth_bow": [
+    90
+   ],
+   "local_depth_footprint": [
+    90
+   ],
+   "mass": [],
+   "n_grid": [],
+   "speed": [
+    90,
+    18194
+   ],
+   "t": [
+    90,
+    3
+   ],
+   "veh_check_45": [
+    3846,
+    3
+   ],
+   "veh_check_last": [
+    3846,
+    3
+   ],
+   "veh_particles_scene0": [
+    3846,
+    3
+   ],
+   "veh_particles_vehframe": [
+    3846,
+    3
+   ],
+   "velocity": [],
+   "water": [
+    90,
+    18194,
+    3
+   ]
+  },
+  "source_sha256": "bbc84eb5bdf575a02e6761a66d8e654463f51a82e191b364abc3e937950d296b"
+ },
+ "g48_m1609": {
+  "arrays": {
+   "R": [
+    90,
+    3,
+    3
+   ],
+   "depth": [],
+   "dx": [],
+   "extent": [
+    3
+   ],
+   "floor": [],
+   "fps": [],
+   "frames": [],
+   "h": [],
+   "lim": [],
+   "local_depth_bow": [
+    90
+   ],
+   "local_depth_footprint": [
+    90
+   ],
+   "mass": [],
+   "n_grid": [],
+   "speed": [
+    90,
+    18194
+   ],
+   "t": [
+    90,
+    3
+   ],
+   "veh_check_45": [
+    3846,
+    3
+   ],
+   "veh_check_last": [
+    3846,
+    3
+   ],
+   "veh_particles_scene0": [
+    3846,
+    3
+   ],
+   "veh_particles_vehframe": [
+    3846,
+    3
+   ],
+   "velocity": [],
+   "water": [
+    90,
+    18194,
+    3
+   ]
+  },
+  "source_sha256": "a5dfd955fba2f1addfd2966d0d46a526693808ca2485da218bf4502640be324a"
+ },
+ "g48_m2337": {
+  "arrays": {
+   "R": [
+    90,
+    3,
+    3
+   ],
+   "depth": [],
+   "dx": [],
+   "extent": [
+    3
+   ],
+   "floor": [],
+   "fps": [],
+   "frames": [],
+   "h": [],
+   "lim": [],
+   "local_depth_bow": [
+    90
+   ],
+   "local_depth_footprint": [
+    90
+   ],
+   "mass": [],
+   "n_grid": [],
+   "speed": [
+    90,
+    18194
+   ],
+   "t": [
+    90,
+    3
+   ],
+   "veh_check_45": [
+    3846,
+    3
+   ],
+   "veh_check_last": [
+    3846,
+    3
+   ],
+   "veh_particles_scene0": [
+    3846,
+    3
+   ],
+   "veh_particles_vehframe": [
+    3846,
+    3
+   ],
+   "velocity": [],
+   "water": [
+    90,
+    18194,
+    3
+   ]
+  },
+  "source_sha256": "4474a3bf8aed27a3c9b53014b83e98cd06e7a361169f171bb76e5db20e4a3774"
+ },
+ "g64_m1100": {
+  "arrays": {
+   "R": [
+    90,
+    3,
+    3
+   ],
+   "depth": [],
+   "dx": [],
+   "extent": [
+    3
+   ],
+   "floor": [],
+   "fps": [],
+   "frames": [],
+   "h": [],
+   "lim": [],
+   "local_depth_bow": [
+    90
+   ],
+   "local_depth_footprint": [
+    90
+   ],
+   "mass": [],
+   "n_grid": [],
+   "speed": [
+    90,
+    48367
+   ],
+   "t": [
+    90,
+    3
+   ],
+   "veh_check_45": [
+    8905,
+    3
+   ],
+   "veh_check_last": [
+    8905,
+    3
+   ],
+   "veh_particles_scene0": [
+    8905,
+    3
+   ],
+   "veh_particles_vehframe": [
+    8905,
+    3
+   ],
+   "velocity": [],
+   "water": [
+    90,
+    48367,
+    3
+   ]
+  },
+  "source_sha256": "94bdf4ebb9c48f21324a08a47a2ddbd921d8e061d87eaf3d33bf24549ca68527"
+ },
+ "g64_m1609": {
+  "arrays": {
+   "R": [
+    90,
+    3,
+    3
+   ],
+   "depth": [],
+   "dx": [],
+   "extent": [
+    3
+   ],
+   "floor": [],
+   "fps": [],
+   "frames": [],
+   "h": [],
+   "lim": [],
+   "local_depth_bow": [
+    90
+   ],
+   "local_depth_footprint": [
+    90
+   ],
+   "mass": [],
+   "n_grid": [],
+   "speed": [
+    90,
+    48367
+   ],
+   "t": [
+    90,
+    3
+   ],
+   "veh_check_45": [
+    8905,
+    3
+   ],
+   "veh_check_last": [
+    8905,
+    3
+   ],
+   "veh_particles_scene0": [
+    8905,
+    3
+   ],
+   "veh_particles_vehframe": [
+    8905,
+    3
+   ],
+   "velocity": [],
+   "water": [
+    90,
+    48367,
+    3
+   ]
+  },
+  "source_sha256": "c4dd443940628f2fcda6b2bc681d8185020a9b15afd3e7b672c8eef30efd9c2a"
+ },
+ "g64_m2337": {
+  "arrays": {
+   "R": [
+    90,
+    3,
+    3
+   ],
+   "depth": [],
+   "dx": [],
+   "extent": [
+    3
+   ],
+   "floor": [],
+   "fps": [],
+   "frames": [],
+   "h": [],
+   "lim": [],
+   "local_depth_bow": [
+    90
+   ],
+   "local_depth_footprint": [
+    90
+   ],
+   "mass": [],
+   "n_grid": [],
+   "speed": [
+    90,
+    48367
+   ],
+   "t": [
+    90,
+    3
+   ],
+   "veh_check_45": [
+    8905,
+    3
+   ],
+   "veh_check_last": [
+    8905,
+    3
+   ],
+   "veh_particles_scene0": [
+    8905,
+    3
+   ],
+   "veh_particles_vehframe": [
+    8905,
+    3
+   ],
+   "velocity": [],
+   "water": [
+    90,
+    48367,
+    3
+   ]
+  },
+  "source_sha256": "d38a1a0b784032cecd545e1a263965c1a1ff0f3cae1e0963e3a3c90633034342"
+ },
+ "g96_m1100": {
+  "arrays": {
+   "R": [
+    90,
+    3,
+    3
+   ],
+   "depth": [],
+   "dx": [],
+   "extent": [
+    3
+   ],
+   "floor": [],
+   "fps": [],
+   "frames": [],
+   "h": [],
+   "lim": [],
+   "local_depth_bow": [
+    90
+   ],
+   "local_depth_footprint": [
+    90
+   ],
+   "mass": [],
+   "n_grid": [],
+   "speed": [
+    90,
+    180067
+   ],
+   "t": [
+    90,
+    3
+   ],
+   "veh_check_45": [
+    29804,
+    3
+   ],
+   "veh_check_last": [
+    29804,
+    3
+   ],
+   "veh_particles_scene0": [
+    29804,
+    3
+   ],
+   "veh_particles_vehframe": [
+    29804,
+    3
+   ],
+   "velocity": [],
+   "water": [
+    90,
+    180067,
+    3
+   ]
+  },
+  "source_sha256": "429b365cf804db147d76f81b5d0082f4c20a31b213bb56dd1528542a07c5138a"
+ },
+ "g96_m1609": {
+  "arrays": {
+   "R": [
+    90,
+    3,
+    3
+   ],
+   "depth": [],
+   "dx": [],
+   "extent": [
+    3
+   ],
+   "floor": [],
+   "fps": [],
+   "frames": [],
+   "h": [],
+   "lim": [],
+   "local_depth_bow": [
+    90
+   ],
+   "local_depth_footprint": [
+    90
+   ],
+   "mass": [],
+   "n_grid": [],
+   "speed": [
+    90,
+    180067
+   ],
+   "t": [
+    90,
+    3
+   ],
+   "veh_check_45": [
+    29804,
+    3
+   ],
+   "veh_check_last": [
+    29804,
+    3
+   ],
+   "veh_particles_scene0": [
+    29804,
+    3
+   ],
+   "veh_particles_vehframe": [
+    29804,
+    3
+   ],
+   "velocity": [],
+   "water": [
+    90,
+    180067,
+    3
+   ]
+  },
+  "source_sha256": "be3bd443bfdd60569fb95b19dc0f724a8d5670df714758c232eb80526ebb50ce"
+ },
+ "g96_m2337": {
+  "arrays": {
+   "R": [
+    90,
+    3,
+    3
+   ],
+   "depth": [],
+   "dx": [],
+   "extent": [
+    3
+   ],
+   "floor": [],
+   "fps": [],
+   "frames": [],
+   "h": [],
+   "lim": [],
+   "local_depth_bow": [
+    90
+   ],
+   "local_depth_footprint": [
+    90
+   ],
+   "mass": [],
+   "n_grid": [],
+   "speed": [
+    90,
+    180067
+   ],
+   "t": [
+    90,
+    3
+   ],
+   "veh_check_45": [
+    29804,
+    3
+   ],
+   "veh_check_last": [
+    29804,
+    3
+   ],
+   "veh_particles_scene0": [
+    29804,
+    3
+   ],
+   "veh_particles_vehframe": [
+    29804,
+    3
+   ],
+   "velocity": [],
+   "water": [
+    90,
+    180067,
+    3
+   ]
+  },
+  "source_sha256": "59829744f8ddf64f04d2bb3297bec484dc91bf0f56af79698a4643cb6e4cfe4b"
+ },
+ "sweepD_g64_d0p25": {
+  "arrays": {
+   "R": [
+    90,
+    3,
+    3
+   ],
+   "depth": [],
+   "dx": [],
+   "extent": [
+    3
+   ],
+   "floor": [],
+   "fps": [],
+   "frames": [],
+   "h": [],
+   "lim": [],
+   "local_depth_bow": [
+    90
+   ],
+   "local_depth_footprint": [
+    90
+   ],
+   "mass": [],
+   "n_grid": [],
+   "speed": [
+    90,
+    36842
+   ],
+   "t": [
+    90,
+    3
+   ],
+   "veh_check_45": [
+    8905,
+    3
+   ],
+   "veh_check_last": [
+    8905,
+    3
+   ],
+   "veh_particles_scene0": [
+    8905,
+    3
+   ],
+   "veh_particles_vehframe": [
+    8905,
+    3
+   ],
+   "velocity": [],
+   "water": [
+    90,
+    36842,
+    3
+   ]
+  },
+  "source_sha256": "e9c84358fb58838a52d185ddc1d58e271e4129e5183100bc76b87763790ae9ce"
+ },
+ "sweepD_g64_d0p35": {
+  "arrays": {
+   "R": [
+    90,
+    3,
+    3
+   ],
+   "depth": [],
+   "dx": [],
+   "extent": [
+    3
+   ],
+   "floor": [],
+   "fps": [],
+   "frames": [],
+   "h": [],
+   "lim": [],
+   "local_depth_bow": [
+    90
+   ],
+   "local_depth_footprint": [
+    90
+   ],
+   "mass": [],
+   "n_grid": [],
+   "speed": [
+    90,
+    60060
+   ],
+   "t": [
+    90,
+    3
+   ],
+   "veh_check_45": [
+    8905,
+    3
+   ],
+   "veh_check_last": [
+    8905,
+    3
+   ],
+   "veh_particles_scene0": [
+    8905,
+    3
+   ],
+   "veh_particles_vehframe": [
+    8905,
+    3
+   ],
+   "velocity": [],
+   "water": [
+    90,
+    60060,
+    3
+   ]
+  },
+  "source_sha256": "ed4fc05d00173d8811d076df7ea8b1d0fb24402bef9169bd53f0b043600518a9"
+ },
+ "sweepD_g64_d0p45": {
+  "arrays": {
+   "R": [
+    90,
+    3,
+    3
+   ],
+   "depth": [],
+   "dx": [],
+   "extent": [
+    3
+   ],
+   "floor": [],
+   "fps": [],
+   "frames": [],
+   "h": [],
+   "lim": [],
+   "local_depth_bow": [
+    90
+   ],
+   "local_depth_footprint": [
+    90
+   ],
+   "mass": [],
+   "n_grid": [],
+   "speed": [
+    90,
+    72381
+   ],
+   "t": [
+    90,
+    3
+   ],
+   "veh_check_45": [
+    8905,
+    3
+   ],
+   "veh_check_last": [
+    8905,
+    3
+   ],
+   "veh_particles_scene0": [
+    8905,
+    3
+   ],
+   "veh_particles_vehframe": [
+    8905,
+    3
+   ],
+   "velocity": [],
+   "water": [
+    90,
+    72381,
+    3
+   ]
+  },
+  "source_sha256": "d21188520abcf557eaf086008a810407f0a102349cbe94a254bbd6b70ff6539b"
+ },
+ "sweepV_g64_v0p5": {
+  "arrays": {
+   "R": [
+    90,
+    3,
+    3
+   ],
+   "depth": [],
+   "dx": [],
+   "extent": [
+    3
+   ],
+   "floor": [],
+   "fps": [],
+   "frames": [],
+   "h": [],
+   "lim": [],
+   "local_depth_bow": [
+    90
+   ],
+   "local_depth_footprint": [
+    90
+   ],
+   "mass": [],
+   "n_grid": [],
+   "speed": [
+    90,
+    48367
+   ],
+   "t": [
+    90,
+    3
+   ],
+   "veh_check_45": [
+    8905,
+    3
+   ],
+   "veh_check_last": [
+    8905,
+    3
+   ],
+   "veh_particles_scene0": [
+    8905,
+    3
+   ],
+   "veh_particles_vehframe": [
+    8905,
+    3
+   ],
+   "velocity": [],
+   "water": [
+    90,
+    48367,
+    3
+   ]
+  },
+  "source_sha256": "758c84a9626f172647dad5c46a65ae67c3bce315d275939683f82dc29b0689f5"
+ },
+ "sweepV_g64_v1p0": {
+  "arrays": {
+   "R": [
+    90,
+    3,
+    3
+   ],
+   "depth": [],
+   "dx": [],
+   "extent": [
+    3
+   ],
+   "floor": [],
+   "fps": [],
+   "frames": [],
+   "h": [],
+   "lim": [],
+   "local_depth_bow": [
+    90
+   ],
+   "local_depth_footprint": [
+    90
+   ],
+   "mass": [],
+   "n_grid": [],
+   "speed": [
+    90,
+    48367
+   ],
+   "t": [
+    90,
+    3
+   ],
+   "veh_check_45": [
+    8905,
+    3
+   ],
+   "veh_check_last": [
+    8905,
+    3
+   ],
+   "veh_particles_scene0": [
+    8905,
+    3
+   ],
+   "veh_particles_vehframe": [
+    8905,
+    3
+   ],
+   "velocity": [],
+   "water": [
+    90,
+    48367,
+    3
+   ]
+  },
+  "source_sha256": "4e9334c0fbeec323a83efcbce2bd487b80853b1e690dc478f535829492377e1d"
+ },
+ "sweepV_g64_v2p0": {
+  "arrays": {
+   "R": [
+    90,
+    3,
+    3
+   ],
+   "depth": [],
+   "dx": [],
+   "extent": [
+    3
+   ],
+   "floor": [],
+   "fps": [],
+   "frames": [],
+   "h": [],
+   "lim": [],
+   "local_depth_bow": [
+    90
+   ],
+   "local_depth_footprint": [
+    90
+   ],
+   "mass": [],
+   "n_grid": [],
+   "speed": [
+    90,
+    48367
+   ],
+   "t": [
+    90,
+    3
+   ],
+   "veh_check_45": [
+    8905,
+    3
+   ],
+   "veh_check_last": [
+    8905,
+    3
+   ],
+   "veh_particles_scene0": [
+    8905,
+    3
+   ],
+   "veh_particles_vehframe": [
+    8905,
+    3
+   ],
+   "velocity": [],
+   "water": [
+    90,
+    48367,
+    3
+   ]
+  },
+  "source_sha256": "2b6d29125a8d37f6ea4eba117e1e43866bf8786c2e5866e1268aeca6f50da80e"
+ },
+ "sweepV_g64_v2p5": {
+  "arrays": {
+   "R": [
+    90,
+    3,
+    3
+   ],
+   "depth": [],
+   "dx": [],
+   "extent": [
+    3
+   ],
+   "floor": [],
+   "fps": [],
+   "frames": [],
+   "h": [],
+   "lim": [],
+   "local_depth_bow": [
+    90
+   ],
+   "local_depth_footprint": [
+    90
+   ],
+   "mass": [],
+   "n_grid": [],
+   "speed": [
+    90,
+    48367
+   ],
+   "t": [
+    90,
+    3
+   ],
+   "veh_check_45": [
+    8905,
+    3
+   ],
+   "veh_check_last": [
+    8905,
+    3
+   ],
+   "veh_particles_scene0": [
+    8905,
+    3
+   ],
+   "veh_particles_vehframe": [
+    8905,
+    3
+   ],
+   "velocity": [],
+   "water": [
+    90,
+    48367,
+    3
+   ]
+  },
+  "source_sha256": "3574ccfec8e44e3a16eaefb356353db04660989d0f34c1e6e3e0d014229791ca"
+ },
+ "sweepV_g64_v3p0": {
+  "arrays": {
+   "R": [
+    90,
+    3,
+    3
+   ],
+   "depth": [],
+   "dx": [],
+   "extent": [
+    3
+   ],
+   "floor": [],
+   "fps": [],
+   "frames": [],
+   "h": [],
+   "lim": [],
+   "local_depth_bow": [
+    90
+   ],
+   "local_depth_footprint": [
+    90
+   ],
+   "mass": [],
+   "n_grid": [],
+   "speed": [
+    90,
+    48367
+   ],
+   "t": [
+    90,
+    3
+   ],
+   "veh_check_45": [
+    8905,
+    3
+   ],
+   "veh_check_last": [
+    8905,
+    3
+   ],
+   "veh_particles_scene0": [
+    8905,
+    3
+   ],
+   "veh_particles_vehframe": [
+    8905,
+    3
+   ],
+   "velocity": [],
+   "water": [
+    90,
+    48367,
+    3
+   ]
+  },
+  "source_sha256": "1c3aa5a5d8d08fc8ddd3bb4c826ea098a6751fcfc35daaf359cab63e9e644b13"
+ }
+}
