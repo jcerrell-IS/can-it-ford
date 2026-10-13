@@ -148,6 +148,10 @@ def build(stem):
     print(f'  icc            : {ICC_PATH.name}, {len(icc_z)} bytes deflated')
     print(f'  wrote          : {out}  ({out.stat().st_size} bytes)')
     print(f'  MediaBox       : [ 0 0 {box_w} {box_h} ]')
+    # The square canvas is only needed to build the PDF; keep the PNG at the figure's own height.
+    from PIL import Image
+    Image.open(png).crop((0, 0, box_w, box_h)).save(png, optimize=True)
+    print(f'  png cropped    : {png.name} to {box_w} x {box_h}')
     print()
 
 
