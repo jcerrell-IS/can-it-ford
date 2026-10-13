@@ -18,16 +18,16 @@
 
 set -uo pipefail
 
-REPO=/scratch/11603/jcerrell0629/canitford_track1b/can-it-ford
+REPO=$SCRATCH/canitford_track1b/can-it-ford
 # NOTE: two mpm-engine trees exist on /work. The rung-b coupling work uses
 # vista/can-it-ford/mpm-engine, whose warpmpm.vehicle has NO solidify_watertight.
 # sim_standing.py needs it, and the existing g64 anchor runs (job 896273) resolved
 # warpmpm to vista/mpm-engine per their 00_provenance.txt. Use that one, both
 # because it is the only one that works and because it is the one the anchors used.
-ENGINE=/work/11603/jcerrell0629/vista/mpm-engine/src
-VENV=/scratch/11603/jcerrell0629/warpmpm_ls6_env
+ENGINE=$STOCKYARD/vista/mpm-engine/src
+VENV=$SCRATCH/warpmpm_ls6_env
 TAG=${1:-manual}
-BASE=/scratch/11603/jcerrell0629/rs_sweep_${TAG}
+BASE=$SCRATCH/rs_sweep_${TAG}
 
 export CUDA_VISIBLE_DEVICES=1
 

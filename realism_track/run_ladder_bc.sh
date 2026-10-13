@@ -6,9 +6,9 @@
 # g64_m1100 gated values to the last digit. Predictions are pre-registered in the
 # module docstring, so they cannot be fitted after the fact.
 set -uo pipefail
-REPO=/work/11603/jcerrell0629/vista/can-it-ford
-VENV=/scratch/11603/jcerrell0629/warpmpm_ls6_env
-OUT=/scratch/11603/jcerrell0629/ladder_bc_3362208
+REPO=$STOCKYARD/vista/can-it-ford
+VENV=$SCRATCH/warpmpm_ls6_env
+OUT=$SCRATCH/ladder_bc_3362208
 PY="$VENV/bin/python"
 export PYTHONPATH="$REPO/mpm-engine/src:$REPO:${PYTHONPATH:-}"
 mkdir -p "$OUT"; cd "$REPO"

@@ -10,10 +10,10 @@
 
 set -uo pipefail
 
-REPO=/work/11603/jcerrell0629/vista/can-it-ford
-VENV=/scratch/11603/jcerrell0629/warpmpm_ls6_env
+REPO=$STOCKYARD/vista/can-it-ford
+VENV=$SCRATCH/warpmpm_ls6_env
 TAG=${1:-manual}
-OUTDIR=/scratch/11603/jcerrell0629/rungb_g96_gated_${TAG}
+OUTDIR=$SCRATCH/rungb_g96_gated_${TAG}
 
 echo "=== node ==="
 hostname

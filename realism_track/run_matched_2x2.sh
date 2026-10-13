@@ -14,9 +14,9 @@
 #   valid gate-met point, just not exactly on target)
 
 set -uo pipefail
-REPO=/work/11603/jcerrell0629/vista/can-it-ford
-VENV=/scratch/11603/jcerrell0629/warpmpm_ls6_env
-OUTDIR=/scratch/11603/jcerrell0629/rungb_matched_2x2
+REPO=$STOCKYARD/vista/can-it-ford
+VENV=$SCRATCH/warpmpm_ls6_env
+OUTDIR=$SCRATCH/rungb_matched_2x2
 PY="$VENV/bin/python"
 export PYTHONPATH="$REPO/mpm-engine/src:$REPO:${PYTHONPATH:-}"
 mkdir -p "$OUTDIR"; cd "$REPO"

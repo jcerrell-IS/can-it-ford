@@ -2,9 +2,9 @@
 # Rung (d): rung (c) plus flow, matching the gated scene's velocity clamp.
 # This is the last rung before the gated configuration itself.
 set -uo pipefail
-REPO=/work/11603/jcerrell0629/vista/can-it-ford
-VENV=/scratch/11603/jcerrell0629/warpmpm_ls6_env
-OUT=/scratch/11603/jcerrell0629/ladder_d_3362208
+REPO=$STOCKYARD/vista/can-it-ford
+VENV=$SCRATCH/warpmpm_ls6_env
+OUT=$SCRATCH/ladder_d_3362208
 PY="$VENV/bin/python"
 export PYTHONPATH="$REPO/mpm-engine/src:$REPO:${PYTHONPATH:-}"
 mkdir -p "$OUT"; cd "$REPO"

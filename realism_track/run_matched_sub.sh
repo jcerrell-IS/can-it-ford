@@ -15,11 +15,11 @@
 
 set -uo pipefail
 
-REPO=/work/11603/jcerrell0629/vista/can-it-ford
-VENV=/scratch/11603/jcerrell0629/warpmpm_ls6_env
+REPO=$STOCKYARD/vista/can-it-ford
+VENV=$SCRATCH/warpmpm_ls6_env
 DC=${1:-18.89}
 TAG=${2:-probe}
-OUTDIR=/scratch/11603/jcerrell0629/rungb_matched_${TAG}
+OUTDIR=$SCRATCH/rungb_matched_${TAG}
 
 echo "=== node ==="; hostname
 PY="$VENV/bin/python"
