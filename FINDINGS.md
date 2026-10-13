@@ -48,7 +48,8 @@ runs that record it (two loads give the same particle count and domain size), bu
 trajectories are not bit-identical, and the 3 dry-start runs record nothing. Mesh containment 100.00 % of a 2000-particle subsample. D×V
 bit-identical across the mass range, tested with `float.hex()`. Eight geometry and physics gates
 are reported. Particle passthrough (P-2) fails in 7 of the 17 runs, the floor check (P-3) fails in
-all three 48-cell runs, and three gates (G-6, P-4, P-5) print a value with no pass criterion. No
+5 of the 17 (the three 48-cell runs and two depth-sweep runs, where the hull's lowest point settles
+0.02 to 0.05 m onto the floor during the record), and three gates (G-6, P-4, P-5) print a value with no pass criterion. No
 gate is a physics validation: each one checks that the code is self-consistent or that particles
 stay contained.
 
