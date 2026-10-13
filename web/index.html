@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Can It Ford?</title>
-<meta name="description" content="Autonomous vehicle flood traversability via reconstruct-to-decide world models. NSF SCIPE REU 2026, GeoElements Lab, UT Austin.">
+<meta name="description" content="Can a specific car cross a specific flooded road? A depth rule, the Australian flood guideline for vehicles and a GPU water simulation, compared on the same cases. NSF SCIPE REU 2026, GeoElements Lab, UT Austin.">
 <style>
   :root {
     --bg: #ffffff;
@@ -71,7 +71,7 @@
 
   <header>
     <h1>Can It Ford?</h1>
-    <p class="tagline">Autonomous vehicle flood traversability via reconstruct-to-decide world models.</p>
+    <p class="tagline">Can a specific car cross a specific flooded road? A depth rule, the Australian flood guideline for vehicles and a GPU water simulation, compared on the same cases.</p>
   </header>
 
   <p>Given a real flooded road, this project asks whether a specific vehicle can ford the crossing, and looks for the simplest physical abstraction that still answers correctly.</p>
@@ -82,7 +82,7 @@
     <div class="row">
       <div class="lvl">L0</div>
       <div class="desc">Static depth threshold
-        <small>Depth alone, following NWS Turn Around Don't Drown guidance.</small>
+        <small>Depth alone: 0.15 m or deeper means do not cross. The cutoff is this project's choice; the National Weather Service warns that about 15 cm of fast water can knock an adult down.</small>
       </div>
     </div>
     <div class="row">
@@ -93,8 +93,8 @@
     </div>
     <div class="row">
       <div class="lvl">L2</div>
-      <div class="desc">Full physics
-        <small>A warpmpm material point method simulation, weakly compressible water coupled to a rigid vehicle hull. Runs on GPU, not in a browser.</small>
+      <div class="desc">Coupled water simulation
+        <small>A material point method simulation (water as many small particles that move through a grid) coupled to a rigid car hull, run on TACC GPUs with the warpmpm solver. It has no verdict yet: the first 17 runs measured the start of the flow, not a steady current, and were withdrawn.</small>
       </div>
     </div>
   </div>
