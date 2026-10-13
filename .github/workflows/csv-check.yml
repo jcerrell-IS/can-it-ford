@@ -12,5 +12,14 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - run: pip install -r requirements.txt pytest
-      - run: pytest -q tests
+      - run: pip install -r requirements.txt pytest ruff==0.6.9
+      - name: Lint (syntax errors and undefined names, whole repository)
+        run: ruff check --select E9,F63,F7,F82 .
+      - name: Lint (default rules, tests and the audit modules)
+        run: ruff check tests analysis/stationarity.py analysis/settle_audit.py analysis/gci_least_squares.py
+      - name: Stationarity self-test
+        run: python analysis/stationarity.py
+      - name: Start-up transient audit of the 17 gated runs
+        run: python analysis/settle_audit.py
+      - name: Tests (skips are listed with their reasons)
+        run: pytest -q -rs tests

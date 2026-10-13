@@ -54,6 +54,10 @@ Flood Traversability from Gaussian Splatting*](public_release/Cerrell_CanItFord_
 - Wrote the depth rule and the AR&R guideline as code in one place,
   [`vehicle_params.py`](vehicle_params.py), with [tests](tests/) that check all 70 published cases
   against it.
+- Wrote checks that run in CI on copies of the 17 runs' records: invariants of the recorded data,
+  relations between runs that differ in grid or mass, a grid-convergence check
+  ([`analysis/gci_least_squares.py`](analysis/gci_least_squares.py)) and a start-up transient audit
+  ([`analysis/settle_audit.py`](analysis/settle_audit.py)). None of them is a physics validation.
 - Ran water-and-car simulations on TACC's supercomputers with the warpmpm solver: 17 runs on Vista
   and 46 steady-current runs on Lonestar6 (41 of them with the car in the water), with up to 18.5
   million water particles per run.
@@ -107,8 +111,9 @@ the permitted crossings from 37 to 14. Both panels read stored verdicts from
   from the solver version the repository pins and from the mesh that matches each run's recorded
   hull volume. The code commit was reconstructed from file dates, so it is an upper bound rather than
   proof of what ran. The GPU (NVIDIA GH200 on Vista) was logged once per batch, not per run, and wall
-  time was not recorded. The per-run records stay in the private development repository; the
-  manifest carries their fields and labels. See
+  time was not recorded. The per-run summary files stay in the private development repository; the
+  manifest carries their fields and labels, and each run's per-frame record is in
+  [`tests/data/runs/`](tests/data/runs/). See
   [`data/reproducibility_manifest.json`](data/reproducibility_manifest.json), built by
   [`analysis/reproducibility_manifest.py`](analysis/reproducibility_manifest.py).
 
@@ -257,6 +262,23 @@ and reports total water momentum per run. It does **not** verify mass conservati
 mass-integrity check was withdrawn on July 15, 2026 as tautological (it compared a value to itself
 and could not fail). Per-step invariant checking is not yet implemented.
 
+These run in CI on the copies of the 17 runs' records in [`tests/data/`](tests/data/):
+
+```bash
+python3 analysis/settle_audit.py        # how much of each record is start-up transient
+python3 analysis/stationarity.py        # self-test of the stationarity methods it uses
+python3 analysis/gci_least_squares.py --h 0.075 0.05 0.0375 --phi 2473 1906 1557
+pytest -q -rs tests                     # -rs prints the reason for every skip
+```
+
+`settle_audit.py` flags 29 to 80 of each run's 91 frames as start-up transient (median 48), and in 8
+of the 17 runs what remains is still not stationary, which is consistent with those runs being
+withdrawn as verdicts. `gci_least_squares.py` applies Celik et al. (2008), Xing and Stern (2010) and
+Eca and Hoekstra (2014); on the Stage 1e force ladder it reports apparent order 0.41 and no
+convergence claim. `tests/test_physics_gates.py` checks the closed-form channel flows and that each
+rollout holds the particle counts its run recorded; its comparison against solver output is a
+reported skip, because no solver channel-flow profile exists yet.
+
 ---
 
 ## Data
@@ -330,7 +352,7 @@ analysis/render_v1/as_ran_local_copies/  The driver and job script exactly as th
 renders/yaris_render_s1/ A later revision of that driver
 realism_track/           Coupling-accuracy checks: buoyancy and force on submerged bodies against analytic values, with job records
 analysis/                Figures, provenance manifest, consistency checks
-tests/                   Rule, sweep and bridge tests, run by CI
+tests/                   Rule, sweep, bridge, physics and convergence tests, run by CI; tests/data/ holds the run-record fixtures
 vehicle_params.py        Cited vehicle classes (mass, bbox, CG, inertia)
 data/                    Experiment CSVs and the provenance manifest
 figures/                 Output figures, pipeline diagram, short run videos
