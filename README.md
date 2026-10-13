@@ -72,6 +72,8 @@ Flood Traversability from Gaussian Splatting*](public_release/Cerrell_CanItFord_
 | **Simulation records** | [TACC run records](https://huggingface.co/datasets/josiecerrell/can-it-ford-steady-force): configuration, status, wall time, GPU and per-frame time series for every steady-current run |
 | **Plain-language explainer** | [can-it-ford.vercel.app](https://can-it-ford.vercel.app) |
 | **Data** | [Scenario sweep](https://huggingface.co/datasets/josiecerrell/can-it-ford-scenario-sweep) and [load surface](https://huggingface.co/datasets/josiecerrell/can-it-ford-speed-surface) on Hugging Face |
+| **Everything on Hugging Face in one place** | [Can It Ford collection](https://huggingface.co/collections/josiecerrell/can-it-ford-nsf-reu-2026-6ab0d6628cca97af44b705c4) |
+| **Use it from an AI assistant** | The live demo is also an [MCP server](https://josiecerrell-can-it-ford.hf.space/gradio_api/mcp/) with one tool, `can_it_ford_evaluate`, that returns the L0 and L1 verdicts for a depth, speed and vehicle class |
 | **Paper and poster** | [`public_release/`](public_release/). One correction to the July poster: it says all 17 runs are bit-reproducible, but the check behind that only confirms that each run's setup is repeatable; repeat runs are not bit-identical. |
 
 ## Key results
