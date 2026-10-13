@@ -1,3 +1,4 @@
+import os
 import sys
 import re
 import json
@@ -5,7 +6,8 @@ import time
 import urllib.request
 import urllib.error
 
-MAILTO = "jcerrell29@cmc.edu"
+# Crossref asks polite clients to give a contact address; set CROSSREF_MAILTO to send one.
+MAILTO = os.environ.get("CROSSREF_MAILTO", "")
 
 def extract_dois(bib_path):
     text = open(bib_path, "r", encoding="utf-8", errors="ignore").read()
@@ -35,8 +37,9 @@ def extract_arxiv_preprints(bib_path):
     return found
 
 def check_doi(doi):
-    url = f"https://api.crossref.org/works/{doi}?mailto={MAILTO}"
-    req = urllib.request.Request(url, headers={"User-Agent": f"can-it-ford-citation-check/1.0 (mailto:{MAILTO})"})
+    url = f"https://api.crossref.org/works/{doi}" + (f"?mailto={MAILTO}" if MAILTO else "")
+    agent = "can-it-ford-citation-check/1.0" + (f" (mailto:{MAILTO})" if MAILTO else "")
+    req = urllib.request.Request(url, headers={"User-Agent": agent})
     try:
         with urllib.request.urlopen(req, timeout=15) as resp:
             data = json.loads(resp.read().decode("utf-8"))

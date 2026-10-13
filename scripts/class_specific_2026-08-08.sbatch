@@ -5,8 +5,8 @@
 #SBATCH -N 1
 #SBATCH -n 1
 #SBATCH -t 01:00:00
-#SBATCH -o /work/11603/jcerrell0629/vista/class_specific_2026-08-08/slurm_%j.out
-#SBATCH -e /work/11603/jcerrell0629/vista/class_specific_2026-08-08/slurm_%j.err
+#SBATCH -o slurm_%j.out
+#SBATCH -e slurm_%j.err
 
 # ===========================================================================
 # CLASS-SPECIFIC HULL RUNS, Rogue and Silverado, canonical g64.

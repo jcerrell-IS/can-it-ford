@@ -1,15 +1,15 @@
 #!/bin/bash
 #SBATCH -J yaris_v2_prov
-#SBATCH -o /work/11603/jcerrell0629/vista/can-it-ford/logs/yaris_v2_prov_%j.out
-#SBATCH -e /work/11603/jcerrell0629/vista/can-it-ford/logs/yaris_v2_prov_%j.err
+#SBATCH -o yaris_v2_prov_%j.out
+#SBATCH -e yaris_v2_prov_%j.err
 #SBATCH -p gh
 #SBATCH -N 1
 #SBATCH -n 1
 #SBATCH -t 02:00:00
 
 set -o pipefail
-REPO=/work/11603/jcerrell0629/vista/can-it-ford
-VENV=/work/11603/jcerrell0629/vista/.venv
+REPO=$STOCKYARD/vista/can-it-ford
+VENV=$STOCKYARD/vista/.venv
 OUT=data/track1_sweep_v2_yaris
 
 echo "host=$(hostname)"

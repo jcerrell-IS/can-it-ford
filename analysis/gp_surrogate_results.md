@@ -2,7 +2,7 @@
 
 Generated July 15, 2026. Source data: `data/track1_sweep_v2/manifest.csv` (36 rows, SLURM job 833218, elapsed 00:01:52, exit 0).
 Code: `analysis/gp_surrogate.py`. Metrics: `analysis/gp_surrogate_metrics.json`. Model: `analysis/gp_regressor.joblib`.
-Environment: `/work/11603/jcerrell0629/vista/.venv`, scikit-learn 1.9.0 (installed with numpy and scipy pinned so the shared `warpmpm` build was not disturbed).
+Environment: `$STOCKYARD/vista/.venv` on TACC, scikit-learn 1.9.0 (installed with numpy and scipy pinned so the shared `warpmpm` build was not disturbed).
 
 ## Headline
 

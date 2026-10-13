@@ -5,15 +5,15 @@
 #SBATCH -N 1
 #SBATCH -n 1
 #SBATCH -t 02:00:00
-#SBATCH -o /work/11603/jcerrell0629/vista/render_s2/conv_2026-07-25/slurm_%j.out
-#SBATCH -e /work/11603/jcerrell0629/vista/render_s2/conv_2026-07-25/slurm_%j.err
+#SBATCH -o slurm_%j.out
+#SBATCH -e slurm_%j.err
 
 # No set -e. A failing task must not abort the ones after it.
 set -o pipefail
 
-PY=/work/11603/jcerrell0629/vista/.venv/bin/python
-ENGINE=/work/11603/jcerrell0629/vista/mpm-engine
-BASE=/work/11603/jcerrell0629/vista/render_s2
+PY=$STOCKYARD/vista/.venv/bin/python
+ENGINE=$STOCKYARD/vista/mpm-engine
+BASE=$STOCKYARD/vista/render_s2
 LOGS=$BASE/conv_2026-07-25
 
 mkdir -p "$LOGS"
