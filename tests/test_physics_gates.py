@@ -47,7 +47,7 @@ INVENTORY = os.path.join(REPO, "data", "all_runs_inventory.csv")
 FULL_RUNS = os.environ.get("CANFORD_RUNS_DIR", "")
 
 # Physical anchors. Any drift here is itself a defect.
-G_ACCEL = 9.81          # m/s^2, hardcoded in the solver core, not a default
+G_ACCEL = 9.81          # m/s^2, the solver wrapper's default; nothing in the gated runs overrides it
 RHO_WATER = 1000.0      # kg/m^3
 RHO_HULL = 310.494      # kg/m^3: 1100 kg over the hull's 3.542739 m^3 (hull_m3 in the inventory)
 SWEEP_V_MAX = 3.0       # m/s, upper end of the velocity sweep
@@ -262,8 +262,8 @@ def test_metrics_are_finite_and_physically_bounded():
 def test_unit_anchors_are_self_consistent():
     """The declared constants must satisfy the relations they take part in.
 
-    Catches a units slip: the drift threshold of 0.05 m and the speed threshold of 0.05 m/s share a
-    numeral, so an edit by value can silently change a label.
+    Checks that gravity, water density and hull density are in physical ranges and agree with each
+    other. It does not check the 0.05 m drift and 0.05 m/s speed thresholds used by the move rule.
     """
     assert 9.7 < G_ACCEL < 9.9
     assert math.isclose(RHO_WATER, 1000.0)
@@ -357,9 +357,10 @@ def test_heavier_vehicle_moves_no_more():
     #     g48   m1100 22   m1609 25   m2337 19    NOT monotone
     #     g64   m1100 41   m1609 28   m2337  8    monotone
     #     g96   m1100 16   m1609  7   m2337  1    monotone
-    # All three g48 runs fail the floor check P-3 (FINDINGS.md): the hull's lowest point drops about
-    # 0.05 m into the floor plane. A run whose floor contact is broken cannot be expected to follow
-    # a friction-derived ordering, because the normal force the ordering depends on is not resolved.
+    # All three g48 runs fail the floor check P-3 (FINDINGS.md): the hull's lowest point is still
+    # settling 0.04 to 0.05 m onto the floor during the record. Their final displacement does fall
+    # with mass (0.351, 0.257, 0.188 m); it is this frame-count margin that is not monotone, because
+    # the 1100 kg run slows below 0.05 m/s a few frames earlier. So g48 is left out of this check.
     # The next test pins the g48 anomaly so it cannot change silently.
     for g in ("g64", "g96"):
         seq = []

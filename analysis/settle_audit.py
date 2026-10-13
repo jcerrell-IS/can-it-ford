@@ -3,8 +3,9 @@
 
 The driver the 17 gated runs used (`analysis/render_v1/as_ran_local_copies/sim_standing.py`, line 76,
 `settle_frames=8`) lets still water settle for 8 frames, then sets all the water moving in one step
-and starts recording. So the record begins at that step, and every leading frame this audit flags is
-the start-up surge, not hydrostatic settling. The question per run is: how many leading frames does
+and starts recording. So the record begins at that step, and the leading frames this audit flags are
+mostly the start-up surge. In the three 48-cell runs the hull is also still settling 0.04 to 0.05 m
+onto the floor during the record, so some of what is flagged there is that settling. The question per run is: how many leading frames does
 the record itself say are transient, and is what remains stationary?
 
 No GPU is needed. By default it reads the 17 per-frame records copied into `tests/data/runs/`; point
