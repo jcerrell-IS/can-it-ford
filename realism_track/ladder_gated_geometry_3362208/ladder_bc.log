@@ -9,8 +9,8 @@ No reservation for this job
 --> Verifying valid ssh keys...OK
 --> Verifying access to desired queue (gpu-a100-dev)...OK
 --> Checking available allocation (BCS20003)...OK
---> Verifying that quota for filesystem /home1/11603/jcerrell0629 is at 47.80% allocated...OK
---> Verifying that quota for filesystem /work/11603/jcerrell0629/ls6 is at  5.41% allocated...OK
+--> Verifying that quota for filesystem /home1/11603/<user> is at 47.80% allocated...OK
+--> Verifying that quota for filesystem /work/11603/<user>/ls6 is at  5.41% allocated...OK
 c301-003.ls6.tacc.utexas.edu
 
 ############ RUNG (b) g64 gated-scene geometry ############
@@ -49,7 +49,7 @@ Thu Aug 13 05:42:23 CDT 2026
     "depth_source": "data/all_runs_inventory.csv realized_depth_m = 0.2944294473039918 m in all 17 runs == 2*DX_CANON, so --depth-cells 2 matches it exactly. Read live 2026-08-07."
   }
 }
-wrote /scratch/11603/jcerrell0629/ladder_bc_3362208/rung_b_g64.json
+wrote /scratch/11603/<user>/ladder_bc_3362208/rung_b_g64.json
 exit=0
 
 ############ RUNG (c) g64 gated-scene geometry ############
@@ -88,11 +88,11 @@ Thu Aug 13 05:43:07 CDT 2026
     "depth_source": "data/all_runs_inventory.csv realized_depth_m = 0.2944294473039918 m in all 17 runs == 2*DX_CANON, so --depth-cells 2 matches it exactly. Read live 2026-08-07."
   }
 }
-wrote /scratch/11603/jcerrell0629/ladder_bc_3362208/rung_c_g64.json
+wrote /scratch/11603/<user>/ladder_bc_3362208/rung_c_g64.json
 exit=0
 === results ===
 total 91
-drwx------  2 jcerrell0629 G-819066     1 Aug 13 05:43 .
-drwx------ 25 jcerrell0629 G-819066    48 Aug 13 05:42 ..
--rw-------  1 jcerrell0629 G-819066 40657 Aug 13 05:43 rung_b_g64.json
--rw-------  1 jcerrell0629 G-819066 50354 Aug 13 05:43 rung_c_g64.json
+drwx------  2 <user> G-819066     1 Aug 13 05:43 .
+drwx------ 25 <user> G-819066    48 Aug 13 05:42 ..
+-rw-------  1 <user> G-819066 40657 Aug 13 05:43 rung_b_g64.json
+-rw-------  1 <user> G-819066 50354 Aug 13 05:43 rung_c_g64.json

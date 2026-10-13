@@ -9,15 +9,15 @@ No reservation for this job
 --> Verifying valid ssh keys...OK
 --> Verifying access to desired queue (gpu-a100-dev)...OK
 --> Checking available allocation (BCS20003)...OK
---> Verifying that quota for filesystem /home1/11603/jcerrell0629 is at 47.78% allocated...OK
---> Verifying that quota for filesystem /work/11603/jcerrell0629/ls6 is at  5.40% allocated...OK
+--> Verifying that quota for filesystem /home1/11603/<user> is at 47.78% allocated...OK
+--> Verifying that quota for filesystem /work/11603/<user>/ls6 is at  5.40% allocated...OK
 === node ===
 c301-003.ls6.tacc.utexas.edu
 NVIDIA A100-PCIE-40GB, 40960 MiB, 570.195.03
 NVIDIA A100-PCIE-40GB, 40960 MiB, 570.195.03
 NVIDIA A100-PCIE-40GB, 40960 MiB, 570.195.03
 Warp DeprecationWarning: The namespace `warp.torch` will soon be removed from the public API. It can still be accessed from `warp._src.torch` but might be changed or removed without notice.
-warpmpm /work/11603/jcerrell0629/vista/can-it-ford/mpm-engine/src/warpmpm/__init__.py
+warpmpm /work/11603/<user>/vista/can-it-ford/mpm-engine/src/warpmpm/__init__.py
 warp 1.12.1 cuda True
 
 ############ n_grid=96 mode=coupled settle-frames=3000 ############
@@ -42,7 +42,7 @@ MODE coupled  n_grid 96  relax 1.0
   ERROR first3 vs full submersion = -44.19 %
   lateral/Fz = 0.0202   net dz = -0.008817 m
 ============================================================================
-wrote /scratch/11603/jcerrell0629/rungb_g96_gated_3362208/settled_coupled_g96_gated.json
+wrote /scratch/11603/<user>/rungb_g96_gated_3362208/settled_coupled_g96_gated.json
 exit=0
 Thu Aug 13 05:13:13 CDT 2026
 
@@ -66,13 +66,13 @@ MODE fixed  n_grid 96  relax 1.0
   ERROR first3 vs full submersion = -44.42 %
   lateral/Fz = 0.0411   net dz = +0.000000 m
 ============================================================================
-wrote /scratch/11603/jcerrell0629/rungb_g96_gated_3362208/settled_fixed_g96_gated.json
+wrote /scratch/11603/<user>/rungb_g96_gated_3362208/settled_fixed_g96_gated.json
 exit=0
 Thu Aug 13 05:18:09 CDT 2026
 
 === results ===
 total 25
-drwx------  2 jcerrell0629 G-819066     1 Aug 13 05:18 .
-drwx------ 22 jcerrell0629 G-819066    39 Aug 13 05:16 ..
--rw-------  1 jcerrell0629 G-819066 12271 Aug 13 05:13 settled_coupled_g96_gated.json
--rw-------  1 jcerrell0629 G-819066 12144 Aug 13 05:18 settled_fixed_g96_gated.json
+drwx------  2 <user> G-819066     1 Aug 13 05:18 .
+drwx------ 22 <user> G-819066    39 Aug 13 05:16 ..
+-rw-------  1 <user> G-819066 12271 Aug 13 05:13 settled_coupled_g96_gated.json
+-rw-------  1 <user> G-819066 12144 Aug 13 05:18 settled_fixed_g96_gated.json
