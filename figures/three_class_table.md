@@ -43,11 +43,15 @@ Common to all three: nominal depth 0.30 m, nominal surge 1.5 m/s, n_grid 64,
 90 frames at 30 fps, grid_lim 9.4216 m, dx 0.147213 m, h 0.0736064 m, 4 water layers,
 23532 water particles, hull volume 3.542739 m3.
 
-| class | mass (kg) | fill ratio | rho (kg/m3) | final abs d (m) | final yaw (deg) | L1 nominal | L2 (MPM) | agree? |
+| class | mass (kg) | fill ratio (n_grid=64) | rho (kg/m3) | final abs d (m) | final yaw (deg) | L1 nominal | L2 (MPM) | agree? |
 |---|---|---|---|---|---|---|---|---|
 | small_passenger | 1100 | 1.0024 | 309.75 | 0.09240 | +1.431 | NO-FORD | NO-FORD | AGREE |
 | large_passenger | 1609 | 1.0023 | 453.13 | 0.05110 | +0.016 | FORD | NO-FORD | **DIVERGE** |
 | large_4wd | 2337 | 1.0023 | 658.14 | 0.03890 | +0.310 | FORD | FORD | AGREE |
+
+fill_ratio is grid-dependent and must not be quoted without its n_grid. The three values
+above are render_s1 at n_grid=64. Across grids in render_s2 it is 1.026243 at g48,
+1.002440 at g64 and 0.994089 at g96. Particle count moves with it: 3846 / 8905 / 29804.
 
 L2 verdict rule: final displacement magnitude vs DRIFT_THRESHOLD = 0.05 m.
 **DRIFT_THRESHOLD 0.05 m has no peer-reviewed source.** It is a conservative numerical
