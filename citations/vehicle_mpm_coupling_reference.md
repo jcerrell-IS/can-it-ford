@@ -1,6 +1,6 @@
 # Vehicle Parameters and Mesh-to-SDF Coupling: A Cited Reference
 
-### For MPM Flood-Crossing Simulation ("Can It Ford?", NSF SCIPE REU 2026, TACC/UT Austin)
+### For MPM Flood-Crossing Simulation ("Can It Ford?", NSF REU 2026, TACC/UT Austin)
 
 This reference collects primary-source engineering values for three passenger-vehicle classes and version-specific (2026) best practices for converting external meshes into signed distance fields (SDFs) for Material Point Method (MPM) rigid-body coupling in NVIDIA Warp and Genesis (`genesis-world`). All physical values are drawn from manufacturer spec sheets, NHTSA/SAE measured databases, and official engine documentation — not aggregator sites.
 
@@ -259,4 +259,4 @@ Two consequences worth stating plainly:
 - NVIDIA SDF-resolution dev-forum thread: https://forums.developer.nvidia.com/t/invalid-inertia-when-sdf-mesh-for-collision-has-sdf-resolution-too-low/270823
 - Omniverse Collision Behavior Guide: https://docs.omniverse.nvidia.com/kit/docs/omni_physics/107.3/dev_guide/guides/collision_guide.html
 
-*Prepared for "Can It Ford?" — NSF SCIPE REU Site Award 2447887, TACC/UT Austin. CG height and inertia values are measured (NHTSA IPMD/VIMF); curb weight and dimensions are from manufacturer official spec sheets.*
+*Prepared for "Can It Ford?", NSF REU Site: Cyberinfrastructure Research for Societal Advancement, Award 2447887, TACC/UT Austin. CG height and inertia values are measured (NHTSA IPMD/VIMF); curb weight and dimensions are from manufacturer official spec sheets.*

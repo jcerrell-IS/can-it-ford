@@ -5,7 +5,7 @@ Cited engineering parameters for three passenger-vehicle classes, for seeding
 rigid bodies in MPM flood-crossing simulations (Genesis genesis-world / NVIDIA
 Warp mesh-to-SDF coupling).
 
-Project: "Can It Ford?" — NSF SCIPE REU 2026, TACC/UT Austin (Josie Cerrell).
+Project: "Can It Ford?", NSF REU 2026, TACC/UT Austin (Josie Cerrell).
 
 ALL physical values are from PRIMARY / authoritative sources, not aggregators:
   - Curb weight & bounding box: manufacturer official spec sheets

@@ -1,6 +1,6 @@
 # Findings, deliverables and public surfaces
 
-Reader-facing outputs for **Can It Ford?**, NSF SCIPE REU 2026, GeoElements Lab, TACC / UT Austin.
+Reader-facing outputs for **Can It Ford?**, NSF REU 2026, GeoElements Lab, TACC / UT Austin.
 Josie Cerrell, Claremont McKenna College.
 
 ## Interactive

@@ -65,5 +65,5 @@ This is a research demo built on draft interim criteria for stationary vehicles.
 
 ## About
 
-Josie Cerrell, NSF SCIPE REU 2026, GeoElements Lab, UT Austin (PI: Krishna Kumar).
+Josie Cerrell, NSF REU 2026, GeoElements Lab, UT Austin (PI: Krishna Kumar).
 This project contributes the reconstruct-to-decide pipeline and the abstraction-ladder experiment.

@@ -23,7 +23,7 @@ not a measured drag.</em></p>
 [![Project site](https://img.shields.io/badge/project_site-can--it--ford.vercel.app-black)](https://can-it-ford.vercel.app)
 [![Tests](https://github.com/jcerrell-IS/can-it-ford/actions/workflows/csv-check.yml/badge.svg)](https://github.com/jcerrell-IS/can-it-ford/actions/workflows/csv-check.yml)
 
-*Josie Cerrell, Claremont McKenna College. NSF REU Site SCIPE-AI (Award #2447887), GeoElements
+*Josie Cerrell, Claremont McKenna College. NSF REU Site: Cyberinfrastructure Research for Societal Advancement (Award #2447887), GeoElements
 Lab, Texas Advanced Computing Center, The University of Texas at Austin. Mentor: Krishna Kumar.*
 
 ## Summary
@@ -404,7 +404,7 @@ Third-party material in this repository keeps its own terms, listed per item in
 ## Acknowledgments
 
 This work was supported by the National Science Foundation under NSF REU Site: Cyberinfrastructure
-Research for Societal Advancement (SCIPE-AI), Award #2447887, hosted at the Texas Advanced Computing
+Research for Societal Advancement, Award #2447887, hosted at the Texas Advanced Computing
 Center, The University of Texas at Austin. Mentor: Krishna Kumar (GeoElements Lab). Research
 mentors: Hassan Iqbal, Cheng-Hsi Hsiao, Sarah Etter. Near-peer mentor: Cristian Moran. Genesis
 container: Luke Smith. Program coordination: Rosalia Gomez.
