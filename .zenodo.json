@@ -1,0 +1,29 @@
+{
+  "upload_type": "software",
+  "title": "Can It Ford? Code, data and run records for comparing flood-crossing rules with a coupled water simulation for one car",
+  "version": "1.0.0",
+  "language": "eng",
+  "creators": [
+    {"name": "Cerrell, Josie", "affiliation": "Claremont McKenna College"},
+    {"name": "Kumar, Krishna", "affiliation": "The University of Texas at Austin"}
+  ],
+  "description": "<p>Code, data and run records for <em>Can It Ford?</em>, an NSF REU project at the Texas Advanced Computing Center (summer 2026). It asks whether one specific car, a 2010 Toyota Yaris, can cross a specific flooded road, and compares three methods on the same 70 combinations of water depth and speed: a 0.15 m depth rule (L0), the Australian Rainfall and Runoff (AR&amp;R) stability criterion for stationary vehicles (L1), and a GPU material point method simulation (water represented as many small particles that move through a grid) of water around a rigid car hull, run on TACC Vista and Lonestar6 (L2).</p><p><strong>Limitations.</strong> This is a research record, not a safety tool. No simulation here has been validated against an experiment. The first 17 coupled runs set the water moving in one step inside a closed tank, so they recorded a start-up surge rather than a steady current, and their FORD and NO-FORD labels are withdrawn as verdicts. The steady-current runs that replace them have no verdict yet, and their forces are not grid-converged. A static floating-sphere check at the geometry of Kramer et al. (2021) failed. The AR&amp;R thresholds are draft interim criteria for stationary vehicles.</p><p><strong>Result.</strong> Applying the full AR&amp;R rule for the car's own vehicle class, instead of the depth times velocity shortcut it is often reduced to, moves 23 of the 70 scenarios from FORD to NO-FORD and none the other way.</p><p><strong>Contents.</strong> The L0 and L1 rules with tests; the coupled-simulation driver as it ran; run inventories and a provenance manifest that says which fields each run recorded and which were filled in later; physics, grid-convergence and start-up transient checks that run in continuous integration; the paper (September 2026 revision) and the July 2026 poster as PDFs.</p><p><strong>Licences.</strong> Code: BSD 3-Clause. Project data: CC BY 4.0. Third-party material keeps its own terms, listed in THIRD_PARTY_NOTICES.md.</p><p><strong>Funding and acknowledgements.</strong> Supported by the National Science Foundation, NSF REU Site: Cyberinfrastructure Research for Societal Advancement (SCIPE-AI), Award #2447887, hosted at the Texas Advanced Computing Center, The University of Texas at Austin. Mentor: Krishna Kumar (GeoElements Lab). The vehicle geometry is derived from the 2010 Toyota Yaris finite element model developed by the Center for Collision Safety and Analysis (CCSA) at George Mason University, with sponsorship from the Federal Highway Administration (FHWA).</p>",
+  "license": "BSD-3-Clause",
+  "keywords": [
+    "flood",
+    "vehicle stability",
+    "floodwater crossing",
+    "material point method",
+    "Australian Rainfall and Runoff",
+    "autonomous vehicles",
+    "TACC"
+  ],
+  "related_identifiers": [
+    {"identifier": "https://github.com/jcerrell-IS/can-it-ford/tree/v1.0.0", "relation": "isSupplementTo", "resource_type": "software"},
+    {"identifier": "https://github.com/jcerrell-IS/mpm-engine", "relation": "requires", "resource_type": "software"},
+    {"identifier": "10.13021/G8JS5D", "relation": "isDerivedFrom"},
+    {"identifier": "https://huggingface.co/datasets/josiecerrell/can-it-ford-scenario-sweep", "relation": "isSupplementedBy", "resource_type": "dataset"},
+    {"identifier": "https://huggingface.co/datasets/josiecerrell/can-it-ford-steady-force", "relation": "isSupplementedBy", "resource_type": "dataset"},
+    {"identifier": "https://huggingface.co/datasets/josiecerrell/can-it-ford-speed-surface", "relation": "isSupplementedBy", "resource_type": "dataset"}
+  ]
+}

@@ -1,7 +1,9 @@
 cff-version: 1.2.0
-title: "Can It Ford? Query-Conditioned World Models for Autonomous Vehicle Flood Traversability"
-message: "If you use this dataset or code, please cite it as below."
-type: dataset
+title: "Can It Ford? Code, data and run records for comparing flood-crossing rules with a coupled water simulation for one car"
+message: "If you use this code or data, please cite the paper below. To cite this exact release, use the Zenodo DOI listed on the GitHub release."
+type: software
+version: "1.0.0"
+date-released: 2026-10-13
 authors:
   - given-names: Josie
     family-names: Cerrell
@@ -9,18 +11,17 @@ authors:
   - given-names: Krishna
     family-names: Kumar
     affiliation: University of Texas at Austin
-# Changed 2026-08-20 from ODC-By-1.0 on the authors' decision. CC-BY-4.0 has covered
-# sui generis database rights since 4.0, so it is a defensible dataset licence.
-# Not yet reconciled: the Hugging Face dataset can-it-ford-scenario-sweep is listed as
-# odc-by, while can-it-ford-speed-surface is cc-by-4.0.
-# This licence covers the project's own data. The code is BSD-3-Clause (see LICENSE).
+# Code: BSD-3-Clause (LICENSE). The project's own data: CC-BY-4.0.
 # Third-party material keeps its own terms, listed in THIRD_PARTY_NOTICES.md.
-license: CC-BY-4.0
+license:
+  - BSD-3-Clause
+  - CC-BY-4.0
 keywords:
-  - flood traversability
-  - Gaussian splatting
+  - flood
+  - vehicle stability
+  - floodwater crossing
   - material point method
-  - world models
+  - Australian Rainfall and Runoff
   - autonomous vehicles
 repository-code: "https://github.com/jcerrell-IS/can-it-ford"
 url: "https://huggingface.co/spaces/josiecerrell/can-it-ford"
