@@ -328,7 +328,7 @@ def test_recorded_move_label_is_the_same_on_all_three_grids():
 
     This pins the recorded start-up surge labels (withdrawn as verdicts), so a change to the records
     or to the rule that reads them is caught here rather than discovered in a figure. The size of the
-    motion does change with the grid, by 2.0 to 2.5 times at a fixed mass, and is not checked here.
+    motion does change with the grid, by 2.0 to 2.5 times at a fixed mass (largest over smallest), and is not checked here.
     """
     ran = 0
     for mass in ("m1100", "m1609", "m2337"):
@@ -359,8 +359,8 @@ def test_heavier_vehicle_moves_no_more():
     #     g96   m1100 16   m1609  7   m2337  1    monotone
     # All three g48 runs fail the floor check P-3 (FINDINGS.md): the hull's lowest point is still
     # settling 0.04 to 0.05 m onto the floor during the record. Their final displacement does fall
-    # with mass (0.351, 0.257, 0.188 m); it is this frame-count margin that is not monotone, because
-    # the 1100 kg run slows below 0.05 m/s a few frames earlier. So g48 is left out of this check.
+    # with mass (0.351, 0.257, 0.188 m); it is the frame-count margin above (22, 25, 19) that is not
+    # monotone. So g48 is left out of this check.
     # The next test pins the g48 anomaly so it cannot change silently.
     for g in ("g64", "g96"):
         seq = []

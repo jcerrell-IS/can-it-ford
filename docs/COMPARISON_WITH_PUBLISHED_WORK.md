@@ -38,7 +38,7 @@ see [`FINDINGS.md`](../FINDINGS.md)), so this is a sanity check on ordering, not
 
 **Refining the grid keeps the decision but not the size of the motion.** Across the three grids
 (48, 64, 96 cells) the recorded move-or-stay label is the same while the final displacement at a
-fixed mass changes by 2.0 to 2.5 times. This holds for these recorded start-up runs; a later local
+fixed mass differs by 2.0 to 2.5 times between its largest and smallest value. This holds for these recorded start-up runs; a later local
 run on a 128-cell grid changed one label (0.30 m deep at 3.0 m/s, from sliding to floating). Syamlal, Celik and Benyahia 2017
 ([doi:10.1002/aic.15868](https://doi.org/10.1002/aic.15868)) note that a quantity that is still
 changing in time is not expected to converge under grid refinement, which is why I quote the
@@ -59,7 +59,7 @@ decision and not the displacement.
 - **No benchmark has passed.** A public floating-sphere dataset with about 0.3 percent uncertainty
   exists (Kramer et al. 2021, [doi:10.3390/en14020269](https://doi.org/10.3390/en14020269)). In
   August 2026 I ran a static version with the same sphere, held half submerged at its floating
-  depth, in a tank 1.2 m square and 0.5 m deep rather than Kramer's 13 x 8.44 m basin. It failed
+  depth, in a 1.2 m square domain with water 0.5 m deep rather than Kramer's 13 x 8.44 m basin. It failed
   all 24 gradings across six runs: the computed upward force was 34 to 64 percent above the buoyancy predicted at the
   measured water level, which had dropped because water leaked out, and it was below the sphere's
   69.2 N weight in every run compared that way. Most of the drop in water level happened even with
