@@ -58,11 +58,12 @@ decision and not the displacement.
 - **No benchmark has passed.** A public floating-sphere dataset with about 0.3 percent uncertainty
   exists (Kramer et al. 2021, [doi:10.3390/en14020269](https://doi.org/10.3390/en14020269)). In
   August 2026 I ran a static version with the same sphere, held half submerged at its floating
-  depth, and it failed all 24 checks. Each check divided the computed upward force by the buoyancy
-  expected at the water level actually left in the tank, which had dropped because water leaked out;
-  that ratio was 34 to 64 percent too high. Against the sphere's weight (69.2 N), the force was 13
-  to 35 percent too low in the two runs where I compared them. Most of the drop in water level
-  happened even with no sphere in the tank, from water leaking through the floor and walls
+  depth, in a tank 1.2 m square and 0.5 m deep rather than Kramer's 13 x 8.44 m basin. It failed
+  all 24 checks: the computed upward force was 34 to 64 percent above the buoyancy predicted at the
+  measured water level, which had dropped because water leaked out, and it was below the sphere's
+  69.2 N weight in every run compared that way. Most of the drop in water level happened even with
+  no sphere in the tank, from water leaking through the floor and walls. Stopping 96.3 percent of
+  the floor leak removed only 31.9 percent of the excess, so the leak does not explain the failure
   (records in the private development repository). The moving version of the test, where the sphere
   is released and bobs, has not been run yet.
 
