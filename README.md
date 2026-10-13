@@ -294,6 +294,10 @@ reported skip, because no solver channel-flow profile exists yet.
 | `data/phase_space_results.csv` | L2 SPH pilot output (pre-fix). **Not usable for an agreement rate:** it carries a single verdict column with no corresponding L1 value, and 15 of its 31 rows share a condition with another row under a different verdict |
 | `data/track1_sweep_v2/` | **Superseded and excluded from the paper.** 36-run sweep on a rescaled box proxy (1390 kg, 4.7352 m3 against the real hull's 3.5427 m3). Kept as a record; do not cite its numbers |
 
+The TACC account name in run logs and records was replaced with `<user>` on 2026-10-13; nothing else in
+those files was changed. The as-ran driver and job-script copies in `analysis/render_v1/as_ran_local_copies/`
+and `renders/yaris_render_s1/sim_standing.py` keep their original paths, so their recorded hashes still match.
+
 ## Limitations
 
 - **Not a safety tool.** L1 uses draft and interim criteria that describe a stationary vehicle.
