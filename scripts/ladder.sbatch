@@ -8,8 +8,8 @@
 # one backfills. Padded 6x over the measured runtime, not trimmed to it.
 #SBATCH -t 00:20:00
 #SBATCH -A BCS20003
-#SBATCH -o /work/11603/jcerrell0629/vista/can-it-ford/data/coupling_validation/ladder_%j.out
-#SBATCH -e /work/11603/jcerrell0629/vista/can-it-ford/data/coupling_validation/ladder_%j.err
+#SBATCH -o ladder_%j.out
+#SBATCH -e ladder_%j.err
 #
 # Regime ladder, rungs (b)(c)(d) at g64 and g96, plus the live Fix B check.
 # Executes the regime ladder plan of 2026-08-07 section 3, which executes

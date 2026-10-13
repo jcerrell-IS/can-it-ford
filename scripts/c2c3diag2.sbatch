@@ -5,8 +5,8 @@
 #SBATCH -n 1
 #SBATCH -t 00:30:00
 #SBATCH -A BCS20003
-#SBATCH -o /work/11603/jcerrell0629/vista/can-it-ford/data/coupling_validation/c2c3diag2_%j.out
-#SBATCH -e /work/11603/jcerrell0629/vista/can-it-ford/data/coupling_validation/c2c3diag2_%j.err
+#SBATCH -o c2c3diag2_%j.out
+#SBATCH -e c2c3diag2_%j.err
 set -u
 
 PY=$WORK/can-it-ford/mpm-engine/.venv/bin/python

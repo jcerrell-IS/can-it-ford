@@ -5,8 +5,8 @@
 #SBATCH -n 1
 #SBATCH -t 06:00:00
 #SBATCH -A BCS20003
-#SBATCH -o /work/11603/jcerrell0629/vista/can-it-ford/data/coupling_validation/c1sdf_%j.out
-#SBATCH -e /work/11603/jcerrell0629/vista/can-it-ford/data/coupling_validation/c1sdf_%j.err
+#SBATCH -o c1sdf_%j.out
+#SBATCH -e c1sdf_%j.err
 #
 # C1-SDF discriminator: is the sign-inverted C1 result a defect in the free rigid
 # coupling, or in the scene/harness?

@@ -5,8 +5,8 @@
 #SBATCH -n 1
 #SBATCH -t 01:30:00
 #SBATCH -A BCS20003
-#SBATCH -o /work/11603/jcerrell0629/vista/can-it-ford/data/coupling_validation/slurm_%j.out
-#SBATCH -e /work/11603/jcerrell0629/vista/can-it-ford/data/coupling_validation/slurm_%j.err
+#SBATCH -o slurm_%j.out
+#SBATCH -e slurm_%j.err
 
 set -u
 

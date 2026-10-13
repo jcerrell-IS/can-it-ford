@@ -10,8 +10,8 @@
 # partition a short request backfills where a long one waits in (Resources).
 #SBATCH -t 00:20:00
 #SBATCH -A BCS20003
-#SBATCH -o /work/11603/jcerrell0629/vista/can-it-ford/data/coupling_validation/c1b_%j.out
-#SBATCH -e /work/11603/jcerrell0629/vista/can-it-ford/data/coupling_validation/c1b_%j.err
+#SBATCH -o c1b_%j.out
+#SBATCH -e c1b_%j.err
 #
 # C1b: C1 with the cube PARTIALLY submerged, to isolate the free surface.
 #
